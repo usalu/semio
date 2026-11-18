@@ -2,7 +2,7 @@
  * window vocabulary; namespaced re-exports (not a blanket `export *`) since every window twin
  * independently declares its own same-shaped `*ViewModel` interface. */
 
-export const EN1992_EDITOR_DIALECT = { artifactKind: "s.norm.en1992", standard: "1", subset: "*" } as const;
+export const EN1992_EDITOR_DIALECT = { artifactKind: "s.norm-eurocode-structural.en1992", standard: "1", subset: "*" } as const;
 
 export const EN1992_EDIT_MODE_ID = "edit" as const;
 

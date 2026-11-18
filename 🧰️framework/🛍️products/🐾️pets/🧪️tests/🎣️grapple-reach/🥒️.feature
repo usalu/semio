@@ -8,8 +8,8 @@ Feature: Pets shoot a grappling hook at an edge above, are hauled up the rope st
   heights above the feet, its two corners, each `HOOK_INSET` inside its ends — the hook bites the
   corner, so a rope from below can rise beside the element the edge tops —, and the point between them
   nearest to the feet (the middle of a perch too narrow for that). A candidate holds when its rope is
-  `ROPE_SHORT` to `ROPE_LONG` heights long (8 heights: what the cards of the real pages at 1440 × 900
-  need above their footer), rises at least `ROPE_ELEVATION` per pixel of its length, and its line
+  `ROPE_SHORT` to `ROPE_LONG` heights long (12 heights: what the lowest edge a pet may stand on in the
+  real pages at 1440 × 900 needs above their footer), rises at least `ROPE_ELEVATION` per pixel of its length, and its line
   misses every keep-out grown by `ROPE_MARGIN` — except the keep-outs that hold the point of the edge
   under the hook: what a hook bites is not in its way. The candidate with the least `length +
   ROPE_DETOUR × sideways distance` wins, the first one among equals. A rope no more slanted than

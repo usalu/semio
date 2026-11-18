@@ -23,7 +23,7 @@ use framework_schema::ArtifactSchema;
 #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.norm.din18599.inference")]
+#[artifact_schema(id = "s.norm-energy.din18599.inference")]
 pub struct Din18599Inference {
     #[derived]
     pub outline: Din18599Outline,
@@ -48,14 +48,14 @@ impl Default for Din18599Inference {
 
 impl protocol::InferenceSpec<Din18599Snapshot> for Din18599Inference {
     fn inference_schema_id() -> &'static str {
-        "s.norm.din18599.inference"
+        "s.norm-energy.din18599.inference"
     }
     fn schema_version() -> u32 {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec {
-            id: "s.norm.din18599.inference.outline",
+            id: "s.norm-energy.din18599.inference.outline",
             reads: &[
                 "buildingCategory",
                 "attachment",
@@ -83,11 +83,11 @@ impl protocol::InferenceSpec<Din18599Snapshot> for Din18599Inference {
 //#endregion 🔖️Inference
 
 //#region 🔖️Descriptor
-/// 💡️ Registers `s.norm.din18599.inference`'s facet leaves into the OS-wide inference catalog — call once at
+/// 💡️ Registers `s.norm-energy.din18599.inference`'s facet leaves into the OS-wide inference catalog — call once at
 /// plugin init, alongside `din18599_artifact_schema_descriptor`'s registration.
 pub fn din18599_artifact_inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {
     semio_framework_schema_registry::ArtifactInferenceDescriptor {
-        id: "s.norm.din18599.inference",
+        id: "s.norm-energy.din18599.inference",
         inference: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }

@@ -7,9 +7,9 @@
 
 import throttle from "lodash/throttle";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { PRESENCE_PROTOCOL } from "@semio-tech/framework-server";
+import { PRESENCE_HEARTBEAT_MS, PRESENCE_PROTOCOL, PRESENCE_SILENCE_FACTOR } from "@semio-tech/framework-server";
 import { cursorProblem, learnerTag, type CursorState } from "@semio-tech/course";
-import { MAX_WATCHED_ROOMS, PRESENCE_FRAME_HZ, PRESENCE_FRAME_INTERVAL_MS, PresenceRoom, WATCH_INTERVAL_MS } from "@semio-tech/course-react";
+import { MAX_WATCHED_ROOMS, PRESENCE_FRAME_HZ, PRESENCE_FRAME_INTERVAL_MS, PRESENCE_JOIN_MS, PresenceRoom, WATCH_INTERVAL_MS } from "@semio-tech/course-react";
 import vectors from "../🧫️fixtures/📡️presence-client/🔣️.json";
 import { BEN, FakeProctorSockets, ME, MIRA, TIMING, snapshot } from "../🧰️presence-client-kit/🟦️.tsx";
 
@@ -172,6 +172,91 @@ describe("👥️ presence room", () => {
     expect(proctor.sockets).toHaveLength(3);
   });
 
+  it("closes a socket that neither opens, closes nor welcomes within the join time and joins again, however often that happens", async () => {
+    vi.spyOn(Math, "random").mockReturnValue(0.5);
+    const proctor = new FakeProctorSockets();
+    const room = new PresenceRoom<CursorState>({ url: "ws://proctor.test/x", connect: proctor.connect, parse: () => undefined, timing: TIMING, random: () => 0.5, joinMs: 500 });
+    room.start();
+    const stalled = proctor.sockets[0]!;
+    stalled.readyState = 0;
+    await vi.advanceTimersByTimeAsync(499);
+    expect(stalled.closed).toBe(false);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(stalled.closed).toBe(true);
+    expect(room.getSnapshot().status).toBe("waiting");
+    for (let round = 0; round < 5; round += 1) await vi.advanceTimersByTimeAsync(500 + TIMING.maxMs);
+    expect(proctor.sockets.length).toBeGreaterThanOrEqual(6);
+    expect(proctor.sockets.slice(0, 5).every((socket) => socket.closed)).toBe(true);
+    const joined = proctor.sockets.at(-1)!;
+    const count = proctor.sockets.length;
+    joined.welcome("r-ok", 1);
+    await vi.advanceTimersByTimeAsync(PRESENCE_JOIN_MS * 2);
+    expect(joined.closed).toBe(false);
+    expect(room.getSnapshot()).toMatchObject({ status: "open", self: "r-ok" });
+    expect(proctor.sockets).toHaveLength(count);
+    room.stop();
+  });
+
+  it("gives a socket the whole join time by default and stops asking once the room is left while a socket still connects", async () => {
+    const proctor = new FakeProctorSockets();
+    const room = new PresenceRoom<CursorState>({ url: "ws://proctor.test/x", connect: proctor.connect, parse: () => undefined, timing: TIMING, random: () => 0.5 });
+    room.start();
+    proctor.sockets[0]!.readyState = 0;
+    await vi.advanceTimersByTimeAsync(PRESENCE_JOIN_MS - 1);
+    expect(proctor.sockets[0]!.closed).toBe(false);
+    room.stop();
+    await vi.advanceTimersByTimeAsync(PRESENCE_JOIN_MS * 3);
+    expect(proctor.sockets).toHaveLength(1);
+  });
+
+  it("closes a welcomed socket that is silent for 2.5 heartbeats and joins again, while heartbeats and any other frame keep it alive", async () => {
+    const proctor = new FakeProctorSockets();
+    const room = new PresenceRoom<CursorState>({ url: "ws://proctor.test/x", connect: proctor.connect, parse: () => undefined, timing: TIMING, random: () => 0.5 });
+    const silence = PRESENCE_HEARTBEAT_MS * PRESENCE_SILENCE_FACTOR;
+    expect(silence).toBe(25_000);
+    room.start();
+    const first = proctor.sockets[0]!;
+    first.welcome("r-1", 0, [{ session: "r-mira", colour: 3, surface: "home", state: { tag: learnerTag(MIRA) } }]);
+    for (let beat = 0; beat < 6; beat += 1) {
+      await vi.advanceTimersByTimeAsync(PRESENCE_HEARTBEAT_MS);
+      first.deliver({ type: "heartbeat" });
+    }
+    expect(first.closed).toBe(false);
+    expect(room.getSnapshot().status).toBe("open");
+    await vi.advanceTimersByTimeAsync(silence - 1);
+    expect(first.closed).toBe(false);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(first.closed).toBe(true);
+    expect(room.getSnapshot()).toMatchObject({ status: "waiting", members: [] });
+    await vi.advanceTimersByTimeAsync(TIMING.maxMs);
+    expect(proctor.sockets).toHaveLength(2);
+    const second = proctor.sockets[1]!;
+    second.welcome("r-2", 1);
+    await vi.advanceTimersByTimeAsync(silence - 1);
+    second.deliver({ type: "batch", entries: [], left: [] });
+    await vi.advanceTimersByTimeAsync(silence - 1);
+    expect(second.closed).toBe(false);
+    room.stop();
+    await vi.advanceTimersByTimeAsync(silence * 3);
+    expect(proctor.sockets).toHaveLength(2);
+  });
+
+  it("does not time a socket out while it is joining (the join time rules there) and again after a silent one was replaced, however often", async () => {
+    const proctor = new FakeProctorSockets();
+    const room = new PresenceRoom<CursorState>({ url: "ws://proctor.test/x", connect: proctor.connect, parse: () => undefined, timing: TIMING, random: () => 0.5 });
+    const silence = PRESENCE_HEARTBEAT_MS * PRESENCE_SILENCE_FACTOR;
+    room.start();
+    for (let round = 0; round < 4; round += 1) {
+      const socket = proctor.sockets.at(-1)!;
+      socket.welcome(`r-${round}`, 0);
+      await vi.advanceTimersByTimeAsync(silence);
+      expect(socket.closed).toBe(true);
+      await vi.advanceTimersByTimeAsync(TIMING.maxMs);
+      expect(proctor.sockets).toHaveLength(round + 2);
+    }
+    room.stop();
+  });
+
   it("leaves no abort listener behind on its lifetime for any socket that ended", async () => {
     const proctor = new FakeProctorSockets();
     const signal = Object.getPrototypeOf(new AbortController().signal) as AbortSignal;
@@ -198,7 +283,7 @@ describe("👥️ presence room", () => {
       expect(settled).toBeGreaterThan(0);
       for (let round = 1; round <= 4; round += 1) {
         proctor.sockets[round]!.drop();
-        await vi.advanceTimersByTimeAsync(TIMING.maxMs * 2 ** round);
+        await vi.advanceTimersByTimeAsync(TIMING.maxMs * 2);
         proctor.sockets[round + 1]!.welcome(`r-${round + 2}`, 0);
         await vi.advanceTimersByTimeAsync(0);
         expect(held).toBe(settled);

@@ -19,7 +19,7 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import { createHash } from "node:crypto";
 import { rebaseRowV1, rebaseRowsV1 } from "./🏚️relocation/🟨️.mjs";
 import { sha256HexV1, utf8TextV1 } from "../🧂️text-bytes/🟨️.mjs";
-import { sourceTreeFilterV1 } from "./📂️source-names/🟨️.mjs";
+import { hollowDirectoryV1, sourceTreeFilterV1 } from "./📂️source-names/🟨️.mjs";
 
 /** 🔢️ A hex SHA-256 digest, compiled once. */
 const SHA256_HEX_V1 = /^[a-f0-9]{64}$/u;
@@ -53,6 +53,23 @@ declareFormatStampV1("graph.record",sourceAnalysisSchemaV1);
 
 /** 📌️ Records the stamp of each named inferrer in the active inference scope, so the record that is being computed names exactly the protocol versions it took part in. */
 export function observedInferenceStampsV1(paths){for(const path of paths)record("stamp",path);}
+
+/** 📸️ The facts of the implementation files this process loaded, taken at load and kept in memory: the digest of each file as it was when the code was read. They are facts of the PROCESS, not of the tree: a fact about such a file holds when it names the loaded digest, never by a read of the file on disk, so an edit of tooling during a read cannot make a fact stale that the process could never refresh. Only a new process loads a new digest. */
+const loadedImplementationFactsV1 = new Map();
+
+/** 📸️ Registers the rows an implementation module loaded with the bytes they had at load; the first row of a path wins, a later load of the same path in this process never replaces it. */
+export function registerLoadedImplementationRowsV1(rows) {
+  for (const row of rows) if (row.kind === "digest" && typeof row.fact?.sha256 === "string" && !loadedImplementationFactsV1.has(row.path)) loadedImplementationFactsV1.set(row.path, Object.freeze({ sha256: row.fact.sha256, ignored: row.fact.ignore !== undefined }));
+}
+
+/** 🔎️ The answer of the loaded implementation for one observed row, `undefined` when the row is not about a loaded implementation file or the process is not pinned: a `digest` row, or a `file` row of a file read whole, holds exactly when it names the digest the process loaded. */
+function loadedImplementationAnswerV1(kind, path, fact) {
+  if (!implementationPinnedV1()) return undefined;
+  const loaded = loadedImplementationFactsV1.get(path);
+  if (loaded === undefined || typeof fact?.sha256 !== "string") return undefined;
+  if (kind === "digest" || (kind === "file" && !loaded.ignored && fact.error === undefined)) return fact.sha256 === loaded.sha256;
+  return undefined;
+}
 
 /** 🧷️ Refuses a statically cached observation instance whose executing Source or privately captured schema changed. */
 export function requireCurrentObservationV1(){if(implementationPinnedV1())return;try{if(captureBoundedSourceRevisionV1(fileURLToPath(physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),REVISION_POLICY_V1.maximumSourceBytes).sha256===OBSERVATION_REVISION&&captureBoundedSourceRevisionV1(fileURLToPath(observationSchemaURLV1),REVISION_POLICY_V1.maximumTextBytes).sha256===observationSchemaRevisionV1)return;}catch(cause){throw Object.assign(staleImplementationV1("Stale loaded observation implementation; restart required"),{code:"BUILD_AUTHORITY_CHANGED",cause});}throw Object.assign(staleImplementationV1("Stale loaded observation implementation; restart required"),{code:"BUILD_AUTHORITY_CHANGED"});}
@@ -439,10 +456,12 @@ function sourceAnalysisFactHoldsV1(path,fact){
 
 /** 🆔️ Fingerprints the names or typed entries of a directory read that belong to the source tree as the build sees it (`📂️source-names`): machine-local output and operating-system noise are not part of the fact, so a record made on one machine holds on every other and after a build. A name of the generated-directory list leaves only where the entry is a directory or a link (`directory` is where the untyped names were listed; none means every name is a directory). */
 function directoryFactV1(entries,typed=false,directory=null){
- const kept=sourceTreeFilterV1(entries,entry=>String(typed?entry.name:entry),entry=>typed?entry.isDirectory()||entry.isSymbolicLink():directory===null||directoryLinkOrDirectoryV1(join(directory,String(entry))));
+ const hollow=directory===null?undefined:entry=>{const name=String(typed?entry.name:entry);if(!(typed?entry.isDirectory():directoryOnlyV1(join(directory,name))))return false;return hollowDirectoryV1(join(directory,name),path=>world.readdirSync(path,{withFileTypes:true}),join);};
+ const kept=sourceTreeFilterV1(entries,entry=>String(typed?entry.name:entry),entry=>typed?entry.isDirectory()||entry.isSymbolicLink():directory===null||directoryLinkOrDirectoryV1(join(directory,String(entry))),hollow);
  return sha256HexV1(JSON.stringify(kept.map(entry=>typed?[String(entry.name),nodeType(entry)]:String(entry)).sort()));
 }
 function directoryLinkOrDirectoryV1(path){try{const stat=world.lstatSync(path);return stat.isDirectory()||stat.isSymbolicLink();}catch{return false;}}
+function directoryOnlyV1(path){try{return world.lstatSync(path).isDirectory();}catch{return false;}}
 
 /** 🔤️ Decodes the BOM forms accepted by the TypeScript host without another runtime dependency. */
 function typescriptTextV1(bytes){if(bytes.length>=2&&bytes[0]===254&&bytes[1]===255){const swapped=Buffer.from(bytes);for(let index=0;index+1<swapped.length;index+=2){const byte=swapped[index];swapped[index]=swapped[index+1];swapped[index+1]=byte;}return swapped.toString("utf16le",2);}if(bytes.length>=2&&bytes[0]===255&&bytes[1]===254)return bytes.toString("utf16le",2);return bytes.toString("utf8",bytes.length>=3&&bytes[0]===239&&bytes[1]===187&&bytes[2]===191?3:0);}
@@ -474,6 +493,17 @@ export async function settleClosureRowsV1(rows,value){
  const paths=new Set();for(const row of rows)if(row.kind==="closure")paths.add(row.path);
  await closureProviderV1.settle([...paths],value);
 }
+/** 🔎️ The first row of a stale record that does not hold now, named so that a read can say why a record of the fleet was refused: its kind, its path and its fact, each cut to a short text; undefined when every row holds one by one (the record was stale as a whole only). A row is judged like the whole record is: a closure row through the provider, any other as it stands. Asked only after a stale verdict.
+ * @see ./🧪️tests/🔎️stale-row */
+export async function firstFailingRowV1(rows,value){
+ const short=(text,limit)=>{const line=typeof text==="string"?text:JSON.stringify(text)??"";return line.length>limit?line.slice(0,limit)+"...":line;};
+ for(const row of rows){
+  let holds=true;
+  try{holds=row.kind==="closure"?await projectRowsHoldV1([row],value,()=>true):current([row]);}catch{holds=false;}
+  if(holds!==true)return Object.freeze({kind:String(row.kind),path:short(row.path,200),fact:short(row.fact,160)});
+ }
+ return undefined;
+}
 /** 🤝️ The verdict of one process on one stored project record, the only verification the record gets: the record is read plainly (a farm child holds no custody of the graph store and only reads), its closure entries are settled and every observed row is verified, the closure rows through the provider and the others as they stand now. `headerDigest` names the record by the digest of its header line, which covers every observed row and every block digest the record names, so a reader that holds the same header and adopts a `holds` verdict verifies nothing itself; `other` is a record of another key, `missing` none, `stale` a row that no longer holds. A verdict is single use and never kept: a later verdict judges the files as they are then.
  * @see ./🧪️tests/🤝️adopted-verdict */
 export async function verifyStoredProjectRecordV1({cachePath,key}){
@@ -484,7 +514,8 @@ export async function verifyStoredProjectRecordV1({cachePath,key}){
  if(header.digest!==sha256HexV1(JSON.stringify([recordStampV1(),null,key])))return{verdict:"other",headerDigest,verifier:process.pid};
  await settleClosureRowsV1(header.observations,value);
  const holds=await projectRowsHoldV1(header.observations,value,rest=>current(rest));
- return{verdict:holds?"holds":"stale",headerDigest,rows:header.observations.length,verifier:process.pid};
+ if(holds)return{verdict:"holds",headerDigest,rows:header.observations.length,verifier:process.pid};
+ return{verdict:"stale",headerDigest,rows:header.observations.length,staleRow:await firstFailingRowV1(header.observations,value).catch(()=>undefined),verifier:process.pid};
 }
 /** 🪡️ Records the answer one closure entry gave to the running inference. */
 export function recordClosureFactV1(path,answer){record("closure",path,answer);}
@@ -637,7 +668,7 @@ const facts = {
   exists: (path) => world.existsSync(path),
   stat: (path) => { try { return nodeType(world.statSync(path)); } catch (error) { return `!${error.code ?? "EUNKNOWN"}`; } },
   lstat: (path) => { try { return nodeType(world.lstatSync(path)); } catch (error) { return `!${error.code ?? "EUNKNOWN"}`; } },
-  readdir: (path) => { probeCountsV1.readdir++; try { return directoryFactV1(world.readdirSync(path, { withFileTypes: true }),true); } catch (error) { return `!${error.code ?? "EUNKNOWN"}`; } },
+  readdir: (path) => { probeCountsV1.readdir++; try { return directoryFactV1(world.readdirSync(path, { withFileTypes: true }),true,path); } catch (error) { return `!${error.code ?? "EUNKNOWN"}`; } },
   readdirNames: (path) => {probeCountsV1.readdir++;try{return directoryFactV1(world.readdirSync(path),false,path);}catch(error){return `!${error.code??"EUNKNOWN"}`;}},
   fileExists: (path) => {try{return world.statSync(path).isFile();}catch{return false;}},
   directoryExists: (path) => {try{return world.statSync(path).isDirectory();}catch{return false;}},
@@ -1264,6 +1295,8 @@ async function observationsHoldInRoundV1(observations, limit, stableDirectories,
   const check = async ({ kind, path, fact }) => {
     const parent = path.slice(0, Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\")));
     const absent = fact === false;
+    const loadedAnswer = loadedImplementationAnswerV1(kind, path, fact);
+    if (loadedAnswer !== undefined) return loadedAnswer;
     if (kind === "lstat" && stableDirectories.has(parent) || kind === "exists" && stableDirectories.has(parent) && (absent || symlinks !== true && !symlinks.has(path)) || (kind === "fileExists" || kind === "directoryExists") && absent && stableDirectories.has(parent) || (kind === "readdir" || kind === "readdirNames") && stableDirectories.has(path)) return true;
     if (kind === "file") {
       if (fact.error !== undefined) return fileFactHolds(path, fact);

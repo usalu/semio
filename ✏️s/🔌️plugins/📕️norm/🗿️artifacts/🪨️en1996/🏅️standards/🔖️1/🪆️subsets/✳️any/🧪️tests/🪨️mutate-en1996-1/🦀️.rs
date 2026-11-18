@@ -1,4 +1,4 @@
-//! 🦀️ EN 1996 exhaustive mutation case — the Rust SUBJECT half. `s.norm.en1996` is a semio-native artifact with no
+//! 🦀️ EN 1996 exhaustive mutation case — the Rust SUBJECT half. `s.norm-eurocode-materials.en1996` is a semio-native artifact with no
 //! third-party reader or writer, so its reference is the independent Python implementation registered as the oracle
 //! `en1996-1-python-independent`; this adapter drives this repository's own production dispatch over the whole
 //! `En1996Mutation` vocabulary — a masonry building: walls with their openings, load cases and concentrated loads, addressed by wall, load-case and member position.

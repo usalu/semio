@@ -74,11 +74,22 @@ export const refuseChildFailureV1 = (failure: OwnedCommandFailure): RepoErrorV1 
   : refuseProcessV1("failed", "execution.child-killed", { label: failure.label, signal: failure.outcome.signal ?? "" }, { cause: failure });
 
 type RefusalOptionsV1 = Readonly<{ environment?: LanguageEnvironmentV1; args?: readonly string[]; osLanguages?: OsLanguageListV1; write?: ProgressWriteV1; setExitCode?: (code: number) => void }>;
-type BilingualRefusalV1 = Readonly<{ name: "CargoLockRefused"; texts: Readonly<Record<string, string>>; diagnostic?: Readonly<{ stderr?: string }> }>;
+type BilingualRefusalV1 = Readonly<{ name: "CargoLockRefused" | "WindowsRenameRefused"; texts: Readonly<Record<string, string>>; diagnostic?: Readonly<{ stderr?: string }> }>;
 
 const isBilingualRefusalV1 = (value: unknown): value is BilingualRefusalV1 => {
   const row = value as Partial<BilingualRefusalV1> | null;
-  return typeof value === "object" && row !== null && row.name === "CargoLockRefused" && typeof row.texts === "object" && row.texts !== null;
+  return typeof value === "object" && row !== null && (row.name === "CargoLockRefused" || row.name === "WindowsRenameRefused") && typeof row.texts === "object" && row.texts !== null;
+};
+
+/** 🔎️ The first typed bilingual refusal of a fault, looked for through aggregated faults and causes (first failure first, bounded depth), so a settlement that wrapped it renders it instead of an internal error. */
+const firstBilingualRefusalV1 = (error: unknown, depth = 0): BilingualRefusalV1 | undefined => {
+  if (isBilingualRefusalV1(error)) return error;
+  if (depth >= 8 || !(error instanceof Error)) return undefined;
+  for (const member of error instanceof AggregateError ? error.errors : error.cause === undefined ? [] : [error.cause]) {
+    const found = firstBilingualRefusalV1(member, depth + 1);
+    if (found) return found;
+  }
+  return undefined;
 };
 
 /** 🪆️ The message of a fault with the messages of the faults it aggregates, so a settlement that failed for several reasons names each of them instead of only its own summary. */
@@ -91,7 +102,7 @@ export const refuseInternalV1 = (error: unknown): RepoErrorV1 => error instanceo
 
 /** 🚪️ Reports a refusal at the CLI boundary: a `RepoErrorV1` is rendered in the resolved language to the standard error and sets the exit status of its class; a failed child command is rendered as a refusal and passes on its own exit status; anything else is not handled and answers `false`. */
 export function reportRepoErrorV1(error: unknown, options: RefusalOptionsV1 = {}): boolean {
-  const bilingual = isBilingualRefusalV1(error) ? error : undefined;
+  const bilingual = firstBilingualRefusalV1(error);
   if (bilingual) {
     const language = resolveLanguageV1(CATALOG_LANGUAGES_V1, options.args ?? [], options.environment ?? process.env, options.osLanguages).language, write = options.write ?? processWriteV1;
     write(bilingual.texts[language] ?? "");

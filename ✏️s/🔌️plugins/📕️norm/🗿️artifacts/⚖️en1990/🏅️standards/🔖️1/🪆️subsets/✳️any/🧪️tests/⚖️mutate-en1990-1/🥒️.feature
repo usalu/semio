@@ -3,7 +3,7 @@
 @comparison-ordered-json-v1
 @mutations-en1990-1-any
 Feature: Apply every typed EN 1990 mutation against an independent Python implementation
-  `s.norm.en1990` is a semio-NATIVE artifact and no third party reads or writes it — checked, not
+  `s.norm-eurocode.en1990` is a semio-NATIVE artifact and no third party reads or writes it — checked, not
   assumed: PyPI serves no `en1990` distribution, and none for `eurocode`, `vdi3805` or `iso16757`
   either, and the nearest real packages (`structuralcodes`, `concreteproperties`, `anastruct`)
   implement design-code FORMULAE and speak no interchange format at all, so not one of them could be

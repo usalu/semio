@@ -1,0 +1,58 @@
+# R189: "0 MB free" on a Windows worker is a failed measurement, not a full disk (living report)
+
+Status at 07:07 UTC: LANDED 2026-11-18 07:00:08 to 07:01:39 UTC (entry in `landings.md`, hold 91 s, 20 gate files green, restore not needed; live files sha-equal to the staged ones). Landing script `☀️13/FLEET-ONE-MACHINE-SHARED-HOT-CACHE-AND-REMOTE-EXECUTION/🧰️scripts/R189/land.sh`.
+
+## 0. The wall and what it really was
+
+g1-m05 (Windows, 64 GB), 2026-11-18 06:22 UTC: "Stage tools needs 4096 MB free in C:\semio\.cache but only 0 MB are free". Cause chain in the code (read, not guessed):
+
+- The check is `readyDiskShortV1` (R146) fed by `readyFilesystemFactsV1` in `🚦️ready/🟦️.ts`. That provider called the runtime's `statfsSync` directly and computed `bavail * bsize`.
+- Every other free-space consumer of the build system already goes through `🆓️free-space` (`freeSpaceSyncV1`) or `nativeFreeSpaceSyncV1`, whose comments state that Windows has no `statfs` and asks the volume (`GetDiskFreeSpaceExW` through bun:ffi, `📁️directory/🪟️host/🟦️.ts`, `nativeWindowsSystemHostPortV1().availableBytes`). The readiness provider was one of the production sites that still called `statfsSync` raw: the scan law `📐️statfs/🧪️tests/🆓️unknown` ("every production call of the host statfs is either routed ... or kept for a named reason") was already red on the live tree because seven raw sites are not in its list (readiness, remote agent disk, resident host `makeRoomV1`, cargo launcher, budget `🖼️full`, owner publication initial, budget root).
+- A row of zeros gives `bavail*bsize = 0` (or any row with `bavail 0`), which `readyDiskShortV1` read as "0 MB available" and waited on forever (the stage cannot start, so the service never runs a collector either, the wait is a pure comparison). The inode guard (`files > 0 ? ffree : null`) was right: NTFS reports no inode table and is `null`, never 0, so "0 inodes" was never turned into "0 MB"; the byte value itself was the fault.
+- Not verifiable here (no Windows machine): what exactly bun 1.4.x returns for `statfsSync("C:\\semio\\.cache")` (a zero row, an all-NaN row, or a row with a block size and zero available blocks). The fix does not depend on it: on Windows `statfs` is not called any more, and every degenerate row from any platform is unknown.
+
+## 1. Finding on the way: R186 overwrote R185's landing (read-only evidence, repaired in this landing)
+
+`🚦️ready/🟦️.ts` and its schema live at sha `e8e56bf302ec` / R186's staged copies, built on the PRE-R185 base (R186 `base/f1` = R185 `base/f1` = `c0c683f62009`) and copied after R186 waited 134 s for R185's lock; the sha check of `land.sh` ran before the wait, not under the lock. So since 06:02:38 UTC the live ready code has no `readyDiskNeedV1`, no `recover` port, no `disk-collecting`/`disk-consumers`, no exemption of the running stage (grep count 0), while the R185 laws and the `🧹️disk-recovery` half of R185 are intact (`💽️disk-recovery` of ready: 0 pass 1 fail live before my landing). Everything R185 reported as live for the ready path (collect before waiting, `disk-consumers`) was not live. A clean three-way merge (R186 stage over R185 base with R185 stage, 0 conflicts) is the base of my edits (scratch `R189/merged-f1.ts`, `merged-f2.json`); landing it restores R185 and keeps R186. A note is in `landings.md` (FINDING by R189). Rule for all landing scripts: compare live and base sha INSIDE the lock.
+
+## 2. What is built (task 2)
+
+One typed provider, bytes or unknown with a reason, behind the same interface on every platform.
+
+- `🏃️process/🆓️free-space/🟦️.ts`:
+  - `FreeSpaceFactsV1` = `{known:true, availableBytes, totalBytes, freeInodes:number|null, source}` | `{known:false, reason, detail}`; reasons `unreadable | missing | incoherent-row | empty-row | host-call`.
+  - `judgeFreeSpaceRowV1(row)`: unknown unless block size >= 1 and available blocks finite and >= 0; NEW: a row that reports nothing (`blocks` not > 0 and `bavail` 0) is `empty-row`, because a really full volume still has blocks; bigint rows are handled; inodes only when `files > 0`, `ffree` finite, >= 0 and <= `files` (NTFS, btrfs, network shares: `null`, never 0; a real `ffree 0` with `files > 0` stays 0).
+  - `readFreeSpaceV1(path, {nearest, platform, read, windowsAvailableBytes})`: on `win32` (and no custom reader) the volume is asked through `windowsAvailableBytesV1` = `GetDiskFreeSpaceExW` via the existing bun:ffi host port (the caller-quota-aware figure), no `statfs`; a failing call (non-Windows machine, Win32 error, NaN, negative, infinite) is `host-call` unknown, never a number; nearest existing ancestor on every platform.
+  - `freeSpaceSyncV1` and `freeSpaceOfRowV1` are thin projections of the typed result, so every existing consumer (CAS partition, lease store, cache gc, disk recovery) is Windows-correct without a change: until now `freeSpaceSyncV1(path)` on Windows read the same zero row.
+  - Public entry `📦️packages/🟦️typescript/🆓️free-space` re-exports the new names.
+- Readiness `🚦️ready/🟦️.ts` (on the merged base): `readyFilesystemFactsV1` is now a projection of `readFreeSpaceV1`; `freeBytes` is `null` exactly when unknown and then carries `unknown:{reason, detail}`; `readyDiskShortV1` also ignores NaN, negative and infinite values; new `readyDiskUnknownV1` (the unmeasured paths) and `readyDiskUnmeasuredV1` (text `disk-unmeasured`, EN and DE); port `diskUnknown`. The loop warns once per (stage, path, reason) in the log, in both languages, then starts the stage ("unknown is not full"); the 97 % gate of the stage and the write error (`storeFullPattern`: `No space left (EDQUOT|ENOSPC)`) remain. A stage that is already running is neither gated nor warned about. The `statfsSync` import is gone from the file.
+- Remote agent `🛰️agent/💽️disk/🟦️.ts`: `remoteExecutionFreeBytesV1` goes through the same question (a Windows worker with `statfs` zeros would have had zero slots).
+
+## 3. Proof (tests)
+
+Red first (against the live tree: import errors for the missing names; `🪟️volume` red on behaviour: the old function returned the raw figure):
+- `🆓️free-space/🧪️tests/🪟️windows-shaped` (5): authored rows (`🧫️fixtures/🔣️.json`, 11 incl. a row of zeros, a full volume that still has blocks, no inode table, `ffree > files`, negative `ffree`, exhausted table) judged by TypeScript and by the independent Python oracle `🐍️.py`; bigint/NaN/negative rows; Windows-shaped fakes (bytes without inodes, nearest ancestor asked with the existing directory, throwing call, NaN/-1/Infinity); non-Windows machine asked for the Windows call is unknown; real volume equals Python `shutil.disk_usage` and `os.statvfs` (bytes within 2 GiB, total 1 %, inodes within 1 %).
+- `🚦️ready/🧪️tests/🕳️disk-unknown` (6): the g1-m05 wall (zero measurement -> stage starts, one bilingual warning, no `disk-short`); every degenerate answer unknown and never short; a real 500 MB shortage on a Windows-shaped volume still refuses with the typed text ("only 500 MB"/"nur 500 MB") and starts when space returns; no inode table -> no inode shortage, real exhausted table -> inodes shortage; a running stage is not judged; the real provider on a Windows-shaped host.
+- `🛰️agent/💽️disk/🧪️tests/🪟️volume` (2).
+- Existing: `🆓️unknown` row oracle extended by the "reports nothing" row (Python program updated to the same rule).
+- Under the lock (live, baseline compared): see section 6.
+
+## 4. Linux worker shape (task 3): what the check can know
+
+g1-m04's earlier failure was inode/quota exhaustion on `/home/deck`. `statfs` reports the whole filesystem: free blocks (`bavail` already excludes root-reserved blocks), the inode table (`files`/`ffree`, a real number on ext4/xfs, 0 on btrfs and some overlay/network filesystems -> `null`), and, only on XFS/ext4 with project quotas and an inherited project id on the directory, the project quota limits. It cannot see: user or group quotas (EDQUOT while the filesystem has plenty of blocks and inodes), a container/cgroup disk limit on an overlay, an NFS server quota. So a quota shortage still passes the up-front check and shows as the write error that the stage classifier names (`store-full`, errno EDQUOT, path). If the fleet wants the up-front refusal for quotas too, the only portable probe is a create-and-write probe in `.cache` (create a file, write 1 MiB, remove; EDQUOT/ENOSPC at that moment is a typed shortage); not built here (a new refusal resource, texts, and a decision on how often it runs), proposed.
+
+## 5. Not verified / limits
+
+- No Windows machine: the real `GetDiskFreeSpaceExW` call of this code is the existing, already law-tested host port (`🪟️host/🧪️tests`, Windows-shaped fakes), but its use for the readiness volume has not run on g1-m05. If the call fails there, the check says `host-call` in the log and the stage starts.
+- What bun returns for `statfsSync` on Windows is inferred, not observed.
+- Raw `statfsSync` remains in: resident host `makeRoomV1` (on Windows it evicts every spilled slice before each write: slower, not failing), cargo launcher image free bytes, budget `🖼️full`, owner publication initial, image-slack (mount of a Darwin image) and the scan law `🆓️unknown` stays red on them as before (1 failing law, baseline 5 pass 1 fail).
+- Quota blindness of `statfs` (section 4).
+
+## 6. Landing and the next step of g1-m05
+
+Landing: see the status line. Under the lock (live): free-space disk-full 3, lease admission 17, create-relief 5, directory host 11, `🆓️unknown` 5 pass 1 fail (equal to the baseline: the statfs-sites scan), statfs 4, sites 1, concurrent free-space 2, remote disk 6, new laws windows-shaped 5 / disk-unknown 6 / volume 2, ready resume 8, stage-plan 2, probes 4, tooling-compiler 4, failure-log 4, ready disk-recovery (R185's law) 5 (was 0 pass 1 fail before: the R186 overwrite), both standing preflights (2 and 10). After the release: holder-custody 6/0, stale-stage 14/0, ready main 41/0 (all live).
+
+g1-m05 after the landing (read-only, `/Users/Shared/semio-store/v1/origins/g1-m05`, 07:04 to 07:06 UTC):
+- The wall of 06:22 had cleared before my landing and without any change of ours. Timings: the last `tools` try failed 05:51 to 06:20; a new `tools` run was already running at 06:31 (2050 s old at 07:05). So the "0 MB" cleared by itself within about 10 minutes on the old code, which fits a failed or transient measurement (it does not prove the cause).
+- The readiness service of m05 restarted onto the new code at about 07:04:20 UTC (`startedMs` 42 s before my read) and adopted the running stage. Verbatim `ready.json` at 07:05: `state running`, `stage tools`, `stageIndex 4` of 5, `refusal null`, reason `adopted`: "Adopted stage tools, which was already running; not restarted." / "Stufe tools übernommen, sie lief schon; nicht neu gestartet.", tail `[repository:command] still running after 2050 s`, at 07:06 `[repo] still working after 2486 s; last phase started: source.served`. The log shows the build running (`native-artifact-input-stage:1560..1562`, `native-artifact-input-verification`), i.e. the `tools` stage is past its disk check and past the point where R187's preservation rename failed earlier; no preservation-rename line and no disk line appears.
+- So neither the new measurement nor the R187 rename fix has been exercised on a real Windows start yet: the next stage start of m05 (after this run ends or fails) is the first one. What to look for in `ready-log-*.txt`/`view.txt`: either no disk line at all (volume measured, enough space), or `Stage <x>: the free space in C:\semio\.cache could not be measured (host-call: ...)` (the Windows call failed and says why), or a real `disk-short`/`disk-collecting` with a believable MB figure.

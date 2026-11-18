@@ -24,12 +24,14 @@ import { devStreamMuxServer } from "../../../../🧰️framework/🛍️products
 import { semioBackboneVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/🔌️vite-plugins/🧱️backbone-vite-plugin/🟦️.ts";
 import { semioActivationVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🚀️activation-vite-plugin/🟦️.ts";
 import { semioBlobVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🫧️blob-vite-plugin/🟦️.ts";
+import { semioAgentBridgeRendezvousVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🛰️agent-bridge-rendezvous/🟦️.ts";
 import { semioExtensionStoreVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️installation/🟦️.ts";
 import { playGisMapTileServeMode } from "../../🔨️modules/📦️site/🗺️tile-serve-mode/🟦️.ts";
 import { playDevStaticDirMounts } from "../../🔨️modules/🧩️runtime/📦️assets/🟦️.ts";
 import { playActivationComponents, playExtensionDirectory, readPlayActivation } from "../../🔨️modules/🧩️runtime/♻️activation/🟦️.ts";
 import { playUnionReceiptVitePlugin } from "../../🔨️modules/🧩️runtime/♻️activation/🌐️vite/🟦️.ts";
-import { PLAY_HOST, playRuntimeModuleLayout, playScopeTargets } from "../../🔨️modules/🧩️runtime/🟦️.ts";
+import { PLAY_HOST } from "../../🔨️modules/🧩️runtime/📇️catalog/🟦️.ts";
+import { playRuntimeModuleLayout, playScopeTargets } from "../../🔨️modules/🧩️runtime/🟦️.ts";
 import { playPageOrigins } from "../../🔨️modules/📦️site/📄pages/🟦️.ts";
 
 const playDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -44,6 +46,7 @@ const runtimeTargets = playScopeTargets(scope);
 const engineFacet = scope === undefined ? "play" : "renderer";
 const resolvedPlaygroundAssets = runtimeTargets.flatMap(target => target.assets);
 const { extensionModuleDirNames } = playRuntimeModuleLayout(runtimeTargets);
+const scopeHasPuzzle = runtimeTargets.some(target => target.pluginId === "puzzle");
 
 export default defineOwnedBuildConfigFactory(({ command, mode }) => {
   const development = command === "serve" ? readPlayActivation(repoRoot, scope) : undefined;
@@ -61,6 +64,7 @@ export default defineOwnedBuildConfigFactory(({ command, mode }) => {
     resolve: {
       alias: [
         ...playgroundSceneHostResolveAliases(repoRoot),
+        ...(scopeHasPuzzle ? [] : [{ find: /^@semio-tech\/puzzle-2d$/u, replacement: path.join(playDir, "🏗️builder/🌐️vite/🫙️surface-sessions/🟦️.ts") }]),
         { find: /^@semio-tech\/ui-react\/test$/u, replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🖌️render/🟦️.ts") },
         { find: /^@semio-tech\/ui-react\/runtime$/u, replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎠️runtime/🟦️.ts") },
         { find: /^@semio-tech\/ui-react$/u, replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx") },
@@ -84,14 +88,15 @@ export default defineOwnedBuildConfigFactory(({ command, mode }) => {
       watch: process.env.SEMIO_TECH_PLAY_FROZEN === "true" ? null : { ignored: ["**/📇️registry/🤖️generated/**", "**/🤖️generated/**"] },
     },
     plugins: [
+      managedWasmPackagesVitePluginV1(frameworkOsEngineDeliveriesV1(repositoryCachePartitionRootDataV1(repoRoot,"products"),{version:1,mode:readBuildMode(mode),facet:engineFacet}).map(({packageName,root,entry,files,entrypoint})=>({packageName,root,entry,files,entrypoint}))),
       canonicalWasmBuildVitePlugin(repoRoot, readBuildMode(mode)),
       semioServeCloseVitePlugin(),
       ...semioHostHtmlVitePlugin(repoRoot, { title: "semio · Play", entry: "./🟦️.tsx", bodyClass: "h-screen w-screen overflow-hidden bg-background text-foreground", cnameHost: PLAY_HOST }),
       semioEmojiIndexHtmlVitePlugin(playDir),
-      managedWasmPackagesVitePluginV1(frameworkOsEngineDeliveriesV1(repositoryCachePartitionRootDataV1(repoRoot,"products"),{version:1,mode:readBuildMode(mode),facet:engineFacet}).map(({packageName,root,entry,files,entrypoint})=>({packageName,root,entry,files,entrypoint}))),
       playgroundFlowWasmDevStubPlugin(repoRoot,flowBrowserDeliveryV1(repoRoot,repositoryCachePartitionRootDataV1(repoRoot,"products"),{version:1,mode:readBuildMode(mode),command})),
       semioBackboneVitePlugin(),
       semioBlobVitePlugin(),
+      semioAgentBridgeRendezvousVitePlugin({ shellKind: "react" }),
       ...(development && scope === undefined ? [playUnionReceiptVitePlugin({ workspace: repoRoot })] : []),
       ...(development ? [semioActivationVitePlugin({ receiptDirectory: development.receiptDirectory, moduleRoot: pluginModulesDir, installRoot: installedExtensionsDir, components: playActivationComponents(repoRoot, development.extensionDirectories, development.receipt.plugins.map(plugin => plugin.pluginId)) })] : []),
       ...(command === "serve" ? [semioExtensionStoreVitePlugin({ installRoot: installedExtensionsDir, repoRoot, streams: devStreamMuxServer })] : []),

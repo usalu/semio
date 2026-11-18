@@ -113,7 +113,7 @@ print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.string
 
 test("the elastic rust capacity sizes a new compiler image from need and host, the strict storage envelope follows the same rule, and agrees with an independent Python model",()=>{
  const validate=new Ajv({strict:true}).compile(schema.$defs.elasticCapacityCase),rule=policy.elastic.rust,declared=policy.partitions.rust.capacityBytes;
- expect(new Ajv({strict:true}).compile(schema.$defs.elasticPartition)(rule)).toBe(true);expect(rule.automatic).toBe(true);expect(rule.pressureFreeBytes).toBeLessThanOrEqual(8*2**30);expect(rule.needBytes).toBe(declared);
+ expect(new Ajv({strict:true}).compile(schema.$defs.elasticPartition)(rule)).toBe(true);expect(rule.automatic).toBe(true);expect(rule.pressureFreeBytes).toBeLessThanOrEqual(8*2**30);expect(rule.needBytes).toBeLessThan(declared);expect(rule.needBytes).toBeGreaterThanOrEqual(rule.minimumBytes);
  const model=`import json,sys
 rule,rows=json.loads(sys.argv[1]),json.loads(sys.argv[2])
 out={}
@@ -218,7 +218,7 @@ test("a tiny foreign receipt of one partition is ignored for that partition and 
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 
-test("a raw fixed image keeps freed blocks, the bloat rule recognises it, and the elastic partitions carry the rule; agrees with an independent Python model",()=>{
+test("the bloat rule recognises host blocks an idle image no longer uses, and the elastic partitions carry the rule; agrees with an independent Python model",()=>{
  const {elasticBloatedV1}=require("../📐️elastic/🟦️.ts"),GiB=2**30,rows:[number,number,number][]=[];
  for(const allocated of[0,GiB,3*GiB,10*GiB,24*GiB,45*GiB])for(const used of[0,GiB/2,GiB,3*GiB,12*GiB])for(const free of[2*GiB,20*GiB,47*GiB,49*GiB,300*GiB])rows.push([allocated,used,free]);
  for(const name of["graph","products","rust"] as const){
@@ -264,4 +264,13 @@ print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.string
   const hostFree=require("node:fs").statfsSync(root),allowed=Math.floor(hostFree.bavail*hostFree.bsize*(100-graph.hostFreeReservePercent)/100/graph.alignBytes)*graph.alignBytes;expect(effectiveCapacityV1(directory,graph.minimumBytes,graph)).toBe(Math.max(born,Math.min(born+6*GiB,graph.maximumBytes,allowed)));
   expect(effectiveCapacityV1(directory,graph.minimumBytes,graph)).toBeLessThanOrEqual(graph.maximumBytes);
  }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+test("every partition has a bloat rule, the common one is schema-valid, and the rust image is sized from its working set instead of its cap",()=>{
+ const {repositoryPartitionReclaimRuleV1}=require("../🟦️.ts"),{elasticCapacityV1}=require("../📐️elastic/🟦️.ts"),GiB=2**30;
+ expect(new Ajv({strict:true}).compile(schema.$defs.reclaimRule)(policy.reclaim)).toBe(true);
+ for(const name of Object.keys(policy.partitions))expect(repositoryPartitionReclaimRuleV1(name)).toEqual((policy.elastic as Record<string,unknown>)[name]??policy.reclaim);
+ expect(policy.elastic.rust.needBytes).toBeLessThan(policy.elastic.rust.maximumBytes);
+ expect(elasticCapacityV1(policy.elastic.rust,policy.elastic.rust.minimumBytes,7*GiB)).toBe(policy.elastic.rust.minimumBytes);
+ expect(elasticCapacityV1(policy.elastic.rust,policy.elastic.rust.minimumBytes,400*GiB)).toBe(40*GiB);
 });

@@ -208,7 +208,7 @@ fn fem3d_solve_all_returns_case_and_combination_results() {
 #[test]
 fn self_weight_case_produces_nonzero_reactions() {
     let (mut doc, _e, _iy, l, _p, _iz) = cantilever_fixture();
-    let (area, rho) = (doc.sections[0].area, doc.materials.get(0).expect("material").rho);
+    let (area, rho) = (doc.sections[0].area, doc.materials.get().get(0).expect("material").rho);
     doc.load_cases = vec![FemLoadCase { id: "self".into(), name: "Self Weight".into(), loads: vec![], self_weight: true }];
 
     let results = fem3d_solve_all(&doc).expect("solves");

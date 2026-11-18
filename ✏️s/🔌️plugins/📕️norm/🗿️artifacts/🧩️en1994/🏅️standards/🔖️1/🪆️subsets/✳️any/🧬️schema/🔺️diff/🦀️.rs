@@ -132,7 +132,7 @@ mod apply_and_inverse;
 #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
-#[artifact_schema(id = "s.norm.en1994")]
+#[artifact_schema(id = "s.norm-eurocode-structural.en1994")]
 pub struct En1994Diff {
     #[state(artifact)]
     pub annex: Option<semio_s_plugin_norm_compliance::AnnexChoice>,

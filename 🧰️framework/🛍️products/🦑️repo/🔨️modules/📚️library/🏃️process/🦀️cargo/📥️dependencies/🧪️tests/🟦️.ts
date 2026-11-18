@@ -22,3 +22,14 @@ test("flag views are compared per target: the guard agrees with node:util parseA
     expect(oracle(row.selections),row.name).toBe(row.refused);
   }
 });
+
+test("an adopted declared input is named by its exact request: only an identical request reuses the held configuration view",async()=>{
+  const {adoptedCargoSelectionKeyV1}=await import("../🟦️.ts"),{isDeepStrictEqual}=await import("node:util"),consumption={kind:"compiler",producer:"artifact",operation:"build"} as const,args=["build","--locked","--manifest-path","/w/Cargo.toml","--target","wasm32-wasip2"],environment={CARGO_HOME:"/h",CARGO_TARGET_DIR:"/t",GONE:undefined};
+  const key=adoptedCargoSelectionKeyV1("/w/./Cargo.toml","/w/x/..",args,consumption,environment);
+  expect(key).toBe(adoptedCargoSelectionKeyV1("/w/Cargo.toml","/w",args,consumption,{CARGO_TARGET_DIR:"/t",CARGO_HOME:"/h"}));
+  const oracle=(left:Record<string,string|undefined>,right:Record<string,string|undefined>)=>isDeepStrictEqual(Object.entries(left).filter(([,v])=>v!==undefined).sort(),Object.entries(right).filter(([,v])=>v!==undefined).sort());
+  for(const other of [{...environment,CARGO_TARGET_DIR:"/u"},{...environment,EXTRA:"1"}])expect(key===adoptedCargoSelectionKeyV1("/w/Cargo.toml","/w",args,consumption,other)).toBe(oracle(environment,other));
+  expect(key).not.toBe(adoptedCargoSelectionKeyV1("/w/Cargo.toml","/w",[...args,"--unit-graph"],consumption,environment));
+  expect(key).not.toBe(adoptedCargoSelectionKeyV1("/w/Cargo.toml","/w",args,{...consumption,operation:"check"},environment));
+  expect(key).not.toBe(adoptedCargoSelectionKeyV1("/w/Other.toml","/w",args,consumption,environment));
+});

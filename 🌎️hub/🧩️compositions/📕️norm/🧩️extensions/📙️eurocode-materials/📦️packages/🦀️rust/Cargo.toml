@@ -4,7 +4,7 @@ name = "semio-hub-norm-eurocode-materials"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Norm Eurocode Materials plugin — Eurocode material design: concrete, steel, composite, timber, masonry and aluminium (EN 1992–1996, EN 1999)"
+description = "Norm Eurocode Materials plugin — Eurocode timber, masonry and aluminium structures (EN 1995, EN 1996, EN 1999)"
 
 [lints]
 workspace = true
@@ -24,18 +24,6 @@ name = "compliance_gate"
 path = "../../🧪️tests/🚦️compliance-gate/🦀️.rs"
 
 [dependencies]
-semio-s-artifact-norm-en1992-viewer = { workspace = true }
-semio-s-artifact-norm-en1992-model = { workspace = true }
-semio-s-artifact-norm-en1992-editor = { workspace = true }
-semio-s-artifact-norm-en1992 = { workspace = true }
-semio-s-artifact-norm-en1993-viewer = { workspace = true }
-semio-s-artifact-norm-en1993-model = { workspace = true }
-semio-s-artifact-norm-en1993-editor = { workspace = true }
-semio-s-artifact-norm-en1993 = { workspace = true }
-semio-s-artifact-norm-en1994-viewer = { workspace = true }
-semio-s-artifact-norm-en1994-model = { workspace = true }
-semio-s-artifact-norm-en1994-editor = { workspace = true }
-semio-s-artifact-norm-en1994 = { workspace = true }
 semio-s-artifact-norm-en1995-viewer = { workspace = true }
 semio-s-artifact-norm-en1995-model = { workspace = true }
 semio-s-artifact-norm-en1995-editor = { workspace = true }
@@ -60,9 +48,6 @@ semio-plugin = { workspace = true }
 
 [dev-dependencies]
 semio-framework-test-fixtures = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
-semio-s-artifact-norm-en1992-examples = { workspace = true }
-semio-s-artifact-norm-en1993-examples = { workspace = true }
-semio-s-artifact-norm-en1994-examples = { workspace = true }
 semio-s-artifact-norm-en1995-examples = { workspace = true }
 semio-s-artifact-norm-en1996-examples = { workspace = true }
 semio-s-artifact-norm-en1999-examples = { workspace = true }

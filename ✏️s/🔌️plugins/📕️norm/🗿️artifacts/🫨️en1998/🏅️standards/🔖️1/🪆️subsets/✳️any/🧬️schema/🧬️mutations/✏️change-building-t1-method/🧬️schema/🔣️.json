@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-building-t1-method/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1998/mutation/change-building-t1-method/schema.json",
   "title": "ChangeBuildingT1Method",
   "type": "object",
   "additionalProperties": false,
@@ -34,7 +34,7 @@
       }
     },
     "newT1Method": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/$defs/T1Method",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1998/snapshot.json#/$defs/T1Method",
       "x-semio-ui": {
         "role": "value",
         "label": {

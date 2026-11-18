@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-beam-construction/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1994/mutation/change-beam-construction/schema.json",
   "title": "ChangeBeamConstruction",
   "type": "object",
   "additionalProperties": false,
@@ -30,7 +30,7 @@
       }
     },
     "newConstruction": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/ConstructionMethod",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1994/snapshot.json#/$defs/ConstructionMethod",
       "x-semio-ui": {
         "role": "value",
         "label": {

@@ -95,7 +95,7 @@ export function registerShipsVectorsRuleSurveyTests(): void {
       { id: wallId(inside, -1), surface: surfaceId(inside), side: -1, x: 100, y0: 300, y1: 400 },
       { id: wallId(inside, 1), surface: surfaceId(inside), side: 1, x: 300, y0: 300, y1: 400 },
     ];
-    const shown = { kind: "surveyed", width: 1000, height: 700, surfaces: [{ id: surfaceId(inside), x0: 100, x1: 300, y: 300 }, floor], keepouts: [{ x: 396, y: 296, width: 208, height: 48 }, { x: 396, y: 496, width: 208, height: 48 }, { x: 96, y: 300, width: 208, height: 100 }], walls, fixtures: [] };
+    const shown = { kind: "surveyed", width: 1000, height: 700, surfaces: [{ id: surfaceId(inside), x0: 100, x1: 300, y: 300 }, floor], keepouts: [{ x: 396, y: 296, width: 208, height: 48 }, { x: 396, y: 496, width: 208, height: 48 }], walls, fixtures: [] };
     expect(survey(root)).toEqual(shown);
     expect(survey(document)).toEqual(shown);
     folded.remove();

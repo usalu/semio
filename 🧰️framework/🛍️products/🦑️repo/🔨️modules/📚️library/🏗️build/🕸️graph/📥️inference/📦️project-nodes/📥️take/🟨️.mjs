@@ -1,4 +1,6 @@
 import { execFile } from "node:child_process";
+import { readFileSync, readdirSync, statSync } from "node:fs";
+import { join } from "node:path";
 import { localMachineSpeedFactorV1, scaledMillisecondsV1 } from "../../../../🐢️speed/🟨️.mjs";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 
@@ -29,11 +31,12 @@ export function takeAdmittedV1(attempt, gate, signal, state = { flying: 0 }) {
   };
 }
 
-/** 🛤️ The two lanes of a take pass: the owners whose record is stored here (`local`, decided by the CPU of this process) and the others (`remote`, decided by the fleet cache and the network), which run beside each other so that an owner the fleet holds does not wait behind thousands of local looks. Every name is in exactly one lane, in its order; an empty lane is left out. */
-export function takeLanesV1(names, isPresent) {
-  const local = [], remote = [];
-  for (const name of names) (isPresent(name) ? local : remote).push(name);
-  return [local, remote].filter(lane => lane.length > 0);
+/** 🛤️ The lanes of a take pass: the owners the pools of the fleet say they stored and that are not stored here (`hot`, first: their look finds a record), the owners whose record is stored here (`local`, decided by the CPU of this process) and the others (`remote`, decided by the fleet cache and the network), which run beside each other so that an owner the fleet holds does not wait behind thousands of local looks. Every name is in exactly one lane, in its order; an empty lane is left out.
+ * @see ./🧪️tests/🔥️hot-lane */
+export function takeLanesV1(names, isPresent, isPublished = () => false) {
+  const hot = [], local = [], remote = [];
+  for (const name of names) (isPresent(name) ? local : isPublished(name) ? hot : remote).push(name);
+  return [hot, local, remote].filter(lane => lane.length > 0);
 }
 
 /** 🐘️ The names of a take pass in two groups: the light ones, which run together in the lanes, and the heavy ones (the owners the cost table calls `alone` or `slow`), which are looked at one at a time after every light one has been looked at, each in its order. Every name is in exactly one group.
@@ -165,6 +168,9 @@ export function createCpuProgressV1({ sample, now = () => performance.now(), pol
 /** 🗣️ The plain text of a read that stopped for lack of progress, in one language: how long nothing moved, how many owners are done, which run and what the read waits on. */
 export function takeNoProgressTextV1(language, fields) { return fill(TEXTS[language === "de" ? "de" : "en"].noProgress, fields); }
 
+/** 🔒️ The outcomes that decide an owner: once an owner is present, fetched or inferred a later look that finds it stale or missing (the look of the take pass runs beside the inference of the same owner) never takes it back, so a ledger never shows an owner as stale that this read already has. */
+const DECIDED_V1 = Object.freeze(["present", "fetched", "inferred"]);
+
 /** 📒️ What a reader knows about its owners while it resolves them: the outcome of every look, which owners it published as wanted for the fleet and how many run here; the counts it reports and the line in both languages. An owner counts once, by its last outcome. */
 export function createTakeLedgerV1(total) {
   const states = new Map(), wanted = new Set();
@@ -175,12 +181,14 @@ export function createTakeLedgerV1(total) {
     return Object.freeze({ total, present, fetched, here, stale, running, wanted: wanted.size, done: present + fetched + here, missing: total - present - fetched - here });
   };
   return Object.freeze({
-    mark(name, outcome) { states.set(name, outcome); if (outcome === "present" || outcome === "fetched" || outcome === "inferred") wanted.delete(name); },
+    mark(name, outcome) { if (!DECIDED_V1.includes(outcome) && DECIDED_V1.includes(states.get(name))) return; states.set(name, outcome); if (outcome === "present" || outcome === "fetched" || outcome === "inferred") wanted.delete(name); },
     want(names) { for (const name of names) if (!["present", "fetched", "inferred"].includes(states.get(name))) wanted.add(name); },
     run(delta) { running = Math.max(0, running + delta); },
     state(name) { return states.get(name); },
     counts,
     line(language) { return fill(TEXTS[language === "de" ? "de" : "en"].progress, counts()); },
+    staleRowLine(language, name, row) { return fill(TEXTS[language === "de" ? "de" : "en"].staleRow, { name, kind: row.kind, path: row.path, fact: row.fact }); },
+    staleLine(language, name) { return fill(TEXTS[language === "de" ? "de" : "en"].staleOwner, { name, count: counts().stale }); },
     waveLine(language) { const row = counts(); return fill(TEXTS[language === "de" ? "de" : "en"].wave, row); },
   });
 }
@@ -210,18 +218,38 @@ export async function takePassV1({ names, attempt, concurrency = TAKE_POLICY_V1.
   return outcomes;
 }
 
-/** 🔁️ Looks again at the cache for the owners that are still missing, with a growing pause: `queue()` names the owners not started yet (a batch of at most `pollBatch` of them is looked at, rotating, so every owner gets its turn), `attempt(name)` answers like in {@link takePassV1}; a record that appeared is reported to `arrived(name, outcome)` and resets the pause. Stops when `stop()` is true or `signal` aborts; answers how many looks it made and how many records arrived. */
-export async function takePollV1({ queue, attempt, arrived, stop, signal, concurrency, sleep = (milliseconds, abort) => new Promise(resolve => { const timer = setTimeout(resolve, milliseconds); abort?.addEventListener("abort", () => { clearTimeout(timer); resolve(); }, { once: true }); }), policy = TAKE_POLICY_V1 }) {
+/** 📣️ The names of the owners that the pools of the fleet say they stored: every pool child appends the name to `pool-published-<wave>.txt` below its origin in the shared store, so a reader finds them with one directory read per origin and looks at those first instead of rotating through thousands of owners. Files older than `publishedMaximumAgeMilliseconds` and everything unreadable count for nothing.
+ * @see ./🧪️tests/📣️published/🟦️.ts */
+export function fleetPublishedNamesV1(store, now = Date.now(), policy = TAKE_POLICY_V1) {
+  const names = new Set();
+  if (typeof store !== "string" || store === "") return names;
+  let origins = [];
+  try { origins = readdirSync(join(store, "v1", "origins")); } catch { return names; }
+  for (const origin of origins) {
+    const directory = join(store, "v1", "origins", origin);
+    let files = [];
+    try { files = readdirSync(directory).filter(file => /^pool-published-[0-9a-f]+\.txt$/u.test(file)); } catch { continue; }
+    for (const file of files) { try { if (now - statSync(join(directory, file)).mtimeMs > policy.publishedMaximumAgeMilliseconds) continue; for (const line of readFileSync(join(directory, file), "utf8").split("\n")) if (line !== "") names.add(line); } catch {} }
+  }
+  return names;
+}
+
+/** 🔁️ Looks again at the cache for the owners that are still missing, with a growing pause: `queue()` names the owners not started yet (a batch of at most `pollBatch` of them is looked at, rotating, so every owner gets its turn), `attempt(name)` answers like in {@link takePassV1}; a record that appeared is reported to `arrived(name, outcome)` and resets the pause. With `hotOnly` only the owners the fleet lists are looked at, every `pollFirstMilliseconds`, and nothing is rotated through. Stops when `stop()` is true or `signal` aborts; answers how many looks it made and how many records arrived. */
+export async function takePollV1({ queue, attempt, arrived, stop, signal, hot, hotOnly = false, now = Date.now, concurrency, sleep = (milliseconds, abort) => new Promise(resolve => { const timer = setTimeout(resolve, milliseconds); abort?.addEventListener("abort", () => { clearTimeout(timer); resolve(); }, { once: true }); }), policy = TAKE_POLICY_V1 }) {
   let round = 0, offset = 0, looks = 0, found = 0;
+  const missedAt = new Map();
   while (stop() !== true && signal?.aborted !== true) {
-    await sleep(takePollWaitV1(round, policy), signal);
+    const listed = () => { const published = hot?.(); return published === undefined || published.size === 0 ? [] : queue().filter(name => published.has(name) && now() - (missedAt.get(name) ?? -Infinity) >= policy.hotRetryMilliseconds); };
+    await sleep(hotOnly || listed().length > 0 ? policy.pollFirstMilliseconds : takePollWaitV1(round, policy), signal);
     if (stop() === true || signal?.aborted === true) break;
-    const names = queue();
-    if (names.length === 0) { round++; continue; }
-    offset %= names.length;
-    const batch = names.slice(offset, offset + policy.pollBatch);
-    if (batch.length < policy.pollBatch) batch.push(...names.slice(0, Math.min(names.length - batch.length, policy.pollBatch - batch.length)));
-    offset += policy.pollBatch;
+    const names = queue(), first = listed(), batch = first.slice(0, policy.pollBatch);
+    if (names.length === 0 || hotOnly && batch.length === 0) { round++; continue; }
+    if (batch.length === 0) {
+      offset %= names.length;
+      batch.push(...names.slice(offset, offset + policy.pollBatch));
+      if (batch.length < policy.pollBatch) batch.push(...names.slice(0, Math.min(names.length - batch.length, policy.pollBatch - batch.length)));
+      offset += policy.pollBatch;
+    }
     let hit = 0, next = 0;
     await Promise.all(Array.from({ length: Math.min(concurrency ?? takeConcurrencyV1(Infinity, policy), batch.length) }, async () => {
       while (next < batch.length && stop() !== true) {
@@ -230,11 +258,24 @@ export async function takePollV1({ queue, attempt, arrived, stop, signal, concur
         let outcome;
         try { outcome = await attempt(name); } catch { continue; }
         if (outcome === "present" || outcome === "fetched") { hit++; found++; await arrived(name, outcome); }
+        else missedAt.set(name, now());
       }
     }));
     round = hit > 0 ? 0 : round + 1;
   }
   return Object.freeze({ looks, found });
+}
+
+/** 🎣️ The take pass of a read that adopts before it looks: beside the lanes of `takePassV1` (own looks, slow under load) an adopt loop (`takePollV1` with `hotOnly`, `adoptConcurrency` looks at once, each owner again after `adoptRetryMilliseconds`) looks at every undecided owner that the fleet lists as stored as soon as it is listed, so a record the fleet delivers is taken within one poll of its publication and never waits for the lanes; the loop ends with the lanes or when `stop()` says every owner is decided. Answers what the adopt loop did.
+ * @see ./🧪️tests/🎣️fetch-first/🟦️.ts */
+export async function takeFetchFirstV1({ lanes, heavy = [], concurrency = TAKE_POLICY_V1.concurrency, attempt, signal, mark = () => {}, hot, queue, arrived, stop = () => false, now, sleep, policy = TAKE_POLICY_V1 }) {
+  const adopting = new AbortController(), abort = signal === undefined ? adopting.signal : AbortSignal.any([signal, adopting.signal]);
+  const adopt = takePollV1({ hot, hotOnly: true, queue, attempt, arrived, stop, signal: abort, now, sleep, concurrency: Math.min(policy.adoptConcurrency, concurrency), policy: { ...policy, hotRetryMilliseconds: policy.adoptRetryMilliseconds } }).catch(() => Object.freeze({ looks: 0, found: 0 }));
+  try {
+    await Promise.all(lanes.map(lane => takePassV1({ names: lane, concurrency, attempt, signal, mark })));
+    await takePassV1({ names: heavy, concurrency: 1, attempt, signal, mark });
+  } finally { adopting.abort(); }
+  return adopt;
 }
 
 /**

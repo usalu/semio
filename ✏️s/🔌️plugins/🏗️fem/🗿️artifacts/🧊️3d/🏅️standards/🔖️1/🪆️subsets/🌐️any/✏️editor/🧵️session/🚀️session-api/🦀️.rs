@@ -23,7 +23,7 @@ pub(super) fn current_identity(app_instance_id: u32) -> Option<Identity> {
 pub(super) fn identity_live(identity: Identity) -> bool { MOUNTED.with(|registry| registry.borrow().current.iter().flatten().any(|current| current.identity == identity)) }
 
 pub(super) fn source_version(render: AppRenderOperationContext) -> semio_framework_value_registry::fixed_request_owners::RequestSourceVersion { semio_framework_value_registry::fixed_request_owners::RequestSourceVersion { base_revision: render.base_revision.0, generation: render.generation.0, canonical_revision: render.canonical_base_revision } }
-fn identity_version(identity: Identity) -> semio_framework_value_registry::fixed_request_owners::RequestSourceVersion { semio_framework_value_registry::fixed_request_owners::RequestSourceVersion { base_revision: identity.base_revision.0, generation: identity.generation.0, canonical_revision: identity.canonical_base_revision } }
+pub(super) fn identity_version(identity: Identity) -> semio_framework_value_registry::fixed_request_owners::RequestSourceVersion { semio_framework_value_registry::fixed_request_owners::RequestSourceVersion { base_revision: identity.base_revision.0, generation: identity.generation.0, canonical_revision: identity.canonical_base_revision } }
 pub(super) fn record_terminal(identity: Identity, kind: semio_framework_value_registry::fixed_request_owners::RequestTerminalKind) {
     MOUNTED.with(|registry| { let mut registry = registry.borrow_mut(); if let Some(slot) = registry.current.iter().position(|current| current.is_some_and(|current| current.identity == identity)) { if let Some((owner, _, _)) = registry.requests.at(slot) { registry.requests.record_terminal(owner, identity_version(identity), identity.job, kind); } } });
 }
@@ -33,7 +33,7 @@ pub(super) type RequestKey = semio_framework_value_registry::fixed_request_owner
 pub enum ConsumerKey { Model, Window(semio_plugin::WindowConfigAuthorityIdentity) }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) struct PhysicalRequestSpec { pub(super) family: u8, pub(super) namespace: u8, pub(super) index: usize }
-fn physical_parts(snapshot: &Fem3dSnapshot, request: Fem3dResultRequest) -> Option<(PhysicalRequestSpec, &str)> {
+pub(super) fn physical_parts(snapshot: &Fem3dSnapshot, request: Fem3dResultRequest) -> Option<(PhysicalRequestSpec, &str)> {
     let family = if request.mode.is_some() { 1 } else if request.buckling.is_some() { 2 } else { 0 };
     let index = request.mode.or(request.buckling).unwrap_or(0);
     let (namespace, source) = if family == 1 { (2, "none") } else { match request.source { Fem3dResultSource::FirstCase => snapshot.load_cases.first().map_or((2, "none"), |case| (0, case.id.as_str())), Fem3dResultSource::Case(index) => (0, snapshot.load_cases.get(index)?.id.as_str()), Fem3dResultSource::Combination(index) => (1, snapshot.combinations.get(index)?.id.as_str()) } };
@@ -41,15 +41,15 @@ fn physical_parts(snapshot: &Fem3dSnapshot, request: Fem3dResultRequest) -> Opti
     Some((spec, source))
 }
 #[cfg(test)]
-fn request_key(snapshot: &Fem3dSnapshot, request: Fem3dResultRequest) -> Option<RequestKey> { let (spec, source) = physical_parts(snapshot, request)?; RequestKey::from_segments(&[&[spec.family], &[spec.namespace], &(spec.index as u64).to_le_bytes(), source.as_bytes()]) }
+pub(super) fn request_key(snapshot: &Fem3dSnapshot, request: Fem3dResultRequest) -> Option<RequestKey> { let (spec, source) = physical_parts(snapshot, request)?; RequestKey::from_segments(&[&[spec.family], &[spec.namespace], &(spec.index as u64).to_le_bytes(), source.as_bytes()]) }
 #[cfg(test)]
-fn resolve_physical_request(snapshot: &Fem3dSnapshot, spec: PhysicalRequestSpec, id: &str) -> Option<Fem3dResultRequest> {
+pub(super) fn resolve_physical_request(snapshot: &Fem3dSnapshot, spec: PhysicalRequestSpec, id: &str) -> Option<Fem3dResultRequest> {
     let source = if spec.namespace == 2 { Fem3dResultSource::FirstCase } else if spec.namespace == 0 { Fem3dResultSource::Case(snapshot.load_cases.iter().position(|case| case.id == id)?) } else { Fem3dResultSource::Combination(snapshot.combinations.iter().position(|case| case.id == id)?) };
     Some(Fem3dResultRequest { source, mode: (spec.family == 1).then_some(spec.index), buckling: (spec.family == 2).then_some(spec.index) })
 }
 #[cfg(test)]
-fn resolve_request(registry: &Registry, snapshot: &Fem3dSnapshot, owner: semio_framework_value_registry::fixed_key_slots::FixedKeySlot) -> Option<Fem3dResultRequest> { resolve_physical_request(snapshot, registry.request_specs[owner.index()]?, registry.requests.request_name(owner)?) }
-fn prepare_result_demand(registry: &mut Registry, render: AppRenderOperationContext, consumer: ConsumerKey, window: &str, spec: PhysicalRequestSpec, source: &str, version: semio_framework_value_registry::fixed_request_owners::RequestCandidateVersion, grant: RetainedCloneGrant) -> RetainedCloneProgress {
+pub(super) fn resolve_request(registry: &Registry, snapshot: &Fem3dSnapshot, owner: semio_framework_value_registry::fixed_key_slots::FixedKeySlot) -> Option<Fem3dResultRequest> { resolve_physical_request(snapshot, registry.request_specs[owner.index()]?, registry.requests.request_name(owner)?) }
+pub(super) fn prepare_result_demand(registry: &mut Registry, render: AppRenderOperationContext, consumer: ConsumerKey, window: &str, spec: PhysicalRequestSpec, source: &str, version: semio_framework_value_registry::fixed_request_owners::RequestCandidateVersion, grant: RetainedCloneGrant) -> RetainedCloneProgress {
     if registry.app_slots.lookup(render.app_instance_id).is_none() { let bytes = size_of::<u32>() + size_of::<semio_framework_value_registry::fixed_key_slots::FixedKeySlot>(); if grant.maximum_items == 0 || grant.maximum_copy_bytes < bytes || grant.maximum_depth == 0 || registry.app_slots.claim(render.app_instance_id).is_none() { return Default::default(); } return RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() }; }
     let consumer_index = registry.requests.consumer_index(render.app_instance_id, consumer);
     if consumer == ConsumerKey::Model && consumer_index.is_none() { return registry.requests.claim_consumer_controlled(render.app_instance_id, consumer, grant).map_or(Default::default(), |step| step.progress); }
@@ -95,7 +95,7 @@ pub fn prepare_snapshot_read(render: AppRenderOperationContext, snapshot: &Fem3d
     prepare_snapshot_admission(render, snapshot, grant)
 }
 
-fn prepare_snapshot_admission(render: AppRenderOperationContext, snapshot: &Fem3dSnapshot, grant: RetainedCloneGrant) -> semio_plugin::MountedSnapshotReadPreparation {
+pub(super) fn prepare_snapshot_admission(render: AppRenderOperationContext, snapshot: &Fem3dSnapshot, grant: RetainedCloneGrant) -> semio_plugin::MountedSnapshotReadPreparation {
     let mut progress = RetainedCloneProgress::default();
     if render.app_instance_id == 0 || snapshot.solids.len() > MAXIMUM_REGIONS || snapshot.nodes.len() > MAXIMUM_NODES || snapshot.elements.len() > MAXIMUM_ELEMENTS || snapshot.supports.len() > MAXIMUM_SUPPORTS {
         return Default::default();
@@ -317,9 +317,9 @@ impl Fem3dResultBorrow<'_> {
     pub fn reaction_values(&self, index: usize) -> Option<[f64; 6]> { self.child.full_reactions.get(index).copied() }
 }
 
-fn select_result_shell(current: Option<u16>, retained: Option<u16>) -> Option<u16> { current.or(retained) }
+pub(super) fn select_result_shell(current: Option<u16>, retained: Option<u16>) -> Option<u16> { current.or(retained) }
 
-fn same_result_source(old: &Fem3dSnapshot, old_request: Fem3dResultRequest, new: &Fem3dSnapshot, new_request: Fem3dResultRequest) -> bool {
+pub(super) fn same_result_source(old: &Fem3dSnapshot, old_request: Fem3dResultRequest, new: &Fem3dSnapshot, new_request: Fem3dResultRequest) -> bool {
     fn identity(doc: &Fem3dSnapshot, source: Fem3dResultSource) -> Option<(&str, &str)> {
         match source {
             Fem3dResultSource::FirstCase => doc.load_cases.first().map(|case| ("loadCase", case.id.as_str())),

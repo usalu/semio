@@ -360,7 +360,7 @@ export function HomeScreen(props: HomeProps): ReactElement | null {
   const [problem, setProblem] = useState<Problem | undefined>(undefined);
   const quizIds = state.course?.quizzes.map((quiz) => quiz.id).join(" ") ?? "";
   const refreshLeaderboard = useCallback(() => session.refreshLeaderboard(), [session, state.learner?.id]);
-  usePolling(refreshLeaderboard, LEADERBOARD_POLL_MS);
+  usePolling(refreshLeaderboard, LEADERBOARD_POLL_MS, true, session.revived);
   const { submissions } = state;
   useEffect(() => {
     for (const quiz of quizIds.split(" ").filter(Boolean)) void session.refreshCrowd(quiz);

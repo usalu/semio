@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-assessment-limit-state/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1998/mutation/change-assessment-limit-state/schema.json",
   "title": "ChangeAssessmentLimitState",
   "type": "object",
   "additionalProperties": false,
@@ -34,7 +34,7 @@
       }
     },
     "newLimitState": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/$defs/LimitState",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1998/snapshot.json#/$defs/LimitState",
       "x-semio-ui": {
         "role": "value",
         "label": {

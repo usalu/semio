@@ -74,7 +74,7 @@ test("law: every fact kind that reads a directory is declared in the schema and 
  const found=[...block.matchAll(/^\s{2}([A-Za-z]+):.*(?:readdirSync|typescriptDirectoriesV1)/gmu)].map(match=>match[1]);
  expect(found.sort()).toEqual([...declared].sort());
  for(const line of block.split("\n").filter(line=>/readdirSync|typescriptDirectoriesV1/u.test(line)))expect(line,line).toContain("directoryFactV1(");
- const reads=text.split("\n").filter(line=>/(?<![\w.])readdirSync\(|world\.readdirSync\(/u.test(line)&&!/^\s*(?:\/\*\*|\*)/u.test(line)&&!/function typescriptDirectoriesV1|world\.readdirSync\(path\|\|"\."/u.test(line)&&!/^(?:function|export function) directoryFactOfV1/u.test(line));
+ const reads=text.split("\n").filter(line=>/(?<![\w.])readdirSync\(|world\.readdirSync\(/u.test(line)&&!/^\s*(?:\/\*\*|\*)/u.test(line)&&!/function typescriptDirectoriesV1|world\.readdirSync\(path\|\|"\."/u.test(line)&&!/^(?:function|export function) directoryFactOfV1/u.test(line)&&!/hollowDirectoryV1\(/u.test(line));
  for(const line of reads)expect(line,line).toContain("directoryFactV1(");
  expect(text).toContain("getDirectories: (path) => probe(\"directories\",path,()=>sys.getDirectories(path),value=>directoryFactV1(value))");
  expect(declared.length).toBe(3);

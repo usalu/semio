@@ -139,11 +139,14 @@ export async function acceptSelectedOwnersV1(input:Readonly<{fetched:SelectedFet
 }
 
 /** 🎫️ A claim this machine holds: renewed on a timer until released. */
-function holdV1(client:GraphFleetClientV1,key:string,owner:string,ttl:number,beat:number){
+function holdV1(client:GraphFleetClientV1,key:string,owner:string,ttl:number,beat:number,alive:()=>boolean=()=>true){
  let stopped=false,gone=false;
- const timer=setInterval(()=>{void client.renew(key,owner,ttl).then(state=>{if(state==="lost"){gone=true;stopped=true;clearInterval(timer);}},()=>undefined);},beat);timer.unref?.();
+ const timer=setInterval(()=>{if(!alive())return;void client.renew(key,owner,ttl).then(state=>{if(state==="lost"){gone=true;stopped=true;clearInterval(timer);}},()=>undefined);},beat);timer.unref?.();
  return Object.freeze({lost:()=>gone,async release(){if(!stopped){stopped=true;clearInterval(timer);}if(!gone)await Promise.race([client.release(key,owner).catch(()=>undefined),new Promise<void>(done=>setTimeout(done,600))]);}});
 }
+
+/** 🪜️ Runs one await of the exchange as a named step of the read (the progress line names it with its bound), `detail` fills its text. */
+export type SelectedStepV1=<T>(id:"exchange-look"|"exchange-wait"|"exchange-install"|"exchange-publish",run:()=>Promise<T>,detail?:Readonly<Record<string,string|number>>)=>Promise<T>;
 
 /** 🏁️ How one selected read ended: `installed` (every owner held, nothing was read), `repaired` (some owners were read again), `read` (no head, this machine read and published), `waited` (another machine read, this one took its head), `taken-over` (the reader died, this machine read with the owner records it had published), `unreachable` (the fleet could not say, this machine read). */
 export type SelectedOutcomeV1=Readonly<{outcome:"installed"|"repaired"|"read"|"waited"|"taken-over"|"unreachable";held:number;differing:readonly string[];waitedMilliseconds:number;published:boolean}>;
@@ -158,26 +161,27 @@ export async function selectedGenerationV1(input:Readonly<{
  install:(plan:Readonly<{fetched:SelectedFetchedV1;matching:readonly string[];differing:readonly string[];complete:boolean}>)=>Promise<void>;
  read:(differing:readonly string[]|undefined)=>Promise<SelectedSealedV1|undefined>;
  say?:Say;now?:()=>number;sleep?:(milliseconds:number)=>Promise<void>;signal?:AbortSignal;
+ alive?:()=>boolean;step?:SelectedStepV1;
  claimTtlMilliseconds?:number;claimHeartbeatMilliseconds?:number;waitMaximumMilliseconds?:number;waitSliceMilliseconds?:number}>):Promise<SelectedOutcomeV1>{
  const {client}=input,now=input.now??Date.now,started=now(),key=selectedHeadKeyV1(input),ttl=input.claimTtlMilliseconds??policy.claimTtlMilliseconds,beat=input.claimHeartbeatMilliseconds??policy.claimHeartbeatMilliseconds,limit=input.waitMaximumMilliseconds??policy.waitMaximumMilliseconds,slice=input.waitSliceMilliseconds??policy.waitSliceMilliseconds;
- const say=input.say??(()=>undefined),seconds=()=>Math.round((now()-started)/1000);
+ const say=input.say??(()=>undefined),step:SelectedStepV1=input.step??((_id,run)=>run()),alive=input.alive??(()=>true),seconds=()=>Math.round((now()-started)/1000);
  const finish=(outcome:SelectedOutcomeV1["outcome"],held:number,differing:readonly string[],published:boolean):SelectedOutcomeV1=>({outcome,held,differing,waitedMilliseconds:now()-started,published});
  const publish=async(sealed:SelectedSealedV1|undefined,held:SelectedHeadV1|undefined)=>{
   if(sealed===undefined)return false;
-  const stored=await publishSelectedGenerationV1({client,scope:input.scope,platform:input.platform,host:input.host,sealed,ownerOf:input.ownerOf,now,held});
+  const stored=await step("exchange-publish",()=>publishSelectedGenerationV1({client,scope:input.scope,platform:input.platform,host:input.host,sealed,ownerOf:input.ownerOf,now,held}));
   if(stored.stored)say("published",{owners:Object.keys(stored.head!.owners).length});
   return stored.stored;
  };
  const take=async(fetched:SelectedFetchedV1,through:"installed"|"waited"|"taken-over"):Promise<SelectedOutcomeV1>=>{
   const verdict=await acceptSelectedOwnersV1({fetched,holds:input.holds,own:input.own?.(),owners:input.owners?.()}),differing=[...verdict.differing,...verdict.added].sort(),complete=differing.length===0&&verdict.removed.length===0;
-  await input.install({fetched,matching:verdict.matching,differing,complete});
+  await step("exchange-install",()=>input.install({fetched,matching:verdict.matching,differing,complete}));
   if(complete){say("installed",{owners:verdict.matching.length,seconds:seconds()});return finish(through==="installed"?"installed":through,verdict.matching.length,[],false);}
   say("repaired",{held:verdict.matching.length,differing:differing.length});
   const sealed=await input.read(differing),published=await publish(sealed,fetched.head);
   return finish("repaired",verdict.matching.length,differing,published);
  };
  const readHere=async(outcome:SelectedOutcomeV1["outcome"],held:SelectedHeadV1|undefined):Promise<SelectedOutcomeV1>=>{const sealed=await input.read(undefined),published=await publish(sealed,held);return finish(outcome,0,[],published);};
- const first=await lookSelectedGenerationV1(input);
+ const first=await step("exchange-look",()=>lookSelectedGenerationV1(input));
  if(first!=="miss"&&first!=="fault")return take(first,"installed");
  if(first==="fault"||!client.claimsUsable()||!client.settings.upload)return readHere("unreachable",undefined);
  let since:number|undefined,lapsed=false;
@@ -185,7 +189,7 @@ export async function selectedGenerationV1(input:Readonly<{
   input.signal?.throwIfAborted();
   const claim=await client.claim(key,input.owner,ttl).catch(()=>({state:"fault",fault:"error"}) as never) as {state:string;by?:string;untilMilliseconds?:number};
   if(claim.state==="granted"){
-   const hold=holdV1(client,key,input.owner,ttl,beat);
+   const hold=holdV1(client,key,input.owner,ttl,beat,alive);
    try{
     const again=await lookSelectedGenerationV1(input);
     if(again!=="miss"&&again!=="fault")return take(again,lapsed?"taken-over":"waited");
@@ -199,7 +203,7 @@ export async function selectedGenerationV1(input:Readonly<{
   const remaining=since+limit-now();
   if(remaining<=0)return readHere("unreachable",undefined);
   say("waiting",{seconds:Math.round((now()-since)/1000),limit:Math.round(limit/1000),by:String(claim.by??"?")});
-  const waited=await client.await(key,Math.min(slice,remaining)).catch(()=>"fault" as const);
+  const waited=await step("exchange-wait",()=>client.await(key,Math.min(slice,remaining)),{who:String(claim.by??"?"),boundMilliseconds:limit}).catch(()=>"fault" as const);
   if(waited==="fault")return readHere("unreachable",undefined);
   if(waited==="lapsed"){lapsed=true;if(input.sleep)await input.sleep(50);continue;}
   if(waited==="stored"){const again=await lookSelectedGenerationV1(input);if(again!=="miss"&&again!=="fault")return take(again,"waited");}

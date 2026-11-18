@@ -68,3 +68,6 @@ path = "../../🧪️tests/🧬️genesis/🦀️.rs"
 [[test]]
 name = "window_pair_receiving_outcomes"
 path = "../../📐️owner-contract-and-mutation/🛬️receiving/🧪️tests/🦀️.rs"
+
+[features]
+artifact-app-testing = []

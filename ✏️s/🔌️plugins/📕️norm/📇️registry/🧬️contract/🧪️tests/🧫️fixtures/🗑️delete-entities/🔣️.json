@@ -11,9 +11,9 @@
     ]
   },
   "notices": {
-    "norm.entity-delete-empty": { "en": "Select at least one row to delete.", "de": "Mindestens eine Zeile zum Löschen auswählen." },
-    "norm.entity-delete-unknown": { "en": "A selected row no longer exists, so nothing was deleted.", "de": "Eine ausgewählte Zeile existiert nicht mehr, daher wurde nichts gelöscht." },
-    "norm.edit-unresolved": { "en": "The edit could not be resolved against the document.", "de": "Die Änderung konnte im Dokument nicht aufgelöst werden." }
+    "norm.editor.entity-delete-empty": { "en": "Select at least one row to delete.", "de": "Mindestens eine Zeile zum Löschen auswählen." },
+    "norm.editor.entity-delete-unknown": { "en": "A selected row no longer exists, so nothing was deleted.", "de": "Eine ausgewählte Zeile existiert nicht mehr, daher wurde nichts gelöscht." },
+    "norm.editor.edit-unresolved": { "en": "The edit could not be resolved against the document.", "de": "Die Änderung konnte im Dokument nicht aufgelöst werden." }
   },
   "arguments": [
     { "id": "selected rows", "args": { "collection": "beams", "ids": ["b1", "b2"] }, "parsed": { "collection": "beams", "ids": ["b1", "b2"] } },
@@ -70,7 +70,7 @@
       "collection": "beams",
       "ids": [],
       "outcome": "refused",
-      "code": "norm.entity-delete-empty",
+      "code": "norm.editor.entity-delete-empty",
       "message": { "en": "Select at least one row to delete", "de": "Mindestens eine Zeile zum Löschen auswählen" },
       "remaining": ["b1", "b2", "b3", "b4"]
     },
@@ -79,7 +79,7 @@
       "collection": "walls",
       "ids": ["b1"],
       "outcome": "refused",
-      "code": "norm.entity-delete-unknown",
+      "code": "norm.editor.entity-delete-unknown",
       "message": { "en": "'walls' is not a list of this document", "de": "'walls' ist keine Liste dieses Dokuments" },
       "remaining": []
     },
@@ -88,7 +88,7 @@
       "collection": "beams",
       "ids": ["b1", "gone"],
       "outcome": "refused",
-      "code": "norm.entity-delete-unknown",
+      "code": "norm.editor.entity-delete-unknown",
       "message": { "en": "'gone' is not a row of 'beams'", "de": "'gone' ist keine Zeile von 'beams'" },
       "remaining": ["b1", "b2", "b3", "b4"]
     },
@@ -98,7 +98,7 @@
       "ids": ["b1", "b2"],
       "refuseRemovalAt": 0,
       "outcome": "refused",
-      "code": "norm.edit-unresolved",
+      "code": "norm.editor.edit-unresolved",
       "resolverError": "invariant",
       "remaining": ["b1", "b2", "b3", "b4"]
     }

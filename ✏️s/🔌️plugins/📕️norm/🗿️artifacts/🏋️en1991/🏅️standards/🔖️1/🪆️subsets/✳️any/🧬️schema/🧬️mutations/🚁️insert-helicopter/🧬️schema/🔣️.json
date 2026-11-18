@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/insert-helicopter/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1991/mutation/insert-helicopter/schema.json",
   "title": "InsertHelicopter",
   "type": "object",
   "additionalProperties": false,
@@ -30,7 +30,7 @@
       }
     },
     "item": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/HelicopterLanding",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1991/snapshot.json#/$defs/HelicopterLanding",
       "x-semio-ui": {
         "role": "value",
         "label": {

@@ -1,0 +1,12 @@
+🌡️host-capacity/🧹️disk-recovery/🧪️tests/🟦️.ts 19pass 0fail 
+🌡️host-capacity/🧹️disk-recovery/🖼️image-slack/🧪️tests/🟦️.ts 15pass 0fail 
+🌡️host-capacity/🧹️disk-recovery/🗃️replica-store/🧪️tests/🟦️.ts 10pass 0fail 
+missing 🌡️host-capacity/🧹️disk-recovery/🧺️bounds/🧪️tests/🟦️.ts
+🌐️remote-execution/🛰️sidecar/🚦️ready/🧪️tests/🔁️resume/🟦️.ts 8pass 0fail 
+🌐️remote-execution/🛰️sidecar/🚦️ready/🧪️tests/🪜️stage-plan/🟦️.ts 2pass 0fail 
+🌐️remote-execution/🛰️sidecar/🚦️ready/🧪️tests/🟦️.ts 41pass 0fail 
+🌐️remote-execution/🛰️sidecar/🚦️ready/🧪️tests/🕰️stale-stage/🟦️.ts 14pass 0fail 
+🌐️remote-execution/🛰️sidecar/🚦️ready/🧪️tests/🎯️probes/🟦️.ts 4pass 0fail 
+🌐️remote-execution/🛰️sidecar/🚦️ready/🧪️tests/🤝️holder-custody/🟦️.ts 6pass 0fail 
+/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🧪️tests/🟦️.ts 8pass 5fail 
+/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🧪️tests/🌱️regrow/🟦️.ts 2pass 0fail 

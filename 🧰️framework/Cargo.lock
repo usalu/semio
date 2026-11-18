@@ -12010,6 +12010,7 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-ui-contract",
+ "semio-ui-contract-values",
  "serde",
  "serde_json",
 ]
@@ -12304,6 +12305,7 @@ dependencies = [
  "semio-ui-action",
  "semio-ui-arena",
  "semio-ui-contract",
+ "semio-ui-contract-values",
  "semio-ui-declaration",
  "semio-ui-layout",
  "semio-ui-locale",
@@ -12718,6 +12720,7 @@ dependencies = [
  "semio-ui-tui-terminal",
  "semio-ui-tui-vt",
  "semio-ui-tui-widgets",
+ "serde_json",
 ]
 
 [[package]]
@@ -12829,6 +12832,7 @@ dependencies = [
  "semio-ui-action",
  "semio-ui-arena",
  "semio-ui-contract",
+ "semio-ui-contract-values",
  "semio-ui-declaration",
  "semio-ui-draw-contract",
  "semio-ui-locale",
@@ -13075,6 +13079,7 @@ dependencies = [
  "semio-framework-value",
  "semio-ui-arena",
  "semio-ui-contract",
+ "semio-ui-contract-values",
  "semio-ui-declaration",
  "semio-ui-draw-contract",
  "semio-ui-locale",
@@ -13125,6 +13130,7 @@ dependencies = [
  "semio-framework-job",
  "semio-ui-arena",
  "semio-ui-contract",
+ "semio-ui-contract-values",
  "semio-ui-declaration",
  "semio-ui-draw-contract",
  "semio-ui-layout",

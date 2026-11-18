@@ -20,7 +20,7 @@ use framework_schema::ArtifactSchema;
 #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[dsl(id = "norm.en1996", layout = "lines")]
-#[artifact_schema(id = "s.norm.en1996")]
+#[artifact_schema(id = "s.norm-eurocode-materials.en1996")]
 pub struct En1996Snapshot {
     #[state(artifact)]
     pub annex: AnnexChoice,
@@ -965,7 +965,7 @@ pub fn artifact_kind() -> semio_plugin::ArtifactKindSpec {
 /// 🪪️ This subset's canonical `(artifact_kind, standard, subset)` coordinate (ticket
 /// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1) — lives at the ARTIFACT level, not
 /// under the sibling `editor` module, so a viewer file can read it without ever importing through it.
-pub const EN1996_DIALECT: semio_plugin::app::Dialect = semio_plugin::app::Dialect { artifact_kind: "s.norm.en1996", standard: semio_plugin::app::StandardId("1"), subset: semio_plugin::app::SubsetId::ANY };
+pub const EN1996_DIALECT: semio_plugin::app::Dialect = semio_plugin::app::Dialect { artifact_kind: "s.norm-eurocode-materials.en1996", standard: semio_plugin::app::StandardId("1"), subset: semio_plugin::app::SubsetId::ANY };
 
 pub const EN1996_DOCUMENT_SCHEMA: &str = "semio.norm.en1996/v1";
 

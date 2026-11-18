@@ -20,8 +20,8 @@ export type DeleteRefusalV1 = Readonly<{ kind: "nothing" } | { kind: "unknownCol
 export type BilingualTextV1 = Readonly<{ en: string; de: string }>;
 
 /** 🆔️ The fault code of a refusal, a row of {@link NORM_DELETE_NOTICES_V1}. */
-export function deleteRefusalCodeV1(refusal: DeleteRefusalV1): "norm.entity-delete-empty" | "norm.entity-delete-unknown" {
-  return refusal.kind === "nothing" ? "norm.entity-delete-empty" : "norm.entity-delete-unknown";
+export function deleteRefusalCodeV1(refusal: DeleteRefusalV1): "norm.editor.entity-delete-empty" | "norm.editor.entity-delete-unknown" {
+  return refusal.kind === "nothing" ? "norm.editor.entity-delete-empty" : "norm.editor.entity-delete-unknown";
 }
 
 /** 💬️ The reason of a refusal in both languages. */
@@ -38,9 +38,9 @@ export function deleteRefusalMessageV1(refusal: DeleteRefusalV1): BilingualTextV
 
 /** 📣️ The notices of the faults a batch delete can end in (twin of `norm_fault_notices`). */
 export const NORM_DELETE_NOTICES_V1: Readonly<Record<string, BilingualTextV1>> = {
-  "norm.entity-delete-empty": { en: "Select at least one row to delete.", de: "Mindestens eine Zeile zum Löschen auswählen." },
-  "norm.entity-delete-unknown": { en: "A selected row no longer exists, so nothing was deleted.", de: "Eine ausgewählte Zeile existiert nicht mehr, daher wurde nichts gelöscht." },
-  "norm.edit-unresolved": { en: "The edit could not be resolved against the document.", de: "Die Änderung konnte im Dokument nicht aufgelöst werden." },
+  "norm.editor.entity-delete-empty": { en: "Select at least one row to delete.", de: "Mindestens eine Zeile zum Löschen auswählen." },
+  "norm.editor.entity-delete-unknown": { en: "A selected row no longer exists, so nothing was deleted.", de: "Eine ausgewählte Zeile existiert nicht mehr, daher wurde nichts gelöscht." },
+  "norm.editor.edit-unresolved": { en: "The edit could not be resolved against the document.", de: "Die Änderung konnte im Dokument nicht aufgelöst werden." },
 };
 
 const idOfRow = (row: unknown): string | undefined => {
@@ -113,7 +113,7 @@ export function executeDeleteSelectionV1<M>(tree: DocumentTreeV1, collection: st
   const mutations: M[] = [];
   for (const edit of planned.edits) {
     const resolved = resolve(tree, edit);
-    if (!resolved.ok) return { outcome: "refused", code: "norm.edit-unresolved", message: resolved.error, notice: NORM_DELETE_NOTICES_V1["norm.edit-unresolved"]! };
+    if (!resolved.ok) return { outcome: "refused", code: "norm.editor.edit-unresolved", message: resolved.error, notice: NORM_DELETE_NOTICES_V1["norm.editor.edit-unresolved"]! };
     mutations.push(...resolved.mutations);
   }
   return { outcome: "emitted", edits: planned.edits, mutations, undoSteps: 1, tree: applyEditsToTreeV1(tree, planned.edits) };

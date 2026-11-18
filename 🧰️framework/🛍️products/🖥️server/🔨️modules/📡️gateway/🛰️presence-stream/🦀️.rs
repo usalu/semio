@@ -105,6 +105,7 @@ where
     let mut budget = StateBudget::new(settings.max_states_per_second);
     let mut last_seen = Instant::now();
     let mut keepalive = tokio::time::interval_at(Instant::now() + settings.keepalive, settings.keepalive);
+    let mut heartbeat = tokio::time::interval_at(Instant::now() + settings.heartbeat, settings.heartbeat);
     let mut due = Instant::now();
     let mut open = feed(&mut room, &entry, &settings, sink).await.is_some();
     while open {
@@ -132,6 +133,10 @@ where
                 open = fed.is_some();
                 due = if fed == Some(true) && room.arriving() { Instant::now() } else { Instant::now() + settings.tick };
             }
+            _ = heartbeat.tick() => open = match serde_json::to_string(&PresenceFrame::Heartbeat) {
+                Ok(text) => send(sink, Message::Text(text.into()), settings.idle).await,
+                Err(_) => true,
+            },
             _ = keepalive.tick() => open = send(sink, Message::Ping(Vec::new().into()), settings.idle).await,
             _ = tokio::time::sleep_until(last_seen + settings.idle) => {
                 send(sink, Message::Close(None), settings.idle).await;

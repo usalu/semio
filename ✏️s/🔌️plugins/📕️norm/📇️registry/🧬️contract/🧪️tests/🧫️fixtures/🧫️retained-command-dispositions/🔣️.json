@@ -113,57 +113,57 @@
     },
     {
       "variant": "din18599",
-      "controller": "s.norm.din18599@1/*#editor",
+      "controller": "s.norm-energy.din18599@1/*#editor",
       "artifactSchema": "semio.norm.din18599/v1"
     },
     {
       "variant": "en1990",
-      "controller": "s.norm.en1990@1/*#editor",
+      "controller": "s.norm-eurocode.en1990@1/*#editor",
       "artifactSchema": "semio.norm.en1990/v1"
     },
     {
       "variant": "en1991",
-      "controller": "s.norm.en1991@1/*#editor",
+      "controller": "s.norm-eurocode.en1991@1/*#editor",
       "artifactSchema": "semio.norm.en1991/v1"
     },
     {
       "variant": "en1992",
-      "controller": "s.norm.en1992@1/*#editor",
+      "controller": "s.norm-eurocode-structural.en1992@1/*#editor",
       "artifactSchema": "semio.norm.en1992/v1"
     },
     {
       "variant": "en1993",
-      "controller": "s.norm.en1993@1/*#editor",
+      "controller": "s.norm-eurocode-structural.en1993@1/*#editor",
       "artifactSchema": "semio.norm.en1993/v1"
     },
     {
       "variant": "en1994",
-      "controller": "s.norm.en1994@1/*#editor",
+      "controller": "s.norm-eurocode-structural.en1994@1/*#editor",
       "artifactSchema": "semio.norm.en1994/v1"
     },
     {
       "variant": "en1995",
-      "controller": "s.norm.en1995@1/*#editor",
+      "controller": "s.norm-eurocode-materials.en1995@1/*#editor",
       "artifactSchema": "semio.norm.en1995/v1"
     },
     {
       "variant": "en1996",
-      "controller": "s.norm.en1996@1/*#editor",
+      "controller": "s.norm-eurocode-materials.en1996@1/*#editor",
       "artifactSchema": "semio.norm.en1996/v1"
     },
     {
       "variant": "en1997",
-      "controller": "s.norm.en1997@1/*#editor",
+      "controller": "s.norm-eurocode.en1997@1/*#editor",
       "artifactSchema": "semio.norm.en1997/v1"
     },
     {
       "variant": "en1998",
-      "controller": "s.norm.en1998@1/*#editor",
+      "controller": "s.norm-eurocode.en1998@1/*#editor",
       "artifactSchema": "semio.norm.en1998/v1"
     },
     {
       "variant": "en1999",
-      "controller": "s.norm.en1999@1/*#editor",
+      "controller": "s.norm-eurocode-materials.en1999@1/*#editor",
       "artifactSchema": "semio.norm.en1999/v1"
     },
     {

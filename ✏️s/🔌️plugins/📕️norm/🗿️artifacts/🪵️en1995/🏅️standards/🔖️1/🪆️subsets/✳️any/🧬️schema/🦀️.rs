@@ -18,7 +18,7 @@ use framework_schema::ArtifactSchema;
 #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.norm.en1995")]
+#[artifact_schema(id = "s.norm-eurocode-materials.en1995")]
 pub struct En1995Artifact {
     #[state(artifact)]
     pub annex: AnnexChoice,
@@ -75,7 +75,7 @@ impl En1995Artifact {
 //#region 🔖️Descriptor
 pub fn en1995_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
     semio_framework_schema_registry::ArtifactSchemaDescriptor {
-        id: "s.norm.en1995",
+        id: "s.norm-eurocode-materials.en1995",
         artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: semio_s_artifact_norm_en1995_model::SNAPSHOT_LEAVES,
         diff: semio_s_artifact_norm_en1995_diff::DIFF_LEAVES,

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-beam-action-stage/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1994/mutation/change-beam-action-stage/schema.json",
   "title": "ChangeBeamActionStage",
   "type": "object",
   "additionalProperties": false,
@@ -51,7 +51,7 @@
       }
     },
     "newStage": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/ActionStage",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1994/snapshot.json#/$defs/ActionStage",
       "x-semio-ui": {
         "role": "value",
         "label": {

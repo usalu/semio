@@ -194,6 +194,7 @@ mod tests {
     /// `validate_snapshot` cleanly, and matches its expectation's tree/accessibility/action-id shape.
     #[test]
     fn snapshot_only_fixtures_are_valid_and_match_their_expectations() {
+        let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
         let limits = crate::UiDocumentLimits::default();
         for group in GROUPS_WITHOUT_PATCH {
             for slug in case_slugs(group) {
@@ -212,6 +213,7 @@ mod tests {
     /// `apply_patch`, and the resulting state matches the expectation's post-patch shape.
     #[test]
     fn patch_fixtures_apply_cleanly_and_match_their_expectations() {
+        let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
         let default_limits = crate::UiDocumentLimits::default();
         let group = "🩹️patch";
         for slug in case_slugs(group) {
@@ -233,6 +235,7 @@ mod tests {
     /// expectation's `patchRejection` exactly — a renderer that accepts one of these is broken.
     #[test]
     fn rejection_fixtures_are_rejected_with_the_named_violation_and_leave_state_unchanged() {
+        let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
         let default_limits = crate::UiDocumentLimits::default();
         let group = "🚫️rejection";
         for slug in case_slugs(group) {
@@ -276,7 +279,7 @@ mod tests {
                 count += 1;
             }
         }
-        assert_eq!(count, 77);
+        assert_eq!(count, 78);
     }
     //#endregion 🔍️Pairing
 
@@ -286,6 +289,7 @@ mod tests {
     /// the corpus silently going stale.
     #[test]
     fn every_component_variant_appears_in_the_corpus() {
+        let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
         let all_groups: Vec<&str> = GROUPS_WITHOUT_PATCH.iter().chain(GROUPS_WITH_PATCH.iter()).copied().collect();
         let mut seen: BTreeSet<String> = BTreeSet::new();
         for group in &all_groups {
@@ -307,6 +311,7 @@ mod tests {
     /// ops — the same "adding a variant silently goes untested" guard, for patches instead of nodes.
     #[test]
     fn every_ui_patch_op_variant_appears_in_a_patch_case() {
+        let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
         fn op_type_tag(op: &crate::UiPatchOp) -> &'static str {
             match op {
                 crate::UiPatchOp::Upsert(_) => "upsert",

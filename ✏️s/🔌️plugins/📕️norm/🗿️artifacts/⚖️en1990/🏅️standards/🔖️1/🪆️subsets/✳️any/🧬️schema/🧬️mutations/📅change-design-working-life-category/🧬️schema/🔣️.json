@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-design-working-life-category/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1990/mutation/change-design-working-life-category/schema.json",
   "title": "ChangeDesignWorkingLifeCategory",
   "type": "object",
   "additionalProperties": false,

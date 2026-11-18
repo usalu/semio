@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/insert-wall/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1996/mutation/insert-wall/schema.json",
   "title": "InsertWall",
   "type": "object",
   "additionalProperties": false,
@@ -30,7 +30,7 @@
       }
     },
     "wall": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/MasonryWall",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1996/snapshot.json#/$defs/MasonryWall",
       "x-semio-ui": {
         "role": "value",
         "label": {

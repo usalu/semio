@@ -50,15 +50,19 @@ export function mutationAuthorityProjection(repoRoot: string): string {
 
 export const SCHEMA_INDEX_PATH = join(SCRIPT_DIR, "../../🗂️schema-document-index.json");
 
+/** 🔁️ Writes a generated file only when its bytes change, so an unchanged projection keeps its inode and modification time and the replica has nothing to copy; answers what it did. */
+export function writeProjectionIfChangedV1(path: string, text: string): "written" | "unchanged" {
+  let committed: string | undefined;
+  try { committed = readFileSync(path, "utf8"); } catch { committed = undefined; }
+  if (committed === text) return "unchanged";
+  writeFileSync(path, text);
+  return "written";
+}
+
 /** 🔁️ Writes the projection only when its bytes change, so an unrelated taxonomy edit leaves every deriving crate fresh. */
 export class GenerateScript extends BundleScript {
   async run(): Promise<void> {
-    const projected = mutationAuthorityProjection(this.repoRoot);
-    let committed: string | undefined;
-    try { committed = readFileSync(MUTATION_AUTHORITY_PATH, "utf8"); } catch { committed = undefined; }
-    if (committed === projected) return console.log("mutation-authority: unchanged");
-    writeFileSync(MUTATION_AUTHORITY_PATH, projected);
-    console.log("mutation-authority: written");
+    console.log(`mutation-authority: ${writeProjectionIfChangedV1(MUTATION_AUTHORITY_PATH, mutationAuthorityProjection(this.repoRoot))}`);
   }
 }
 
@@ -90,12 +94,7 @@ export class ColdReferenceTestScript extends BundleScript {
 /** 🔁️ Writes the schema document index only when its bytes change, so an unrelated edit leaves every deriving crate fresh. */
 export class GenerateSchemaIndexScript extends BundleScript {
   async run(): Promise<void> {
-    const projected = mutationSchemaDocumentIndexProjection(this.repoRoot);
-    let committed: string | undefined;
-    try { committed = readFileSync(SCHEMA_INDEX_PATH, "utf8"); } catch { committed = undefined; }
-    if (committed === projected) return console.log("schema-document-index: unchanged");
-    writeFileSync(SCHEMA_INDEX_PATH, projected);
-    console.log("schema-document-index: written");
+    console.log(`schema-document-index: ${writeProjectionIfChangedV1(SCHEMA_INDEX_PATH, mutationSchemaDocumentIndexProjection(this.repoRoot))}`);
   }
 }
 

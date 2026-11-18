@@ -47,8 +47,18 @@ const graphModuleAuthorityV1=():BuildGraphModuleAuthorityV1=>{requireCurrentSour
 
 export const loadedGraphModuleAuthorityV1=graphModuleAuthorityV1();
 
+/** 🧾️ The modules that define what a remembered owner admission means: the discovery of an owner, the closure of the admission, the roster and the schemas of the admission. An edit of any other graph module leaves a remembered admission valid, because every remembered row revalidates its own observations.
+ * @see ../📥️load/🧠️admission-memo/🟦️.ts */
+export const graphAdmissionFormatUrlsV1=():URL[]=>{const origin=physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL);return ["../📥️inference/🔎️owner-discovery/🟨️.mjs","../📥️inference/🔎️owner-discovery/🕸️wasm-outputs/🟦️.ts","../🚪️admission/🟦️.ts","../🧭️roster/🟨️.mjs","../🧭️file-owner/🟨️.mjs","../../🧬️schema/🚪️admission.json","../../🧬️schema/📋️owners.json","../../🧬️schema/🚪️selection.json"].map(path=>new URL(path,origin));};
+
+/** 🔖️ The hash of `graphAdmissionFormatUrlsV1`: a remembered admission and the remembered facts of its owners are keyed by it instead of by the whole graph implementation. */
+export const graphAdmissionFormatHashV1=(capture:(path:string)=>string=path=>captureBoundedSourceRevisionV1(path,REVISION_POLICY_V1.maximumSourceBytes).sha256):string=>{const hash=createHash("sha256");for(const url of graphAdmissionFormatUrlsV1())hash.update(capture(fileURLToPath(url)));return hash.digest("hex");};
+
+export const loadedGraphAdmissionFormatV1=graphAdmissionFormatHashV1();
+
 /** 📋️ The loaded graph implementation as workspace facts of the bytes it had when this module loaded; a pinned build names these and no later edit. */
 export const loadedGraphImplementationRowsV1:readonly {kind:"digest";path:string;fact:{sha256:string;size:number;mtimeMs:number}}[]=graphImplementationUrlsV1().map(url=>{const path=fileURLToPath(url),status=lstatSync(path),captured=captureBoundedSourceRevisionV1(path,REVISION_POLICY_V1.maximumSourceBytes);return {kind:"digest" as const,path,fact:{sha256:captured.sha256,size:status.size,mtimeMs:status.mtimeMs}};});
+observationV1.registerLoadedImplementationRowsV1(loadedGraphImplementationRowsV1);
 
 
 /** 🏛️ Reads immutable defining authority of the loaded graph, which is the sealed implementation. */

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-member-order/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1992/mutation/change-member-order/schema.json",
   "title": "ChangeMemberOrder",
   "type": "object",
   "additionalProperties": false,

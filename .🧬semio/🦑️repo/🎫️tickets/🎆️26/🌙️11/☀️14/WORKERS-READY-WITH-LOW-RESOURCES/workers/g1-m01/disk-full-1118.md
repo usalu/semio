@@ -45,3 +45,20 @@ The declared partitions add up to about 172 GiB on a machine whose data volume i
 - The rust image grew on the host from 85.8 GiB to 89.66 GiB occupied (of 96.0 GiB) in 70 minutes; the other images did not change (d 12.0, g 12.0, t 3.13, p 0.48, n 0.9 GiB). Swap: 5164 MB of 6144 MB used.
 - What writes into it: a release build of another agent session on this machine (`CLAUDE_CODE_HOST_SESSION_ID=local_c8359bff-…`, `SEMIO_BUILD_MODE=release`): `bash ./native-lanes.sh component 🔋️energy` → `cargo build --locked --manifest-path …/🌎️hub/Cargo.toml -p semio-hub-energy-component --lib --target wasm…` → `semio-build-scheduler rustc --crate-name semio_hub_energy_component` (rustc 2.0 GiB resident). It holds the shared leases on `.cache/b/r`, `d`, `t` seen at 02:08Z (process 78434). Not started by this session and not touched.
 - The image can grow by another 6.3 GiB (to its 96 GiB); 2.4 GiB are free. If the build keeps writing fresh blocks, the host volume fills before the image does.
+
+## 03:39Z: 0.2 GiB Free
+
+- `df`: 8.86 GiB free at 02:38Z (the other session's build had ended), 6.23 GiB at 03:09Z, 0.20 GiB at 03:38:58Z, 0.15 GiB a minute later. APFS container: `Capacity In Use By Volumes: 244.9 GB (99.9% used)`, `Capacity Not Allocated: 156.3 MB`; no local snapshots (`tmutil listlocalsnapshots /` lists none).
+- Rust image 91.1 GiB occupied on the host (89.66 GiB at 02:29Z); the other images unchanged. VM volume (swap) 7.8 GB; swap 6784 MB of 7424 MB used.
+- Writer: the other agent session's `native-lanes.sh` build is running again (one `rustc`, 3.5 GiB resident). Not touched by this session.
+- This session removed only its own files: 68 run logs `~/native-bootstrap-round-*.log` and `~/tools-setup-round-*.log` (117 MiB; their tails are in the round reports) and its scratch files. Free afterwards: 0.24 GiB.
+- Replica at 03:40Z: `health.json` 51 s old, `store: ok`.
+- The account was notified (decision asked: stop that build, or recreate the rust image).
+
+## 06:12Z: Space Is Back (79.9 GiB Free)
+
+- `df`: 3.65 GiB free at 05:11Z, 79.88 GiB at 06:12Z. Nothing was done by this session in between.
+- Rust image: 15.78 GiB occupied on the host (91.1 GiB at 03:39Z), 14 GiB used inside (28.76 GiB before); image file modified 06:12Z. So blocks were both collected inside the image and given back to the host: the thing finding 2 of "For The Coordinator" asked for now happens here. Which landing did it was not traced from this machine (`result-R184.md`, `result-R185.md` and `result-R188.md` of the coordinator name g1-m01's `disk-short` state).
+- Other images on the host: d 11.48, g 12.0, t 3.13, p 0.52, n 0.71 GiB.
+- Replica: `health.json` 3 s old, `store: ok`.
+- `ready.json`: stage `workspace` running (attempt 69); the graph read prints `waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) … 2557 of 1800`.

@@ -53,7 +53,7 @@ export function adoptVerifiedBlockV1(path:string,text:string):void;
 /** 📦️ Admits one physical project's awaited JSON computation and complete observations. */
 export function observeProjectInferenceV1<T>(options:Readonly<{cachePath:string;key:unknown;owner:string;reusable?:(value:unknown)=>boolean|PromiseLike<boolean>;stamps?:readonly string[];prepare?:()=>boolean|PromiseLike<boolean>;fleet?:string;verdict?:(asked:{readonly headerDigest:string})=>PromiseLike<{readonly verdict?:string;readonly headerDigest?:string}|undefined>;verdictFinal?:boolean;prepareAttempts?:number}>,compute:()=>T|PromiseLike<T>):Promise<Awaited<T>>;
 /** 🤝️ The verdict of one process on one stored project record: `holds`, `stale`, `other` (a record of another key) or `missing`, with the digest of the header line it judged. */
-export function verifyStoredProjectRecordV1(options:Readonly<{cachePath:string;key:unknown}>):Promise<{readonly verdict:"holds"|"stale"|"other"|"missing";readonly headerDigest?:string;readonly rows?:number;readonly verifier:number}>;
+export function verifyStoredProjectRecordV1(options:Readonly<{cachePath:string;key:unknown}>):Promise<{readonly verdict:"holds"|"stale"|"other"|"missing";readonly headerDigest?:string;readonly rows?:number;readonly staleRow?:Readonly<{kind:string;path:string;fact:string}>;readonly verifier:number}>;
 /** 🔖️ Registers the declared stamps of the inference protocol as `[path, stamp]` pairs and the path fragments they cover, which the module-load authority names by stamp instead of by bytes. */
 export function registerInferenceStampsV1(entries:Iterable<readonly [string,string]>,fragments?:readonly string[]):void;
 /** 📌️ Records the stamp of each named inferrer in the active inference scope. */
@@ -144,6 +144,7 @@ export function observeInferenceSnapshotV1<T>(compute:()=>T|PromiseLike<T>):Prom
 export function sourceObservationStatsV1():Readonly<{loadObservations:number;projectImages:number;projectImageBytes:number;originalInferencePublications:number;projectObservationRows:number;captureObservations:number;recordStores:number;analysisEntries:number;analysisBytes:number}>;
 
 export function requireCurrentObservationV1():void;
+export function registerLoadedImplementationRowsV1(rows:readonly {kind:string;path:string;fact:{sha256:string;ignore?:unknown}}[]):void;
 export function staleSourceFactsErrorV1(rows:readonly {kind:string;path:string}[]):Error;
 
 /** 🪡️ Projects finite aggregate observation budget admission DATA. */
@@ -205,3 +206,5 @@ export function settleObservationLeafV1<T>(attempt:()=>T,options?:{attempts?:num
 export function readInferenceRecordOrMissV1(cachePath:string,options?:{read?:(path:string,optional:boolean)=>unknown;say?:(line:string)=>void}):any;
 /** 🔦️ The directory fact of `path` for one of the kinds that read a directory (`readdir`, `readdirNames`, `directories`), as a record row would hold it. */
 export function directoryFactOfV1(kind:"readdir"|"readdirNames"|"directories",path:string):string;
+/** 🔎️ The first row of a stale record that does not hold now. */
+export function firstFailingRowV1(rows:readonly unknown[],value:unknown):Promise<Readonly<{kind:string;path:string;fact:string}>|undefined>;

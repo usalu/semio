@@ -1,0 +1,170 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "allocatedBytes",
+        "usedBytes",
+        "hostFreeBytes",
+        "due"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "allocatedBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "usedBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "hostFreeBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "due": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Corpus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rule",
+        "cases",
+        "cycles",
+        "availability"
+      ],
+      "properties": {
+        "rule": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "reclaimFloorBytes",
+            "reclaimRatioPercent",
+            "reclaimTightHostFreeBytes"
+          ],
+          "properties": {
+            "reclaimFloorBytes": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "reclaimRatioPercent": {
+              "type": "integer",
+              "minimum": 101
+            },
+            "reclaimTightHostFreeBytes": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/Case"
+          }
+        },
+        "cycles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Cycle"
+          }
+        },
+        "availability": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AvailabilityCase"
+          }
+        }
+      }
+    },
+    "Cycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "platform",
+        "image",
+        "attached",
+        "outputs",
+        "expected"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "platform": {
+          "enum": [
+            "linux",
+            "windows"
+          ]
+        },
+        "image": {
+          "type": "string",
+          "minLength": 1
+        },
+        "attached": {
+          "type": "boolean"
+        },
+        "outputs": {
+          "type": "object",
+          "description": "Successive stdout values of a command keyed by `<program> <first argument>` (the program name without directory, PowerShell scripts keyed by `powershell.exe <first word of the script>`); the last value repeats; an absent key prints nothing; `<scratch>` stands for the private scratch mount point.",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "expected": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The commands run in order, each `<program> <arguments joined by one space>`, with `<scratch>` for the scratch mount point; PowerShell lines carry the script only."
+        }
+      }
+    },
+    "AvailabilityCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "volumeAvailableBytes",
+        "effectiveBytes"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "volumeAvailableBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "containerFreeBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "hostFreeBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "effectiveBytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

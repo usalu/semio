@@ -1,0 +1,51 @@
+{
+  "name": "@semio-tech/norm-energy-plugin",
+  "$schema": "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/🌎️hub/🧩️compositions/📕️norm/🧩️extensions/📒️energy/**/*.rs",
+      "{projectRoot}/**/*"
+    ],
+    "normTree": [
+      "sharedGlobals",
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🌎️hub/🧩️compositions/📕️norm/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/**/*",
+      "!{workspaceRoot}/✏️s/🔌️plugins/📕️norm/**/target/**/*",
+      "!{workspaceRoot}/✏️s/🔌️plugins/📕️norm/**/node_modules/**/*",
+      "!{workspaceRoot}/✏️s/🔌️plugins/📕️norm/**/🗑️generated/**/*"
+    ]
+  },
+  "targets": {
+    "test": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/📕️norm/🧩️extensions/📒️energy/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts test",
+        "forwardAllArgs": true
+      },
+      "outputs": [],
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "normTree"
+      ]
+    },
+    "surface-render-test": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/📕️norm/🧩️extensions/📒️energy/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts surface-render-test",
+        "forwardAllArgs": true
+      },
+      "outputs": [],
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "normTree"
+      ]
+    }
+  }
+}

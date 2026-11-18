@@ -34,9 +34,9 @@
           "baseZ": 3.5,
           "height": 0.375,
           "layers": 3,
-          "meshSize": 0.25,
+          "axis": "z",
           "materialId": "c30",
-          "axis": "z"
+          "meshSize": 0.25
         }
       }
     ]

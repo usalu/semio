@@ -638,5 +638,200 @@
         ]
       }
     ]
+  },
+  "directTaskAdmission": {
+    "registry": {
+      "version": 1,
+      "owners": [
+        {
+          "name": "app",
+          "root": "app",
+          "manifest": "app/📋️project.json",
+          "packages": []
+        },
+        {
+          "name": "lib",
+          "root": "library",
+          "manifest": "library/📋️project.json",
+          "packages": []
+        }
+      ],
+      "catalogProviders": []
+    },
+    "edges": [
+      [
+        "app",
+        "lib"
+      ]
+    ],
+    "cases": [
+      {
+        "name": "exclude flag admits only the named owner",
+        "args": [
+          "run",
+          "app:build",
+          "--exclude-dependencies"
+        ],
+        "selection": {
+          "kind": "tasks",
+          "tasks": [
+            {
+              "project": "app",
+              "target": "build"
+            }
+          ],
+          "excludeDependencies": true
+        },
+        "owners": [
+          "app"
+        ],
+        "targets": {
+          "app": [
+            "build"
+          ]
+        }
+      },
+      {
+        "name": "exclude alias admits only the named owner",
+        "args": [
+          "run",
+          "app:build",
+          "--exclude-task-dependencies"
+        ],
+        "selection": {
+          "kind": "tasks",
+          "tasks": [
+            {
+              "project": "app",
+              "target": "build"
+            }
+          ],
+          "excludeDependencies": true
+        },
+        "owners": [
+          "app"
+        ],
+        "targets": {
+          "app": [
+            "build"
+          ]
+        }
+      },
+      {
+        "name": "explicit true value",
+        "args": [
+          "run",
+          "app:build",
+          "--exclude-dependencies=true",
+          "--configuration=prototype"
+        ],
+        "selection": {
+          "kind": "tasks",
+          "tasks": [
+            {
+              "project": "app",
+              "target": "build",
+              "configuration": "prototype"
+            }
+          ],
+          "excludeDependencies": true
+        },
+        "owners": [
+          "app"
+        ],
+        "targets": {
+          "app": [
+            "build"
+          ]
+        }
+      },
+      {
+        "name": "explicit false value keeps the closure",
+        "args": [
+          "run",
+          "app:build",
+          "--exclude-dependencies=false"
+        ],
+        "selection": {
+          "kind": "tasks",
+          "tasks": [
+            {
+              "project": "app",
+              "target": "build"
+            }
+          ]
+        },
+        "owners": [
+          "app",
+          "lib"
+        ],
+        "targets": {
+          "app": [
+            "build"
+          ],
+          "lib": [
+            "build"
+          ]
+        }
+      },
+      {
+        "name": "default keeps the closure",
+        "args": [
+          "run",
+          "app:build"
+        ],
+        "selection": {
+          "kind": "tasks",
+          "tasks": [
+            {
+              "project": "app",
+              "target": "build"
+            }
+          ]
+        },
+        "owners": [
+          "app",
+          "lib"
+        ],
+        "targets": {
+          "app": [
+            "build"
+          ],
+          "lib": [
+            "build"
+          ]
+        }
+      },
+      {
+        "name": "flag after the task boundary is a task argument",
+        "args": [
+          "run",
+          "app:build",
+          "--",
+          "--exclude-dependencies"
+        ],
+        "selection": {
+          "kind": "tasks",
+          "tasks": [
+            {
+              "project": "app",
+              "target": "build"
+            }
+          ]
+        },
+        "owners": [
+          "app",
+          "lib"
+        ],
+        "targets": {
+          "app": [
+            "build"
+          ],
+          "lib": [
+            "build"
+          ]
+        }
+      }
+    ]
   }
 }

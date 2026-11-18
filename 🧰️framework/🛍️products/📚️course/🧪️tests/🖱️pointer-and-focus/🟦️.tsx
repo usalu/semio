@@ -84,6 +84,19 @@ describe("🖱️ pointer and focus", () => {
     expect(presence.point).not.toHaveBeenCalled();
     Reflect.deleteProperty(document, "elementFromPoint");
   });
+  it("never hit-tests the page on a press: the press target is the target, and only a pressed move looks beneath a captured drag", () => {
+    const presence = { point: vi.fn(), focusOn: vi.fn(), drag: vi.fn() };
+    render(<Harness presence={presence as unknown as CoursePresence} />);
+    const hit = vi.fn(() => null);
+    Object.defineProperty(document, "elementFromPoint", { configurable: true, value: hit });
+    const button = screen.getByRole("button", { name: "Outside" });
+    pointer(button, "pointerdown", 20, 30, 1);
+    expect(hit).not.toHaveBeenCalled();
+    expect(presence.point).toHaveBeenLastCalledWith(viewportCursor(20, 30));
+    pointer(button, "pointermove", 25, 30, 1);
+    expect(hit).toHaveBeenCalledTimes(1);
+    Reflect.deleteProperty(document, "elementFromPoint");
+  });
   it("names the nearest anchor under the pointer — an item before its card — also while pressed, the item a grip drags until release, and keyboard focus only", () => {
     const presence = { point: vi.fn(), focusOn: vi.fn(), drag: vi.fn() };
     render(<Harness presence={presence as unknown as CoursePresence} />);

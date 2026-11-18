@@ -8,7 +8,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { buildViteArtifact } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
 import { prefetchPlayMapTiles } from "./🗺️map-tiles/🟦️.ts";
-import { PLAY_HOST, playRuntimeComponentIds } from "../🧩️runtime/🟦️.ts";
+import { PLAY_HOST } from "../🧩️runtime/📇️catalog/🟦️.ts";
+import { playRuntimeComponentIds } from "../🧩️runtime/🟦️.ts";
 import { playModuleCatalogFindingsV1 } from "./📄pages/🟦️.ts";
 import { publishPlayPageCohortV1, withPublishedPlayPagesV1 } from "./📄pages/📦️publication/🟦️.ts";
 

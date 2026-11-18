@@ -122,6 +122,7 @@ fn the_grid_metrics_are_the_ones_the_fixture_was_pinned_against() {
 
 #[test]
 fn rows_columns_and_editable_cells_are_laid_out_on_one_grid() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let law = law();
     let expected = &law["expected"];
     let (tree, _) = mounted(&law);
@@ -200,6 +201,7 @@ fn every_action_slot_sits_at_the_inline_end_of_its_row() {
 
 #[test]
 fn a_click_on_an_action_icon_fires_that_action_and_anywhere_else_on_the_row_its_activation() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let law = law();
     let (mut tree, root) = mounted(&law);
     for click in law["expected"]["clicks"].as_array().expect("clicks") {
@@ -213,6 +215,7 @@ fn a_click_on_an_action_icon_fires_that_action_and_anywhere_else_on_the_row_its_
 
 #[test]
 fn the_table_paints_its_header_and_plain_cells_once_in_their_columns_and_leaves_editable_cells_to_their_children() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let law = law();
     let (tree, root) = mounted(&law);
     let theme = Theme::default();
@@ -244,6 +247,7 @@ fn the_table_paints_its_header_and_plain_cells_once_in_their_columns_and_leaves_
 
 #[test]
 fn every_row_action_is_an_announced_button_that_fires_its_own_binding() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let law = law();
     let (mut tree, _) = mounted(&law);
     let projection = accessibility_projection(&tree);
@@ -271,6 +275,7 @@ fn every_row_action_is_an_announced_button_that_fires_its_own_binding() {
 /// carries them. Oracle: the contract's `🎯️row-target` fixture, shared with the React host's law.
 #[test]
 fn a_tree_row_and_a_table_row_with_one_target_dispatch_identically() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture: Value = serde_json::from_str(include_str!("../../🧬️contract/🧪️tests/🧫️fixtures/🎯️row-target/🔣️.json")).expect("🎯️ the row-target fixture parses");
     let row = |case: &str| fixture["rows"].as_array().expect("fixture rows").iter().find(|row| row["case"] == case).unwrap_or_else(|| panic!("fixture row {case}"))["component"].clone();
     let stack = serde_json::json!({ "kind": "stack", "axis": "vertical", "gap": "none", "padding": { "all": "none" }, "align": "stretch", "justify": "start", "wrap": false, "grow": false });
@@ -330,6 +335,7 @@ fn a_tree_row_and_a_table_row_with_one_target_dispatch_identically() {
 /// ♿️ The closed language-neutral focus corpus preserves explained disabled actions and refuses unexplained ones.
 #[test]
 fn disabled_row_action_focus_matches_its_explanation_corpus() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let cases: Value = serde_json::from_str(include_str!("../🧫️fixtures/♿️disabled-row-action/🔣️.json")).expect("focus corpus");
     for case in cases.as_array().expect("cases") {
         let mut action = serde_json::json!({ "icon": "package-x", "label": case["label"], "verb": "edit", "disabled": case["disabled"] });

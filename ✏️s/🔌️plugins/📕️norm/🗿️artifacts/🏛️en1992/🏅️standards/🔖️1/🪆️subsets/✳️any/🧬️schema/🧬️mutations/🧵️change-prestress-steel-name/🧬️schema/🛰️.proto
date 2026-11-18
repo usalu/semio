@@ -1,5 +1,5 @@
 syntax = "proto3";
-package semio.s.norm.en1992.mutation.change_prestress_steel_name;
+package semio.s.norm_eurocode_structural.en1992.mutation.change_prestress_steel_name;
 message ChangePrestressSteelName {
   string grade_id = 1;
   string new_name = 2;

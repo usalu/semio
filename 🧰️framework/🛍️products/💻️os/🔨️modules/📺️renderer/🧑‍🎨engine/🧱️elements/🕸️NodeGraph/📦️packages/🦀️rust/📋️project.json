@@ -43,6 +43,7 @@
       "outputs": ["{projectRoot}/.🧾️store/wasm.json"],
       "metadata": {
         "semio": {
+          "sourceInputObservation": "freshness",
           "wasmPackageSourceV1": {
             "version": 1,
             "sourceOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust",

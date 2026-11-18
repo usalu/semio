@@ -9,6 +9,7 @@
       "nestedLive": false,
       "expected": {
         "accepts": true,
+        "waits": false,
         "mustDrain": false
       }
     },
@@ -20,6 +21,7 @@
       "nestedLive": false,
       "expected": {
         "accepts": false,
+        "waits": false,
         "mustDrain": true
       }
     },
@@ -31,6 +33,7 @@
       "nestedLive": true,
       "expected": {
         "accepts": true,
+        "waits": false,
         "mustDrain": true
       }
     },
@@ -42,6 +45,7 @@
       "nestedLive": true,
       "expected": {
         "accepts": false,
+        "waits": true,
         "mustDrain": true
       }
     },
@@ -53,6 +57,7 @@
       "nestedLive": false,
       "expected": {
         "accepts": false,
+        "waits": false,
         "mustDrain": false
       }
     },
@@ -64,6 +69,7 @@
       "nestedLive": false,
       "expected": {
         "accepts": true,
+        "waits": false,
         "mustDrain": true
       }
     }

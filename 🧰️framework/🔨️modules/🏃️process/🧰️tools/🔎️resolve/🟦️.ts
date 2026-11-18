@@ -5,6 +5,7 @@ import { findToolV1, TOOL_REGISTRY_V1, type ToolEntryV1, type ToolLocatorV1, typ
 import { runtimeCommandNameV1 } from "../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 import { readToolPinV1, systemToolPinPortV1, toolDigestForHostV1, type ToolPinPortV1, type ToolPinV1 } from "../📌️pin/🟦️.ts";
 import { nativeCompilerArgumentsV1, selectNativeCompilerV1 } from "../🛠️native-compiler/🟦️.ts";
+import { machinePathV1 } from "../../🏗️build/🏠️machine-state/🟦️.ts";
 
 /** 🔌️ What resolving a tool touches on the host; tests replace it so every platform is testable on any host. */
 export type ToolHostV1 = Readonly<{
@@ -71,7 +72,7 @@ export function resolveToolV1(entry: ToolEntryV1, host: ToolHostV1, registry: To
       tried.push("runtime");
       if (entry.commands.includes(basename(host.execPath).replace(/\.exe$/iu, "")) || entry.commands.includes(host.runtimeCommand)) return found(host.execPath, "runtime");
     } else if (locator.kind === "provisioned") {
-      const partition = host.root + "/" + (registry.partitions[locator.partition] ?? locator.partition);
+      const partition = machinePathV1(host.root, registry.partitions[locator.partition] ?? locator.partition);
       const digest = toolDigestForHostV1(pin, host.platform, host.architecture, entry.pin.digests?.hostExtras ?? {});
       const segments = locator.segments.map(segment => segment.replace(/\{sha256(?::(\d+))?\}/gu, (_, length?: string) => digest === undefined ? "" : length ? digest.sha256.slice(0, Number(length)) : digest.sha256).replace("{version}", pin.version ?? "").replace("{host}", `${host.platform}-${host.architecture}`));
       tried.push(join(partition, ...segments, locator.executable));

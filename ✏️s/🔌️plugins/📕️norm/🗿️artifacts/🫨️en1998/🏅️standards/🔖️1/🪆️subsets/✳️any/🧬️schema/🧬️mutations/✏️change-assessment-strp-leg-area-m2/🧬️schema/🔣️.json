@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-assessment-strp-leg-area-m2/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1998/mutation/change-assessment-strp-leg-area-m2/schema.json",
   "title": "ChangeAssessmentStrpLegAreaM2",
   "type": "object",
   "additionalProperties": false,

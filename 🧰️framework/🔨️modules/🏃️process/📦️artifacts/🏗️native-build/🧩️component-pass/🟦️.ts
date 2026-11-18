@@ -24,6 +24,7 @@ import { execFile, spawn, type ChildProcess } from "node:child_process";
 import { createHash } from "node:crypto";
 import { closeSync, existsSync, mkdirSync, mkdtempSync, openSync, readdirSync, readSync, rmSync, statSync, writeFileSync, writeSync } from "node:fs";
 import {nativeStatfsSyncV1} from "../💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {nativeImageAvailabilityCorrectionMillisecondsV1, nativeImageContainerFreeBytesSyncV1, nativeImageEffectiveAvailableBytesV1} from "../💾️storage/🍎️image/⚖️availability/🟦️.ts";
 import { availableParallelism, homedir } from "node:os";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { createInterface } from "node:readline";
@@ -570,7 +571,10 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
   };
   const graphOf = (id: string): Promise<CargoUnitGraphV1> => unitGraphs.get(batches.find((row) => row.pass.id === id)?.parent ?? id)!;
   const remainingBytes = (): number => Math.max(0, ...batches.filter((row) => !finishedPasses.has(row.pass.id)).map((row) => row.bytes));
-  const headroomBytes = (): number => { const facts = nativeStatfsSyncV1(options.storage.backing.root); return facts.bavail * facts.bsize; };
+  let correction = { bytes: 0, until: 0 };
+  const statfsBytes = (): number => { const facts = nativeStatfsSyncV1(options.storage.backing.root); return facts.bavail * facts.bsize; };
+  const headroomBytes = (): number => statfsBytes() + (Date.now() < correction.until ? correction.bytes : 0);
+  const reconcileHeadroom = (): void => { const volume = statfsBytes(), effective = nativeImageEffectiveAvailableBytesV1(volume, nativeImageContainerFreeBytesSyncV1(options.storage.backing.root)); correction = { bytes: effective - volume, until: Date.now() + nativeImageAvailabilityCorrectionMillisecondsV1 }; if (effective > volume) log(`[native-build] the volume reports ${(volume / 1024 ** 2).toFixed(0)} MiB available but its container has ${(effective / 1024 ** 2).toFixed(0)} MiB unallocated; the volume figure is stale from its mount, using the container figure`); };
   const reclaimPass = (pass: NativeBuildPassV1, messages: readonly unknown[]): void => {
     const done = completion(`reclaim:${pass.id}`), settled = done.promise.catch(() => undefined);
     reclaims.set(pass.id, settled);
@@ -594,7 +598,8 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
     await options.storage.recheck();
     const predicted = batches.find((row) => row.pass.id === pass.id)!;
     while (availableBytes() < predicted.bytes + reserveBytes && (inflight.size || pendingReclaims.size)) { check(); await Promise.race([...[...inflight.values()].map((row) => row.settled), ...pendingReclaims]); }
-    if (availableBytes() < predicted.bytes + reserveBytes && options.reclaimStorage) { const needBytes = predicted.bytes + reserveBytes - availableBytes(); log(`[native-build] ${pass.id}: ${(needBytes / 1024 ** 2).toFixed(0)} MiB short of its predicted footprint; asking the cache collector to free the incremental sessions no running compiler holds`); await options.reclaimStorage({ needBytes }); check(); }
+    if (availableBytes() < predicted.bytes + reserveBytes) reconcileHeadroom();
+    if (availableBytes() < predicted.bytes + reserveBytes && options.reclaimStorage) { const needBytes = predicted.bytes + reserveBytes - availableBytes(); log(`[native-build] ${pass.id}: ${(needBytes / 1024 ** 2).toFixed(0)} MiB short of its predicted footprint; asking the cache collector to free the incremental sessions no running compiler holds`); await options.reclaimStorage({ needBytes }); check(); reconcileHeadroom(); }
     if (availableBytes() < predicted.bytes + reserveBytes) throw Error(`Native build storage refused: ${pass.id} needs a predicted ${(predicted.bytes / 1024 ** 2).toFixed(0)} MiB${predicted.measured ? "" : " (unmeasured units estimated by kind)"} plus the ${(reserveBytes / 1024 ** 2).toFixed(0)} MiB reserve, ${(availableBytes() / 1024 ** 2).toFixed(0)} MiB remain after every running batch settled and every unit no remaining pass needs was reclaimed`);
     let release = (): void => undefined;
     inflight.set(pass.id, { bytes: predicted.bytes, settled: new Promise<void>((accept) => { release = accept; }) });

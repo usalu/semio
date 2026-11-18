@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-plated-stiffener-shape/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1993/mutation/change-plated-stiffener-shape/schema.json",
   "title": "ChangePlatedStiffenerShape",
   "type": "object",
   "additionalProperties": false,
@@ -30,7 +30,7 @@
       }
     },
     "newStiffenerShape": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/StiffenerShape",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1993/snapshot.json#/$defs/StiffenerShape",
       "x-semio-ui": {
         "label": {
           "en": "Transverse stiffener outline shape (centreline walls for I_T, I_w and I_p of the stiffener)",

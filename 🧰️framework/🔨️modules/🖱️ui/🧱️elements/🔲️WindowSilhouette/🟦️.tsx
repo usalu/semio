@@ -84,6 +84,7 @@ export interface WindowSilhouetteGeometry {
 
 export const WINDOW_SILHOUETTE_PATH_INSET = 1;
 export const WINDOW_SILHOUETTE_CHIP_EPSILON = 0.5;
+export const WINDOW_SILHOUETTE_FULL_SPAN_SNAP = 2 * WINDOW_SILHOUETTE_PATH_INSET;
 
 function finiteWindowSilhouetteCoordinate(value: number): number {
   return Number.isFinite(value) ? Math.max(0, value) : 0;
@@ -108,6 +109,12 @@ export function normalizeWindowSilhouetteChips(chips: readonly WindowSilhouetteC
   return merged;
 }
 
+/** 📐️ A chip ending less than two border insets from a card side reaches that side, so the cap row is the card top and the silhouette stays valid at every inset. */
+export function snapWindowSilhouetteChips(chips: readonly WindowSilhouetteChip[], width: number): WindowSilhouetteChip[] {
+  const snapped = chips.map((chip) => ({ left: chip.left <= WINDOW_SILHOUETTE_FULL_SPAN_SNAP ? 0 : chip.left, right: chip.right >= width - WINDOW_SILHOUETTE_FULL_SPAN_SNAP ? width : chip.right }));
+  return normalizeWindowSilhouetteChips(snapped, 0, width);
+}
+
 export function normalizeWindowSilhouetteMetrics(metrics: WindowSilhouetteMetrics): WindowSilhouetteMetrics {
   const width = finiteWindowSilhouetteCoordinate(metrics.width);
   const height = finiteWindowSilhouetteCoordinate(metrics.height);
@@ -116,8 +123,8 @@ export function normalizeWindowSilhouetteMetrics(metrics: WindowSilhouetteMetric
   return {
     width,
     height,
-    top: { depth: topDepth, chips: normalizeWindowSilhouetteChips(metrics.top.chips, 0, width) },
-    bottom: { depth: bottomDepth, chips: normalizeWindowSilhouetteChips(metrics.bottom.chips, 0, width) },
+    top: { depth: topDepth, chips: snapWindowSilhouetteChips(normalizeWindowSilhouetteChips(metrics.top.chips, 0, width), width) },
+    bottom: { depth: bottomDepth, chips: snapWindowSilhouetteChips(normalizeWindowSilhouetteChips(metrics.bottom.chips, 0, width), width) },
     ...(metrics.contextMenuFusion ? { contextMenuFusion: metrics.contextMenuFusion } : {}),
   };
 }

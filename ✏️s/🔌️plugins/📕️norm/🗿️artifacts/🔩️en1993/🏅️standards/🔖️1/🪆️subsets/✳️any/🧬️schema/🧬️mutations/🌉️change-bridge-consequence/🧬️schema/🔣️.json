@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-bridge-consequence/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1993/mutation/change-bridge-consequence/schema.json",
   "title": "ChangeBridgeConsequence",
   "type": "object",
   "additionalProperties": false,
@@ -30,7 +30,7 @@
       }
     },
     "newConsequence": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/FatigueConsequence",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1993/snapshot.json#/$defs/FatigueConsequence",
       "x-semio-ui": {
         "label": {
           "en": "Assessment consequence",

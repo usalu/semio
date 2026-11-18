@@ -26,6 +26,7 @@ path = "../../🦀️.rs"
 [dev-dependencies]
 semio-framework-job = { path = "../../../../../../../../🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
 semio-ui-arena = { path = "../../../../../../../🌳️retained/🏟️arena/📦️packages/🦀️rust" }
+semio-ui-contract-values = { path = "../../../../../../../🧬️contract/🌱️values/📦️packages/🦀️rust", features = ["testkit"] }
 semio-ui-declaration = { path = "../../../../../../../📜️declaration/📦️packages/🦀️rust" }
 semio-ui-draw-contract = { path = "../../../../../🖍️draw/🏷️types/📦️packages/🦀️rust", features = ["testkit"] }
 semio-ui-layout = { path = "../../../../../../../📜️declaration/📐️layout/📦️packages/🦀️rust" }

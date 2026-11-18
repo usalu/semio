@@ -1,5 +1,59 @@
 {
- "version": 1,
+ "version": 2,
+ "semantics": {
+  "revision": 1,
+  "contract": {
+   "en": "The task semantics revision: the one declared number that stands for every behaviour of the private Nx executors (how a command is started, which environment, working directory and arguments it gets, what a restored task output means) that the listed surface files do not carry by their bytes. Bump it on purpose whenever a change makes any task produce different outputs; the task semantics law fails when the fixture outputs changed without the matching history row. Scheduling, graph reading, planning, capacity, leases, readiness, the fleet pool and cache custody never change task outputs and are in no task hash.",
+   "de": "Die Aufgabensemantik-Revision: die eine deklarierte Zahl für jedes Verhalten der privaten Nx-Executoren (wie ein Befehl gestartet wird, welche Umgebung, welches Arbeitsverzeichnis und welche Argumente er erhält, was eine wiederhergestellte Aufgabenausgabe bedeutet), das die gelisteten Oberflächendateien nicht durch ihre Bytes tragen. Sie wird absichtlich erhöht, sobald eine Änderung irgendeine Aufgabe andere Ausgaben erzeugen lässt; das Aufgabensemantik-Gesetz scheitert, wenn sich die Fixture-Ausgaben ohne die passende Verlaufszeile ändern. Scheduling, Graphlesen, Planung, Kapazität, Leases, Bereitschaft, der Flotten-Pool und die Cache-Verwahrung ändern nie Aufgabenausgaben und stehen in keinem Aufgaben-Hash."
+  },
+  "surface": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/🏃️execution/🟨️.mjs",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/📜️script.ts",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🟦️.ts",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🟨️.mjs",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/📥️source.json",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/🔣️command.json",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/🔣️executor.json",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📤️arguments/🟨️.mjs",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/📤️orchestration/🟨️.mjs",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/📤️orchestration/🧬️schema/🔣️.json",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📥️caller.json",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️executors.json"
+  ],
+  "nativeSurface": [
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/⚙️configuration/",
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎯️recipe/",
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📋️plan/",
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📏️path-envelope/",
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📏️paths/",
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️capture/",
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️inputs/",
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/",
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/",
+   "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/",
+   "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🏃️execution/",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🌿️environment/",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🕸️wasm-bindgen/",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗂️directories/",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🏗️buildscript/",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🔏️key/",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧭️remap/",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🪪️extern/",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️execution/",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🔣️policy/",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🛠️preparation/",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/"
+  ],
+  "excludedSegments": [
+   "🧪️tests",
+   "🧪️testing-fixtures"
+  ]
+ },
  "spawnOnly": [
   {
    "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🚀️launch/🟦️.ts",
@@ -24,58 +78,6 @@
     "en": "The reload of an invocation only computes the path of the sealed entry to find the sealed store that holds its snapshot and reads its pointer; it never imports the entry, and the entry never runs an Nx task, so the entry and everything only it reaches cannot change the bytes of a task.",
     "de": "Das Neuladen eines Aufrufs berechnet nur den Pfad des versiegelten Einstiegs, um den versiegelten Speicher mit seinem Schnappschuss zu finden und dessen Zeiger zu lesen; es importiert den Einstieg nie, und der Einstieg führt nie eine Nx-Task aus, daher können der Einstieg und alles, was nur er erreicht, die Bytes einer Task nicht ändern."
    }
-  }
- ],
- "domains": [
-  {
-   "id": "bazel-route",
-   "contract": {
-    "en": "Code of the Bazel route: servers, sessions, scopes, task plans and its executor. A task of the Nx route never runs it, so the bytes of its outputs cannot depend on it.",
-    "de": "Code der Bazel-Route: Server, Sitzungen, Scopes, Task-Pläne und ihr Executor. Eine Task der Nx-Route führt ihn nie aus, daher können die Bytes ihrer Ausgaben nicht von ihm abhängen."
-   },
-   "prefixes": [
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/",
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/"
-   ]
-  },
-  {
-   "id": "cache-retention",
-   "contract": {
-    "en": "Retention of cache stores: which cached bytes are kept, pruned or collected. It decides how long bytes live, never what they are.",
-    "de": "Aufbewahrung der Cache-Speicher: welche gecachten Bytes bleiben, bereinigt oder eingesammelt werden. Sie bestimmt, wie lange Bytes leben, nie was sie sind."
-   },
-   "prefixes": [
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/",
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/",
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/"
-   ]
-  },
-  {
-   "id": "cargo-route",
-   "contract": {
-    "en": "Cargo orchestration, its unit cache and the Cargo test harness. Only the owner-command executor of a target that compiles Rust runs it; a command of any other target that needs it names it among its own declared inputs, so its bytes cannot depend on it through the engine.",
-    "de": "Cargo-Orchestrierung, ihr Unit-Cache und der Cargo-Testrahmen. Nur der Owner-Command-Executor eines Ziels, das Rust übersetzt, führt sie aus; ein Befehl jedes anderen Ziels, das sie braucht, nennt sie unter seinen eigenen deklarierten Eingaben, daher können seine Bytes über die Engine nicht von ihr abhängen."
-   },
-   "prefixes": [
-    "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/",
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/",
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/",
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/"
-   ],
-   "keyedFor": [
-    "native"
-   ]
-  },
-  {
-   "id": "graph-derivation",
-   "contract": {
-    "en": "Derivation of the build graph: inference, observation, sealing and the Nx graph pool. Its result is the task definition (command, environment, inputs, outputs, dependencies) that the Nx hasher already keys, so an edit that keeps every definition cannot change the bytes of a task.",
-    "de": "Ableitung des Build-Graphen: Inferenz, Beobachtung, Versiegelung und der Nx-Graph-Pool. Ihr Ergebnis ist die Task-Definition (Befehl, Umgebung, Eingaben, Ausgaben, Abhängigkeiten), die der Nx-Hasher bereits schlüsselt; eine Änderung, die jede Definition erhält, kann die Bytes einer Task nicht ändern."
-   },
-   "prefixes": [
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/",
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/"
-   ]
   }
  ]
 }

@@ -201,15 +201,15 @@ fn the_surface_of_a_live_editor_binds_the_drag_phases_and_an_armed_insert_tool_b
     let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     use crate::{GhostPreview, GhostSource, LaneFrame, NormTransient};
     let palette = vec![PaletteEntry { id: "member".into(), label_en: "Member".into(), label_de: "Bauteil".into() }];
-    let idle = panel_json("s.norm.en1993@1/*#editor", LaneOverlays { palette: palette.clone(), ..Default::default() });
+    let idle = panel_json("s.norm-eurocode-structural.en1993@1/*#editor", LaneOverlays { palette: palette.clone(), ..Default::default() });
     for needle in ["setFields", "stream", "commit", "abort", "previewRemedy", "clearPreview", "Insert Member"] {
         assert!(idle.contains(needle), "{needle}: {idle}");
     }
     assert!(!idle.contains("placeSpec"), "no tool armed, no placement binding");
     let ghost = GhostPreview { writes: Vec::new(), source: GhostSource::Insert { spec: "member".into(), kind: EntityKind::Member, at: Vec3::new(0.0, 0.0, 0.0) } };
-    let armed = panel_json("s.norm.en1993@1/*#editor", LaneOverlays { palette, frame: LaneFrame { transient: NormTransient::default().with_ghost(Some(ghost)), peers: Vec::new() }, ..Default::default() });
+    let armed = panel_json("s.norm-eurocode-structural.en1993@1/*#editor", LaneOverlays { palette, frame: LaneFrame { transient: NormTransient::default().with_ghost(Some(ghost)), peers: Vec::new() }, ..Default::default() });
     assert!(armed.contains("placeSpec") && armed.contains("insertSpec"), "{armed}");
-    let viewer = panel_json("s.norm.en1993@1/*#viewer", LaneOverlays::default());
+    let viewer = panel_json("s.norm-eurocode-structural.en1993@1/*#viewer", LaneOverlays::default());
     assert!(!viewer.contains("setFields"), "{viewer}");
 }
 
@@ -294,7 +294,7 @@ fn grip(id: &str, rest: f64, limits: (f64, f64), increment: f64) -> Handle {
     }
 }
 
-const EDITOR_CONTROLLER: &str = "s.norm.en1993@1/*#editor";
+const EDITOR_CONTROLLER: &str = "s.norm-eurocode-structural.en1993@1/*#editor";
 
 fn touch_json(view: &ViewportView, device: Option<DeviceClass>, locale: semio_ui_locale::Locale) -> Option<String> {
     crate::toolbar::render_touch_controls(view, device, "norm.x", locale, EDITOR_CONTROLLER).expect("touch controls").map(|node| semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("project the touch controls"))
@@ -341,7 +341,7 @@ fn the_edit_menu_is_part_of_the_viewport_panel_while_the_view_lane_holds_it_open
     let german = panel(true, EDITOR_CONTROLLER, Locale::De);
     assert!(german.contains("Bearbeiten") && german.contains("Menü schließen") && german.contains("Alle auswählen") && german.contains("Prüfung fokussieren"), "{german}");
     assert!(!panel(false, EDITOR_CONTROLLER, Locale::En).contains("norm-touch-menu"), "a closed menu is not drawn");
-    assert!(!panel(true, "s.norm.en1993@1/*#viewer", Locale::En).contains("norm-touch-menu"), "a viewer edits nothing, so it has no Edit menu");
+    assert!(!panel(true, "s.norm-eurocode-structural.en1993@1/*#viewer", Locale::En).contains("norm-touch-menu"), "a viewer edits nothing, so it has no Edit menu");
     let nodes = crate::accessibility::published_nodes::published("menu", "norm.menu-law");
     assert_eq!((nodes.len(), nodes[0].node.role), (7, "menu"), "the open menu publishes a menu with its six entries (focus check first) for the screen reader");
     assert_eq!(nodes[1].key, crate::TOUCH_FOCUS_CHECK_ID);

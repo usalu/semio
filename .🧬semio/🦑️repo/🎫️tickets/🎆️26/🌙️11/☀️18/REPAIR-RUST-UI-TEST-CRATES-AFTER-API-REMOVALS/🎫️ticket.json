@@ -1,0 +1,22 @@
+{
+  "title": "Repair Rust UI Test Crates After API Removals",
+  "emoji": "🧪",
+  "status": "open",
+  "description": "Repair the Rust UI test crates under 🧰️framework/🔨️modules/🖱️ui broken by API removals and the arena-registration refactor: non-compiling crates (wgpu-engine-laws, engine-scene-laws, layout-laws, raster, locale, text-splice-native), 9 failing wgpu-laws (panic-safe arena scope), 5 stale contract-conformance fixtures (with TS twin), clipboard ingress admission laws, events/mounted-layout settling, and sweep all remaining UI crates. Follows 26/11/17/FINISH-SHARED-BORDER-CONSOLIDATION-ACROSS-UI. Done = every UI Rust crate compiles its tests and passes, with a per-crate before/after table.",
+  "goal": "🎯runningframework",
+  "sessions": [
+    "06d76325-44e9-4c6e-aa9a-9cf1d46f3adb"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-18 12:51:37",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Repair the Rust UI test crates under 🧰️framework/🔨️modules/🖱️ui broken by API removals and the arena-registration refactor: non-compiling crates (wgpu-engine-laws, engine-scene-laws, layout-laws, raster, locale, text-splice-native), 9 failing wgpu-laws (panic-safe arena scope), 5 stale contract-conformance fixtures (with TS twin), clipboard ingress admission laws, events/mounted-layout settling, and sweep all remaining UI crates. Follows 26/11/17/FINISH-SHARED-BORDER-CONSOLIDATION-ACROSS-UI. Done = every UI Rust crate compiles its tests and passes, with a per-crate before/after table.",
+      "llm": "opus-5-5"
+    }
+  ]
+}

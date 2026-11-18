@@ -1,5 +1,5 @@
 /** 🌪️ A whole class at once, with the network and the proctor misbehaving: real browser learners (as many as the machine sustains, `CHAOS_BROWSERS`) and lightweight protocol learners (`CHAOS_PROTOCOL`) that speak the site's own client protocol add up to about a hundred simultaneous learners. Every browser learner plays every quiz of the course end to end while the network drops and returns at random moments in the middle of an answer or a submission, pages reload, tabs close and reopen, the proctor is killed and started again, and the requests of the page slow down. Afterwards every learner's truth is read back from the proctor itself: each quiz was submitted and scored exactly once, the totals are exact, the leaderboard ranks everyone with the right total, and the presence counts converge on how many are online.
- * A hundred real browsers (`CHAOS_PROTOCOL=0 CHAOS_BROWSERS=100`) is a mode of this spec: `CHAOS_CONTEXTS_PER_BROWSER` spreads the learners over Chromium processes of that many contexts each, `CHAOS_ARRIVAL_S` is the time the class takes to arrive, `CHAOS_QUIZZES=1` gives every browser one quiz (spread evenly over the course), `CHAOS_CALM=1` switches the learners' pets and icon animations off through the app's own preferences and asks for reduced motion, `CHAOS_VIEWPORT=WxH` makes the windows small, and `CHAOS_SAMPLE_S` is how often the memory, the connected browsers and the presence count are sampled.
+ * A hundred real browsers (`CHAOS_PROTOCOL=0 CHAOS_BROWSERS=100`) is a mode of this spec: `CHAOS_CONTEXTS_PER_BROWSER` spreads the learners over Chromium processes of that many contexts each, `CHAOS_ARRIVAL_S` is the time the class takes to arrive, `CHAOS_BROWSER_QUIZZES=1` gives every browser one quiz (spread evenly over the course; `CHAOS_QUIZZES` still sets how many quizzes the protocol learners play), `CHAOS_CALM=1` switches the learners' pets, icon animations and shared cursors off through the app's own preferences and asks for reduced motion, `CHAOS_VIEWPORT=WxH` makes the windows small, and `CHAOS_SAMPLE_S` is how often the memory, the connected browsers and the presence count are sampled.
  * The stack comes from the gate (`TEACHING_ARCHITECTURE_COURSE_E2E_*`); a run writes its timings and counters to `CHAOS_REPORT` (a JSON file path) when set.
  * @see ./🥒️.feature — the scenarios in words
  * @see ./🤖️protocol-learner/🟦️.ts — the learners without a browser
@@ -19,11 +19,16 @@ import { ghost, type Vanish, ProtocolLearner } from "./🤖️protocol-learner/�
 const BROWSERS = Number(process.env.CHAOS_BROWSERS ?? 24);
 const PROTOCOL = Number(process.env.CHAOS_PROTOCOL ?? 76);
 const QUIZ_LIMIT = Number(process.env.CHAOS_QUIZZES ?? QUIZZES.length);
+const BROWSER_QUIZZES = Number(process.env.CHAOS_BROWSER_QUIZZES ?? QUIZ_LIMIT);
 const CHAOS = Number(process.env.CHAOS_INTENSITY ?? 1);
 const REPORT = process.env.CHAOS_REPORT ?? "";
 const CONTEXTS_PER_BROWSER = Number(process.env.CHAOS_CONTEXTS_PER_BROWSER ?? 0);
 const ARRIVAL_MS = Number(process.env.CHAOS_ARRIVAL_S ?? 0) * 1_000;
 const CALM = process.env.CHAOS_CALM === "1";
+const MAX_BROWSERS_MB = Number(process.env.CHAOS_MAX_BROWSERS_MB ?? 0);
+const RETRIES = Number(process.env.CHAOS_RETRIES ?? 8);
+const PATIENCE_MS = Number(process.env.CHAOS_ADMIT_PATIENCE_S ?? 0) * 1_000;
+const BOOT_SLOTS = Number(process.env.CHAOS_BOOT_SLOTS ?? 0);
 const SAMPLE_MS = Number(process.env.CHAOS_SAMPLE_S ?? 30) * 1_000;
 const VIEWPORT = /^(\d+)x(\d+)$/u.exec(process.env.CHAOS_VIEWPORT ?? "");
 const KILLS = Number(process.env.CHAOS_KILLS ?? 3);
@@ -56,12 +61,21 @@ interface Ledger {
 }
 
 const ledger: Ledger = { events: {}, timings: [], memory: [], latency: { arrive: [], quizStart: [], submit: [], submitAll: [] }, notes: [] };
+const stage = (name: string): void => console.log(`[chaos] stage ${name}`);
 const percentile = (values: readonly number[], fraction: number): number | undefined => [...values].sort((left, right) => left - right)[Math.min(values.length - 1, Math.floor(values.length * fraction))];
 const spread = (values: readonly number[]): { count: number; p50?: number; p95?: number; max?: number } => ({ count: values.length, p50: percentile(values, 0.5), p95: percentile(values, 0.95), max: percentile(values, 1) });
 const inject = (kind: string): void => void (ledger.events[kind] = (ledger.events[kind] ?? 0) + 1);
 
 /** 🌡️ The resident memory, in megabytes, of every browser process this runner started (and how many of them render pages), of the proctor, and of this runner; and the share of memory macOS still calls free. */
 function processes(): { browsersMb: number; renderers: number; proctorMb: number; runnerMb: number; freePct: number } {
+  if (Date.now() - lastProcesses.at < 4_000) return lastProcesses.value;
+  const value = measuredProcesses();
+  lastProcesses = { at: Date.now(), value };
+  return value;
+}
+let lastProcesses: { at: number; value: ReturnType<typeof measuredProcesses> } = { at: 0, value: { browsersMb: 0, renderers: 0, proctorMb: 0, runnerMb: 0, freePct: -1 } };
+
+function measuredProcesses(): { browsersMb: number; renderers: number; proctorMb: number; runnerMb: number; freePct: number } {
   const mb = (rows: readonly { rss: number }[]): number => Math.round(rows.reduce((sum, row) => sum + row.rss, 0) / 1024);
   try {
     const rows = execFileSync("ps", ["-axo", "pid=,ppid=,rss=,command="], { encoding: "utf8" }).split("\n").flatMap((line) => {
@@ -99,6 +113,8 @@ class Chaotic implements Device {
   readonly plan: SourceQuiz[];
   id = "";
   live = false;
+  skipped = false;
+  epoch = 0;
   private recovering = 0;
   private shortage = 0;
   private latency = 0;
@@ -107,7 +123,7 @@ class Chaotic implements Device {
   private alive = true;
   private background: Promise<void> = Promise.resolve();
   constructor(readonly index: number, readonly locale: Locale, readonly handle: string, private readonly browser: () => Promise<Browser>, private readonly viewport: { width: number; height: number }) {
-    this.plan = Array.from({ length: QUIZ_LIMIT }, (_, place) => QUIZZES[(index + place) % QUIZZES.length]!);
+    this.plan = Array.from({ length: BROWSER_QUIZZES }, (_, place) => QUIZZES[(index + place) % QUIZZES.length]!);
   }
 
   get quiet(): boolean {
@@ -157,7 +173,7 @@ class Chaotic implements Device {
     if (CALM) await this.context.addInitScript((key) => {
       try {
         const stored = JSON.parse(localStorage.getItem(key) ?? "{}") as { petsChosen?: boolean };
-        if (stored.petsChosen !== true) localStorage.setItem(key, JSON.stringify({ ...stored, pets: "off", petsChosen: true, animateIcons: false, iconsChosen: true }));
+        if (stored.petsChosen !== true) localStorage.setItem(key, JSON.stringify({ ...stored, pets: "off", petsChosen: true, animateIcons: false, iconsChosen: true, showCursors: false }));
       } catch {}
     }, `semio.course.${COURSE.id}.preferences`);
     await this.context.exposeBinding("courseSecurityViolation", (_source, violation: string) => void this.problems.push(`content security policy: ${violation}`));
@@ -173,8 +189,18 @@ class Chaotic implements Device {
     ledger.latency.arrive.push(Math.round(performance.now() - arriving));
     await readIntroduction(this);
     const form = screen(this.page, "identity");
-    await form.locator('input[type="radio"][value="pseudonym"]').check();
-    await form.locator('input[type="text"]').fill(this.handle);
+    await expect(async () => {
+      await form.locator('input[type="radio"][value="pseudonym"]').check({ timeout: 10_000 });
+      await form.locator('input[type="text"]').fill(this.handle, { timeout: 10_000 });
+    }).toPass({ timeout: 150_000, intervals: [500, 1_000, 2_000] }).catch(async (error: unknown) => {
+      const state = await this.page.evaluate(() => {
+        const radio = document.querySelector<HTMLInputElement>('input[type="radio"][value="pseudonym"]');
+        const box = radio?.getBoundingClientRect();
+        const top = box === undefined ? null : document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2);
+        return JSON.stringify({ disabled: radio?.disabled, checked: radio?.checked, box: box === undefined ? null : [box.x, box.y, box.width, box.height], top: top === null ? null : `${top.tagName}.${top.className}`.slice(0, 120), visibility: document.visibilityState, focus: document.hasFocus(), text: document.body.innerText.slice(0, 160), dialogs: document.querySelectorAll("[role=dialog]").length });
+      }, undefined, { timeout: 5_000 }).catch((failure: unknown) => `page unresponsive: ${String(failure).slice(0, 80)}`);
+      throw new Error(`${this.handle} identity step: ${state} | ${error instanceof Error ? error.message.split("\n")[0] : ""}`);
+    });
     await primary(form).click({ noWaitAfter: true });
     await expect(activeOverview(this.page)).toBeVisible();
     await expect.poll(() => learnerId(this), { message: "the identified learner is kept on the device", timeout: 120_000 }).not.toBe("");
@@ -228,6 +254,7 @@ class Chaotic implements Device {
     if (this.offline || this.recovering > 0) return;
     this.counts.reload += 1;
     inject("reload");
+    this.epoch += 1;
     this.disturbedAt = Date.now();
     await this.page.reload({ waitUntil: "domcontentloaded" }).catch(() => undefined);
   }
@@ -236,6 +263,7 @@ class Chaotic implements Device {
     if (this.offline || this.recovering > 0) return;
     this.counts.closed += 1;
     inject("tab-closed-reopened");
+    this.epoch += 1;
     this.disturbedAt = Date.now();
     const gone = this.page;
     this.page = await this.context.newPage();
@@ -318,13 +346,27 @@ class Chaotic implements Device {
 //#region 🎬️Journey
 const challengeOf = (learner: Chaotic, place: number): Challenge => (learner.index % 2 === 1 && place % 3 === 0 ? "easy" : "medium");
 
+/** ✂️ Runs `step`, giving it up as soon as a reload or a reopened tab took its page away, instead of letting it wait out its long timeouts on a page that no longer shows what it acts on. */
+async function untilReloaded<T>(learner: Chaotic, step: () => Promise<T>): Promise<T> {
+  const epoch = learner.epoch;
+  let timer: ReturnType<typeof setInterval> | undefined;
+  const taken = new Promise<never>((_, reject) => void (timer = setInterval(() => learner.epoch !== epoch && reject(new Error("a reload or a reopened tab took the page away")), 500)));
+  const running = step();
+  running.catch(() => undefined);
+  try {
+    return await Promise.race([running, taken]);
+  } finally {
+    clearInterval(timer);
+  }
+}
+
 /** 🔁️ Runs `step` until it passes, recovering the page after a disturbance that interrupted it; a failure with no disturbance behind it is real. */
 async function resilient<T>(learner: Chaotic, what: string, step: () => Promise<T>, recover: () => Promise<void>): Promise<T> {
   for (let attempt = 1; ; attempt++) {
     try {
-      return await step();
+      return await untilReloaded(learner, step);
     } catch (error) {
-      if (attempt >= 8 || !(learner.disturbed || learner.counts.offline > 0 || !proctorState.up)) throw new Error(`${what}: ${error instanceof Error ? error.message.split("\n")[0] : String(error)} | ${await learner.describe()}`);
+      if (attempt >= RETRIES || !(learner.disturbed || learner.counts.offline > 0 || !proctorState.up)) throw new Error(`${what}: ${error instanceof Error ? error.message.split("\n")[0] : String(error)} | ${await learner.describe()}`);
       inject("step-recovered");
       await learner.settle().catch(() => undefined);
       await recover().catch((failure: unknown) => void ledger.notes.push(`${learner.handle}: ${what} recovery interrupted: ${String(failure).split("\n")[0]}`));
@@ -363,7 +405,7 @@ async function playOne(learner: Chaotic, truth: ProctorClient, quiz: SourceQuiz,
       await expect(screen(learner.page, "run").locator("nav button").nth(index).locator("[data-complete]")).toBeVisible();
     }, resume);
   }
-  const submittedByTruth = async (): Promise<boolean> => (await truth.learner(learner.id)).runs.some((run) => run.quiz === quiz.id && run.status === "submitted");
+  const submittedByTruth = async () => (await truth.learner(learner.id)).runs.find((run) => run.quiz === quiz.id && run.status === "submitted");
   let results: { score: number; points: number } | undefined;
   for (let attempt = 1; results === undefined; attempt++) {
     try {
@@ -385,8 +427,8 @@ async function playOne(learner: Chaotic, truth: ProctorClient, quiz: SourceQuiz,
       if (attempt >= 5) throw new Error(`${quiz.id} submit: ${error instanceof Error ? error.message : String(error)}`);
       inject("submit-recovered");
       await learner.settle().catch(() => undefined);
-      if (await submittedByTruth().catch(() => false)) {
-        const view = (await truth.learner(learner.id)).runs.find((run) => run.quiz === quiz.id && run.status === "submitted")!;
+      const view = await submittedByTruth().catch(() => undefined);
+      if (view !== undefined) {
         results = { score: Math.round((view.score ?? 0) * 100), points: view.points ?? 0 };
       } else await resume().catch(() => undefined);
     }
@@ -460,6 +502,20 @@ test("a crowd of about a hundred learners plays every quiz while the network and
   const learners = Array.from({ length: BROWSERS }, (_, index) => new Chaotic(index, index % 2 === 0 ? "en" : "de", `Chaos ${index} ${Math.random().toString(36).slice(2, 7)}`, browserFor(index), viewport));
   const bots = Array.from({ length: PROTOCOL }, (_, index) => new ProtocolLearner(PROCTOR_ORIGIN, COURSE.id, index, shuffled(quizzes), { lostRequest: 0.06, lostAnswer: 0.06 }, give.signal));
   let presenceSeen = 0;
+  let booting = 0;
+  const admit = async (index: number): Promise<(() => void) | undefined> => {
+    const waitedFrom = Date.now();
+    for (;;) {
+      if (PATIENCE_MS > 0 && Date.now() - waitedFrom > PATIENCE_MS) return undefined;
+      const slotFree = BOOT_SLOTS <= 0 || booting < BOOT_SLOTS;
+      const memoryFree = MAX_BROWSERS_MB <= 0 || processes().browsersMb < MAX_BROWSERS_MB || learners.every((learner) => !learner.live);
+      if (slotFree && memoryFree) break;
+      await sleep(1_000 + Math.random() * 1_000);
+    }
+    booting += 1;
+    if (Date.now() - waitedFrom > 4_000) ledger.notes.push(`learner ${index} waited ${Math.round((Date.now() - waitedFrom) / 1000)} s for a boot slot (${BOOT_SLOTS}) and browsers below ${MAX_BROWSERS_MB} MB, with ${learners.filter((learner) => learner.live).length} connected`);
+    return () => void (booting -= 1);
+  };
   const sampler = setInterval(() => {
     const connected = learners.filter((learner) => learner.live).length;
     const sample = { atMs: Date.now() - started, freeMb: Math.round(freemem() / 1048576), ...processes(), connected, presence: presenceSeen };
@@ -478,11 +534,13 @@ test("a crowd of about a hundred learners plays every quiz while the network and
     arrived = () => void (++arrivals >= BROWSERS && accept());
     if (BROWSERS === 0) accept();
   });
-  const total = BROWSERS * quizzes.length;
+  const total = BROWSERS * BROWSER_QUIZZES;
+  let crowdDone = false;
   const conductor = (async () => {
     for (let kill = 1; kill <= KILLS; kill++) {
       const threshold = Math.ceil((total * kill) / (KILLS + 1));
-      while (done < threshold && !give.signal.aborted) await sleep(500);
+      while (done < threshold && !give.signal.aborted && !crowdDone) await sleep(500);
+      if (crowdDone) return;
       if (give.signal.aborted) return;
       inject("proctor-killed");
       proctorState.up = false;
@@ -499,7 +557,13 @@ test("a crowd of about a hundred learners plays every quiz while the network and
     await Promise.all([
       ...learners.map(async (learner, index) => {
         await sleep(index * (ARRIVAL_MS > 0 ? ARRIVAL_MS / Math.max(1, BROWSERS) : 1_500));
-        await learner.start();
+        const booted = await admit(index);
+        if (booted === undefined) {
+          learner.skipped = true;
+          inject("not-admitted-memory-ceiling");
+          return arrived();
+        }
+        await learner.start().finally(booted);
         arrived();
         await attendBrowser(learner, truth, () => void (done += 1));
       }),
@@ -508,16 +572,21 @@ test("a crowd of about a hundred learners plays every quiz while the network and
         await bot.play();
       }),
     ]);
+    crowdDone = true;
     await conductor;
+    const attending = learners.filter((learner) => !learner.skipped).length;
+    learners.splice(0, learners.length, ...learners.filter((learner) => !learner.skipped));
+    stage(`all done, ${attending} of ${BROWSERS} browsers attended`);
     ledger.notes.push(`all learners finished after ${Math.round((Date.now() - started) / 1000)} s`);
 
     for (const bot of bots) expect(bot.account.problems, `bot ${bot.index}`).toEqual([]);
     const everyone = [...learners.map((learner) => ({ id: "", name: learner.handle, expected: 0, plan: learner.plan })), ...bots.map((bot) => ({ id: bot.account.learner, name: `bot ${bot.index}`, expected: bot.account.expectedTotal, plan: shuffledPlan(bot.account.quizzes) }))];
     const expectedBrowser = (learner: Chaotic): number => learner.plan.reduce((sum, _quiz, place) => sum + PAR[challengeOf(learner, place)], 0);
-    for (const learner of learners) {
-      await learner.settle();
-      everyone[learner.index]!.id = learner.id;
-      everyone[learner.index]!.expected = expectedBrowser(learner);
+    await Promise.all(learners.map((learner) => learner.settle()));
+    stage("settled");
+    for (const [position, learner] of learners.entries()) {
+      everyone[position]!.id = learner.id;
+      everyone[position]!.expected = expectedBrowser(learner);
     }
 
     const failures: string[] = [];
@@ -532,19 +601,23 @@ test("a crowd of about a hundred learners plays every quiz while the network and
       if (row === undefined || row.total !== who.expected) failures.push(`${who.name}: leaderboard row ${row?.total}, wanted ${who.expected}`);
     }
     const board = await truth.leaderboard({ period: "all-time" }, undefined);
-    if (board.learners - base.learners !== BROWSERS + PROTOCOL) failures.push(`the leaderboard ranks ${board.learners - base.learners} new learners, wanted ${BROWSERS + PROTOCOL}`);
+    if (board.learners - base.learners !== attending + PROTOCOL) failures.push(`the leaderboard ranks ${board.learners - base.learners} new learners, wanted ${attending + PROTOCOL}`);
     const submissionsWanted = learners.reduce((sum, learner) => sum + learner.plan.length, 0) + PROTOCOL * quizzes.length;
     if (board.submissions - base.submissions !== submissionsWanted) failures.push(`the leaderboard counts ${board.submissions - base.submissions} new submissions, wanted ${submissionsWanted}`);
     ledger.notes.push(...failures);
+    stage("proctor truth checked");
     expect(failures, "what the proctor holds").toEqual([]);
 
-    for (const learner of learners) expect(await boardTotal(learner), `${learner.handle}: the leaderboard page shows the own total`).toBe(expectedBrowser(learner));
-
-    for (const learner of learners) await expect(connection(learner), `${learner.handle}: the connection indicator recovered | ${await learner.describe()}`).toHaveAttribute("data-tone", "calm", { timeout: 60_000 });
-    await Promise.all(learners.map((learner) => expectOnline(learner, BROWSERS + PROTOCOL, "presence converges on everyone online")));
+    await Promise.all(learners.map(async (learner) => expect(await boardTotal(learner), `${learner.handle}: the leaderboard page shows the own total`).toBe(expectedBrowser(learner))));
+    stage("leaderboard pages checked");
+    await Promise.all(learners.map(async (learner) => expect(connection(learner), `${learner.handle}: the connection indicator recovered | ${await learner.describe()}`).toHaveAttribute("data-tone", "calm", { timeout: 60_000 })));
+    stage("connections calm");
+    await Promise.all(learners.map((learner) => expectOnline(learner, attending + PROTOCOL, "presence converges on everyone online")));
+    stage("presence converged");
     for (const bot of bots) bot.leave();
-    await Promise.all(learners.map((learner) => expectOnline(learner, BROWSERS, "presence converges on the browsers left")));
+    await Promise.all(learners.map((learner) => expectOnline(learner, attending, "presence converges on the browsers left")));
 
+    stage("protocol learners left");
     const { idleS, keepaliveS } = presenceTimeouts();
     const origin = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1";
     const watcher = learners[0]!;
@@ -553,13 +626,13 @@ test("a crowd of about a hundred learners plays every quiz while the network and
     const began = Date.now();
     for (const how of vanishing) for (let each = 0; each < GHOSTS; each++) release.push(await ghost(PROCTOR_ORIGIN, COURSE.id, how, origin));
     const silent = GHOSTS;
-    await expectOnline(watcher, BROWSERS + silent, "ghosts that ended or reset their connection leave at once; the silent ones are still counted", 30_000);
+    await expectOnline(watcher, attending + silent, "ghosts that ended or reset their connection leave at once; the silent ones are still counted", 30_000);
     const abruptS = Math.round((Date.now() - began) / 100) / 10;
-    await expectOnline(watcher, BROWSERS, `silent sockets leave within the proctor's idle timeout (${idleS} s, ping every ${keepaliveS} s)`, (idleS + keepaliveS + 30) * 1000);
+    await expectOnline(watcher, attending, `silent sockets leave within the proctor's idle timeout (${idleS} s, ping every ${keepaliveS} s)`, (idleS + keepaliveS + 30) * 1000);
     const silentS = Math.round((Date.now() - began) / 100) / 10;
     ledger.notes.push(`ghost sockets: ${GHOSTS} closed, ${GHOSTS} reset, ${GHOSTS} silent; ended/reset gone after ${abruptS} s, silent gone after ${silentS} s (proctor idle ${idleS} s, keepalive ${keepaliveS} s)`);
     ledger.events["ghost-closed-silent-converged-s"] = silentS;
-    await Promise.all(learners.map((learner) => expectOnline(learner, BROWSERS, "presence holds the true count after the ghosts", 30_000)));
+    await Promise.all(learners.map((learner) => expectOnline(learner, attending, "presence holds the true count after the ghosts", 30_000)));
     release.forEach((end) => end());
 
     for (const learner of learners) await learner.stop();
@@ -574,6 +647,7 @@ test("a crowd of about a hundred learners plays every quiz while the network and
     const durations = ledger.timings.map((entry) => entry.ms).sort((left, right) => left - right);
     const summary = {
       browsers: BROWSERS,
+      attended: learners.length,
       protocol: PROTOCOL,
       quizzes: quizzes.length,
       runsCompleted: ledger.timings.length + PROTOCOL * quizzes.length,

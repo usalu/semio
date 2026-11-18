@@ -70,6 +70,7 @@ fn drain_pages() {
 /// ♻️ One refresh replaces one resident root at a time, so the aggregate never carries two full sets.
 #[test]
 fn retained_refresh_never_needs_a_second_full_resident_set() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let data = fixture();
     assert_eq!(data["aggregateBytes"].as_u64().unwrap() as usize, UI_RESIDENT_AGGREGATE_BYTES);
     assert_eq!(data["surfaceBytes"].as_u64().unwrap() as usize, UI_RESIDENT_SURFACE_BYTES);
@@ -126,6 +127,7 @@ fn retained_refresh_never_needs_a_second_full_resident_set() {
 /// still resident — needs a second FULL set: twice the roots and twice the bytes.
 #[test]
 fn retained_refresh_double_buffered_order_needs_a_second_full_set() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let data = fixture();
     let surfaces = surfaces(&data);
     let before = UiResidentPermit::snapshot().unwrap();
@@ -160,6 +162,7 @@ fn retained_refresh_double_buffered_order_needs_a_second_full_set() {
 /// gap between six and sixty-four is exactly the reason right-sizing is not optional.
 #[test]
 fn retained_refresh_aggregate_admits_only_a_handful_of_ceiling_sized_surfaces() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let data = fixture();
     let before = UiResidentPermit::snapshot().unwrap();
     let mut admitted = Vec::new();
@@ -193,6 +196,7 @@ fn retained_refresh_aggregate_admits_only_a_handful_of_ceiling_sized_surfaces() 
 /// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY wave 2–6 integration).
 #[test]
 fn cold_document_roots_are_priced_from_their_census_and_reach_every_slot() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let before = UiResidentPermit::snapshot().unwrap();
     let empty = crate::ui_document_resident_limits(0);
     assert!(empty.items < UI_RESIDENT_SURFACE_ITEMS && empty.bytes < UI_RESIDENT_SURFACE_BYTES, "an empty document never costs the per-surface ceiling: {empty:?}");
@@ -227,6 +231,7 @@ fn cold_document_roots_are_priced_from_their_census_and_reach_every_slot() {
 /// ledger reaches its independent ceiling before the sixty-four-position slot ledger.
 #[test]
 fn populated_full_documents_admit_sixty_and_refuse_the_sixty_first_on_bytes() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let data = fixture();
     let nodes = data["documentNodes"].as_u64().unwrap() as usize;
     let full = surface_limits(nodes);

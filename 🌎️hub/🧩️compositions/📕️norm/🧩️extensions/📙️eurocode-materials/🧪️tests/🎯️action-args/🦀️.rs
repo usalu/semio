@@ -4,9 +4,6 @@
 
 include!("../../../../🧪️tests/🧰️laws/🎯️action-args/🦀️.rs");
 
-value_tree_case!(en1992_declares_its_value_tree_arguments, semio_s_artifact_norm_en1992_editor::create_en1992_app);
-value_tree_case!(en1993_declares_its_value_tree_arguments, semio_s_artifact_norm_en1993_editor::create_en1993_app);
-value_tree_case!(en1994_declares_its_value_tree_arguments, semio_s_artifact_norm_en1994_editor::create_en1994_app);
 value_tree_case!(en1995_declares_its_value_tree_arguments, semio_s_artifact_norm_en1995_editor::create_en1995_app);
 value_tree_case!(en1996_declares_its_value_tree_arguments, semio_s_artifact_norm_en1996_editor::create_en1996_app);
 value_tree_case!(en1999_declares_its_value_tree_arguments, semio_s_artifact_norm_en1999_editor::create_en1999_app);

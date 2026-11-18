@@ -2,15 +2,17 @@
  "version": 1,
  "checkoutFromTests": "../../../../../../../../../..",
  "forgedPolicies": [
-  "duplicate-domain-id",
-  "nested-prefix",
-  "duplicate-prefix",
-  "parent-segment",
   "extra-key",
-  "no-domains",
-  "bad-id",
+  "old-version",
+  "no-surface",
+  "duplicate-surface-file",
+  "zero-revision",
+  "fractional-revision",
+  "parent-segment",
+  "nested-prefix",
+  "surface-file-below-native-prefix",
+  "prefix-without-slash",
   "missing-german-contract",
-  "empty-prefixes",
   "spawn-extra-key",
   "spawn-absolute-reference",
   "spawn-missing-german-contract"
@@ -21,109 +23,212 @@
  ],
  "edits": [
   {
-   "role": "scheduling-leases",
+   "role": "graph-reader",
    "select": {
-    "schedulingDomain": "leases"
+    "prefix": "🏗️build/🪪️graph-state/📦️project-records/"
    },
    "generic": "unchanged",
    "native": "unchanged"
   },
   {
-   "role": "scheduling-capacity",
+   "role": "planner-task-model",
    "select": {
-    "schedulingDomain": "capacity"
+    "prefix": "🏗️build/🧮️task-model/"
    },
    "generic": "unchanged",
    "native": "unchanged"
   },
   {
-   "role": "scheduling-supervision",
+   "role": "tools-registry",
    "select": {
-    "schedulingDomain": "process-supervision"
+    "prefix": "⚡️caching/🚀️bootstrap/🛠️tools/"
    },
    "generic": "unchanged",
    "native": "unchanged"
   },
   {
-   "role": "scheduling-retry",
+   "role": "dependencies",
    "select": {
-    "schedulingDomain": "retry-observation"
+    "prefix": "⚡️caching/🚀️bootstrap/📦️dependencies/"
    },
    "generic": "unchanged",
    "native": "unchanged"
   },
   {
-   "role": "scheduling-progress",
+   "role": "fleet-fetch",
    "select": {
-    "schedulingDomain": "progress-reporting"
+    "prefix": "⚡️caching/🚀️bootstrap/🛰️fleet-fetch/"
    },
    "generic": "unchanged",
    "native": "unchanged"
   },
   {
-   "role": "scheduling-cargo-arguments",
+   "role": "leases",
    "select": {
-    "nativeKeyed": true
-   },
-   "generic": "unchanged",
-   "native": "changed"
-  },
-  {
-   "role": "bazel-route",
-   "select": {
-    "engineDomain": "bazel-route"
-   },
-   "generic": "unchanged",
-   "native": "unchanged",
-   "optional": true
-  },
-  {
-   "role": "cache-retention",
-   "select": {
-    "engineDomain": "cache-retention"
+    "prefix": "🏗️build/🔒️leases/"
    },
    "generic": "unchanged",
    "native": "unchanged"
   },
   {
-   "role": "cargo-route",
+   "role": "preflight",
    "select": {
-    "engineDomain": "cargo-route"
-   },
-   "generic": "unchanged",
-   "native": "changed"
-  },
-  {
-   "role": "graph-derivation",
-   "select": {
-    "engineDomain": "graph-derivation"
+    "prefix": "🏗️build/🩺️preflight/"
    },
    "generic": "unchanged",
    "native": "unchanged"
   },
   {
-   "role": "plugin",
+   "role": "observation",
    "select": {
-    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs"
+    "prefix": "🏗️build/👁️observation/"
    },
-   "generic": "changed",
-   "native": "changed"
+   "generic": "unchanged",
+   "native": "unchanged"
   },
   {
-   "role": "executor",
+   "role": "revision-reader",
    "select": {
-    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/🏃️execution/🟨️.mjs"
+    "path": "🏗️build/📥️inputs/🔏️revision/🟨️.mjs"
    },
-   "generic": "changed",
-   "native": "changed"
+   "generic": "unchanged",
+   "native": "unchanged"
+  },
+  {
+   "role": "implementation-identity",
+   "select": {
+    "path": "⚡️caching/🚀️bootstrap/🔌️nx-plugin/🔏️implementation/🟨️.mjs"
+   },
+   "generic": "unchanged",
+   "native": "unchanged"
+  },
+  {
+   "role": "graph-pin",
+   "select": {
+    "path": "⚡️caching/🚀️bootstrap/🔌️nx-plugin/📌️graph-pin/🟨️.mjs"
+   },
+   "generic": "unchanged",
+   "native": "unchanged"
+  },
+  {
+   "role": "plugin-projection",
+   "select": {
+    "path": "🟨️.mjs"
+   },
+   "generic": "unchanged",
+   "native": "unchanged"
   },
   {
    "role": "digest-entry",
    "select": {
-    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/🧮️engine-digest/🟨️.mjs"
+    "path": "⚡️caching/🚀️bootstrap/🔌️nx-plugin/🧮️engine-digest/🟨️.mjs"
+   },
+   "generic": "unchanged",
+   "native": "unchanged"
+  },
+  {
+   "role": "process-authority",
+   "select": {
+    "prefix": "🧰️framework/🔨️modules/🏃️process/⏱️budget/"
+   },
+   "generic": "unchanged",
+   "native": "unchanged"
+  },
+  {
+   "role": "shared-worktree",
+   "select": {
+    "prefix": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/"
+   },
+   "generic": "unchanged",
+   "native": "unchanged"
+  },
+  {
+   "role": "runtime-serve",
+   "select": {
+    "prefix": "🧰️framework/🔨️modules/⚙️runtime/"
+   },
+   "generic": "unchanged",
+   "native": "unchanged"
+  },
+  {
+   "role": "executor",
+   "select": {
+    "path": "⚡️caching/🚀️bootstrap/🔌️nx-plugin/🏃️execution/🟨️.mjs"
    },
    "generic": "changed",
    "native": "changed"
+  },
+  {
+   "role": "executor-arguments",
+   "select": {
+    "path": "⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🟨️.mjs"
+   },
+   "generic": "changed",
+   "native": "changed"
+  },
+  {
+   "role": "owner-arguments",
+   "select": {
+    "path": "🏗️build/📤️arguments/🟨️.mjs"
+   },
+   "generic": "changed",
+   "native": "changed"
+  },
+  {
+   "role": "executor-registry",
+   "select": {
+    "path": "📦️packages/🟦️typescript/📋️executors.json"
+   },
+   "generic": "changed",
+   "native": "changed"
+  },
+  {
+   "role": "orchestration",
+   "select": {
+    "path": "🏗️build/📥️caller/📤️orchestration/🟨️.mjs"
+   },
+   "generic": "changed",
+   "native": "changed"
+  },
+  {
+   "role": "cargo-units",
+   "select": {
+    "prefix": "⚡️caching/🦀️cargo/📦️units/"
+   },
+   "generic": "unchanged",
+   "native": "changed"
+  },
+  {
+   "role": "cargo-exact",
+   "select": {
+    "prefix": "🏃️process/🦀️cargo/🎯️exact/"
+   },
+   "generic": "unchanged",
+   "native": "changed"
+  },
+  {
+   "role": "cargo-admission",
+   "select": {
+    "prefix": "🏃️process/🦀️cargo/🎟️admission/"
+   },
+   "generic": "unchanged",
+   "native": "unchanged"
+  },
+  {
+   "role": "cargo-budget",
+   "select": {
+    "prefix": "🏃️process/🦀️cargo/⏱️budget/"
+   },
+   "generic": "unchanged",
+   "native": "unchanged"
+  },
+  {
+   "role": "unit-cache-fleet",
+   "select": {
+    "prefix": "⚡️caching/🦀️cargo/🗃️unit-cache/🛰️fleet/"
+   },
+   "generic": "unchanged",
+   "native": "unchanged"
   }
  ],
  "spawnOnly": {

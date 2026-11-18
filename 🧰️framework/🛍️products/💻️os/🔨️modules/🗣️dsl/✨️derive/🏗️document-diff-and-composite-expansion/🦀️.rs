@@ -34,10 +34,6 @@ pub fn expand_dsl_document(input: TokenStream) -> TokenStream {
             pub fn __artifact_record_spec_producer() -> ::semio_framework_dsl_record::RecordSpecProducer {
                 Self::__dsl_spec_producer()
             }
-            /// 🫳️ Binds the same DslRecord authored static declaration.
-            pub fn __artifact_borrowed_record_spec_producer() -> ::semio_framework_dsl_record::BorrowedRecordSpecProducer {
-                ::semio_framework_dsl_record::BorrowedRecordSpecProducer::of::<Self>()
-            }
         }
     }.into()
 }

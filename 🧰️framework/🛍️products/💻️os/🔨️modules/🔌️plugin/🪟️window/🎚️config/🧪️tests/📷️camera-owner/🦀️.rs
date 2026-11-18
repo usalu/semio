@@ -59,9 +59,6 @@ impl pack::snapshot::ArtifactPack for RetainedLoadCameraConfig {
     fn record_spec_producer() -> Option<store::RecordSpecProducer> {
         Some(Self::__artifact_record_spec_producer())
     }
-    fn borrowed_record_spec_producer() -> Option<store::BorrowedRecordSpecProducer> {
-        Some(Self::__artifact_borrowed_record_spec_producer())
-    }
 }
 impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for RetainedLoadCameraConfig {
 

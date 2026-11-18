@@ -1,5 +1,5 @@
 syntax = "proto3";
-package semio.s.norm.en1992.mutation.change_anchor_d;
+package semio.s.norm_eurocode_structural.en1992.mutation.change_anchor_d;
 message ChangeAnchorD {
   string anchor_id = 1;
   double new_d = 2;

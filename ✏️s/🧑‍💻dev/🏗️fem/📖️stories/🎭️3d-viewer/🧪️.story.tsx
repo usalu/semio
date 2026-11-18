@@ -7,11 +7,8 @@
 // (`policyViewerPurityBreaches` forbids reaching into the sibling editor), at a hardcoded
 // `FemCamera::default()` since a viewer has `Config = NoConfig`. There is no results window on the viewer
 // side at all, and no tool to dispatch, so this story wires no toolbar.
-// 🕳️ Honest note on what the RUNTIME viewer paints: its `render` hands `world3d_scene` the literal `"[]"`
-// for both `meshes_json` and `instances_json` and carries geometry only on `scene.snapshot`, the
-// `live_visual` page lease — so a real viewer session with no reconciled lease paints an EMPTY world. This
-// story renders the editor-side `fem3d_scene_parts` projection instead (what the geometry WOULD be), which
-// is the assertable content; the lease path itself has no browser equivalent.
+// The runtime viewer builds its scene from the document through `fem3d_scene_parts` and only attaches the
+// optional `live_visual` page lease as `scene.snapshot`; this story renders the same document projection.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
@@ -26,9 +23,6 @@ import { buildFem3dSceneNode, fem3dStoryStateFor, fem3dStructuralInstances, fem3
 //#region StoryHost
 const FEM3D_VIEW_BODY_KEY = "fem3d.view.model";
 const FEM3D_VIEW_CONTROLLER_ID = "fem3d-view";
-
-/** 🕳️ What the runtime viewer window actually hands `world3d_scene` before the `live_visual` lease is applied. */
-const FEM3D_RUNTIME_EMPTY_SCENE_PARTS = { meshesJson: "[]", instancesJson: "[]" };
 
 function Fem3dViewerStoryHost({ initialExampleId, locale }: { readonly initialExampleId: string; readonly locale: FemStoryLocale }): ReactElement {
   const snapshot = useMemo(() => fem3dStoryStateFor(initialExampleId, locale).snapshot, [initialExampleId, locale]);
@@ -45,7 +39,6 @@ function Fem3dViewerStoryHost({ initialExampleId, locale }: { readonly initialEx
         locale,
         instanceCount: instances.length,
         emitsMutations: false,
-        runtimeSceneWithoutLiveVisualLease: FEM3D_RUNTIME_EMPTY_SCENE_PARTS,
         omitted: femStoryOmissions([FEM3D_SOLID_MESH_OMISSION]),
         lastAction,
       }),

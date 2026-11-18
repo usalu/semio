@@ -1,7 +1,7 @@
 /** 🔁️ The presence socket of the quiz client: the frame rates and timings, the browser socket behind a port, and the room that joins, rejoins and leaves with jittered backoff. */
 
 import { retryWithJitteredBackoff } from "@semio-tech/framework";
-import { PRESENCE_PROTOCOL, decodePresenceFrame, encodePresenceFrame, type PresenceEntry as SocketEntry } from "@semio-tech/framework-server";
+import { PRESENCE_HEARTBEAT_MS, PRESENCE_PROTOCOL, PRESENCE_SILENCE_FACTOR, decodePresenceFrame, encodePresenceFrame, type PresenceEntry as SocketEntry } from "@semio-tech/framework-server";
 import { RETRY_TIMING, type RetryTiming } from "../../🛂️proctor/🟦️.ts";
 
 //#region 🔌️Socket
@@ -22,6 +22,12 @@ export const MAX_WATCHED_ROOMS = 16;
 
 /** ⚓️ How long a joined session must last to count as stable; one that ends sooner is a flap. */
 export const PRESENCE_STABLE_MS = 10_000;
+
+/** 🪤️ How long a socket may take from its first byte to its welcome before it counts as lost: one that neither opens nor closes — a proctor that accepts connections but does not answer — is closed and the room joins again. */
+export const PRESENCE_JOIN_MS = 10_000;
+
+/** 🕳️ How long a welcomed socket may stay without any frame before it counts as dead: {@link PRESENCE_SILENCE_FACTOR} heartbeats of the proctor. A socket whose peer vanished without a close — a dropped network, a frozen proctor — is closed and the room joins again. */
+export const PRESENCE_SILENCE_MS = PRESENCE_HEARTBEAT_MS * PRESENCE_SILENCE_FACTOR;
 
 /** ⏳️ The pause before a room joins again after `flaps` short-lived sessions in a row (`random` in [0, 1]): a first loss
  * is a blip and is rejoined within the shortest backoff; from the second flap on the pause is at least that backoff
@@ -83,7 +89,8 @@ export interface RoomSnapshot<S, W = never> {
 }
 
 /** ⚙️ One room: its socket URL, the socket factory, the checks that admit a member's state (of the joined room, and of
- * a watched room by scope), the frame interval, the backoff bounds and the random source of the jitter. */
+ * a watched room by scope), the frame interval, the backoff bounds, the random source of the jitter and the time a socket
+ * has to join ({@link PRESENCE_JOIN_MS}) and the silence after which a joined socket counts as dead ({@link PRESENCE_SILENCE_MS}). */
 export interface PresenceRoomOptions<S, W = never> {
   readonly url: string;
   readonly connect: PresenceConnect;
@@ -92,6 +99,8 @@ export interface PresenceRoomOptions<S, W = never> {
   readonly intervalMs?: number;
   readonly timing?: RetryTiming;
   readonly random?: () => number;
+  readonly joinMs?: number;
+  readonly silenceMs?: number;
 }
 
 function pause(ms: number, signal: AbortSignal): Promise<void> {
@@ -203,17 +212,27 @@ export class PresenceRoom<S, W = never> {
       let end: () => void = () => undefined;
       const ended = new Promise<void>((done) => (end = done));
       const aborted = (): void => (reject(signal.reason), end());
-      signal.addEventListener("abort", aborted, { once: true });
-      void ended.then(() => signal.removeEventListener("abort", aborted));
-      this.socket = socket;
-      socket.onmessage = (event) => {
-        if (this.receive(socket, event.data) === "welcome") resolve({ ended });
-      };
-      socket.onclose = () => {
+      const closed = (): void => {
         if (this.socket === socket) this.lost();
         reject(new Error("presence socket closed"));
         end();
       };
+      const stalled = setTimeout(() => (socket.close(), closed()), this.options.joinMs ?? PRESENCE_JOIN_MS);
+      signal.addEventListener("abort", aborted, { once: true });
+      void ended.then(() => (clearTimeout(stalled), signal.removeEventListener("abort", aborted)));
+      let watchdog: ReturnType<typeof setTimeout> | undefined;
+      const arm = (): void => {
+        clearTimeout(watchdog);
+        watchdog = setTimeout(() => (socket.close(), closed()), this.options.silenceMs ?? PRESENCE_SILENCE_MS);
+      };
+      void ended.then(() => clearTimeout(watchdog));
+      this.socket = socket;
+      socket.onmessage = (event) => {
+        const kind = this.receive(socket, event.data);
+        if (kind === "welcome") (clearTimeout(stalled), resolve({ ended }));
+        if (kind === "welcome" || watchdog !== undefined) arm();
+      };
+      socket.onclose = closed;
       socket.onerror = () => undefined;
     });
   }
@@ -250,6 +269,7 @@ export class PresenceRoom<S, W = never> {
         this.refused = frame.reason;
         this.emit("open");
         break;
+      case "heartbeat":
       case "state":
       case "watch":
         break;

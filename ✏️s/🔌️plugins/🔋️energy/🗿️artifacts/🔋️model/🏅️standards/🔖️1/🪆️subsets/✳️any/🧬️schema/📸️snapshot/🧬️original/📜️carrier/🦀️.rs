@@ -2,7 +2,7 @@
 use super::EnergyModelSnapshot;
 use crate::store::{PackDecodeOptions,PackEncodeOptions,PackError,pack_rt,semio_format::{Component,SemioEnvelope,split_text_preamble,unwrap_binary,wrap_binary,wrap_text}};
 use semio_framework_diagnostic::{Limits,TextError,TextSpan};
-use semio_framework_dsl_record::{BorrowedRecordSpecProducer,FieldSpec,FieldValue,JoinMode,ParseOptions,RecordLayout,RecordSpec,RecordValue,Shape,SourceMode};
+use semio_framework_dsl_record::{FieldSpec,FieldValue,JoinMode,ParseOptions,RecordLayout,RecordSpec,RecordValue,Shape,SourceMode};
 use semio_framework_value::{DslValue,FromValue,ToValue,ValueError,ValueRefusalKind};
 use semio_s_artifact_energy_model_snapshot_bridge::{receive_stepped,retire_stepped};
 use pack::snapshot::{ArtifactDsl,ArtifactPack};
@@ -84,7 +84,6 @@ impl ArtifactPack for EnergyModelSnapshot{
   EnergyModelDocument::receive(&pack_rt::decode_document(&inner,&EnergyModelDocument::__dsl_spec(),options)?.0).map_err(PackError::from)
  }
  fn record_spec()->Option<RecordSpec>{Some(EnergyModelDocument::__dsl_spec())}
- fn borrowed_record_spec_producer()->Option<BorrowedRecordSpecProducer>{Some(BorrowedRecordSpecProducer::of::<Self>())}
 }
 
 #[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;

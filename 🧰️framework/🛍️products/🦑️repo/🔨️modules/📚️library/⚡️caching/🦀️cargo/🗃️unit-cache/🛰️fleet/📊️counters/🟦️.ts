@@ -49,3 +49,21 @@ export function writeBuildCountersV1(workspace:string):void{
   mkdirSync(machinePathV1(workspace,".cache","f"),{recursive:true});writeFileSync(temporary,JSON.stringify(readBuildCountersV1(workspace)));renameSync(temporary,path);
  }catch{}
 }
+
+/** 🧮️ What one run did with compile units: the growth of the five counters of this machine between two readings, so every run says how many units it restored from this machine, restored from the fleet and compiled. */
+export type UnitLedgerV1=Readonly<{restoredLocal:number;restoredFleet:number;compiled:number;stored:number;skipped:number}>;
+
+/** 🧮️ The growth of the counters from `before` to `after` (never negative: a counter directory that was emptied in between counts as zero). */
+export function unitLedgerV1(before:Readonly<Record<UnitCountKindV1,number>>,after:Readonly<Record<UnitCountKindV1,number>>):UnitLedgerV1{
+ const grow=(kind:UnitCountKindV1)=>Math.max(0,(after[kind]??0)-(before[kind]??0));
+ return Object.freeze({restoredLocal:grow("localHit"),restoredFleet:grow("remoteHit"),compiled:grow("miss"),stored:grow("stored"),skipped:grow("skipped")});
+}
+
+/** 🧾️ The two lines of a run's unit ledger (English, German); empty when the run touched no unit. */
+export function unitLedgerLinesV1(ledger:UnitLedgerV1):readonly string[]{
+ if(ledger.restoredLocal+ledger.restoredFleet+ledger.compiled+ledger.skipped===0)return [];
+ return [
+  `[units] ${ledger.restoredLocal} restored local, ${ledger.restoredFleet} restored fleet, ${ledger.compiled} compiled (${ledger.stored} stored, ${ledger.skipped} not shared)`,
+  `[units] ${ledger.restoredLocal} lokal wiederhergestellt, ${ledger.restoredFleet} aus der Flotte wiederhergestellt, ${ledger.compiled} kompiliert (${ledger.stored} gespeichert, ${ledger.skipped} nicht geteilt)`,
+ ];
+}

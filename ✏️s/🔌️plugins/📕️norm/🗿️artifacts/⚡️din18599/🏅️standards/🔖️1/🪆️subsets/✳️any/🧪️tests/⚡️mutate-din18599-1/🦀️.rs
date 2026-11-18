@@ -1,4 +1,4 @@
-//! 🦀️ DIN V 18599 exhaustive mutation case — the Rust SUBJECT half. `s.norm.din18599` is a semio-native artifact with no
+//! 🦀️ DIN V 18599 exhaustive mutation case — the Rust SUBJECT half. `s.norm-energy.din18599` is a semio-native artifact with no
 //! third-party reader or writer, so its reference is the independent Python implementation registered as the oracle
 //! `din18599-1-python-independent`; this adapter drives this repository's own production dispatch over the whole
 //! `Din18599Mutation` vocabulary — a energy-balance building: document scalars, whole-facet system specifications, zone and element lists and the parent-owned monthly climate with its derived climate table.

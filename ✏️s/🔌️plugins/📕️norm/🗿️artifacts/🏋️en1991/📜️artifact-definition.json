@@ -1,6 +1,6 @@
 {
   "definition_version": 1,
-  "id": "s.norm.en1991",
+  "id": "s.norm-eurocode.en1991",
   "artifact": "en1991",
   "directory": "🏋️en1991",
   "rust_package": "semio-s-artifact-norm-en1991",

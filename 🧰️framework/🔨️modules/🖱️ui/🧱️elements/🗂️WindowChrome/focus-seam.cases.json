@@ -1,0 +1,102 @@
+{
+  "$schema": "./focus-seam.schema.json",
+  "files": [
+    {
+      "file": "../../🎨️styling/🖌️ui/🎨️.css",
+      "mustContain": [
+        "[data-window-silhouette-chip] :is(button, [role=\"button\"], [tabindex], a[href], input, select, textarea):focus-visible {\n  outline: none;\n  box-shadow: none;\n}",
+        "[data-shared-border-cells] > [data-shared-border-frame]):focus-visible,",
+        "  outline: none !important;\n  box-shadow: none !important;\n}",
+        "[data-overview-card]:is(button):focus-visible [data-window-silhouette-border] path { stroke: var(--active-base) !important; }",
+        "[role=\"tabpanel\"]:focus-visible {\n  outline: 1px solid var(--active-base) !important;\n  outline-offset: -1px;",
+        "[tabindex]):focus-visible {\n  text-decoration: underline;\n  text-decoration-thickness: 2px;",
+        "[data-shared-border-segment][data-shared-border-state=\"focus\"][data-focus-on-accent] { stroke-width: calc(var(--stroke-hairline) * 2); }",
+        "[data-state=\"active\"], [data-state=\"on\"], [aria-selected=\"true\"], [aria-pressed=\"true\"], [data-active=\"true\"]):not([role=\"tabpanel\"], [data-window-silhouette], [data-slot=\"window\"]) > :is(button",
+        "@layer shared-border-ownership {\n  .window-silhouette-border {\n    stroke-width: var(--stroke-hairline);\n  }\n}"
+      ],
+      "mustNotContain": [
+        "[data-window-silhouette-chip] > :focus-visible,\n",
+        "[data-window-silhouette-chip] :is(button, [role=\"button\"], [tabindex]):focus-visible {\n  box-shadow: inset",
+        "[data-focus-on-accent] { stroke-width: calc(var(--stroke-hairline) * 2) !important",
+        "[data-focus-on-accent] { stroke-width: 2 !important",
+        "\n.window-silhouette-border {\n  stroke-width"
+      ]
+    },
+    {
+      "file": "../../🔨️modules/🎨️chrome-class-names/🟦️.ts",
+      "mustContain": [
+        "\"outline-none\","
+      ],
+      "mustNotContain": [
+        "focus-visible:ring"
+      ]
+    },
+    {
+      "file": "../../🔨️modules/🎛️chrome-control-presentation/🟦️.ts",
+      "mustContain": [
+        "\"outline-none\","
+      ],
+      "mustNotContain": [
+        "focus-visible:ring"
+      ]
+    },
+    {
+      "file": "../📑️Tabs/🟦️.tsx",
+      "mustContain": [
+        "focus-visible:border-active-base"
+      ],
+      "mustNotContain": [
+        "focus-visible:ring-[length",
+        "focus-visible:outline-ring",
+        "\"flex-1 outline-none\""
+      ]
+    },
+    {
+      "file": "../🃏️OverviewCard/🟦️.tsx",
+      "mustContain": [],
+      "mustNotContain": [
+        "focus-visible:ring",
+        "ring-offset"
+      ]
+    },
+    {
+      "file": "../../../../🛍️products/📚️course/🎯️targets/⚛️react/🎨️styles/🏁️results-and-preferences/🎨️.css",
+      "mustContain": [
+        ".course-cell:focus-visible + .course-cell {\n  border-inline-start-color: var(--active-base);\n}\n\n.course-cell:focus-visible {\n  outline: none;"
+      ],
+      "mustNotContain": [
+        "outline-offset: 1px"
+      ]
+    },
+    {
+      "file": "../../../../🛍️products/📚️course/🎯️targets/⚛️react/🎨️styles/📊️plots-and-crowd/🎨️.css",
+      "mustContain": [
+        ".course-card-link:focus-visible {\n  outline: none;"
+      ],
+      "mustNotContain": [
+        "outline: var(--stroke-default) solid var(--active-base)"
+      ]
+    },
+    {
+      "file": "./🟦️.tsx",
+      "mustContain": [
+        "data-focus-on-accent={resolvedKind === \"active\" ? \"\" : undefined}"
+      ],
+      "mustNotContain": []
+    },
+    {
+      "file": "../../../../🛍️products/📚️course/🎯️targets/⚛️react/🎨️styles/⚖️footer-and-forced-colors/🎨️.css",
+      "mustContain": [
+        ".course-skip-link:focus {\n  outline: none;\n  border: var(--stroke-hairline) solid var(--active-base);\n  text-decoration: underline;"
+      ],
+      "mustNotContain": []
+    },
+    {
+      "file": "../../../../🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/📚️app/🟦️.tsx",
+      "mustContain": [
+        "course-skip-link sr-only"
+      ],
+      "mustNotContain": []
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "schema": "silhouette-chip-span/v1",
+  "cases": [
+    { "name": "chip spanning the full width is a plain rectangle", "width": 59, "height": 80, "depth": 30, "chips": [[0, 59]], "outline": [[0, 0], [59, 0], [59, 80], [0, 80]], "paint": [[1, 1], [58, 1], [58, 79], [1, 79]] },
+    { "name": "chip ending one pixel short of the right side reaches it", "width": 59, "height": 80, "depth": 30, "chips": [[0, 58]], "outline": [[0, 0], [59, 0], [59, 80], [0, 80]], "paint": [[1, 1], [58, 1], [58, 79], [1, 79]] },
+    { "name": "chip starting less than two pixels in reaches the left side", "width": 59, "height": 80, "depth": 30, "chips": [[1.75, 59]], "outline": [[0, 0], [59, 0], [59, 80], [0, 80]], "paint": [[1, 1], [58, 1], [58, 79], [1, 79]] },
+    { "name": "chip with a real margin keeps its step", "width": 59, "height": 80, "depth": 30, "chips": [[0, 50]], "outline": [[0, 0], [50, 0], [50, 30], [59, 30], [59, 80], [0, 80]], "paint": [[1, 1], [50, 1], [50, 31], [58, 31], [58, 79], [1, 79]] }
+  ]
+}

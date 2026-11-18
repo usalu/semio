@@ -54,15 +54,16 @@ describe("shotFor", () => {
 
   it("needs a perch high enough above the feet, a rope of the right length and a rope steep enough", () => {
     const high = (y: number, size: Size = PET) => shotFor({ x: 400, y: 480 }, [perch("stub", 380, 420, y)], [], size);
+    const far = (y: number, size: Size = PET) => shotFor({ x: 400, y: 700 }, [perch("stub", 380, 420, y)], [], size);
     expect(high(480 - ROPE_RISE * 48 + 0.5)).toBeNull();
     expect(high(413)).not.toBeNull();
     expect(high(413)!.length).toBeGreaterThanOrEqual(ROPE_SHORT * 48);
     expect(high(414)).toBeNull();
-    expect(high(66)).not.toBeNull();
-    expect(high(66)!.length).toBeLessThanOrEqual(ROPE_LONG * 48);
-    expect(high(65)).toBeNull();
-    expect(high(480 - MUZZLE_HEIGHT * 56 - 420, LARGE)).not.toBeNull();
-    expect(high(480 - MUZZLE_HEIGHT * 56 - 420, PET)).toBeNull();
+    expect(far(94)).not.toBeNull();
+    expect(far(94)!.length).toBeLessThanOrEqual(ROPE_LONG * 48);
+    expect(far(93)).toBeNull();
+    expect(far(700 - MUZZLE_HEIGHT * 56 - 620, LARGE)).not.toBeNull();
+    expect(far(700 - MUZZLE_HEIGHT * 56 - 620, PET)).toBeNull();
     expect(high(480, PET)).toBeNull();
     expect(high(520, PET)).toBeNull();
     expect(from(240)).not.toBeNull();

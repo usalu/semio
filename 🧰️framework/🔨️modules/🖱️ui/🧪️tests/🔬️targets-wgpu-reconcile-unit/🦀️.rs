@@ -1,5 +1,6 @@
 use super::*;
 use semio_framework_test_fixtures::fixture_text;
+use semio_ui_contract_values::testkit::UiArenaFixture;
 use semio_ui_declaration::layout::ActionDescriptor;
 use semio_ui_declaration::ui::{ui_tree_stamp_presence, UiButtonNode, UiControlNode, UiPresence, UiStackNode, UiTextNode, UiToggleNode};
 
@@ -32,7 +33,7 @@ fn clear_dirty(tree: &mut UiTree, id: NodeId) {
 }
 
 #[test]
-fn an_editable_table_row_keeps_one_child_per_cell_and_its_remove_action_as_a_row_action() {
+fn an_editable_table_row_keeps_one_child_per_cell_and_its_remove_action_as_a_row_action() { let _arena = UiArenaFixture::new();
     let table: ui_contract::UiNodeRecord = serde_json::from_value(serde_json::json!({
         "id": 0,
         "key": "table",
@@ -113,7 +114,7 @@ fn an_editable_table_row_keeps_one_child_per_cell_and_its_remove_action_as_a_row
 /// ones already shown — the parity half of the React `mergeTreeSectionOrder` law (a program that leads with a new section,
 /// like the history body's edit band, is never sunk below the sections a host already painted).
 #[test]
-fn a_retained_tree_paints_inserted_sections_where_the_document_puts_them() {
+fn a_retained_tree_paints_inserted_sections_where_the_document_puts_them() { let _arena = UiArenaFixture::new();
     fn record(id: u64, key: &str, component: serde_json::Value, children: &[u64]) -> ui_contract::UiNodeRecord {
         serde_json::from_value(serde_json::json!({
             "id": id,
@@ -146,7 +147,7 @@ fn a_retained_tree_paints_inserted_sections_where_the_document_puts_them() {
 }
 
 #[test]
-fn a_childless_table_row_never_implicitly_activates_its_first_row_action() {
+fn a_childless_table_row_never_implicitly_activates_its_first_row_action() { let _arena = UiArenaFixture::new();
     let row: ui_contract::UiNodeRecord = serde_json::from_value(serde_json::json!({
         "id": 0,
         "key": "legacy-row",
@@ -177,7 +178,7 @@ fn any_dirty(tree: &UiTree, id: NodeId) -> bool {
 }
 
 #[test]
-fn reapplying_an_identical_tree_sets_zero_dirty_flags() {
+fn reapplying_an_identical_tree_sets_zero_dirty_flags() { let _arena = UiArenaFixture::new();
     let mut tree = UiTree::new();
     let ui = stack("root", vec![text("hello"), button("btn", "Go")]);
     tree.apply_tree(&ui);
@@ -190,7 +191,7 @@ fn reapplying_an_identical_tree_sets_zero_dirty_flags() {
 }
 
 #[test]
-fn text_value_change_dirties_that_node_and_ancestors_but_not_siblings() {
+fn text_value_change_dirties_that_node_and_ancestors_but_not_siblings() { let _arena = UiArenaFixture::new();
     let mut tree = UiTree::new();
     tree.apply_tree(&stack("root", vec![text("hello"), text("world")]));
     let root = tree.root.unwrap();
@@ -209,7 +210,7 @@ fn text_value_change_dirties_that_node_and_ancestors_but_not_siblings() {
 }
 
 #[test]
-fn adding_a_child_inserts_exactly_one_new_dirty_node_and_leaves_siblings_untouched() {
+fn adding_a_child_inserts_exactly_one_new_dirty_node_and_leaves_siblings_untouched() { let _arena = UiArenaFixture::new();
     let mut tree = UiTree::new();
     tree.apply_tree(&stack("root", vec![text("hello")]));
     let root = tree.root.unwrap();
@@ -227,7 +228,7 @@ fn adding_a_child_inserts_exactly_one_new_dirty_node_and_leaves_siblings_untouch
 }
 
 #[test]
-fn removing_a_child_frees_its_arena_slot() {
+fn removing_a_child_frees_its_arena_slot() { let _arena = UiArenaFixture::new();
     let mut tree = UiTree::new();
     tree.apply_tree(&stack("root", vec![text("hello"), text("bye")]));
     let root = tree.root.unwrap();
@@ -300,7 +301,7 @@ fn open_select(tree: &mut UiTree, ui: &UiNode) -> NodeId {
 /// 🚦️ A tree row carries only a semantic tone to its paint — the four outcome roles, each with an ink of the theme; the
 /// neutral tone and the brand roles carry none, and a toneless row costs nothing on the wire.
 #[test]
-fn a_tree_row_carries_only_a_semantic_tone() {
+fn a_tree_row_carries_only_a_semantic_tone() { let _arena = UiArenaFixture::new();
     let theme = semio_ui_theme::Theme::light();
     for (tone, carried) in [
         (ui_contract::Tone::Info, true),
@@ -323,7 +324,7 @@ fn a_tree_row_carries_only_a_semantic_tone() {
 }
 
 #[test]
-fn a_closed_select_materializes_no_option_rows_at_all() {
+fn a_closed_select_materializes_no_option_rows_at_all() { let _arena = UiArenaFixture::new();
     let mut tree = UiTree::new();
     let ui = select("sel", "a", vec![("a", "Alpha"), ("b", "Beta")]);
     tree.apply_tree(&ui);
@@ -342,7 +343,7 @@ fn a_closed_select_materializes_no_option_rows_at_all() {
 }
 
 #[test]
-fn select_expands_items_into_keyed_button_rows_carrying_the_chosen_value_and_flags_has_popup() {
+fn select_expands_items_into_keyed_button_rows_carrying_the_chosen_value_and_flags_has_popup() { let _arena = UiArenaFixture::new();
     let mut tree = UiTree::new();
     let root = open_select(&mut tree, &select("sel", "a", vec![("a", "Alpha"), ("b", "Beta")]));
 
@@ -361,7 +362,7 @@ fn select_expands_items_into_keyed_button_rows_carrying_the_chosen_value_and_fla
 }
 
 #[test]
-fn select_removing_an_item_removes_its_row_and_clears_has_popup_once_empty() {
+fn select_removing_an_item_removes_its_row_and_clears_has_popup_once_empty() { let _arena = UiArenaFixture::new();
     let mut tree = UiTree::new();
     let root = open_select(&mut tree, &select("sel", "a", vec![("a", "Alpha"), ("b", "Beta")]));
     let children_before: Vec<NodeId> = tree.children(root).collect();
@@ -377,7 +378,7 @@ fn select_removing_an_item_removes_its_row_and_clears_has_popup_once_empty() {
 }
 
 #[test]
-fn tree_expands_sections_and_nested_items_into_keyed_stack_rows() {
+fn tree_expands_sections_and_nested_items_into_keyed_stack_rows() { let _arena = UiArenaFixture::new();
     let mut tree = UiTree::new();
     let nested = UiTreeItemNode { window: None, granularity: None, items: Some(vec![tree_item("child", "Child")]), menu: None, ..tree_item("parent", "Parent") };
     let ui = tree_ui(vec![UiTreeSectionNode { header_toolbar: None, window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![nested] }], Some(vec!["parent".into()]));
@@ -403,7 +404,7 @@ fn tree_expands_sections_and_nested_items_into_keyed_stack_rows() {
 }
 
 #[test]
-fn tree_item_control_and_trailing_actions_become_retained_children_too() {
+fn tree_item_control_and_trailing_actions_become_retained_children_too() { let _arena = UiArenaFixture::new();
     let mut tree = UiTree::new();
     let item = UiTreeItemNode {
         window: None,
@@ -427,7 +428,7 @@ fn tree_item_control_and_trailing_actions_become_retained_children_too() {
 }
 
 #[test]
-fn reapplying_an_identical_select_or_tree_sets_zero_dirty_flags() {
+fn reapplying_an_identical_select_or_tree_sets_zero_dirty_flags() { let _arena = UiArenaFixture::new();
     let mut tree = UiTree::new();
     let select_ui = select("sel", "a", vec![("a", "Alpha"), ("b", "Beta")]);
     let root = open_select(&mut tree, &select_ui);
@@ -446,7 +447,7 @@ fn reapplying_an_identical_select_or_tree_sets_zero_dirty_flags() {
 //#endregion 🔖️CompositeExpansionTests
 
 #[test]
-fn changing_only_a_field_error_dirties_layout_for_the_new_error_band() {
+fn changing_only_a_field_error_dirties_layout_for_the_new_error_band() { let _arena = UiArenaFixture::new();
     let field = |error: Option<&str>| {
         UiNode::Field(semio_ui_declaration::ui::UiFieldNode {
             id: "field".into(),
@@ -472,9 +473,9 @@ fn changing_only_a_field_error_dirties_layout_for_the_new_error_band() {
 }
 
 #[test]
-fn node_graph_surface_reconciles_paged_records_and_host_snapshot() {
+fn node_graph_surface_reconciles_paged_records_and_host_snapshot() { let _arena = UiArenaFixture::new();
     use ui_scene::SceneDoc;
-    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🎬️scene/🧪️tests/🧫️fixtures/🚚️node-graph-scene-lanes/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../🎬️scene/🧪️tests/🧫️fixtures/🚚️node-graph-scene-lanes/🔣️.json")).unwrap();
     let node: ui_scene::NodeGraphNodeRecord = serde_json::from_value(fixture["node"].clone()).unwrap();
     let count = fixture["nodeCount"].as_u64().unwrap() as usize;
     let nodes = (0..count).map(|index| ui_scene::NodeGraphNodeRecord { id: index.to_string(), ..node.clone() }).collect();

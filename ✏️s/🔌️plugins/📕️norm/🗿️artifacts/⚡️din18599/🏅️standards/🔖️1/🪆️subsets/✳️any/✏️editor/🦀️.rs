@@ -47,7 +47,7 @@ pub const LABEL: &str = "DIN V 18599";
 /// 🆔️ The playground/registry variant key — every body key, window id and schema is derived from it.
 pub const VARIANT: &str = "din18599";
 /// 🆔️ Retained-command / UI action controller id.
-pub const CONTROLLER_ID: &str = "s.norm.din18599@1/*#editor";
+pub const CONTROLLER_ID: &str = "s.norm-energy.din18599@1/*#editor";
 pub const DOCUMENT_SCHEMA: &str = "semio.norm.din18599/v1";
 /// 🏷️ The scene entity kinds DIN V 18599 projects: one interaction granularity each.
 pub const ENTITY_KIND_SCENE_KINDS: &[semio_s_plugin_norm_structural_scene::EntityKind] = &[semio_s_plugin_norm_structural_scene::EntityKind::Solid];
@@ -107,7 +107,6 @@ impl ArtifactEditor for Din18599PlayApp {
 
     type Command = Din18599Command;
 
-    type Members = semio_s_artifact_stdio_semio::SemioMembers;
 
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
         semio_s_artifact_norm_din18599_model::din18599_child_restore_projection(snapshot)
@@ -141,7 +140,7 @@ impl ArtifactEditor for Din18599PlayApp {
     semio_plugin::bounded_first_step_tool_proofs! {
         owner: semio_plugin::EditorApp<Din18599PlayApp>,
         owner_file: "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
-        controller: "s.norm.din18599@1/*#editor",
+        controller: "s.norm-energy.din18599@1/*#editor",
         artifact_schema: "semio.norm.din18599/v1",
         factory: "Din18599BoundedCommandJobFactory",
         factory_type: Din18599BoundedCommandJobFactory,

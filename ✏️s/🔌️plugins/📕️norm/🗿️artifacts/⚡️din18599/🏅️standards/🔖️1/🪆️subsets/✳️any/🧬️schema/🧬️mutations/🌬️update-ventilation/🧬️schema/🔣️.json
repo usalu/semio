@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/update-ventilation/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/mutation/update-ventilation/schema.json",
   "title": "UpdateVentilation",
   "type": "object",
   "additionalProperties": false,
@@ -13,7 +13,7 @@
       "const": "updateVentilation"
     },
     "newVentilation": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/VentilationSystem",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/VentilationSystem",
       "x-semio-ui": {
         "role": "value",
         "label": {

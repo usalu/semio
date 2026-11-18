@@ -1,5 +1,4 @@
-import {existsSync,statfsSync} from "node:fs";
-import {dirname} from "node:path";
+import {freeSpaceSyncV1,type FreeSpaceOptionsV1} from "../../../../../../../../🔨️modules/🏃️process/🆓️free-space/🟦️.ts";
 
 const GIBIBYTE=2**30;
 
@@ -9,11 +8,9 @@ export type RemoteExecutionWorkerDiskV1=Readonly<{reserveGigabytes:number;perAct
 /** 🧮️ How many actions the free space allows at once and what that was measured on. */
 export type RemoteExecutionDiskSlotsV1=Readonly<{slots:number;freeBytes:number|undefined;needBytes:number;oneActionBytes:number}>;
 
-/** 💾️ The bytes free to a normal user on the volume that holds `path` (or its nearest existing parent); `undefined` when the volume cannot be asked. */
-export function remoteExecutionFreeBytesV1(path:string):number|undefined{
- let probe=path;
- while(!existsSync(probe)&&dirname(probe)!==probe)probe=dirname(probe);
- try{const row=statfsSync(probe);return row.bavail*row.bsize;}catch{return undefined;}
+/** 💾️ The bytes free to a normal user on the volume that holds `path` (or its nearest existing parent), from the one free-space question of the build system (the volume call on Windows, where `statfs` answers zeros); `undefined` when the volume cannot be asked. @see ../../../../../../../../🔨️modules/🏃️process/🆓️free-space/🟦️.ts */
+export function remoteExecutionFreeBytesV1(path:string,options?:Omit<FreeSpaceOptionsV1,"nearest">):number|undefined{
+ return freeSpaceSyncV1(path,{nearest:true,...options})?.availableBytes;
 }
 
 /** 📏️ The free space a worker with `concurrency` slots needs to serve all of them: the reserve plus the worst case of every slot. */

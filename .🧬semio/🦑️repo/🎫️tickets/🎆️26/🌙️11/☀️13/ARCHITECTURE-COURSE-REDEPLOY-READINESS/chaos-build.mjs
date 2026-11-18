@@ -22,7 +22,7 @@ const channel = createServer((request, response) => {
 });
 await new Promise((accept) => channel.listen(0, "127.0.0.1", accept));
 rmSync(out, { recursive: true, force: true });
-const child = spawn(process.execPath, [join(repo, "node_modules/vite/bin/vite.js"), "build", "--config", join(site, "🏗️builder/🌐️vite/🟦️.ts"), "--mode", "release", "--outDir", out, "--emptyOutDir"], {
+const child = spawn(process.execPath, [join(repo, "node_modules/vite/bin/vite.js"), "build", "--config", join(site, "🏗️builder/🌐️vite/🟦️.ts"), "--mode", "release", "--outDir", out, "--emptyOutDir", ...(process.env.VITE_EXTRA ? process.env.VITE_EXTRA.split(" ") : [])], {
   cwd: site, stdio: "inherit",
   env: { ...process.env, SEMIO_BUILD_MODE: "release", PROCTOR_URL: process.env.PROCTOR_URL ?? "http://127.0.0.1:8793", SEMIO_VITE_CACHE_DIRECTORY: join(repo, ".cache/b/p/m/vite-course-native-chaos-release"), SEMIO_VITE_RUNTIME_CHANNELS_V1: JSON.stringify([{ name: "course-assignment-pdfs", endpoint: `http://127.0.0.1:${channel.address().port}/pdfs`, secret }]) },
 });

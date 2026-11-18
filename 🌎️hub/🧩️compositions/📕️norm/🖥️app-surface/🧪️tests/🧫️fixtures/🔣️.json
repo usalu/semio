@@ -53,7 +53,7 @@
     {
       "variant": "din18599",
       "role": "editor",
-      "appId": "s.norm.din18599@1/*#editor",
+      "appId": "s.norm-energy.din18599@1/*#editor",
       "bodyKeys": [
         "norm.din18599.play.outliner",
         "norm.din18599.play.properties",
@@ -69,7 +69,7 @@
     {
       "variant": "din18599",
       "role": "viewer",
-      "appId": "s.norm.din18599@1/*#viewer",
+      "appId": "s.norm-energy.din18599@1/*#viewer",
       "bodyKeys": [
         "norm.din18599.view.viewport",
         "norm.din18599.view.diagrams",
@@ -80,7 +80,7 @@
     {
       "variant": "en1990",
       "role": "editor",
-      "appId": "s.norm.en1990@1/*#editor",
+      "appId": "s.norm-eurocode.en1990@1/*#editor",
       "bodyKeys": [
         "norm.en1990.play.outliner",
         "norm.en1990.play.properties",
@@ -96,7 +96,7 @@
     {
       "variant": "en1990",
       "role": "viewer",
-      "appId": "s.norm.en1990@1/*#viewer",
+      "appId": "s.norm-eurocode.en1990@1/*#viewer",
       "bodyKeys": [
         "norm.en1990.view.viewport",
         "norm.en1990.view.diagrams",
@@ -107,7 +107,7 @@
     {
       "variant": "en1991",
       "role": "editor",
-      "appId": "s.norm.en1991@1/*#editor",
+      "appId": "s.norm-eurocode.en1991@1/*#editor",
       "bodyKeys": [
         "norm.en1991.play.outliner",
         "norm.en1991.play.properties",
@@ -123,7 +123,7 @@
     {
       "variant": "en1991",
       "role": "viewer",
-      "appId": "s.norm.en1991@1/*#viewer",
+      "appId": "s.norm-eurocode.en1991@1/*#viewer",
       "bodyKeys": [
         "norm.en1991.view.viewport",
         "norm.en1991.view.diagrams",
@@ -134,7 +134,7 @@
     {
       "variant": "en1992",
       "role": "editor",
-      "appId": "s.norm.en1992@1/*#editor",
+      "appId": "s.norm-eurocode-structural.en1992@1/*#editor",
       "bodyKeys": [
         "norm.en1992.play.outliner",
         "norm.en1992.play.properties",
@@ -150,7 +150,7 @@
     {
       "variant": "en1992",
       "role": "viewer",
-      "appId": "s.norm.en1992@1/*#viewer",
+      "appId": "s.norm-eurocode-structural.en1992@1/*#viewer",
       "bodyKeys": [
         "norm.en1992.view.viewport",
         "norm.en1992.view.diagrams",
@@ -161,7 +161,7 @@
     {
       "variant": "en1993",
       "role": "editor",
-      "appId": "s.norm.en1993@1/*#editor",
+      "appId": "s.norm-eurocode-structural.en1993@1/*#editor",
       "bodyKeys": [
         "norm.en1993.play.outliner",
         "norm.en1993.play.properties",
@@ -177,7 +177,7 @@
     {
       "variant": "en1993",
       "role": "viewer",
-      "appId": "s.norm.en1993@1/*#viewer",
+      "appId": "s.norm-eurocode-structural.en1993@1/*#viewer",
       "bodyKeys": [
         "norm.en1993.view.viewport",
         "norm.en1993.view.diagrams",
@@ -188,7 +188,7 @@
     {
       "variant": "en1994",
       "role": "editor",
-      "appId": "s.norm.en1994@1/*#editor",
+      "appId": "s.norm-eurocode-structural.en1994@1/*#editor",
       "bodyKeys": [
         "norm.en1994.play.outliner",
         "norm.en1994.play.properties",
@@ -204,7 +204,7 @@
     {
       "variant": "en1994",
       "role": "viewer",
-      "appId": "s.norm.en1994@1/*#viewer",
+      "appId": "s.norm-eurocode-structural.en1994@1/*#viewer",
       "bodyKeys": [
         "norm.en1994.view.viewport",
         "norm.en1994.view.diagrams",
@@ -215,7 +215,7 @@
     {
       "variant": "en1995",
       "role": "editor",
-      "appId": "s.norm.en1995@1/*#editor",
+      "appId": "s.norm-eurocode-materials.en1995@1/*#editor",
       "bodyKeys": [
         "norm.en1995.play.outliner",
         "norm.en1995.play.properties",
@@ -231,7 +231,7 @@
     {
       "variant": "en1995",
       "role": "viewer",
-      "appId": "s.norm.en1995@1/*#viewer",
+      "appId": "s.norm-eurocode-materials.en1995@1/*#viewer",
       "bodyKeys": [
         "norm.en1995.view.viewport",
         "norm.en1995.view.diagrams",
@@ -242,7 +242,7 @@
     {
       "variant": "en1996",
       "role": "editor",
-      "appId": "s.norm.en1996@1/*#editor",
+      "appId": "s.norm-eurocode-materials.en1996@1/*#editor",
       "bodyKeys": [
         "norm.en1996.play.outliner",
         "norm.en1996.play.properties",
@@ -258,7 +258,7 @@
     {
       "variant": "en1996",
       "role": "viewer",
-      "appId": "s.norm.en1996@1/*#viewer",
+      "appId": "s.norm-eurocode-materials.en1996@1/*#viewer",
       "bodyKeys": [
         "norm.en1996.view.viewport",
         "norm.en1996.view.diagrams",
@@ -269,7 +269,7 @@
     {
       "variant": "en1997",
       "role": "editor",
-      "appId": "s.norm.en1997@1/*#editor",
+      "appId": "s.norm-eurocode.en1997@1/*#editor",
       "bodyKeys": [
         "norm.en1997.play.outliner",
         "norm.en1997.play.properties",
@@ -285,7 +285,7 @@
     {
       "variant": "en1997",
       "role": "viewer",
-      "appId": "s.norm.en1997@1/*#viewer",
+      "appId": "s.norm-eurocode.en1997@1/*#viewer",
       "bodyKeys": [
         "norm.en1997.view.viewport",
         "norm.en1997.view.diagrams",
@@ -296,7 +296,7 @@
     {
       "variant": "en1998",
       "role": "editor",
-      "appId": "s.norm.en1998@1/*#editor",
+      "appId": "s.norm-eurocode.en1998@1/*#editor",
       "bodyKeys": [
         "norm.en1998.play.outliner",
         "norm.en1998.play.properties",
@@ -312,7 +312,7 @@
     {
       "variant": "en1998",
       "role": "viewer",
-      "appId": "s.norm.en1998@1/*#viewer",
+      "appId": "s.norm-eurocode.en1998@1/*#viewer",
       "bodyKeys": [
         "norm.en1998.view.viewport",
         "norm.en1998.view.diagrams",
@@ -323,7 +323,7 @@
     {
       "variant": "en1999",
       "role": "editor",
-      "appId": "s.norm.en1999@1/*#editor",
+      "appId": "s.norm-eurocode-materials.en1999@1/*#editor",
       "bodyKeys": [
         "norm.en1999.play.outliner",
         "norm.en1999.play.properties",
@@ -339,7 +339,7 @@
     {
       "variant": "en1999",
       "role": "viewer",
-      "appId": "s.norm.en1999@1/*#viewer",
+      "appId": "s.norm-eurocode-materials.en1999@1/*#viewer",
       "bodyKeys": [
         "norm.en1999.view.viewport",
         "norm.en1999.view.diagrams",

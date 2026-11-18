@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/insert-shell-action/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1999/mutation/insert-shell-action/schema.json",
   "title": "InsertShellAction",
   "type": "object",
   "additionalProperties": false,
@@ -56,7 +56,7 @@
       }
     },
     "action": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/MemberAction",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1999/snapshot.json#/$defs/MemberAction",
       "x-semio-ui": {
         "role": "value",
         "label": {

@@ -198,7 +198,7 @@ pub const HOOK_RETURN: f64 = 1280.0;
 pub const ROPE_SHORT: f64 = 0.8;
 
 /// 🧶️ The longest rope as a fraction of the height.
-pub const ROPE_LONG: f64 = 8.0;
+pub const ROPE_LONG: f64 = 12.0;
 
 /// 🌄️ The least rise of a rope per pixel of its length (about 25°): a flatter rope would scrape the face of a card.
 pub const ROPE_ELEVATION: f64 = 0.42;

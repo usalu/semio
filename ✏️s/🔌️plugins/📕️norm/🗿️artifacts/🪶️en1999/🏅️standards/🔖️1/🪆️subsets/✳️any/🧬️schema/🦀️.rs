@@ -20,7 +20,7 @@ use framework_schema::ArtifactSchema;
 #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.norm.en1999")]
+#[artifact_schema(id = "s.norm-eurocode-materials.en1999")]
 pub struct En1999Artifact {
     #[state(artifact)]
     pub annex: AnnexChoice,
@@ -131,7 +131,7 @@ impl En1999Artifact {
 //#region 🔖️Descriptor
 pub fn en1999_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
     semio_framework_schema_registry::ArtifactSchemaDescriptor {
-        id: "s.norm.en1999",
+        id: "s.norm-eurocode-materials.en1999",
         artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: semio_s_artifact_norm_en1999_model::SNAPSHOT_LEAVES,
         diff: semio_s_artifact_norm_en1999_diff::DIFF_LEAVES,

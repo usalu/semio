@@ -20,11 +20,12 @@ test("the attempt of a selected scope runs through the fleet exchange inside the
  expect(helper).toContain("loadSelectedThroughFleetV1({");
 });
 
-test("the admission facts of the exchange are the memo of the process, keyed by scope, implementation and question",()=>{
+test("the admission facts of the exchange are the memo of the process, keyed by scope, admission format and question",()=>{
  const block=text.slice(text.indexOf("export const selectedAdmissionFactsV1"),text.indexOf("export async function observeOwnerFactsMemoizedV1"));
- expect(block).toContain('scope+"\\0"+loadedGraphModuleAuthorityV1.implementation+"\\0"');
+ expect(block).toContain('scope+"\\0"+loadedGraphAdmissionFormatV1+"\\0"');
+ expect(block).not.toContain("loadedGraphModuleAuthorityV1");
  expect(block).toContain("rememberOwnerFactsV1(");
- expect(text).toContain('key:scope+"\\0"+memoModule.implementation+"\\0"+owner.name+"\\0"+JSON.stringify([targets,inputs])');
+ expect(text).toContain('key:scope+"\\0"+loadedGraphAdmissionFormatV1+"\\0"+owner.name+"\\0"+JSON.stringify([targets,inputs])');
 });
 
 test("the attempt of the load module is not touched by the exchange",()=>{

@@ -110,7 +110,7 @@ describe("shared-border language-neutral cases", () => {
       expect(rules.some(rule => rule.selector === `[data-shared-border-attached~="${side}"]` && rule.nodes.some(n => n.type === "decl" && n.prop === `border-${side}-color` && n.value === "transparent"))).toBe(true);
     }
     for (const rule of rules.filter(rule => rule.selector.includes("shared-border-cell"))) {
-      expect(rule.nodes.some(n => n.type === "decl" && n.prop === "box-shadow")).toBe(false);
+      expect(rule.nodes.some(n => n.type === "decl" && n.prop === "box-shadow" && n.value !== "none")).toBe(false);
     }
   });
   test("paged partition fixtures match lodash binary search", () => {

@@ -1,3 +1,0 @@
-extent min [ -3.239, 0.004, -3.457 ] max [ 3.054, 12.504, 3.543 ] dims 6.3 12.5 7 feature 0.015
-== front 1:100 iou 0.988 hausdorff 0.0302 limit 0.03 section false drawn=901392 vol=893269
-  volume-only at (0.595, 11.323) distance 0.03

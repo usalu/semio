@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-use-class/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/mutation/change-use-class/schema.json",
   "title": "ChangeUseClass",
   "type": "object",
   "additionalProperties": false,
@@ -13,7 +13,7 @@
       "const": "changeUseClass"
     },
     "newUseClass": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/UseClass",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/UseClass",
       "x-semio-ui": {
         "role": "value",
         "label": {

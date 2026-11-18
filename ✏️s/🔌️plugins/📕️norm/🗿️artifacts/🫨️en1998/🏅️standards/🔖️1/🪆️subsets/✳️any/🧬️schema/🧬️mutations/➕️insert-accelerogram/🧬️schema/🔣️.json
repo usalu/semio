@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/insert-accelerogram/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1998/mutation/insert-accelerogram/schema.json",
   "title": "InsertAccelerogram",
   "type": "object",
   "additionalProperties": false,
@@ -36,7 +36,7 @@
       }
     },
     "accelerogram": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/$defs/En1998Accelerogram",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1998/snapshot.json#/$defs/En1998Accelerogram",
       "x-semio-ui": {
         "role": "value",
         "label": {

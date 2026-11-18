@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemas.assets.semio-tech.com/s/norm/compliance/design-case/schema.json",
-  "artifact": "s.norm.en1992",
+  "artifact": "s.norm-eurocode-structural.en1992",
   "inputs": [
     {
       "key": "a",

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-transverse-sides/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1999/mutation/change-transverse-sides/schema.json",
   "title": "ChangeTransverseSides",
   "type": "object",
   "additionalProperties": false,
@@ -34,7 +34,7 @@
       }
     },
     "newSides": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/StiffenerSides",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1999/snapshot.json#/$defs/StiffenerSides",
       "x-semio-ui": {
         "label": {
           "en": "Sides of the web",

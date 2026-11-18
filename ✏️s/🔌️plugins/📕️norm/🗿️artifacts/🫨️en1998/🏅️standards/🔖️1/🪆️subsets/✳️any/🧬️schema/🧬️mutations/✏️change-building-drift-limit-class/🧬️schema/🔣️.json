@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-building-drift-limit-class/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1998/mutation/change-building-drift-limit-class/schema.json",
   "title": "ChangeBuildingDriftLimitClass",
   "type": "object",
   "additionalProperties": false,
@@ -34,7 +34,7 @@
       }
     },
     "newDriftLimitClass": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/$defs/DriftLimitClass",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1998/snapshot.json#/$defs/DriftLimitClass",
       "x-semio-ui": {
         "role": "value",
         "label": {

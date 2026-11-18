@@ -1,0 +1,9 @@
+{
+  "title": "Dev Fem 3d End to End",
+  "emoji": "🧊",
+  "status": "open",
+  "description": "Get the fem3d playground (`dev fem 3d`, app s.fem.fem3d of ✏️s/🔌️plugins/🏗️fem) working end to end on the shared worktree: build, activation, serve on the react lane, every window rendering, examples switchable, editor actions dispatching, results visible.",
+  "goal": "🎯runningproducts",
+  "sessions": ["⚪ab112164-99fc-4583-bb1e-40539bfb15a7"],
+  "note": "Ticket created manually on disk: the session's repo MCP is bound to the stale checkout C:\git\semio; the shared worktree is C:\semio."
+}

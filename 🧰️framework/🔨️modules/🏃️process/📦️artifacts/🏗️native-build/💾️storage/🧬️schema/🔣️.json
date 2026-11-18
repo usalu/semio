@@ -398,12 +398,60 @@
         "recheckWindowMilliseconds": 500,
         "recheckWindowMaximumMilliseconds": 5000,
         "publicationDirectory": ".publication",
+        "attachProgram": "/usr/sbin/diskutil",
         "attachArguments": [
-          "-nobrowse",
-          "-noautoopen",
-          "-owners",
-          "on"
+          "image",
+          "attach",
+          "--nobrowse",
+          "--mountOptions",
+          "owners"
         ],
+        "attachMountPointFlag": "--mountPoint",
+        "reclaim": {
+          "version": 1,
+          "description": "Freed blocks reach the host only when the image is attached through an UNMAP-capable stack. macOS: `diskutil image attach` (diskimagesd) forwards the APFS trim of a mounted volume to the raw file as hole punching, so a detached idle image is reclaimed by one attach and detach cycle; the legacy `hdiutil attach` stack never unmaps, which is why every image attaches through diskutil. Linux: the backing is a sparse loop file mounted with `discard` (or `fstrim`), which punches holes with FALLOC_FL_PUNCH_HOLE. Windows: the backing is a dynamic VHDX compacted with Optimize-VHD -Mode Full after the volume trimmed.",
+          "mechanisms": {
+            "darwin": {"mechanism": "unmap-on-attach", "program": "/usr/sbin/diskutil", "detachProgram": "/usr/bin/hdiutil", "imageName": "fixed.dmg"},
+            "linux": {"mechanism": "punch-hole-fstrim", "program": "/usr/sbin/fstrim", "detachProgram": "/usr/bin/umount", "imageName": "fixed.img"},
+            "windows": {"mechanism": "optimize-vhd-full", "program": "powershell.exe", "detachProgram": "powershell.exe", "imageName": "fixed.vhdx"}
+          },
+          "linux": {
+            "losetup": "/usr/sbin/losetup",
+            "mount": "/usr/bin/mount",
+            "umount": "/usr/bin/umount",
+            "findmnt": "/usr/bin/findmnt",
+            "fstrim": "/usr/sbin/fstrim",
+            "associatedArguments": ["--associated", "<image>", "--noheadings", "--output", "NAME"],
+            "attachArguments": ["--find", "--show", "<image>"],
+            "detachArguments": ["--detach", "<device>"],
+            "mountArguments": ["-o", "discard,noatime", "<device>", "<mountPoint>"],
+            "mountsArguments": ["--source", "<device>", "--noheadings", "--output", "TARGET"],
+            "unmountArguments": ["<mountPoint>"],
+            "trimArguments": ["--verbose", "<mountPoint>"]
+          },
+          "windows": {
+            "program": "powershell.exe",
+            "arguments": ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command"],
+            "attachedScript": "(Get-VHD -Path '<image>').Attached",
+            "attachScript": "Mount-VHD -Path '<image>' -ReadOnly -NoDriveLetter",
+            "detachScript": "Dismount-VHD -Path '<image>'",
+            "optimizeScript": "Optimize-VHD -Path '<image>' -Mode Full"
+          },
+          "settlePollMilliseconds": 500,
+          "settleStablePolls": 4,
+          "maximumSettleMilliseconds": 120000,
+          "scratchPrefix": "semio-reclaim-",
+          "progressSteps": 4,
+          "availability": {
+            "description": "A volume mounted while the host disk was full keeps reporting the host free space of that moment until it is remounted. The container figure (APFS container free bytes of `diskutil info -plist`) is exact; when the volume reports less than the container by more than the tolerance, the figure is stale and the effective availability is the container figure capped by the host free space.",
+            "toleranceMinimumBytes": 268435456,
+            "toleranceDivisor": 16,
+            "correctionMilliseconds": 30000,
+            "containerFreeKey": "APFSContainerFree",
+            "infoProgram": "/usr/sbin/diskutil",
+            "infoArguments": ["info", "-plist"]
+          }
+        },
         "mountProgram": "/sbin/mount",
         "mountWithoutOwnersFlag": "noowners",
         "reservedApplicationEntries": [

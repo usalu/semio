@@ -1,5 +1,5 @@
 syntax = "proto3";
-package semio.s.norm.en1992.mutation.change_reinforcement_es;
+package semio.s.norm_eurocode_structural.en1992.mutation.change_reinforcement_es;
 message ChangeReinforcementES {
   string grade_id = 1;
   double new_e_s = 2;

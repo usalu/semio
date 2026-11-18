@@ -90,6 +90,10 @@
     { "status": 429, "kind": "throttled" },
     { "status": 503, "kind": "overloaded" }
   ],
+  "presence": {
+    "heartbeatMs": 10000,
+    "silenceFactor": 2.5
+  },
   "vectors": [
     {
       "name": "error-body",
@@ -862,6 +866,13 @@
       "json": {
         "type": "refused",
         "reason": "state-too-large"
+      }
+    },
+    {
+      "name": "presence-heartbeat",
+      "type": "presenceFrame",
+      "json": {
+        "type": "heartbeat"
       }
     },
     {

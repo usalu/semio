@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-weld-run-process/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1999/mutation/change-weld-run-process/schema.json",
   "title": "ChangeWeldRunProcess",
   "type": "object",
   "additionalProperties": false,
@@ -34,7 +34,7 @@
       }
     },
     "newProcess": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/WeldProcess",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1999/snapshot.json#/$defs/WeldProcess",
       "x-semio-ui": {
         "label": {
           "en": "Welding process",

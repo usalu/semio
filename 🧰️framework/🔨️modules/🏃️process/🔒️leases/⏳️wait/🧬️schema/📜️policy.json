@@ -14,7 +14,9 @@
         "sweepIntervalMilliseconds",
         "progressIntervalMilliseconds",
         "maximumReportedResourceCharacters",
-        "continuationDrainMilliseconds"
+        "continuationDrainMilliseconds",
+        "reapSliceTickets",
+        "reapSliceMilliseconds"
       ],
       "properties": {
         "version": {
@@ -59,6 +61,16 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 60000
+        },
+        "reapSliceTickets": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "reapSliceMilliseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5000
         }
       }
     },
@@ -72,7 +84,9 @@
         "sweepIntervalMilliseconds": 1000,
         "progressIntervalMilliseconds": 15000,
         "maximumReportedResourceCharacters": 400,
-        "continuationDrainMilliseconds": 300
+        "continuationDrainMilliseconds": 300,
+        "reapSliceTickets": 256,
+        "reapSliceMilliseconds": 150
       }
     },
     "Messages": {

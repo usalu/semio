@@ -4,6 +4,7 @@ Feature: A Page Recovers After Every Proctor Restart
   Scenario: Presence and the Connection Indicator Return After Every Kill
     Given ten browser learners are signed in, some in a run, some on the overview and some on the leaderboard
     When the proctor is killed and started again with down-times from a tenth of a second to ninety seconds
+    And the proctor is frozen with its sockets open, then thawed, or killed while frozen
     And the proctor is killed while a presence socket handshakes
     And the proctor is killed while a command is in flight
     And the network of some learners drops and returns before, during and after the kill

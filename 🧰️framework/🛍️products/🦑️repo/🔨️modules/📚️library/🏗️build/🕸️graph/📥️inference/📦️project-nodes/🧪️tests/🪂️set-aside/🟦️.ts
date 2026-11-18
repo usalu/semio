@@ -29,7 +29,7 @@ test("what the set-aside records is what the fleet and the next read see: the co
  const enforcement:any=await withTotal(16384,()=>graphOwnerEnforcementV1(root,process.env,1024*MB,()=>7,()=>4000*MB,()=>16384));
  expect(enforcement.known("@semio-tech/wfc-bitmap")).toBeUndefined();
  const factor=enforcement.cost.ownerCostPolicyV1.footprintFactor;
- setAsideOverrunV1({error:overrun(),never:new Set(),alone:new Set(),recorder:enforcement.recorder,factor,say:()=>{}});
+ await withTotal(16384,async()=>setAsideOverrunV1({error:overrun(),never:new Set(),alone:new Set(),recorder:enforcement.recorder,factor,say:()=>{}}));
  expect(enforcement.known("@semio-tech/wfc-bitmap")).toBe(4358);
  expect(await withTotal(16384,async()=>enforcement.neverHere(["@semio-tech/wfc-bitmap"]))).toEqual(["@semio-tech/wfc-bitmap"]);
 });

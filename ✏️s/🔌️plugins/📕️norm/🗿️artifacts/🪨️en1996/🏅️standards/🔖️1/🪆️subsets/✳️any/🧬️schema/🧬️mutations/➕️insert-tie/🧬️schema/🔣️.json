@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/insert-tie/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1996/mutation/insert-tie/schema.json",
   "title": "InsertTie",
   "type": "object",
   "additionalProperties": false,
@@ -51,7 +51,7 @@
       }
     },
     "tie": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/WallTie",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1996/snapshot.json#/$defs/WallTie",
       "x-semio-ui": {
         "role": "value",
         "label": {

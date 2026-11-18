@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/insert-variable/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1990/mutation/insert-variable/schema.json",
   "title": "InsertVariable",
   "type": "object",
   "additionalProperties": false,
@@ -33,7 +33,7 @@
       }
     },
     "item": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/$defs/VariableAction",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1990/snapshot.json#/$defs/VariableAction",
       "x-semio-ui": {
         "label": {
           "en": "Variable action",

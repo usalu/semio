@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/insert-panel/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1995/mutation/insert-panel/schema.json",
   "title": "InsertPanel",
   "type": "object",
   "additionalProperties": false,
@@ -30,7 +30,7 @@
       }
     },
     "panel": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/Panel",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1995/snapshot.json#/$defs/Panel",
       "x-semio-ui": {
         "role": "value",
         "label": {

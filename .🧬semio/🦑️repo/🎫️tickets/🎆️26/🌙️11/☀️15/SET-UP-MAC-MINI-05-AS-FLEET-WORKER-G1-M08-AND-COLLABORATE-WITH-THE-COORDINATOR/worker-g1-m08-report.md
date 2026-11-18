@@ -47,3 +47,13 @@ Not ready. The machine is joined, replicating and running the automatic ready ru
 - The coordinator posted no round after 31 and no `next.md` for this machine. Observation ended after twice the protocol's six hours; the runner continues by itself and reports to the store.
 - Not done: `repo preflight --lang en` (the protocol runs it only when ready). Not measured: waiting permission dialogs, the cut-smaller lines of the runs after the first, which process the runner's peak figure measures.
 - What makes it ready is a change to the graph read's memory use (coordinator's code), not anything on this machine.
+
+## Ready (2026-11-18T04:04:35Z)
+
+The "Final State" above was superseded: observation went on in six-hour blocks until the worker became ready.
+
+- The automatic ready runner finished stage `workspace` with exit 0 at 04:04:35Z on 2026-11-18 (2600 s, peak 3993 MB) and wrote the marker `.cache/f/native-bootstrap.done`; `ready.json` says `ready: true`. This session ran no setup command at any time.
+- On the way the coordinator's changes moved the failure from memory refusals (exit 75, up to 10635 MB of 6553 MB) through `code changed under the slice worker`, `build.graph.no-progress`, `graph.read-parent-computes`, `Unknown selected named source input`, `Closed scoped plan required` (4443 scope targets) and a failed Nx build to a pass. Each kind is recorded verbatim with its time in `workers/g1-m08/round-31.md` of the coordinator's ticket.
+- `repo preflight --lang en`: exit 0 (7 s). Replica `status`: exit 0, this machine `ok`, 0 events behind, code `ca097b4fae32`. The fleet as a whole is not in agreement yet (other origins diverged, stale or lagging); that is not this machine's state.
+- Reported to the coordinator: `round-31.md` (section READY), `round-31.preflight.txt`, `round-31.status.txt`, `state.json` with `ready: true`.
+- Not measured in the whole observation: whether a macOS permission dialog was waiting on screen.

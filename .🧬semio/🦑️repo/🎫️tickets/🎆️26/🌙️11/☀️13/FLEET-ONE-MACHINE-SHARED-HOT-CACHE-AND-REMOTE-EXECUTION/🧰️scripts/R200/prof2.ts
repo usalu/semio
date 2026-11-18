@@ -1,0 +1,30 @@
+import {mkdirSync,mkdtempSync,readFileSync,writeFileSync,existsSync} from "node:fs";
+import {join,dirname,relative} from "node:path";
+import {tmpdir} from "node:os";import {realpathSync} from "node:fs";
+const R="/Users/ueli/Documents/semio",B=R+"/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/";
+const inf:any=await import(B+"🕸️graph/📥️inference/🟨️.mjs");await inf.libraryBootstrap;
+const pn:any=await import(B+"🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs");
+const si:any=await import(B+"🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs");
+const svc:any=await import(B+"🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/👷️service/🟨️.mjs");
+const obs:any=await import(B+"👁️observation/🟨️.mjs");
+const dir=process.argv[2];const T=(l:string,t:number)=>console.error(`[T] ${l} ${Math.round(performance.now()-t)}ms rss=${Math.round(process.memoryUsage().rss/1e6)}MB`);
+let t=performance.now();
+const contracts=pn.projectGeneratorContractsV1(R);
+const staging=mkdtempSync(join(realpathSync(tmpdir()),"r200-"));
+const session:any={workspaceRoot:R,registry:null,contracts,commandInputs:null,lateClosures:process.env.LATE==="1",projectsByRoot:[],componentRoots:[],stagingBase:staging,closureStore:process.env.LATE==="1"?si.closureStoreDirectoryV1(R):undefined};
+const probe=await obs.observeInferenceSnapshotV1(()=>pn.createProjectInferenceEnvironmentV1(session));T("env",t);t=performance.now();
+const ci=await obs.observeInferenceSnapshotV1(()=>si.closureApiV1(probe.scripts,R).nativeCommandInputs());T("nativeCommandInputs",t);t=performance.now();
+const h=si.closureHandleOfV1(ci);session.commandInputs=h?{closureRecipe:h.recipe}:ci;
+const opened=await svc.open(session,{slot:0,generation:1});T("open",t);t=performance.now();
+const env=svc.sessionEnvironmentV1();
+const {createHash}=await import("node:crypto");
+const globals={projectAuthority:createHash("sha256").update(JSON.stringify([contracts])).digest("hex"),registryDigest:createHash("sha256").update("null").digest("hex"),commandRevision:createHash("sha256").update(JSON.stringify(h?.key??ci??null)).digest("hex"),late:process.env.LATE==="1"};
+for(const dir of process.argv.slice(2)){
+const pj=JSON.parse(readFileSync(join(R,dir,"📋️project.json"),"utf8"));pj.root=dir;
+t=performance.now();const rss0=process.memoryUsage().rss;
+const job=pn.ownerJobV1(env,globals,{name:pj.name,json:pj});const tj=performance.now()-t;t=performance.now();
+const c=process.cpuUsage();const reply=await svc.run(job);const u=process.cpuUsage(c);
+if(process.env.NAMES_OUT)writeFileSync(process.env.NAMES_OUT+"."+pj.name.replace(/[^a-z0-9]/gi,"_"),reply.names.join("\n"));
+console.log(JSON.stringify({name:pj.name,late:globals.late,jobMs:Math.round(tj),produceMs:Math.round(performance.now()-t),cpuMs:Math.round((u.user+u.system)/1000),rssBeforeMB:Math.round(rss0/1e6),rssAfterMB:Math.round(process.memoryUsage().rss/1e6),childPeakMB:reply.peakMegabytes,leaves:reply.names.length,namesSha:createHash("sha256").update(JSON.stringify(reply.names)).digest("hex").slice(0,16)}));
+}
+console.error("[CALLS]",JSON.stringify({closurePackages:((globalThis as any).__n??[]).length,big:((globalThis as any).__n??[]).filter((x:number)=>x>1000).length,toolGroups:Object.entries(((globalThis as any).__tg??[]).reduce((m:any,x:string)=>(m[x]=(m[x]??0)+1,m),{}))}));

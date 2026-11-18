@@ -53,7 +53,7 @@ macro_rules! norm_command_from_action {
                 })),
                 other => Err(semio_plugin::Fault::new(
                     semio_plugin::FaultOrigin::App,
-                    semio_plugin::FaultCode::new("norm.unhandled-action"),
+                    semio_plugin::FaultCode::new("norm.editor.unhandled-action"),
                     format!("action '{other}' is not one of this app's declared verbs (setSelectedCheckIndex/setField/insertItem/removeItem/applyRemedy)"),
                 )),
             }
@@ -143,7 +143,7 @@ macro_rules! norm_command_from_action {
                         Some(Err(message)) => Err(semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("norm.host-route"), message)),
                         None => Err(semio_plugin::Fault::new(
                             semio_plugin::FaultOrigin::App,
-                            semio_plugin::FaultCode::new("norm.unhandled-action"),
+                            semio_plugin::FaultCode::new("norm.editor.unhandled-action"),
                             format!("action '{other}' is not one of this app's declared verbs (setSelectedCheckIndex/setField/insertItem/removeItem/applyRemedy/setFields/previewRemedy/clearPreview/cancelEvaluation/evaluateUnits/viewportAct/copyEntities/duplicateEntities/pasteEntities/moveEntity/deleteEntities/norm.shortcut.<step>)"),
                         )),
                     },
@@ -182,7 +182,7 @@ macro_rules! norm_command_from_action {
                 })),
                 other => Err(semio_plugin::Fault::new(
                     semio_plugin::FaultOrigin::App,
-                    semio_plugin::FaultCode::new("norm.unhandled-action"),
+                    semio_plugin::FaultCode::new("norm.editor.unhandled-action"),
                     format!("action '{other}' is not one of this app's declared verbs (setSelectedCheckIndex/setField/insertItem/removeItem/applyRemedy)"),
                 )),
             }

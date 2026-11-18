@@ -62,6 +62,7 @@ export function planBuildTasksV1(graph:BuildGraphV1,request:BuildTaskRequestV1):
    const specification=typeof dependency==="string"?{target:dependency}:dependency,pattern=specification.target,fromDependencies=pattern.startsWith("^")||specification.projects==="dependencies"||specification.dependencies===true,operation=pattern.replace(/^\^/u,""),forwarded=specification.params==="forward"?args:[];
    const add=(name:string)=>{
     const[dependencyProject,dependencyTarget]=name.split(":");
+    if(request.excludeDependencies&&!graph.projects[dependencyProject!])return;
     if(!graph.projects[dependencyProject!])throw Error(`Unknown build task dependency: ${id} depends on ${name}, but project ${dependencyProject} is not in the build graph`);
     if(!graph.projects[dependencyProject!]!.targets[dependencyTarget??""])throw Error(`Unknown build task dependency: ${id} depends on ${name}, but project ${dependencyProject} defines no target ${dependencyTarget}`);
     const resolved=identity(graph,name,inherited).id;

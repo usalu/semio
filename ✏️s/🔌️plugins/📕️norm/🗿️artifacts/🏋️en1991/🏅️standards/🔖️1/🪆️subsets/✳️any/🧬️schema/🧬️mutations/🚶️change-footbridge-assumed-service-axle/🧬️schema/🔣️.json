@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-footbridge-assumed-service-axle/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1991/mutation/change-footbridge-assumed-service-axle/schema.json",
   "title": "ChangeFootbridgeAssumedServiceAxle",
   "type": "object",
   "additionalProperties": false,

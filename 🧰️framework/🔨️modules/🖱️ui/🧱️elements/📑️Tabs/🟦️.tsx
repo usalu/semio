@@ -209,7 +209,7 @@ function TabsTrigger({ className, value, disabled = false, id, ref, onClick, onF
       data-state={selected ? "active" : "inactive"}
       data-disabled={disabled ? "" : undefined}
       className={cn(
-        "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring text-element relative inline-flex flex-1 items-center justify-center gap-single border border-transparent p-single text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[length:var(--stroke-focus)] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "focus-visible:border-active-base focus-visible:outline-none focus-visible:ring-0 text-element relative inline-flex flex-1 items-center justify-center gap-single border border-transparent p-single text-sm font-medium whitespace-nowrap transition-[color,box-shadow] disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         interactiveTabActiveClass,
         interactiveHoverClass,
         className,
@@ -244,7 +244,7 @@ function TabsContent({ className, value, id, ref, ...props }: TabsContentProps) 
   const triggerId = context.triggerIds.get(value) ?? context.associationId("trigger", value);
   React.useEffect(() => context.registerId("content", value, contentId), [contentId, context.registerId, value]);
   if (!selected) return null;
-  return <div {...props} ref={ref} id={contentId} role="tabpanel" aria-labelledby={triggerId} tabIndex={0} data-slot="tabs-content" data-state="active" className={cn("flex-1 outline-none", className)} />;
+  return <div {...props} ref={ref} id={contentId} role="tabpanel" aria-labelledby={triggerId} tabIndex={0} data-slot="tabs-content" data-state="active" className={cn("flex-1", className)} />;
 }
 
 export { Tabs, TabsContent, TabsList, TabsTrigger };

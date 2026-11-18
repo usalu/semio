@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-anchor-action-source/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1992/mutation/change-anchor-action-source/schema.json",
   "title": "ChangeAnchorActionSource",
   "type": "object",
   "additionalProperties": false,
@@ -51,7 +51,7 @@
       }
     },
     "newSource": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/ActionSource",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1992/snapshot.json#/$defs/ActionSource",
       "x-semio-ui": {
         "label": {
           "en": "source",

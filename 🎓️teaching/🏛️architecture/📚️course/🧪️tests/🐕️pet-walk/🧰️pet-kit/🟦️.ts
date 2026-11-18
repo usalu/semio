@@ -160,18 +160,6 @@ export const CIRCLE_LAP_MS = 1000;
 /** 🌀️ How many laps the spec draws round a pet: five quarter turns make a circle, and the first lap begins anew while the pointer comes in. */
 export const CIRCLE_LAPS = 3;
 
-/** 🪝️ How many of its own heights the rope of a grappling gun reaches at most (`ROPE_LONG` of the pets' climbing): the
- * ledge of {@link ledgeAdded} stands this many heights over the footer line at most, which is a few more than the lowest
- * ledge a rope may rise to ({@link ROPE_LEDGE}). */
-export const ROPE_REACH = 8;
-
-/** 🪜️ Where the gear spec puts the ledge a rope is shot at, relative to the page: its width and height in pixels, how far
- * its top stands over the footer line (about six of the shortest grappler's heights, in a rope's reach) and how far its
- * left side stands from the window's right edge, in the gutter beside the column of a quiz's page, which no control of
- * the footer lies under. Cards fill their page, so no card part of the course leaves a perch with room above it and a
- * corridor beside it for a rope: what the layer surveys as a surface is, by its selector, an element of a card. */
-export const ROPE_LEDGE = { width: 200, height: 24, rise: 300, inset: 250 } as const;
-
 /** 🔁️ How long the gear spec waits for a rope while the hand holds whoever sat on the perch in a rope's reach, before it
  * lets go and clears the way again, in milliseconds of the wall clock: two minutes of the pets' time at eight times the
  * pace, in which a grappler on the footer line feels like going up a time or two — and in which a newcomer of the
@@ -339,21 +327,6 @@ export function circleRound(body: Body, cue: "circle" | "countercircle", laps: n
   const radius = Math.max(body.right - body.left, body.bottom - body.top) / 2 + CIRCLE_BEYOND;
   const way = cue === "circle" ? 1 : -1;
   return Array.from({ length: laps * CIRCLE_POINTS + 1 }, (_, step) => ({ x: middle.x + radius * Math.cos((way * step * 2 * Math.PI) / CIRCLE_POINTS), y: middle.y + radius * Math.sin((way * step * 2 * Math.PI) / CIRCLE_POINTS) }));
-}
-
-/** 🛋️ In the page: puts an empty card part into the main area of the client, a ledge as wide and high as `ledge` says, standing `ledge.rise` pixels over the footer line and `ledge.inset` pixels from the right edge of the window, which no press ever reaches. The pet layer surveys it as the top edge of a card part; its middle, where a pet on the footer line stands under its way up, is what the call returns. */
-export function ledgeAdded(ledge: { readonly width: number; readonly height: number; readonly rise: number; readonly inset: number }): number {
-  const footer = document.querySelector(".course-app > footer")!.getBoundingClientRect().top;
-  const left = window.innerWidth - ledge.inset;
-  const card = document.createElement("div");
-  card.setAttribute("data-card", "");
-  card.style.cssText = `position:fixed;left:${left}px;top:${footer - ledge.rise}px;width:${ledge.width}px;height:${ledge.height}px;pointer-events:none`;
-  const surface = document.createElement("div");
-  surface.setAttribute("data-slot", "window-chrome-body-surface");
-  surface.style.cssText = "width:100%;height:100%;background:currentColor;opacity:0.15";
-  card.append(surface);
-  document.querySelector("#course-main")!.append(card);
-  return left + ledge.width / 2;
 }
 
 /** 🏝️ In the page: a place on the footer line with room for a pet and a circle round it — no part of a card and no pet
@@ -644,14 +617,46 @@ export function seenBoxes(selector: string): { left: number; top: number; right:
   });
 }
 
+/** 🔤️ The tabs of the cards, which stand on the edge of their body: a pet there would stand in front of them. */
+export const CHIPS = '#course-main [data-card] [data-slot="window-chrome-chip-cap"]';
+
+/** 📄️ The blocks whose words a pet must not cover. */
+export const WORDS = "p, li, h1, h2, h3, h4, h5, h6, legend, figcaption, dt, dd, td, th, label, [role=\"status\"]";
+
+/** 🔡️ In the page: where the words of the blocks `selector` matches lie, one box per line and run of words, without anything inert, hidden or part of the pet layer and cut to the window and to what its scrolling ancestors show. */
+export function seenWords(selector: string): { left: number; top: number; right: number; bottom: number }[] {
+  const lines: { left: number; top: number; right: number; bottom: number }[] = [];
+  for (const block of document.querySelectorAll(selector)) {
+    if (block.closest("[inert], [hidden], .pet-layer") !== null) continue;
+    let [clipLeft, clipTop, clipRight, clipBottom] = [0, 0, window.innerWidth, window.innerHeight];
+    for (let node = block.parentElement; node !== null && node !== document.body; node = node.parentElement) {
+      const style = getComputedStyle(node);
+      if (style.overflowX === "visible" && style.overflowY === "visible") continue;
+      const clip = node.getBoundingClientRect();
+      [clipLeft, clipTop, clipRight, clipBottom] = [Math.max(clipLeft, clip.left), Math.max(clipTop, clip.top), Math.min(clipRight, clip.right), Math.min(clipBottom, clip.bottom)];
+    }
+    const walker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT);
+    for (let node = walker.nextNode(); node !== null; node = walker.nextNode()) {
+      if ((node.textContent ?? "").trim() === "") continue;
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      for (const rect of range.getClientRects()) {
+        const [left, top, right, bottom] = [Math.max(rect.left, clipLeft), Math.max(rect.top, clipTop), Math.min(rect.right, clipRight), Math.min(rect.bottom, clipBottom)];
+        if (right > left && bottom > top) lines.push({ left, top, right, bottom });
+      }
+    }
+  }
+  return lines;
+}
+
 /** 👣️ What is wrong with where the pets of a page stand that stand on a perch, one line each; none when every such pet
  * that is whole stands with its feet on an edge the screen shows (the top of a tab, of a body or of the footer; a
- * floater its hover above it), no two of them on one edge overlap, and none covers a control or stands in front of a
- * card. Pets in the hand, in the air, on a wall, a ladder, a rope or another pet's head stand on no edge by design. */
+ * floater its hover above it), no two of them on one edge overlap, and none covers a control, a line of text or a
+ * tab that stands on its edge (a card is no wall: its empty face may lie behind a pet). Pets in the hand, in the air, on a wall, a ladder, a rope or another pet's head stand on no edge by design. */
 export async function misplaced(page: Page): Promise<readonly string[]> {
   const shown = (await standing(page)).filter((pet) => pet.opacity > 0.99 && pet.footing === "perch");
   const edges = (await page.evaluate(seenBoxes, EDGES)).filter((edge) => edge.topped);
-  const kept = await page.evaluate(seenBoxes, `a[href], button, input, select, textarea, summary, ${CARD_PARTS}`);
+  const kept = [...(await page.evaluate(seenBoxes, `a[href], button, input, select, textarea, summary, ${CHIPS}`)), ...(await page.evaluate(seenWords, WORDS))];
   const wrong: string[] = [];
   for (const pet of shown) {
     const kind = KINDS[pet.id];

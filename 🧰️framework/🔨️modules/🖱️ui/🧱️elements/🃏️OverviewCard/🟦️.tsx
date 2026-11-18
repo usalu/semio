@@ -115,7 +115,6 @@ export function OverviewCard(props: OverviewCardProps): React.ReactElement {
       onClick={props.onClick}
       className={cn(
         "pointer-events-auto group h-full w-full min-w-0 cursor-pointer border-0 bg-transparent p-0 text-left outline-none",
-        "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         className,
       )}
     >

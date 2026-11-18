@@ -1,6 +1,6 @@
 {
   "$schema":"http://json-schema.org/draft-07/schema#",
-  "$id":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/artifact.json",
+  "$id":"https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1991/artifact.json",
   "title":"En1991Artifact",
   "type":"object",
   "additionalProperties":false,
@@ -48,5 +48,5 @@
     "RailLoadGroup":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string"},"loadGroup":{"type":"string"},"factorVertical":{"type":"number","format":"double"},"factorLongitudinal":{"type":"number","format":"double"},"factorLateral":{"type":"number","format":"double"},"assumedAxleLoad":{"type":"number","format":"double"},"assumedUdl":{"type":"number","format":"double"},"assumedLongitudinal":{"type":"number","format":"double"},"assumedLateral":{"type":"number","format":"double"}},"required":["id","loadGroup","factorVertical","factorLongitudinal","factorLateral","assumedAxleLoad","assumedUdl","assumedLongitudinal","assumedLateral"]},
     "DustExplosion":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string"},"kst":{"type":"number","format":"double"},"pMax":{"type":"number","format":"double"},"volume":{"type":"number","format":"double"},"ventArea":{"type":"number","format":"double"},"staticOpeningPressure":{"type":"number","format":"double"},"designPressure":{"type":"number","format":"double"}},"required":["id","kst","pMax","volume","ventArea","staticOpeningPressure","designPressure"]}
   },
-  "x-semio-rust":{"doc":["🧬️ Full En1991 artifact state across the artifact and presence lanes."],"derive":["Clone","Debug","PartialEq","ArtifactSchema","semio_framework_dsl_record_derive::DslRecord","value_derive::ToValue","value_derive::FromValue"],"artifactSchema":"s.norm.en1991","attributes":["#[cfg_attr(any(test, feature = \"test-support\"), derive(serde::Serialize, serde::Deserialize))]","#[cfg_attr(any(test, feature = \"test-support\"), serde(rename_all = \"camelCase\"))]","#[value(rename_all = \"camelCase\")]"]}
+  "x-semio-rust":{"doc":["🧬️ Full En1991 artifact state across the artifact and presence lanes."],"derive":["Clone","Debug","PartialEq","ArtifactSchema","semio_framework_dsl_record_derive::DslRecord","value_derive::ToValue","value_derive::FromValue"],"artifactSchema":"s.norm-eurocode.en1991","attributes":["#[cfg_attr(any(test, feature = \"test-support\"), derive(serde::Serialize, serde::Deserialize))]","#[cfg_attr(any(test, feature = \"test-support\"), serde(rename_all = \"camelCase\"))]","#[value(rename_all = \"camelCase\")]"]}
 }

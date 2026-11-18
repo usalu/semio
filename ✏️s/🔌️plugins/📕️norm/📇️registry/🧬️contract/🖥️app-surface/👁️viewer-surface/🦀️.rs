@@ -303,7 +303,7 @@ macro_rules! norm_view_command_from_action {
                     Some((action, direction)) => Ok($command::ViewportAct(viewport_act::ViewportAct { action: action.to_string(), text: None, number: Some(direction) })),
                     None => Err(semio_plugin::Fault::new(
                         semio_plugin::FaultOrigin::App,
-                        semio_plugin::FaultCode::new("norm.unhandled-action"),
+                        semio_plugin::FaultCode::new("norm.editor.unhandled-action"),
                         format!("action '{other}' is not one of this viewer's declared verbs (viewportAct/norm.shortcut.<step>)"),
                     )),
                 },
@@ -315,10 +315,10 @@ macro_rules! norm_view_command_from_action {
 /// 🧩️ Implements [`NormViewerSurface`] for a viewer from its report, scene and command enum (row `ViewportAct`).
 #[macro_export]
 macro_rules! norm_viewer_surface {
-    ($viewer:ty, $command:ident, variant = $variant:literal, report = $report:expr, scene = $scene:expr, diagrams = $diagrams:expr) => {
+    ($viewer:ty, $command:ident, owner = $owner:literal, variant = $variant:literal, report = $report:expr, scene = $scene:expr, diagrams = $diagrams:expr) => {
         impl $crate::NormViewerSurface for $viewer {
             const VARIANT: &'static str = $variant;
-            const CONTROLLER: &'static str = concat!("s.norm.", $variant, "@1/*#viewer");
+            const CONTROLLER: &'static str = concat!("s.", $owner, ".", $variant, "@1/*#viewer");
             const INTERACTION_DOMAIN: &'static str = concat!("norm.", $variant);
             const VIEWPORT_BODY: &'static str = concat!("norm.", $variant, ".view.viewport");
             const CHECKS_BODY: &'static str = concat!("norm.", $variant, ".view.checks");

@@ -1,6 +1,6 @@
 {
   "definition_version": 1,
-  "id": "s.norm.en1998",
+  "id": "s.norm-eurocode.en1998",
   "artifact": "en1998",
   "directory": "🫨️en1998",
   "rust_package": "semio-s-artifact-norm-en1998",

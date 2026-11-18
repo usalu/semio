@@ -323,10 +323,10 @@ where
 
 /// 📤️ The document lane of `setFields`: a plain bundle commits all its writes as one edit, its placement leaves through the shared `PlacementCommit` (an entity without a row is ONE insert of its standing pose with the dragged leaves); a gesture commits only on release (or Enter) with the writes the statechart releases; a placement commits one `insertItem` edit at the snapped cursor; every other gesture step leaves the document alone.
 pub fn live_set_fields<A: NormLiveEditor>(document: &A::Snapshot, writes_json: &str, gesture_json: Option<&str>, insert_json: Option<&str>) -> Result<Emit<A::Mutation, NoConfigMutation>, Fault> {
-    let invocation = LiveInvocation::set_fields(writes_json, gesture_json, insert_json).map_err(|message| fault("norm.set-fields-args", message))?;
+    let invocation = LiveInvocation::set_fields(writes_json, gesture_json, insert_json).map_err(|message| fault("norm.editor.set-fields-args", message))?;
     if let Some(placement) = &invocation.placement {
-        let edit = placement_edit::<A>(document, placement).map_err(|message| fault("norm.insert-placement", message))?;
-        let mutations = A::live_resolve(document, &edit).map_err(|message| fault("norm.insert-placement", message))?;
+        let edit = placement_edit::<A>(document, placement).map_err(|message| fault("norm.editor.insert-placement", message))?;
+        let mutations = A::live_resolve(document, &edit).map_err(|message| fault("norm.editor.insert-placement", message))?;
         return crate::commit_snapshot_fields(mutations).map(|emit| Emit { artifact_mutations: emit.artifact_mutations, ..Emit::default() });
     }
     let dragged = invocation.gesture.as_ref().map(|gesture| gesture_handles::<A>(document, gesture));

@@ -38,7 +38,7 @@ export const modeDockTabClassName = cn(chromeControlTabItemClass, "group max-w-[
 export const windowPaneChromeToggleClass = cn(
   modeDockTabClassName,
   "relative z-30 box-border min-h-medium shrink-0 border-0 bg-transparent",
-  "outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-active-base",
+  "outline-none",
   "disabled:pointer-events-none disabled:opacity-50",
 );
 

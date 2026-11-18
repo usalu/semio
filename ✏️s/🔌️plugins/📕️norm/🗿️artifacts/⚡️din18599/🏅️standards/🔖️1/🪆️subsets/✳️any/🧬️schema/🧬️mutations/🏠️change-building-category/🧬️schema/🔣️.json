@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-building-category/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/mutation/change-building-category/schema.json",
   "title": "ChangeBuildingCategory",
   "type": "object",
   "additionalProperties": false,
@@ -13,7 +13,7 @@
       "const": "changeBuildingCategory"
     },
     "newBuildingCategory": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/BuildingCategory",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/BuildingCategory",
       "x-semio-ui": {
         "role": "value",
         "label": {

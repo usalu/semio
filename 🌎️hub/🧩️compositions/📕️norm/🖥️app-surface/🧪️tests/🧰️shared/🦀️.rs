@@ -69,7 +69,7 @@ async fn norm_public_surfaces_render_all_declared_bodies() {
     assert_eq!(fixture.rows.len(), VARIANTS.len() * 2);
     let plugin = plugin().expect("the real plugin must assemble its complete surface registry");
     assert_eq!(plugin.manifest.apps.iter().map(|app| app.id.clone()).collect::<BTreeSet<_>>(), fixture.rows.iter().map(|row| row.app_id.clone()).collect());
-    assert_eq!(plugin.artifact_definitions().definitions().map(|definition| definition.identity().as_str().to_owned()).collect::<BTreeSet<_>>(), fixture.rows.iter().map(|row| format!("s.norm.{}", row.variant)).collect());
+    assert_eq!(plugin.artifact_definitions().definitions().map(|definition| definition.identity().as_str().to_owned()).collect::<BTreeSet<_>>(), fixture.rows.iter().map(|row| format!("s.{}.{}", plugin.manifest.plugin_id, row.variant)).collect());
     let mut visited = BTreeSet::new();
     let mut rendered = 0;
     for row in &fixture.rows {
@@ -77,7 +77,7 @@ async fn norm_public_surfaces_render_all_declared_bodies() {
         let definition = plugin.manifest.apps.iter().find(|app| app.id == row.app_id).unwrap();
         assert_eq!(definition.id, row.app_id);
         assert_eq!(definition.role.as_str(), row.role);
-        assert_eq!(definition.dialect.artifact_kind, format!("s.norm.{}", row.variant));
+        assert_eq!(definition.dialect.artifact_kind, format!("s.{}.{}", plugin.manifest.plugin_id, row.variant));
         let mut app = plugin.create_app(&row.app_id, semio_os_kernel::ActorId(semio_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).expect("each manifest app must have a registered factory");
         let result = check_surface(&mut app, definition, row).await;
         close_registered_fixture_app(&mut app);
@@ -180,7 +180,7 @@ async fn every_norm_editor_action_is_migrated_onto_the_shared_owned_factory() {
     for app in fixture.apps.iter().filter(|app| VARIANTS.contains(&app.variant.as_str())) {
         let definition = plugin.manifest.apps.iter().find(|entry| entry.id == app.controller).unwrap_or_else(|| panic!("{} is not a registered norm editor", app.controller));
         assert_eq!(definition.io.artifact_schema, app.artifact_schema);
-        assert_eq!(definition.dialect.artifact_kind, format!("s.norm.{}", app.variant));
+        assert_eq!(definition.dialect.artifact_kind, format!("s.{}.{}", plugin.manifest.plugin_id, app.variant));
         for window in definition.window_kinds.iter() {
             let presented = semio_plugin::window_kind_actions(definition, window);
             for route in &fixture.routes {

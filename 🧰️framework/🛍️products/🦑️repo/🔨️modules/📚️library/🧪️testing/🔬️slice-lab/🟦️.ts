@@ -1,11 +1,11 @@
-import{machinePathV1}from"../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
+import{MACHINE_STATE_PROTOCOL_V1,machinePathV1}from"../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {spawn,spawnSync} from "node:child_process";
 import {randomBytes} from "node:crypto";
-import {closeSync,existsSync,mkdirSync,mkdtempSync,openSync,readdirSync,readFileSync,readSync,realpathSync,rmSync,statSync,writeFileSync} from "node:fs";
+import {closeSync,existsSync,lstatSync,mkdirSync,mkdtempSync,openSync,readdirSync,readFileSync,readSync,realpathSync,rmSync,statfsSync,statSync,symlinkSync,writeFileSync} from "node:fs";
 import {homedir,tmpdir} from "node:os";
 import {dirname,join,resolve,sep} from "node:path";
 import {fileURLToPath} from "node:url";
-import {editFrozenFileV1,freezeSliceLabRootV1,frozenRootV1,relinkFrozenRootV1} from "./🧊️frozen/🟦️.ts";
+import {cloneFrozenRootV1,editFrozenFileV1,freezeSliceLabRootV1,frozenRootV1} from "./🧊️frozen/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {PLAN_STAGE_POLICY_V1} from "../../🏗️build/🧠️memory/🪜️plan-stage/🟨️.mjs";
 import {READY_PROBES_V1,READY_STAGES_V1,type ReadyStageV1} from "../../🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🟦️.ts";
@@ -16,6 +16,10 @@ import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 export const SLICE_LAB_POLICY_V1=schema.definitions.Policy.const;
 const P=SLICE_LAB_POLICY_V1,MEGABYTE=1048576,here=dirname(fileURLToPath(import.meta.url)),pause=(milliseconds:number)=>new Promise<void>(done=>setTimeout(done,milliseconds));
 
+/** 💽️ Whether the volume of the work directory can carry a lab: the fixed rust cache image is created at its minimum size (`elastic.rust.minimumBytes` of the storage budget) at the first command of the `workspace` stage and macOS refuses an image beyond the free space of the volume, so a lab that starts with less than that plus its own footprint (`Policy.minimumFreeBytes`) would run for half an hour and stop at that one command. @see https://nodejs.org/api/fs.html#fsstatfssyncpath-options */
+export function sliceLabDiskPreflightV1(freeBytes:number):Readonly<{ok:boolean;needBytes:number;freeBytes:number}>{
+ return Object.freeze({ok:freeBytes>=P.minimumFreeBytes,needBytes:P.minimumFreeBytes,freeBytes});
+}
 /** 🎛️ What a lab run is asked to do. */
 export type SliceLabOptionsV1=Readonly<{machines:number;memoryMegabytes:16384|8192;cores:number;slice:readonly string[];target?:string;timeoutSeconds:number;workspaceArguments?:readonly string[];execute?:boolean;stages?:"workspace"|"all";skip?:readonly string[];warm?:string;kinds?:readonly string[];frozen?:boolean;frozenDirectory?:string;edit?:string;stagger?:number;preload?:string;out?:string;work?:string;language?:"en"|"de"}>;
 
@@ -44,12 +48,33 @@ export function sliceLabStagesV1(options:SliceLabOptionsV1):readonly ReadyStageV
 /** 🗂️ One machine of a run: its own state root (what `<checkout>/.cache` is on a worker), temporary, runtime and capacity directories. */
 export type SliceLabPlanV1=Readonly<{origin:string;index:number;id:string;work:string;root:string;state:string;temporary:string;runtime:string;capacity:string;registry:string;cache:string;home:string;store:string;memoryMegabytes:number;cores:number}>;
 
-/** 🗺️ Names the machines of a run; the runtime directory is short (the socket of the resident service must fit 96 bytes) and the store is the one shared directory. */
-export function sliceLabPlansV1(options:SliceLabOptionsV1,id:string,work:string,root:string):readonly SliceLabPlanV1[]{
+/** 🗺️ Names the machines of a run; the runtime directory is short (the socket of the resident service must fit 96 bytes) and the store is the one shared directory. With `own` every machine gets a checkout of its own below its directory (`m1/r`, filled by `cloneFrozenRootV1`) instead of the shared `root`: the Nx client finds its installation at `<checkout>/.nx/installation` and the patched Nx compares storage paths with the checkout, so two machines cannot share one checkout. */
+export function sliceLabPlansV1(options:SliceLabOptionsV1,id:string,work:string,root:string,own:boolean=false):readonly SliceLabPlanV1[]{
  return Array.from({length:options.machines},(_,at)=>{
   const index=at+1,home=join(work,`m${index}`);
-  return Object.freeze({origin:`slice-lab-${id}-m${index}`,index,id,work,root,state:join(home,"s"),temporary:join(home,"t"),runtime:`${P.runtimePrefix}${id}${index}`,capacity:join(home,"c"),registry:join(home,"l"),cache:join(home,"x"),home:join(home,HOME.directory),store:join(work,"store"),memoryMegabytes:options.memoryMegabytes,cores:options.cores});
+  return Object.freeze({origin:`slice-lab-${id}-m${index}`,index,id,work,root:own?join(home,"r"):root,state:join(home,"s"),temporary:join(home,"t"),runtime:`${P.runtimePrefix}${id}${index}`,capacity:join(home,"c"),registry:join(home,"l"),cache:join(home,"x"),home:join(home,HOME.directory),store:join(work,"store"),memoryMegabytes:options.memoryMegabytes,cores:options.cores});
  });
+}
+
+/** 🔗️ Gives the checkout of a machine the `.nx` its Nx client looks at: the build moves `<checkout>/.nx` below the declared state (`<state>/nx`, `MACHINE_STATE_PROTOCOL_V1.moved`), but Nx resolves the installation of its tooling at `<checkout>/.nx/installation` (`getNxInstallationPath` in the Nx package) and without it falls back to the `node_modules/nx` of the dependency store, which has no compiled authorizers (wall 99: `Original immutable Native snapshot authority required`). A checkout that already has a `.nx` keeps it. Returns whether a link was made. @see https://nx.dev/docs/reference/nx-json */
+export function sliceLabNxLinkV1(plan:SliceLabPlanV1):boolean{
+ const moved=MACHINE_STATE_PROTOCOL_V1.moved.find(row=>row.prefix===".nx");
+ if(moved===undefined)throw Error("The machine state protocol moves no .nx / Das Maschinenzustandsprotokoll verschiebt kein .nx");
+ const link=join(plan.root,".nx"),target=join(plan.state,...moved.to);
+ mkdirSync(target,{recursive:true});
+ try{lstatSync(link);return false;}catch{}
+ symlinkSync(target,link);
+ return true;
+}
+
+/** 🛑️ The pids of the resident watchers of a lab: processes of the table whose command is a `semio-repo-watch serve` below the work directory of the run. The watcher daemonizes out of the process group and drops the marker of the lab from its environment, so the lab's own process filter never lists it; with its watched root deleted under it, one spun at 165 percent of a core for over an hour. @see https://man7.org/linux/man-pages/man1/ps.1.html */
+export function sliceLabWatcherPidsV1(table:string,work:string):readonly number[]{
+ const pids:number[]=[];
+ for(const line of table.split("\n")){
+  const match=/^\s*(\d+)\s+(.*)$/u.exec(line);
+  if(match!==null&&match[2]!.startsWith(work+sep)&&/\/semio-repo-watch serve(?:\s|$)/u.test(match[2]!))pids.push(Number(match[1]));
+ }
+ return pids;
 }
 
 /** 🌿️ The environment of one machine: the state root, the declared memory and cores (the seam every limit of the build derives from), its own temporary, runtime, capacity and lease-registry directories, no launchd service, the fleet identity, and the marker that finds its processes again. */
@@ -73,6 +98,7 @@ export function sliceLabProcessRowsV1(text:string,id:string):readonly SliceLabPr
  }
  return rows;
 }
+const watcherTable=():string=>spawnSync("ps",["-A","-ww","-o","pid=,command="],{encoding:"utf8",maxBuffer:64*MEGABYTE}).stdout??"";
 const processTable=():string=>{const run=spawnSync("ps",process.platform==="darwin"?["-A","-ww","-E","-o","pid=,ppid=,rss=,pcpu=,nice=,command="]:["-A","-ww","e","-o","pid=,ppid=,rss=,pcpu=,nice=,command="],{encoding:"utf8",maxBuffer:128*MEGABYTE});return run.status===0?run.stdout:"";};
 
 /** 💿️ The disk images of `hdiutil info` whose file lies below a directory, with their devices. */
@@ -228,19 +254,22 @@ const selectedPublications=(state:string):readonly string[]=>{
 const readJson=<T>(path:string):T|undefined=>{try{return JSON.parse(readFileSync(path,"utf8")) as T;}catch{return undefined;}};
 
 /** 🔬️ Runs the lab: one temporary work directory, one driver per machine that runs the real readiness loop and the real ports over the lab's stage plan with its own state root, a sampler every 2 s, the verdict, and the clean-up of everything it started (processes, disk images, directories). */
-export async function runSliceLabV1(options:SliceLabOptionsV1,io:Readonly<{say?(line:string):void;keep?:boolean;signal?:AbortSignal;root?:string}>={}):Promise<Readonly<{workDirectory:string;samples:readonly SliceLabSampleV1[];verdict:SliceLabVerdictV1;home:SliceLabHomeReportV1}>>{
+export async function runSliceLabV1(options:SliceLabOptionsV1,io:Readonly<{say?(line:string):void;keep?:boolean;hold?:boolean;signal?:AbortSignal;root?:string}>={}):Promise<Readonly<{workDirectory:string;samples:readonly SliceLabSampleV1[];verdict:SliceLabVerdictV1;home:SliceLabHomeReportV1}>>{
  const language=options.language??"en";
  if(process.platform==="win32")throw Error(`${sliceLabTextV1("en","windows")}\n${sliceLabTextV1("de","windows")}`);
  const say=io.say??(()=>{}),started=Date.now(),id=randomBytes(2).toString("hex"),root=io.root??process.env.SEMIO_WORKSPACE_ROOT??process.cwd(),base=options.work===undefined?realpathSync("/tmp"):options.work;
  mkdirSync(base,{recursive:true});
+ {const info=statfsSync(base),disk=sliceLabDiskPreflightV1(info.bavail*info.bsize),fields={path:base,free:Math.floor(disk.freeBytes/1073741824),need:Math.ceil(disk.needBytes/1073741824)};if(!disk.ok)throw Error(`${sliceLabTextV1("en","disk",fields)}\n${sliceLabTextV1("de","disk",fields)}`);}
  const work=realpathSync(mkdtempSync(join(base,`${P.prefix}-`)));
  if(work.length>P.maximumWorkDirectoryCharacters||work.startsWith(resolve(root)+sep))throw Error("A work directory outside the checkout with a short path is required / Ein Arbeitsverzeichnis ausserhalb des Checkouts mit kurzem Pfad ist erforderlich");
  if(options.warm!==undefined&&!existsSync(options.warm))throw Error(`The warm directory ${options.warm} is absent; build it with slice-lab warm --out=<dir> / Das Warm-Verzeichnis ${options.warm} fehlt; mit slice-lab warm --out=<dir> bauen`);
  const live=resolve(root),driftMarker=join(work,"start.marker");writeFileSync(driftMarker,"");
  const frozen=options.frozen===true||options.frozenDirectory!==undefined?(say("freezing the tree / Baum wird eingefroren"),options.frozenDirectory===undefined?freezeSliceLabRootV1(live,join(work,P.frozen.directory)):frozenRootV1(live,options.frozenDirectory)):undefined,view=frozen?.root??live,marker=frozen===undefined?driftMarker:join(work,"frozen.marker");writeFileSync(marker,"");
  if(frozen!==undefined)say(`frozen view ${frozen.files} files, ${frozen.megabytes} MB, ${frozen.seconds} s / eingefrorene Sicht ${frozen.files} Dateien`);
- const plans=sliceLabPlansV1(options,id,work,view),kinds=options.stages==="all"?sliceLabKindsOfSliceV1(options.slice,READY_PROBES_V1.projects,options.kinds):[],tools=sliceLabToolsForKindsV1(kinds),labStages=sliceLabStagesV1(options),stages=options.stages==="all"?sliceLabSkipStagesV1(sliceLabAllStagesV1(READY_STAGES_V1,labStages.at(-1)!,tools),options.skip):labStages,load=Number(spawnSync("sysctl",["-n","vm.loadavg"],{encoding:"utf8"}).stdout?.trim().split(/\s+/u)[1]??0)||0;
+ const plans=sliceLabPlansV1(options,id,work,view,frozen!==undefined),kinds=options.stages==="all"?sliceLabKindsOfSliceV1(options.slice,READY_PROBES_V1.projects,options.kinds):[],tools=sliceLabToolsForKindsV1(kinds),labStages=sliceLabStagesV1(options),stages=options.stages==="all"?sliceLabSkipStagesV1(sliceLabAllStagesV1(READY_STAGES_V1,labStages.at(-1)!,tools),options.skip):labStages,load=Number(spawnSync("sysctl",["-n","vm.loadavg"],{encoding:"utf8"}).stdout?.trim().split(/\s+/u)[1]??0)||0;
  for(const plan of plans)for(const path of[...P.provision.map(name=>join(plan.state,...name.split("/"))),plan.state,plan.temporary,plan.runtime,plan.capacity,plan.registry,plan.cache,plan.store])mkdirSync(path,{recursive:true});
+ if(frozen!==undefined)for(const plan of plans){const made=cloneFrozenRootV1(view,live,plan.root);say(`machine checkout ${plan.origin} cloned in ${made.seconds} s / Maschinen-Checkout ${plan.origin} geklont`);}
+ for(const plan of plans)sliceLabNxLinkV1(plan);
  const liveHome=process.env.HOME??homedir(),liveBefore=sliceLabLiveSnapshotV1(liveHome,live),seedRows:{machine:string;id:string;ok:boolean;method:string;seconds:number}[]=[];
  for(const plan of plans){mkdirSync(plan.home,{recursive:true});sliceLabRegistryRefusalV1(plan.home);sliceLabShimsV1(plan.home,join(plan.work,`m${plan.index}`,HOME.downloadLog));seedRows.push(...sliceLabSeedHomeV1((seedTools=>[...sliceLabHomeSeedsV1(seedTools,liveHome,plan.home),...seedTools==="all"||seedTools.includes("go")?sliceLabPinnedGoSeedsV1(live,plan.home):[]])(sliceLabSeedToolsV1(tools,options.stages))).concat((()=>{sliceLabLinkHomeV1(sliceLabSeedToolsV1(tools,options.stages),plan.home);return[];})()).map(row=>({machine:plan.origin,...row})));}
  if(options.stages==="all")for(const plan of plans){const built=sliceLabLauncherBuildV1(view,plan.home);say(`launcher ${built.reason} ${built.seconds}s / Launcher ${built.reason}`);seedRows.push({machine:plan.origin,id:"launcher-build",ok:built.ok,method:built.reason,seconds:built.seconds});}
@@ -258,14 +287,17 @@ export async function runSliceLabV1(options:SliceLabOptionsV1,io:Readonly<{say?(
   await pause(1500);
   leftoverProcesses=mine().length;
   for(const row of mine())try{process.kill(row.pid,"SIGKILL");}catch{}
+  for(const pid of sliceLabWatcherPidsV1(watcherTable(),work))try{process.kill(pid,"SIGTERM");}catch{}
   await pause(500);
-  const images=attachedImages(work);detachedImages=images.length;
+  for(const pid of sliceLabWatcherPidsV1(watcherTable(),work))try{process.kill(pid,"SIGKILL");}catch{}
+  await pause(500);
+  const images=io.hold===true?[]:attachedImages(work);detachedImages=images.length;
   for(const image of images)spawnSync("hdiutil",["detach",image.device,"-force"],{encoding:"utf8"});
   await pause(500);leftoverImages=attachedImages(work).length;
  };
  try{
   const launch=(plan:SliceLabPlanV1):void=>{
-   if(options.edit!==undefined&&plan.index===plans.length&&restoreEdit===undefined)restoreEdit=editFrozenFileV1(view,options.edit);
+   if(options.edit!==undefined&&plan.index===plans.length&&restoreEdit===undefined)restoreEdit=editFrozenFileV1(plan.root,options.edit);
    const config={origin:plan.origin,root:plan.root,group:P.group,stages,state:plan.state,...options.warm===undefined?{}:{warm:{source:options.warm,tools,prime:HOME.primeTools}},result:join(plan.work,`m${plan.index}`,"result.json"),timeoutSeconds:options.timeoutSeconds};
    const file=join(plan.work,`m${plan.index}`,"config.json"),log=join(plan.work,`m${plan.index}`,"driver.log");
    writeFileSync(file,JSON.stringify(config));
@@ -315,7 +347,6 @@ export async function runSliceLabV1(options:SliceLabOptionsV1,io:Readonly<{say?(
   }
   writeFileSync(join(options.out,"fleet.json"),JSON.stringify(sliceLabFleetSummaryV1(fleet.requests),null,1));
  }
- if(frozen!==undefined&&options.frozenDirectory!==undefined){try{const again=relinkFrozenRootV1(live,view,work);say(`frozen root relinked: ${again} links / eingefrorene Wurzel neu verlinkt: ${again} Links`);}catch(error){say(`frozen root relink failed: ${String(error)}`);}}
  const guard=resolve(work);
  if(io.keep!==true&&guard.startsWith(join(base,P.prefix))&&!guard.includes(sep+".."+sep)&&existsSync(guard))rmSync(guard,{recursive:true,force:true});
  for(const plan of plans)if(io.keep!==true&&plan.runtime.startsWith(P.runtimePrefix))rmSync(plan.runtime,{recursive:true,force:true});

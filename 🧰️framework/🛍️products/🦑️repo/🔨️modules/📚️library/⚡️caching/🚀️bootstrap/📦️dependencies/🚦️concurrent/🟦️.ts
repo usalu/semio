@@ -1,3 +1,4 @@
+import {join} from "node:path";
 import {compileJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {generationCanonicalJsonV1,generationSha256V1} from "../🧾️generation/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
@@ -82,6 +83,17 @@ export function concurrentCollectionV1(input:Readonly<{rows:readonly ConcurrentR
  return Object.freeze({collect:Object.freeze(collect),keep:Object.freeze(keep)});
 }
 
+/** 🫙️ Names the retention capsule a lock leaves for an unready generation it moved aside: a dot, `p` and eight hex digits. */
+export const concurrentUnreadyCapsulePatternV1=/^\.p[a-f0-9]{8}$/u;
+/** 🗑️ Decides whether one retention capsule of an unready generation is garbage: exactly its three records, an intent and receipt that name each other, a generation that is not current, and a payload that never became ready. An unready generation is rebuilt from its inputs, so no reader can need it. */
+export function concurrentUnreadyCapsuleRetirableV1(input:Readonly<{container:string;name:string;roster:readonly string[];intent:unknown;receipt:unknown;current:ReadonlySet<string>;payloadReady:boolean}>):boolean{
+ const object=(value:unknown):value is Readonly<Record<string,unknown>>=>typeof value==="object"&&value!==null&&!Array.isArray(value);
+ if(!concurrentUnreadyCapsulePatternV1.test(input.name)||input.payloadReady||JSON.stringify([...input.roster].sort())!==JSON.stringify(["i","p","r"])||!object(input.intent)||!object(input.receipt))return false;
+ const generation=input.intent.generation;
+ if(input.intent.purpose!=="retain-current-unready-dependency-generation"||input.intent.readyAbsent!==true||typeof generation!=="string"||!/^[a-f0-9]{64}$/u.test(generation))return false;
+ const prefix=generation.slice(0,20);
+ return !input.current.has(prefix)&&input.receipt.capsule===input.name&&input.receipt.name===prefix&&typeof input.intent.directory==="string"&&input.intent.directory===join(input.container,prefix);
+}
 /** ⏱️ Is what one waiting round does: whether the waiter has waited too long, asks whether the work became unnecessary and reports progress. */
 export type ConcurrentWaitStepV1=Readonly<{expired:boolean;recheck:boolean;progress:boolean}>;
 /** 🔁️ Schedules a politely waiting acquisition: it probes the lease every round, rechecks readiness every few seconds and reports progress on its own cadence. */

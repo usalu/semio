@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/insert-flange/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1996/mutation/insert-flange/schema.json",
   "title": "InsertFlange",
   "type": "object",
   "additionalProperties": false,
@@ -51,7 +51,7 @@
       }
     },
     "flange": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/ShearFlange",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1996/snapshot.json#/$defs/ShearFlange",
       "x-semio-ui": {
         "role": "value",
         "label": {

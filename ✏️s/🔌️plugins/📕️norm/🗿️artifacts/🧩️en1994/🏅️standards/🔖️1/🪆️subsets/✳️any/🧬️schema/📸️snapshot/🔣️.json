@@ -1,6 +1,6 @@
 {
   "$schema":"http://json-schema.org/draft-07/schema#",
-  "$id":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json",
+  "$id":"https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1994/snapshot.json",
   "title":"En1994Snapshot",
   "type":"object",
   "additionalProperties":false,
@@ -33,6 +33,6 @@
     "CaseText":{"title":"CaseText","type":"object","additionalProperties":false,"required":["id","value"],"properties":{"id":{"type":"string","x-semio-ui":{"widget":"text","label":{"en":"Input key","de":"Eingabeschlüssel"}}},"value":{"type":"string","x-semio-ui":{"widget":"text","label":{"en":"Value","de":"Wert"}}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
     "CaseRow":{"title":"CaseRow","type":"object","additionalProperties":false,"required":["id","labelEn","labelDe","entryId","numbers","texts"],"properties":{"id":{"type":"string"},"labelEn":{"type":"string","x-semio-ui":{"widget":"text","label":{"en":"English label","de":"Englische Bezeichnung"}}},"labelDe":{"type":"string","x-semio-ui":{"widget":"text","label":{"en":"German label","de":"Deutsche Bezeichnung"}}},"entryId":{"type":"string","x-semio-ui":{"widget":"text","label":{"en":"Catalogue entry","de":"Katalogeintrag"},"description":{"en":"Verification id C94-nn of the EN 1994 catalogue.","de":"Nachweis-Id C94-nn des EN-1994-Katalogs."}}},"numbers":{"type":"array","items":{"$ref":"#/$defs/CaseNumber"},"x-semio-ui":{"label":{"en":"Numeric inputs","de":"Zahlenwerte"}}},"texts":{"type":"array","items":{"$ref":"#/$defs/CaseText"},"x-semio-ui":{"label":{"en":"Text inputs","de":"Textwerte"}}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]}
   },
-  "x-semio-rust":{"doc":[],"derive":["Clone","Debug","PartialEq","semio_framework_dsl_record_derive::DslRecord","ArtifactSchema","value_derive::ToValue","value_derive::FromValue","semio_framework_value::RetireOwned","semio_framework_value::RetainedClone"],"artifactSchema":"s.norm.en1994","attributes":["#[cfg_attr(any(test, feature = \"test-support\"), derive(serde::Serialize, serde::Deserialize))]","#[cfg_attr(any(test, feature = \"test-support\"), serde(rename_all = \"camelCase\"))]","#[value(rename_all = \"camelCase\")]"]},
+  "x-semio-rust":{"doc":[],"derive":["Clone","Debug","PartialEq","semio_framework_dsl_record_derive::DslRecord","ArtifactSchema","value_derive::ToValue","value_derive::FromValue","semio_framework_value::RetireOwned","semio_framework_value::RetainedClone"],"artifactSchema":"s.norm-eurocode-structural.en1994","attributes":["#[cfg_attr(any(test, feature = \"test-support\"), derive(serde::Serialize, serde::Deserialize))]","#[cfg_attr(any(test, feature = \"test-support\"), serde(rename_all = \"camelCase\"))]","#[value(rename_all = \"camelCase\")]"]},
   "x-semio-dsl":{"id":"norm.en1994","layout":"lines"}
 }

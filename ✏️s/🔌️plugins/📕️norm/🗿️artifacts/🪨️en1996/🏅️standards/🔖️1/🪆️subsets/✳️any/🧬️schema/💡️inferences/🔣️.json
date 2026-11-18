@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/inference.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1996/inference.json",
   "title": "En1996Inference",
   "type": "object",
   "additionalProperties": false,
@@ -60,7 +60,7 @@
       "value_derive::ToValue",
       "value_derive::FromValue"
     ],
-    "artifactSchema": "s.norm.en1996.inference",
+    "artifactSchema": "s.norm-eurocode-materials.en1996.inference",
     "attributes": [
       "#[cfg_attr(any(test, feature = \"test-support\"), derive(serde::Serialize, serde::Deserialize))]",
       "#[cfg_attr(any(test, feature = \"test-support\"), serde(rename_all = \"camelCase\"))]",

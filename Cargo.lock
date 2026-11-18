@@ -25111,6 +25111,7 @@ dependencies = [
  "semio-ui-action",
  "semio-ui-arena",
  "semio-ui-contract",
+ "semio-ui-contract-values",
  "semio-ui-declaration",
  "semio-ui-draw-contract",
  "semio-ui-locale",

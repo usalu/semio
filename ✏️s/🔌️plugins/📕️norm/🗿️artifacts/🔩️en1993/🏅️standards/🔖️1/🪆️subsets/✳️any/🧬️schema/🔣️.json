@@ -1,6 +1,6 @@
 {
   "$schema":"http://json-schema.org/draft-07/schema#",
-  "$id":"https://json.schemas.assets.semio-tech.com/s/norm/en1993/artifact.json",
+  "$id":"https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1993/artifact.json",
   "title":"En1993Artifact",
   "type":"object",
   "additionalProperties":false,
@@ -89,5 +89,5 @@
     "FastenedJoint":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string"},"memberId":{"type":"string"},"kind":{"$ref":"#/$defs/FastenerKind"},"diameter":{"type":"number","format":"double"},"washerDiameter":{"type":"number","format":"double"},"count":{"type":"integer","minimum":0,"maximum":4294967295},"perRow":{"type":"integer","minimum":0,"maximum":4294967295},"headThickness":{"type":"number","format":"double"},"baseThickness":{"type":"number","format":"double"},"headStrength":{"type":"number","format":"double"},"baseStrength":{"type":"number","format":"double"},"endDistance":{"type":"number","format":"double"},"edgeDistance":{"type":"number","format":"double"},"pitch":{"type":"number","format":"double"},"gauge":{"type":"number","format":"double"},"sheetWidth":{"type":"number","format":"double"},"shearForce":{"type":"number","format":"double"},"tensionForce":{"type":"number","format":"double"},"shearResistance":{"type":"number","format":"double"}},"required":["id","memberId","kind","diameter","washerDiameter","count","perRow","headThickness","baseThickness","headStrength","baseStrength","endDistance","edgeDistance","pitch","gauge","sheetWidth","shearForce","tensionForce","shearResistance"]},
     "FatigueConsequence":{"title":"FatigueConsequence","type":"string","enum":["Low","High"],"x-semio-ui":{"options":{"Low":{"en":"Low consequence","de":"Geringe Folgen"},"High":{"en":"High consequence","de":"Hohe Folgen"}}}}
   },
-  "x-semio-rust":{"doc":["🧬️ Full En1993 artifact state across the artifact and presence lanes."],"derive":["Clone","Debug","PartialEq","ArtifactSchema","semio_framework_dsl_record_derive::DslRecord","value_derive::ToValue","value_derive::FromValue"],"artifactSchema":"s.norm.en1993","attributes":["#[cfg_attr(any(test, feature = \"test-support\"), derive(serde::Serialize, serde::Deserialize))]","#[cfg_attr(any(test, feature = \"test-support\"), serde(rename_all = \"camelCase\"))]","#[value(rename_all = \"camelCase\")]"]}
+  "x-semio-rust":{"doc":["🧬️ Full En1993 artifact state across the artifact and presence lanes."],"derive":["Clone","Debug","PartialEq","ArtifactSchema","semio_framework_dsl_record_derive::DslRecord","value_derive::ToValue","value_derive::FromValue"],"artifactSchema":"s.norm-eurocode-structural.en1993","attributes":["#[cfg_attr(any(test, feature = \"test-support\"), derive(serde::Serialize, serde::Deserialize))]","#[cfg_attr(any(test, feature = \"test-support\"), serde(rename_all = \"camelCase\"))]","#[value(rename_all = \"camelCase\")]"]}
 }

@@ -1,7 +1,7 @@
 /** 📡️ How the session talks to the proctor in time: the session clock, calls retried through connection shortages, the grace for views that are not projected yet and the learner's patience with a proctor that does not answer. */
 
 import { PROJECTION_GRACE_MS } from "../📋️session-model/🟦️.ts";
-import { ProctorUnavailable, isNotFound, retryTransient, type ProctorClient, type RetryTiming } from "../../🛂️proctor/🟦️.ts";
+import { ProctorUnavailable, isNotFound, pause, retryTransient, type ProctorClient, type RetryTiming } from "../../🛂️proctor/🟦️.ts";
 
 //#region 📡️ProctorLink
 /** 🔗️ The proctor with the timing a session asks it by: its `timing` of retries, the `patienceMs` a learner waits for a decision and the clock. */
@@ -22,6 +22,12 @@ export class ProctorLink {
   /** 🔁️ Calls the proctor again through connection shortages, with jittered backoff, until it answers or `signal` aborts. */
   retrying<T>(call: () => Promise<T>, signal: AbortSignal): Promise<T> {
     return retryTransient(call, this.timing, signal);
+  }
+
+  /** 🚑️ Probes the proctor ({@link ProctorClient.probe}) through connection shortages, with jittered backoff, until it answers and agrees or `signal` aborts; it starts only after the minimum backoff, so a proctor that answers probes but refuses commands is not asked in a loop the event loop never leaves. */
+  async revive(signal: AbortSignal): Promise<void> {
+    await pause(this.timing.minMs, signal);
+    return retryTransient(() => this.proctor.probe(signal), this.timing, signal);
   }
 
   /** 🏗️ Calls the proctor like {@link retrying} and waits out the projection lag: a view this client itself caused may be missing for {@link PROJECTION_GRACE_MS}. */

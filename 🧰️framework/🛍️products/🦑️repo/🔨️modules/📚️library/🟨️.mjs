@@ -8,7 +8,7 @@ import {createHash} from "node:crypto";
 import {fileURLToPath} from "node:url";
 import {classifyModuleReferencesV1} from "./🏗️build/🧮️task-model/🔎️module-references/🟦️.ts";
 import {nxBuildDependencySourceIdentityV1,nxBuildDependencySourceChangesV1,nxBuildDependencySourceRevisionsV1,nxBuildDependencySourceChangesFromV1,nxBuildDependencySourceProbeV1,nxEngineNamedInputV1 as engineNamedInput,nxEngineNativeNamedInputV1 as engineNativeNamedInput} from "./⚡️caching/🚀️bootstrap/🔌️nx-plugin/🔏️implementation/🟨️.mjs";
-import {nxEngineUnkeyedPrefixesV1,splitNxEngineFilesV1,nxEngineFamilyV1,nxEnginePolicyV1,nxEngineSpawnOnlyV1} from "./⚡️caching/🚀️bootstrap/🔌️nx-plugin/🧮️engine-digest/🟦️.ts";
+import {nxEngineIdentityV1,nxEngineSurfaceV1,nxEngineFamilyV1,nxEnginePolicyV1,nxEngineSpawnOnlyV1} from "./⚡️caching/🚀️bootstrap/🔌️nx-plugin/🧮️engine-digest/🟦️.ts";
 import {withNxBuildGraphPublicationV1} from "./⚡️caching/🚀️bootstrap/🔌️nx-plugin/📌️graph-pin/🟨️.mjs";
 import { isRuntimeBuiltinSpecifierV1, runtimeIdsV1 } from "../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
@@ -62,14 +62,14 @@ export function nxBuildEngineClosureV1(policy=nxEnginePolicyV1()){
  return {files:[...files].map(path=>relative(root,path).replaceAll("\\","/")).sort(),packages:[...packages].sort()};
 }
 
-/** 🔑️ Digests the bytes of the engine files under their workspace-relative names, one `name NUL sha256 LF` row each, then one `NUL unkeyed NUL sha256-of-the-prefixes LF` row when prefixes stay out, so a prefix that moves re-keys. */
-export function nxBuildEngineFilesDigestV1(root,files,unkeyedPrefixes=[]){
+/** 🔑️ Digests the bytes of the given files under their workspace-relative names, one `name NUL sha256 LF` row each, then one `NUL identity NUL sha256-of-the-identity-rows LF` row when identity rows are given, so a revision or a family that moves re-keys without a byte changing. */
+export function nxBuildEngineFilesDigestV1(root,files,identity=[]){
  const digest=createHash("sha256");for(const file of files)digest.update(file).update("\0").update(createHash("sha256").update(readFileSync(join(root,file))).digest("hex")).update("\n");
- if(unkeyedPrefixes.length)digest.update("\0unkeyed\0").update(createHash("sha256").update(unkeyedPrefixes.join("\n")).digest("hex")).update("\n");return digest.digest("hex");
+ if(identity.length)digest.update("\0identity\0").update(createHash("sha256").update(identity.join("\n")).digest("hex")).update("\n");return digest.digest("hex");
 }
 
-/** 🪪️ Digests the current bytes of the keyed part of the private engine closure of one family: the one value a hash plan carries for the engine instead of every file path; scheduling code and the other output-neutral domains of `./⚡️caching/🚀️bootstrap/🔌️nx-plugin/🧮️engine-digest/🔣️.json` stay out. */
-export function nxBuildEngineDigestV1(family="generic"){const name=nxEngineFamilyV1(family);return nxBuildEngineFilesDigestV1(defaultEngineRoot,splitNxEngineFilesV1(nxBuildEngineClosureV1().files,name).keyed,nxEngineUnkeyedPrefixesV1(name));}
+/** 🪪️ Digests the task semantics of one family: the declared revision, the family and the bytes of the executor surface files (for `native` also the Cargo argument builders), the one value a hash plan carries for the engine instead of every file path; no other file of the engine closure is in it, see `./⚡️caching/🚀️bootstrap/🔌️nx-plugin/🧮️engine-digest/🔣️.json`. The generic family does not read the closure. */
+export function nxBuildEngineDigestV1(family="generic"){const name=nxEngineFamilyV1(family);return nxBuildEngineFilesDigestV1(defaultEngineRoot,nxEngineSurfaceV1(name==="native"?nxBuildEngineClosureV1().files:[],name),nxEngineIdentityV1(name));}
 
 const engineAuthorities=new Map();
 /** 🏷️ Names the engine of one family as one runtime digest of its keyed closure plus the real npm packages it imports; the hasher runs the digest once per client, so no task plan lists engine file paths. */

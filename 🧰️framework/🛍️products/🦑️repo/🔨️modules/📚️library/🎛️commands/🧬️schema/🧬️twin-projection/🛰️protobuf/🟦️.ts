@@ -5,7 +5,7 @@ import { renderProto } from "../../🪞️parser-projection/📐️type-render/�
 import { snake } from "../../🪞️parser-projection/🔡️json-text/🟦️.ts";
 import { aggregateMembers, resolveNode, withIntegerFormats, withoutMetaProperties, withoutTag, type Node, type SchemaModule } from "../🧩️model/🟦️.ts";
 
-/** 📦️ The protobuf package a document id names: `…/s/norm/en1990/artifact.json` to `semio.s.norm.en1990`. */
+/** 📦️ The protobuf package a document id names: `…/s/norm-eurocode/en1990/artifact.json` to `semio.s.norm_eurocode.en1990`. */
 export function protoPackage(id: string): string {
   const path = id.replace(/^https?:\/\/[^/]+\//u, "").split("/").slice(0, -1);
   return ["semio", ...path.map((segment) => segment.replace(/[^A-Za-z0-9_]/gu, "_"))].join(".");

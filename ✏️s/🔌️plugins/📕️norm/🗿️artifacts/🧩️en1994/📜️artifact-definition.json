@@ -1,6 +1,6 @@
 {
   "definition_version": 1,
-  "id": "s.norm.en1994",
+  "id": "s.norm-eurocode-structural.en1994",
   "artifact": "en1994",
   "directory": "\ud83e\udde9\ufe0fen1994",
   "rust_package": "semio-s-artifact-norm-en1994",

@@ -3,7 +3,7 @@
 @comparison-ordered-json-v1
 @mutations-en1999-1-any
 Feature: Apply every typed EN 1999 mutation against an independent Python implementation
-  `s.norm.en1999` is a semio-NATIVE artifact and no third party reads or writes it, so the second producer a
+  `s.norm-eurocode-materials.en1999` is a semio-NATIVE artifact and no third party reads or writes it, so the second producer a
   differential comparison needs is a second IMPLEMENTATION: the shared norm reference engine
   (`✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️execution/🐍️.py`), which `🐍️.py` beside this file feeds with this subset's
   kind list, vectors and carrier. It is written from the repository's own specification of what a semantic

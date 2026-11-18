@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-forming-gain-forming/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1993/mutation/change-forming-gain-forming/schema.json",
   "title": "ChangeFormingGainForming",
   "type": "object",
   "additionalProperties": false,
@@ -30,7 +30,7 @@
       }
     },
     "newForming": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/FormingProcess",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1993/snapshot.json#/$defs/FormingProcess",
       "x-semio-ui": {
         "label": {
           "en": "Forming",

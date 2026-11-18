@@ -41,7 +41,7 @@ export function registerNamesFixtureOnceGoodTests(): void {
     drawn.append(place(document.createElement("p"), { left: 510, top: 310, width: 100, height: 20 }), place(document.createElement("button"), { left: 510, top: 340, width: 100, height: 20 }));
     layer.append(drawn);
     document.body.append(plain, layer);
-    const page = { kind: "surveyed", width: 1000, height: 700, surfaces: [{ id: surfaceId(outside), x0: 100, x1: 300, y: 300 }, { id: FLOOR, x0: 0, x1: 1000, y: 700 }], keepouts: [{ x: 96, y: 300, width: 208, height: 100 }], walls: [{ id: wallId(outside, -1), surface: surfaceId(outside), side: -1, x: 100, y0: 300, y1: 400 }, { id: wallId(outside, 1), surface: surfaceId(outside), side: 1, x: 300, y0: 300, y1: 400 }], fixtures: [] };
+    const page = { kind: "surveyed", width: 1000, height: 700, surfaces: [{ id: surfaceId(outside), x0: 100, x1: 300, y: 300 }, { id: FLOOR, x0: 0, x1: 1000, y: 700 }], keepouts: [], walls: [{ id: wallId(outside, -1), surface: surfaceId(outside), side: -1, x: 100, y0: 300, y1: 400 }, { id: wallId(outside, 1), surface: surfaceId(outside), side: 1, x: 300, y0: 300, y1: 400 }], fixtures: [] };
     expect(survey(document, { frame: layer, walls: "article" })).toEqual(page);
     expect(survey(document).surfaces.map((surface) => surface.id)).toEqual([surfaceId(outside), surfaceId(drawn), FLOOR]);
     const backstage = document.createElement("section");

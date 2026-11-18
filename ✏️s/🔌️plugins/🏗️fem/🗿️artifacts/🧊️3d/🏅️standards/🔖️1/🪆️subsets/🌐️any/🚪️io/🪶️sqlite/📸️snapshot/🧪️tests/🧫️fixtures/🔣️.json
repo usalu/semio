@@ -7,13 +7,13 @@
   "document": {
     "nodes": [
       {
-        "id": "",
+        "id": "node a",
         "xBits": "8000000000000000",
         "yBits": "0000000000000001",
         "zBits": "3ff0000000000000"
       },
       {
-        "id": "",
+        "id": "node 🧬b",
         "xBits": "3ff0000000000000",
         "yBits": "4000000000000000",
         "zBits": "4008000000000000"
@@ -23,18 +23,18 @@
       {
         "kind": "bar",
         "id": "member!@/\u0000",
-        "start": "unresolved start",
-        "end": "",
-        "materialId": "missing material",
-        "sectionId": "missing section"
+        "start": "node a",
+        "end": "node 🧬b",
+        "materialId": "material",
+        "sectionId": "section"
       },
       {
         "kind": "frame",
-        "id": "member!@/\u0000",
-        "start": "",
-        "end": "unresolved end",
-        "materialId": "missing material",
-        "sectionId": "missing section",
+        "id": "member!@/\u0001",
+        "start": "node 🧬b",
+        "end": "node a",
+        "materialId": "material",
+        "sectionId": "section",
         "rollBits": "8000000000000000"
       }
     ],
@@ -92,7 +92,7 @@
     "supports": [
       {
         "id": "support",
-        "nodeId": "missing node",
+        "nodeId": "node a",
         "fixed": [
           "Tx",
           "Tx",
@@ -113,21 +113,21 @@
           {
             "kind": "nodal",
             "id": "load",
-            "nodeId": "unresolved",
+            "nodeId": "node a",
             "dof": "Rz",
             "valueBits": "bff0000000000000"
           },
           {
             "kind": "memberUdl",
-            "id": "load",
-            "elementId": "missing member",
+            "id": "load udl",
+            "elementId": "member!@/\u0000",
             "wxBits": "8000000000000000",
             "wyBits": "4000000000000000",
             "wzBits": "4008000000000000"
           },
           {
             "kind": "area",
-            "id": "load",
+            "id": "load area",
             "solidId": "missing solid",
             "pressureBits": "4008000000000000"
           }

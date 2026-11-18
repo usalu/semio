@@ -9,7 +9,9 @@
   {"name": "open wave and a target of zero", "waves": [{"state": "open", "backoffUntil": 0, "acceptable": true}], "open": 1, "children": 0, "targetChildren": 0, "targetReason": null, "expect": "nothing-fits"},
   {"name": "open wave and children wanted", "waves": [{"state": "open", "backoffUntil": 0, "acceptable": true}], "open": 1, "children": 0, "targetChildren": 3, "targetReason": null, "expect": null},
   {"name": "children run", "waves": [{"state": "open", "backoffUntil": 0, "acceptable": true}], "open": 1, "children": 2, "targetChildren": 2, "targetReason": null, "expect": null},
-  {"name": "the gate says why", "waves": [{"state": "open", "backoffUntil": 0, "acceptable": true}], "open": 1, "children": 1, "targetChildren": 1, "targetReason": "yielding", "expect": "yielding"}
+  {"name": "the gate names a bound while the pool still grows", "waves": [{"state": "open", "backoffUntil": 0, "acceptable": true}], "open": 1, "children": 1, "targetChildren": 8, "targetReason": "yielding", "expect": null},
+    {"name": "the gate says waiting with no child", "waves": [{"state": "open", "backoffUntil": 0, "acceptable": true}], "open": 1, "children": 0, "targetChildren": 0, "targetReason": "waiting", "expect": "waiting"},
+    {"name": "the gate says why", "waves": [{"state": "open", "backoffUntil": 0, "acceptable": true}], "open": 1, "children": 1, "targetChildren": 1, "targetReason": "yielding", "expect": "yielding"}
  ],
  "now": 50,
  "accepts": [

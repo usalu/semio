@@ -62,6 +62,10 @@
       "en": "Directory admission resource is reserved",
       "de": "Die Ressource der Verzeichnis-Zulassung ist reserviert"
     },
+    "leases.admission-timeout": {
+      "en": "The directory admission of {directory} stayed taken by another process for {seconds} s while waiting for {resource}; the directory holds {entries} entries ({claims} queue claims). Longest silent registered processes: {holders}. Nothing was changed; try again, the waiter reclaims abandoned tickets step by step.",
+      "de": "Die Verzeichniszulassung von {directory} blieb {seconds} s lang von einem anderen Prozess belegt, während auf {resource} gewartet wurde; das Verzeichnis enthält {entries} Einträge ({claims} Warteschlangen-Anmeldungen). Am längsten stille registrierte Prozesse: {holders}. Es wurde nichts verändert; versuche es erneut, der Wartende räumt verlassene Tickets schrittweise ab."
+    },
     "leases.invalid-queue-owner": {
       "en": "Invalid lease queue owner",
       "de": "Ungültiger Eigentümer der Lease-Warteschlange"

@@ -16,7 +16,9 @@ fn decode<T: FromValue>(fixture: &DslValue, key: &str) -> T {
 }
 
 fn apply(base: &Fem3dSnapshotValue, mutation: &Fem3dMutation) -> Fem3dSnapshotValue {
-    crate::vcs::apply_mutation(base, mutation).expect("valid mutation").0
+    let mut snapshot = base.clone();
+    semio_s_artifact_fem_3d_mutations::central_apply::apply_fem3d_mutation(&mut snapshot, mutation).expect("valid mutation");
+    snapshot
 }
 
 #[test]
@@ -42,7 +44,7 @@ fn transform_authors_only_changed_geometry_and_preserves_peer_fields() {
     assert_eq!(undone.solids[0].to_value(), *vector.get("undoneSolid").unwrap());
     assert_eq!(undone, peer, "inverse restores only authored geometry");
     assert_eq!(apply(&undone, &motion), combined, "redo retains peer fields");
-    assert_eq!(protocol::apply_diff_cold(&protocol::DiffAlgebra::inverse(forward.diff(), &base), &combined).unwrap(), peer);
+    assert_eq!(protocol::apply_diff_cold(&protocol::ColdDiffAlgebra::inverse(forward.diff(), &base), &combined).unwrap(), peer);
 }
 
 #[test]
@@ -80,7 +82,7 @@ fn rotation_and_scaling_inverse_leave_unmoved_peer_coordinates_intact() {
         let diff = operation.diff(&base);
         let fields: Vec<_> = diff.diff().nodes.as_ref().unwrap().modified[0].patch.to_value().as_object().unwrap().iter().map(|(key, _)| key.clone()).collect();
         assert_eq!(fields, decode::<Vec<String>>(scenario, "authored"));
-        let peer = Fem3dMutation::ChangeNode(crate::standards::v1::subsets::any::schema::mutations::change_node::ChangeNode { id: "n1".into(), patch: decode(scenario, "peerPatch") });
+        let peer: Fem3dMutation = decode(scenario, "peerMutation");
         let combined = apply(&moved, &peer);
         let restored = operation.inverse(&base).unwrap().iter().rev().fold(combined, |state, event| apply(&state, event));
         assert_eq!(restored, apply(&base, &peer));

@@ -1,6 +1,7 @@
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { resolveCardBands, type CardBandCard, type CardBandSpan } from "./bands.ts";
+import { WINDOW_SILHOUETTE_PATH_INSET } from "../🔲️WindowSilhouette/🟦️.tsx";
+import { resolveCardBands, snapCardHeight, type CardBandCard, type CardBandSpan } from "./bands.ts";
 
 export { resolveCardBands, type CardBand, type CardBandCard, type CardBandSpan } from "./bands.ts";
 
@@ -13,17 +14,21 @@ const CHIPS = ":scope > [data-window-silhouette-chip]";
 const LIFT = "--card-stack-lift";
 const CAP_BAND = "--card-stack-cap";
 const FOOTER_BAND = "--card-stack-footer";
+const REACH = 1 + 2 * WINDOW_SILHOUETTE_PATH_INSET;
+const SETTLE_PASSES = 4;
 
 const spans = (row: Element | null): readonly CardBandSpan[] => [...(row?.querySelectorAll(CHIPS) ?? [])].map(chip => { const rect = chip.getBoundingClientRect(); return { left: rect.left, right: rect.right }; }).filter(span => span.right > span.left);
 const height = (row: Element | null): number => row?.getBoundingClientRect().height ?? 0;
-const lift = (target: HTMLElement, by: number): void => { target.style.setProperty(LIFT, `${by}px`); if (by > 0) target.style.setProperty("margin-block-start", `${-by}px`); else target.style.removeProperty("margin-block-start"); };
+const lift = (target: HTMLElement, by: number): void => { by = Math.round(by * 1000) / 1000; target.style.setProperty(LIFT, `${by}px`); if (by > 0) target.style.setProperty("margin-block-start", `${-by}px`); else target.style.removeProperty("margin-block-start"); };
 const overlap = (a: DOMRect, b: DOMRect): number => Math.min(a.right, b.right) - Math.max(a.left, b.left);
 
 /** 📐️ Interlocks the cards of a stack or grid `container`: each card whose top lies on the bottom of another card (the one
  * above it in its stack or column) is lifted onto that card's bottom line, so its cap row coincides with the footer row of the
  * card above (one shared band as high as the taller of the two) unless their chips would collide, in which case the rows follow
  * each other. Measures the rows at their natural height, writes `--card-stack-lift` on the card (on its grid cell in a grid) and
- * `--card-stack-cap|footer` on the cards, and keeps doing so while the cards, their chips or the container change.
+ * `--card-stack-cap|footer` on the cards, and keeps doing so while the cards, their chips or the container change. A lift moves the
+ * tracks of a grid (fr rows give the freed room to their neighbours), so the measured seams are re-read after the lifts are written and
+ * corrected until every overlap equals the band (a few passes), and all heights are snapped together before the first read.
  *
  * @see ./bands.ts */
 export function useCardInterlock(container: HTMLElement | null): void {
@@ -37,20 +42,42 @@ export function useCardInterlock(container: HTMLElement | null): void {
       frame = 0;
       const cards = [...container.querySelectorAll<HTMLElement>(CARD)].filter(card => card.closest(OWNER) === container && card.parentElement?.closest(CARD) == null);
       const next = new Set<Element>([container, ...cards]);
-      for (const card of cards) { lift(targetOf(card), 0); card.style.setProperty(CAP_BAND, "0px"); card.style.setProperty(FOOTER_BAND, "0px"); }
+      const pixel = 1 / (view?.devicePixelRatio || 1);
+      for (const card of cards) { lift(targetOf(card), 0); card.style.setProperty(CAP_BAND, "0px"); card.style.setProperty(FOOTER_BAND, "0px"); card.style.removeProperty("min-block-size"); card.querySelector<HTMLElement>(WINDOW)?.style.removeProperty("min-block-size"); }
+      const snap = (elements: readonly (HTMLElement | null)[]) => { const naturals = elements.map(element => element?.getBoundingClientRect().height ?? 0); elements.forEach((element, index) => { const snapped = snapCardHeight(naturals[index]!, pixel); if (element && snapped - naturals[index]! > 1e-3) element.style.setProperty("min-block-size", `${snapped}px`); }); };
+      snap(cards.map(card => card.querySelector<HTMLElement>(WINDOW)));
+      snap(cards);
       const rows = cards.map(card => { const window = card.querySelector(WINDOW); return { cap: window?.querySelector(CAP) ?? null, footer: window?.querySelector(FOOTER) ?? null }; });
       const measured: CardBandCard[] = rows.map(row => ({ cap: height(row.cap), footer: height(row.footer), capChips: spans(row.cap), footerChips: spans(row.footer) }));
       for (const row of rows) for (const element of [row.cap, row.footer]) for (const chip of element?.querySelectorAll(CHIPS) ?? []) next.add(chip);
       const rects = cards.map(card => card.getBoundingClientRect());
+      const seams: { index: number; above: number; target: number; by: number; from: readonly [number, number] }[] = [];
       cards.forEach((card, index) => {
         let above = -1, best = 0;
-        rects.forEach((rect, other) => { const shared = overlap(rects[index]!, rect); if (other !== index && Math.abs(rect.bottom - rects[index]!.top) <= 1 && shared > best) { above = other; best = shared; } });
+        rects.forEach((rect, other) => { const shared = overlap(rects[index]!, rect); if (other !== index && Math.abs(rect.bottom - rects[index]!.top) <= REACH && shared > best) { above = other; best = shared; } });
         if (above < 0) return;
-        const band = resolveCardBands([measured[above]!, measured[index]!])[0]!;
-        lift(targetOf(card), band.lift);
+        const band = resolveCardBands([measured[above]!, measured[index]!], WINDOW_SILHOUETTE_PATH_INSET)[0]!;
+        const by = band.lift - (rects[above]!.bottom - rects[index]!.top);
+        seams.push({ index, above, target: band.lift, by, from: [0, by] });
+        lift(targetOf(card), by);
         card.style.setProperty(CAP_BAND, `${band.cap}px`);
         cards[above]!.style.setProperty(FOOTER_BAND, `${band.footer}px`);
       });
+      for (let pass = 0; pass < SETTLE_PASSES && seams.length; pass++) {
+        const placed = cards.map(card => card.getBoundingClientRect());
+        let moved = false;
+        for (const seam of seams) {
+          const error = seam.target - (placed[seam.above]!.bottom - placed[seam.index]!.top);
+          if (Math.abs(error) <= 5e-3) continue;
+          const slope = seam.by === seam.from[0] ? 0 : (error - seam.from[1]) / (seam.by - seam.from[0]);
+          const by = slope < 0 ? seam.by - error / slope : seam.by + error;
+          seam.from = [seam.by, error];
+          seam.by = by;
+          lift(targetOf(cards[seam.index]!), by);
+          moved = true;
+        }
+        if (!moved) break;
+      }
       for (const element of observed) if (!next.has(element)) { resize?.unobserve(element); observed.delete(element); }
       for (const element of next) if (!observed.has(element)) { resize?.observe(element); observed.add(element); }
     };
@@ -70,7 +97,7 @@ export function useCardInterlock(container: HTMLElement | null): void {
       resize?.disconnect();
       mutations?.disconnect();
       view?.removeEventListener("resize", schedule);
-      for (const card of container.querySelectorAll<HTMLElement>(CARD)) { targetOf(card).style.removeProperty(LIFT); targetOf(card).style.removeProperty("margin-block-start"); card.style.removeProperty(CAP_BAND); card.style.removeProperty(FOOTER_BAND); }
+      for (const card of container.querySelectorAll<HTMLElement>(CARD)) { targetOf(card).style.removeProperty(LIFT); targetOf(card).style.removeProperty("margin-block-start"); card.style.removeProperty(CAP_BAND); card.style.removeProperty(FOOTER_BAND); card.style.removeProperty("min-block-size"); card.querySelector<HTMLElement>(WINDOW)?.style.removeProperty("min-block-size"); }
     };
   }, [container]);
 }

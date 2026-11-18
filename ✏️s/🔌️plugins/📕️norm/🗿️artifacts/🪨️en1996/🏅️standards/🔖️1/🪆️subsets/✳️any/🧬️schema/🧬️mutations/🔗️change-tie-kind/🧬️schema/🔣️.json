@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-tie-kind/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1996/mutation/change-tie-kind/schema.json",
   "title": "ChangeTieKind",
   "type": "object",
   "additionalProperties": false,
@@ -51,7 +51,7 @@
       }
     },
     "newKind": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/TieKind",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1996/snapshot.json#/$defs/TieKind",
       "x-semio-ui": {
         "role": "value",
         "label": {

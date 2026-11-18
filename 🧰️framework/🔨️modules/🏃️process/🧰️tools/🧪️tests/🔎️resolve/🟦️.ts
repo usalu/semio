@@ -63,6 +63,14 @@ describe("tool resolution", () => {
     expect(found.source).toBe("provisioned");
     expect(found.pin.version).toBe("1.4.2");
   });
+  test("a machine with a declared state directory finds its provisioned tools below it, not below the checkout", () => {
+    const digest = "d".repeat(64), pins = { ["/repo/" + bun.pin.digests!.file]: JSON.stringify({ definitions: { Release: { const: { version: "1.4.2", distributions: [{ platform: "darwin", arch: "arm64", musl: false, archive: "a", bytes: 1, sha256: digest }] } } } }) }, declared = process.env.SEMIO_MACHINE_STATE_DIRECTORY;
+    process.env.SEMIO_MACHINE_STATE_DIRECTORY = "/lab/s";
+    try {
+      expect(resolveToolV1(bun, host({ pins, execPath: "/runtime/node", present: [`/lab/s/b/t/m/bun/${digest}/bun`] })).source).toBe("provisioned");
+      expect(resolveToolV1(bun, host({ pins, execPath: "/runtime/node", present: [`/repo/.cache/b/t/m/bun/${digest}/bun`] })).source).toBe("missing");
+    } finally { if (declared === undefined) delete process.env.SEMIO_MACHINE_STATE_DIRECTORY; else process.env.SEMIO_MACHINE_STATE_DIRECTORY = declared; }
+  });
   test("builds the host and 16-digit placeholders of a provisioned Go", () => {
     const sha = "a".repeat(64), found = resolveToolV1(go, host({ pins: { ["/repo/" + BOOT]: bootstrap }, present: [`/repo/.cache/b/t/m/native/go/1.26.9/darwin-arm64-${sha.slice(0, 16)}/bin/go`] }));
     expect(found.source).toBe("provisioned");

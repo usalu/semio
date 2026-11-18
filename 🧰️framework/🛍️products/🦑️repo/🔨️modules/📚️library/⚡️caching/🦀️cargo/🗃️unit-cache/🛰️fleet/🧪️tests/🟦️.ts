@@ -120,7 +120,7 @@ test("two machines at different paths: the first builds cold and uploads, the se
  const crates=(rows:Event[],kind:string)=>rows.filter(row=>row.kind===kind).map(row=>row.crate).sort();
  expect(crates(warm,"remote-hit")).toEqual(crates(cold,"miss"));
  const localKeys=(rows:Event[],kind:string)=>new Set(rows.filter(row=>row.kind===kind).map(row=>row.key));
- expect([...localKeys(warm,"remote-hit")].filter(key=>localKeys(cold,"miss").has(key)).length,"the local keys carry the checkout path, the fleet keys do not").toBe(0);
+ expect([...localKeys(warm,"remote-hit")].filter(key=>localKeys(cold,"miss").has(key)).length,"a unit without a real path has one local key in every checkout").toBeGreaterThan(0);
  const status=await (await fetch(server.url+"/status",{headers:{authorization:"Bearer w-token"}})).json() as {counters:{ac:{puts:number;hits:number}};claims:{active:number}};
  expect(status.counters.ac.puts).toBe(count(cold,"miss"));expect(status.counters.ac.hits).toBeGreaterThanOrEqual(count(cold,"miss"));expect(status.claims.active).toBe(0);
  const entries=readdirSync(join(m2.cache,"e")).flatMap(shard=>readdirSync(join(m2.cache,"e",shard)).flatMap(key=>readdirSync(join(m2.cache,"e",shard,key)).map(file=>JSON.parse(readFileSync(join(m2.cache,"e",shard,key,file),"utf8")) as {slot?:string})));

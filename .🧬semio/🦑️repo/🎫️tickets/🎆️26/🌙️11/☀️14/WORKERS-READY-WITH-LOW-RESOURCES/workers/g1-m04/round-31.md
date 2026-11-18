@@ -2803,3 +2803,193 @@ Five largest processes (rss KiB, pid, ppid, command):
 557196 650309  648479 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧒️child/
 516780 680363  650309 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧮️derived-nodes/🧩️closure-kinds/🏭️walk-farm/👷️chi
 ```
+
+## Out of the Fleet Since 22:07 UTC on 2026-11-16: SteamOS Update Switched the System Slot
+
+Measured 22:37 to 22:50 UTC. Nothing was changed; this note reaches the other machines only after the store is mounted again.
+
+- 21:54 to 21:59 UTC: the Steam client installed SteamOS `20261112.101` (3.9.6) into slot A (`rauc`, journal). 22:07 UTC: reboot requested from the desktop session; the machine came up at 22:08 UTC on slot A (`/var` is now `var-A`, `nvme0n1p6`; before `var-B`).
+- SteamOS keeps `/var` and the `/etc` overlay per slot. Carried over: `semio-fleet-replica@.service`, `semio-fleet-compact@.service` and both enablement links (written 21:59 UTC). Not carried over: the store line in `/etc/fstab`, the mount point `/var/mnt/semio-store`, `semio-fleet-compact@.timer`, `/etc/sysctl.d/90-semio-fleet.conf` (`fs.inotify.max_user_watches` is 524288 instead of 1048576), `/etc/sudoers.d/zz-semio-provision`.
+- Effect: the replica daemon runs (pid 1635, code `b4c6513b…`) and logs `store-unreachable … waiting-for-mount` and `file watching stopped, only the scans remain: ENOSPC … watch`; `health.json` says `store: unreachable`; sidecar `build-agent` is `waiting`; no `ready` child. The server answers (ping, port 2049 open). `mount.nfs` is present.
+- Swap is 8.7 GB (zram 7.7 GB and `/home/swapfile` 1 GB) instead of 24.7 GB: the 16 GB file `/home/semio-swap` is not active after the reboot (it was never in `/etc/fstab`).
+- `/tmp` was emptied by the reboot: 52 of 1 048 576 file slots used. Home volume: 1 302 499 file slots free.
+- Try 38 of `tools` ended with the shutdown (`worker stopped` 22:07:04 UTC in `build-agent.log`).
+- Repair needs root, and `sudo` asks for a password now, so the owner has to run the provision script once; asked in the chat.
+
+For the coordinator: on SteamOS every system update drops the fleet's system settings (fstab line, sysctl file, timer unit). The provision script writes them into `/etc` and `/var` of the running slot only.
+
+## Back in the Fleet at 12:02 UTC on 2026-11-18 (Out for 37 h 55 min)
+
+The owner ran the provision script as root at 11:59 and 12:01 UTC. Measured 12:02 to 12:12 UTC.
+
+- Store mounted 12:01 UTC (`192.168.178.70:/Users/Shared/semio-store`, line in `/etc/fstab`). Replica daemon restarted (pid 223734, code `b4c6513b…`), `store: ok` at 12:04 UTC; catch-up: `applied` 4609, 548 and smaller batches, `published` 1902 and 535 paths (the notes above among them), `repaired git 9929`.
+- 12:05:06 to about 12:08 UTC the build agent restarted every 15 s with `agent stopped: Cannot find module '…/🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts' imported from …/🛰️sidecar/👷️agent/🟦️.ts`: the agent file had arrived before the module it imports. It ended by itself when the folder arrived; 12:08:51 UTC the pool drained a child normally.
+- `ready` child runs again (pid 234687): `ready.json` 12:10 UTC `state waiting, stage tools, attempts 39, refusal stage-failed (exit status -), "Stage tools failed before; retrying after the back-off."` Try 38 had reached `native-artifact-input-read:34244` when the shutdown ended it.
+- Memory: 15 848 MB RAM, 7769 MB available; swap 25 331 MB, 23 778 MB free (`/home/semio-swap` active again). `/tmp`: 6654 of 1 048 576 file slots used. Home volume: 1 208 017 file slots free.
+
+### What the Provision Script Needed on SteamOS After the Slot Switch (Three Stops)
+
+1. `ln: failed to create symbolic link '/usr/local/bin/repo': Read-only file system` in step 3 (line 762/765): the new slot has `steamos-readonly` enabled. The owner ran `steamos-readonly disable`. The Linux service does not use that link (`ExecStart=/bin/sh …/entry/boot.sh run`).
+2. `mount.nfs: Failed to resolve server nfs.g1.semio.internal: Name or service not known` (exit 32): `sudo` drops `SEMIO_FLEET_GROUP`, `SEMIO_FLEET_NFS_HOST` and `SEMIO_FLEET_NETWORK`, and `/etc/profile.d/semio-fleet.sh` was lost with the slot, so the script fell back to the DNS name, which this network does not resolve. It had already written that name into `/etc/fstab`; a second run with the address would have been refused (`/etc/fstab already mounts another source`), so the line was removed by hand first, then the script was run with `sudo env SEMIO_FLEET_…`.
+3. Step 9 (native bootstrap) did not run: `deck has no passwordless sudo … these tools are missing: cc c++ make pkg-config`. As root the tools in `~/.local/bin` (`cc`, `c++`, `pkg-config`) are not on the path. For the account `make` is missing (`command -v make` empty); `cc`, `c++`, `gcc`, `pkg-config`, `curl`, `git`, `unzip`, `rustc`, `cargo` are present. Exit 3, as round 31 wants (no native bootstrap by a session).
+
+### Still Open on This Machine
+
+- File watching is off again: `file watching stopped, only the scans remain: ENOSPC: no space left on device, watch '/home/deck/semio/.cache/b/d/m/j/8ec5fba53abe7b163544/w/218'` at 12:02:12 UTC, with `fs.inotify.max_user_watches = 1048576` applied before the daemon started. The watched path is inside `.cache/b/d`.
+- `make` is not installed in the new slot; whether a stage needs it will show in the `ready` logs.
+- Every SteamOS update repeats this: fstab line, sysctl file, profile file, timer unit and read-only switch live in the slot that is left.
+
+Observation every ten minutes continues below.
+
+## 2026-11-18T12:10Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":234687,"state":"waiting","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":39,"exit":null,"refusal":{"code":"stage-failed","en":"Stage tools failed with exit status -; retrying with back-off.","de":"Stufe tools schlug mit Exit-Status - fehl; neuer Versuch mit Wartezeit."},"reason":{"code":"previous-failed","en":"Stage tools failed before; retrying after the back-off.","de":"Stufe tools schlug zuvor fehl; neuer Versuch nach der Wartezeit."},"peakMegabytes":1876,"tail":["[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"native-artifact-input-read:34225\",\"mode\":\"exclusive\",\"elapsedMs\":0}}","[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"native-artifact-input-read:34226\",\"mode\":\"exclusive\",\"elapsedMs\":0}}","[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"native-artifact-input-read:34227\",\"mode\":\"exclusive\",\"elapsedMs\":0}}","[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\`
+
+MemAvailable 8442 MB, SwapFree 23778 MB, load 18.01 14.45 7.64
+
+Last 30 lines of `tools.log`:
+
+```
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34215","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34216","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34217","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34218","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34219","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34220","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34221","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34222","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34223","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34224","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34225","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34226","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34227","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34228","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34229","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34230","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34231","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34232","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34233","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34234","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34235","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34236","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34237","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34238","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34239","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34240","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34241","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34242","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34243","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34244","mode":"exclusive","elapsedMs":0}}
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+1502256 217937 217644 /proc/self/exe --type=renderer --crashpad-handler-pid=84 --enable-crash-reporter=fd6babd7-ee2c-4588-8a6a-c59dbd14b126,no_channel --user-data-dir=/home/deck/.var/app/com.axosoft.GitKraken/config/GitKraken --secure-schemes=sentry-ipc --bypa
+875492 238870  235827 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧒️child/
+806140 223734  223625 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+580444   6325    2675 claude --resume
+523544   1955    1788 /usr/lib/kf6/baloo_file
+```
+
+## 2026-11-18T12:20Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":247854,"state":"backoff","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":39,"exit":null,"refusal":{"code":"stage-failed","en":"Stage tools failed (no exit status and no signal: the stage process vanished, the last lines of its log say how); retrying with back-off.","de":"Stufe tools schlug fehl (kein Exit-Status und kein Signal: der Stufenprozess verschwand, die letzten Zeilen seines Protokolls sagen wie); neuer Versuch mit Wartezeit."},"reason":null,"peakMegabytes":1876,"tail":["[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"native-artifact-input-read:34225\",\"mode\":\"exclusive\",\"elapsedMs\":0}}","[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"native-artifact-input-read:34226\",\"mode\":\"exclusive\",\"elapsedMs\":0}}","[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"native-artifact-input-read:34227\",\"mode\":\"exclusive\",\"elapsedMs\":0}}","[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\`
+
+MemAvailable 4470 MB, SwapFree 21361 MB, load 20.14 14.59 10.31
+
+Last 30 lines of `tools.log`:
+
+```
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34215","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34216","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34217","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34218","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34219","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34220","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34221","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34222","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34223","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34224","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34225","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34226","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34227","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34228","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34229","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34230","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34231","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34232","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34233","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34234","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34235","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34236","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34237","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34238","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34239","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34240","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34241","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34242","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34243","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:34244","mode":"exclusive","elapsedMs":0}}
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+1059060 217937 217644 /proc/self/exe --type=renderer --crashpad-handler-pid=84 --enable-crash-reporter=fd6babd7-ee2c-4588-8a6a-c59dbd14b126,no_channel --user-data-dir=/home/deck/.var/app/com.axosoft.GitKraken/config/GitKraken --secure-schemes=sentry-ipc --bypa
+763596 246505  246467 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+664404 260454  247853 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧒️child/
+561964 248087  247853 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧒️child/
+430512 255866  247853 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧒️child/
+```
+
+## 2026-11-18T12:30Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":247854,"state":"running","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":39,"exit":null,"refusal":null,"reason":{"code":"previous-failed","en":"Stage tools failed before; retrying after the back-off.","de":"Stufe tools schlug zuvor fehl; neuer Versuch nach der Wartezeit."},"peakMegabytes":1876,"tail":["[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"native-artifact-input-stage:1695\",\"mode\":\"exclusive\",\"elapsedMs\":0}}"],"nextAttemptMs":null,"readyMs":null,"startedMs":1795004098039,"updatedMs":1795005013543,"containment":null}`
+
+MemAvailable 5875 MB, SwapFree 23452 MB, load 12.26 15.82 13.99
+
+Last 30 lines of `tools.log`:
+
+```
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:1680","mode":"exclusive","elapsedMs":0}}
+[repository:command] still running after 160 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:1681","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:1682","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:1683","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:1684","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:1685","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:1686","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:1687","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:1688","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:1689","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:1690","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:1691","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:1692","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:1693","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:1694","mode":"exclusive","elapsedMs":0}}
+[repo] still working after 170 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:1695","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:1696","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:1697","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:1698","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:1699","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:1700","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:1701","mode":"exclusive","elapsedMs":0}}
+[repository:command] still running after 170 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:1702","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:1703","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:1704","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:1705","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:1706","mode":"exclusive","elapsedMs":0}}
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+978856 278920  278721 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypt
+764836 280250  247853 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧒️child/
+719720 246505  246467 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+573068 279120  247853 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧒️child/
+530176 281246  247853 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧒️child/
+```

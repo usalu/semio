@@ -79,10 +79,10 @@ export const ownerPoolRepublishV1=(input:Readonly<{published:number|undefined;co
  * @see ./🧪️tests/🔔️keep-alive/🟦️.ts */
 export const ownerPoolKeepAliveV1=(input:Readonly<{published:number|undefined;sinceMs:number}>,policy:typeof P=P):boolean=>input.published!==undefined&&input.sinceMs>=policy.republishKeepAliveMilliseconds;
 
-/** 💤️ Why a pool that holds waves works none: the key of the schema's `Status.reason`, `null` when it works or nothing needs saying. A target of the capacity gate that says why (waiting, yielding) is passed through; no wave at all is `no-wave`; waves that are all declined or of another revision are `no-current-wave`; waves that rest are `waves-done`, waves the children could not open `waves-backoff`; open waves with a target of zero children are `nothing-fits`.
+/** 💤️ Why a pool that holds waves works none: the key of the schema's `Status.reason`, `null` when it works or nothing needs saying. A target of the capacity gate that says why (waiting, yielding) is passed through while it holds the pool where it is or below (a target above the children that run is a pool that is starting, whatever bound the gate names); no wave at all is `no-wave`; waves that are all declined or of another revision are `no-current-wave`; waves that rest are `waves-done`, waves the children could not open `waves-backoff`; open waves with a target of zero children are `nothing-fits`.
  * @see ./🧪️tests/🌊️early-wave/🟦️.ts */
 export function ownerPoolWhyIdleV1(input:Readonly<{waves:readonly Readonly<{state:string;backoffUntil:number;acceptable:boolean}>[];open:number;children:number;targetChildren:number;targetReason:string|null;now:number}>):string|null{
- if(input.targetReason!==null)return input.targetReason;
+ if(input.targetReason!==null&&input.targetChildren<=input.children)return input.targetReason;
  if(input.children>0)return null;
  if(input.waves.length===0)return"no-wave";
  if(input.open===0)return input.waves.every(wave=>wave.state==="declined"||!wave.acceptable)?"no-current-wave":input.waves.some(wave=>wave.backoffUntil>input.now)?"waves-backoff":"waves-done";

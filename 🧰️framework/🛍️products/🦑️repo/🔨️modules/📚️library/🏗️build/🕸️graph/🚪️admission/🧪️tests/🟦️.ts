@@ -55,6 +55,36 @@ test("run-many with literal projects and targets admits their owner closure and 
 });
 
 
+test("a task run that excludes its dependencies admits only its own owner, matching an independent SQLite closure",async()=>{
+ const corpus=fixture.directTaskAdmission,registry=readBuildOwnerRegistryV1(corpus.registry),selectionValid=new Ajv({strict:true}).compile(selectionSchema),admissionValid=new Ajv({strict:false}).compile(schema),db=new Database(":memory:");
+ try{
+  db.exec("CREATE TABLE edge(source TEXT,target TEXT)");for(const[source,target]of corpus.edges)db.query("INSERT INTO edge VALUES(?,?)").run(source,target);
+  for(const row of corpus.cases){
+   const selection=buildInvocationGraphSelectionV1(row.args);expect<unknown>(selection,row.name).toEqual(row.selection);expect(selectionValid(selection),row.name+JSON.stringify(selectionValid.errors)).toBe(true);expect<unknown>(readBuildGraphSelectionV1(selection),row.name).toEqual(row.selection);
+   const observed:string[]=[],admitted=await closeBuildOwnerAdmissionV1(selection,registry,async(owner,targets)=>{observed.push(owner.name);return{project:{name:owner.name,targets:{build:{dependsOn:owner.name==="app"?["^build"]:[]}}},files:[owner.manifest,...owner.name==="app"?["library/api.ts"]:[]],dependencies:owner.name==="app"?["lib"]:[]};});
+   const direct=row.selection.excludeDependencies===true,closure=db.query("WITH RECURSIVE reach(name) AS (SELECT 'app' UNION SELECT edge.target FROM edge JOIN reach ON edge.source=reach.name WHERE ?1=0) SELECT name FROM reach ORDER BY name").all(direct?1:0).map(found=>(found as {name:string}).name);
+   expect(admissionValid(admitted),row.name+JSON.stringify(admissionValid.errors)).toBe(true);expect(admitted.owners,row.name).toEqual(row.owners);expect(admitted.owners,row.name).toEqual(closure);expect(admitted.targets,row.name).toEqual(row.targets);if(direct)expect([...new Set(observed)],row.name).toEqual(["app"]);
+  }
+  expect(()=>readBuildGraphSelectionV1({kind:"tasks",tasks:[{project:"app",target:"build"}],excludeDependencies:false})).toThrow();
+  expect(buildGraphScopeKeyV1(readBuildGraphSelectionV1(corpus.cases[0]!.selection),registry)).not.toBe(buildGraphScopeKeyV1(readBuildGraphSelectionV1(corpus.cases[4]!.selection),registry));
+ }finally{db.close();}
+});
+
+test("a task run that excludes its dependencies admits only its own owner, matching an independent SQLite closure",async()=>{
+ const corpus=fixture.directTaskAdmission,registry=readBuildOwnerRegistryV1(corpus.registry),selectionValid=new Ajv({strict:true}).compile(selectionSchema),admissionValid=new Ajv({strict:false}).compile(schema),db=new Database(":memory:");
+ try{
+  db.exec("CREATE TABLE edge(source TEXT,target TEXT)");for(const[source,target]of corpus.edges)db.query("INSERT INTO edge VALUES(?,?)").run(source,target);
+  for(const row of corpus.cases){
+   const selection=buildInvocationGraphSelectionV1(row.args);expect<unknown>(selection,row.name).toEqual(row.selection);expect(selectionValid(selection),row.name+JSON.stringify(selectionValid.errors)).toBe(true);expect<unknown>(readBuildGraphSelectionV1(selection),row.name).toEqual(row.selection);
+   const observed:string[]=[],admitted=await closeBuildOwnerAdmissionV1(selection,registry,async owner=>{observed.push(owner.name);return{project:{name:owner.name,targets:{build:{dependsOn:owner.name==="app"?["^build"]:[]}}},files:[owner.manifest,...owner.name==="app"?["library/api.ts"]:[]],dependencies:owner.name==="app"?["lib"]:[]};});
+   const direct=(row.selection as {excludeDependencies?:true}).excludeDependencies===true,closure=db.query("WITH RECURSIVE reach(name) AS (SELECT 'app' UNION SELECT edge.target FROM edge JOIN reach ON edge.source=reach.name WHERE ?1=0) SELECT name FROM reach ORDER BY name").all(direct?1:0).map(found=>(found as {name:string}).name);
+   expect(admissionValid(admitted),row.name+JSON.stringify(admissionValid.errors)).toBe(true);expect(admitted.owners,row.name).toEqual(row.owners);expect(admitted.owners,row.name).toEqual(closure);expect(admitted.targets,row.name).toEqual(row.targets);if(direct)expect([...new Set(observed)],row.name).toEqual(["app"]);
+  }
+  expect(()=>readBuildGraphSelectionV1({kind:"tasks",tasks:[{project:"app",target:"build"}],excludeDependencies:false})).toThrow();
+  expect(buildGraphScopeKeyV1(readBuildGraphSelectionV1(corpus.cases[0]!.selection),registry)).not.toBe(buildGraphScopeKeyV1(readBuildGraphSelectionV1(corpus.cases[4]!.selection),registry));
+ }finally{db.close();}
+});
+
 test("the authored workspace registry has one identity per physical owner",async()=>{
  const registry=JSON.parse(await Bun.file(new URL("../../../../../../../../../📋️build-owners.json",import.meta.url)).text()),db=new Database(":memory:");
  try{db.exec("CREATE TABLE owner(name TEXT PRIMARY KEY,root TEXT UNIQUE,manifest TEXT UNIQUE)");for(const owner of registry.owners)db.query("INSERT INTO owner VALUES(?,?,?)").run(owner.name,owner.root,owner.manifest);expect(readBuildOwnerRegistryV1(registry).owners.length).toBe((db.query("SELECT COUNT(*) AS count FROM owner").get() as {count:number}).count);}finally{db.close();}

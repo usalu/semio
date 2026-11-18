@@ -75,3 +75,9 @@ mod solve_step;
 #[path = "📄️page-job/🦀️.rs"]
 mod page_job;
 pub use self::page_job::*;
+
+//#region 🧪️Laws
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+//#endregion 🧪️Laws

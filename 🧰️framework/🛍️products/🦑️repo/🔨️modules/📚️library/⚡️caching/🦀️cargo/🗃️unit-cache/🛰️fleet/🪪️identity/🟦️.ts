@@ -132,6 +132,12 @@ export function remoteKeyV1(platform:PlatformV1,input:Parameters<typeof unitKeyV
  return sha256V1(JSON.stringify([UNIT_CACHE_POLICY_V1.namespace,fleet.namespace,platform,portableKeyV1(input,roots),...sensitive.length===0?[]:[["real-paths",...sensitive]]]));
 }
 
+/** 🏠️ The local first-level key of a unit: the portable key, so one crate under another checkout root, task view or machine is the same local entry; a unit whose bytes name a real path of this machine (`sensitive`) is keyed on those paths as well and shares only with equal paths. */
+export function localKeyV1(input:Parameters<typeof unitKeyV1>[0],roots:readonly PortableRootV1[],sensitive:readonly string[]=[]):string{
+ const portable=portableKeyV1(input,roots);
+ return sensitive.length===0?portable:sha256V1(JSON.stringify([portable,["real-paths",...sensitive]]));
+}
+
 /** 🪢️ A slot id exactly as package C specified it (`🏗️build/🪢️slots`); the test compares both implementations. */
 export function slotIdV1(parts:readonly string[]):string{return createHash("sha256").update(JSON.stringify(["semio-slot-v1","rust-unit",...parts])).digest("hex");}
 

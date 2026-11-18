@@ -9,6 +9,7 @@ import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 /** 📋️ The declared numbers of the slice memory report: the schema file is the single source.
  * @see ./🧬️schema/🔣️.json */
 export const SLICE_REPORT_POLICY_V1=Object.freeze({...schema.definitions.Policy.const});
+const STEPS=schema.definitions.Steps.const,steps=[];let movedAt=performance.now(),movedSign="";
 const P=SLICE_REPORT_POLICY_V1,MEGABYTE=1048576,megabytes=bytes=>Math.round(bytes/MEGABYTE*10)/10,sources=new Map(),finals=new Map(),startedAt=performance.now();
 let phase={name:"start",done:0,total:0},stage,stop,measured={};
 const collectionSources=new Map();
@@ -51,11 +52,41 @@ export function readFinalSliceReportSourceV1(name){return sources.has(name)?unde
 /** 📖️ What the source `name` answers now, or undefined while it is not registered or throws. */
 export function readSliceReportSourceV1(name){const read=sources.get(name);if(read===undefined)return undefined;try{return read();}catch{return undefined;}}
 
+
+const fill=(text,fields)=>text.replace(/\{(\w+)\}/gu,(_,name)=>String(fields[name]??""));
+
+/** 🪜️ Runs `run` as the step `id` of the read (declared in the schema with its bound): while it runs the progress line names it with how long it has run and its bound, and a wait inside it names who it waits for through `detail`; steps nest, the innermost is named. A step that ends or fails is removed.
+ * @see ./🧬️schema/🔣️.json */
+export async function sliceReadStepV1(id,run,detail={}){
+ const row={id,startedMs:performance.now(),detail,boundMilliseconds:detail.boundMilliseconds??STEPS.steps[id]?.boundMilliseconds};
+ if(row.boundMilliseconds===undefined)throw Error("Declared slice read step required: "+id);
+ steps.push(row);movedAt=performance.now();
+ try{return await run();}finally{const at=steps.lastIndexOf(row);if(at>=0)steps.splice(at,1);movedAt=performance.now();}
+}
+
+/** 🪧️ What the progress line says about the innermost running step: `{phase,done,total}` with the step in both languages, the seconds it has run as `done` and its bound as `total`, or undefined while no step runs. */
+export function describeSliceReadStepV1(now=performance.now()){
+ const row=steps.at(-1);if(row===undefined)return undefined;
+ const seconds=Math.round((now-row.startedMs)/1000),bound=Math.round(row.boundMilliseconds/1000),spec=STEPS.steps[row.id],fields={round:1,...row.detail};
+ const text=language=>fill(spec[language],fields)+" ("+STEPS.counter[language]+")"+(seconds>bound?" ("+fill(STEPS.overBound[language],{bound})+")":"");
+ return{id:row.id,phase:text("en")+" / "+text("de"),done:seconds,total:bound};
+}
+
+/** 🔔️ The moment this process last made progress that a waiter of the fleet can rely on: a step began or ended, or the owners of the read counted more done, in flight or inferred (the processor time of the process counts too, so one large owner that runs for minutes is not idle). A claim of the fleet is renewed only while this is younger than `idleMilliseconds`. */
+export function sliceReadMovedAtV1(){
+ const owners=readSliceReportSourceV1("owners"),ledger=owners?.ledger,sign=JSON.stringify([ledger?.done,ledger?.running,owners?.finished,owners?.taken,owners?.cpuSeconds,steps.map(row=>row.id)]);
+ if(sign!==movedSign){movedSign=sign;movedAt=performance.now();}
+ return movedAt;
+}
+
+/** 🫀️ Whether this process has made progress within the idle bound of the schema (the heartbeat of a fleet claim asks it). */
+export function sliceReadActiveV1(now=performance.now()){return now-sliceReadMovedAtV1()<STEPS.idleMilliseconds;}
+
 /** 💓️ Tells `emit({phase:"taken",done,total})` every `milliseconds` while the owners source counts more owners decided (taken from the store or the fleet, or inferred) than the last time told: a worker that takes thousands of owners shows work to whoever watches its output, which a worker that says nothing for ten minutes never does. Returns the function that stops it; the timer never keeps the process alive.
  * @see ./🧬️schema/🔣️.json */
 export function startSliceProgressV1({emit,read=readSliceReportSourceV1,final=readFinalSliceReportSourceV1,milliseconds=P.progressMilliseconds}){
  let told,finished;
- const timer=setInterval(()=>{const live=read("owners"),ledger=(live??final("owners"))?.ledger,done=Number(ledger?.done),total=Number(ledger?.total);if(!Number.isSafeInteger(done)||!Number.isSafeInteger(total)||total<=0)return;if(live===undefined){if(finished===ledger)return;finished=ledger;told=undefined;try{emit({phase:"owners done",done,total});}catch{}return;}finished=undefined;if(done===told)return;told=done;try{emit({phase:"taken",done,total});}catch{}},milliseconds);
+ const timer=setInterval(()=>{const step=describeSliceReadStepV1(),live=read("owners"),ledger=(live??final("owners"))?.ledger,done=Number(ledger?.done),total=Number(ledger?.total);if(step!==undefined&&!(step.id==="owners-round"&&live!==undefined&&done!==told)){if(step.id!=="owners-round")told=undefined;try{emit({phase:step.phase,done:step.done,total:step.total});}catch{}return;}if(!Number.isSafeInteger(done)||!Number.isSafeInteger(total)||total<=0)return;if(live===undefined){if(finished===ledger)return;finished=ledger;told=undefined;try{emit({phase:"owners done",done,total});}catch{}return;}finished=undefined;if(done===told)return;told=done;try{emit({phase:"taken",done,total});}catch{}},milliseconds);
  timer.unref?.();
  return()=>clearInterval(timer);
 }

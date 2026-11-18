@@ -158,7 +158,7 @@ use semio_s_artifact_norm_en1990_mut_traffic_groups_rows::remove_traffic_group;
 #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "test-support"), serde(tag = "mutation", rename_all = "camelCase"))]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = En1990Snapshot, diff = En1990Diff, schema = "s.norm.en1990", reference = En1990Snapshot, reference_diff = En1990Diff)]
+#[mutations(snapshot = En1990Snapshot, diff = En1990Diff, schema = "s.norm-eurocode.en1990", reference = En1990Snapshot, reference_diff = En1990Diff)]
 pub enum En1990Mutation {
     ChangeAnnex(change_annex::ChangeAnnex),
     ChangeProjectId(change_project_id::ChangeProjectId),

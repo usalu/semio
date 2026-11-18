@@ -149,10 +149,15 @@ describe("Window chrome stacking", () => {
 
 describe("Window chrome focus indicator", () => {
   const uiCss = readFileSync(join(import.meta.dirname, "../../../../🎨️styling/🖌️ui/🎨️.css"), "utf8");
-  it("keeps a visible focus ring without erasing contained control borders", () => {
+  it("recolours the chip's lines instead of ringing a focused control, without erasing contained control borders", () => {
     expect(uiCss).not.toMatch(/\[data-window-silhouette-chip\] > \*\s*\{/u);
     expect(uiCss).toMatch(/\[data-window-silhouette-chip\]\s*\{[^}]*border-width: 0/u);
-    expect(uiCss).toMatch(/\[data-window-silhouette-chip\] > :focus-visible[^{]*\{\s*box-shadow: inset 0 0 0 var\(--stroke-default\) var\(--active-base\);/u);
+    expect(uiCss).not.toMatch(/\[data-window-silhouette-chip\][^{]*:focus-visible[^{]*\{[^}]*inset 0 0 0 var\(--stroke-default\) var\(--active-base\)/u);
+    expect(uiCss).toMatch(/\[data-window-silhouette-chip\] :is\([^)]*\):focus-visible\s*\{\s*outline: none;\s*box-shadow: none;/u);
+  });
+  it("doubles the focus line weight where the window already paints the accent", () => {
+    expect(uiCss).toMatch(/\[data-shared-border-state="focus"\]\[data-focus-on-accent\]\s*\{\s*stroke-width: calc\(var\(--stroke-hairline\) \* 2\);/u);
+    expect(uiCss).toMatch(/:not\(\[role="tabpanel"\], \[data-window-silhouette\], \[data-slot="window"\]\) > :is\([^)]*\):focus-visible\s*\{\s*text-decoration: underline;/u);
   });
 });
 // #endregion 🪜️ChromeStacking

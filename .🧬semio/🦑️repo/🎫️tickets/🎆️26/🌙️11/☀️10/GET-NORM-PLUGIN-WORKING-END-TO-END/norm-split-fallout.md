@@ -1,4 +1,19 @@
-# Norm split fallout
+# Norm split fallout (five-plugin layout)
+
+Final layout: `norm` (din4108, din16798, iso16757, vdi3805), `norm-energy` (din18599), `norm-eurocode` (en1990, en1991, en1997, en1998), `norm-eurocode-structural` (en1992, en1993, en1994), `norm-eurocode-materials` (en1995, en1996, en1999). The first pass targeted a three-plugin layout; the second pass (below) redid everything for five. Generators: `norm-split-fallout-tests.py` (pass 1) and `norm-split-fallout-tests-5.py` (pass 2, regenerates every per-crate test file from the family blocks of pass 1). Where the pass-1 text below says three plugins, read the five-plugin table here instead.
+
+## Pass 2 deltas (five plugins)
+
+- Per-crate test files (`🧪️tests/{🔬️surface,🎯️action-args,🚦️compliance-gate,🖥️app-surface}/🦀️.rs`, norm root files plus extension-local files) regenerated: norm 4 families, energy 1, eurocode 4, structural 3, materials 3. Shared `🧰️laws`, `🧰️harness` and `🧰️shared` files unchanged. The gaming source scan stays in `norm` only.
+- New crates `norm-energy` and `norm-eurocode-structural`: `[[test]]` `surface_render` and `compliance_gate`, dev-dependencies (own `*-examples`, fixture reader, compliance, `semio-plugin` with `artifact-app-testing`, async macros, serde, serde_json), lib `#[cfg(test)]` modules, `surface-render-test` route and target, `normTree` inputs. `norm-eurocode-materials` dev-dependencies trimmed to en1995, en1996, en1999 examples. `semio-hub-norm` lost `din18599-examples` and its description names four families.
+- `🔬️rust-package-commands`: `NORM_PLUGINS` has five rows (package id, variants and component budget loops follow).
+- Catalog fixture, stories (`NormEnergy`, `NormEurocodeStructural`), program-matrix TS set and JSON `pluginVerbs`, bootstrap selection (specs and `ALL_PACKAGES`), nextest overrides, TS budget table and its JSON fixture: all extended for `norm-energy` and `norm-eurocode-structural`.
+- package-runner fixture lists five descriptors, test expects 5 (editors 4+1+4+3+3 = 15). time-travel contract regex `/^norm(-|$)/` already covers all five.
+- Plugin README (EN and DE) names the three Eurocode plugins and `norm-energy`.
+- Play: `prepare-prototype` gained `prepare-din18599` and `prepare-en1995` (activate lanes were already there, 39 lanes now); `playscopes` fixture has five activations in project order and five components (sorted); play README 39 lanes and five-lane text (EN and DE).
+- Not verified: nothing was run (no cargo; the repo TS runner blocked on the graph load).
+
+## Pass 1 report (three-plugin layout, superseded where it conflicts)
 
 The 15 norm families now live in three plugins: `norm` (din4108, din16798, din18599, iso16757, vdi3805), `norm-eurocode` (en1990, en1991, en1997, en1998) and `norm-eurocode-materials` (en1992, en1993, en1994, en1995, en1996, en1999). This report lists everything outside the already-split sources that still assumed one `norm` plugin. Generator for the Rust test files: `norm-split-fallout-tests.py` (same folder).
 

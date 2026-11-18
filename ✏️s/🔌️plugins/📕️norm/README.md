@@ -7,7 +7,7 @@ kind: user
 
 ## English
 
-The Eurocode part of the norm plugins checks a design against the Eurocodes (EN 1990 to EN 1999, with the German national annex NA-DE) and shows the result next to the model. It ships as two plugins: `norm-eurocode` (EN 1990, EN 1991, EN 1997, EN 1998) and `norm-eurocode-materials` (EN 1992, EN 1993, EN 1994, EN 1995, EN 1996, EN 1999); the DIN, ISO and VDI standards stay in `norm`. This guide is shared by all ten Eurocode editors. Each code has its own page with covered clauses, diagrams, handles and examples:
+The Eurocode part of the norm plugins checks a design against the Eurocodes (EN 1990 to EN 1999, with the German national annex NA-DE) and shows the result next to the model. It ships as three plugins: `norm-eurocode` (EN 1990, EN 1991, EN 1997, EN 1998), `norm-eurocode-structural` (EN 1992, EN 1993, EN 1994) and `norm-eurocode-materials` (EN 1995, EN 1996, EN 1999); DIN V 18599 ships in `norm-energy`, and DIN EN 16798, DIN 4108, ISO 16757 and VDI 3805 stay in `norm`. This guide is shared by all ten Eurocode editors. Each code has its own page with covered clauses, diagrams, handles and examples:
 
 | Code | Subject | Page |
 |---|---|---|
@@ -149,7 +149,7 @@ All functions can be used without a pointer. Focus is never trapped. Tab order o
 
 ## Deutsch
 
-Der Eurocode-Teil der Norm-Plugins prüft einen Entwurf nach den Eurocodes (EN 1990 bis EN 1999, mit dem deutschen Nationalen Anhang NA-DE) und zeigt das Ergebnis neben dem Modell. Er wird als zwei Plugins ausgeliefert: `norm-eurocode` (EN 1990, EN 1991, EN 1997, EN 1998) und `norm-eurocode-materials` (EN 1992, EN 1993, EN 1994, EN 1995, EN 1996, EN 1999); die DIN-, ISO- und VDI-Normen bleiben in `norm`. Dieser Leitfaden gilt für alle zehn Eurocode-Editoren. Jeder Eurocode hat eine eigene Seite mit abgedeckten Abschnitten, Diagrammen, Griffen und Beispielen:
+Der Eurocode-Teil der Norm-Plugins prüft einen Entwurf nach den Eurocodes (EN 1990 bis EN 1999, mit dem deutschen Nationalen Anhang NA-DE) und zeigt das Ergebnis neben dem Modell. Er wird als drei Plugins ausgeliefert: `norm-eurocode` (EN 1990, EN 1991, EN 1997, EN 1998), `norm-eurocode-structural` (EN 1992, EN 1993, EN 1994) und `norm-eurocode-materials` (EN 1995, EN 1996, EN 1999); DIN V 18599 wird in `norm-energy` ausgeliefert, DIN EN 16798, DIN 4108, ISO 16757 und VDI 3805 bleiben in `norm`. Dieser Leitfaden gilt für alle zehn Eurocode-Editoren. Jeder Eurocode hat eine eigene Seite mit abgedeckten Abschnitten, Diagrammen, Griffen und Beispielen:
 
 | Norm | Thema | Seite |
 |---|---|---|

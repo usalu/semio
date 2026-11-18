@@ -31,6 +31,7 @@ const PROJECTION_FIXTURE: &str = include_str!("../🧫️fixtures/♿️accessib
 /// no renderer can invent a role vocabulary of its own.
 #[test]
 fn every_component_implies_the_role_the_shared_fixture_declares() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture: serde_json::Value = serde_json::from_str(PROJECTION_FIXTURE).expect("♿️ the projection fixture parses");
     let rows = fixture["roles"].as_array().expect("fixture role rows");
     let mut seen = std::collections::BTreeSet::new();

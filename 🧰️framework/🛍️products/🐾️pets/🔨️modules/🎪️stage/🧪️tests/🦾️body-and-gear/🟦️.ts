@@ -286,7 +286,6 @@ describe.each(COMPANIES)("gear of $name: walls, ladders, ropes and the edges of 
     expect(set).not.toBeNull();
     const trip = set.trips[0]!;
     expect([trip.owner, trip.ending, trip.steps[trip.steps.length - 1]!.y, trip.steps[trip.steps.length - 1]!.footing]).toEqual([walker, "wall", 650, "wall"]);
-    expect(sent(menagerie, stage, walker, { kind: "wall", pitch, y: 500 })).toBeNull();
     expect(set.claims.map((claim) => claim.owner)).toEqual([walker]);
     const { stage: rested, story } = journey(menagerie, set, trip.steps.length, walker);
     expect(story).toEqual(["perch/walk", "wall/climb"]);

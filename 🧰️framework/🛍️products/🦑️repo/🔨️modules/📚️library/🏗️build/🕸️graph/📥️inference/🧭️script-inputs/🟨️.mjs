@@ -944,19 +944,20 @@ function toolCoverV1(scripts, target, entries, words, resources, packages) {
 }
 
 const byNameV1 = ([left], [right]) => left < right ? -1 : left > right ? 1 : 0;
-/** 🫙️ The files of the group of one declared tool command, once per script input cache.
+/** 🫙️ The files of the group of one declared tool command, once per script input cache, however many targets ask while the first derivation runs.
  * @see ./🔌️provider-closures/🟨️.mjs */
 async function toolGroupFilesV1(workspaceRoot, scripts, name) {
   const groups = scripts.toolGroups ??= new Map();
   let files = groups.get(name);
-  if (files === undefined) groups.set(name, files = new Set((await toolClosureGroupV1(workspaceRoot, scripts, name)).filter(item => typeof item === "string")));
+  if (files === undefined) { const pending = toolClosureGroupV1(workspaceRoot, scripts, name).then(list => new Set(list.filter(item => typeof item === "string"))); groups.set(name, pending); pending.catch(() => { if (groups.get(name) === pending) groups.delete(name); }); files = pending; }
   return files;
 }
 
-/** 🛃️ Walks every declared tool closure and the closure of every designated provider port once, through one shared cache, and returns the refusals instead of stopping at the first: a closure that can never be derived (it imports a generated output, names an unknown port) is known before a read derives anything. `refused` holds `{ name, version, code, key, values }` rows, `name` the tool or `port:<name>`. */
-export async function preflightToolClosuresV1(workspaceRoot, scripts) {
-  const refused = [], names = Object.keys(PROVIDER_CLOSURE_POLICY_V1.tools.closures).sort(), view = Object.keys(PROVIDER_CLOSURE_POLICY_V1.views)[0], ports = Object.keys(providerDesignationV1(scripts).providers).sort();
-  const attempt = async (name, run) => { try { await run(); } catch (error) { if (!isRepoErrorV1(error)) throw error; refused.push({ name, ...repoErrorDataV1(error) }); } };
+/** 🛃️ Walks every declared tool closure and the closure of every designated provider port once, through one shared cache, and returns the refusals instead of stopping at the first: a closure that can never be derived (it imports a generated output, names an unknown port) is known before a read derives anything. `progress({done,total})` is awaited after each closure, so a caller can let its event loop turn between the closures (the capped child of the heavy questions reports its phase and its heartbeat there). `refused` holds `{ name, version, code, key, values }` rows, `name` the tool or `port:<name>`. */
+export async function preflightToolClosuresV1(workspaceRoot, scripts, { progress } = {}) {
+  const refused = [], names = Object.keys(PROVIDER_CLOSURE_POLICY_V1.tools.closures).sort(), view = Object.keys(PROVIDER_CLOSURE_POLICY_V1.views)[0], ports = Object.keys(providerDesignationV1(scripts).providers).sort(), total = names.length + ports.length;
+  let done = 0;
+  const attempt = async (name, run) => { try { await run(); } catch (error) { if (!isRepoErrorV1(error)) throw error; refused.push({ name, ...repoErrorDataV1(error) }); } await progress?.({ done: ++done, total }); };
   for (const name of names) await attempt(name, () => toolGroupFilesV1(workspaceRoot, scripts, name));
   for (const port of ports) await attempt("port:" + port, () => scriptProviderGroupV1(workspaceRoot, scripts, port, view));
   return { checked: names.length + ports.length, refused };
@@ -1652,11 +1653,11 @@ export function releaseOwnerStateV1(scripts, { shrink = false, gate = footprintG
   const grant = gate?.grantBytes(), share = grant > 0 ? decideFootprintV1({ footprintBytes: gate.footprintBytes(), grantBytes: grant }) : undefined;
   if (share !== undefined) shrink = share === "wait";
   const finished = (FINISHED_OWNERS_V1.get(scripts) ?? 0) + 1;
-  if (shrink) { scripts.files.clear(); scripts.closures.clear(); scripts.commandDependencies.clear(); }
+  if (shrink) { scripts.files.clear(); scripts.closures.clear(); scripts.commandDependencies.clear(); scripts.groupLists?.clear(); }
   if (!now && finished < (shrink ? OWNERS_PER_SHRINK_RELEASE_V1 : OWNERS_PER_RELEASE_V1)) { FINISHED_OWNERS_V1.set(scripts, finished); return; }
   FINISHED_OWNERS_V1.set(scripts, 0);
   scripts.reachState = undefined; scripts.sharedBytes = 0;
-  scripts.files.clear(); scripts.closures.clear(); scripts.commandDependencies.clear(); scripts.declared.clear(); scripts.paths.clear(); scripts.walkNodes?.clear(); scripts.toolGroups?.clear(); sharedSourceFilesV1.clear();
+  scripts.files.clear(); scripts.closures.clear(); scripts.commandDependencies.clear(); scripts.groupLists?.clear(); scripts.declared.clear(); scripts.paths.clear(); scripts.walkNodes?.clear(); scripts.toolGroups?.clear(); sharedSourceFilesV1.clear();
   if (shrink) closureEntriesV1.shrink(0.5);
 }
 
@@ -1910,12 +1911,26 @@ export function closureApiV1(scripts, workspaceRoot) {
   });
 }
 
+/** 🗄️ The group a shared reference stands for (a tool closure or a script provider of the providers project), derived once per script input cache and replayed with its observed rows into every project that expands it again; the 17 targets of a crate expanded the same 18 groups 690 times, each time walking the 1800 modules of the cargo command again. A group that is being derived is awaited, then replayed, so concurrent expansions neither derive twice nor lose the rows. Any other recipe is produced as before.
+ * @see ./🧪️tests/🗂️shared-groups/🟦️.ts */
+async function sharedGroupV1(recipe, workspaceRoot, scripts) {
+  if (recipe.fn !== "tool-closure" && recipe.fn !== "script-provider") return produceClosureRecipeV1(recipe, workspaceRoot, scripts);
+  let index = 0;
+  const key = closureRecipeKeyV1(recipe), cache = scripts.groupLists ??= new Map(), flights = scripts.groupFlights ??= new Map();
+  const run = () => memoizedObservedAsyncComputationV1(cache, key, () => { scripts.groupComputations = (scripts.groupComputations ?? 0) + 1; return produceClosureRecipeV1(recipe, workspaceRoot, scripts); }, (force = false) => yieldInferenceV1(scripts.context, "build:command-source-packages", ++index, force));
+  const flight = flights.get(key);
+  if (flight !== undefined) { await flight.catch(() => {}); return run(); }
+  const mine = run();
+  flights.set(key, mine);
+  try { return await mine; } finally { if (flights.get(key) === mine) flights.delete(key); }
+}
+
 /** 📇️ A command input list (or a target-sources value) with every shared reference (a script provider or tool closure of the providers project, `./🔌️provider-closures`) replaced by the files of its group: what a consumer that needs the literal files of a command closure reads (a read oracle, a law, a query) instead of the references a node holds. */
 export async function expandedCommandInputsV1(value, workspaceRoot, scripts = createScriptInputCache()) {
   const references = sharedReferencesOfV1(value);
   if (!references.length) return value;
   const files = [];
-  for (const reference of references) for (const item of await produceClosureRecipeV1(reference.recipe, workspaceRoot, scripts)) if (typeof item === "string" && item.startsWith("{workspaceRoot}/")) files.push(item);
+  for (const reference of references) for (const item of await sharedGroupV1(reference.recipe, workspaceRoot, scripts)) if (typeof item === "string" && item.startsWith("{workspaceRoot}/")) files.push(item);
   return expandClosureValueV1(value, files);
 }
 

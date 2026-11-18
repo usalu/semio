@@ -1,5 +1,5 @@
 syntax = "proto3";
-package semio.s.norm.din18599.mutation;
+package semio.s.norm_energy.din18599.mutation;
 
 message Din18599Mutation {
   // @state artifact

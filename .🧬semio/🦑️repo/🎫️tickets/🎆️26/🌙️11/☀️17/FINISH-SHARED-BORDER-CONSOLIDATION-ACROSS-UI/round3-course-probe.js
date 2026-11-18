@@ -6,6 +6,7 @@ export function probe3({ root = document.body, near = 3.2, overlap = 4 } = {}) {
     if (el.closest("[inert]") || el.closest("details:not([open]) > :not(summary)")) return false;
     for (let e = el; e; e = e.parentElement) { const s = getComputedStyle(e); if (s.display === "none" || s.visibility === "hidden" || +s.opacity === 0) return false; }
     const r = el.getBoundingClientRect();
+    for (let e = el.parentElement; e && e !== document.body; e = e.parentElement) { const s = getComputedStyle(e); if (s.overflowY === "visible" && s.overflowX === "visible") continue; const q = e.getBoundingClientRect(); if (r.top >= q.bottom - 0.01 || r.bottom <= q.top + 0.01) return false; }
     return r.width > 0 && r.height > 0 && r.bottom > 0 && r.right > 0 && r.top < innerHeight * 3 && r.left < innerWidth;
   };
   const nm = el => `${el.tagName.toLowerCase()}${el.getAttribute?.("data-slot") ? `[${el.getAttribute("data-slot")}]` : ""}.${(typeof el.className === "string" ? el.className : "").split(/\s+/).filter(c => c && !c.includes(":")).slice(0, 3).join(".")} «${(el.textContent || "").trim().replace(/\s+/g, " ").slice(0, 24)}»`;

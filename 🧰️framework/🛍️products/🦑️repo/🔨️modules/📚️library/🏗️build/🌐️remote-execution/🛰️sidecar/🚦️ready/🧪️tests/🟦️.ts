@@ -449,17 +449,17 @@ test("a stage stopped because it waited on a holder while its code changed start
  expect(restarted[1]!.reason!.code).toBe("code-changed");expect(restarted[1]!.reason!.en).toContain("new code");expect(restarted[1]!.reason!.de).toContain("neuen Code");
 });
 
-posix("a stage that waits on a named holder is stopped with its tree only when a source file changed after it started; unchanged code lets it wait",async()=>{
+posix("a stage that waits on a named holder is stopped with its tree only when a declared semantics source moved after it started; an edit of other code lets it wait",async()=>{
  const holder='#!/bin/sh\ni=0\nwhile [ $i -lt 40 ]; do i=$((i+1)); echo "Process 48352 (x show projects) holds the dependency store since 2026-11-14T16:34:21.027Z; waiting for it ($i s of at most 21600 s)"; echo "[script] {\\"activity\\":{\\"resource\\":\\"dependencies:maintenance-parent-observation\\",\\"mode\\":\\"shared\\",\\"elapsedMs\\":1.$i}}"; sleep 0.3; done\nexit 0\n';
- const policy={...TREE,holderWaitRestartMilliseconds:1500,codeCheckMilliseconds:300,codeRoots:["code"],stallStopMilliseconds:600000};
- const quiet=fakeHome(holder),quietRoot=temp("root");mkdirSync(join(quietRoot,"code"),{recursive:true});writeFileSync(join(quietRoot,"code","a.ts"),"x");utimesSync(join(quietRoot,"code","a.ts"),new Date(Date.now()-600000),new Date(Date.now()-600000));
+ const policy={...TREE,holderWaitRestartMilliseconds:1500,codeCheckMilliseconds:300,semanticsSources:[{file:"code/semantics.json",pointer:"/revision"}],stallStopMilliseconds:600000},declare=(directory:string,revision:number)=>{mkdirSync(join(directory,"code"),{recursive:true});writeFileSync(join(directory,"code","semantics.json"),JSON.stringify({revision}));};
+ const quiet=fakeHome(holder),quietRoot=temp("root");declare(quietRoot,1);writeFileSync(join(quietRoot,"code","a.ts"),"x");
  const unchanged=await runReadyStageV1({home:quiet.home,root:quietRoot,environment:{},stage:stageOf("tools",600000),signal:new AbortController().signal,jobs:1,onLine:()=>undefined,tree:policy});
  expect(unchanged.stalled).toBe(false);expect(unchanged.codeChanged).toBeUndefined();expect(unchanged.exit).toBe(0);
- const busy=fakeHome(holder),root=temp("root");mkdirSync(join(root,"code"),{recursive:true});
+ const busy=fakeHome(holder),root=temp("root");declare(root,1);
  const began=Date.now(),pending=runReadyStageV1({home:busy.home,root,environment:{},stage:stageOf("tools",600000),signal:new AbortController().signal,jobs:1,onLine:()=>undefined,tree:policy});
- setTimeout(()=>{const at=new Date(Date.now()+5000);writeFileSync(join(root,"code","b.ts"),"y");utimesSync(join(root,"code","b.ts"),at,at);},700);
+ setTimeout(()=>{writeFileSync(join(root,"code","b.ts"),"y");declare(root,2);},700);
  const changed=await pending;
- expect(changed.stalled).toBe(true);expect(changed.codeChanged).toBe(join("code","b.ts"));expect(changed.timedOut).toBe(false);expect(Date.now()-began).toBeGreaterThan(1500);expect(Date.now()-began).toBeLessThan(25000);
+ expect(changed.stalled).toBe(true);expect(changed.codeChanged).toBe("code/semantics.json");expect(changed.timedOut).toBe(false);expect(Date.now()-began).toBeGreaterThan(1500);expect(Date.now()-began).toBeLessThan(25000);
 },90000);
 
 posix("a stage whose only moving values are elapsedMs floats is stopped as stalled after the stall limit, one whose resource counter grows is not",async()=>{

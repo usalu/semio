@@ -59,7 +59,7 @@ pub const LABEL: &str = "EN 1997";
 /// 🆔️ The playground/registry variant key â every body key, window id and schema is derived from it.
 pub const VARIANT: &str = "en1997";
 /// 🆔️ Retained-command / UI action controller id.
-pub const CONTROLLER_ID: &str = "s.norm.en1997@1/*#editor";
+pub const CONTROLLER_ID: &str = "s.norm-eurocode.en1997@1/*#editor";
 pub const DOCUMENT_SCHEMA: &str = "semio.norm.en1997/v1";
 //#endregion ðï¸Constants
 
@@ -156,7 +156,7 @@ impl ArtifactEditor for En1997PlayApp {
     semio_plugin::bounded_first_step_tool_proofs! {
         owner: semio_plugin::EditorApp<En1997PlayApp>,
         owner_file: "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
-        controller: "s.norm.en1997@1/*#editor",
+        controller: "s.norm-eurocode.en1997@1/*#editor",
         artifact_schema: "semio.norm.en1997/v1",
         factory: "En1997BoundedCommandJobFactory",
         factory_type: En1997BoundedCommandJobFactory,

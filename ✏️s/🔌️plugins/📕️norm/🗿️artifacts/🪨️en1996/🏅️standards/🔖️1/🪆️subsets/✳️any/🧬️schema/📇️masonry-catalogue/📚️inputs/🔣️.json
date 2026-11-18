@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemas.assets.semio-tech.com/s/norm/compliance/design-case/schema.json",
-  "artifact": "s.norm.en1996",
+  "artifact": "s.norm-eurocode-materials.en1996",
   "inputs": [
     {
       "key": "a1_m",

@@ -8404,6 +8404,12 @@
       "packages": []
     },
     {
+      "name": "@semio-tech/ui-border-presentation-rs",
+      "root": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📏️border-presentation/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📏️border-presentation/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
       "name": "@semio-tech/ui-contract-actions-rs",
       "root": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎬️action/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎬️action/📦️packages/🦀️rust/📋️project.json",

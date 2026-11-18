@@ -76,3 +76,12 @@ Same recipe as `plan_field_stage`: one non-generic helper per per-field stage ma
 4. `NativeReceiverBackingClose::drive`/`quote` (`🧳️owned/🧬️protocol/♻️backing/🦀️.rs`, 1.69 M + 0.47 M lines, one per receiver type C): introduce `trait BackingReceiver { fn terminal_is_empty; fn is_closing; fn begin_close_demand; fn begin_close_work_demand; fn close_demands; fn close_work_demand; fn native_terminal_release; fn begin_close_into; fn recover_begin_close_into; fn close_step; fn close_original_step; fn recover_*; }` as the object-safe subset of `NativeReceiver<I,T>`, plus `trait BackingStorage { get/get_mut as &dyn/&mut dyn BackingReceiver, reserved, address, take_box_into, release, box_demand, box_work_demand, release_demand }` implemented by `NativeOwnedStorage<C>`; `drive` and `quote` take `&mut dyn BackingStorage` and `&mut dyn BackingRetired` (for `Option<Box<C>>`), keeping the public generic wrappers `close_into` etc. as one-line forwards.
 5. `native_relay`, `admit_retirement_cursor`, `retirement_cursor_birth_demand`: `native_relay` takes `&mut dyn FnMut` like `native_close_settle_dyn`; the cursor admit splits the allocation into a `Layout`-parameterised core as `admit_frame_slot` does.
 Estimated additional reduction: 3.5 to 4 M of the remaining 15 M IR lines in the initialization crate; combined with the shipped cuts, about 40 percent of the original bytes, i.e. roughly 300 MB for energy before wasm-opt and `-Zshare-generics`.
+
+## Round 7: component chain on the patched sources
+| component | result | detail |
+|---|---|---|
+| demonstrator | FAIL 1 | 1271 units; failed unit `semio-framework-job-failure` (rmeta) then no component; no size |
+| energy | FAIL 1 | `semio-hub-energy-component` final crate killed, rustc exit status 137 (jetsam, swap peak 2.84 GiB, rustc 6.7 GiB resident sum); the earlier 379,181,287 B component is the last good size |
+| fem | FAIL 1 at describe | component.wasm 127,594,960 B (was 228 MB); describe refuses: 4 declared artifact kinds not owned ("native io: original interpreter deadline requires its caller clock") |
+| procedural | FAIL 1 at describe | component.wasm 151,047,665 B (was ~160 to 230 MB); describe: "plugin assembly failed - no declared composer capability owns the runtime claims" |
+Crate tests: retirement (30 tests), receiving-frame (4), receiver-protocol (4) pass; native-owned, native-decoding, derive not run.

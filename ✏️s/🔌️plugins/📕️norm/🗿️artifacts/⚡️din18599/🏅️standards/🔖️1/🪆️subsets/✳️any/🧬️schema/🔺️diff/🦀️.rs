@@ -608,7 +608,7 @@ pub struct Din18599CoolingPatchPlantValue {
 #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
-#[artifact_schema(id = "s.norm.din18599")]
+#[artifact_schema(id = "s.norm-energy.din18599")]
 pub struct Din18599Diff {
     #[state(artifact)]
     pub building_category: Option<semio_s_artifact_norm_din18599_model::BuildingCategory>,

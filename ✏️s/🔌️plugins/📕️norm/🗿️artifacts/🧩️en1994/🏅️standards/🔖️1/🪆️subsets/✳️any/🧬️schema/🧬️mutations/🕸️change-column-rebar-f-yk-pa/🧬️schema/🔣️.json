@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-column-rebar-f-yk-pa/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1994/mutation/change-column-rebar-f-yk-pa/schema.json",
   "title": "ChangeColumnRebarFYkPa",
   "type": "object",
   "additionalProperties": false,

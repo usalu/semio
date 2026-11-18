@@ -25,27 +25,27 @@ pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::Ar
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.generation2d.composer.svg")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.svg@1.1/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.svg@1.1/*")?)?,
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::composition_route(), "29:s.procedural.generation2d@1/*17:s.stdio.svg@1.1/*")?)?,
         )?
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.generation2d.composer.pdf")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.pdf@1.4/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.pdf@1.4/*")?)?,
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::composition_route(), "29:s.procedural.generation2d@1/*17:s.stdio.pdf@1.4/*")?)?,
         )?
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.generation2d.composer.png")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.png@1.2/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.png@1.2/*")?)?,
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::composition_route(), "29:s.procedural.generation2d@1/*17:s.stdio.png@1.2/*")?)?,
         )?
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.generation2d.composer.json")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.json@rfc8259/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.json@rfc8259/*")?)?,
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::composition_route(), "29:s.procedural.generation2d@1/*22:s.stdio.json@rfc8259/*")?)?,
         )?
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.generation2d.composer.dxf")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.dxf@r12/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.dxf@r12/*")?)?,
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::composition_route(), "29:s.procedural.generation2d@1/*17:s.stdio.dxf@r12/*")?)?,
         )?
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.generation2d.codec.document")?, ArtifactCapabilityKind::codec())

@@ -1,5 +1,5 @@
 {
-  "artifact": "s.norm.en1990",
+  "artifact": "s.norm-eurocode.en1990",
   "standard": "1",
   "subsets": {
     "*": {
@@ -7,5 +7,5 @@
     }
   },
   "subsetPolicy": "single",
-  "subsetPolicyRationale": "`s.norm.en1990@1` is this plugin's own self-contained Eurocode EN 1990 basis-of-design document — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (change-annex, change-consequence-class, change-permanents, change-variables, insert-variable, remove-effect, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch, whether it sets a scalar design value, replaces an action or member collection, or inserts and removes one of its entries. The variable actions are an inline ordered collection of that model, not a separately owned register, so they are no narrower scope. `✳️any` remains this artifact's only real scope."
+  "subsetPolicyRationale": "`s.norm-eurocode.en1990@1` is this plugin's own self-contained Eurocode EN 1990 basis-of-design document — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (change-annex, change-consequence-class, change-permanents, change-variables, insert-variable, remove-effect, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch, whether it sets a scalar design value, replaces an action or member collection, or inserts and removes one of its entries. The variable actions are an inline ordered collection of that model, not a separately owned register, so they are no narrower scope. `✳️any` remains this artifact's only real scope."
 }

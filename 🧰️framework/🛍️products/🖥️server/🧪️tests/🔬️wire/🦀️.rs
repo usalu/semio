@@ -110,9 +110,17 @@ fn every_presence_frame_has_a_vector() {
     let mut frames: Vec<String> = document["vectors"].as_array().expect("vectors").iter().filter(|vector| vector["type"] == "presenceFrame").map(|vector| vector["json"]["type"].as_str().expect("a frame type").to_string()).collect();
     frames.sort();
     frames.dedup();
-    assert_eq!(frames, ["batch", "refused", "state", "watch", "watched", "welcome"]);
+    assert_eq!(frames, ["batch", "heartbeat", "refused", "state", "watch", "watched", "welcome"]);
     let snapshots: Vec<bool> = document["vectors"].as_array().expect("vectors").iter().filter(|vector| vector["json"]["type"] == "watched").map(|vector| vector["json"]["snapshot"] == true).collect();
     assert_eq!(snapshots, [true, false], "a snapshot and a change, the flag left out when unset");
+}
+
+#[test]
+fn the_presence_heartbeat_is_the_fixtures_value() {
+    let document = fixture();
+    let settings = server::gateway::PresenceSettings::default();
+    assert_eq!(settings.heartbeat.as_millis() as u64, document["presence"]["heartbeatMs"].as_u64().expect("heartbeatMs"));
+    assert!(settings.heartbeat < settings.keepalive, "a heartbeat comes before the first protocol ping");
 }
 
 #[test]

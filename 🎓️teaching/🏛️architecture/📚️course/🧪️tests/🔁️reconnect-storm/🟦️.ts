@@ -1,4 +1,4 @@
-/** 🔁️ A reconnect storm: ten real browser learners are signed in — some in a run, some on the overview and the leaderboard — while the one proctor of the stack is killed and started again and again, with down-times from a tenth of a second to ninety seconds, killed during a socket handshake and during an in-flight command or submission, with the network of some learners dropping and returning in every order around the kill, and tabs going hidden and visible meanwhile. After every cycle each page must show its presence footer with everyone online and its connection indicator calm again, within a bound derived from the client's own backoff cap; the worst recovery of the run is reported.
+/** 🔁️ A reconnect storm: ten real browser learners are signed in — some in a run, some on the overview and the leaderboard — while the one proctor of the stack is killed and started again and again, with down-times from a tenth of a second to ninety seconds, frozen (a black hole: sockets stay open, nothing answers) and thawed or killed while frozen, killed during a socket handshake and during an in-flight command or submission, with the network of some learners dropping and returning in every order around the kill, and tabs going hidden and visible meanwhile. After every cycle each page must show its presence footer with everyone online and its connection indicator calm again, within a bound derived from the client's own backoff cap; the worst recovery of the run is reported.
  * The stack comes from the gate (`TEACHING_ARCHITECTURE_COURSE_E2E_*`) and kills its proctor by process id, one at a time, so no two proctors ever contend for the port. `RECONNECT_LEARNERS`, `RECONNECT_CYCLES`, `RECONNECT_SEED` and `RECONNECT_REPORT` (a JSON file path) tune a run.
  * @see ./🥒️.feature — the scenarios in words
  * @see ../🔌️connection-shortage/🟦️.ts — one learner through one shortage
@@ -7,7 +7,9 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import type { Page, Request } from "@playwright/test";
+import { PRESENCE_HEARTBEAT_MS, PRESENCE_SILENCE_FACTOR } from "../../../../../🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript/🧬️wire-types/🟦️.ts";
 import { RETRY_TIMING } from "../../../../../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/🔨️modules/🛂️proctor/🟦️.ts";
+import { platform } from "node:os";
 import { answerRun, answerTask, card, enter, expect, handle, openTask, playQuiz, primary, proctor, quizOf, screen, test, type Device, type Locale } from "../../🎭️e2e/🚶️learner/🟦️.ts";
 
 //#region 🎚️Settings
@@ -17,6 +19,9 @@ const SEED = Number(process.env.RECONNECT_SEED ?? Date.now() % 2_147_483_647);
 const REPORT = process.env.RECONNECT_REPORT ?? "";
 const DOWNTIMES_MS = [100, 300, 1_000, 3_000, 8_000, 20_000, 45_000, 90_000] as const;
 const CONNECT_AND_ANSWER_MS = 10_000;
+
+/** 🕳️ How long a joined socket may stay silent before the client closes it: {@link PRESENCE_SILENCE_FACTOR} heartbeats. A freeze of the proctor must outlast it for the client to notice. */
+const SILENCE_MS = PRESENCE_HEARTBEAT_MS * PRESENCE_SILENCE_FACTOR;
 
 /** ⏱️ The longest a page may take to be whole again once the proctor is back, the network is back and the tab is visible: it waits out one backoff of at most the cap, tries again, and waits out another, and its last request may take as long as the client lets a request take. */
 export const RECOVERY_BOUND_MS = 2 * RETRY_TIMING.maxMs + CONNECT_AND_ANSWER_MS;
@@ -37,6 +42,18 @@ function generator(seed: number): () => number {
 }
 const sleep = (milliseconds: number): Promise<void> => new Promise((done) => setTimeout(done, milliseconds));
 //#endregion 🎲️Randomness
+
+//#region 🕳️Black hole
+const CONTROL = process.env.TEACHING_ARCHITECTURE_COURSE_E2E_CONTROL ?? "";
+
+/** 🕳️ Whether the platform can freeze a process (`SIGSTOP`), which the black-hole cycles need. */
+const FREEZING = platform() !== "win32";
+
+/** 🧊️ Freezes (`pause`) or thaws (`resume`) the stack's proctor: its accepted sockets stay open and nothing answers, as with a network that swallows packets without a reset. */
+async function freeze(action: "pause" | "resume"): Promise<number> {
+  return (await fetch(`${CONTROL}/proctor/${action}`, { method: "POST" })).status;
+}
+//#endregion 🕳️Black hole
 
 //#region 🧑‍🎓️Learners
 type Place = "run" | "run-idle" | "board" | "home";
@@ -112,6 +129,7 @@ async function observe(page: Page): Promise<Observation> {
 class Storm {
   readonly cycles: Cycle[] = [];
   readonly counts: Record<string, number> = {};
+  private pending: string[] = [];
   constructor(private readonly learners: readonly Learner[], private readonly random: () => number) {}
 
   private count(kind: string): void {
@@ -124,6 +142,14 @@ class Storm {
 
   private some(fraction: number): Learner[] {
     return this.learners.filter(() => this.random() < fraction);
+  }
+
+  private async expectSilentSocketsClosed(): Promise<void> {
+    const seen = await Promise.all(this.learners.map(async (learner) => [learner, await observe(learner.device.page)] as const));
+    for (const [learner, last] of seen) {
+      if (last.footer) this.pending.push(`learner ${learner.index} (${learner.place}) still showed its presence footer after ${SILENCE_MS / 1000} s of a frozen proctor: the silent socket was not closed`);
+      else this.count("silent-socket-closed");
+    }
   }
 
   private async network(learners: readonly Learner[], offline: boolean): Promise<void> {
@@ -196,7 +222,7 @@ class Storm {
   }
 
   async cycle(index: number, downMs: number): Promise<void> {
-    const kinds = ["blip", "handshake", "inflight", "offline-around", "offline-after", "hidden", "fuzz"] as const;
+    const kinds = ["blip", "handshake", "inflight", "offline-around", "offline-after", "hidden", "fuzz", ...(FREEZING ? (["black-hole", "long-black-hole", "freeze-then-kill"] as const) : [])] as const;
     const kind = kinds[index % kinds.length]!;
     this.count(kind);
     switch (kind) {
@@ -243,10 +269,30 @@ class Storm {
         await sleep(this.random() * 3_000);
         break;
       }
+      case "black-hole":
+        this.count("frozen");
+        await freeze("pause");
+        await sleep(downMs);
+        break;
+      case "long-black-hole":
+        this.count("frozen");
+        await freeze("pause");
+        await sleep(Math.max(downMs, SILENCE_MS + 15_000));
+        await this.expectSilentSocketsClosed();
+        break;
+      case "freeze-then-kill":
+        this.count("frozen");
+        await freeze("pause");
+        await sleep(Math.max(downMs, SILENCE_MS + 5_000));
+        await this.expectSilentSocketsClosed();
+        await this.kill();
+        await sleep(downMs / 2);
+        break;
       case "fuzz":
         for (let step = 0; step < 6; step++) {
-          const action = this.pick(["kill", "revive", "offline", "online", "hide", "show", "sleep", "sleep", "traffic"] as const);
-          if (action === "kill") await this.kill();
+          const action = this.pick(["kill", "revive", "offline", "online", "hide", "show", "sleep", "sleep", "traffic", ...(FREEZING ? (["pause", "resume"] as const) : [])] as const);
+          if (action === "pause" || action === "resume") await freeze(action);
+          else if (action === "kill") await this.kill();
           else if (action === "revive") await this.revive();
           else if (action === "offline") await this.network(this.some(0.5), true);
           else if (action === "online") await this.network(this.learners, false);
@@ -263,12 +309,13 @@ class Storm {
   }
 
   async settle(index: number, kind: string, downMs: number): Promise<void> {
+    if (FREEZING) await freeze("resume");
     await this.revive();
     await this.network(this.learners, false);
     await this.tabs(this.learners, false);
     const since = Date.now();
     const limit = RECOVERY_BOUND_MS + SLACK_MS;
-    const cycle: Cycle = { index, kind, downMs, presenceMs: [], calmMs: [], failures: [] };
+    const cycle: Cycle = { index, kind, downMs, presenceMs: [], calmMs: [], failures: this.pending.splice(0) };
     await Promise.all(this.learners.map(async (learner) => {
       let presence: number | undefined;
       let calm: number | undefined;
@@ -302,8 +349,9 @@ test("every page gets its presence footer and a calm connection indicator back a
   }
 
   const storm = new Storm(learners, random);
-  const downs = Array.from({ length: CYCLES }, (_, index) => DOWNTIMES_MS[(index + Math.floor(random() * DOWNTIMES_MS.length)) % DOWNTIMES_MS.length]!);
-  const runner = learners.find((learner) => learner.place === "run");
+  const offset = Math.floor(random() * DOWNTIMES_MS.length);
+  const downs = Array.from({ length: CYCLES }, (_, index) => DOWNTIMES_MS[(index + offset) % DOWNTIMES_MS.length]!);
+  const runner = learners.find((learner) => learner.place === "run-idle");
   const conduct = async (): Promise<void> => {
     for (const [index, downMs] of downs.entries()) await storm.cycle(index, downMs);
     if (runner === undefined) return;
@@ -317,15 +365,20 @@ test("every page gets its presence footer and a calm connection indicator back a
     await storm.settle(CYCLES, "submit", 2_000);
     await expect(screen(runner.device.page, "results")).toBeVisible({ timeout: RECOVERY_BOUND_MS * 2 });
   };
-  await learners.map((learner) => learner.device).reduceRight<() => Promise<void>>((inner, tolerant) => async () => void (await tolerant.expectingFailures(inner)), conduct)();
-
   const worst = (pick: (cycle: Cycle) => number[]): number => Math.max(0, ...storm.cycles.flatMap(pick));
-  const report = { seed: SEED, learners: LEARNERS, boundMs: RECOVERY_BOUND_MS, counts: storm.counts, worstPresenceMs: worst((cycle) => cycle.presenceMs), worstCalmMs: worst((cycle) => cycle.calmMs), cycles: storm.cycles };
-  if (REPORT !== "") {
-    mkdirSync(dirname(REPORT), { recursive: true });
-    writeFileSync(REPORT, JSON.stringify(report, null, 1));
+  const write = (): void => {
+    const report = { seed: SEED, learners: LEARNERS, boundMs: RECOVERY_BOUND_MS, counts: storm.counts, worstPresenceMs: worst((cycle) => cycle.presenceMs), worstCalmMs: worst((cycle) => cycle.calmMs), cycles: storm.cycles };
+    if (REPORT !== "") {
+      mkdirSync(dirname(REPORT), { recursive: true });
+      writeFileSync(REPORT, JSON.stringify(report, null, 1));
+    }
+    info.annotations.push({ type: "worst", description: `presence ${report.worstPresenceMs} ms, calm ${report.worstCalmMs} ms of bound ${RECOVERY_BOUND_MS} ms` });
+    console.log(`[reconnect] seed ${SEED}: worst presence ${report.worstPresenceMs} ms, worst calm ${report.worstCalmMs} ms, bound ${RECOVERY_BOUND_MS} ms, counts ${JSON.stringify(storm.counts)}`);
+  };
+  try {
+    await learners.map((learner) => learner.device).reduceRight<() => Promise<void>>((inner, tolerant) => async () => void (await tolerant.expectingFailures(inner)), conduct)();
+  } finally {
+    write();
   }
-  info.annotations.push({ type: "worst", description: `presence ${report.worstPresenceMs} ms, calm ${report.worstCalmMs} ms of bound ${RECOVERY_BOUND_MS} ms` });
-  console.log(`[reconnect] seed ${SEED}: worst presence ${report.worstPresenceMs} ms, worst calm ${report.worstCalmMs} ms, bound ${RECOVERY_BOUND_MS} ms, counts ${JSON.stringify(storm.counts)}`);
   expect(storm.cycles.flatMap((cycle) => cycle.failures.map((failure) => `cycle ${cycle.index} ${cycle.kind} down ${cycle.downMs} ms: ${failure}`))).toEqual([]);
 });

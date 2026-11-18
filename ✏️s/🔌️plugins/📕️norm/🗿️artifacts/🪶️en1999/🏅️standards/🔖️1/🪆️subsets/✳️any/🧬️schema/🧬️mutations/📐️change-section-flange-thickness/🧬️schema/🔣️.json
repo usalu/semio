@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-section-flange-thickness/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1999/mutation/change-section-flange-thickness/schema.json",
   "title": "ChangeSectionFlangeThickness",
   "type": "object",
   "additionalProperties": false,

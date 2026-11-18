@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-element-adjacency/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/mutation/change-element-adjacency/schema.json",
   "title": "ChangeElementAdjacency",
   "type": "object",
   "additionalProperties": false,
@@ -34,7 +34,7 @@
       }
     },
     "newAdjacency": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/Adjacency",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/Adjacency",
       "x-semio-ui": {
         "role": "value",
         "label": {

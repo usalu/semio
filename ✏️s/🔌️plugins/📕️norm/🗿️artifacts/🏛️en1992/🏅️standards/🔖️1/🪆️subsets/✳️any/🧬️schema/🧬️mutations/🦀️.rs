@@ -179,7 +179,7 @@ use semio_s_artifact_norm_en1992_mut_member_geometry_rows::remove_stud_row;
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
-#[mutations(snapshot = En1992Snapshot, diff = En1992Diff, schema = "s.norm.en1992", reference = En1992Snapshot, reference_diff = En1992Diff)]
+#[mutations(snapshot = En1992Snapshot, diff = En1992Diff, schema = "s.norm-eurocode-structural.en1992", reference = En1992Snapshot, reference_diff = En1992Diff)]
 pub enum En1992Mutation {
     ChangeAnnex(change_annex::ChangeAnnex),
     ChangeReliabilityClass(change_reliability_class::ChangeReliabilityClass),

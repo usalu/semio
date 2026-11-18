@@ -3,9 +3,9 @@
  * @see ../🟦️.ts — the pets in a real browser, as the second round made them
  */
 import type { Page } from "@playwright/test";
-import { HANG_ROD, LADDER_LEAN } from "@semio-tech/pets";
+import { HANG_ROD, LADDER_LEAN, ROPE_LONG } from "@semio-tech/pets";
 import {QUIZZES, enter, expect, pane, playQuiz, swipeTo, test, type Device, activeOverview} from "../../../🎭️e2e/🚶️learner/🟦️.ts";
-import { ANSWER_MS, APPEAR_MS, bodies, eventually, type Body, CARD_PARTS, carry, castOf, choosePets, CONTROLS, enterWithPets, expectCast, expectPerched, floorSpot, HASTE, ledgeAdded, hasten, hoverOf, instrumented, type Instruments, KINDS, LANDING_MS, layer, MISCHIEF_HASTE, MISCHIEF_QUIZ, misplaced, pets, reachable, RECAST_MS, ROPE_MS, ROPE_LEDGE, ROPE_REACH, ROPE_ROUND_MS, stagePasses, standing, TEMPO, trailOf, WALK_MS } from "../🧰️pet-kit/🟦️.ts";
+import { ANSWER_MS, APPEAR_MS, bodies, eventually, type Body, CARD_PARTS, carry, castOf, choosePets, CONTROLS, enterWithPets, expectCast, expectPerched, floorSpot, HASTE, hasten, hoverOf, instrumented, type Instruments, KINDS, LANDING_MS, layer, MISCHIEF_HASTE, MISCHIEF_QUIZ, misplaced, pets, reachable, RECAST_MS, ROPE_MS, ROPE_ROUND_MS, stagePasses, standing, TEMPO, trailOf, WALK_MS } from "../🧰️pet-kit/🟦️.ts";
 
 for (const reclaim of ["hover", "focus"] as const) test(`a pet lifts a copy of a task of a quiz's page out of its place, beside its transparent original; the original is back at once on ${reclaim}, and the pet is thrown off`, async ({ device }) => {
   const learner = await device("en");
@@ -68,9 +68,6 @@ function ladderFoot(question: { readonly parts: string; readonly lean: number })
   return lowest === null ? null : lowest.right + question.lean * (line - lowest.top);
 }
 
-/** 📏️ How far from the middle of the ledge, in pixels, a grappler still counts as standing under it: the ledge is 200 px wide and the pet 30 to 50, so it stands within a rope's shot of its end. */
-const LEDGE_SLACK = 80;
-
 /** 🧗️ The pets that have stood on `footing` (a ladder, a rope) since the instruments were put in. */
 function carriedOn(page: Page, footing: string): Promise<readonly string[]> {
   return page.evaluate((wanted) => Object.entries((window as unknown as { petWalk: Instruments }).petWalk.trails).flatMap(([id, trail]) => (trail.some((line) => line.split("/")[1] === wanted) ? [id] : [])), footing);
@@ -117,42 +114,50 @@ test("a pet that cannot hop to a perch above raises its ladder: on a quiz's page
   expect(laddered.every((id) => KINDS[id]!.gear.some((gear) => gear !== "parachute")), `only pets with gear are on a ladder: ${laddered.join(", ")}`).toBe(true);
 });
 
-test("a pet that cannot hop to a perch above shoots its grapple there: on a quiz's page a grappler on the footer line reels itself up a rope to a ledge in the gutter beside the column", async ({ device }) => {
+/** 🪝️ Where the gear spec stands a grappler on the footer line round after round, as fractions of the window's width: the edges a rope can reach lie where the page leaves their way free, which differs from page to page, so the spec tries the strip from the middle outwards. */
+const ROPE_SPOTS = [0.5, 0.7, 0.45, 0.9, 0.6, 0.35, 0.8, 0.55] as const;
+
+/** 🎣️ The pages the gear spec shoots a rope on: the first quiz page whose cast has a grappler in its core. */
+const ROPE_PAGES = [
+  { name: "a quiz's page", scene: QUIZZES.find((quiz) => castOf(quiz.id).core.some((id) => KINDS[id]?.gear.includes("grapple") === true))?.id ?? "", opens: true },
+] as const;
+
+for (const where of ROPE_PAGES) test(`a pet that cannot hop to a perch above shoots its grapple there: on ${where.name} a grappler on the footer line reels itself up a rope to the edge of a card, with nothing added to the page`, async ({ device }) => {
   test.setTimeout(30 * 60_000);
   const learner = await device("en");
   const page = learner.page;
   await lively(learner);
   const grappling = (body: Body): boolean => KINDS[body.id]?.gear.includes("grapple") === true;
-  const shooters = QUIZZES.find((quiz) => castOf(quiz.id).core.some((id) => KINDS[id]?.gear.includes("grapple") === true));
-  expect(shooters, "a quiz whose cast has a grappler in its core").toBeDefined();
-  await page.evaluate((id) => (window.location.hash = id), shooters!.id);
-  await expect(pane(page, shooters!.id)).toHaveAttribute("data-opened", "");
-  await expectCast(learner, shooters!.id, true);
-  const under = await page.evaluate(ledgeAdded, ROPE_LEDGE);
+  expect(castOf(where.scene).core.some((id) => KINDS[id]?.gear.includes("grapple") === true), `a grappler in the core of the cast of ${where.scene}`).toBe(true);
+  if (where.opens) {
+    await page.evaluate((id) => (window.location.hash = id), where.scene);
+    await expect(pane(page, where.scene)).toHaveAttribute("data-opened", "");
+  }
+  await expectCast(learner, where.scene, true);
   await instrumented(page);
   const moved: string[] = [];
   const held: string[] = [];
-  const ropeRound = async (): Promise<void> => {
+  const ropeRound = async (attempt: number): Promise<void> => {
     if ((await carriedOn(page, "rope")).length > 0) return;
     const footer = (await page.locator(".course-app > footer").boundingBox())!;
     const raised = (body: Body): number => footer.y - body.bottom - hoverOf(body.id);
-    const placed = (body: Body): boolean => raised(body) <= 2 && Math.abs((body.left + body.right) / 2 - under) <= LEDGE_SLACK;
-    for (const body of (await bodies(page)).filter((candidate) => grappling(candidate) && candidate.footing === "perch" && !placed(candidate))) {
+    const near = page.viewportSize()!.width * ROPE_SPOTS[attempt % ROPE_SPOTS.length]!;
+    for (const body of (await bodies(page)).filter((candidate) => grappling(candidate) && candidate.footing === "perch" && raised(candidate) <= 2)) {
       const pet = await reachable(page, (candidate) => candidate.id === body.id).catch(() => undefined);
       if (pet === undefined) continue;
       const height = pet.bottom - pet.top;
       const hover = hoverOf(pet.id);
-      const spot = await page.evaluate(floorSpot, { parts: CARD_PARTS, controls: CONTROLS, reach: (pet.right - pet.left) / 2 + 12, room: height + hover + 12, near: under });
+      const spot = await page.evaluate(floorSpot, { parts: CARD_PARTS, controls: CONTROLS, reach: (pet.right - pet.left) / 2 + 12, room: height + hover + 12, near });
       if (spot === null) continue;
       await carry(page, pet, { x: spot.x, y: spot.top - HANG_ROD * height - hover - 8 });
       await page.mouse.up();
       moved.push(pet.id);
       await expectPerched(page, pet.id, LANDING_MS).catch(() => undefined);
-      if ((await bodies(page)).some((landed) => landed.id === pet.id && landed.footing === "perch" && placed(landed))) break;
+      break;
     }
-    const groundedNow = async (): Promise<readonly Body[]> => (await bodies(page)).filter((body) => body.opacity > 0.99 && grappling(body) && body.footing === "perch" && placed(body));
-    const grounded = await eventually(page, groundedNow, (seen) => seen.length > 0, { stageMs: ROPE_ROUND_MS * HASTE, message: "a grappler on the footer line under the ledge" });
-    const reach = Math.max(...grounded.map((body) => ROPE_REACH * KINDS[body.id]!.size.height));
+    const groundedNow = async (): Promise<readonly Body[]> => (await bodies(page)).filter((body) => body.opacity > 0.99 && grappling(body) && body.footing === "perch" && raised(body) <= 2);
+    const grounded = await eventually(page, groundedNow, (seen) => seen.length > 0, { stageMs: ROPE_ROUND_MS * HASTE, message: "a grappler on the footer line" });
+    const reach = Math.max(...grounded.map((body) => ROPE_LONG * KINDS[body.id]!.size.height));
     const sitting = (body: Body): boolean => !grappling(body) && raised(body) > 2 && raised(body) <= reach;
     let round = 0;
     let holding = false;
@@ -172,12 +177,12 @@ test("a pet that cannot hop to a perch above shoots its grapple there: on a quiz
     }
     expect(await carriedOn(page, "rope"), "a grappler on the footer line reels itself up a rope").not.toEqual([]);
   };
-  for (let attempt = 1; ; attempt++) {
+  for (let attempt = 0; ; attempt++) {
     try {
-      await ropeRound();
+      await ropeRound(attempt);
       break;
     } catch (failure) {
-      if (attempt >= ROPE_MS / ROPE_ROUND_MS) throw failure;
+      if (attempt + 1 >= ROPE_MS / ROPE_ROUND_MS) throw failure;
     }
   }
   const roped = await carriedOn(page, "rope");

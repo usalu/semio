@@ -1,4 +1,4 @@
-//! 🚪️ IO s.norm.en1990 (1/✳️any) — universal semio DSL/pack import+export for the native `s.norm.en1990`
+//! 🚪️ IO s.norm-eurocode.en1990 (1/✳️any) — universal semio DSL/pack import+export for the native `s.norm-eurocode.en1990`
 //! dialect. Registration flows through 🎹️composer::register (called once from ⚙️engine::register).
 
 #![allow(async_fn_in_trait)]
@@ -12,10 +12,10 @@ extern crate semio_framework_value_derive as value_derive;
 use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 
 pub fn import_stdio_kinds() -> &'static [&'static str] {
-    &["s.norm.en1990"]
+    &["s.norm-eurocode.en1990"]
 }
 pub fn export_stdio_kinds() -> &'static [&'static str] {
-    &["s.norm.en1990"]
+    &["s.norm-eurocode.en1990"]
 }
 
 /// 📖️ Parses `.en1990` DSL bytes into a snapshot.
@@ -45,7 +45,7 @@ pub mod derived_composition {
     use semio_s_artifact_norm_en1990_model::En1990Snapshot;
     use {semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactComposition,semio_plugin::io::ComposeError,semio_plugin::io::ComposeSource,semio_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
-    const DIALECT: Dialect = Dialect { artifact_kind: "s.norm.en1990", standard: StandardId("1"), subset: SubsetId("*") };
+    const DIALECT: Dialect = Dialect { artifact_kind: "s.norm-eurocode.en1990", standard: StandardId("1"), subset: SubsetId("*") };
 
     pub struct En1990ComposerComposition;
 
@@ -169,7 +169,7 @@ pub mod derived_analysis {
 
     impl ArtifactAnalysis for En1990AnalyzerAnalysis {
         type Parts = En1990Parts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.norm.en1990", standard: StandardId("1"), subset: SubsetId("*") };
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.norm-eurocode.en1990", standard: StandardId("1"), subset: SubsetId("*") };
 
         fn sniff(_source: &AnalyzeSource<'_>) -> semio_plugin::io::Confidence {
             semio_plugin::io::Confidence::Medium

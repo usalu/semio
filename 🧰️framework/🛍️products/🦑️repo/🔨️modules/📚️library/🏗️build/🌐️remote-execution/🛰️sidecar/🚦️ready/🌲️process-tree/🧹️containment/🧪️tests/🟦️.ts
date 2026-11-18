@@ -11,7 +11,7 @@ import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🔣️.json" with {type:"json"};
 import {LEASE_OWNER_ENVIRONMENT_V1,leaseRegistryRootV1} from "../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🧭️order/🗂️registry/🟦️.ts";
 import ready from "../../../🧬️schema/🔣️.json" with {type:"json"};
-import {READY_CONTAINMENT_POLICY_V1 as C,readyRegistryRootV1,readyContainmentLineV1,readyContainmentStatusV1,readyHeirsV1,readyKillRecordLineV1,readyKillRecorderV1,readyOrphanPlanV1,readyOwnerTokenV1,readyPathKeyV1,readySharedPidsV1,readyReapOrphansV1,readyRegistryEntriesV1,readySampleDelayV1,readyStopV1,readyStoppedWindowsV1,readySweepRostersV1,type ReadyRegistryEntryV1} from "../🟦️.ts";
+import {READY_CONTAINMENT_POLICY_V1 as C,readyRegistryRootV1,readyContainmentLineV1,readyContainmentStatusV1,readyHeirsV1,readyKillRecordLineV1,readyKillRecorderV1,readyOrphanPlanV1,readyOwnerTokenV1,readyPathKeyV1,readySharedPidsV1,readyHostPidsV1,readyHostDirectoriesV1,readyReapOrphansV1,readyRegistryEntriesV1,readySampleDelayV1,readyStopV1,readyStoppedWindowsV1,readySweepRostersV1,type ReadyRegistryEntryV1} from "../🟦️.ts";
 
 /** 🧹️ Contract: every process a stage starts is stopped as one unit and the stop is proven by a second look at the process table; what survives is named; the orphans of a stopped try, found through the lease registry by pid and start time, are stopped before the next stage and while a stage waits on them, and nobody else's process ever is. The fixture is language-agnostic; a Python oracle derives the same verdicts again. */
 const scratch:string[]=[],ajv=new Ajv({strict:false}),posix=process.platform==="win32"?test.skip:test;
@@ -125,6 +125,22 @@ posix("real processes: the roster an earlier try left behind is stopped before t
  }finally{try{process.kill(sleeper.pid!,"SIGKILL");}catch{}}
 },60000);
 
+posix("a resident host is spared by its own descriptor even without a registry entry: the live pid that started no later than the descriptor says, not a stopping host, a reused pid or a damaged descriptor",async()=>{
+ const directory=temp("hosts"),spawned:number[]=[];
+ const launch=async():Promise<{pid:number;startMs:number}>=>{const child=spawn("sleep",["300"],{stdio:"ignore",detached:true});child.unref();spawned.push(child.pid!);await wait(150);const row=(await readyReadTableV1()).find(each=>each.pid===child.pid)!;return{pid:row.pid,startMs:row.startMs};};
+ try{
+  const live=await launch(),stopping=await launch(),old=await launch(),late=await launch();
+  const write=(tag:string,value:unknown)=>writeFileSync(join(directory,`host-${tag}.json`),typeof value==="string"?value:JSON.stringify(value));
+  write("aa01",{v:1,pid:live.pid,startedAt:live.startMs+9000});write("aa02",{v:1,pid:stopping.pid,startedAt:live.startMs+9000,stopping:true});
+  write("aa03",{v:1,pid:old.pid,startedAt:old.startMs+C.hostStartWindowMilliseconds+60000});write("aa04",{v:1,pid:late.pid,startedAt:late.startMs-60000});
+  write("aa05","{not json");write("aa06",{v:1,pid:2147483000,startedAt:Date.now()});writeFileSync(join(directory,"other.json"),JSON.stringify({pid:live.pid,startedAt:live.startMs}));
+  const table=await readyReadTableV1();
+  expect(readyHostPidsV1(table,[directory,join(directory,"missing")])).toEqual(new Set([live.pid]));
+  expect(readySharedPidsV1([],table,C,undefined,[directory])).toEqual(new Set([live.pid]));
+  expect(readyHostDirectoriesV1("/tmp/x","501","darwin")).toEqual(["/tmp/x/semio-repo/501","/tmp/x/sr501"]);expect(readyHostDirectoriesV1("C:\\t","501","win32")).toEqual([]);
+ }finally{for(const pid of spawned)try{process.kill(pid,"SIGKILL");}catch{}}
+},60000);
+
 posix("real processes: only the registry orphan that carries the owner token of a stopped try is reaped, by pid and start time; another agent's process, a resident service, another stage's token, a reused pid and a person's window are left alone, and the kill record names the killer",async()=>{
  const registry=temp("registry"),root=temp("checkout"),folder=join(registry,"0123456789abcdef01234567"),directory=temp("ready");mkdirSync(folder,{recursive:true});
  const spawned:number[]=[],started=Date.now(),token=readyOwnerTokenV1(root,"tools",started-30000),other=readyOwnerTokenV1(root,"workspace",started-30000);
@@ -138,7 +154,7 @@ posix("real processes: only the registry orphan that carries the owner token of 
   const orphan=await launch(),second=await launch(),agent=await launch(),service=await launch(),elsewhere=await launch(),reused=await launch();
   register(orphan,{owner:token});register(second,{owner:token});register(agent);register(service,{owner:token,command:`${repo} service host run`});register(elsewhere,{owner:other});register(reused,{owner:token,startMs:reused.startMs-3_600_000});
   const windows=[{stage:"tools",startedMs:started-30000,endedMs:Date.now()+1000}],say:string[]=[],explained:string[]=[];
-  expect(readySharedPidsV1(readyRegistryEntriesV1(registry),await readyReadTableV1())).toEqual(new Set([service.pid]));
+  expect(readySharedPidsV1(readyRegistryEntriesV1(registry),await readyReadTableV1(),C,undefined,[])).toEqual(new Set([service.pid]));
   const none=await readyReapOrphansV1({registryRoot:registry,root,windows:[],human:null,stage:null,stageName:"tools",kind:"registry"});
   expect(none.reaped,"no stopped try, nothing is reaped").toEqual([]);
   const human=await readyReapOrphansV1({registryRoot:registry,root,windows,human:{startedMs:started-1000},stage:null,stageName:"tools",kind:"registry"});

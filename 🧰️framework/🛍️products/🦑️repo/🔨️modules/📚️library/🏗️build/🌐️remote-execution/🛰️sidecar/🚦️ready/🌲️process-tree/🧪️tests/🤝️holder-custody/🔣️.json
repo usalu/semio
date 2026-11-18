@@ -1,0 +1,841 @@
+{
+ "parse": [
+  {
+   "name": "the real g1-m05 line",
+   "lines": [
+    "[repo] still working after 470 s",
+    "Process 30880 (741d306890f3eaea75560cfde56699ec57f6b657c06db92f1e0d550e400c18ef show projects) holds the dependency store since 2026-11-18T03:28:01.557Z; waiting for it (346 s of at most 21600 s)"
+   ],
+   "expected": {
+    "pid": 30880,
+    "command": "741d306890f3eaea75560cfde56699ec57f6b657c06db92f1e0d550e400c18ef show projects",
+    "since": "2026-11-18T03:28:01.557Z",
+    "silentSeconds": null,
+    "seconds": 346,
+    "limitSeconds": 21600
+   }
+  },
+  {
+   "name": "the silent holder text",
+   "lines": [
+    "Process 30880 (741d306890f3eaea75560cfde56699ec57f6b657c06db92f1e0d550e400c18ef show projects) holds the dependency store since 2026-11-18T03:28:01.557Z and has not renewed its registration for 450 s, so it may be blocked; waiting for it (900 s of at most 21600 s)"
+   ],
+   "expected": {
+    "pid": 30880,
+    "command": "741d306890f3eaea75560cfde56699ec57f6b657c06db92f1e0d550e400c18ef show projects",
+    "since": "2026-11-18T03:28:01.557Z",
+    "silentSeconds": 450,
+    "seconds": 900,
+    "limitSeconds": 21600
+   }
+  },
+  {
+   "name": "the German text",
+   "lines": [
+    "Der Prozess 4120 (741d306890f3eaea75560cfde56699ec57f6b657c06db92f1e0d550e400c18ef show projects) hält den Abhängigkeitsspeicher seit 2026-11-18T03:28:01.557Z; es wird darauf gewartet (77 s von höchstens 21600 s)"
+   ],
+   "expected": {
+    "pid": 4120,
+    "command": "741d306890f3eaea75560cfde56699ec57f6b657c06db92f1e0d550e400c18ef show projects",
+    "since": "2026-11-18T03:28:01.557Z",
+    "silentSeconds": null,
+    "seconds": 77,
+    "limitSeconds": 21600
+   }
+  },
+  {
+   "name": "the German silent text",
+   "lines": [
+    "Der Prozess 4120 (x show projects) hält den Abhängigkeitsspeicher seit 2026-11-18T03:28:01.557Z und hat seine Anmeldung seit 600 s nicht erneuert, er ist womöglich blockiert; es wird darauf gewartet (700 s von höchstens 21600 s)"
+   ],
+   "expected": {
+    "pid": 4120,
+    "command": "x show projects",
+    "since": "2026-11-18T03:28:01.557Z",
+    "silentSeconds": 600,
+    "seconds": 700,
+    "limitSeconds": 21600
+   }
+  },
+  {
+   "name": "the newest line wins and a CRLF ending is ignored",
+   "lines": [
+    "Process 111 (741d306890f3eaea75560cfde56699ec57f6b657c06db92f1e0d550e400c18ef show projects) holds the dependency store since 2026-11-18T03:28:01.557Z; waiting for it (346 s of at most 21600 s)\r",
+    "Process 30880 (741d306890f3eaea75560cfde56699ec57f6b657c06db92f1e0d550e400c18ef show projects) holds the dependency store since 2026-11-18T03:28:01.557Z; waiting for it (346 s of at most 21600 s)\r"
+   ],
+   "expected": {
+    "pid": 30880,
+    "command": "741d306890f3eaea75560cfde56699ec57f6b657c06db92f1e0d550e400c18ef show projects",
+    "since": "2026-11-18T03:28:01.557Z",
+    "silentSeconds": null,
+    "seconds": 346,
+    "limitSeconds": 21600
+   }
+  },
+  {
+   "name": "no holder line",
+   "lines": [
+    "[repository:command] still running after 12 s"
+   ],
+   "expected": null
+  }
+ ],
+ "custody": [
+  {
+   "name": "alive, renews its entry: progressing",
+   "wait": {
+    "pid": 30880,
+    "command": "x",
+    "since": "s",
+    "silentSeconds": null,
+    "seconds": 346,
+    "limitSeconds": 21600
+   },
+   "entry": {
+    "pid": 30880,
+    "startedAtMs": 1794975120000,
+    "updatedAtMs": 1794975680000,
+    "command": "x"
+   },
+   "table": [
+    {
+     "pid": 4,
+     "ppid": 0,
+     "startMs": 1794000000000,
+     "name": "System"
+    },
+    {
+     "pid": 30880,
+     "ppid": 24364,
+     "startMs": 1794975120000,
+     "name": "bun.exe"
+    },
+    {
+     "pid": 24364,
+     "ppid": 4,
+     "startMs": 1794975000000,
+     "name": "bun.exe"
+    }
+   ],
+   "nowMs": 1794975700000,
+   "expected": "progressing"
+  },
+  {
+   "name": "alive, entry silent for 400 s: silent",
+   "wait": {
+    "pid": 30880,
+    "command": "x",
+    "since": "s",
+    "silentSeconds": null,
+    "seconds": 346,
+    "limitSeconds": 21600
+   },
+   "entry": {
+    "pid": 30880,
+    "startedAtMs": 1794975120000,
+    "updatedAtMs": 1794975300000,
+    "command": "x"
+   },
+   "table": [
+    {
+     "pid": 4,
+     "ppid": 0,
+     "startMs": 1794000000000,
+     "name": "System"
+    },
+    {
+     "pid": 30880,
+     "ppid": 24364,
+     "startMs": 1794975120000,
+     "name": "bun.exe"
+    },
+    {
+     "pid": 24364,
+     "ppid": 4,
+     "startMs": 1794975000000,
+     "name": "bun.exe"
+    }
+   ],
+   "nowMs": 1794975700000,
+   "expected": "silent"
+  },
+  {
+   "name": "alive, exactly at the silent bound: still progressing",
+   "wait": {
+    "pid": 30880,
+    "command": "x",
+    "since": "s",
+    "silentSeconds": null,
+    "seconds": 346,
+    "limitSeconds": 21600
+   },
+   "entry": {
+    "pid": 30880,
+    "startedAtMs": 1794975120000,
+    "updatedAtMs": 1794975400000,
+    "command": "x"
+   },
+   "table": [
+    {
+     "pid": 4,
+     "ppid": 0,
+     "startMs": 1794000000000,
+     "name": "System"
+    },
+    {
+     "pid": 30880,
+     "ppid": 24364,
+     "startMs": 1794975120000,
+     "name": "bun.exe"
+    },
+    {
+     "pid": 24364,
+     "ppid": 4,
+     "startMs": 1794975000000,
+     "name": "bun.exe"
+    }
+   ],
+   "nowMs": 1794975700000,
+   "expected": "progressing"
+  },
+  {
+   "name": "alive, no entry, the waiter did not call it silent: progressing",
+   "wait": {
+    "pid": 30880,
+    "command": "x",
+    "since": "s",
+    "silentSeconds": null,
+    "seconds": 346,
+    "limitSeconds": 21600
+   },
+   "entry": null,
+   "table": [
+    {
+     "pid": 4,
+     "ppid": 0,
+     "startMs": 1794000000000,
+     "name": "System"
+    },
+    {
+     "pid": 30880,
+     "ppid": 24364,
+     "startMs": 1794975120000,
+     "name": "bun.exe"
+    },
+    {
+     "pid": 24364,
+     "ppid": 4,
+     "startMs": 1794975000000,
+     "name": "bun.exe"
+    }
+   ],
+   "nowMs": 1794975700000,
+   "expected": "progressing"
+  },
+  {
+   "name": "alive, no entry, the waiter called it silent for 450 s: silent",
+   "wait": {
+    "pid": 30880,
+    "command": "x",
+    "since": "s",
+    "silentSeconds": 450,
+    "seconds": 346,
+    "limitSeconds": 21600
+   },
+   "entry": null,
+   "table": [
+    {
+     "pid": 4,
+     "ppid": 0,
+     "startMs": 1794000000000,
+     "name": "System"
+    },
+    {
+     "pid": 30880,
+     "ppid": 24364,
+     "startMs": 1794975120000,
+     "name": "bun.exe"
+    },
+    {
+     "pid": 24364,
+     "ppid": 4,
+     "startMs": 1794975000000,
+     "name": "bun.exe"
+    }
+   ],
+   "nowMs": 1794975700000,
+   "expected": "silent"
+  },
+  {
+   "name": "no such process any more: gone",
+   "wait": {
+    "pid": 555,
+    "command": "x",
+    "since": "s",
+    "silentSeconds": null,
+    "seconds": 346,
+    "limitSeconds": 21600
+   },
+   "entry": {
+    "pid": 555,
+    "startedAtMs": 1794975120000,
+    "updatedAtMs": 1794975680000,
+    "command": "x"
+   },
+   "table": [
+    {
+     "pid": 4,
+     "ppid": 0,
+     "startMs": 1794000000000,
+     "name": "System"
+    },
+    {
+     "pid": 30880,
+     "ppid": 24364,
+     "startMs": 1794975120000,
+     "name": "bun.exe"
+    },
+    {
+     "pid": 24364,
+     "ppid": 4,
+     "startMs": 1794975000000,
+     "name": "bun.exe"
+    }
+   ],
+   "nowMs": 1794975700000,
+   "expected": "gone"
+  },
+  {
+   "name": "the pid belongs to a later process (reused, 600 s later start): gone",
+   "wait": {
+    "pid": 30880,
+    "command": "x",
+    "since": "s",
+    "silentSeconds": null,
+    "seconds": 346,
+    "limitSeconds": 21600
+   },
+   "entry": {
+    "pid": 30880,
+    "startedAtMs": 1794974400000,
+    "updatedAtMs": 1794975680000,
+    "command": "x"
+   },
+   "table": [
+    {
+     "pid": 4,
+     "ppid": 0,
+     "startMs": 1794000000000,
+     "name": "System"
+    },
+    {
+     "pid": 30880,
+     "ppid": 24364,
+     "startMs": 1794975120000,
+     "name": "bun.exe"
+    },
+    {
+     "pid": 24364,
+     "ppid": 4,
+     "startMs": 1794975000000,
+     "name": "bun.exe"
+    }
+   ],
+   "nowMs": 1794975700000,
+   "expected": "gone"
+  },
+  {
+   "name": "a start within the tolerance is the same process",
+   "wait": {
+    "pid": 30880,
+    "command": "x",
+    "since": "s",
+    "silentSeconds": null,
+    "seconds": 346,
+    "limitSeconds": 21600
+   },
+   "entry": {
+    "pid": 30880,
+    "startedAtMs": 1794975106000,
+    "updatedAtMs": 1794975680000,
+    "command": "x"
+   },
+   "table": [
+    {
+     "pid": 4,
+     "ppid": 0,
+     "startMs": 1794000000000,
+     "name": "System"
+    },
+    {
+     "pid": 30880,
+     "ppid": 24364,
+     "startMs": 1794975120000,
+     "name": "bun.exe"
+    },
+    {
+     "pid": 24364,
+     "ppid": 4,
+     "startMs": 1794975000000,
+     "name": "bun.exe"
+    }
+   ],
+   "nowMs": 1794975700000,
+   "expected": "progressing"
+  },
+  {
+   "name": "the stated bound is spent",
+   "wait": {
+    "pid": 30880,
+    "command": "x",
+    "since": "s",
+    "silentSeconds": null,
+    "seconds": 21600,
+    "limitSeconds": 21600
+   },
+   "entry": {
+    "pid": 30880,
+    "startedAtMs": 1794975120000,
+    "updatedAtMs": 1794975680000,
+    "command": "x"
+   },
+   "table": [
+    {
+     "pid": 4,
+     "ppid": 0,
+     "startMs": 1794000000000,
+     "name": "System"
+    },
+    {
+     "pid": 30880,
+     "ppid": 24364,
+     "startMs": 1794975120000,
+     "name": "bun.exe"
+    },
+    {
+     "pid": 24364,
+     "ppid": 4,
+     "startMs": 1794975000000,
+     "name": "bun.exe"
+    }
+   ],
+   "nowMs": 1794975700000,
+   "expected": "bound"
+  },
+  {
+   "name": "the table could not be read",
+   "wait": {
+    "pid": 30880,
+    "command": "x",
+    "since": "s",
+    "silentSeconds": null,
+    "seconds": 346,
+    "limitSeconds": 21600
+   },
+   "entry": {
+    "pid": 30880,
+    "startedAtMs": 1794975120000,
+    "updatedAtMs": 1794975680000,
+    "command": "x"
+   },
+   "table": [],
+   "nowMs": 1794975700000,
+   "expected": "unknown"
+  },
+  {
+   "name": "a heartbeat in the future is no silence",
+   "wait": {
+    "pid": 30880,
+    "command": "x",
+    "since": "s",
+    "silentSeconds": null,
+    "seconds": 346,
+    "limitSeconds": 21600
+   },
+   "entry": {
+    "pid": 30880,
+    "startedAtMs": 1794975120000,
+    "updatedAtMs": 1794975705000,
+    "command": "x"
+   },
+   "table": [
+    {
+     "pid": 4,
+     "ppid": 0,
+     "startMs": 1794000000000,
+     "name": "System"
+    },
+    {
+     "pid": 30880,
+     "ppid": 24364,
+     "startMs": 1794975120000,
+     "name": "bun.exe"
+    },
+    {
+     "pid": 24364,
+     "ppid": 4,
+     "startMs": 1794975000000,
+     "name": "bun.exe"
+    }
+   ],
+   "nowMs": 1794975700000,
+   "expected": "progressing"
+  }
+ ],
+ "reader": [
+  {
+   "name": "the read of the graph server holds: runner, read and the show projects below it",
+   "record": {
+    "reason": "refresh",
+    "runner": 100,
+    "read": 101,
+    "startedMs": 1794975000000,
+    "status": null,
+    "endedMs": null
+   },
+   "holder": 30880,
+   "self": 9,
+   "table": [
+    {
+     "pid": 4,
+     "ppid": 0,
+     "startMs": 1,
+     "name": "System"
+    },
+    {
+     "pid": 9,
+     "ppid": 4,
+     "startMs": 1794900000000,
+     "name": "bun.exe"
+    },
+    {
+     "pid": 100,
+     "ppid": 4,
+     "startMs": 1794975000000,
+     "name": "bun.exe"
+    },
+    {
+     "pid": 101,
+     "ppid": 100,
+     "startMs": 1794975001000,
+     "name": "repo.exe"
+    },
+    {
+     "pid": 30880,
+     "ppid": 101,
+     "startMs": 1794975120000,
+     "name": "bun.exe"
+    }
+   ],
+   "expected": {
+    "root": 100,
+    "plan": [
+     100,
+     101,
+     30880
+    ],
+    "reason": "refresh"
+   }
+  },
+  {
+   "name": "a request read is a background reader too",
+   "record": {
+    "reason": "request",
+    "runner": 100,
+    "read": 101,
+    "startedMs": 1794975000000,
+    "status": null,
+    "endedMs": null
+   },
+   "holder": 101,
+   "self": 9,
+   "table": [
+    {
+     "pid": 4,
+     "ppid": 0,
+     "startMs": 1,
+     "name": "System"
+    },
+    {
+     "pid": 9,
+     "ppid": 4,
+     "startMs": 1794900000000,
+     "name": "bun.exe"
+    },
+    {
+     "pid": 100,
+     "ppid": 4,
+     "startMs": 1794975000000,
+     "name": "bun.exe"
+    },
+    {
+     "pid": 101,
+     "ppid": 100,
+     "startMs": 1794975001000,
+     "name": "repo.exe"
+    }
+   ],
+   "expected": {
+    "root": 100,
+    "plan": [
+     100,
+     101
+    ],
+    "reason": "request"
+   }
+  },
+  {
+   "name": "a holder of a person or another agent is no victim",
+   "record": {
+    "reason": "refresh",
+    "runner": 100,
+    "read": 101,
+    "startedMs": 1794975000000,
+    "status": null,
+    "endedMs": null
+   },
+   "holder": 777,
+   "self": 9,
+   "table": [
+    {
+     "pid": 4,
+     "ppid": 0,
+     "startMs": 1,
+     "name": "System"
+    },
+    {
+     "pid": 9,
+     "ppid": 4,
+     "startMs": 1794900000000,
+     "name": "bun.exe"
+    },
+    {
+     "pid": 100,
+     "ppid": 4,
+     "startMs": 1794975000000,
+     "name": "bun.exe"
+    },
+    {
+     "pid": 101,
+     "ppid": 100,
+     "startMs": 1794975001000,
+     "name": "repo.exe"
+    },
+    {
+     "pid": 777,
+     "ppid": 4,
+     "startMs": 1794975050000,
+     "name": "bun.exe"
+    }
+   ],
+   "expected": null
+  },
+  {
+   "name": "a read that ended is nothing to stop",
+   "record": {
+    "reason": "refresh",
+    "runner": 100,
+    "read": 101,
+    "startedMs": 1794975000000,
+    "status": 0,
+    "endedMs": 1794975500000
+   },
+   "holder": 101,
+   "self": 9,
+   "table": [
+    {
+     "pid": 4,
+     "ppid": 0,
+     "startMs": 1,
+     "name": "System"
+    },
+    {
+     "pid": 100,
+     "ppid": 4,
+     "startMs": 1794975000000,
+     "name": "bun.exe"
+    },
+    {
+     "pid": 101,
+     "ppid": 100,
+     "startMs": 1794975001000,
+     "name": "repo.exe"
+    }
+   ],
+   "expected": null
+  },
+  {
+   "name": "a runner pid that is another process now is never touched",
+   "record": {
+    "reason": "refresh",
+    "runner": 100,
+    "read": 101,
+    "startedMs": 1794975000000,
+    "status": null,
+    "endedMs": null
+   },
+   "holder": 101,
+   "self": 9,
+   "table": [
+    {
+     "pid": 4,
+     "ppid": 0,
+     "startMs": 1,
+     "name": "System"
+    },
+    {
+     "pid": 100,
+     "ppid": 4,
+     "startMs": 1794975400000,
+     "name": "bun.exe"
+    },
+    {
+     "pid": 101,
+     "ppid": 100,
+     "startMs": 1794975401000,
+     "name": "repo.exe"
+    }
+   ],
+   "expected": null
+  },
+  {
+   "name": "no record, no reader",
+   "record": null,
+   "holder": 101,
+   "self": 9,
+   "table": [
+    {
+     "pid": 4,
+     "ppid": 0,
+     "startMs": 1,
+     "name": "System"
+    },
+    {
+     "pid": 101,
+     "ppid": 4,
+     "startMs": 1794975001000,
+     "name": "repo.exe"
+    }
+   ],
+   "expected": null
+  },
+  {
+   "name": "the runner of the stage itself is never in the plan",
+   "record": {
+    "reason": "refresh",
+    "runner": 100,
+    "read": 101,
+    "startedMs": 1794975000000,
+    "status": null,
+    "endedMs": null
+   },
+   "holder": 101,
+   "self": 101,
+   "table": [
+    {
+     "pid": 4,
+     "ppid": 0,
+     "startMs": 1,
+     "name": "System"
+    },
+    {
+     "pid": 100,
+     "ppid": 4,
+     "startMs": 1794975000000,
+     "name": "bun.exe"
+    },
+    {
+     "pid": 101,
+     "ppid": 100,
+     "startMs": 1794975001000,
+     "name": "repo.exe"
+    }
+   ],
+   "expected": null
+  }
+ ],
+ "foreground": [
+  {
+   "name": "running and fresh",
+   "status": {
+    "ready": false,
+    "state": "running",
+    "updatedMs": 1794975695000
+   },
+   "nowMs": 1794975700000,
+   "expected": true
+  },
+  {
+   "name": "waiting and fresh",
+   "status": {
+    "ready": false,
+    "state": "waiting",
+    "updatedMs": 1794975695000
+   },
+   "nowMs": 1794975700000,
+   "expected": true
+  },
+  {
+   "name": "backing off and fresh",
+   "status": {
+    "ready": false,
+    "state": "backoff",
+    "updatedMs": 1794975101000
+   },
+   "nowMs": 1794975700000,
+   "expected": true
+  },
+  {
+   "name": "ready",
+   "status": {
+    "ready": true,
+    "state": "ready",
+    "updatedMs": 1794975695000
+   },
+   "nowMs": 1794975700000,
+   "expected": false
+  },
+  {
+   "name": "the group server",
+   "status": {
+    "ready": false,
+    "state": "server",
+    "updatedMs": 1794975695000
+   },
+   "nowMs": 1794975700000,
+   "expected": false
+  },
+  {
+   "name": "a person runs the setup, this machine only observes",
+   "status": {
+    "ready": false,
+    "state": "observing",
+    "updatedMs": 1794975695000
+   },
+   "nowMs": 1794975700000,
+   "expected": false
+  },
+  {
+   "name": "a loop that died 11 minutes ago holds nothing back",
+   "status": {
+    "ready": false,
+    "state": "running",
+    "updatedMs": 1794975040000
+   },
+   "nowMs": 1794975700000,
+   "expected": false
+  },
+  {
+   "name": "no status",
+   "status": null,
+   "nowMs": 1794975700000,
+   "expected": false
+  },
+  {
+   "name": "a text is no status",
+   "status": "running",
+   "nowMs": 1794975700000,
+   "expected": false
+  }
+ ]
+}

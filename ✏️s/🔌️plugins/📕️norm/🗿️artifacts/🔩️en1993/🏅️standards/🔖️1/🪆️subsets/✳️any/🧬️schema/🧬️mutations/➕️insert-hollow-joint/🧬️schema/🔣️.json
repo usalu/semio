@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-hollow-joint/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1993/mutation/insert-hollow-joint/schema.json",
   "title": "InsertHollowJoint",
   "type": "object",
   "additionalProperties": false,
@@ -32,7 +32,7 @@
       }
     },
     "hollowJoint": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/HollowJoint",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1993/snapshot.json#/$defs/HollowJoint",
       "x-semio-ui": {
         "role": "value",
         "label": {

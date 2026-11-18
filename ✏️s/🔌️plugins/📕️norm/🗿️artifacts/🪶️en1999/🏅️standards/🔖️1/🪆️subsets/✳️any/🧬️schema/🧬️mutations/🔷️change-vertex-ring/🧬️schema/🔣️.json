@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-vertex-ring/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1999/mutation/change-vertex-ring/schema.json",
   "title": "ChangeVertexRing",
   "type": "object",
   "additionalProperties": false,
@@ -34,7 +34,7 @@
       }
     },
     "newRing": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/OutlineRing",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1999/snapshot.json#/$defs/OutlineRing",
       "x-semio-ui": {
         "label": {
           "en": "Ring (outer or hole name)",

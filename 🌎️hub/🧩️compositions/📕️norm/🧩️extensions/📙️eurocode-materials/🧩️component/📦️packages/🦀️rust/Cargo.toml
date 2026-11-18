@@ -4,6 +4,7 @@ name = "semio-hub-norm-eurocode-materials-component"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+build = "build.rs"
 description = "The `norm-eurocode-materials` plugin component: the one cdylib of `semio-hub-norm-eurocode-materials`, holding only its entry point"
 
 [lints]
@@ -18,40 +19,30 @@ deployment-directory = "📙️norm-eurocode-materials"
 component-kind = "plugin"
 
 [[package.metadata.semio.playground]]
-variant = "en1992"
-compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
-app = "s.norm.en1992@1/*#editor"
-ports = { react = 6096, wgpu = 6196 }
-
-[[package.metadata.semio.playground]]
-variant = "en1993"
-compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
-app = "s.norm.en1993@1/*#editor"
-ports = { react = 6097, wgpu = 6197 }
-
-[[package.metadata.semio.playground]]
-variant = "en1994"
-compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
-app = "s.norm.en1994@1/*#editor"
-ports = { react = 6098, wgpu = 6198 }
-
-[[package.metadata.semio.playground]]
 variant = "en1995"
 compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
-app = "s.norm.en1995@1/*#editor"
+app = "s.norm-eurocode-materials.en1995@1/*#editor"
 ports = { react = 6099, wgpu = 6199 }
 
 [[package.metadata.semio.playground]]
 variant = "en1996"
 compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
-app = "s.norm.en1996@1/*#editor"
+app = "s.norm-eurocode-materials.en1996@1/*#editor"
 ports = { react = 6100, wgpu = 6200 }
 
 [[package.metadata.semio.playground]]
 variant = "en1999"
 compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
-app = "s.norm.en1999@1/*#editor"
+app = "s.norm-eurocode-materials.en1999@1/*#editor"
 ports = { react = 6103, wgpu = 6203 }
+
+[[package.metadata.semio.build-script.files]]
+path = "🌎️hub/🧩️compositions/📕️norm/🧩️extensions/📙️eurocode-materials/🧩️component/📦️packages/🦀️rust/build.rs"
+sha256 = "deb0a7f898ec8614efd43a1751ab513c0f5c7f1758f5bbdb26a15706cc2efda8"
+
+[[package.metadata.semio.build-script.files]]
+path = "🌎️hub/🧩️compositions/📕️norm/🏗️builder/🦀️.rs"
+sha256 = "f1790d23efd80bb1e1ddf717de387fa9aa71bed387697d694e8078a288dd726f"
 
 [lib]
 crate-type = ["cdylib"]

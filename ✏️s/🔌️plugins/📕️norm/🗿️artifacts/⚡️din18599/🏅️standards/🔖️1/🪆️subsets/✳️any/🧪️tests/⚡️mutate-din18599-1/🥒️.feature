@@ -3,7 +3,7 @@
 @comparison-ordered-json-v1
 @mutations-din18599-1-any
 Feature: Apply every typed DIN V 18599 mutation against an independent Python implementation
-  `s.norm.din18599` is a semio-NATIVE artifact and no third party reads or writes it — checked, not
+  `s.norm-energy.din18599` is a semio-NATIVE artifact and no third party reads or writes it — checked, not
   assumed: PyPI serves no `din18599` distribution, and the nearest real packages (`structuralcodes`,
   `concreteproperties`, `anastruct`) implement design-code FORMULAE and speak no interchange format, so
   none of them could be authoritative over `Din18599Mutation`. The second producer a differential comparison

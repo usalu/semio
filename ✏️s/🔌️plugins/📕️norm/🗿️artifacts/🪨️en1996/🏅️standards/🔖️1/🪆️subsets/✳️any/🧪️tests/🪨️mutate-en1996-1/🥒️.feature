@@ -3,7 +3,7 @@
 @comparison-ordered-json-v1
 @mutations-en1996-1-any
 Feature: Apply every typed EN 1996 mutation against an independent Python implementation
-  `s.norm.en1996` is a semio-NATIVE artifact and no third party reads or writes it — checked, not
+  `s.norm-eurocode-materials.en1996` is a semio-NATIVE artifact and no third party reads or writes it — checked, not
   assumed: PyPI serves no `en1996` distribution, and the nearest real packages (`structuralcodes`,
   `concreteproperties`, `anastruct`) implement design-code FORMULAE and speak no interchange format, so
   none of them could be authoritative over `En1996Mutation`. The second producer a differential comparison

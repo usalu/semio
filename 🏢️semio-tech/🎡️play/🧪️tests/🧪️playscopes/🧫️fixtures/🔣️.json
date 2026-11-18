@@ -11,11 +11,13 @@
   {
     "scope": "standards",
     "variants": ["din4108", "din16798", "din18599", "en1990", "en1991", "en1992", "en1993", "en1994", "en1995", "en1996", "en1997", "en1998", "en1999", "iso16757", "vdi3805"],
-    "components": ["norm", "norm-eurocode", "norm-eurocode-materials"],
+    "components": ["norm", "norm-energy", "norm-eurocode", "norm-eurocode-materials", "norm-eurocode-structural"],
     "activations": [
       "@semio-tech/framework-os-dev:activate-din4108-react-prototype",
       "@semio-tech/framework-os-dev:activate-en1990-react-prototype",
-      "@semio-tech/framework-os-dev:activate-en1992-react-prototype"
+      "@semio-tech/framework-os-dev:activate-en1992-react-prototype",
+      "@semio-tech/framework-os-dev:activate-din18599-react-prototype",
+      "@semio-tech/framework-os-dev:activate-en1995-react-prototype"
     ],
     "dev": "serve-standards",
     "prepare": "prepare-standards-e2e",

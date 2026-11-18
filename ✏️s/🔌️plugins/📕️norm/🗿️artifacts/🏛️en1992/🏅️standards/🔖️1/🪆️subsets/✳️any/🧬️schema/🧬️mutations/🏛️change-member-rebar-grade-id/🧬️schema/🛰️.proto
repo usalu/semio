@@ -1,5 +1,5 @@
 syntax = "proto3";
-package semio.s.norm.en1992.mutation.change_member_rebar_grade_id;
+package semio.s.norm_eurocode_structural.en1992.mutation.change_member_rebar_grade_id;
 message ChangeMemberRebarGradeId {
   string member_id = 1;
   string new_reinforcement_grade_id = 2;

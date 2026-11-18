@@ -48,7 +48,8 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" },
+          "sourceInputObservation": "freshness"
         }
       },
       "cache": false,

@@ -1,3 +1,4 @@
+import "../🧰️harness/🟦️.ts";
 import { describe } from "vitest";
 import { registerAssignsStableRanksDirectionTests } from "./🔶️assigns-stable-ranks-direction/🟦️.tsx";
 import { registerAdmitsPublishesOnlyThroughTests } from "./🔸️admits-publishes-only-through/🟦️.tsx";

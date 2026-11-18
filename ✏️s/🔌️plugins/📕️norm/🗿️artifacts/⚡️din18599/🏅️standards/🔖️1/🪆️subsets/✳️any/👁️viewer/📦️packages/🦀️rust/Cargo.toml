@@ -36,7 +36,6 @@ semio-s-plugin-norm-structural-scene = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true }
 semio-s-artifact-norm-din18599-scene = { workspace = true }
 semio-s-artifact-norm-din18599-mutations = { workspace = true }
-semio-s-artifact-stdio-semio = { workspace = true }
 semio-s-plugin-norm-app-surface = { workspace = true }
 
 [dev-dependencies]

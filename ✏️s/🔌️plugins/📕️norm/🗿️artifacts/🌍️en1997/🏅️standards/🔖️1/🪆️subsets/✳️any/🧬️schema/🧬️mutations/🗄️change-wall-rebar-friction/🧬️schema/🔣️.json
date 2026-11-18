@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-wall-rebar-friction/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1997/mutation/change-wall-rebar-friction/schema.json",
   "title": "ChangeWallRebarFriction",
   "type": "object",
   "additionalProperties": false,

@@ -35,7 +35,7 @@ pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::Ar
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.generation3d.composer.txt")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.txt@utf-8/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.txt@utf-8/*")?)?,
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::composition_route(), "29:s.procedural.generation3d@1/*19:s.stdio.txt@utf-8/*")?)?,
         )?
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.generation3d.codec.document")?, ArtifactCapabilityKind::codec())

@@ -107,11 +107,11 @@ export async function prepareBinaryen(workspace: string, store:RepositoryTooling
         }
       } catch (error) { await reader.cancel().catch(() => undefined); throw error; } finally { await file.close(); }
       if (bytes !== row.bytes || hash.digest("hex") !== row.sha256) throw new Error("Binaryen archive checksum mismatch");
-      const members = (await runTool("tar",["-tzf", archive],temporary,signal,true,store.environment,repositoryCargoPreparationStorageV1(workspace))).trim().split(/\r?\n/);
+      const members = (await runTool("tar",["-tzf", "binaryen.tar.gz"],temporary,signal,true,store.environment,repositoryCargoPreparationStorageV1(workspace))).trim().split(/\r?\n/);
       const selected = binaryenMembers(members, process.platform), prefix = `binaryen-version_${manifest.version}`;
       const executable = `bin/wasm-opt${process.platform === "win32" ? ".exe" : ""}`;
       if (!selected.includes(executable)) throw new Error("Binaryen archive has no optimizer");
-      await runTool("tar",["-xzf", archive, "-C", temporary, ...selected.map(path => `${prefix}/${path}`)],temporary,signal,false,store.environment,repositoryCargoPreparationStorageV1(workspace));
+      await runTool("tar",["-xzf", "binaryen.tar.gz", "-C", ".", ...selected.map(path => `${prefix}/${path}`)],temporary,signal,false,store.environment,repositoryCargoPreparationStorageV1(workspace));
       const payload = join(temporary, prefix), files: Record<string, string> = {};
       for (const name of selected) {
         const path = join(payload, name); regularDirectory(dirname(path));

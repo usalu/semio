@@ -293,6 +293,16 @@
               "minimum": 10000,
               "maximum": 100000
             },
+            "settledAfterMilliseconds": {
+              "type": "integer",
+              "minimum": 1000,
+              "description": "With settledKeepBasisPoints: how long a grant has run since it was admitted or resumed before its measurement replaces its estimate. A settled grant is charged settledKeepBasisPoints of what it measurably holds (never under rampIdleKeepMegabytes, never more than it reserved)."
+            },
+            "settledKeepBasisPoints": {
+              "type": "integer",
+              "minimum": 10000,
+              "maximum": 100000
+            },
             "childStartMegabytes": {
               "type": "integer",
               "minimum": 0,

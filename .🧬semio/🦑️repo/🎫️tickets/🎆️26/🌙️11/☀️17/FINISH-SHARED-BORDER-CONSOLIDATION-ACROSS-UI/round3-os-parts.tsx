@@ -9,6 +9,8 @@ import { PresencePeersOverlay } from "../../../../../../../🧰️framework/🛍
 import { PixelEditingOverlay } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🟦️.tsx";
 import editingFixture from "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎚️paint2d-editing/🔣️.json";
 
+import { StagedActionDialog } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📝️staging/🟦️.tsx";
+
 const noop = () => {};
 const Shell = ({ children, subfooter }: { children?: React.ReactNode; subfooter?: React.ReactNode }) => (
   <div style={{ height: "100vh", position: "relative" }} className="semio-scope">
@@ -27,7 +29,10 @@ function Paint({ more }: { more?: boolean }) {
   useEffect(() => { const d = host.current?.querySelector("details"); if (d) d.open = !!more; }, [more]);
   return <div ref={host} data-border-probe-art="" style={{ position: "fixed", inset: 0 }} className="bg-muted"><PixelEditingOverlay {...(props as object)} camera={camera} container={host} /></div>;
 }
+const stagedHost = (locale: "en" | "de") => { const view = { locale, controls: null, pending: false, executing: false, closing: false, error: "Could not complete the action", ready: true }; return { subscribe: () => noop, snapshot: () => view, cancel: noop, execute: noop } as never; };
 export const r3Parts: Record<string, () => React.ReactElement> = {
+  "r4-staged-dialog": () => <div className="semio-scope"><StagedActionDialog host={stagedHost("en")} /></div>,
+  "r4-staged-dialog-de": () => <div className="semio-scope"><StagedActionDialog host={stagedHost("de")} /></div>,
   "r3-bands-top": () => <Shell><NoticeStack data-semio-notice-stack="install" className="top-[var(--navbar-band-height)] left-1/2 max-w-[90vw] -translate-x-1/2 bg-menu">{installRow}{stallRows}</NoticeStack></Shell>,
   "r3-bands-stall-only": () => <Shell><NoticeStack className="top-[var(--navbar-band-height)] left-1/2 max-w-[90vw] -translate-x-1/2 bg-menu">{stallRows}</NoticeStack></Shell>,
   "r3-route-admission": () => <Shell><NoticeStack orientation="horizontal" role="status" className="bottom-[var(--footer-band-height)] left-1/2 z-40 max-w-[90vw] -translate-x-1/2"><NoticeCell>Open the hub to continue</NoticeCell><Button icon="arrow-right" type="button" variant="outline">Open hub</Button></NoticeStack></Shell>,

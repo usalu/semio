@@ -22,7 +22,7 @@ type DescriptorAction = { id: string; semantics?: { execution?: { interactiveJob
 type DescriptorApp = { id: string; role: string; actions?: DescriptorAction[]; windowKinds?: { id: string; actions?: DescriptorAction[] }[] };
 type Descriptor = { manifest: { apps: DescriptorApp[] } };
 
-/** 🧭️ Resolves the committed test plan against the source owner and the deployed descriptors of the three plugins that split the norm families. */
+/** 🧭️ Resolves the committed test plan against the source owner and the deployed descriptors of the five plugins that split the norm families. */
 export function normPackageTestPlan(plugin: string, repoRoot: string): { descriptors: string[]; suites: string[] } {
   return { descriptors: plan.descriptors.map(path => join(repoRoot, path)), suites: plan.suites.map(path => join(plugin, path)) };
 }

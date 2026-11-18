@@ -8,7 +8,7 @@
 fn puzzle3d_settings_document_completes_retained_paint() {
     let law = puzzle3d_settings_law();
     let window_id = law["document"]["surface"].as_str().expect("surface");
-    let mut ui = Ui::new(semio_ui_locale::Locale::En);
+    let mut ui = UiFixture::new(semio_ui_locale::Locale::En);
     reconcile_puzzle3d_settings(&mut ui, window_id, &law);
 
     let mut atlas = FontAtlas::builtin();
@@ -90,7 +90,7 @@ fn puzzle3d_settings_stepper_commits_on_press_and_release_only_retires_capture()
     let law = puzzle3d_settings_law();
     let gestures: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🪜️stepper-pointer-commit/🔣️.json")).expect("stepper pointer fixture");
     for gesture in gestures["cases"].as_array().expect("gesture cases") {
-        let mut ui = Ui::new(semio_ui_locale::Locale::En);
+        let mut ui = UiFixture::new(semio_ui_locale::Locale::En);
         let window_id = law["document"]["surface"].as_str().expect("surface");
         reconcile_puzzle3d_settings(&mut ui, window_id, &law);
         drive_layout(&mut ui, window_id, 360.0, 480.0, &mut FontAtlas::builtin());
@@ -132,7 +132,7 @@ fn puzzle3d_settings_stepper_commits_on_press_and_release_only_retires_capture()
 
 #[test]
 fn accessibility_dispatch_uses_current_window_generation_and_node_identity() {
-    let mut ui = Ui::new(semio_ui_locale::Locale::En);
+    let mut ui = UiFixture::new(semio_ui_locale::Locale::En);
     let window_id = "conformance.a11y.projection";
     publish_accessibility_document(&mut ui, window_id);
     let first_generation = ui.surface_generation(window_id).expect("published surface generation");
@@ -193,7 +193,7 @@ fn close_surface_to_terminal(ui: &mut Ui, token: UiSurfaceToken) {
 #[test]
 fn closed_surface_token_and_document_epoch_cannot_alias_a_same_id_successor() {
     let law: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🪟️surface-lifetime/🔣️.json")).unwrap();
-    let mut ui = Ui::new(semio_ui_locale::Locale::En);
+    let mut ui = UiFixture::new(semio_ui_locale::Locale::En);
     let window_id = "surface-close-same-id";
     publish_accessibility_document(&mut ui, window_id);
     let old_token = ui.surface_token(window_id).unwrap();
@@ -220,7 +220,7 @@ fn closed_surface_token_and_document_epoch_cannot_alias_a_same_id_successor() {
 fn surface_close_releases_queued_layout_capacity_for_every_sequential_window() {
     let law: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🪟️surface-lifetime/🔣️.json")).unwrap();
     let count = law["sequentialMounts"].as_u64().unwrap() as usize;
-    let mut ui = Ui::new(semio_ui_locale::Locale::En);
+    let mut ui = UiFixture::new(semio_ui_locale::Locale::En);
     for index in 0..count {
         let id = format!("queued-surface-{index}");
         publish_accessibility_document(&mut ui, &id);
@@ -237,7 +237,7 @@ fn surface_close_releases_queued_layout_capacity_for_every_sequential_window() {
 #[test]
 fn surface_close_silently_discards_a_focused_blur_commit() {
     let law: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🪟️surface-lifetime/🔣️.json")).unwrap();
-    let mut ui = Ui::new(semio_ui_locale::Locale::En);
+    let mut ui = UiFixture::new(semio_ui_locale::Locale::En);
     let id = "silent-input-unmount";
     publish_blur_commit_input_document(&mut ui, id);
     let generation = ui.surface_generation(id).unwrap();
@@ -258,7 +258,7 @@ fn surface_close_silently_discards_a_focused_blur_commit() {
 
 #[test]
 fn accessibility_blur_input_stages_values_and_commits_exactly_once_on_blur() {
-    let mut ui = Ui::new(semio_ui_locale::Locale::En);
+    let mut ui = UiFixture::new(semio_ui_locale::Locale::En);
     let window_id = "framework.settings.general";
     publish_blur_commit_input_document(&mut ui, window_id);
     let generation = ui.surface_generation(window_id).unwrap();
@@ -287,7 +287,7 @@ fn accessibility_select_projects_one_live_listbox_and_option_activation_commits_
     let window_id = law["window"]["id"].as_str().unwrap();
     let node_id = law["select"]["nodeId"].as_u64().unwrap();
     let node_key = law["select"]["key"].as_str().unwrap();
-    let mut ui = Ui::new(semio_ui_locale::Locale::En);
+    let mut ui = UiFixture::new(semio_ui_locale::Locale::En);
     publish_select_accessibility_document(&mut ui, &law);
     let generation = ui.surface_generation(window_id).expect("published Select surface generation");
 

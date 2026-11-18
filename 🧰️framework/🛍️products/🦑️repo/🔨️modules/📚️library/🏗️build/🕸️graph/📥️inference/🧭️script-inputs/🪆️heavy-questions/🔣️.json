@@ -5,6 +5,8 @@
   "pollMilliseconds": 200,
   "timeoutMilliseconds": 900000,
   "heartbeatMilliseconds": 2000,
+  "livenessMilliseconds": 5000,
   "silenceMilliseconds": 60000,
+  "maximumScale": 8,
   "kinds": ["program", "derive"]
 }

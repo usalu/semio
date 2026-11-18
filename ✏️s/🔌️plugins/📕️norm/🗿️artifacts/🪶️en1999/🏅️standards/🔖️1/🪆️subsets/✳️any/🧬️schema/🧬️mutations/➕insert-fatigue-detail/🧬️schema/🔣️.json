@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/insert-fatigue-detail/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1999/mutation/insert-fatigue-detail/schema.json",
   "title": "InsertFatigueDetail",
   "type": "object",
   "additionalProperties": false,
@@ -35,7 +35,7 @@
       }
     },
     "fatigueDetail": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/FatigueDetail",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1999/snapshot.json#/$defs/FatigueDetail",
       "x-semio-ui": {
         "role": "value",
         "label": {

@@ -1,0 +1,10 @@
+import {nxBuildEngineClosureV1,nxBuildEngineDigestV1} from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs";
+import {splitNxEngineFilesV1} from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/🧮️engine-digest/🟦️.ts";
+import {statSync} from "node:fs";
+const c=nxBuildEngineClosureV1();
+for(const fam of ["generic","native"]){
+ const k=splitNxEngineFilesV1(c.files,fam).keyed;
+ const rows=k.map(f=>[statSync("/Users/ueli/Documents/semio/"+f).mtimeMs,f]).sort((a,b)=>b[0]-a[0]).slice(0,6);
+ console.log(fam,k.length,nxBuildEngineDigestV1(fam).slice(0,12));
+ for(const [m,f] of rows)console.log(" ",new Date(m).toISOString(),f.slice(-90));
+}

@@ -70,7 +70,13 @@
     "semio-hub-norm": {
       "quick": 1800000
     },
+    "semio-hub-norm-energy": {
+      "quick": 1800000
+    },
     "semio-hub-norm-eurocode": {
+      "quick": 1800000
+    },
+    "semio-hub-norm-eurocode-structural": {
       "quick": 1800000
     },
     "semio-hub-norm-eurocode-materials": {

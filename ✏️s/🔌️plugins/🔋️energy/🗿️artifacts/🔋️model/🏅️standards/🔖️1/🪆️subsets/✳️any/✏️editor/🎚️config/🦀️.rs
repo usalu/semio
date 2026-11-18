@@ -108,7 +108,6 @@ impl pack::snapshot::ArtifactPack for EnergyModelConfig {
         Some(Self::__dsl_spec())
     }
     fn record_spec_producer()->Option<store::RecordSpecProducer>{Some(Self::__artifact_record_spec_producer())}
-    fn borrowed_record_spec_producer()->Option<store::BorrowedRecordSpecProducer>{Some(Self::__artifact_borrowed_record_spec_producer())}
 }
 impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for EnergyModelConfig {
     fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}

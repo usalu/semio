@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/insert-anchor/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1992/mutation/insert-anchor/schema.json",
   "title": "InsertAnchor",
   "type": "object",
   "additionalProperties": false,
@@ -30,7 +30,7 @@
       }
     },
     "anchor": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/Anchor",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1992/snapshot.json#/$defs/Anchor",
       "x-semio-ui": {
         "role": "value",
         "label": {

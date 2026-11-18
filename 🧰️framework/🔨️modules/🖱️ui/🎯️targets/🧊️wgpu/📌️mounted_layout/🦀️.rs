@@ -48,7 +48,7 @@ mod text_admission_and_measure_steps;
 #[path = "🏁️collect-publish-and-close/🦀️.rs"]
 mod collect_publish_and_close;
 #[cfg(any(test,feature="testkit"))]
-pub use collect_publish_and_close::layout_tree_now;
+pub use collect_publish_and_close::{layout_tree_flowing_now, layout_tree_now};
 
 #[cfg(test)]
 #[path = "../../../🧪️tests/🪟️tree-window-streaming/🦀️.rs"]

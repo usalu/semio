@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-slab-sheeting-profile/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1994/mutation/change-slab-sheeting-profile/schema.json",
   "title": "ChangeSlabSheetingProfile",
   "type": "object",
   "additionalProperties": false,
@@ -30,7 +30,7 @@
       }
     },
     "newProfile": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/SheetingProfile",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1994/snapshot.json#/$defs/SheetingProfile",
       "x-semio-ui": {
         "role": "value",
         "label": {

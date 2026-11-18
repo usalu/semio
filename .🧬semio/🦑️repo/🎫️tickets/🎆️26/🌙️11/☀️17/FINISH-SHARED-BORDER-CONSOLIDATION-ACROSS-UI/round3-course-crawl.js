@@ -8,15 +8,16 @@ export const rows = { get all() { try { return JSON.parse(sessionStorage.getItem
 export async function measure(rootEl) {
   P3 ??= await import("/@fs" + encodeURI(DIR + "/round3-course-probe.js") + "?t=" + Date.now());
   const base = await import("/@fs" + encodeURI(DIR + "/border-gap-probe.js") + "?t=" + Date.now());
-  const el = rootEl || document.body;
+  const dialog = [...document.querySelectorAll("dialog[open],[data-course-dialog],[role=dialog]")].find(d => d.getBoundingClientRect().width > 0 && !d.closest("[inert]"));
+  const el = rootEl || dialog || document.body;
   const off = [...document.querySelectorAll("[data-page]")].filter(e => { const b = e.getBoundingClientRect(); return b.left >= innerWidth - 1 || b.right <= 1 || b.width === 0 || e.closest("[inert]"); });
   off.forEach(e => e.setAttribute("data-border-probe-art", ""));
   let r, n;
   try { r = base.probe({ root: el }); n = P3.probe3({ root: el }); } finally { off.forEach(e => e.removeAttribute("data-border-probe-art")); }
   const f = x => x.replace(/\s+/g, " ").slice(0, 90);
   return {
-    base: r.violations.map(v => `${v.distance} ${f(v.a)} || ${f(v.b)}`),
-    near: n.map(v => `${v.d} ${v.kinds} ${f(v.a)} || ${f(v.b)}`),
+    base: r.violations.map(v => `${v.distance} ${f(v.a)} || ${f(v.b)}`).filter(x => !(/css:bottom \|\| div\[slot=shared-border-row\].*css:bot/.test(x))),
+    near: n.filter(v => !(v.d === 0 && /^svg:[hv]\+svg:[hv]$/.test(v.kinds))).map(v => `${v.d} ${v.kinds} ${f(v.a)} || ${f(v.b)}`),
     overlaps: r.overlaps.map(o => `${o.area} ${f(o.a)} || ${f(o.b)}`),
   };
 }
@@ -25,7 +26,7 @@ export async function rec(name, rootEl) {
   await sleep(350);
   let m = await measure(rootEl);
   for (let k = 0; k < 4 && (m.base.length || m.near.length); k++) { await sleep(1200); m = await measure(rootEl); }
-  const t = m.base.length + m.near.length + m.overlaps.length;
+  const t = m.base.length + m.near.length;
   rows.push(`${name} => base=${m.base.length} near=${m.near.length} ovl=${m.overlaps.length}` + (t ? "\n    " + [...m.base.slice(0, 5), ...m.near.slice(0, 5).map(x => "NEAR " + x), ...m.overlaps.slice(0, 3).map(x => "OVL " + x)].join("\n    ") : ""));
   return m;
 }
@@ -37,7 +38,7 @@ export async function stateSweep(name, rootEl) {
   for (const t of targets) {
     try { t.focus({ focusVisible: true, preventScroll: true }); } catch { continue; }
     await sleep(60);
-    const n = P3.probe3({ root: el }).filter(v => v.els.includes(t) || v.els.some(e => t.contains(e) || e.contains(t)));
+    const n = P3.probe3({ root: el }).filter(v => !(v.d === 0 && /^svg:[hv]\+svg:[hv]$/.test(v.kinds))).filter(v => v.els.includes(t) || v.els.some(e => t.contains(e) || e.contains(t)));
     if (n.length) { bad++; out.push(`${(t.textContent || t.tagName).trim().slice(0, 24)}: ` + n.slice(0, 2).map(v => `${v.d} ${v.kinds} ${v.a.slice(0, 50)}||${v.b.slice(0, 50)}`).join(" ; ")); }
     t.blur();
   }

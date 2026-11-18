@@ -50,10 +50,14 @@
           "additionalProperties": false,
           "required": [
             "accepts",
+            "waits",
             "mustDrain"
           ],
           "properties": {
             "accepts": {
+              "type": "boolean"
+            },
+            "waits": {
               "type": "boolean"
             },
             "mustDrain": {

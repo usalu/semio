@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/artifact.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1990/artifact.json",
   "title": "En1990Artifact",
   "type": "object",
   "additionalProperties": false,
@@ -49,7 +49,7 @@
       "x-semio-state": "artifact"
     },
     "structureKind": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/$defs/StructureKind",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1990/snapshot.json#/$defs/StructureKind",
       "x-semio-state": "artifact",
       "x-semio-rust": {
         "type": "semio_s_artifact_norm_en1990_model::StructureKind"
@@ -92,14 +92,14 @@
       "x-semio-state": "artifact"
     },
     "supervisionLevel": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/$defs/SupervisionLevel",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1990/snapshot.json#/$defs/SupervisionLevel",
       "x-semio-state": "artifact",
       "x-semio-rust": {
         "type": "semio_s_artifact_norm_en1990_model::SupervisionLevel"
       }
     },
     "inspectionLevel": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/$defs/InspectionLevel",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1990/snapshot.json#/$defs/InspectionLevel",
       "x-semio-state": "artifact",
       "x-semio-rust": {
         "type": "semio_s_artifact_norm_en1990_model::InspectionLevel"
@@ -1317,7 +1317,7 @@
       "value_derive::ToValue",
       "value_derive::FromValue"
     ],
-    "artifactSchema": "s.norm.en1990",
+    "artifactSchema": "s.norm-eurocode.en1990",
     "attributes": [
       "#[cfg_attr(any(test, feature = \"test-support\"), derive(serde::Serialize, serde::Deserialize))]",
       "#[cfg_attr(any(test, feature = \"test-support\"), serde(rename_all = \"camelCase\"))]",

@@ -1,5 +1,5 @@
 {
-  "artifact": "s.norm.en1996",
+  "artifact": "s.norm-eurocode-materials.en1996",
   "standard": "1",
   "subsets": {
     "*": {
@@ -7,5 +7,5 @@
     }
   },
   "subsetPolicy": "single",
-  "subsetPolicyRationale": "`s.norm.en1996@1` is this plugin's own self-contained Eurocode EN 1996 masonry-design document — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (change-annex, change-wall-height, insert-opening, change-opening-width, insert-load-case, change-concentrated-force, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch regardless of which field, record or nested collection it touches. `✳️any` remains this artifact's only real scope."
+  "subsetPolicyRationale": "`s.norm-eurocode-materials.en1996@1` is this plugin's own self-contained Eurocode EN 1996 masonry-design document — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (change-annex, change-wall-height, insert-opening, change-opening-width, insert-load-case, change-concentrated-force, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch regardless of which field, record or nested collection it touches. `✳️any` remains this artifact's only real scope."
 }

@@ -21,6 +21,7 @@ import { interactiveActiveFillClass } from "../../🔨️modules/🖱️interact
 import { type UiStatus, uiSpacingPx } from "@semio-tech/ui-styling";
 import { ExternalLinkIcon, Minimize2Icon, Maximize2Icon, CloseIcon } from "../🔣️Icons/🟦️.tsx";
 import { PaneHost, Pane } from "../📌️WindowPane/🟦️.tsx";
+import { observeChipRowAbuts, settlePaneChipAbuts } from "../🗂️WindowChrome/chip-abut.ts";
 import { type EngagementSpec, Engagement } from "../🎮️Engagement/🟦️.tsx";
 import { type SearchSpec, UI_WINDOW_SEARCH, routeWindowSearchEscape, shouldRouteKeysToWindowSearch, Search, focusActiveSearchInput } from "../🔍️WindowSearch/🟦️.tsx";
 import { windowMeasuresDefaultWidthPx, windowMeasuresMinWidthPx, windowMeasuresMaxWidthPx, WINDOW_PANE_MEASURES_ICON, WINDOW_PANE_ACTIONS_ICON, WINDOW_PANE_SEARCH_ICON, WINDOW_PANE_UTILITIES_ICON, windowChromeClearedTopOffset } from "../../🔨️modules/📐️window-measures/🟦️.ts";
@@ -235,6 +236,8 @@ const Window: React.FC<WindowProps> = ({
     if (pane !== "measures" && rawOpen.measures) setMeasuresFolded(true);
     if (pane !== "utility" && rawOpen.utility) setUtilityBarFolded(true);
   };
+
+  reactHostPort.useLayoutEffect(() => (windowBodyRef.current ? observeChipRowAbuts(windowBodyRef.current, settlePaneChipAbuts) : undefined), []);
 
   reactHostPort.useLayoutEffect(() => {
     const body = windowBodyRef.current;

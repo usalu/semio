@@ -1,5 +1,5 @@
 syntax = "proto3";
-package semio.s.norm.en1992.mutation.change_member_use_fem;
+package semio.s.norm_eurocode_structural.en1992.mutation.change_member_use_fem;
 message ChangeMemberUseFem {
   string member_id = 1;
   bool new_use_fem = 2;

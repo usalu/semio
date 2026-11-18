@@ -1,5 +1,5 @@
 syntax = "proto3";
-package semio.s.norm.en1992.mutation.change_member_stirrups_diameter;
+package semio.s.norm_eurocode_structural.en1992.mutation.change_member_stirrups_diameter;
 message ChangeMemberStirrupsDiameter {
   string member_id = 1;
   double new_stirrups_diameter = 2;

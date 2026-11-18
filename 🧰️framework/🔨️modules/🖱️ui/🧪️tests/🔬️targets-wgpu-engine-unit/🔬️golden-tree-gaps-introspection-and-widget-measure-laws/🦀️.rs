@@ -37,7 +37,7 @@ fn retained_tree_action_rows_do_not_overpaint_their_labels() {
             menu: None,
             interaction_domain: None,
         });
-        let mut ui = Ui::new(semio_ui_locale::Locale::En);
+        let mut ui = UiFixture::new(semio_ui_locale::Locale::En);
         let mut atlas = FontAtlas::builtin();
         let mut draw = DrawList::default();
         let bounds = Rect::new(120.0, 300.0, 300.0, 48.0);
@@ -232,7 +232,7 @@ fn every_ui_node_kind_has_a_widget_kit_arm_that_paints() {
 //#region 🔬️IntrospectionTests
 #[test]
 fn window_ids_viewport_tree_and_theme_expose_private_window_state() {
-    let mut ui = Ui::new(semio_ui_locale::Locale::En);
+    let mut ui = UiFixture::new(semio_ui_locale::Locale::En);
     assert_eq!(ui.window_ids().count(), 0);
     assert_eq!(ui.viewport("win"), None);
     assert!(ui.tree("win").is_none());

@@ -22,8 +22,8 @@
     { "mutation": "changeSolid", "id": "slab", "patch": { "name": "Peer Slab", "height": 5, "layers": 2, "meshSize": 0.5 } }
   ],
   "motions": [
-    { "name": "rotate", "dx": 0, "axisX": 1, "axisZ": 0, "angle": 1.5707963267948966, "sx": 1, "position": [1, -3, 2], "authored": ["y", "z"], "peerPatch": { "x": 9 } },
-    { "name": "scale", "dx": 0, "axisX": 0, "axisZ": 1, "angle": 0, "sx": 2, "position": [2, 2, 3], "authored": ["x"], "peerPatch": { "y": 9 } }
+    { "name": "rotate", "dx": 0, "axisX": 1, "axisZ": 0, "angle": 1.5707963267948966, "sx": 1, "position": [1, -3, 2], "authored": ["y", "z"], "peerMutation": { "mutation": "changeNode", "id": "n1", "patch": { "x": 9 } } },
+    { "name": "scale", "dx": 0, "axisX": 0, "axisZ": 1, "angle": 0, "sx": 2, "position": [2, 2, 3], "authored": ["x"], "peerMutation": { "mutation": "changeNode", "id": "n1", "patch": { "y": 9 } } }
   ],
   "overflowNode": { "id": "n1", "x": 1.7976931348623157e308, "y": 2, "z": 3 },
   "overflowOffset": 1.7976931348623157e308,

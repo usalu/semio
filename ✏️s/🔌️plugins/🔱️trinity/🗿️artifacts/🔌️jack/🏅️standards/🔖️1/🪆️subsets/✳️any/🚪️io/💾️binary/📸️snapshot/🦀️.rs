@@ -57,7 +57,6 @@ impl pack::snapshot::ArtifactPack for JackSnapshot {
 
     
 
-    fn borrowed_record_spec_producer()->Option<semio_framework_dsl_record::BorrowedRecordSpecProducer>{Some(semio_framework_dsl_record::BorrowedRecordSpecProducer::of::<JackPackRecord>())}
 
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(JackPackRecord::__dsl_spec())

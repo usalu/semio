@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-pile-pile-type/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1997/mutation/change-pile-pile-type/schema.json",
   "title": "ChangePilePileType",
   "type": "object",
   "additionalProperties": false,
@@ -34,7 +34,7 @@
       }
     },
     "newPileType": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/$defs/PileType",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1997/snapshot.json#/$defs/PileType",
       "x-semio-ui": {
         "label": {
           "en": "Pile type",

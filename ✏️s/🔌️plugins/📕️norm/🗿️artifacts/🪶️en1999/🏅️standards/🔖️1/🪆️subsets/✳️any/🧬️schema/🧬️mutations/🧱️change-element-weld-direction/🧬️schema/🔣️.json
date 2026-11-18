@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-element-weld-direction/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1999/mutation/change-element-weld-direction/schema.json",
   "title": "ChangeElementWeldDirection",
   "type": "object",
   "additionalProperties": false,
@@ -55,7 +55,7 @@
       }
     },
     "newWeldDirection": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/WeldDirection",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1999/snapshot.json#/$defs/WeldDirection",
       "x-semio-ui": {
         "label": {
           "en": "weld direction",

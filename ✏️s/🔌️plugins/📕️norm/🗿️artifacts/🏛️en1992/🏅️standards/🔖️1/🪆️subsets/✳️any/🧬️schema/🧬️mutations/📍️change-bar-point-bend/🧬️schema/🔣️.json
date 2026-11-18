@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-bar-point-bend/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1992/mutation/change-bar-point-bend/schema.json",
   "title": "ChangeBarPointBend",
   "type": "object",
   "additionalProperties": false,
@@ -51,7 +51,7 @@
       }
     },
     "newBend": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/BarBend",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1992/snapshot.json#/$defs/BarBend",
       "x-semio-ui": {
         "label": {
           "en": "bend",

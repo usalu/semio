@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/insert-load-dispersal/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1991/mutation/insert-load-dispersal/schema.json",
   "title": "InsertLoadDispersal",
   "type": "object",
   "additionalProperties": false,
@@ -30,7 +30,7 @@
       }
     },
     "item": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/LoadDispersal",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1991/snapshot.json#/$defs/LoadDispersal",
       "x-semio-ui": {
         "role": "value",
         "label": {

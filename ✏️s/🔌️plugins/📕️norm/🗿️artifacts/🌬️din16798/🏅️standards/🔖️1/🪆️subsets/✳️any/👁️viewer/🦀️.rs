@@ -33,7 +33,7 @@ semio_s_plugin_norm_app_surface::norm_viewer_commands!(semio_s_artifact_norm_din
 
 semio_s_plugin_norm_app_surface::norm_owned_view_tool_job_factory!(Din16798ViewBoundedCommandJobFactory, Din16798Viewer);
 
-semio_s_plugin_norm_app_surface::norm_viewer_surface!(Din16798Viewer, Din16798ViewCommand, variant = "din16798", report = |d: &Din16798Snapshot| semio_s_plugin_norm_app_surface::paint_report_of(|budget| semio_s_artifact_norm_din16798_inferences::live::responsive(d, budget)), scene = |d: &Din16798Snapshot, r: &semio_s_plugin_norm_app_surface::NormViewReport, _| semio_s_artifact_norm_din16798_scene::live_scene_of(d, r), diagrams = |d: &Din16798Snapshot, r: &semio_s_plugin_norm_app_surface::NormViewReport, focus: Option<&str>| semio_s_plugin_norm_structural_scene::projection::memo_diagrams("din16798", d, r, focus.unwrap_or("\u{0}"), || semio_s_artifact_norm_din16798_scene::diagrams(d, r, focus)).to_vec());
+semio_s_plugin_norm_app_surface::norm_viewer_surface!(Din16798Viewer, Din16798ViewCommand, owner = "norm", variant = "din16798", report = |d: &Din16798Snapshot| semio_s_plugin_norm_app_surface::paint_report_of(|budget| semio_s_artifact_norm_din16798_inferences::live::responsive(d, budget)), scene = |d: &Din16798Snapshot, r: &semio_s_plugin_norm_app_surface::NormViewReport, _| semio_s_artifact_norm_din16798_scene::live_scene_of(d, r), diagrams = |d: &Din16798Snapshot, r: &semio_s_plugin_norm_app_surface::NormViewReport, focus: Option<&str>| semio_s_plugin_norm_structural_scene::projection::memo_diagrams("din16798", d, r, focus.unwrap_or("\u{0}"), || semio_s_artifact_norm_din16798_scene::diagrams(d, r, focus)).to_vec());
 //#endregion 🔖️Command
 
 //#region 🔖️Viewer
@@ -150,6 +150,7 @@ pub fn create_din16798_viewer() -> semio_plugin::AppDefinition {
     Viewer::builder(DIN16798_DIALECT)
         .document(["semio", "norm", "din16798"])
         .interaction(semio_s_plugin_norm_app_surface::viewer_interaction_definition("din16798"))
+        .utility(semio_s_plugin_norm_app_surface::transform_utility_definition())
         .icon_id("check-circle")
         .mode_def(view::definition())
         .default_mode_id(semio_s_plugin_norm_app_surface::MODE_VIEW)

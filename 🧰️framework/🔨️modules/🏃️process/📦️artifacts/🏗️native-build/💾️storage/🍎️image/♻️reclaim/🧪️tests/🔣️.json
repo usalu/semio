@@ -1,0 +1,223 @@
+{
+  "rule": {
+    "reclaimFloorBytes": 8589934592,
+    "reclaimRatioPercent": 300,
+    "reclaimTightHostFreeBytes": 51539607552
+  },
+  "cases": [
+    {
+      "name": "live rust image: 100.6 GB held for 31 GiB used on a tight host",
+      "allocatedBytes": 100600000000,
+      "usedBytes": 33285996544,
+      "hostFreeBytes": 7000000000,
+      "due": true
+    },
+    {
+      "name": "live dependencies image: 12.9 GB held for 9 GiB used is within the ratio",
+      "allocatedBytes": 12900000000,
+      "usedBytes": 9663676416,
+      "hostFreeBytes": 7000000000,
+      "due": false
+    },
+    {
+      "name": "tight host divides the floor by eight",
+      "allocatedBytes": 4000000000,
+      "usedBytes": 1000000000,
+      "hostFreeBytes": 1000000000,
+      "due": true
+    },
+    {
+      "name": "roomy host keeps the full floor",
+      "allocatedBytes": 4000000000,
+      "usedBytes": 1000000000,
+      "hostFreeBytes": 200000000000,
+      "due": false
+    },
+    {
+      "name": "ratio not reached although the floor is",
+      "allocatedBytes": 20000000000,
+      "usedBytes": 10000000000,
+      "hostFreeBytes": 1000000000,
+      "due": false
+    },
+    {
+      "name": "nothing allocated",
+      "allocatedBytes": 0,
+      "usedBytes": 0,
+      "hostFreeBytes": 0,
+      "due": false
+    },
+    {
+      "name": "exact boundary of floor and ratio on a roomy host",
+      "allocatedBytes": 12884901888,
+      "usedBytes": 4294967296,
+      "hostFreeBytes": 60000000000,
+      "due": true
+    }
+  ],
+  "cycles": [
+    {
+      "name": "linux image not attached: loop, discard mount, fstrim, unmount, release",
+      "platform": "linux",
+      "image": "/cache/r/fixed.img",
+      "attached": false,
+      "outputs": {
+        "losetup --associated": [
+          "",
+          "/dev/loop7"
+        ],
+        "losetup --find": [
+          "/dev/loop7"
+        ],
+        "findmnt --source": [
+          "<scratch>"
+        ]
+      },
+      "expected": [
+        "losetup --associated /cache/r/fixed.img --noheadings --output NAME",
+        "losetup --find --show /cache/r/fixed.img",
+        "mount -o discard,noatime /dev/loop7 <scratch>",
+        "fstrim --verbose <scratch>",
+        "losetup --associated /cache/r/fixed.img --noheadings --output NAME",
+        "findmnt --source /dev/loop7 --noheadings --output TARGET",
+        "umount <scratch>",
+        "losetup --detach /dev/loop7"
+      ]
+    },
+    {
+      "name": "linux image attached first: its mounts are released before the cycle",
+      "platform": "linux",
+      "image": "/cache/r/fixed.img",
+      "attached": true,
+      "outputs": {
+        "losetup --associated": [
+          "/dev/loop3",
+          "/dev/loop7"
+        ],
+        "losetup --find": [
+          "/dev/loop7"
+        ],
+        "findmnt --source": [
+          "/cache/r/m\n",
+          "<scratch>"
+        ]
+      },
+      "expected": [
+        "losetup --associated /cache/r/fixed.img --noheadings --output NAME",
+        "findmnt --source /dev/loop3 --noheadings --output TARGET",
+        "umount /cache/r/m",
+        "losetup --detach /dev/loop3",
+        "losetup --find --show /cache/r/fixed.img",
+        "mount -o discard,noatime /dev/loop7 <scratch>",
+        "fstrim --verbose <scratch>",
+        "losetup --associated /cache/r/fixed.img --noheadings --output NAME",
+        "findmnt --source /dev/loop7 --noheadings --output TARGET",
+        "umount <scratch>",
+        "losetup --detach /dev/loop7"
+      ]
+    },
+    {
+      "name": "windows dynamic VHDX not attached: read-only mount, full optimize, dismount",
+      "platform": "windows",
+      "image": "C:\\cache\\r\\fixed.vhdx",
+      "attached": false,
+      "outputs": {
+        "powershell.exe (Get-VHD": [
+          "False",
+          "True"
+        ]
+      },
+      "expected": [
+        "powershell.exe (Get-VHD -Path 'C:\\cache\\r\\fixed.vhdx').Attached",
+        "powershell.exe Mount-VHD -Path 'C:\\cache\\r\\fixed.vhdx' -ReadOnly -NoDriveLetter",
+        "powershell.exe Optimize-VHD -Path 'C:\\cache\\r\\fixed.vhdx' -Mode Full",
+        "powershell.exe (Get-VHD -Path 'C:\\cache\\r\\fixed.vhdx').Attached",
+        "powershell.exe Dismount-VHD -Path 'C:\\cache\\r\\fixed.vhdx'"
+      ]
+    },
+    {
+      "name": "windows path with a quote is escaped for PowerShell",
+      "platform": "windows",
+      "image": "C:\\o'brien\\fixed.vhdx",
+      "attached": false,
+      "outputs": {
+        "powershell.exe (Get-VHD": [
+          "False",
+          "True"
+        ]
+      },
+      "expected": [
+        "powershell.exe (Get-VHD -Path 'C:\\o''brien\\fixed.vhdx').Attached",
+        "powershell.exe Mount-VHD -Path 'C:\\o''brien\\fixed.vhdx' -ReadOnly -NoDriveLetter",
+        "powershell.exe Optimize-VHD -Path 'C:\\o''brien\\fixed.vhdx' -Mode Full",
+        "powershell.exe (Get-VHD -Path 'C:\\o''brien\\fixed.vhdx').Attached",
+        "powershell.exe Dismount-VHD -Path 'C:\\o''brien\\fixed.vhdx'"
+      ]
+    }
+  ],
+  "availability": [
+    {
+      "name": "consistent figures keep the volume figure",
+      "volumeAvailableBytes": 4294967296,
+      "containerFreeBytes": 4402341478,
+      "effectiveBytes": 4294967296
+    },
+    {
+      "name": "incident: 2.3 GiB reported, 81.8 GB unallocated, 64 GiB free on the host",
+      "volumeAvailableBytes": 2469606195,
+      "containerFreeBytes": 81800000000,
+      "hostFreeBytes": 68719476736,
+      "effectiveBytes": 68719476736
+    },
+    {
+      "name": "stale volume with an unknown host uses the container figure",
+      "volumeAvailableBytes": 2147483648,
+      "containerFreeBytes": 85899345920,
+      "effectiveBytes": 85899345920
+    },
+    {
+      "name": "stale volume on a roomy host uses the container figure",
+      "volumeAvailableBytes": 2147483648,
+      "containerFreeBytes": 85899345920,
+      "hostFreeBytes": 214748364800,
+      "effectiveBytes": 85899345920
+    },
+    {
+      "name": "unknown container figure keeps the volume figure",
+      "volumeAvailableBytes": 3221225472,
+      "effectiveBytes": 3221225472
+    },
+    {
+      "name": "difference exactly at the tolerance keeps the volume figure",
+      "volumeAvailableBytes": 16106127360,
+      "containerFreeBytes": 17179869184,
+      "effectiveBytes": 16106127360
+    },
+    {
+      "name": "difference one byte above the tolerance is stale",
+      "volumeAvailableBytes": 16106127359,
+      "containerFreeBytes": 17179869184,
+      "effectiveBytes": 17179869184
+    },
+    {
+      "name": "a small container uses the minimum tolerance",
+      "volumeAvailableBytes": 104857600,
+      "containerFreeBytes": 314572800,
+      "effectiveBytes": 104857600
+    },
+    {
+      "name": "a volume that reports more than the container is never lowered",
+      "volumeAvailableBytes": 9663676416,
+      "containerFreeBytes": 2147483648,
+      "hostFreeBytes": 1073741824,
+      "effectiveBytes": 9663676416
+    },
+    {
+      "name": "a full host caps a stale correction but never lowers the volume figure",
+      "volumeAvailableBytes": 2147483648,
+      "containerFreeBytes": 85899345920,
+      "hostFreeBytes": 1073741824,
+      "effectiveBytes": 2147483648
+    }
+  ]
+}

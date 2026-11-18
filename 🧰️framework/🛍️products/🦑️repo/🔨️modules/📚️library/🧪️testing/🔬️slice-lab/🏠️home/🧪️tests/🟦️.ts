@@ -1,11 +1,11 @@
 import {describe,expect,setDefaultTimeout,test} from "bun:test";
 import {spawnSync} from "node:child_process";
-import {chmodSync,existsSync,mkdirSync,mkdtempSync,readFileSync,realpathSync,rmSync,statSync,symlinkSync,writeFileSync} from "node:fs";
+import {chmodSync,existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,readlinkSync,realpathSync,rmSync,statSync,symlinkSync,writeFileSync} from "node:fs";
 import {hostname,tmpdir} from "node:os";
 import {join} from "node:path";
 import {TOOL_SETUP_V1} from "../../../../🏗️build/🧰️tool-setup/🟦️.ts";
 import {READY_STAGES_V1,runReadyStageV1} from "../../../../🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🟦️.ts";
-import {SLICE_LAB_HOME_V1 as H,sliceLabAllStagesV1,sliceLabLauncherBuildV1,sliceLabStageEnvironmentV1,sliceLabRegistryRefusalV1,sliceLabWarmBuildV1,sliceLabWarmItemsV1,sliceLabWarmV1,sliceLabCloneV1,sliceLabHomeEnvironmentV1,sliceLabHomeSeedsV1,sliceLabKindsOfSliceV1,sliceLabHomeReportV1,sliceLabLeaksV1,sliceLabLinkHomeV1,sliceLabLiveDiffV1,sliceLabLiveSnapshotV1,sliceLabObservedStagesV1,sliceLabPinnedGoSeedsV1,sliceLabSeedHomeV1,sliceLabSeedToolsV1,sliceLabSkipStagesV1,sliceLabShimsV1,sliceLabStageTableV1,sliceLabToolsForKindsV1} from "../🟦️.ts";
+import {SLICE_LAB_HOME_V1 as H,sliceLabAllStagesV1,sliceLabLauncherBuildV1,sliceLabStageEnvironmentV1,sliceLabRegistryRefusalV1,sliceLabWarmBuildV1,sliceLabWarmItemsV1,sliceLabWarmV1,sliceLabRegistryAliasV1,sliceLabCloneV1,sliceLabHomeEnvironmentV1,sliceLabHomeSeedsV1,sliceLabKindsOfSliceV1,sliceLabHomeReportV1,sliceLabLeaksV1,sliceLabLinkHomeV1,sliceLabLiveDiffV1,sliceLabLiveSnapshotV1,sliceLabObservedStagesV1,sliceLabPinnedGoSeedsV1,sliceLabSeedHomeV1,sliceLabSeedToolsV1,sliceLabSkipStagesV1,sliceLabShimsV1,sliceLabStageTableV1,sliceLabToolsForKindsV1} from "../🟦️.ts";
 
 setDefaultTimeout(60000);
 /** 🏠️ The home of a lab machine: the toolchain a slice needs comes from the declared kinds of its owners, the environment of a machine names no path of the live account, a download is refused and logged, a seed is a copy-on-write clone, a stage and a seed are told in a table, and a change outside the seam is found by a before and after listing. */
@@ -244,6 +244,24 @@ describe("slice lab home: registry, warm partitions, tool selection",()=>{
    expect(sliceLabWarmV1({state,source,stage:"tools",tools:["bun"],mounted}).map(row=>[row.id,row.method])).toEqual([["downloads","skipped: no-source"],["repo-watch","skipped: no-source"],["bun","skipped: no-source"]]);
    expect(sliceLabWarmV1({state,source:join(directory,"nowhere"),stage:"dependencies",tools:"all",mounted}).map(row=>row.method)).toEqual(["skipped: no-source"]);
    expect(()=>statSync(join(source,"d","bun-cache","@scope","pkg","a.txt"))).not.toThrow();
+  }finally{rmSync(directory,{recursive:true,force:true});}
+ });
+ test("warming makes the default-registry entries of a cache addressable under the registry of the lab",()=>{
+  const directory=realpathSync(mkdtempSync(join(tmpdir(),"slw-t178-"))),source=join(directory,"warm"),state=join(directory,"s");
+  try{
+   const cache=join(source,"t","downloads");
+   mkdirSync(join(cache,"@nx","js@1.0.0@@@1"),{recursive:true});writeFileSync(join(cache,"@nx","js@1.0.0@@@1","package.json"),"{}");
+   mkdirSync(join(cache,"tar@2.0.0@@@1"));writeFileSync(join(cache,"tar@2.0.0@@@1","index.js"),"x");
+   mkdirSync(join(cache,"fleet@3.0.0@@10.0.0.1@@@1"));mkdirSync(join(cache,"tar"));
+   mkdirSync(join(state,"b","t","m","downloads"),{recursive:true});
+   const target=join(state,"b","t","m","downloads"),host=new URL(H.registry.url).hostname;
+   expect(sliceLabWarmV1({state,source,stage:"tools",tools:[],mounted:()=>true}).find(row=>row.id==="downloads")?.method).toBe("copy");
+   expect(readlinkSync(join(target,"@nx",`js@1.0.0@@${host}@@@1`))).toBe("js@1.0.0@@@1");
+   expect(readlinkSync(join(target,`tar@2.0.0@@${host}@@@1`))).toBe("tar@2.0.0@@@1");
+   expect(spawnSync("cat",[join(target,"@nx",`js@1.0.0@@${host}@@@1`,"package.json"),join(target,`tar@2.0.0@@${host}@@@1`,"index.js")],{encoding:"utf8"})).toMatchObject({status:0,stdout:"{}x"});
+   expect(readdirSync(target).filter(name=>name.includes("fleet")||name===`tar@@${host}@@@1`)).toEqual(["fleet@3.0.0@@10.0.0.1@@@1"]);
+   expect(readdirSync(cache).some(name=>name.includes(host))).toBe(false);
+   expect(sliceLabRegistryAliasV1(target,H.registry.url)).toBe(0);
   }finally{rmSync(directory,{recursive:true,force:true});}
  });
  test("the real partition test tells a plain directory from a mounted one by the device of its mount directory",()=>{

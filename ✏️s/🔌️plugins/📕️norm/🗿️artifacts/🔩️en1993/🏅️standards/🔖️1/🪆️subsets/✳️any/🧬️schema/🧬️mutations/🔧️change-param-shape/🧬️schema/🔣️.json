@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-param-shape/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1993/mutation/change-param-shape/schema.json",
   "title": "ChangeParamShape",
   "type": "object",
   "additionalProperties": false,
@@ -30,7 +30,7 @@
       }
     },
     "newShape": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/ParametricShape",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1993/snapshot.json#/$defs/ParametricShape",
       "x-semio-ui": {
         "label": {
           "en": "Shape",

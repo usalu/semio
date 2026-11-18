@@ -29,6 +29,7 @@ fn close(owner: &mut UiPendingPatch, grant: usize) -> usize {
 
 #[test]
 fn retained_pending_patch_closes_all_native_component_payloads_and_exact_surface_bytes() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = fixture();
     let components: serde_json::Value = serde_json::from_str(include_str!("../../../../../🌳️typed/🧩️components.json")).unwrap();
     for row in components["cases"].as_array().unwrap() {
@@ -49,6 +50,7 @@ fn retained_pending_patch_closes_all_native_component_payloads_and_exact_surface
 
 #[test]
 fn retained_pending_patch_keeps_empty_backing_and_partial_owner_through_unwind() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = fixture();
     for frontier in fixture["frontiers"].as_array().unwrap() {
         let mut ops = UiPatchOps::default();

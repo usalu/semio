@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "noteCount": 47,
+  "noteCount": 48,
   "dependenciesSynopsis": "dependencies sync|lock --all|--scope <owner> | ensure",
   "scopedSubcommands": [
     { "operation": "dependencies", "subcommand": "ensure", "flags": [], "examples": ["repo dependencies ensure"], "excludedExamples": ["repo dependencies lock --all", "repo dependencies sync --all"] },

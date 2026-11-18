@@ -94,6 +94,27 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
   });
 
+  describe("🃏️ interpreted card containers", () => {
+    afterEach(() => cleanup());
+
+    it("renders a `cardStack` as the React CardStack and a `card` as an OverviewCard named by its label with its description as the footer chip", () => {
+      const body = (id: number, key: string) => node(id, key, { type: "text", value: key, emphasize: null, dataAttributes: null });
+      const card = (id: number, key: string, label: string, description: string | null, children: readonly number[]) =>
+        node(id, key, { type: "container", role: "card", label, description, required: null, error: null, defaultOpen: null, dropOverlay: null }, children);
+      mount([container(1, "deck", "cardStack", null, [2, 4]), card(2, "first", "First", "Open", [3]), body(3, "first.body"), card(4, "second", "Second", null, [5]), body(5, "second.body")], 1);
+      const stack = document.getElementById(`${SURFACE}/deck`);
+      expect(stack).not.toBeNull();
+      expect(stack!.hasAttribute("data-card-stack")).toBe(true);
+      const cards = stack!.querySelectorAll("section[data-overview-card]");
+      expect(cards.length).toBe(2);
+      expect(cards[0]!.querySelector("h2")!.textContent).toBe("First");
+      expect(cards[0]!.querySelector('[data-slot="window-chrome-footer"]')!.textContent).toBe("Open");
+      expect(cards[1]!.querySelector("h2")!.textContent).toBe("Second");
+      expect(cards[1]!.querySelector('[data-slot="window-chrome-footer"]')?.textContent ?? "").toBe("");
+      expect(cards[0]!.getAttribute("aria-labelledby")).toBe(cards[0]!.querySelector("h2")!.id);
+    });
+  });
+
   describe("🪟️ interpreted surface retirement", () => {
     afterEach(() => cleanup());
 

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/insert-pile-group/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1997/mutation/insert-pile-group/schema.json",
   "title": "InsertPileGroup",
   "type": "object",
   "additionalProperties": false,
@@ -34,7 +34,7 @@
       }
     },
     "pileGroup": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/$defs/PileGroup",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1997/snapshot.json#/$defs/PileGroup",
       "x-semio-ui": {
         "role": "value",
         "label": {

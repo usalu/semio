@@ -33,6 +33,7 @@ test("in a child only a recorded STOP above the alone cap refuses an owner up fr
   const enforcement=await enforce(root,host),cap=farmAloneCapV1(host);
   expect(enforcement.neverHere!(["@semio-tech/fits","@semio-tech/noisy","@semio-tech/over","@semio-tech/unknown"],cap),`child on ${host} MB`).toEqual(["@semio-tech/over"]);
  }
+ recordOwnerCostFileV1(path,{name:"@semio-tech/fits",kind:"project",megabytes:1500,seconds:90,rows:10,stopped:false,atMs:now,hostMegabytes:8192});
  const small=await enforce(root,8192);
  expect(small.neverHere!(["@semio-tech/fits"])).toEqual(["@semio-tech/fits"]);
 });

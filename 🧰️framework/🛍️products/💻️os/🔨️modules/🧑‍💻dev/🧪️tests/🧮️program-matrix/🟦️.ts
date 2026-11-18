@@ -65,8 +65,8 @@ const subsetOf = (appId: string): string => /@[^/]+\/([^#]+)#/u.exec(appId)?.[1]
 const baseKeyOf = (program: MatrixProgram): string => `${program.pluginId}/${kindOf(program.appId)}`;
 export const keyOf = (program: MatrixProgram): string => `${baseKeyOf(program)}${subsetOf(program.appId) === "*" ? "" : `/${subsetOf(program.appId)}`}`;
 
-/** 📕️ The plugins that split the fifteen norm families; every one stages its kind through `setSnapshot`. */
-const NORM_PLUGIN_IDS: ReadonlySet<string> = new Set(["norm", "norm-eurocode", "norm-eurocode-materials"]);
+/** 📕️ The five plugins that split the fifteen norm families; every one stages its kind through `setSnapshot`. */
+const NORM_PLUGIN_IDS: ReadonlySet<string> = new Set(["norm", "norm-energy", "norm-eurocode", "norm-eurocode-structural", "norm-eurocode-materials"]);
 
 /** 📕️ Each norm standard's `setSnapshot` stages ITS OWN codec-canonical document: the `➡️after` snapshot of the
  * standard's first committed mutation fixture, folded to one line by deleting line breaks only — never re-serialized, so

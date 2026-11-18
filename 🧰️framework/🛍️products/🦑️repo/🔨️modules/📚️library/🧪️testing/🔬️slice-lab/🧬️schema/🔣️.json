@@ -15,6 +15,7 @@
         "machineEnvironment": "SEMIO_SLICE_LAB_MACHINE",
         "runtimePrefix": "/tmp/sl-",
         "maximumWorkDirectoryCharacters": 40,
+        "minimumFreeBytes": 42949672960,
         "memoryChoices": [16384, 8192],
         "defaultTimeoutSeconds": 1800,
         "target": "build",
@@ -83,6 +84,7 @@
           "churn": "files of the tree below `framework` that peers changed while the run was going (a read of a moving tree is invalidated by them): {count}{sample}",
           "detached": "disk images the lab detached after the machines were stopped: {count}",
           "windows": "the lab lists processes with ps and runs on macOS and Linux",
+          "disk": "the disk of {path} has {free} GiB free; a lab needs {need} GiB (the workspace stage creates the fixed rust cache image of 32 GiB, which macOS refuses to size beyond the free space, and the lab itself takes about 8 GiB): free space and run again",
           "frozen": "frozen view: {files} files ({megabytes} MB logical, cloned in {seconds} s without copying bytes where the file system clones); {drift} files of the live tree changed since the freeze and stay invisible to the machines",
           "frozenChurn": "files of the frozen view that changed during the run (must be 0): {count}{sample}",
           "usage": "usage: slice-lab run [--machines=1|2] [--memory=16384|8192] [--cores=8] [--slice=a,b,...] [--target=build] [--timeout=1800] [--execute] [--frozen[=<dir>]] [--edit=<file>] [--stagger=<seconds>|-1] [--out=<dir>] [--lang=en|de]"
@@ -108,6 +110,7 @@
           "churn": "Dateien des Baums unter `framework`, die andere während des Laufs geändert haben (ein Lesen eines bewegten Baums wird dadurch ungültig): {count}{sample}",
           "detached": "Disk-Images, die das Labor nach dem Stopp der Maschinen gelöst hat: {count}",
           "windows": "das Labor listet Prozesse mit ps und läuft auf macOS und Linux",
+          "disk": "die Platte von {path} hat {free} GiB frei; ein Labor braucht {need} GiB (die Stufe workspace legt das feste Rust-Cache-Image von 32 GiB an, dessen Grösse macOS über dem freien Platz verweigert, und das Labor selbst belegt etwa 8 GiB): Platz schaffen und erneut starten",
           "frozen": "eingefrorene Sicht: {files} Dateien ({megabytes} MB logisch, in {seconds} s geklont ohne Bytes zu kopieren, wo das Dateisystem klont); {drift} Dateien des Live-Baums haben sich seit dem Einfrieren geändert und bleiben für die Maschinen unsichtbar",
           "frozenChurn": "Dateien der eingefrorenen Sicht, die sich während des Laufs geändert haben (muss 0 sein): {count}{sample}",
           "usage": "Aufruf: slice-lab run [--machines=1|2] [--memory=16384|8192] [--cores=8] [--slice=a,b,...] [--target=build] [--timeout=1800] [--execute] [--frozen[=<dir>]] [--edit=<file>] [--stagger=<Sekunden>|-1] [--out=<dir>] [--lang=en|de]"

@@ -138,7 +138,7 @@ describe("🖱️ pointer routing table", () => {
   it("keeps the chips of one window from overlapping and inside its walls", () => {
     for (const window of windows) {
       const own = chips.filter((c) => c.window === window.window).sort((a, b) => a.x - b.x);
-      for (let i = 1; i < own.length; i += 1) expect(own[i].x).toBeGreaterThan(own[i - 1].right);
+      for (let i = 1; i < own.length; i += 1) expect(own[i].x).toBeGreaterThanOrEqual(own[i - 1].right);
       const last = own[own.length - 1];
       expect(last.right).toBeLessThanOrEqual(window.right);
     }

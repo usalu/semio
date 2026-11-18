@@ -193,9 +193,9 @@ pub mod laws {
     use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
     use semio_s_artifact_fem_3d_mutations::central_apply::apply_fem3d_mutation;
 
-    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 
-    fn snapshot(text: &str) -> Fem3dSnapshot {
+    fn snapshot(text: &str) -> Fem3dSnapshotValue {
         semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes")
     }
 
@@ -207,7 +207,7 @@ pub mod laws {
         semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed JSON parses")
     }
 
-    fn applied(base: &Fem3dSnapshot, operation: &Fem3dMutation) -> Fem3dSnapshot {
+    fn applied(base: &Fem3dSnapshotValue, operation: &Fem3dMutation) -> Fem3dSnapshotValue {
         let mut snapshot = base.clone();
         apply_fem3d_mutation(&mut snapshot, operation).expect("the leaf applies");
         snapshot
@@ -220,11 +220,11 @@ pub mod laws {
         assert_eq!(produced, snapshot(after), "the applied state is the committed after-snapshot");
         assert_ne!(produced, base, "a forward vector moves the model");
         assert_eq!(semio_framework_value::ToValue::to_value(protocol::ColdMutation::diff(&operation, &base).diff()), value(diff), "the produced delta is the committed one");
-        assert_eq!(<Fem3dMutation as protocol::SemanticMutation<Fem3dSnapshot>>::semantics(&operation).kind, "move-selection");
+        assert_eq!(<Fem3dMutation as protocol::SemanticMutation<semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot>>::semantics(&operation).kind, "move-selection");
     }
 
     /// 🔣️ The committed snapshot, decoded.
-    pub fn decoded_snapshot(text: &str) -> Fem3dSnapshot {
+    pub fn decoded_snapshot(text: &str) -> Fem3dSnapshotValue {
         snapshot(text)
     }
 

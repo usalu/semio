@@ -165,3 +165,50 @@ Native build, second fault after the disk space: `Internal error: Bun installati
 ## Owner decision 2026-11-14 05:30 UTC
 
 Asked in the session: the native build on g1-m03 waits for the fixes of the g1-m07 session; no build code is changed from g1-m03 and no periodic retry runs. When the fixes have arrived: `bash 🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh setup` in `~/Documents/semio`, then `preflight --group g1` and `fleet --wait 120`. Fleet state at 05:25 UTC: all eight origins `lagging` on a common checkpoint about 3221 s old, none `diverged`.
+
+## Update 2026-11-18 07:20 UTC: Worker Ready, Final Checks
+
+Worker setup
+- The fleet agent's own setup (`ready` child, stages native → repo-mcp → dependencies → tools → workspace) reported `ready: true` for g1-m03 at 2026-11-18T03:58:53Z; the workspace stage ended with exit 0 on its 37th attempt. `.cache/f/native-bootstrap.done` exists.
+- `repo preflight --lang en` in the worktree root: exit 0 (04:41Z).
+- Details: `☀️14/WORKERS-READY-WITH-LOW-RESOURCES/workers/g1-m03/round-30.md` (my own five tries, none reached exit 0) and `round-31.md` (observation until ready, preflight, replica status).
+
+One canonical folder
+- `/Users/Shared/semio` does not exist (`ls`: No such file or directory). `~/Documents/semio` is the only worktree. The old folder is in `~/.Trash/semio-old-worktree-users-shared-20261114`.
+
+Same state as the other machines
+- Replica `status` at 04:52Z: `g1-m03 … 0/0 cp:0s on ca097b4fae32 196/33/123 … ok`, 0 events behind for every origin. Same code digest and same view counts as g1-m08 and g1-m10 (both `ok`).
+- Replica `verify` twice: 07:04Z drift on 3 of 302874 paths (two ticket files others were writing and my own output file); 07:15Z drift on 1 of 302886 paths (`🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🧪️fixture/🦀️.rs`, state differs). The three paths of the first run were clean in the second, and the one path of the second is a different file: these are edits in flight during the 10-minute check, not a standing difference.
+- `ready: true` at 04:52Z also on g1-m07 and g1-m08; the other workers were still in their workspace or tools stage. The fleet-wide line "not in agreement" comes from other origins (g1-m01 diverged, g1-m02/m04/m06 stale attestations, g1-m05/m07/server lagging), not from g1-m03.
+
+Local changes of the old folder
+- Merged on 2026-11-14 (see above): 8 files copied; full content comparison done then.
+- Two edits were deliberately not merged and stay as patches in `☀️13/GET-MIT-BESTAND-DEMONSTRATOR-RUNNING-END-TO-END/🩹patches`. Checked again today against the current tree:
+  - `old-worktree-script-inputs-debug.patch`: only `[DEBUG] hitcost` counters (temporary instrumentation, marked for removal by the repo rule). Current tree: 0 occurrences of `hitcost`. Not a change to keep.
+  - `old-worktree-project-nodes.patch`: one line, `bindClosureStoreV1(workspaceRoot, session.closureStore, true)` in `createProjectInferenceEnvironmentV1` (makes the closure store of the inference session writable). The current fleet code keeps that call read-only and passes `true` at the two job sites instead (`bindClosureStoreV1(environment.workspaceRoot, job.closureStore, true)`), and it now refuses computing in the parent of a read (`graph.read-parent-computes`). The experiment's intent is covered by the later design; applying the old line would work against it. Left unapplied on purpose; the patch file stays for the owner of that ticket.
+- My own edit of 2026-11-14 in `📚️library/🗂️workspaces/🟦️bun/🟨️.cjs` (a root symlink without `package.json` is no installation owner) is in the tree and committed (`3cde99d423d`). Its two tests in `🧪️tests/🟦️.ts` ("a root symlink to a plain file …", "a root symlink to a directory …") pass: `repo tools exec bun -- test ./🧪️tests/🟦️.ts -t "root symlink"` → 2 pass, 0 fail (2026-11-18).
+
+Left for the owner
+- Empty the Trash (old worktree, old git packs).
+- `/usr/local/bin/repo` still links to `~/.local/bin/repo`; relinking needs the provision script with sudo.
+- Free disk about 28 GiB.
+
+## Update 2026-11-18 08:40 UTC: Verify Clean, Old Edits Settled
+
+Replica
+- `verify --lang en` at 08:27Z: `No drift: 302928 shared paths agree with the state and the store.` Exit 0. (The two runs at 07:04Z and 07:15Z had 3 and 1 paths in flight.)
+- `status --lang en` at 08:37Z (exit 0): g1-m03 `0s 0/0 cp:0s on ca097b4fae32 3809/43/296 … ok`. The same code digest and the same view counts 3809/43/296, verdict `ok`, on g1-m01, g1-m07, g1-m08, g1-m10 and g1-server. g1-m03 is in the same state as every origin that is up to date.
+- The fleet line still reads "not in agreement" because of four other origins: g1-m02 stale (attestation 239 s old), g1-m04 stale (124236 s), g1-m06 stale (168949 s), g1-m05 lagging (228 queued). Nothing on g1-m03 can change that; those machines have to attest again.
+- `ready.json` at 08:37Z: ready true on g1-m03, g1-m07, g1-m08, g1-m10; g1-m01, g1-m02, g1-m06 in workspace, g1-m04 and g1-m05 in tools.
+
+The two edits of the old folder that were kept as patches
+- `old-worktree-project-nodes.patch` (2026-11-14, one line: bind the closure store writable for the inference session). Git history of `📦️project-nodes/🟨️.mjs`: commits `5ececaa78b9` (12 Nov) and `efff7f986f5` (15 Nov) have only the read-only session bind; commit `3cde99d423d` (18 Nov) has, in addition, `bindClosureStoreV1(environment.workspaceRoot, job.closureStore, true)` at both job sites. The farm child creates its environment from the session and every job then binds the store writable. So what the old line was for (inference work may write the closure store) is in the canonical tree now, put there by the fleet at the job level. The old line itself is superseded; applying it on top would only make the parent session writable as well, which the current design does not do. Settled: content present in the tree in its later form.
+- `old-worktree-script-inputs-debug.patch`: `[DEBUG] hitcost` counters only (`globalThis.__hc`), no behaviour. Temporary logs carry the `[DEBUG]` prefix so that they are removed, not merged. Settled: nothing to merge.
+- Both patch files stay in `☀️13/GET-MIT-BESTAND-DEMONSTRATOR-RUNNING-END-TO-END/🩹patches` as the record. They are now the only copy of those two edits: `~/.Trash/semio-old-worktree-users-shared-20261114` no longer exists at 08:20Z (the Trash listing itself is not readable from this shell).
+
+## Update 2026-11-18 09:05 UTC: What Cannot Be Closed From This Machine
+
+- `verify` run four times today: 07:04Z 3 paths, 07:15Z 1 path, 08:27Z no drift (exit 0), 08:59Z 1 path (`☀️14/WORKERS-READY-WITH-LOW-RESOURCES/result-R178.md`, content differs). Every differing path was a different file each time and each is a file somebody was writing during the 10-minute check. The tree is live (the coordinator writes result files continuously), so a check that long is clean only when nobody writes in that window. There is no standing difference on g1-m03.
+- Fleet agreement: depends on g1-m02, g1-m04, g1-m06 attesting again and g1-m05 catching up. Not reachable from g1-m03.
+- Readiness of the other workers (g1-m01, g1-m02, g1-m04, g1-m05, g1-m06): their own fleet agents are still working on it. Not reachable from g1-m03.
+- The two old edits, dry-run against the current files (`patch --dry-run`): `old-worktree-script-inputs-debug.patch` does not apply any more (exit 1; the fleet rewrote those lines), `old-worktree-project-nodes.patch` would still apply (exit 0). My decision stands: neither is applied. The debug counters cannot be merged and are temporary by definition; the one-liner's purpose is already in the tree at the job sites, and changing shared graph code on every machine for a superseded experiment is not justified. If the owner wants the one-liner anyway, it is one line and the patch file is there.

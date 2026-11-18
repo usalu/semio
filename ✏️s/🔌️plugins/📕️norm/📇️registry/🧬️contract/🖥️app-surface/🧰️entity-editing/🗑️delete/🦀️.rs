@@ -16,8 +16,8 @@ impl DeleteRefusal {
     /// 🆔️ The fault code of the refusal, a row of [`norm_fault_notices`](crate::norm_fault_notices) with its EN and DE sentence.
     pub fn code(&self) -> &'static str {
         match self {
-            Self::Nothing => "norm.entity-delete-empty",
-            Self::UnknownCollection(_) | Self::UnknownId { .. } => "norm.entity-delete-unknown",
+            Self::Nothing => "norm.editor.entity-delete-empty",
+            Self::UnknownCollection(_) | Self::UnknownId { .. } => "norm.editor.entity-delete-unknown",
         }
     }
 

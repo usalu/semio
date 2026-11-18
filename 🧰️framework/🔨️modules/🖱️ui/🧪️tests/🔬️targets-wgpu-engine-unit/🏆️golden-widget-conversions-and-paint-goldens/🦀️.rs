@@ -60,6 +60,8 @@ fn to_widget_node(node: &UiNode) -> WidgetNode<ActionDescriptor> {
         UiNode::Image(image) => WidgetNode::Image { id: image.id.clone(), src: image.src.clone(), alt: image.alt.clone().map(|alt| alt.to_string()) },
         UiNode::ComponentScene(scene) => WidgetNode::component_scene(scene),
         UiNode::ExternalSlot(slot) => WidgetNode::ExternalSlot { body_key: slot.body_key.clone() },
+        UiNode::CardStack(stack) => WidgetNode::Stack { direction: "vertical".into(), gap: None, padding: None, children: stack.children.iter().map(to_widget_node).collect() },
+        UiNode::OverviewCard(card) => WidgetNode::Section { id: card.id.clone(), label: Some(card.title.to_string()), default_open: true, children: card.children.iter().map(to_widget_node).collect() },
     }
 }
 
@@ -169,7 +171,7 @@ fn stats(draw: &DrawList) -> (usize, usize, usize) {
 }
 
 fn retained_stats(node: &UiNode) -> (usize, usize, usize) {
-    let mut ui = Ui::new(semio_ui_locale::Locale::En);
+    let mut ui = UiFixture::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("golden", node);
     drive_layout(&mut ui, "golden", 400.0, 400.0, &mut atlas);
@@ -321,7 +323,7 @@ fn checkbox_checked_state_does_not_paint_a_selection_outline() {
     let height = paint["availableHeight"].as_f64().unwrap() as f32;
     let side = paint["controlSide"].as_f64().unwrap() as f32;
     for checked in paint["checkedStates"].as_array().unwrap().iter().map(|value| value.as_bool().unwrap()) {
-        let mut ui = Ui::new(semio_ui_locale::Locale::En);
+        let mut ui = UiFixture::new(semio_ui_locale::Locale::En);
         let mut atlas = FontAtlas::builtin();
         let toggle = UiNode::Toggle(UiToggleNode { appearance: ui_contract::ToggleAppearance::Checkbox, id: "checkbox".into(), icon_id: IconName::CircleDot, text: None, on_change: action(), presence: UiPresence::selected(checked), menu: None });
         ui.apply_tree("checkbox-paint", &leaf(toggle));

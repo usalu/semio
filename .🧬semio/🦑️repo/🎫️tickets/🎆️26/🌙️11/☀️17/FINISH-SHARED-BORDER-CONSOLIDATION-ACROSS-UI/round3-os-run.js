@@ -19,13 +19,13 @@ const ensureFrames = async () => {
 };
 export async function run(part, { mark = false, wait = 900 } = {}) {
   await ensureFrames();
-  const m = await import(base + "round3-os-live.tsx?t=" + Date.now());
+  const m = window.__osLive ??= await import(base + "round3-os-live.tsx");
   await m.show(part);
   await pump(wait);
   for (let i = 0; i < 25 && document.querySelector("[data-shared-border-pending]"); i++) await pump(200);
   await pump(300);
   for (let i = 0; i < 25 && document.querySelector("[data-shared-border-pending]"); i++) await pump(200);
-  const p = await import(base + "border-gap-probe.js?t=" + Date.now());
+  const p = window.__osProbe ??= await import(base + "border-gap-probe.js");
   const r = p.probe({ mark });
   return `${r.count} ${part} w${innerWidth} art${r.art.length} edges${r.edges} pn${r.panels} ov${r.overlaps.length}${r.pending ? " PENDING" : ""}` + (r.violations.length ? "\n   " + r.violations.slice(0, 12).map(v => v.distance + " @" + v.at + " " + v.a + " || " + v.b).join("\n   ") : "") + (r.overlaps.length ? "\n   OVERLAP " + r.overlaps.slice(0, 6).map(o => o.area + " " + o.a + " || " + o.b).join("\n   OVERLAP ") : "");
 }

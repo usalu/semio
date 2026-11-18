@@ -1,9 +1,9 @@
 import {spawnSync} from "node:child_process";
-import {constants,copyFileSync,existsSync,lstatSync,mkdirSync,readdirSync,readFileSync,readlinkSync,realpathSync,symlinkSync,unlinkSync,utimesSync,writeFileSync} from "node:fs";
-import {dirname,join,sep} from "node:path";
+import {constants,copyFileSync,existsSync,lstatSync,mkdirSync,readdirSync,readFileSync,readlinkSync,realpathSync,rmSync,symlinkSync,utimesSync,writeFileSync} from "node:fs";
+import {dirname,join,resolve,sep} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 
-const F=schema.definitions.Policy.const.frozen,MEGABYTE=1048576;
+const F=schema.definitions.Policy.const.frozen,MEGABYTE=1048576,CLONE_SCRIPT="import ctypes,sys\nl=ctypes.CDLL(\"/usr/lib/libSystem.B.dylib\",use_errno=True)\nr=l.clonefile(sys.argv[1].encode(),sys.argv[2].encode(),0)\nif r!=0:\n  sys.stderr.write(\"clonefile errno %d\\n\"%ctypes.get_errno())\n  sys.exit(1)\n";
 
 /** 🧊️ What a freeze cloned: the files of the frozen root (`tracked` of them in its git index), the logical size, the paths left out and the entries that vanished or were no files while the listing was taken. */
 export type FrozenRootV1=Readonly<{root:string;files:number;tracked:number;megabytes:number;seconds:number;excluded:number;vanished:number;linked:number;cloned:number;ambient:number;reused:boolean}>;
@@ -78,20 +78,17 @@ export function frozenRootV1(source:string,directory:string):FrozenRootV1{
  return made;
 }
 
-/** 🔁️ Gives a reusable frozen root back its links after a run whose `dependencies` stage was real: that stage links every `node_modules` of the root into the generations of the lab's own state, which the end of the run deletes; each such link (found among the ignored paths of the root, and the root `node_modules` itself) is made again as the live tree has it, and the root `node_modules` is rebuilt as the directory of entry links of a freeze. Returns how many links were made again. */
-export function relinkFrozenRootV1(source:string,root:string,work:string):number{
- const below=work+sep,pointsIntoWork=(path:string):boolean=>{try{return lstatSync(path).isSymbolicLink()&&readlinkSync(path).startsWith(below);}catch{return false;}};
- let made=0;
- for(const name of names(git(root,["ls-files","-z","--others","--ignored","--exclude-standard","--directory"]))){
-  const path=name.replace(/\/$/u,""),at=join(root,path);
-  if(path==="node_modules"||!pointsIntoWork(at))continue;
-  const from=join(source,path);
-  unlinkSync(at);made++;
-  try{if(lstatSync(from).isSymbolicLink())symlinkSync(readlinkSync(from),at);}catch{}
- }
- if(pointsIntoWork(join(root,"node_modules"))){unlinkSync(join(root,"node_modules"));made++;}
- linkAmbientV1(source,root);
- return made;
+/** 🧬️ Gives one machine a checkout of its own: the frozen root is cloned below `destination` (a copy-on-write clone of the whole directory in one call on macOS, so no space and no time per file; a copy elsewhere; the links keep their targets), the `.cache` of the clone is emptied (a machine starts without state, whatever an earlier run left in the frozen root) and the ambient links of a freeze are made again. The frozen root itself is never run in: a real `dependencies` stage rewrites the `node_modules` links of the root it runs in, and two machines that share one root share its `.nx` and its checkout paths, which the Nx tooling cannot tell apart. @see https://developer.apple.com/documentation/kernel/1558433-clonefile */
+export function cloneFrozenRootV1(frozen:string,live:string,destination:string):Readonly<{root:string;seconds:number}>{
+ const started=Date.now(),target=resolve(destination);
+ if(existsSync(target))throw Error(`The machine root ${target} exists / Das Maschinenverzeichnis ${target} existiert`);
+ mkdirSync(dirname(target),{recursive:true});
+ const run=process.platform==="darwin"?spawnSync("/usr/bin/python3",["-I","-c",CLONE_SCRIPT,frozen,target],{encoding:"utf8"}):spawnSync("cp",["-a","--reflink=auto",frozen,target],{encoding:"utf8"});
+ if(run.status!==0)throw Error(`The clone of ${frozen} failed: ${String(run.stderr).trim().slice(0,300)} / Der Klon von ${frozen} ist fehlgeschlagen`);
+ rmSync(join(target,".cache"),{recursive:true,force:true});
+ mkdirSync(join(target,".cache"),{recursive:true});
+ linkAmbientV1(live,target);
+ return Object.freeze({root:target,seconds:Math.round((Date.now()-started)/100)/10});
 }
 
 /** ✏️ Appends one line feed to a file of a frozen root (the one edited file of a two-machine run) and returns the function that writes the original bytes and times back; the write leaves the other clones of the file untouched. */

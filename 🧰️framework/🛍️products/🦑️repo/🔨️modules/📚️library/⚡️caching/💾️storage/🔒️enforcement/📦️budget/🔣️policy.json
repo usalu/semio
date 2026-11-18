@@ -30,7 +30,7 @@
       "maximumBytes": 42949672960
     },
     "rust": {
-      "needBytes": 103080263680,
+      "needBytes": 34359738368,
       "headroomPercent": 25,
       "hostFreeReservePercent": 50,
       "alignBytes": 1073741824,
@@ -42,6 +42,11 @@
       "minimumBytes": 34359738368,
       "maximumBytes": 103080263680
     }
+  },
+  "reclaim": {
+    "reclaimFloorBytes": 8589934592,
+    "reclaimRatioPercent": 300,
+    "reclaimTightHostFreeBytes": 51539607552
   },
   "partitions": {
     "rust": {

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-action-category/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1992/mutation/change-action-category/schema.json",
   "title": "ChangeActionCategory",
   "type": "object",
   "additionalProperties": false,
@@ -51,7 +51,7 @@
       }
     },
     "newCategory": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/PsiCategory",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1992/snapshot.json#/$defs/PsiCategory",
       "x-semio-ui": {
         "label": {
           "en": "Action category",

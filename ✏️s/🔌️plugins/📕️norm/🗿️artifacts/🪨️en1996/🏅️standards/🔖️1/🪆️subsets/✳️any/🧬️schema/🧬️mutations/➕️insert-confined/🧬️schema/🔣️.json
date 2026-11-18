@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/insert-confined/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1996/mutation/insert-confined/schema.json",
   "title": "InsertConfined",
   "type": "object",
   "additionalProperties": false,
@@ -51,7 +51,7 @@
       }
     },
     "confined": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/ConfinedElement",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1996/snapshot.json#/$defs/ConfinedElement",
       "x-semio-ui": {
         "role": "value",
         "label": {

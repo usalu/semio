@@ -42,7 +42,7 @@ pub fn handle_edits<D, M, F>(document: &D, edits: &[NormEdit], resolve: F) -> Re
 where
     F: FnMut(&D, &NormEdit) -> Result<Vec<M>, String>,
 {
-    commit_snapshot_fields(resolve_edits(document, edits, resolve).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("norm.edit-unresolved"), error))?)
+    commit_snapshot_fields(resolve_edits(document, edits, resolve).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("norm.editor.edit-unresolved"), error))?)
 }
 
 /// 🌳️ Applies edits to a plain value tree (the reducer behind live previews and the test oracle).

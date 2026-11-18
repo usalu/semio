@@ -23,7 +23,7 @@ use framework_schema::ArtifactSchema;
 #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.norm.en1993.inference")]
+#[artifact_schema(id = "s.norm-eurocode-structural.en1993.inference")]
 pub struct En1993Inference {
     #[derived]
     pub outline: En1993Outline,
@@ -40,23 +40,23 @@ impl protocol::Inference<En1993Snapshot> for En1993Inference {
 
 impl protocol::InferenceSpec<En1993Snapshot> for En1993Inference {
     fn inference_schema_id() -> &'static str {
-        "s.norm.en1993.inference"
+        "s.norm-eurocode-structural.en1993.inference"
     }
     fn schema_version() -> u32 {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.norm.en1993.inference.outline", reads: &["annex", "reliabilityClass", "materials", "sections", "members", "loadCases", "memberActions", "joints", "fatigueDetails", "fireExposures", "coldFormedMembers", "platedPanels", "siloShells", "tensionComponents", "bridgeFatigue", "towerLegs", "piles", "craneRunways", "storeys", "restraints", "builtUpMembers", "weldGroups", "parametricSections", "hollowJoints", "jointRows", "frameNodes", "frameBars", "placements", "fatigueStresses", "bucklingLengths", "formingGains", "fastenedJoints", "materialDuctility"] }]
+        &[protocol::InferenceFieldSpec { id: "s.norm-eurocode-structural.en1993.inference.outline", reads: &["annex", "reliabilityClass", "materials", "sections", "members", "loadCases", "memberActions", "joints", "fatigueDetails", "fireExposures", "coldFormedMembers", "platedPanels", "siloShells", "tensionComponents", "bridgeFatigue", "towerLegs", "piles", "craneRunways", "storeys", "restraints", "builtUpMembers", "weldGroups", "parametricSections", "hollowJoints", "jointRows", "frameNodes", "frameBars", "placements", "fatigueStresses", "bucklingLengths", "formingGains", "fastenedJoints", "materialDuctility"] }]
     }
 }
 //#endregion 🔖️Inference
 
 //#region 🔖️Descriptor
-/// 💡️ Registers `s.norm.en1993.inference`'s facet leaves into the OS-wide inference catalog — call once at
+/// 💡️ Registers `s.norm-eurocode-structural.en1993.inference`'s facet leaves into the OS-wide inference catalog — call once at
 /// plugin init, alongside `en1993_artifact_schema_descriptor`'s registration.
 pub fn en1993_artifact_inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {
     semio_framework_schema_registry::ArtifactInferenceDescriptor {
-        id: "s.norm.en1993.inference",
+        id: "s.norm-eurocode-structural.en1993.inference",
         inference: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }

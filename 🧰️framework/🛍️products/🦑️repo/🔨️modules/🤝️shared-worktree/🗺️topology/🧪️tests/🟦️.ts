@@ -813,6 +813,8 @@ test("a Linux group server switches NFS delegations off before its NFS server st
 });
 
 const bash=Bun.which("bash");
+/** 🐚 Forward-slash form of a host path for splicing into a `bash -c` string, where backslashes would be eaten and mangle the path. */
+const posix=(path:string):string=>path.replaceAll("\\","/");
 function shellBlock(from:string,to:string,body:string,tools:readonly string[],extra:string=""):Readonly<{out:string;code:number}>{
  const root=mkdtempSync(join(tmpdir(),"semio-sh-")),bin=join(root,"bin");
  mkdirSync(bin,{recursive:true});
@@ -869,7 +871,7 @@ test("a plan on an empty worktree extracts nothing, and a tree that the script e
 test("the shell script repeats a native bootstrap that has no completion marker or no launcher, and skips one that has both",()=>{
  const root=mkdtempSync(join(tmpdir(),"semio-marker-")),home=join(root,"home/.local/bin"),tree=join(root,"tree/.cache/f");
  mkdirSync(home,{recursive:true});mkdirSync(tree,{recursive:true});
- const needed=():number=>Bun.spawnSync([bash!,"-c",`WORKTREE=${root}/tree; WORKER_HOME=${root}/home; ${provisionShell.slice(provisionShell.indexOf("BOOTSTRAP_MARKER="),provisionShell.indexOf("toolchain_packages()"))}\nbootstrap_needed`]).exitCode;
+ const needed=():number=>Bun.spawnSync([bash!,"-c",`WORKTREE=${posix(root)}/tree; WORKER_HOME=${posix(root)}/home;${provisionShell.slice(provisionShell.indexOf("BOOTSTRAP_MARKER="),provisionShell.indexOf("toolchain_packages()"))}\nbootstrap_needed`]).exitCode;
  expect(needed()).toBe(0);
  writeFileSync(join(home,"repo"),"#!/bin/sh\n",{mode:0o755});
  expect(needed()).toBe(0);
@@ -908,9 +910,9 @@ const nativeStep=(options:{repoExit:number;needed?:number;toolchain?:boolean;lau
  if(options.stale)writeFileSync(join(tree,".cache/f/native-bootstrap.done"),"2026-11-10T00:00:00Z\n");
  writeFileSync(join(bin,"repo"),`#!/bin/sh\necho "[semio] repo $*"\nif [ ${options.repoExit} != 0 ]; then echo "Cannot find module 'typescript'" >&2; fi\nexit ${options.repoExit}\n`,{mode:0o755});
  if(options.profile)writeFileSync(join(home,".profile"),options.profile);
- writeFileSync(script,`#!/usr/bin/env bash\nset -euo pipefail\ntouch "${root}/ran"\necho "[semio] cache ${"${SEMIO_REMOTE_CACHE_ENDPOINT:-}"} ${"${SEMIO_REMOTE_CACHE_ACCESS:-}"} ${"${SEMIO_REMOTE_CACHE_INSTANCE:-}"} token=${"${SEMIO_REMOTE_CACHE_TOKEN:-none}"}"\necho "[semio] workspace:setup..."\nrepo run workspace:setup\n`);
+ writeFileSync(script,`#!/usr/bin/env bash\nset -euo pipefail\ntouch "${posix(root)}/ran"\necho "[semio] cache ${"${SEMIO_REMOTE_CACHE_ENDPOINT:-}"} ${"${SEMIO_REMOTE_CACHE_ACCESS:-}"} ${"${SEMIO_REMOTE_CACHE_INSTANCE:-}"} token=${"${SEMIO_REMOTE_CACHE_TOKEN:-none}"}"\necho "[semio] workspace:setup..."\nrepo run workspace:setup\n`);
  const toolchain=options.toolchain??true?"check_toolchain(){ return 0; }":'check_toolchain(){ TOOLCHAIN_PROBLEM="missing build tools: cc: install them as root first (apt-get install -y build-essential)"; return 1; }';
- const run=Bun.spawnSync([bash!,"-c",`set -euo pipefail\nsay(){ printf '%s\\n' "$*"; }\n${constants}\nWORKTREE=${tree}; WORKER_HOME=${home}; WORKER_USER=builder; ORIGIN_ID=a1-m01; GROUP_ID=a1; EXIT_NATIVE_PENDING=3; NEEDS_NATIVE=${options.needed??1}; PLATFORM=linux\nrun_as(){ "$@"; }\n${provisionShell.slice(provisionShell.indexOf("BOOTSTRAP_MARKER="),provisionShell.indexOf("check_time_sync() {"))}\n${toolchain}\nnative_bootstrap\necho reached-the-end`],{env:{...Object.fromEntries(Object.entries(process.env).filter(([name])=>!name.startsWith("SEMIO_"))),ENVIRONMENT:options.environment??"",PATH:`${bin}:${process.env["PATH"]}`}});
+ const run=Bun.spawnSync([bash!,"-c",`set -euo pipefail\nsay(){ printf '%s\\n' "$*"; }\n${constants}\nWORKTREE=${posix(tree)}; WORKER_HOME=${posix(home)}; WORKER_USER=builder; ORIGIN_ID=a1-m01; GROUP_ID=a1; EXIT_NATIVE_PENDING=3; NEEDS_NATIVE=${options.needed??1}; PLATFORM=linux\nrun_as(){ "$@"; }\n${provisionShell.slice(provisionShell.indexOf("BOOTSTRAP_MARKER="),provisionShell.indexOf("check_time_sync() {"))}\n${toolchain}\nnative_bootstrap\necho reached-the-end`],{env:{...Object.fromEntries(Object.entries(process.env).filter(([name])=>!name.startsWith("SEMIO_"))),ENVIRONMENT:options.environment??"",PATH:`${bin}:${process.env["PATH"]}`}});
  const log=join(tree,".cache/f/native-bootstrap.log"),result={out:run.stdout.toString()+run.stderr.toString(),code:run.exitCode,marker:existsSync(join(tree,".cache/f/native-bootstrap.done")),log:existsSync(log)?readFileSync(log,"utf8"):undefined,ran:existsSync(join(root,"ran")),left:existsSync(join(tree,".cache/f/native-environment"))};
  rmSync(root,{recursive:true,force:true});
  return result;
@@ -961,7 +963,7 @@ const nativeStep=(options:{repoExit:number;needed?:number;toolchain?:boolean;lau
 
 (bash?test:test.skip)("a Linux worker gets swap up to the memory of a cold graph build before the native bootstrap, and none when RAM and swap already cover it",()=>{
  const root=mkdtempSync(join(tmpdir(),"semio-swap-")),meminfo=(ram:number,swap:number)=>{const path=join(root,`meminfo-${ram}-${swap}`);writeFileSync(path,`MemTotal:       ${ram*1024} kB\nMemFree:        1 kB\nSwapTotal:      ${swap*1024} kB\n`);return path;};
- const shortfall=(path:string):string=>Bun.spawnSync([bash!,"-c",`${provisionShell.slice(provisionShell.indexOf("COLD_GRAPH_MEMORY_MB="),provisionShell.indexOf("ensure_swap() {"))}\nswap_shortfall_mb ${path}`]).stdout.toString().trim();
+ const shortfall=(path:string):string=>Bun.spawnSync([bash!,"-c",`${provisionShell.slice(provisionShell.indexOf("COLD_GRAPH_MEMORY_MB="),provisionShell.indexOf("ensure_swap() {"))}\nswap_shortfall_mb ${posix(path)}`]).stdout.toString().trim();
  try{
   expect(shortfall(meminfo(8192,0))).toBe("8193");
   expect(shortfall(meminfo(8192,2048))).toBe("6145");

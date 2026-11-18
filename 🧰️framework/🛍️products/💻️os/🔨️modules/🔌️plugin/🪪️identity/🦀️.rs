@@ -763,7 +763,7 @@ pub fn require_declared_capability_or_record(definition: &ArtifactDefinition, de
         }
         let capability = match found {
             Some(capability) => capability,
-            None => return Err(ArtifactDefinitionError::new("artifact-definition.runtime-capability", format!("no declared {} capability owns the runtime claims", kind.as_str()))),
+            None => return Err(ArtifactDefinitionError::new("artifact-definition.runtime-capability", format!("no declared {} capability of {} owns the runtime claims [{}]", kind.as_str(), definition.identity, claims.iter().map(|claim| format!("{}={}", claim.namespace().as_str(), claim.value())).collect::<Vec<_>>().join(", ")))),
         };
         definition.require_declared_capability(kind, capability.identity(), &claims, None).map(|_| ())
     })();

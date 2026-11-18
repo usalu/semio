@@ -143,8 +143,8 @@
       "de": "Eine schwere abgeleitete Frage ist in ihrem Kindprozess fehlgeschlagen (Exit {exit}): {detail}"
     },
     "graph.heavy-question-silent": {
-      "en": "A heavy derived question was stopped: its child process wrote nothing for {seconds} s (stuck on a lock, a dead peer or a blocked loop): {detail}",
-      "de": "Eine schwere abgeleitete Frage wurde gestoppt: ihr Kindprozess hat {seconds} s lang nichts geschrieben (hängt an einer Sperre, einem toten Partner oder einer blockierten Schleife): {detail}"
+      "en": "A heavy derived question was stopped: its child process showed no sign of life for {seconds} s, no output and no processor time (question {question}, last phase {phase}, longest event-loop stall {lag} s; a dead peer, a lock nobody releases or a frozen process): {detail}",
+      "de": "Eine schwere abgeleitete Frage wurde gestoppt: ihr Kindprozess hat {seconds} s lang kein Lebenszeichen gezeigt, weder Ausgabe noch Prozessorzeit (Frage {question}, letzte Phase {phase}, längster Stillstand der Ereignisschleife {lag} s; ein toter Partner, eine Sperre, die niemand freigibt, oder ein eingefrorener Prozess): {detail}"
     },
     "closure.tool-unknown": {
       "en": "The shared closure policy declares no tool command {name}",

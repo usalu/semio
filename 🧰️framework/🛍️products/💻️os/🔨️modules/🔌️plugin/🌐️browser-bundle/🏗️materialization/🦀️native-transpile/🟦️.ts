@@ -6,12 +6,12 @@ export function nativeTranspileBinaryNameV1(platform: string = process.platform)
   return platform === "win32" ? "semio-native-transpile.exe" : "semio-native-transpile";
 }
 
-/** 📍️ The staged native transpile of a platform: `SEMIO_NATIVE_TRANSPILE_BIN` when set, else the release tool directory the `📜️stage.ts` script fills.
- * @see {@link ./📜️stage.ts} */
+/** 📍️ The staged native transpile of a platform: `SEMIO_NATIVE_TRANSPILE_BIN` when set, else the release tool directory the `📜️script.ts` build fills.
+ * @see {@link ./📜️script.ts} */
 export function nativeTranspileBinaryV1(repoRoot: string, environment: Readonly<Record<string, string | undefined>> = process.env, platform: string = process.platform): string {
   const selected = environment.SEMIO_NATIVE_TRANSPILE_BIN;
   const path = selected ? resolve(repoRoot, selected) : join(repoRoot, ".cache", "b", "p", "m", "browser", "release", "tools", "native-transpile", platform, nativeTranspileBinaryNameV1(platform));
-  if (!existsSync(path)) throw new Error(`native transpile is not staged at ${path}; run \`repo ./📜️stage.ts\` in ${join("🧰️framework", "🛍️products", "💻️os", "🔨️modules", "🔌️plugin", "🌐️browser-bundle", "🏗️materialization", "🦀️native-transpile")}`);
+  if (!existsSync(path)) throw new Error(`native transpile is not staged at ${path}; run \`repo ./📜️script.ts build\` in ${join("🧰️framework", "🛍️products", "💻️os", "🔨️modules", "🔌️plugin", "🌐️browser-bundle", "🏗️materialization", "🦀️native-transpile")}`);
   return path;
 }
 

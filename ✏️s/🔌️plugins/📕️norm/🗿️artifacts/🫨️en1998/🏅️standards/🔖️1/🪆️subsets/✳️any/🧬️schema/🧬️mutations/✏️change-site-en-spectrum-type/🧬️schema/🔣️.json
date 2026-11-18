@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-site-en-spectrum-type/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1998/mutation/change-site-en-spectrum-type/schema.json",
   "title": "ChangeSiteEnSpectrumType",
   "type": "object",
   "additionalProperties": false,
@@ -13,7 +13,7 @@
       "const": "changeSiteEnSpectrumType"
     },
     "newEnSpectrumType": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/$defs/EnSpectrumType",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1998/snapshot.json#/$defs/EnSpectrumType",
       "x-semio-ui": {
         "role": "value",
         "label": {

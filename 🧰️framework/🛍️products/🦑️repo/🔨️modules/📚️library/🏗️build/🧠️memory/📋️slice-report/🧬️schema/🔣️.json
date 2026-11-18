@@ -3,6 +3,27 @@
   "title": "Slice memory report / Speicherbericht des Slice-Workers",
   "description": "EN: What the slice worker that reads the project graph writes next to the readiness files of its machine while it reads (every intervalMilliseconds and the moment the plan guard stops a plan): the phase it is in, the memory counters of the process, the heap statistics (most numerous object types), the sizes of the caches it holds and what every part of the read says about itself (owners taken, fetched, inferred, wanted, in flight, retained collections), so that a machine nobody has a shell on can be diagnosed from the store. The file is bounded by fileBytes (sources are dropped, largest first, until it fits). DE: Was der Slice-Worker, der den Projektgraphen liest, neben den Bereitschaftsdateien seiner Maschine schreibt, solange er liest (alle intervalMilliseconds und im Moment, in dem die Plan-Wache einen Plan stoppt): die Phase, die Speicherzähler des Prozesses, die Heap-Statistik (häufigste Objekttypen), die Größen der gehaltenen Caches und was jeder Teil des Lesens über sich sagt (Eigner übernommen, geholt, abgeleitet, gewünscht, in Arbeit, gehaltene Sammlungen), damit eine Maschine ohne Shell aus dem Speicher diagnostiziert werden kann. Die Datei ist durch fileBytes begrenzt (Quellen fallen, größte zuerst, bis sie passt).",
   "definitions": {
+    "Steps": {
+      "description": "EN: The steps of a read that follow the owner pass and the waits inside them: while one runs the progress line names it (English and German), how long it has run and the bound it is expected to end within; a step that runs past its bound is still named, with a note, at every tick. DE: Die Schritte eines Lesens nach dem Eigner-Durchgang und die Wartezeiten darin: solange einer läuft, nennt die Fortschrittszeile ihn (Englisch und Deutsch), wie lange er läuft und die Grenze, in der er enden soll; ein Schritt über seiner Grenze wird bei jedem Takt weiter genannt, mit Hinweis.",
+      "const": {
+        "idleMilliseconds": 120000,
+        "counter": { "en": "elapsed seconds of expected seconds", "de": "verstrichene Sekunden von erwarteten Sekunden" },
+        "overBound": { "en": "beyond the expected {bound} s", "de": "über den erwarteten {bound} s" },
+        "steps": {
+          "inventory": { "boundMilliseconds": 600000, "en": "checking the file inventory of the tree", "de": "Prüfe das Dateiverzeichnis des Baums" },
+          "owners-round": { "boundMilliseconds": 3600000, "en": "reading the owners (round {round})", "de": "Lese die Projekte (Runde {round})" },
+          "facts-hold": { "boundMilliseconds": 600000, "en": "checking that the observed source facts still hold (round {round})", "de": "Prüfe, ob die beobachteten Quellfakten noch gelten (Runde {round})" },
+          "receipt-check": { "boundMilliseconds": 600000, "en": "checking the sealed receipt of an earlier read against the tree", "de": "Prüfe die versiegelte Quittung eines früheren Lesens gegen den Baum" },
+          "seal": { "boundMilliseconds": 600000, "en": "sealing and publishing the graph of this read", "de": "Versiegle und veröffentliche den Graphen dieses Lesens" },
+          "exchange-look": { "boundMilliseconds": 120000, "en": "asking the fleet for the sealed graph of this selection", "de": "Frage die Flotte nach dem versiegelten Graphen dieser Auswahl" },
+          "exchange-wait": { "boundMilliseconds": 1500000, "en": "waiting for {who} to seal this selection", "de": "Warte darauf, dass {who} diese Auswahl versiegelt" },
+          "exchange-install": { "boundMilliseconds": 600000, "en": "installing the sealed graph of the fleet", "de": "Installiere den versiegelten Graphen der Flotte" },
+          "exchange-publish": { "boundMilliseconds": 600000, "en": "publishing the sealed graph to the fleet", "de": "Veröffentliche den versiegelten Graphen an die Flotte" },
+          "heavy-wait": { "boundMilliseconds": 1800000, "en": "waiting for the fleet to infer {names}", "de": "Warte darauf, dass die Flotte {names} ableitet" },
+          "orphan-sweep": { "boundMilliseconds": 3600000, "en": "reading the owners nobody ran: {names}", "de": "Lese die Projekte, die niemand ausführte: {names}" }
+        }
+      }
+    },
     "Policy": {
       "const": {
         "version": 1,

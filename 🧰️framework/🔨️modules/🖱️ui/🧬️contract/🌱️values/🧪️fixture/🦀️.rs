@@ -1,6 +1,6 @@
 //! 🧪️ A serialized native test scope opens and returns the real finite UI arena Source.
 use super::*;
-use semio_framework_job::{Generation,OperationId,OriginalNativeLease};
+use semio_framework_job::{Generation,OperationId,OriginalNativeLease,OriginalTurnFailure,StepContext};
 use semio_framework_job_testing_caller::OriginalJobFixtureCaller;
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress};
 use std::panic::{catch_unwind,AssertUnwindSafe};
@@ -18,6 +18,9 @@ impl UiArenaFixture{
   for _ in 0..100{if caller.turn(stock,|cx|UiArenaLifetime::admit_source(&mut input,&mut lease,cx)).unwrap(){break}}assert!(input.is_none()&&lease.is_some());
   for _ in 0..100_000{if caller.turn(stock,|cx|UiArenaLifetime::advance_on_source(lease.as_mut().unwrap(),cx)).unwrap(){break}}assert!(ui_value_arena_registry().borrow().unwrap().is_some());Self{caller:Some(caller),lease,_serial:serial}
  }
+ /// 🧵️ Runs one funded turn of this scope's own original caller, so a test retires its owners under the very Source that admitted the arena.
+ pub fn turn<R>(&mut self,work:impl FnOnce(&mut StepContext<'_>)->Result<R,OriginalTurnFailure>)->Result<R,OriginalTurnFailure>{self.caller.as_mut().unwrap().turn(grant(),work)}
+ pub fn debug_remaining(&self)->String{let caller=self.caller.as_ref().unwrap();format!("[DEBUG] grant={:?} fuel={}",caller.remaining_grant(),caller.fuel_remaining())}
  /// 🛡️ Recovers a poisoned borrow through this same Source-owned registration.
  pub fn recover(&mut self){let caller=self.caller.as_mut().unwrap();let lease=self.lease.as_mut().unwrap();for _ in 0..100_000{if caller.turn(grant(),|cx|UiArenaLifetime::recover_on_source(lease,cx)).unwrap(){return}}panic!("test arena recovery did not finish")}
 }

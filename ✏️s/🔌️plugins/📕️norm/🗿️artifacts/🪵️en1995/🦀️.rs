@@ -28,28 +28,28 @@ pub fn package_descriptor() -> Result<semio_s_artifact_norm_contract::NormArtifa
 pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
     package_descriptor().map_err(|error| semio_plugin::ArtifactDefinitionError::new("artifact.package-schema", error.to_string()))?;
     use semio_s_artifact_norm_contract::definition::{CapabilitySpec, ClaimSpec, LocalizationSpec};
-    const SCHEMA: &[ClaimSpec] = &[ClaimSpec { namespace: "schema", value: "s.norm.en1995" }];
-    const INFERENCE: &[ClaimSpec] = &[ClaimSpec { namespace: "schema", value: "s.norm.en1995.inference" }];
-    const COMPOSER: &[ClaimSpec] = &[ClaimSpec { namespace: "dialect", value: "s.norm.en1995@1/*" }];
+    const SCHEMA: &[ClaimSpec] = &[ClaimSpec { namespace: "schema", value: "s.norm-eurocode-materials.en1995" }];
+    const INFERENCE: &[ClaimSpec] = &[ClaimSpec { namespace: "schema", value: "s.norm-eurocode-materials.en1995.inference" }];
+    const COMPOSER: &[ClaimSpec] = &[ClaimSpec { namespace: "dialect", value: "s.norm-eurocode-materials.en1995@1/*" }];
     const CODEC: &[ClaimSpec] = &[ClaimSpec { namespace: "codec", value: "semio.norm.en1995/v1" }, ClaimSpec { namespace: "codec-extension", value: "20:semio.norm.en1995/v1:en1995" }];
     const EN: &[LocalizationSpec] = &[LocalizationSpec { locale: "en", text: "EN 1995 design of timber structures" }];
     const DE: &[LocalizationSpec] = &[LocalizationSpec { locale: "de", text: "EN 1995 Bemessung und Konstruktion von Holzbauten" }];
     const CAPABILITIES: &[CapabilitySpec] = &[
-        CapabilitySpec { identity: "s.norm.en1995.standard.v1", kind: "standard", descriptor: "v1", claims: &[], localizations: &[] },
-        CapabilitySpec { identity: "s.norm.en1995.standard.v1.profile.any", kind: "profile", descriptor: "any", claims: &[], localizations: &[] },
-        CapabilitySpec { identity: "s.norm.en1995.schema.artifact", kind: "schema", descriptor: "s.norm.en1995", claims: SCHEMA, localizations: &[] },
-        CapabilitySpec { identity: "s.norm.en1995.inference.outline", kind: "inference", descriptor: "s.norm.en1995.inference", claims: INFERENCE, localizations: &[] },
-        CapabilitySpec { identity: "s.norm.en1995.composer.any", kind: "composer", descriptor: "s.norm.en1995@1/*", claims: COMPOSER, localizations: &[] },
-        CapabilitySpec { identity: "s.norm.en1995.grammar.document", kind: "grammar", descriptor: "en1995.document", claims: &[ClaimSpec { namespace: "grammar", value: "en1995.document" }], localizations: &[] },
-        CapabilitySpec { identity: "s.norm.en1995.grammar.op", kind: "grammar", descriptor: "en1995.op", claims: &[ClaimSpec { namespace: "grammar", value: "en1995.op" }], localizations: &[] },
-        CapabilitySpec { identity: "s.norm.en1995.grammar.diff", kind: "grammar", descriptor: "en1995.diff", claims: &[ClaimSpec { namespace: "grammar", value: "en1995.diff" }], localizations: &[] },
-        CapabilitySpec { identity: "s.norm.en1995.grammar.pack", kind: "grammar", descriptor: "en1995.pack", claims: &[ClaimSpec { namespace: "grammar", value: "en1995.pack" }], localizations: &[] },
-        CapabilitySpec { identity: "s.norm.en1995.grammar.spr", kind: "grammar", descriptor: "en1995.spr", claims: &[ClaimSpec { namespace: "grammar", value: "en1995.spr" }], localizations: &[] },
-        CapabilitySpec { identity: "s.norm.en1995.codec.document.v1", kind: "codec", descriptor: "semio.norm.en1995/v1:en1995", claims: CODEC, localizations: &[] },
-        CapabilitySpec { identity: "s.norm.en1995.localization.en", kind: "localization", descriptor: "EN 1995 design of timber structures", claims: &[], localizations: EN },
-        CapabilitySpec { identity: "s.norm.en1995.localization.de", kind: "localization", descriptor: "EN 1995 Bemessung und Konstruktion von Holzbauten", claims: &[], localizations: DE },
+        CapabilitySpec { identity: "s.norm-eurocode-materials.en1995.standard.v1", kind: "standard", descriptor: "v1", claims: &[], localizations: &[] },
+        CapabilitySpec { identity: "s.norm-eurocode-materials.en1995.standard.v1.profile.any", kind: "profile", descriptor: "any", claims: &[], localizations: &[] },
+        CapabilitySpec { identity: "s.norm-eurocode-materials.en1995.schema.artifact", kind: "schema", descriptor: "s.norm-eurocode-materials.en1995", claims: SCHEMA, localizations: &[] },
+        CapabilitySpec { identity: "s.norm-eurocode-materials.en1995.inference.outline", kind: "inference", descriptor: "s.norm-eurocode-materials.en1995.inference", claims: INFERENCE, localizations: &[] },
+        CapabilitySpec { identity: "s.norm-eurocode-materials.en1995.composer.any", kind: "composer", descriptor: "s.norm-eurocode-materials.en1995@1/*", claims: COMPOSER, localizations: &[] },
+        CapabilitySpec { identity: "s.norm-eurocode-materials.en1995.grammar.document", kind: "grammar", descriptor: "en1995.document", claims: &[ClaimSpec { namespace: "grammar", value: "en1995.document" }], localizations: &[] },
+        CapabilitySpec { identity: "s.norm-eurocode-materials.en1995.grammar.op", kind: "grammar", descriptor: "en1995.op", claims: &[ClaimSpec { namespace: "grammar", value: "en1995.op" }], localizations: &[] },
+        CapabilitySpec { identity: "s.norm-eurocode-materials.en1995.grammar.diff", kind: "grammar", descriptor: "en1995.diff", claims: &[ClaimSpec { namespace: "grammar", value: "en1995.diff" }], localizations: &[] },
+        CapabilitySpec { identity: "s.norm-eurocode-materials.en1995.grammar.pack", kind: "grammar", descriptor: "en1995.pack", claims: &[ClaimSpec { namespace: "grammar", value: "en1995.pack" }], localizations: &[] },
+        CapabilitySpec { identity: "s.norm-eurocode-materials.en1995.grammar.spr", kind: "grammar", descriptor: "en1995.spr", claims: &[ClaimSpec { namespace: "grammar", value: "en1995.spr" }], localizations: &[] },
+        CapabilitySpec { identity: "s.norm-eurocode-materials.en1995.codec.document.v1", kind: "codec", descriptor: "semio.norm.en1995/v1:en1995", claims: CODEC, localizations: &[] },
+        CapabilitySpec { identity: "s.norm-eurocode-materials.en1995.localization.en", kind: "localization", descriptor: "EN 1995 design of timber structures", claims: &[], localizations: EN },
+        CapabilitySpec { identity: "s.norm-eurocode-materials.en1995.localization.de", kind: "localization", descriptor: "EN 1995 Bemessung und Konstruktion von Holzbauten", claims: &[], localizations: DE },
     ];
-    semio_s_artifact_norm_contract::definition::assemble_definition("s.norm.en1995", CAPABILITIES)
+    semio_s_artifact_norm_contract::definition::assemble_definition("s.norm-eurocode-materials.en1995", CAPABILITIES)
 }
 
 pub fn declaration(definition: semio_plugin::ArtifactDefinition) -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {

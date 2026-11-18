@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["cases"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "chips", "expected"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "chips": { "type": "array", "items": { "$ref": "#/$defs/chip" } },
+          "expected": { "type": "array", "items": { "type": "boolean" } }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "chip": {
+      "type": "object",
+      "required": ["left", "right", "natural", "reach"],
+      "additionalProperties": false,
+      "properties": { "left": { "type": "number" }, "right": { "type": "number" }, "natural": { "type": "number", "minimum": 0 }, "reach": { "enum": ["none", "next", "prev"] } }
+    }
+  }
+}

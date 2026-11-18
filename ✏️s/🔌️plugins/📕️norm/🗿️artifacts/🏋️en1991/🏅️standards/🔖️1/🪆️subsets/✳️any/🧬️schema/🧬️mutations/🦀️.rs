@@ -344,7 +344,7 @@ use semio_s_artifact_norm_en1991_mut_snow_guards::remove_snow_guard;
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
-#[mutations(snapshot = En1991Snapshot, diff = En1991Diff, schema = "s.norm.en1991", reference = En1991Snapshot, reference_diff = En1991Diff)]
+#[mutations(snapshot = En1991Snapshot, diff = En1991Diff, schema = "s.norm-eurocode.en1991", reference = En1991Snapshot, reference_diff = En1991Diff)]
 pub enum En1991Mutation {
     ChangeAnnex(change_annex::ChangeAnnex),
     ChangeSnowZone(change_snow_zone::ChangeSnowZone),

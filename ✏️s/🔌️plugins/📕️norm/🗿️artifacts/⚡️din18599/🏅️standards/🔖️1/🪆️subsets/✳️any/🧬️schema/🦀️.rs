@@ -18,7 +18,7 @@ use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
 #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.norm.din18599")]
+#[artifact_schema(id = "s.norm-energy.din18599")]
 pub struct Din18599Artifact {
     #[state(artifact)]
     pub building_category: BuildingCategory,
@@ -119,10 +119,10 @@ impl Din18599Artifact {
 //#endregion 🔖️Conversions
 
 //#region 🔖️Descriptor
-/// 🧬️ Descriptor for `s.norm.din18599` — twenty handcrafted schema leaves.
+/// 🧬️ Descriptor for `s.norm-energy.din18599` — twenty handcrafted schema leaves.
 pub fn din18599_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
     semio_framework_schema_registry::ArtifactSchemaDescriptor {
-        id: "s.norm.din18599",
+        id: "s.norm-energy.din18599",
         artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: semio_s_artifact_norm_din18599_model::SNAPSHOT_LEAVES,
         diff: semio_s_artifact_norm_din18599_diff::DIFF_LEAVES,

@@ -1,4 +1,4 @@
-/** 🧊️ Contract: the policy of Nx engine code that never computes task bytes is closed by its schema and refuses forged tables; every prefix is a real directory; the keyed part of each engine family and its digest equal an independent Python oracle on the real closure; an edit of a file under a scheduling or engine-domain prefix leaves the digest of the family unchanged, an edit of output-producing code changes it, the Cargo-argument prefixes key only the `native` family, and a moved prefix re-keys. The cases live in `./🔣️.json`. */
+/** 🧊️ Contract: the policy of the Nx engine digest is closed by its schema and refuses forged tables; the declared surface files exist and are part of the engine closure; the digest of each family equals an independent Python oracle on the real closure; an edit of any closure file outside the declared surface (graph reading, planning, capacity, leases, readiness, the fleet pool, cache custody, the process authority) leaves both digests unchanged, an edit of a surface file or of the declared task semantics revision moves them, and a Cargo argument builder moves only the native family. See `../🔣️.json` and `./🔖️task-semantics`. */
 import {afterAll,expect,test} from "bun:test";
 import {createRequire} from "node:module";
 import {cpSync,mkdirSync,mkdtempSync,readFileSync,rmSync,statSync,writeFileSync} from "node:fs";
@@ -7,31 +7,25 @@ import {dirname,join,resolve} from "node:path";
 import Ajv from "ajv";
 import {nxBuildEngineClosureV1,nxBuildEngineDigestV1,nxBuildEngineFilesDigestV1,nxBuildEngineInputsV1,projectBuildGraphForNxV1,projectBuildTargetForNxV1} from "../../../../../🟨️.mjs";
 import {nxEngineNamedInputV1,nxEngineNativeNamedInputV1} from "../../🔏️implementation/🟨️.mjs";
-import {buildSchedulingDomainOfV1,buildSchedulingExclusionPatternsV1,buildSchedulingExclusionsInputV1,buildSchedulingPrefixesV1,buildSchedulingV1} from "../../../../../🏗️build/📥️source/🔏️closure/🗓️scheduling/🟦️.ts";
-import schedulingPolicy from "../../../../../🏗️build/📥️source/🔏️closure/🗓️scheduling/🔣️.json";
-import {nxEngineFamilyV1,nxEnginePolicyV1,nxEngineSpawnOnlyV1,nxEngineUnkeyedPrefixesV1,splitNxEngineFilesV1,type NxEngineFamilyV1} from "../🟦️.ts";
+import {buildSchedulingExclusionPatternsV1,buildSchedulingExclusionsInputV1,buildSchedulingPrefixesV1} from "../../../../../🏗️build/📥️source/🔏️closure/🗓️scheduling/🟦️.ts";
+import {nxEngineFamilyV1,nxEngineIdentityV1,nxEnginePolicyV1,nxEngineSpawnOnlyV1,nxEngineSurfaceV1,type NxEngineFamilyV1,type NxEnginePolicyV1} from "../🟦️.ts";
 import {nxBuildEngineReferencesV1} from "../../../../../🟨️.mjs";
 import declared from "../🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import corpus from "./🔣️.json";
 import corpusSchema from "./🧬️schema/🔣️.json";
 
-const checkout=resolve(import.meta.dir,corpus.checkoutFromTests),closure=nxBuildEngineClosureV1(),families=corpus.families as NxEngineFamilyV1[];
-type Draft={version:1;domains:{id:string;contract:{en:string;de:string};prefixes:string[]}[]};
-const copy=():Draft=>JSON.parse(JSON.stringify(declared));
+const checkout=resolve(import.meta.dir,corpus.checkoutFromTests),closure=nxBuildEngineClosureV1(),families=corpus.families as NxEngineFamilyV1[],library="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/";
+const copy=():NxEnginePolicyV1=>JSON.parse(JSON.stringify(declared));
 const refusal=(table:unknown):unknown=>{try{nxEnginePolicyV1(table);}catch(error){return (error as {key?:string}).key;}return undefined;};
-const oracle=(root:string,family:string,files:readonly string[])=>{
- const run=Bun.spawnSync(["python3","-I",join(import.meta.dir,"🐍️oracle/🐍️.py")],{stdin:Buffer.from(JSON.stringify({root,family,files,schedulingPolicy,enginePolicy:declared}))});
- expect(run.exitCode,run.stderr.toString()).toBe(0);return JSON.parse(run.stdout.toString()) as {keyed:string[];unkeyed:string[];digest:string};
+const oracle=(root:string,family:string,files:readonly string[],policy:unknown=declared)=>{
+ const run=Bun.spawnSync(["python3","-I",join(import.meta.dir,"🐍️oracle/🐍️.py")],{stdin:Buffer.from(JSON.stringify({root,family,files,enginePolicy:policy}))});
+ expect(run.exitCode,run.stderr.toString()).toBe(0);return JSON.parse(run.stdout.toString()) as {covered:string[];digest:string};
 };
-const digestOf=(root:string,family:NxEngineFamilyV1)=>nxBuildEngineFilesDigestV1(root,splitNxEngineFilesV1(closure.files,family).keyed,nxEngineUnkeyedPrefixesV1(family));
-const nativeKeyedPrefixes=schedulingPolicy.domains.flatMap(domain=>"nativeKeyed" in domain?(domain as {nativeKeyed:string[]}).nativeKeyed:[]);
-const pick=(select:Record<string,unknown>,optional=false):string|undefined=>{
- const found=select.path!==undefined?closure.files.find(file=>file===select.path)
-  :select.schedulingDomain!==undefined?closure.files.find(file=>buildSchedulingDomainOfV1(file)===select.schedulingDomain&&!nativeKeyedPrefixes.some(prefix=>file.startsWith(prefix)))
-  :select.engineDomain!==undefined?closure.files.find(file=>nxEnginePolicyV1().domains.find(domain=>domain.id===select.engineDomain)!.prefixes.some(prefix=>file.startsWith(prefix)))
-  :closure.files.find(file=>nativeKeyedPrefixes.some(prefix=>file.startsWith(prefix)));
- if(found===undefined&&optional)return undefined;expect(found,JSON.stringify(select)).toBeDefined();return found!;
+const digestOf=(root:string,family:NxEngineFamilyV1)=>nxBuildEngineFilesDigestV1(root,nxEngineSurfaceV1(closure.files,family),nxEngineIdentityV1(family));
+const pick=(select:{path?:string;prefix?:string}):string=>{
+ const found=select.path!==undefined?closure.files.find(file=>file===library+select.path):closure.files.find(file=>file.startsWith(select.prefix!.startsWith("🧰️")?select.prefix!:library+select.prefix!)&&!file.includes("🧪️"));
+ expect(found,JSON.stringify(select)).toBeDefined();return found!;
 };
 
 test("the corpus and the policy are closed by their schemas",()=>{
@@ -40,53 +34,58 @@ test("the corpus and the policy are closed by their schemas",()=>{
  expect(ajv.validate(corpusSchema,{...corpus,extra:1})).toBe(false);
  expect(ajv.validate(schema,declared),JSON.stringify(ajv.errors)).toBe(true);
  expect(ajv.validate(schema,{...declared,extra:1})).toBe(false);
- expect(ajv.validate(schema,{...declared,domains:[]})).toBe(false);
- for(const domain of declared.domains){expect(domain.contract.en.length,domain.id).toBeGreaterThan(0);expect(domain.contract.de.length,domain.id).toBeGreaterThan(0);}
+ expect(ajv.validate(schema,{...declared,semantics:{...declared.semantics,surface:[]}})).toBe(false);
+ expect(ajv.validate(schema,{...declared,semantics:{...declared.semantics,revision:0}})).toBe(false);
+ expect(declared.semantics.contract.en.length).toBeGreaterThan(0);expect(declared.semantics.contract.de.length).toBeGreaterThan(0);
 });
 
 test("every forged policy is refused and the declared one is admitted once",()=>{
  expect(nxEnginePolicyV1()).toBe(nxEnginePolicyV1());
  const forged:Record<string,()=>unknown>={
-  "duplicate-domain-id":()=>{const table=copy();table.domains=[table.domains[0]!,{...table.domains[1]!,id:table.domains[0]!.id}];return table;},
-  "nested-prefix":()=>{const table=copy();const first=table.domains[0]!.prefixes[0]!;table.domains=[table.domains[0]!,{...table.domains[1]!,prefixes:[first+"inner/"]}];return table;},
-  "duplicate-prefix":()=>{const table=copy();const first=table.domains[0]!.prefixes[0]!;table.domains=[table.domains[0]!,{...table.domains[1]!,prefixes:[first]}];return table;},
-  "parent-segment":()=>{const table=copy();table.domains=[{...table.domains[0]!,prefixes:["a/../b/"]}];return table;},
   "extra-key":()=>({...copy(),extra:true}),
-  "no-domains":()=>({...copy(),domains:[]}),
-  "bad-id":()=>{const table=copy();table.domains=[{...table.domains[0]!,id:"Bad Id"}];return table;},
-  "missing-german-contract":()=>{const table=copy();table.domains=[{...table.domains[0]!,contract:{en:"x"} as {en:string;de:string}}];return table;},
-  "empty-prefixes":()=>{const table=copy();table.domains=[{...table.domains[0]!,prefixes:[]}];return table;},
-  "spawn-extra-key":()=>{const table=copy() as Draft&{spawnOnly:Record<string,unknown>[]};table.spawnOnly=[{...declared.spawnOnly[0]!,extra:1}];return table;},
-  "spawn-absolute-reference":()=>{const table=copy() as Draft&{spawnOnly:Record<string,unknown>[]};table.spawnOnly=[{...declared.spawnOnly[0]!,reference:"/etc/passwd"}];return table;},
-  "spawn-missing-german-contract":()=>{const table=copy() as Draft&{spawnOnly:Record<string,unknown>[]};table.spawnOnly=[{...declared.spawnOnly[0]!,contract:{en:"x"}}];return table;}
+  "old-version":()=>({...copy(),version:1}),
+  "no-surface":()=>{const table=copy() as any;table.semantics.surface=[];return table;},
+  "duplicate-surface-file":()=>{const table=copy() as any;table.semantics.surface=[table.semantics.surface[0],table.semantics.surface[0]];return table;},
+  "zero-revision":()=>{const table=copy() as any;table.semantics.revision=0;return table;},
+  "fractional-revision":()=>{const table=copy() as any;table.semantics.revision=1.5;return table;},
+  "parent-segment":()=>{const table=copy() as any;table.semantics.surface=["a/../b.ts"];return table;},
+  "nested-prefix":()=>{const table=copy() as any;table.semantics.nativeSurface=[table.semantics.nativeSurface[0],table.semantics.nativeSurface[0]+"inner/"];return table;},
+  "surface-file-below-native-prefix":()=>{const table=copy() as any;table.semantics.surface=[table.semantics.nativeSurface[0]+"a.ts"];return table;},
+  "prefix-without-slash":()=>{const table=copy() as any;table.semantics.nativeSurface=["a/b"];return table;},
+  "missing-german-contract":()=>{const table=copy() as any;table.semantics.contract={en:"x"};return table;},
+  "spawn-extra-key":()=>{const table=copy() as any;table.spawnOnly=[{...declared.spawnOnly[0]!,extra:1}];return table;},
+  "spawn-absolute-reference":()=>{const table=copy() as any;table.spawnOnly=[{...declared.spawnOnly[0]!,reference:"/etc/passwd"}];return table;},
+  "spawn-missing-german-contract":()=>{const table=copy() as any;table.spawnOnly=[{...declared.spawnOnly[0]!,contract:{en:"x"}}];return table;}
  };
  expect(Object.keys(forged).sort()).toEqual([...corpus.forgedPolicies].sort());
  for(const [name,make] of Object.entries(forged))expect(refusal(make()),name).toBe("build.nx-engine.table-required");
  expect(()=>nxEngineFamilyV1("other")).toThrow();expect(nxEngineFamilyV1(undefined)).toBe("generic");
 });
 
-test("every engine prefix is a real directory and no scheduling prefix is declared twice",()=>{
- for(const domain of nxEnginePolicyV1().domains)for(const prefix of domain.prefixes)expect(statSync(join(checkout,prefix)).isDirectory(),prefix).toBe(true);
- const engine=new Set(nxEnginePolicyV1().domains.flatMap(domain=>domain.prefixes)),scheduling=buildSchedulingV1().domains.flatMap(domain=>domain.prefixes);
- for(const prefix of scheduling)expect(engine.has(prefix),prefix).toBe(false);
- for(const family of families){const prefixes=nxEngineUnkeyedPrefixesV1(family);expect(prefixes).toEqual([...prefixes].sort());expect(new Set(prefixes).size).toBe(prefixes.length);}
- expect(nxEngineUnkeyedPrefixesV1("native").length).toBeLessThan(nxEngineUnkeyedPrefixesV1("generic").length);
+test("every surface file exists, every native prefix is a real directory, and no test file is covered",()=>{
+ const {surface,nativeSurface}=nxEnginePolicyV1().semantics;
+ expect(surface).toEqual([...surface].sort());expect(nativeSurface).toEqual([...nativeSurface].sort());
+ for(const file of surface){expect(statSync(join(checkout,file)).isFile(),file).toBe(true);expect(file.split("/").includes("🧪️tests"),file).toBe(false);}
+ for(const prefix of nativeSurface)expect(statSync(join(checkout,prefix)).isDirectory(),prefix).toBe(true);
+ for(const family of families){const covered=nxEngineSurfaceV1(closure.files,family);expect(covered).toEqual([...covered].sort());expect(covered.some(file=>file.split("/").some(part=>nxEnginePolicyV1().semantics.excludedSegments.includes(part))),family).toBe(false);}
+ expect(nxEngineSurfaceV1(closure.files,"generic").length).toBe(surface.length);
+ expect(nxEngineSurfaceV1(closure.files,"native").length).toBeGreaterThan(surface.length);
+ expect(nxEngineSurfaceV1(closure.files,"native").length).toBeLessThan(closure.files.length/4);
 });
 
 let copied:string|undefined;
 const snapshot=():string=>{
  if(copied)return copied;const base=process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir();copied=mkdtempSync(join(base,"nx-engine-snapshot-"));
- for(const file of closure.files){const target=join(copied,file);mkdirSync(dirname(target),{recursive:true});cpSync(join(checkout,file),target);}
+ for(const file of [...new Set([...closure.files,...nxEnginePolicyV1().semantics.surface])]){const target=join(copied,file);mkdirSync(dirname(target),{recursive:true});cpSync(join(checkout,file),target);}
  return copied;
 };
 afterAll(()=>{if(copied)rmSync(copied,{recursive:true,force:true});});
-for(const family of families)test(`the ${family} engine partition and digest of the real closure equal the independent Python oracle`,()=>{
- const copy=snapshot(),split=splitNxEngineFilesV1(closure.files,family),expected=oracle(copy,family,closure.files);
- expect(split.keyed).toEqual(expected.keyed);expect(split.unkeyed).toEqual(expected.unkeyed);
+for(const family of families)test(`the ${family} engine surface and digest of the real closure equal the independent Python oracle`,()=>{
+ const copy=snapshot(),covered=nxEngineSurfaceV1(closure.files,family),expected=oracle(copy,family,closure.files);
+ expect(covered).toEqual(expected.covered);
  expect(digestOf(copy,family)).toBe(expected.digest);
- expect(split.keyed.length+split.unkeyed.length).toBe(closure.files.length);
- expect(split.keyed.length).toBeLessThan(closure.files.length);expect(split.unkeyed.length).toBeGreaterThan(0);
- for(const entry of ["🧮️engine-digest/🟨️.mjs","🏃️execution/🟨️.mjs","📤️arguments/🟨️.mjs","🏗️build/📤️arguments/🟨️.mjs"])expect(split.keyed.some(file=>file.endsWith(entry)),entry).toBe(true);
+ expect(covered.length).toBeLessThan(closure.files.length/10);
+ for(const entry of ["🏃️execution/🟨️.mjs","📤️arguments/🟨️.mjs","🏗️build/📤️arguments/🟨️.mjs"])expect(covered.some(file=>file.endsWith(entry)),entry).toBe(true);
  const script=join(checkout,closure.files.find(file=>file.endsWith("🧮️engine-digest/🟨️.mjs"))!);let stable=false;
  for(let attempt=0;attempt<3&&!stable;attempt++){
   const before=nxBuildEngineDigestV1(family),run=Bun.spawnSync([process.execPath,script,...(family==="generic"?[]:[family])],{cwd:checkout});
@@ -101,30 +100,32 @@ test("the two families are two runtime inputs that differ only in the command ar
  expect(JSON.stringify(nxBuildEngineInputsV1("native"))).toBe(JSON.stringify([native,...nxBuildEngineInputsV1("generic").slice(1)]).replace(JSON.stringify(generic),JSON.stringify(native)));
 },60000);
 
-test("an edit of scheduling or engine-domain code leaves the digest, an edit of output-producing code moves it, equal to the oracle on an edited copy",()=>{
- const root=snapshot();
- {
-  const before=Object.fromEntries(families.map(family=>[family,digestOf(root,family)]));
-  for(const row of corpus.edits){
-   const path=pick(row.select,"optional" in row);if(path===undefined)continue;const target=join(root,path),original=readFileSync(target);
-   writeFileSync(target,Buffer.concat([original,Buffer.from("\n// probe\n")]));
-   try{for(const family of families){
-    const after=digestOf(root,family),expected=row[family as "generic"|"native"];
-    expect(after===before[family],`${row.role} ${family} ${path}`).toBe(expected==="unchanged");
-    expect(after,`${row.role} ${family} oracle`).toBe(oracle(root,family,closure.files).digest);
-   }}finally{writeFileSync(target,original);}
-  }
-  for(const family of families)expect(digestOf(root,family)).toBe(before[family]);
+
+test("an edit outside the declared surface leaves both digests, an edit of a surface file or of the revision moves them, a Cargo argument builder moves only the native family, equal to the oracle on an edited copy",()=>{
+ const root=snapshot(),before=Object.fromEntries(families.map(family=>[family,digestOf(root,family)]));
+ for(const row of corpus.edits){
+  const path=pick(row.select as {path?:string;prefix?:string}),target=join(root,path),original=readFileSync(target);
+  writeFileSync(target,Buffer.concat([original,Buffer.from("\n// probe\n")]));
+  try{for(const family of families){
+   const after=digestOf(root,family),expected=row[family as "generic"|"native"];
+   expect(after===before[family],`${row.role} ${family} ${path}`).toBe(expected==="unchanged");
+   expect(after,`${row.role} ${family} oracle`).toBe(oracle(root,family,closure.files).digest);
+  }}finally{writeFileSync(target,original);}
+ }
+ for(const family of families)expect(digestOf(root,family)).toBe(before[family]);
+ const bumped:NxEnginePolicyV1={...declared,semantics:{...declared.semantics,revision:declared.semantics.revision+1}} as NxEnginePolicyV1;
+ for(const family of families){
+  const moved=nxBuildEngineFilesDigestV1(root,nxEngineSurfaceV1(closure.files,family,bumped),nxEngineIdentityV1(family,bumped));
+  expect(moved,`revision ${family}`).not.toBe(before[family]);expect(moved).toBe(oracle(root,family,closure.files,bumped).digest);
  }
 },120000);
 
-test("a prefix that moves in or out of the unkeyed set re-keys even when no file byte changes",()=>{
- const keyed=splitNxEngineFilesV1(closure.files,"generic").keyed,prefixes=nxEngineUnkeyedPrefixesV1("generic");
- const base=nxBuildEngineFilesDigestV1(checkout,keyed,prefixes);
- expect(nxBuildEngineFilesDigestV1(checkout,keyed,prefixes.slice(1))).not.toBe(base);
- expect(nxBuildEngineFilesDigestV1(checkout,keyed,[...prefixes,"zz/"])).not.toBe(base);
- expect(nxBuildEngineFilesDigestV1(checkout,keyed)).not.toBe(base);
- expect(nxBuildEngineFilesDigestV1(checkout,keyed,prefixes)).toBe(base);
+test("the revision and the family re-key the digest even when no file byte changes",()=>{
+ const files=nxEngineSurfaceV1(closure.files,"generic"),identity=nxEngineIdentityV1("generic"),base=nxBuildEngineFilesDigestV1(checkout,files,identity);
+ expect(nxBuildEngineFilesDigestV1(checkout,files,["semantics 2","family generic"])).not.toBe(base);
+ expect(nxBuildEngineFilesDigestV1(checkout,files,nxEngineIdentityV1("native"))).not.toBe(base);
+ expect(nxBuildEngineFilesDigestV1(checkout,files)).not.toBe(base);
+ expect(nxBuildEngineFilesDigestV1(checkout,files,identity)).toBe(base);
 },60000);
 
 test("a command that compiles Rust (native owner) keys the native engine, every other command (also a process owner) the generic one, and both named inputs travel whole in every project",()=>{

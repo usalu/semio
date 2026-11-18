@@ -97,12 +97,11 @@
   text-underline-offset: 3px;
 }
 
-.course-guess > input:read-only {
-  border-style: dashed;
+.course-guess-entry > input.course-input:read-only {
   background: transparent;
 }
 
-.course-guess > input:read-only::placeholder {
+.course-guess-entry > input.course-input:read-only::placeholder {
   color: transparent;
 }
 

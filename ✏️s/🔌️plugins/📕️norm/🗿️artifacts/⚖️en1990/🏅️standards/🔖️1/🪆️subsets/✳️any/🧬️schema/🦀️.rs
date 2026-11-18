@@ -17,7 +17,7 @@ use framework_schema::ArtifactSchema;
 #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.norm.en1990")]
+#[artifact_schema(id = "s.norm-eurocode.en1990")]
 pub struct En1990Artifact {
     #[state(artifact)]
     pub annex: AnnexChoice,
@@ -143,10 +143,10 @@ impl En1990Artifact {
 //#endregion 🔖️Conversions
 
 //#region 🔖️Descriptor
-/// 🧬️ Descriptor for `s.norm.en1990` — twenty handcrafted schema leaves.
+/// 🧬️ Descriptor for `s.norm-eurocode.en1990` — twenty handcrafted schema leaves.
 pub fn en1990_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
     semio_framework_schema_registry::ArtifactSchemaDescriptor {
-        id: "s.norm.en1990",
+        id: "s.norm-eurocode.en1990",
         artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: semio_s_artifact_norm_en1990_model::SNAPSHOT_LEAVES,
         diff: semio_s_artifact_norm_en1990_diff::DIFF_LEAVES,

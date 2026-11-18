@@ -1,0 +1,93 @@
+{
+  "case": "card-stack",
+  "kind": "composite",
+  "description": "A Container(role=cardStack) of two Container(role=card) siblings that share one border: the first card carries a footer chip (its description), the second none.",
+  "outcome": "accept",
+  "limits": null,
+  "tree": {
+    "root": 0,
+    "nodeCount": 5,
+    "shape": [
+      {
+        "id": 0,
+        "key": "#0",
+        "type": "container",
+        "children": [
+          1,
+          2
+        ]
+      },
+      {
+        "id": 1,
+        "key": "#0",
+        "type": "container",
+        "children": [
+          3
+        ]
+      },
+      {
+        "id": 2,
+        "key": "#1",
+        "type": "container",
+        "children": [
+          4
+        ]
+      },
+      {
+        "id": 3,
+        "key": "#0",
+        "type": "text",
+        "children": []
+      },
+      {
+        "id": 4,
+        "key": "#0",
+        "type": "text",
+        "children": []
+      }
+    ]
+  },
+  "accessibility": [
+    {
+      "id": 0,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 1,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 2,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 3,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 4,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    }
+  ],
+  "actionIds": []
+}

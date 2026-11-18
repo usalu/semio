@@ -30,6 +30,15 @@ export const PET_TEXTS = 'p, li, h1, h2, h3, h4, h5, h6, label, figcaption, td, 
 /** 🚧️ What pets must not cover unless the host names something else: controls, what a person reads and whatever is marked `data-pet-keepout`. */
 export const PET_KEEPOUTS = `${PET_CONTROLS}, ${PET_TEXTS}, [data-pet-keepout]`;
 
+/** 🧾️ The text blocks whose keep-out is the lines they show, not their whole box: a block is as wide as its container however short its words are, and the empty rest of a line is no text. Controls, read-outs, code and whatever the host names beyond {@link PET_KEEPOUTS} or marks `data-pet-keepout` keep their whole box. */
+export const PET_LINES = 'p, li, h1, h2, h3, h4, h5, h6, figcaption, td, th, legend, dt, dd, blockquote, [role="alert"], [role="status"]';
+
+/** 🪢️ The widest gap between two pieces of one line, in pixels, that still joins them into one keep-out: a word space, not a column apart. */
+export const LINE_GAP = 12;
+
+/** 🖌️ What a text block shows besides words: its pictures, kept free with its lines. */
+const PICTURES = "img, svg, picture, canvas, video";
+
 /** 🧱️ The id of the surface every stage has: the bottom edge of the stage. */
 export const FLOOR = "floor";
 
@@ -60,6 +69,7 @@ const UNSEEN = "[inert], [hidden], [data-concealed]";
 const EDGE_SLACK = 0.5;
 const NO_EDGES: readonly Surface[] = [];
 const SHOW_ELEMENT = 1;
+const SHOW_TEXT = 4;
 const FILTER_ACCEPT = 1;
 const FILTER_REJECT = 2;
 //#endregion 🔖️Selectors
@@ -68,7 +78,7 @@ const FILTER_REJECT = 2;
 /** 🎚️ What a survey looks for and relative to what it measures: the selector of the elements whose top edge carries pets
  * ({@link PET_SURFACES} when absent), the selector of what pets must not cover ({@link PET_KEEPOUTS} when absent), the
  * selector of more elements whose sides pets may climb besides those of the surfaces (none when absent), the selector
- * of the elements a pet may play with ({@link PET_PROPS} when absent), where the pointer is in viewport pixels (`null`
+ * of the elements a pet may play with ({@link PET_PROPS} when absent), the selector of what acts on a press beyond the controls the layer knows (`controls`: a surface inside one is solid whole, its face being a control; none when absent), where the pointer is in viewport pixels (`null`
  * or absent when it is not on the page) and the element whose box is the stage (the pet layer; the viewport when
  * absent or without an area), into which the survey never looks. */
 export interface SurveyOptions {
@@ -76,6 +86,7 @@ export interface SurveyOptions {
   readonly keepouts?: string;
   readonly walls?: string;
   readonly props?: string;
+  readonly controls?: string;
   readonly pointer?: Point | null;
   readonly frame?: Element | null;
 }
@@ -182,7 +193,7 @@ function seen(root: Document | Element, selectors: readonly (string | undefined)
 }
 
 /** 👀️ What of a box one can see: the box cut down to the region its clipping ancestors let through (`clip`); `null` when it has no area or all of it is scrolled or clipped away. */
-function shown(box: DOMRect, clip: Edges | null): Edges | null {
+function shown(box: Edges & { readonly width: number; readonly height: number }, clip: Edges | null): Edges | null {
   if (box.width <= 0 || box.height <= 0) return null;
   if (clip === null) return { left: box.left, top: box.top, right: box.right, bottom: box.bottom };
   const left = Math.max(box.left, clip.left);
@@ -211,21 +222,58 @@ function keepout(region: Edges, margin: number, edges: readonly Surface[], stage
   return staged({ left: region.left - margin, top, right: region.right + margin, bottom: region.bottom + margin }, stage);
 }
 
+/** 🧷️ What the host names as keep-outs beyond {@link PET_KEEPOUTS}: the selector without them, the whole selector when it does not start with them, nothing when it is them or absent. */
+function beyond(selector: string | undefined): string {
+  if (selector === undefined || selector === PET_KEEPOUTS) return "";
+  return selector.startsWith(`${PET_KEEPOUTS},`) ? selector.slice(PET_KEEPOUTS.length + 1).trim() : selector;
+}
+
+/** 🔤️ The lines `element` shows, each a region of the viewport: the boxes of its text, one per line and run of words (pieces within {@link LINE_GAP} of each other on one line are one), and of its pictures; `null` when the page cannot say where its words are or it shows no words, so the whole box stands for it. */
+function linesOf(element: Element): Edges[] | null {
+  const page = element.ownerDocument;
+  const pieces: Edges[] = [];
+  const walker = page.createTreeWalker(element, SHOW_TEXT);
+  for (let node = walker.nextNode(); node !== null; node = walker.nextNode()) {
+    if ((node.nodeValue ?? "").trim() === "") continue;
+    const range = page.createRange();
+    range.selectNodeContents(node);
+    if (typeof range.getClientRects !== "function") return null;
+    for (const rect of range.getClientRects()) if (rect.width > 0 && rect.height > 0) pieces.push({ left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom });
+  }
+  if (pieces.length === 0) return null;
+  for (const picture of element.querySelectorAll(PICTURES)) {
+    const rect = picture.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) pieces.push({ left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom });
+  }
+  const lines: Edges[] = [];
+  for (const piece of pieces.sort((one, other) => one.top - other.top || one.left - other.left)) {
+    const index = lines.findIndex((line) => Math.min(line.bottom, piece.bottom) - Math.max(line.top, piece.top) > Math.min(line.bottom - line.top, piece.bottom - piece.top) / 2 && piece.left - line.right <= LINE_GAP && line.left - piece.right <= LINE_GAP);
+    const line = lines[index];
+    lines[index === -1 ? lines.length : index] = line === undefined ? piece : { left: Math.min(line.left, piece.left), top: Math.min(line.top, piece.top), right: Math.max(line.right, piece.right), bottom: Math.max(line.bottom, piece.bottom) };
+  }
+  return lines;
+}
+
 /** 🗺️ Measures `root` into the `surveyed` event of a stage, reads only.
  *
  * Surfaces are the top edges of the elements matching `surfaces` that are neither inert, hidden nor concealed, cross the stage,
  * are not clipped away by a scrolling ancestor and stay at least {@link SURFACE_WIDTH} wide, in document order, each
  * under the id of its element ({@link surfaceId}); the last surface is the {@link FLOOR}. A host that wants pets to
  * follow a silhouette — a card with a title tab standing up on its body — names every part: each part carries pets on
- * its own top edge, and since every part is solid (below), an edge is free only where no other part stands on it.
+ * its own top edge, and an edge is free only where no other part stands on it.
  *
  * Keep-outs, each cut down to what its scrolling and clipping ancestors let one see (what is scrolled out of a pane
  * blocks nothing):
  * 1. the elements matching `keepouts`, grown by {@link KEEPOUT_MARGIN} — except the surfaces themselves and whatever
- *    contains one — where the margin never reaches over an edge the element lies under;
- * 2. the surfaces' own elements, grown by {@link KEEPOUT_MARGIN} to the left and to the right only (never upwards: a
- *    part that stands on an edge leaves the rest of that edge free): pets stand on a thing, never in front of another
- *    one, and not shoulder to shoulder with its side;
+ *    contains one — where the margin never reaches over an edge the element lies under; a text block of
+ *    {@link PET_LINES} that the host does not name beyond {@link PET_KEEPOUTS} is kept free line by line, not as the
+ *    whole box its container gives it (its whole box where the page cannot say where its words are);
+ * 2. the elements of the surfaces that stand on the top edge of another one — their bottom on that edge, within its
+ *    width, like the tab on its body, or on the floor of the stage, like the footer —, grown by {@link KEEPOUT_MARGIN} to the left and to the right: pets stand on a
+ *    thing, never in front of a part that stands on it. A card that fills the cell above another one stands on nothing
+ *    but its own cell: what it shows is its text and its controls, which are kept free, and its face is no solid, so a
+ *    pet may stand in front of the empty face of a card over the one it perches on — unless the host says the card
+ *    acts on a press (`controls`): then its whole face is solid;
  * 3. the focused element grown by {@link FOCUS_MARGIN} unless it is the page itself or a region that contains a surface
  *    (a focused surface keeps its whole margin, so nobody stands in its focus indicator).
  *
@@ -258,7 +306,7 @@ export function survey(root: Document | Element, options: SurveyOptions = {}): S
   const carriers = new Set<Element>();
   const clips = new Map<Element, Edges | null>();
   const surfaces: Surface[] = [];
-  const solids: Rect[] = [];
+  const parts: { readonly region: Edges; readonly edge: boolean; readonly acting: boolean }[] = [];
   const walls: Wall[] = [];
   const sides = (element: Element, box: DOMRect, region: Edges): void => {
     const y0 = region.top - stage.y;
@@ -271,10 +319,15 @@ export function survey(root: Document | Element, options: SurveyOptions = {}): S
     const box = element.getBoundingClientRect();
     const region = shown(box, clipOf(element, view, clips));
     if (region === null || staged(region, stage) === null) continue;
-    solids.push({ x: region.left - stage.x - KEEPOUT_MARGIN, y: region.top - stage.y, width: region.right - region.left + 2 * KEEPOUT_MARGIN, height: region.bottom - region.top });
     sides(element, box, region);
-    if (region.top > box.top || region.right - region.left < SURFACE_WIDTH) continue;
-    surfaces.push({ id: surfaceId(element), x0: region.left - stage.x, x1: region.right - stage.x, y: region.top - stage.y });
+    const edge = region.top <= box.top && region.right - region.left >= SURFACE_WIDTH;
+    parts.push({ region, edge, acting: options.controls !== undefined && element.closest(options.controls) !== null });
+    if (edge) surfaces.push({ id: surfaceId(element), x0: region.left - stage.x, x1: region.right - stage.x, y: region.top - stage.y });
+  }
+  const solids: Rect[] = [];
+  for (const { region, acting } of parts) {
+    const standing = acting || Math.abs(region.bottom - stage.y - stage.height) <= EDGE_SLACK || parts.some((other) => other.edge && other.region !== region && Math.abs(other.region.top - region.bottom) <= EDGE_SLACK && region.left >= other.region.left - EDGE_SLACK && region.right <= other.region.right + EDGE_SLACK);
+    if (standing) solids.push({ x: region.left - stage.x - KEEPOUT_MARGIN, y: region.top - stage.y, width: region.right - region.left + 2 * KEEPOUT_MARGIN, height: region.bottom - region.top });
   }
   for (const element of walled) {
     if (grounds.has(element)) continue;
@@ -284,11 +337,15 @@ export function survey(root: Document | Element, options: SurveyOptions = {}): S
   }
   surfaces.push({ id: FLOOR, x0: 0, x1: stage.width, y: stage.height });
   const keepouts: Rect[] = [];
+  const named = beyond(options.keepouts);
   for (const element of kept) {
     if (grounds.has(element) || carriers.has(element)) continue;
-    const region = shown(element.getBoundingClientRect(), clipOf(element, view, clips));
-    const box = region === null ? null : keepout(region, KEEPOUT_MARGIN, surfaces, stage);
-    if (box !== null) keepouts.push(box);
+    const clip = clipOf(element, view, clips);
+    const lines = element.matches(PET_LINES) && !element.matches(PET_PRESS_CONTROLS) && !element.hasAttribute("data-pet-keepout") && !(named !== "" && element.matches(named)) ? linesOf(element) : null;
+    for (const region of lines === null ? [shown(element.getBoundingClientRect(), clip)] : lines.map((line) => shown({ ...line, width: line.right - line.left, height: line.bottom - line.top }, clip))) {
+      const box = region === null ? null : keepout(region, KEEPOUT_MARGIN, surfaces, stage);
+      if (box !== null) keepouts.push(box);
+    }
   }
   keepouts.push(...solids);
   const focused = page.activeElement;

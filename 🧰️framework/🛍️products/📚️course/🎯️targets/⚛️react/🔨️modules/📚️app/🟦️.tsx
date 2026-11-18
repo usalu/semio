@@ -444,7 +444,7 @@ function Client(props: ClientProps): ReactElement {
       }} onWheelCapture={(event) => { if (remote !== undefined) { event.stopPropagation(); follow.stop("interaction"); } }} data-pets={pets}>
         <a
           href="#course-main"
-          className="sr-only focus:not-sr-only focus:absolute focus:start-double focus:top-double focus:z-50 focus:bg-background focus:p-double focus:text-sm focus:text-foreground"
+          className="course-skip-link sr-only focus:not-sr-only focus:absolute focus:start-double focus:top-double focus:z-50 focus:bg-background focus:p-double focus:text-sm focus:text-foreground"
           onClick={(event) => {
             event.preventDefault();
             main.current?.focus();

@@ -555,9 +555,9 @@ mod batch_delete {
     fn nothing_selected_an_unknown_list_and_an_unknown_row_are_refused_with_a_localized_reason_and_a_notice() {
         let tree = tree_with(&["b1"]);
         let refusals = [
-            (delete_edits(&tree, "beams", &[]), "norm.entity-delete-empty"),
-            (delete_edits(&tree, "walls", &["b1".into()]), "norm.entity-delete-unknown"),
-            (delete_edits(&tree, "beams", &["b1".into(), "gone".into()]), "norm.entity-delete-unknown"),
+            (delete_edits(&tree, "beams", &[]), "norm.editor.entity-delete-empty"),
+            (delete_edits(&tree, "walls", &["b1".into()]), "norm.editor.entity-delete-unknown"),
+            (delete_edits(&tree, "beams", &["b1".into(), "gone".into()]), "norm.editor.entity-delete-unknown"),
         ];
         for (result, code) in refusals {
             let refusal = result.unwrap_err();
@@ -608,7 +608,7 @@ mod batch_delete {
                 }
                 ("refused", Ok(edits)) => {
                     let refused_at = row["refuseRemovalAt"].as_u64().expect("a refused plan names the removal its kind refuses") as usize;
-                    assert_eq!(text(&row["code"]), "norm.edit-unresolved");
+                    assert_eq!(text(&row["code"]), "norm.editor.edit-unresolved");
                     assert!(handle_edits(&tree, &edits, |_, edit| if matches!(edit, NormEdit::RemoveItem { index, .. } if *index == refused_at) { Err(text(&row["resolverError"])) } else { Ok(vec![String::new()]) }).is_err(), "{}: the batch is all or nothing", row["id"]);
                 }
                 (outcome, other) => panic!("{}: {outcome} but {other:?}", row["id"]),

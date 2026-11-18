@@ -1,6 +1,6 @@
 /** 🧱️ Container presentation borrows a record and rendered children without owning their source. */
 import type { MouseEventHandler, ReactNode } from "react";
-import { Field, SharedBorderRow, SharedBorderRowCell, borderElementClass, cn } from "@semio-tech/ui-react";
+import { CardStack, Field, OverviewCard, SharedBorderRow, SharedBorderRowCell, borderElementClass, cn, overviewCardChipClass } from "@semio-tech/ui-react";
 import type { UiNodeRecord, Component } from "../../../../../../../../🔨️modules/🛂️manifest/🤖️generated/📜️ui-contract/🟦️.ts";
 import { accessibilityAriaProps, layoutSpecStyle, styleSpecDataAttributes } from "../📐️layout-accessibility/🟦️.tsx";
 import { activityBorderClass } from "../🔤️display-views/🟦️.tsx";
@@ -34,6 +34,12 @@ export function UiContainerFrame({ record, id, children, controlId, selected, ho
         {children}
       </SharedBorderRow>
     );
+  }
+  if (component.role === "cardStack") return <CardStack {...dataAttrs} {...aria} id={id} data-ui-node-id={record.id} data-ui-node-key={record.key}>{describedBy}{children}</CardStack>;
+  if (component.role === "card") {
+    const title = component.label ? wireLabel(component.label) : "";
+    const footer = component.description ? wireLabel(component.description) : null;
+    return <OverviewCard as="section" slot="ui-card" headingId={`${id}.title`} icon={null} title={title} footerRight={footer ? <span className={overviewCardChipClass}>{footer}</span> : undefined} flush data={{ "data-ui-node-id": String(record.id), "data-ui-node-key": record.key }}>{describedBy}{children}</OverviewCard>;
   }
   if (component.role === "field") return <Field {...dataAttrs} {...aria} data-ui-node-id={record.id} data-ui-node-key={record.key} style={rowStyle} id={id} controlId={controlId} label={component.label ?? ""} description={component.description ?? undefined} required={component.required ?? undefined} error={component.error ?? undefined}>{describedBy}{children}</Field>;
   if (row && !onActivate) return <SharedBorderRow style={rowStyle} orientation={orientation} {...dataAttrs} {...aria} aria-label={record.accessibility.label ?? (component.role === "form" ? component.label ?? undefined : undefined)} role={component.role === "form" ? "form" : component.role === "toolbar" ? "toolbar" : undefined} id={id} data-ui-node-id={record.id} data-ui-node-key={record.key} data-activity={record.activity} className={cn(activityBorderClass(record), selected && "ring-primary ring-1", hovered && "outline-primary/50 outline-1")} aria-busy={record.activity === "loading" || record.activity === "waiting" || undefined}>{describedBy}{children}</SharedBorderRow>;

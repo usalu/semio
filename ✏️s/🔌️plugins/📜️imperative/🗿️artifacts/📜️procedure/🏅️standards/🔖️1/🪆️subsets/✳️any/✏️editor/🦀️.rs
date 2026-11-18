@@ -681,7 +681,7 @@ pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::Ar
         ("s.imperative.procedure.schema.artifact", "schema", "s.imperative.procedure", &[("schema", "s.imperative.procedure")], None),
         ("s.imperative.procedure.inference.artifact", "inference", "s.imperative.procedure.inference", &[("schema", "s.imperative.procedure.inference")], None),
         ("s.imperative.procedure.composer.native", "composer", "s.imperative.procedure@1/*", &[("dialect", "s.imperative.procedure@1/*")], None),
-        ("s.imperative.procedure.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.imperative.procedure.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("composition-route", "26:s.imperative.procedure@1/*22:s.stdio.json@rfc8259/*")], None),
         ("s.imperative.procedure.grammar.document", "grammar", "procedure.document", &[("grammar", "procedure.document")], None),
         ("s.imperative.procedure.grammar.diff", "grammar", "imperative.procedure.diff", &[("grammar", "imperative.procedure.diff")], None),
         ("s.imperative.procedure.grammar.pack", "grammar", "procedure.pack", &[("grammar", "procedure.pack")], None),

@@ -226,6 +226,8 @@
       "quietSoftStopGrants": 1,
       "rampIdleKeepMegabytes": 3072,
       "rampIdleKeepBasisPoints": 15000,
+      "settledAfterMilliseconds": 900000,
+      "settledKeepBasisPoints": 15000,
       "childStartMegabytes": 512
     },
     "swap": {

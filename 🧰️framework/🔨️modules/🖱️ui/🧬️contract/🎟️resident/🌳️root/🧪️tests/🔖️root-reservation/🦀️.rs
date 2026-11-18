@@ -48,6 +48,7 @@ fn close(owner: &mut UiDocumentLease, grant: usize) -> usize {
 
 #[test]
 fn retained_document_root_permit_nine_surfaces_share_one_aggregate() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let data = fixture();
     let before = UiResidentPermit::snapshot().unwrap();
     let count = data["surfaces"].as_u64().unwrap() as usize;
@@ -72,6 +73,7 @@ fn retained_document_root_permit_nine_surfaces_share_one_aggregate() {
 
 #[test]
 fn retained_document_root_permit_last_reader_keeps_credit_and_typed_payload() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     for grant in [1, 64, 4096] {
         let before = UiResidentPermit::snapshot().unwrap();
         let mut owner = finish(&mut assembled(100 + grant as u64, 65536));
@@ -88,6 +90,7 @@ fn retained_document_root_permit_last_reader_keeps_credit_and_typed_payload() {
 
 #[test]
 fn retained_document_root_permit_cancel_and_contended_final_return_keep_exact_owner() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let before = UiResidentPermit::snapshot().unwrap();
     let mut candidate = assembled(77, 65536);
     let observation = UiResidentPermit::try_observe().unwrap();
@@ -120,6 +123,7 @@ fn retained_document_root_permit_cancel_and_contended_final_return_keep_exact_ow
 }
 #[test]
 fn retained_document_root_permit_reader_pressure_refuses_then_retries_exact_slot() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let data = fixture();
     assert_eq!(data["pressureAggregateBytes"].as_u64().unwrap() as usize, UI_RESIDENT_AGGREGATE_BYTES);
     let before = UiResidentPermit::snapshot().unwrap();
@@ -171,6 +175,7 @@ fn retained_document_root_permit_reader_pressure_refuses_then_retries_exact_slot
 }
 #[test]
 fn retained_document_root_permit_seal_transfers_output_without_detaching_root_credit() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let data = fixture();
     let sealed = data["sealedBytes"].as_u64().unwrap() as usize;
     for order in data["outputOrders"].as_array().unwrap() {

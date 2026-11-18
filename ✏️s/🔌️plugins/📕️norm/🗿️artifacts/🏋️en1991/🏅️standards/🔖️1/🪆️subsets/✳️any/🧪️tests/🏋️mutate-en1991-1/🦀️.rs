@@ -1,4 +1,4 @@
-//! 🦀️ EN 1991 exhaustive mutation case — Rust adapter, the SUBJECT half. `s.norm.en1991` is a semio-native
+//! 🦀️ EN 1991 exhaustive mutation case — Rust adapter, the SUBJECT half. `s.norm-eurocode.en1991` is a semio-native
 //! artifact with no third-party reader or writer, so its reference is a second IMPLEMENTATION: the norm plugin's
 //! independent Python engine, which `🐍️.py` beside this file feeds with this subset's catalog, registered as the
 //! oracle `en1991-1-python-independent`. This adapter drives this repository's own production dispatch over the

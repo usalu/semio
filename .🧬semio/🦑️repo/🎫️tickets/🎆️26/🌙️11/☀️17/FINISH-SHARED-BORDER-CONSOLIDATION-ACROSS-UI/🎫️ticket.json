@@ -1,9 +1,9 @@
 {
   "title": "Finish Shared Border Consolidation Across UI",
   "emoji": "🧱",
-  "status": "open",
+  "status": "closed",
   "description": "Finish the migration from individual element borders to the consolidated shared border design system end to end (continues 26/11/05/CONSOLIDATE-NEIGHBORING-UI-BORDERS). Remove all remaining duplicated borders on both sides of a seam: navbar toggles bottom border shared with navbar bottom border; questions, steps, challenge choices and task lists in the Architecture and Technology course; and every other gap across products.",
-  "summary": "Finished the shared-border consolidation end to end (details in SUMMARY.md). Navbar/footer controls share the band edge (verified live). New nested-cells mechanism (`data-shared-border-cells`, `SharedBorderRow`/`Cell`/`Label`/`Field`, destructive tone, `as`, Input/Textarea root props, exported `useSharedBorderFrameRef`); OverviewCard `flush`. Fixed Layout mobile panel, PanelTabBar, Canvas mode nav, HistoryTable, Table, dead CSS. Course fully consolidated (quiz page, home, run, all task types, results) and verified live. Presentation, CAD REPL, OS hosts, teaching staffage, hub admin (StatTiles), new LanguageChoice (hub, semio-tech play, mit-bestand). Repaired unrelated stale tests and ResizeObserver mocks. Tests: UI 608/608, course 1123/1123, presentation 140/140, os rows 139/139. Not verified: Playwright-browser fixtures (Chromium missing), bun:test suites, visual check of OS/presentation/hub.",
+  "summary": "Shared-border consolidation finished end to end: every seam between bordered things is one line. Card interlock is inset-aware with device-pixel snapping and seam re-reads (single Rust/TS function, bands.cases.json source of truth); chips within two insets of a card side reach it (chip-span cases); chips of a row closer than 40 px abut (React, cross-pane, TUI, Rust vectors); keyboard focus recolours seams instead of rings (layered, no !important, forced-colours, contrast 3.22-5.86:1); course divider overrides replaced by --shared-border-flow; OS shell footer credits fold into a popover cell on phone/tablet; native CardStack/OverviewCard retained nodes with cardStack/card container roles, React Interpreter mapping and a conformance case. Unrelated fixes: course proctor revive loop starving the event loop during outages, Diagram suite harness order, stale ContextMenu/TUI assertions, Rust arena test fixture (central UiFixture). Live gate: border-gap probe 0 at 1440x900, 768x1024, 375x812 across elements, OS, CAD, staffage, demonstrator, play, presentation, hub admin, course en/de (false-positive classes documented). Tests: course 1135/1135, OS 158/158, interpreter 196/196, UI component suites 127/127, Rust tui-unit-laws 100/100, tui-laws, hosting 44/44, light, paint-laws, draw-contract green. Open outside scope (see SUMMARY.md): stale Rust crates after API removals, 9 wgpu-laws paint/layout laws, 5 size-derived conformance fixtures, clipboard admission laws; Playwright browser tests not run (Chromium not installed). Reports: SUMMARY.md, round3-*.md, round4-*.md.",
   "goal": "runningframework",
   "sessions": [
     "5a8e47cd-522a-4f77-8006-0f96c38024dc"
@@ -506,6 +506,149 @@
       "prompt": "Radical, rigorous pass: still many elements are individual with gaps instead of consolidated (cards on demonstrator, course, staffage; elements inside other elements; course classification categories as dashed boxes with gaps; stacked run cards with gaps between footer chip and next title chip). Rule: no bordered element may be separated by a gap or inset from another bordered element — every border run is one shared line. Enforce with a live gap probe across every app.",
       "llm": "opus-5-5",
       "effort": "medium"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-18 10:40:53",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "3cde99d423d750f904ede624e37dcf25f28a99da",
+      "summary": "Shared-border consolidation finished end to end: every seam between bordered things is one line. Card interlock is inset-aware with device-pixel snapping and seam re-reads (single Rust/TS function, bands.cases.json source of truth); chips within two insets of a card side reach it (chip-span cases); chips of a row closer than 40 px abut (React, cross-pane, TUI, Rust vectors); keyboard focus recolours seams instead of rings (layered, no !important, forced-colours, contrast 3.22-5.86:1); course divider overrides replaced by --shared-border-flow; OS shell footer credits fold into a popover cell on phone/tablet; native CardStack/OverviewCard retained nodes with cardStack/card container roles, React Interpreter mapping and a conformance case. Unrelated fixes: course proctor revive loop starving the event loop during outages, Diagram suite harness order, stale ContextMenu/TUI assertions, Rust arena test fixture (central UiFixture). Live gate: border-gap probe 0 at 1440x900, 768x1024, 375x812 across elements, OS, CAD, staffage, demonstrator, play, presentation, hub admin, course en/de (false-positive classes documented). Tests: course 1135/1135, OS 158/158, interpreter 196/196, UI component suites 127/127, Rust tui-unit-laws 100/100, tui-laws, hosting 44/44, light, paint-laws, draw-contract green. Open outside scope (see SUMMARY.md): stale Rust crates after API removals, 9 wgpu-laws paint/layout laws, 5 size-derived conformance fixtures, clipboard admission laws; Playwright browser tests not run (Chromium not installed). Reports: SUMMARY.md, round3-*.md, round4-*.md.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🛅🧬️contract🗃️🛡️limits🗃️📦️packages🛅🦀️rust⚙️cargo"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🌳️retained🗃️🌳️tree🗃️🍃️nodes🗃️📦️packages🛅🦀️rust⚙️cargo"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🕸️diagram🗃️🧪️tests🗃️🧩️component🗃️📐️layouttests💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🗣️interpreter🗃️🧪️tests🗃️🪪️containernodeids💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️⌨️tui🗃️🖥️chrome💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🛅🧬️contract🗃️🧪️tests🗃️♿️accessibility💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🪟️window💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🎨️styles🗃️⚖️footerandforcedcolors💻🎨️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🎨️styling🗃️🧪️tests🗃️🧩️suite🗃️📐️geometry💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🔲️windowsilhouette🥼sharedbordertest"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🛅🧬️contract🗃️🖼️presentation🗃️♿️accessibility💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🃏️cardstack⚙️bandscases"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🃏️cardstack💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🧭️session🗃️📡️proctorlink💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🎯️targets🗃️🧊️wgpu🗃️🖌️paint🗃️🎨️nodepaintingwithdriver🗃️📝️textandstructurenodes💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧪️tests🗃️🧪️conformancecorpus💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧪️tests🗃️🧪️ownedlocaledetectorretirement🗃️🧲️contextmenuandmore💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🃏️cardstack🗃️🎯️targets🗃️🧊️wgpu💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🔲️windowsilhouette💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️⌨️tui🗃️🧪️tests🗃️🖱️pointerrouting💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🛅🧬️contract🗃️🛡️limits🗃️🧪️tests🗃️🧬️conformance💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🃏️cardstack💻bands"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🃏️cardstack🥼🟦️test"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🗂️windowchrome💻sharedborder"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🗂️windowchrome💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🗣️interpreter🗃️🎛️controlport💻container"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️📚️app💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🃏️cardstack🥼bandstest"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🃏️overviewcard🗃️🧪️tests🗃️🧩️component💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️📑️tabs💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🎨️styles🗃️🎚️challengekeys💻🎨️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🎨️styles🗃️🏁️resultsandpreferences💻🎨️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🔨️modules🗃️📏️borderpresentation🥼segmentstest"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🛅🧬️contract🗃️🧪️tests🗃️🔬️conformancecorpus💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🎨️styles🗃️🧩️tasklayouts💻🎨️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🏁️results💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🎨️styling🗃️🖌️ui💻🎨️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🛅🧬️contract🗃️🌱️values🗃️🧪️fixture💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🏛️shellfooter💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🏛️shellhost🗃️🖼️canvasfooter🗃️🟠️footeritems💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🪟️window🗃️🧪️tests🗃️🧩️component💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️▶️run💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🧪️tests🗃️🧰️learnerjourneykit💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🃏️overviewcard💻🟦️"
+        }
+      ]
     }
   ]
 }

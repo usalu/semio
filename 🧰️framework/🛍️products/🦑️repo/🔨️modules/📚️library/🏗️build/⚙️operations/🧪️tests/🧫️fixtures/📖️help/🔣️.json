@@ -253,9 +253,12 @@
         "      Run the same task with Bazel.",
         "  repo run @semio-tech/semio-tech-play:serve --dry-run",
         "      Print the task graph and run nothing.",
+        "  repo run @semio-tech/semio-tech-play:serve --exclude-dependencies",
+        "      Run exactly this task, resolved from its own project manifest without inferring any dependency.",
         "",
         "Notes:",
         "  - --dry-run prints a DryRunPlan on stdout and executes nothing; --graph is the same flag for every tool and takes an optional file.",
+        "  - --exclude-dependencies admits only the owner of the named task: its manifest and command source are read, no dependency owner is admitted or inferred, and the task still receives the invocation envelope, caller capabilities, provider designation, task identity and store receipt of a graph-wide run; use it when the dependency graph is unavailable or the prerequisites are already built.",
         "  - Bazel: a selection builds exactly the transitive closure of its tasks in one generated workspace; a cached test-family task without declared outputs and without dependents runs as a Bazel test (cached test results; only tests are built when only tests are selected; --skip-cache switches the cached test results off), every other task as a cacheable build action. Test sharding is not offered because the neutral contract defines no shard protocol."
       ],
       "run-many": [
@@ -1503,7 +1506,7 @@
         "  cache status [--deep|--tasks] [--budget=<size>]",
         "                                                  Print the cache ledger without walking any tree (statfs of each partition plus the recorded sizes; --deep walks everything): every partition and area with its use against its budget, the retired roots and undeclared entries still on disk; with --tasks, a CacheStatus of the selected tool instead.",
         "  cache gc [--dry-run] [--area=<id>] [--budget=<size>]",
-        "                                                  Collect the cache: remove retired roots, units unused longer than their area allows and the oldest units beyond an area's budget, and entries nobody declared; it never removes a unit that is held by a lease or used recently.",
+        "                                                  Collect the cache: remove retired roots, units unused longer than their area allows and the oldest units beyond an area's budget, and entries nobody declared; it never removes a unit that is held by a lease or used recently. It also returns the host blocks that an idle image no longer uses (progress and cancellation included).",
         "  cache verify --deep [--json]                    Read every indexed optional graph leaf and every content-addressed closure inventory again, compare each with its recorded hash or name and print what differs; the only command that re-reads leaf bytes after they were written.",
         "  cache dedupe [--dry-run] [--area=<id>]          Find identical large files inside the declared places of the machine budget (Bazel outputs and workspaces, Vite products, tool installs) and replace each duplicate by a copy-on-write clone of one canonical file, freeing the duplicated blocks; files used recently, with volatile names or changed meanwhile are kept, a volume that cannot clone keeps everything, and --dry-run only reports what would be freed at most.",
         "  cache cas status|adopt|gc [--dry-run]           Report, deduplicate and collect the host-wide content-addressed store: status prints its fill against the cap; adopt makes finished files of the declared places (dependency installs, bun cache, tool installs, Bazel disk cache) hard links of one stored object per content; gc applies the cap, the watermarks and the idle ages to the store, the graph memo and the build-input closures, least recently accessed first, never removing an object that is pinned, leased, linked by a workspace or too young.",
@@ -1581,7 +1584,7 @@
         "  - Bazel: status counts the files of the disk cache entry folders (action cache and content-addressed store) of the products partition and adds the recorded build activity (builds, actions, executed, cacheHits) read from the build event stream; clear stops the persistent servers, removes their output bases (the local action cache) and empties the disk cache, so the next build is a miss; toolchains and modules stay."
       ],
       "cache gc": [
-        "repo cache gc - Collect the cache: remove retired roots, units unused longer than their area allows and the oldest units beyond an area's budget, and entries nobody declared; it never removes a unit that is held by a lease or used recently.",
+        "repo cache gc - Collect the cache: remove retired roots, units unused longer than their area allows and the oldest units beyond an area's budget, and entries nobody declared; it never removes a unit that is held by a lease or used recently. It also returns the host blocks that an idle image no longer uses (progress and cancellation included).",
         "",
         "Usage:",
         "  repo [--tool=nx|bazel|semio] cache gc [--dry-run] [--area=<id>] [--budget=<size>] [options]",
@@ -2873,9 +2876,12 @@
         "      Führt dieselbe Task mit Bazel aus.",
         "  repo run @semio-tech/semio-tech-play:serve --dry-run",
         "      Gibt den Task-Graphen aus und führt nichts aus.",
+        "  repo run @semio-tech/semio-tech-play:serve --exclude-dependencies",
+        "      Führt genau diese Task aus, aufgelöst aus ihrem eigenen Projektmanifest, ohne eine Abhängigkeit zu inferieren.",
         "",
         "Hinweise:",
         "  - --dry-run gibt einen DryRunPlan auf stdout aus und führt nichts aus; --graph ist für jedes Werkzeug dasselbe Flag und nimmt optional eine Datei.",
+        "  - --exclude-dependencies lässt nur den Eigentümer der benannten Task zu: Sein Manifest und seine Befehlsquelle werden gelesen, kein Abhängigkeits-Eigentümer wird zugelassen oder inferiert, und die Task erhält weiterhin Aufruf-Umschlag, Aufruferfähigkeiten, Anbieterbezeichnung, Task-Identität und Store-Quittung eines graphweiten Laufs; nutzbar, wenn der Abhängigkeitsgraph nicht verfügbar ist oder die Vorbedingungen bereits gebaut sind.",
         "  - Bazel: Eine Auswahl baut genau den transitiven Abschluss ihrer Tasks in einem erzeugten Workspace; eine gecachte Test-Task ohne deklarierte Ausgaben und ohne Abhängige läuft als Bazel-Test (gecachte Testergebnisse; sind nur Tests ausgewählt, werden nur Tests gebaut; --skip-cache schaltet die gecachten Testergebnisse ab), jede andere Task als cachebare Build-Aktion. Test-Sharding wird nicht angeboten, weil der neutrale Vertrag kein Shard-Protokoll definiert."
       ],
       "run-many": [
@@ -4123,7 +4129,7 @@
         "  cache status [--deep|--tasks] [--budget=<size>]",
         "                                                  Gibt die Cache-Bilanz ohne Ablaufen eines Baums aus (statfs jeder Partition plus erfasste Größen; --deep läuft alles ab): jede Partition und jeden Bereich mit Nutzung gegen Budget, die noch vorhandenen stillgelegten Wurzeln und nicht deklarierten Einträge; mit --tasks stattdessen einen CacheStatus des gewählten Werkzeugs.",
         "  cache gc [--dry-run] [--area=<id>] [--budget=<size>]",
-        "                                                  Sammelt den Cache ein: entfernt stillgelegte Wurzeln, länger als erlaubt unbenutzte Einheiten, die ältesten Einheiten über dem Budget eines Bereichs und nicht deklarierte Einträge; eine durch Lease gehaltene oder kürzlich benutzte Einheit wird nie entfernt.",
+        "                                                  Sammelt den Cache ein: entfernt stillgelegte Wurzeln, länger als erlaubt unbenutzte Einheiten, die ältesten Einheiten über dem Budget eines Bereichs und nicht deklarierte Einträge; eine durch Lease gehaltene oder kürzlich benutzte Einheit wird nie entfernt. Außerdem gibt es die Host-Blöcke zurück, die ein ruhendes Image nicht mehr nutzt (mit Fortschritt und Abbruch).",
         "  cache verify --deep [--json]                    Liest jedes indexierte optionale Graph-Blatt und jedes inhaltsadressierte Abschluss-Inventar erneut, vergleicht es mit seinem erfassten Hash oder Namen und gibt aus, was abweicht; der einzige Befehl, der Blattbytes nach dem Schreiben erneut liest.",
         "  cache dedupe [--dry-run] [--area=<id>]          Findet identische große Dateien in den deklarierten Orten des Rechner-Budgets (Bazel-Ergebnisse und -Workspaces, Vite-Produkte, Werkzeug-Installationen) und ersetzt jedes Duplikat durch einen Copy-on-Write-Klon einer kanonischen Datei, wodurch die doppelten Blöcke frei werden; kürzlich benutzte, flüchtig benannte oder zwischenzeitlich geänderte Dateien bleiben, ein Volume ohne Klon-Unterstützung behält alles, und --dry-run meldet nur, was höchstens frei würde.",
         "  cache cas status|adopt|gc [--dry-run]           Zeigt, dedupliziert und sammelt den rechnerweiten inhaltsadressierten Speicher: status gibt die Füllung gegen die Obergrenze aus; adopt macht fertige Dateien der deklarierten Orte (Abhängigkeits-Installationen, Bun-Cache, Werkzeug-Installationen, Bazel-Disk-Cache) zu harten Links je eines gespeicherten Objekts pro Inhalt; gc wendet Obergrenze, Marken und Leerlaufalter auf Speicher, Graph-Memo und Abschluss-Inventare an, zuletzt benutzte zuerst, und entfernt nie ein Objekt, das gepinnt, geleast, von einem Workspace verlinkt oder zu jung ist.",
@@ -4201,7 +4207,7 @@
         "  - Bazel: status zählt die Dateien der Ordner des Festplatten-Caches (Aktions-Cache und inhaltsadressierter Speicher) der Produkt-Partition und ergänzt die aufgezeichnete Build-Aktivität (builds, actions, executed, cacheHits) aus dem Build-Ereignisstrom; clear stoppt die dauerhaften Server, entfernt deren Ausgabebasen (den lokalen Aktions-Cache) und leert den Festplatten-Cache, sodass der nächste Build ein Fehltreffer ist; Toolchains und Module bleiben."
       ],
       "cache gc": [
-        "repo cache gc - Sammelt den Cache ein: entfernt stillgelegte Wurzeln, länger als erlaubt unbenutzte Einheiten, die ältesten Einheiten über dem Budget eines Bereichs und nicht deklarierte Einträge; eine durch Lease gehaltene oder kürzlich benutzte Einheit wird nie entfernt.",
+        "repo cache gc - Sammelt den Cache ein: entfernt stillgelegte Wurzeln, länger als erlaubt unbenutzte Einheiten, die ältesten Einheiten über dem Budget eines Bereichs und nicht deklarierte Einträge; eine durch Lease gehaltene oder kürzlich benutzte Einheit wird nie entfernt. Außerdem gibt es die Host-Blöcke zurück, die ein ruhendes Image nicht mehr nutzt (mit Fortschritt und Abbruch).",
         "",
         "Verwendung:",
         "  repo [--tool=nx|bazel|semio] cache gc [--dry-run] [--area=<id>] [--budget=<size>] [optionen]",

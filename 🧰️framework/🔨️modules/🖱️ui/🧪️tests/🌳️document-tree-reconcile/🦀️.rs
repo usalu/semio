@@ -13,6 +13,7 @@
 
 use semio_ui_retained_tree::reconcile::*;
 use semio_ui_wgpu_engine_surface::{ui_document_ingress_generation, UiDocumentIngressFault, UiDocumentIngressStatus, UiFrameStep, UiLayoutStep, UI_RETIRED_COMPONENT_SCENE_CAPACITY};
+use semio_ui_wgpu_engine::testkit::UiFixture;
 use semio_ui_wgpu_engine::Ui;
 use semio_ui_text::FontAtlas;
 use semio_ui_retained_tree::tree::{NodeKey, UiDocumentTree, UiTree};
@@ -129,26 +130,17 @@ impl semio_ui_wgpu_hosting::scene_slots::SceneHost for NoSceneHost {
     }
 }
 
-fn drive_layout(ui: &mut Ui, window_id: &str, width: f32, height: f32, atlas: &mut FontAtlas) {
+fn drive_layout(ui: &mut UiFixture, window_id: &str, width: f32, height: f32, atlas: &mut FontAtlas) {
     ui.set_viewport(window_id, width, height);
-    let operation = semio_framework_job::allocate_operation_id();
-    let cancel = semio_framework_job::CancelToken::root_now();
     let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
-    let mut preview_sequence = 0;
-    for _ in 0..200_000 {
-        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
-        let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), test_clock, &mut preview_sequence,&mut actual_retained_progress);
-        if matches!(ui.step_layouts(&pool, atlas, &mut cx), UiLayoutStep::Idle) {
-            return;
-        }
-    }
-    panic!("layout did not settle");
+    assert!(ui.settle_layout(window_id, &pool, atlas), "layout did not settle: {}", ui.paint_stall_census(window_id));
 }
 
 /// 🏁️ The headline: the published document mounts, its surface consumes its own lane subtree, and the
 /// arena it produces paints real instances — the exact chain that answered `Missing` before.
 #[test]
 fn a_published_document_mounts_its_records_and_the_arena_it_produces_paints() {
+    let mut ui = UiFixture::new(semio_ui_locale::Locale::En);
     let law = law();
     let ids: Vec<u64> = law["document"]["nodes"].as_array().expect("fixture nodes").iter().map(|node| node["id"].as_u64().expect("fixture id")).collect();
     let document = document_from(&law, &ids, law["document"]["generation"].as_u64().expect("generation"), law["document"]["revision"].as_u64().expect("revision"), None);
@@ -177,8 +169,8 @@ fn a_published_document_mounts_its_records_and_the_arena_it_produces_paints() {
     assert_eq!(scene.pane_id.as_deref(), law["expected"]["surfaceNode"]["paneId"].as_str(), "paneId carries the program's own authored surface id");
     assert_eq!(scene.controller_id, law["expected"]["surfaceNode"]["controllerId"].as_str().expect("controller"));
     assert!(scene.node_graph.is_none(), "an empty doc payload renders the host's own empty viewport rather than refusing the record");
+    retire(tree);
 
-    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let document = document_from(&law, &ids, law["document"]["generation"].as_u64().expect("generation"), law["document"]["revision"].as_u64().expect("revision"), None);
     assert!(ui.publish_document("procedural-main", document));
     reconcile_ui_window(&mut ui, "procedural-main", "generation3d", law["document"]["generation"].as_u64().expect("generation"));
@@ -199,6 +191,7 @@ fn a_published_document_mounts_its_records_and_the_arena_it_produces_paints() {
 /// widget state), a record that leaves frees exactly its own slot, and the new order is the document's.
 #[test]
 fn a_second_generation_preserves_surviving_identities_and_retires_only_what_left() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let law = law();
     let ids: Vec<u64> = law["document"]["nodes"].as_array().expect("fixture nodes").iter().map(|node| node["id"].as_u64().expect("fixture id")).collect();
     let mut tree = UiTree::new();
@@ -240,6 +233,7 @@ fn a_second_generation_preserves_surviving_identities_and_retires_only_what_left
 /// 🧹️ Retirement: dropping the document frees every arena slot it minted, one step at a time.
 #[test]
 fn retiring_a_document_frees_every_node_it_mounted_one_step_at_a_time() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let law = law();
     let ids: Vec<u64> = law["document"]["nodes"].as_array().expect("fixture nodes").iter().map(|node| node["id"].as_u64().expect("fixture id")).collect();
     let mut tree = UiTree::new();
@@ -262,6 +256,7 @@ fn retiring_a_document_frees_every_node_it_mounted_one_step_at_a_time() {
 /// the document controller identifies the live app session and is deliberately different here.
 #[test]
 fn a_synthesized_select_option_keeps_the_published_binding_scope() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let law = law();
     let action_law = &law["actionScope"];
     let select_record = record(&action_law["selectRecord"]);
@@ -425,6 +420,7 @@ fn ingest_once(ui: &mut Ui, window_id: &str, law: &serde_json::Value, ids: &[u64
 /// `📓️wgpu-generation-publication-2026-09-13.md`).
 #[test]
 fn a_surfaces_second_document_reaches_the_arena_and_a_constant_generation_never_does() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let law = law();
     let ids: Vec<u64> = law["document"]["nodes"].as_array().expect("fixture nodes").iter().map(|node| node["id"].as_u64().expect("fixture id")).collect();
     let first_revision = law["document"]["revision"].as_u64().expect("fixture revision");
@@ -460,6 +456,7 @@ fn a_surfaces_second_document_reaches_the_arena_and_a_constant_generation_never_
 /// restarts at revision 1 and must still be admitted). Shared fixture with the TypeScript twin.
 #[test]
 fn the_ingress_generation_holds_still_while_a_surface_does_and_never_moves_backward() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let law = law();
     let mut previous: Option<u64> = None;
     for case in law["ingressGeneration"]["cases"].as_array().expect("ingress generation cases") {
@@ -559,6 +556,7 @@ fn container_record(id: u64, key: &str, children: &[u64]) -> serde_json::Value {
 
 #[test]
 fn mounting_a_record_stamps_its_whole_dispatch_contract_onto_the_arena_node() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut tree = UiTree::new();
     let mut cursor = UiDocumentReconcileCursor::default();
     let root = container_record(0, "panel", &[1]);
@@ -592,6 +590,7 @@ fn mounting_a_record_stamps_its_whole_dispatch_contract_onto_the_arena_node() {
 
 #[test]
 fn a_new_revision_restamps_every_surviving_node_so_its_own_gestures_never_read_stale() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut tree = UiTree::new();
     let mut cursor = UiDocumentReconcileCursor::default();
     let root = container_record(0, "panel", &[1]);
@@ -621,6 +620,7 @@ fn a_new_revision_restamps_every_surviving_node_so_its_own_gestures_never_read_s
 
 #[test]
 fn an_extension_slot_carries_its_publishers_plugin_id_instead_of_an_empty_string() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut tree = UiTree::new();
     let mut cursor = UiDocumentReconcileCursor::default();
     let root = container_record(0, "panel", &[1]);
@@ -647,6 +647,7 @@ fn an_extension_slot_carries_its_publishers_plugin_id_instead_of_an_empty_string
 
 #[test]
 fn the_reserved_media_transport_projects_only_truthful_localized_host_status() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🎬️media-transport-reservation/🔣️.json")).expect("media transport reservation fixture");
     assert_eq!(fixture["reservedExtensionId"].as_str(), Some(semio_ui_retained_tree::reconcile::MEDIA_TRANSPORT_EXTENSION_ID));
     for (index, vector) in fixture["cases"].as_array().expect("fixture cases").iter().enumerate() {
@@ -706,6 +707,7 @@ fn engine_surface_root_record(id: u64, key: &str, kind: &str) -> serde_json::Val
 
 #[test]
 fn same_key_scene_kind_replacement_emits_the_exact_old_identity_once() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut tree = UiTree::new();
     let map = engine_surface_root_record(0, "scene.same-key", "tiled-map");
     tree.publish_document(tiny_document("scene-window", 1, &map, None));
@@ -743,6 +745,7 @@ fn same_key_scene_kind_replacement_emits_the_exact_old_identity_once() {
 
 #[test]
 fn a_full_scene_retirement_ledger_yields_before_mutating_the_old_node() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut tree = UiTree::new();
     let map = engine_surface_root_record(0, "scene.backpressure", "tiled-map");
     tree.publish_document(tiny_document("scene-backpressure", 1, &map, None));
@@ -798,6 +801,7 @@ fn a_full_scene_retirement_ledger_yields_before_mutating_the_old_node() {
 
 #[test]
 fn a_full_scene_retirement_ledger_yields_before_closing_the_mounted_node() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut tree = UiTree::new();
     let map = engine_surface_root_record(0, "scene.close-backpressure", "tiled-map");
     tree.publish_document(tiny_document("scene-close-backpressure", 1, &map, None));
@@ -832,18 +836,13 @@ fn a_full_scene_retirement_ledger_yields_before_closing_the_mounted_node() {
 /// root is clean, and a `Pending` that finds the root dirty again goes back to layout — the exact
 /// ladder `render_ui_document_step` walks (`🗣️Interpreter/🎯️targets/🧊️wgpu`'s `UiDocumentFramePhase`).
 /// Answers the number of opportunities the window spent, or `None` if it never terminated.
-fn drive_window_to_painted(ui: &mut Ui, window_id: &str, viewport: semio_ui_theme::geometry::Rect, atlas: &mut FontAtlas, budget: usize) -> Option<usize> {
+fn drive_window_to_painted(ui: &mut UiFixture, window_id: &str, viewport: semio_ui_theme::geometry::Rect, atlas: &mut FontAtlas, budget: usize) -> Option<usize> {
     let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
-    let operation = semio_framework_job::allocate_operation_id();
-    let cancel = semio_framework_job::CancelToken::root_now();
-    let mut preview_sequence = 0;
     let mut target = semio_ui_draw_contract::DrawList::default();
     for spent in 0..budget {
         if ui.layout_is_dirty(window_id) {
             ui.request_layout(window_id);
-            let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
-            let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), test_clock, &mut preview_sequence,&mut actual_retained_progress);
-            let _ = ui.step_layouts(&pool, atlas, &mut cx);
+            let _ = ui.step_layouts(&pool, atlas);
             continue;
         }
         match ui.frame_into_step::<NoSceneHost>(window_id, viewport, atlas, None, None, &mut target, ui_contract::UI_WORKER_RETIREMENT_POLICY).0 {
@@ -865,7 +864,7 @@ fn drive_window_to_painted(ui: &mut Ui, window_id: &str, viewport: semio_ui_them
 /// ledger stuck at `generation: 0` (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w14a-*`).
 #[test]
 fn a_document_whose_root_is_the_engine_surface_reaches_a_painted_frame() {
-    let mut ui = Ui::new(semio_ui_locale::Locale::En);
+    let mut ui = UiFixture::new(semio_ui_locale::Locale::En);
     let root = engine_surface_root_record(0, "gis2d.play.composite", "tiled-map");
     assert!(ui.publish_document("gis2d-main", tiny_document("gis2d-main", 1, &root, None)));
     reconcile_ui_window(&mut ui, "gis2d-main", "gis", 11);
@@ -883,6 +882,7 @@ fn a_document_whose_root_is_the_engine_surface_reaches_a_painted_frame() {
 
 #[test]
 fn a_tree_row_declares_its_drop_action_through_its_drop_binding() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let text = |value: &str| ui_contract::UiText::try_from_str(value).expect("text fits");
     let item = || ui_contract::Component::TreeItem(ui_contract::TreeItemProps { label: ui_contract::Label(text("row")), description: None, icon: None, default_open: None, draggable: Some(true), drag_data: None, dimmed: None, selected: None, window: None, granularity: None, inline_toolbar: None, detail: None, row_actions: Default::default(), target: None });
     let mut droppable = UiNodeRecord::with_component(UiNodeId(2), text("row-b"), item());

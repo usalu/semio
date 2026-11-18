@@ -24,10 +24,10 @@ static MUTATION: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture
 static OUTCOME: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-element/🚨️no-such-element-eb788c/🎯️outcome/🔣️.json");
 
 fn before() -> Fem3dSnapshotValue {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(&BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> Fem3dSnapshotValue {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(&AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> Fem3dMutation {
     semio_framework_pack_json::from_json_str(MUTATION.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
@@ -79,7 +79,7 @@ fn declared_outcome_holds() {
 /// 🔣️ Both committed snapshots and the committed mutation are already canonical: decode→encode is a fixed point.
 #[test]
 fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", &*BEFORE), ("after", &*AFTER)] {
         let decoded: Fem3dSnapshotValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = semio_framework_value::ToValue::to_value(&decoded);
         let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
@@ -93,6 +93,6 @@ fn committed_json_is_canonical() {
 /// 🪪️ The fixture is bound to this very kind's own semantic descriptor, never a sibling's.
 #[test]
 fn semantics_bind_the_declared_kind() {
-    let semantics = <Fem3dMutation as protocol::SemanticMutation<Fem3dSnapshotValue>>::semantics(&mutation());
+    let semantics = <Fem3dMutation as protocol::SemanticMutation<semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot>>::semantics(&mutation());
     assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("delete", "element", "delete-element", "DeletedElement"), "delete-element/no-such-element-eb788c: the fixture must be bound to delete-element's own descriptor");
 }

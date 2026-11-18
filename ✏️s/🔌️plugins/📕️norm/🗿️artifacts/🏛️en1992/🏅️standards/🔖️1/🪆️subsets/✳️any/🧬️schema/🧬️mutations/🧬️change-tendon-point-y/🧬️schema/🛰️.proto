@@ -1,5 +1,5 @@
 syntax = "proto3";
-package semio.s.norm.en1992.mutation.change_tendon_point_y;
+package semio.s.norm_eurocode_structural.en1992.mutation.change_tendon_point_y;
 message ChangeTendonPointY {
   string member_id = 1;
   string tendon_point_id = 2;

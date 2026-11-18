@@ -254,7 +254,7 @@ test("concurrent wiring laws: lock order build then bindings, shared image only,
  const receipt=slice(text,"export function withJavascriptDependencyReceiptStorageV1<T>(","/** 📜️");
  expect(receipt).toContain('acquireConcurrentLeaseV1("writer"');expect(receipt).not.toContain('"build"');expect(receipt).not.toContain('"bindings"');
  const orchestrator=slice(text,"async function runJavascriptDependencyStoreGenerationsV1(","/** 📌️ Pins the generations a producer is about to create");
- const order=['"build")','acquireConcurrentLeaseV1("bindings"','"publish")','gate.release()'].map(part=>orchestrator.indexOf(part));
+ const order=['"build")','underJavascriptDependencyBindingsGateV1(','"publish")','retireJavascriptDependencyPreservationsInStoreV1('].map(part=>orchestrator.lastIndexOf(part));
  expect(order.every(index=>index>=0)).toBe(true);
  expect(order[0]).toBeLessThan(order[1]!);expect(order[1]).toBeLessThan(order[2]!);expect(order[2]).toBeLessThan(order[3]!);
  expect(text.match(/acquireConcurrentLeaseV1\("build"/gu)?.length).toBe(1);
@@ -281,7 +281,9 @@ test("concurrent wiring laws: lock order build then bindings, shared image only,
  expect(producer.indexOf("admitJavascriptDependencyGenerationV1(")).toBeLessThan(producer.indexOf("captureOwnedCommandResultV1("));
  expect(producer.indexOf("admitJavascriptDependencyGenerationV1(")).toBeGreaterThan(producer.indexOf("for(const row of fresh){"));
  expect(producer).toContain("sealConcurrentPointerV1(previous,scope,generation,switched,frame.built.get(scope)??previous?.bytes??0)");
- expect(orchestrator.indexOf("await collectJavascriptDependencyGenerationsV1(workspace")).toBeGreaterThan(orchestrator.indexOf("gate.release()"));
+ expect(orchestrator.indexOf("await collectJavascriptDependencyGenerationsV1(workspace")).toBeGreaterThan(orchestrator.lastIndexOf("underJavascriptDependencyBindingsGateV1("));
+ const gateHelper=slice(text,"async function underJavascriptDependencyBindingsGateV1(","/** 🫙️");
+ expect(gateHelper).toContain('acquireConcurrentLeaseV1("bindings"');expect(gateHelper.indexOf("await body()")).toBeLessThan(gateHelper.indexOf("gate.release()"));
  const admit=slice(text,"async function admitJavascriptDependencyGenerationV1(","/** 🏗️ Retires superseded gene");
  expect(admit.indexOf("concurrentAdmissionV1(")).toBeLessThan(admit.indexOf("collectJavascriptDependencyGenerationsV1("));
  expect(admit.lastIndexOf("concurrentAdmissionV1(")).toBeGreaterThan(admit.indexOf("collectJavascriptDependencyGenerationsV1("));
@@ -343,6 +345,17 @@ test("concurrent maintenance: collection is generation-scoped and never waits fo
 });
 
 /** 📐️ The declared dependencies partition must hold the current generation set plus one building set: derived from the measured sizes in the schema, checked against every declared platform backend, including Linux copying, with an independent Python arithmetic oracle. */
+test("concurrent reclaim: preservation capsules of interrupted synchronizations retire under pressure before any build",()=>{
+ const text=storage(),orchestrator=slice(text,"async function runJavascriptDependencyStoreGenerationsV1(","/** 📌️ Pins the generations a producer is about to create");
+ expect(orchestrator.indexOf("await reclaimJavascriptDependencyPreservationsUnderPressureV1(")).toBeGreaterThanOrEqual(0);
+ expect(orchestrator.indexOf("await reclaimJavascriptDependencyPreservationsUnderPressureV1(")).toBeLessThan(orchestrator.indexOf('"build")'));
+ const reclaim=slice(text,"async function reclaimJavascriptDependencyPreservationsUnderPressureV1(","/** 🗄️ Runs one synchronization");
+ expect(reclaim.indexOf("concurrentAdmissionV1(")).toBeLessThan(reclaim.indexOf("retireJavascriptDependencyPreservationsInStoreV1("));
+ expect(reclaim).toContain("if(verdict.admitted)return;");expect(reclaim).toContain("underJavascriptDependencyBindingsGateV1(");expect(reclaim).toContain('event:"reclaiming"');
+ const gate=slice(text,"async function underJavascriptDependencyBindingsGateV1(","/** 🫙️");
+ expect(gate).toContain('acquireConcurrentLeaseV1("bindings"');expect(gate.indexOf("await body()")).toBeLessThan(gate.indexOf("gate.release()"));
+ expect(gate.indexOf("frame.gate=null")).toBeLessThan(gate.indexOf("gate.release()"));
+});
 test("concurrent budget: the declared partition funds every platform backend and both generation sets",()=>{
  const budget=protocol.budget,declared=readRepositoryCacheBudgetV1(policy).partitions.dependencies.usableBytes;
  expect(core.concurrentRequiredImageBytesV1(true)).toBeLessThanOrEqual(declared);
@@ -372,4 +385,19 @@ test("concurrent temporaries: only stale scratch directories of the declared sha
  expect(glue.sweepConcurrentTemporariesV1(join(root,"missing"),now,true,()=>{})).toBe(0);
  let checks=0;make(".1b-1.nx",30);make(".1c-1.nx",30);expect(glue.sweepConcurrentTemporariesV1(root,now,false,()=>{checks++;})).toBe(2);expect(checks).toBe(2);
  rmSync(root,{recursive:true,force:true});
+});
+
+/** 🫙️ Frees the retention capsules an interrupted lock leaves for unready generations: only complete, never-ready, non-current ones are garbage, and the collector retires them through its tombstone path. */
+test("concurrent collector retires only complete non-current unready retention capsules",()=>{
+ const prefix="a".repeat(20),full=prefix+"b".repeat(44),container=join("root","j"),name=".pa1b2c3d4",intent={purpose:"retain-current-unready-dependency-generation",generation:full,directory:join(container,prefix),readyAbsent:true},receipt={name:prefix,capsule:name},base={container,name,roster:["i","p","r"],intent,receipt,current:new Set<string>(),payloadReady:false};
+ expect(core.concurrentUnreadyCapsuleRetirableV1(base)).toBe(true);
+ expect(core.concurrentUnreadyCapsuleRetirableV1({...base,current:new Set([prefix])})).toBe(false);
+ expect(core.concurrentUnreadyCapsuleRetirableV1({...base,payloadReady:true})).toBe(false);
+ expect(core.concurrentUnreadyCapsuleRetirableV1({...base,roster:["i","p"]})).toBe(false);
+ expect(core.concurrentUnreadyCapsuleRetirableV1({...base,name:".pxyz"})).toBe(false);
+ expect(core.concurrentUnreadyCapsuleRetirableV1({...base,receipt:{name:prefix,capsule:".pffffffff"}})).toBe(false);
+ expect(core.concurrentUnreadyCapsuleRetirableV1({...base,intent:{...intent,readyAbsent:false}})).toBe(false);
+ expect(core.concurrentUnreadyCapsuleRetirableV1({...base,intent:{...intent,directory:join(container,"c".repeat(20))}})).toBe(false);
+ const collect=slice(storage(),"async function collectJavascriptDependencyGenerationsV1","export function maintainJavascriptDependencyGenerationsV1");
+ expect(collect).toContain("concurrentUnreadyCapsuleRetirableV1(");expect(collect).toContain("concurrentCollectionV1(");
 });

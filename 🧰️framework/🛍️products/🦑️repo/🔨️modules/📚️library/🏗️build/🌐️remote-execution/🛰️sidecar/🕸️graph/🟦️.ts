@@ -22,6 +22,7 @@ import {readRemoteExecutionHostViewV1,remoteExecutionOriginV1} from "../../🌡�
 import {sleep,type RemoteExecutionSidecarContextV1} from "../🧰️shared/🟦️.ts";
 import {awaitGraphReadLeasesV1,describeGraphReadStallV1,graphReadBlockersV1,readGraphLeaseEntriesV1} from "./🔬️stall/🟦️.ts";
 import {measureReadTreeV1,memoryOverrunV1} from "./🔬️stall/🌳️tree/🟦️.ts";
+import {readyForegroundBusyOfStoreV1} from "../🚦️ready/🟦️.ts";
 
 /** 🔌️ The environment the graph server and its reads run in: the one of the agent without the explicit remote cache overrides (`SEMIO_REMOTE_CACHE_ENDPOINT`, `_ACCESS`, `_INSTANCE`, `_TOKEN`, `SEMIO_FLEET_CACHE_ENDPOINT`), so the graph exchange uses the cache and instance the fleet announces, exactly as the workers do (their bootstrap unsets the same variables); an agent that carries the instance `semio` would otherwise look for requests in another instance than the one the workers write them to. */
 export function graphExchangeEnvironmentV1(environment:Readonly<Record<string,string|undefined>>):Record<string,string|undefined>{
@@ -46,7 +47,7 @@ export{inferGraphReadV1,adoptGraphReadV1}from"./🔭️read/🟦️.ts";
 import{adoptGraphReadV1,inferGraphReadV1}from"./🔭️read/🟦️.ts";
 
 
-/** 🕸️ The graph server of a machine: runs {@link runWantedServerV1} in its own supervised process (a graph read holds gigabytes and must never take the build agent down). A machine whose physical memory is below `serveTotalMegabytes` reports no headroom, so it neither serves requests nor refreshes: a full graph read does not fit beside its own work. Its reads are ordinary `repo show projects` commands, so inference runs under the fleet claims and the host capacity gate, and records and the generation reach the fleet cache through the paths every read already uses. A machine without a fleet cache waits and looks again. */
+/** 🕸️ The graph server of a machine: runs {@link runWantedServerV1} in its own supervised process (a graph read holds gigabytes and must never take the build agent down). A machine whose physical memory is below `serveTotalMegabytes` reports no headroom, so it neither serves requests nor refreshes: a full graph read does not fit beside its own work. Its reads are ordinary `repo show projects` commands, so inference runs under the fleet claims and the host capacity gate, and records and the generation reach the fleet cache through the paths every read already uses. A machine without a fleet cache waits and looks again. While the readiness loop of the machine is busy (its `ready.json` says not ready and running, waiting or backing off) it neither serves requests nor refreshes: readiness is the foreground, a background read holds the dependency store for hours, and a read still running when a stage queues behind it is stopped by the stage runner (`yield`). */
 export async function runGraph(context:RemoteExecutionSidecarContextV1):Promise<void>{
  const environment=graphExchangeEnvironmentV1({...context.environment,SEMIO_WORKSPACE_ROOT:context.root}),language=resolveLanguageV1(CATALOG_LANGUAGES_V1,[],environment).language as "en"|"de",origin=remoteExecutionOriginV1(context.root,environment),policy=wantedServerPolicyV1;
  let settings=graphFleetSettingsV1(context.root,environment);
@@ -78,8 +79,8 @@ export async function runGraph(context:RemoteExecutionSidecarContextV1):Promise<
    return view===undefined?names:[...names,...await forwardableRequestersV1({ownStore:store,peers:view.peerStores}).catch(()=>[])];
   },
   async headroom(){return graphServerHeadroomV1((await readRemoteExecutionHostViewV1(environment)).host,policy.serveTotalMegabytes);},
-  async mayServe(){return(await readRemoteExecutionHostViewV1(environment)).host.totalMegabytes>=policy.serveTotalMegabytes;},
-  async mayRefresh(){const key=createHash("sha256").update(JSON.stringify(["graph-refresh",graphPlatformV1()])).digest("hex");return(await client.claim(key,origin,policy.refreshIntervalMilliseconds).catch(()=>({state:"fault"}))).state==="granted";},
+  async mayServe(){return(await readRemoteExecutionHostViewV1(environment)).host.totalMegabytes>=policy.serveTotalMegabytes&&!readyForegroundBusyOfStoreV1(store,origin);},
+  async mayRefresh(){if(readyForegroundBusyOfStoreV1(store,origin))return false;const key=createHash("sha256").update(JSON.stringify(["graph-refresh",graphPlatformV1()])).digest("hex");return(await client.claim(key,origin,policy.refreshIntervalMilliseconds).catch(()=>({state:"fault"}))).state==="granted";},
   async quietMilliseconds(){try{return Math.max(0,Date.now()-statSync(machinePathV1(context.root,".cache","f","state.wal")).mtimeMs);}catch{return 0;}}});}
  finally{if(tickTimer!==undefined)clearInterval(tickTimer);uploader?.stop();await uploader?.idle();}
 }

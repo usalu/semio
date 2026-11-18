@@ -196,17 +196,28 @@ export interface PresenceEntry {
  * `watched` (server → client) carries changes of one scope since the socket was last sent that scope, or — flagged
  * `snapshot` — the beginning of its roster, sent when the scope becomes watched or the watcher fell too far behind,
  * replacing what the client held for it. `watched` frames are bounded the same way, over all watched scopes per
- * interval. */
+ * interval.
+ *
+ * `heartbeat` (server → client, no payload) is sent every {@link PRESENCE_HEARTBEAT_MS} while the socket is open — the
+ * liveness a browser cannot read off the protocol-level pings. A client that has received no frame at all for
+ * {@link PRESENCE_SILENCE_FACTOR} heartbeats treats the socket as dead, closes it and joins again. */
 export type PresenceFrame =
   | { readonly type: "welcome"; readonly session: string; readonly colour: number; readonly roster: readonly PresenceEntry[] }
   | { readonly type: "state"; readonly state: unknown }
   | { readonly type: "batch"; readonly entries: readonly PresenceEntry[]; readonly left: readonly string[] }
   | { readonly type: "refused"; readonly reason: string }
+  | { readonly type: "heartbeat" }
   | { readonly type: "watch"; readonly scopes: readonly Scope[]; readonly intervalMs: number }
   | { readonly type: "watched"; readonly scope: Scope; readonly entries: readonly PresenceEntry[]; readonly left: readonly string[]; readonly snapshot?: boolean };
 
 /** 🔌️ The websocket subprotocol the presence socket speaks. */
 export const PRESENCE_PROTOCOL = "semio.presence.v1";
+
+/** 💓️ How often the server sends a `heartbeat` frame on every open presence socket (the `presence.heartbeatMs` of the wire fixture). */
+export const PRESENCE_HEARTBEAT_MS = 10_000;
+
+/** 🕳️ How many heartbeats of silence — no frame of any kind — a client waits before it treats a socket as dead (the `presence.silenceFactor` of the wire fixture). */
+export const PRESENCE_SILENCE_FACTOR = 2.5;
 
 //#endregion 🔖️Presence
 //#region 🔖️Policy

@@ -449,6 +449,15 @@ export class ProctorClient {
     this.mark("unreachable");
   }
 
+  /** 🩺️ Asks the proctor for its contract anew, whatever was agreed before — a proctor found incompatible is still left
+   * alone for {@link AGREEMENT_RECHECK_MS} — and notes what it found: it answers and agrees, answers and does not, or stays
+   * silent. Needs no other traffic, so a client that gave a call up can learn that the proctor is back; fails like any
+   * call while it is not. */
+  probe(signal?: AbortSignal): Promise<void> {
+    if (this.agreement.kind === "agreed") this.agreement = { kind: "unknown" };
+    return this.observe(async () => undefined, signal);
+  }
+
   /** 📮️ Submits one command once (callers retry transient failures with the same command id). A refusal is only
    * answered once the proctor still agrees on the contract. */
   command(command: Command, signal?: AbortSignal): Promise<CommandVerdict> {

@@ -4,16 +4,14 @@ use semio_framework_pack_error::PackError;
 use crate::record::{EncodeOptions as PackEncodeOptions,DecodeOptions as PackDecodeOptions};
 use semio_framework_dsl_record::RecordSpecProducer;
 pub use semio_framework_dsl_record::BorrowedRecordSpecProducer;
-/// 🧬️ Native snapshot registration depends only on authentic immutable Pack metadata.
+/// 🧬️ Native snapshot registration depends only on the authored Pack record specification, the single source of its schema hash.
 pub trait ArtifactPackMetadata:Sized{
     const EXTENSION:&'static str;
-    fn native_record_spec_producer()->Option<BorrowedRecordSpecProducer>;
-    fn native_pack_schema_hash()->[u8;32];
+    fn native_pack_schema_hash()->Option<[u8;32]>;
 }
 impl<T:ArtifactPack+super::ArtifactDsl> ArtifactPackMetadata for T{
     const EXTENSION:&'static str=<T as super::ArtifactDsl>::EXTENSION;
-    fn native_record_spec_producer()->Option<BorrowedRecordSpecProducer>{<T as ArtifactPack>::borrowed_record_spec_producer()}
-    fn native_pack_schema_hash()->[u8;32]{<T as ArtifactPack>::record_spec().map_or([0;32],|spec|crate::record::schema_hash(&spec))}
+    fn native_pack_schema_hash()->Option<[u8;32]>{<T as ArtifactPack>::record_spec().map(|spec|crate::record::schema_hash(&spec))}
 }
 
 /// 📦️ A snapshot binary representation over first-party options, errors and authored record metadata.
@@ -40,8 +38,6 @@ pub trait ArtifactPack: Sized {
     /// 🏭️ Exposes only an authentically authored native metadata constructor.
     fn record_spec_producer() -> Option<RecordSpecProducer> { None }
 
-    /// 🫳️ Exposes an immutable authored declaration without creating schema owners.
-    fn borrowed_record_spec_producer() -> Option<BorrowedRecordSpecProducer> { None }
 }
 
 

@@ -38,7 +38,7 @@ pub struct CardStackPlacement {
 
 /// 🧮️ Places `cards` in one column with no gap: card `i + 1` is lifted onto the bottom line of card `i` by its band, and a shared band grows the cap row below and the footer row above to the same height.
 pub fn layout_card_stack(cards: &[CardStackCard]) -> Vec<CardStackPlacement> {
-    let bands = resolve_card_bands(&cards.iter().map(|card| CardBandCard { cap: card.top.depth, footer: card.bottom.depth, cap_chips: card.top.chips.clone(), footer_chips: card.bottom.chips.clone() }).collect::<Vec<_>>());
+    let bands = resolve_card_bands(&cards.iter().map(|card| CardBandCard { cap: card.top.depth, footer: card.bottom.depth, cap_chips: card.top.chips.clone(), footer_chips: card.bottom.chips.clone() }).collect::<Vec<_>>(), 0.0);
     let mut placements: Vec<CardStackPlacement> = Vec::with_capacity(cards.len());
     for (index, card) in cards.iter().enumerate() {
         let top = placements.last().zip(bands.get(index.wrapping_sub(1))).map_or(0.0, |(above, band)| above.top + above.height - band.lift);

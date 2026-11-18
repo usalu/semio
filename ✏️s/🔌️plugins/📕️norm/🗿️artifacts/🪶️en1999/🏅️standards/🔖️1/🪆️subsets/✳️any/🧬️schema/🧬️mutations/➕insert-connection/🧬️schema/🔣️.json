@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/insert-connection/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1999/mutation/insert-connection/schema.json",
   "title": "InsertConnection",
   "type": "object",
   "additionalProperties": false,
@@ -35,7 +35,7 @@
       }
     },
     "connection": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/AluminiumConnection",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1999/snapshot.json#/$defs/AluminiumConnection",
       "x-semio-ui": {
         "role": "value",
         "label": {

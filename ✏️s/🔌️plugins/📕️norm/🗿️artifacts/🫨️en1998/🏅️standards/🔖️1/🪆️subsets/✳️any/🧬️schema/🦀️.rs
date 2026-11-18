@@ -16,7 +16,7 @@ use framework_schema::ArtifactSchema;
 #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.norm.en1998")]
+#[artifact_schema(id = "s.norm-eurocode.en1998")]
 pub struct En1998Artifact {
     #[state(artifact)]
     pub annex: AnnexChoice,
@@ -211,10 +211,10 @@ fn en_ground_params(ground: char, type1: bool) -> (f64, f64, f64, f64) {
 }
 
 //#region 🔖️Descriptor
-/// 🧬️ Descriptor for `s.norm.en1998` — handcrafted schema facet leaves.
+/// 🧬️ Descriptor for `s.norm-eurocode.en1998` — handcrafted schema facet leaves.
 pub fn en1998_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
     semio_framework_schema_registry::ArtifactSchemaDescriptor {
-        id: "s.norm.en1998",
+        id: "s.norm-eurocode.en1998",
         artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: semio_s_artifact_norm_en1998_model::SNAPSHOT_LEAVES,
         diff: semio_s_artifact_norm_en1998_diff::DIFF_LEAVES,

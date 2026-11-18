@@ -19,7 +19,7 @@ use framework_schema::ArtifactSchema;
 #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.norm.en1998.inference")]
+#[artifact_schema(id = "s.norm-eurocode.en1998.inference")]
 pub struct En1998Inference {
     #[derived]
     pub outline: En1998Outline,
@@ -41,11 +41,11 @@ impl protocol::Inference<En1998Snapshot> for En1998Inference {
 }
 
 impl protocol::InferenceSpec<En1998Snapshot> for En1998Inference {
-    fn inference_schema_id() -> &'static str { "s.norm.en1998.inference" }
+    fn inference_schema_id() -> &'static str { "s.norm-eurocode.en1998.inference" }
     fn schema_version() -> u32 { 1 }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec {
-            id: "s.norm.en1998.inference.outline",
+            id: "s.norm-eurocode.en1998.inference.outline",
             reads: &["annex", "site", "buildings", "bridges", "assessments", "silos", "tanks", "foundations", "retainingWalls", "towers", "soilLayers", "diaphragms", "accelerograms", "piers", "bearings", "joints"],
         }]
     }
@@ -54,7 +54,7 @@ impl protocol::InferenceSpec<En1998Snapshot> for En1998Inference {
 
 pub fn en1998_artifact_inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {
     semio_framework_schema_registry::ArtifactInferenceDescriptor {
-        id: "s.norm.en1998.inference",
+        id: "s.norm-eurocode.en1998.inference",
         inference: semio_framework_schema_registry::FacetLeaves {
             rust: concat!(include_str!("🦀️.rs"), include_str!("🧰️seismic-helpers/🦀️.rs"), include_str!("🌍️full-seismic-check/🦀️.rs"), include_str!("⚖️part-evaluators/🦀️.rs")),
             typescript: include_str!("🟦️.ts"),

@@ -44,10 +44,21 @@ impl fmt::Display for PackageSchemaError {
 
 impl std::error::Error for PackageSchemaError {}
 
+/// 🏷️ The plugin that owns the artifact kind `s.<owner>.<artifact>` of a norm family: the plugin whose component declares it, since an artifact identity must be owned by its declaring plugin.
+pub fn artifact_owner(artifact: &str) -> &'static str {
+    match artifact {
+        "din18599" => "norm-energy",
+        "en1990" | "en1991" | "en1997" | "en1998" => "norm-eurocode",
+        "en1992" | "en1993" | "en1994" => "norm-eurocode-structural",
+        "en1995" | "en1996" | "en1999" => "norm-eurocode-materials",
+        _ => "norm",
+    }
+}
+
 /// 🧬 Parses and validates one artifact-local package declaration.
 pub fn package_from_schema(source: &str) -> Result<NormArtifactPackage, PackageSchemaError> {
     let parsed = semio_framework_pack_json::from_json_str::<PackageSource>(source, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| PackageSchemaError(error.to_string()))?;
-    let expected_id = format!("s.norm.{}", parsed.artifact);
+    let expected_id = format!("s.{}.{}", artifact_owner(&parsed.artifact), parsed.artifact);
     let expected_rust = format!("semio-s-artifact-norm-{}", parsed.artifact);
     let expected_nx = format!("@semio-tech/norm-{}-rs", parsed.artifact);
     if parsed.definition_version != 1 {

@@ -133,7 +133,7 @@ describe("Norm oracle source ownership", () => {
     expect(built.missingFixtures).toEqual([]);
     expect(built.plan.scenarios).toHaveLength(161);
     expect(built.plan.target).toEqual({
-      artifact: "s.norm.en1991",
+      artifact: "s.norm-eurocode.en1991",
       standard: "1",
       subset: "any",
     });

@@ -36,8 +36,11 @@ pub fn visual_window_id(variant: &str, role: &str) -> String {
     format!("norm-{variant}-{role}")
 }
 
+/// 🎹️ A norm window action: an ephemeral per-client view change, classified [`semio_plugin::InteractiveJobClassification::Migrated`] like the viewer's `viewportAct`.
 fn view_action(id: &str, en: &str, de: &str, icon: &str, args: Vec<ActionArgDef>) -> semio_plugin::ActionDefinition {
-    semio_plugin::ActionDefinition { args, ..semio_plugin::ActionDefinition::new(id, LocalizedLabel::native(en, de), semio_plugin::ActionKind::View, icon) }
+    let mut action = semio_plugin::ActionDefinition { args, ..semio_plugin::ActionDefinition::new(id, LocalizedLabel::native(en, de), semio_plugin::ActionKind::View, icon) };
+    action.semantics.execution.interactive_job = semio_plugin::InteractiveJobClassification::Migrated;
+    action
 }
 
 /// ⌨️ The window actions of the documented keyboard shortcuts, one per distinct shortcut action with the shortcut's English and German label; the shell dispatches a key the norm hook answered with an action to exactly these ids. The focus shortcuts are no app actions: the hook answers them with the framework `focusWindow` verb, which every window kind has through the palette.

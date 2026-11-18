@@ -15,14 +15,15 @@ import {validateJsonSchemaSubset} from "../../../../../../../../../../🔨️mod
 import {withIssuedResourceOperationV1,withRequestedIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,requireIssuedResourceControlV1,readIssuedResourceControlCapabilitiesV1,type ScriptInvocation} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {acquireResourceLease,acquireQueuedResourceLease,captureResourceLeaseWriterProofV1,requireResourceLeaseWriterProofV1,resourceLeasePathV1,checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {withArtifactRelativeDirectoryV1,requireArtifactDescriptorClosureV1,type ArtifactRelativeDirectoryV1,type ArtifactRelativeEntryV1} from "../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
-import {captureOwnedCommandResultV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
+import {captureOwnedCommandV1,captureOwnedCommandResultV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
 import {nativeImageInventoryV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/📥️information/🟦️.ts";
 import {readNativeMountPathsV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/💾️cache/📂️descriptors/🟦️.ts";
 import {requireNativeInactiveCapsuleReadersV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/♻️retirement/📋️contract/🟦️.ts";
 import {callerRepositoryRootV1} from "../../../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import {openRepositoryCachePartitionAttemptV1,repositoryLeaseDirectoryV1,repositoryCachePartitionNativeImageV1} from "../🟦️.ts";
-import {repositoryCacheBudgetV1,repositoryPartitionGrowthRecordV1,repositoryPartitionRegrowDueV1,type RepositoryCachePartitionIdV1} from "../../🟦️.ts";
-import {lstatSync,statSync,readdirSync} from "node:fs";
+import {repositoryCacheBudgetV1,repositoryPartitionGrowthRecordV1,repositoryPartitionReclaimDueV1,repositoryPartitionRegrowDueV1,type RepositoryCachePartitionIdV1} from "../../🟦️.ts";
+import {createNativeImageReclaimPortV1,nativeImageReclaimMechanismV1,reclaimNativeImageV1,type NativeImageReclaimOutcomeV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/♻️reclaim/🟦️.ts";
+import {existsSync,lstatSync,statSync,readdirSync} from "node:fs";
 import {dirname,basename,join,resolve,sep} from "node:path";
 const protocol=schema.$defs.InactivePublicationProtocol.const;
 
@@ -140,14 +141,32 @@ export async function openRepositoryCachePartitionV1(workspace:string,id:Reposit
 
 /** ⏭️ The one next step of an elastic recreation: an interrupted retirement is always resumed first (nothing may open the image while its terminal record exists), otherwise only a pressed image whose journal admits whole retirement is reset, a pressed image that does not (persistent state, foreign or incomplete charges) is declined, everything else is skipped. */
 export function planElasticRegrowV1(row:Readonly<{record:boolean;due:boolean;verdict:string}>):"resume"|"skip"|"decline"|"reset"{return row.record?"resume":!row.due?"skip":row.verdict==="admitted"?"reset":"decline";}
-/** 🌱️ Recreates an exhausted elastic image (the graph, compiler or products image) at its elastic size at the first quiescent moment: it resumes an interrupted retirement, or - only when the journal admits whole retirement - after a cheap precheck (pressure and size from the image receipt and its mounted free space) makes one non-waiting exclusive try that any holder ends silently, then the yielding reset; the next opener creates the image at the elastic size. A refusal inside the reset would close the whole process admission, so a journal that cannot be retired never enters it. It never fails the caller. */
-export async function regrowElasticImageIfQuiescentV1(invocation:ScriptInvocation,control:ResourceLeaseControl,partition:"graph"|"rust"|"products"):Promise<boolean>{
+/** 🌱️ What one elastic regrow answered: `retired` (an interrupted retirement was resumed or the image was retired; the next opener creates it at the elastic size), `held` (a command holds the image mapped: the exclusive non-waiting try ended silently), `journal` (the journal does not admit whole retirement, or the retirement failed), `skipped` (not due). */
+export type ElasticRegrowOutcomeV1="retired"|"held"|"journal"|"skipped";
+/** 🌱️ Recreates an elastic image (the graph, compiler or products image) at the first quiescent moment: it resumes an interrupted retirement, or - only when the journal admits whole retirement - after a cheap precheck (an image that is `pressed` by the volume, or whose size and pressure from the image receipt and its mounted free space make it due) makes one non-waiting exclusive try that any holder ends silently (`held`), then the yielding reset; the next opener creates the image at the elastic size. A refusal inside the reset would close the whole process admission, so a journal that cannot be retired never enters it. It never fails the caller. */
+export async function regrowElasticImageOutcomeV1(invocation:ScriptInvocation,control:ResourceLeaseControl,partition:"graph"|"rust"|"products",pressed:boolean=false):Promise<ElasticRegrowOutcomeV1>{
  try{
   requireIssuedResourceControlInvocationV1(control,invocation);const workspace=callerRepositoryRootV1(invocation.capabilities),declaration=repositoryCacheBudgetV1(workspace).partitions[partition],directory=declaration.directory;
-  const plan=planElasticRegrowV1({record:nativeRecomputableRetirementPendingV1(directory),due:repositoryPartitionRegrowDueV1(workspace,partition),verdict:nativeRecomputableRetirementVerdictAtV1(nativeImageRootV1(directory),declaration.capacityBytes)});
-  if(plan==="skip"||plan==="decline")return false;
+  const plan=planElasticRegrowV1({record:nativeRecomputableRetirementPendingV1(directory),due:pressed||repositoryPartitionRegrowDueV1(workspace,partition),verdict:nativeRecomputableRetirementVerdictAtV1(nativeImageRootV1(directory),declaration.capacityBytes)});
+  if(plan==="skip")return "skipped";
+  if(plan==="decline")return "journal";
   if(plan==="reset")repositoryPartitionGrowthRecordV1(workspace,partition);
-  if(plan==="reset")(await acquireResourceLease({directory:repositoryLeaseDirectoryV1(workspace),resource:"native-fixed-image:"+directory,mode:"exclusive",signal:control.signal,control,timeoutMs:0})).release();
-  await resetInactiveRepositoryCacheNamespaceV1(invocation,control,partition);return true;
- }catch{checkResourceLeaseControl(control);return false;}
+  if(plan==="reset"){try{(await acquireResourceLease({directory:repositoryLeaseDirectoryV1(workspace),resource:"native-fixed-image:"+directory,mode:"exclusive",signal:control.signal,control,timeoutMs:0})).release();}catch{checkResourceLeaseControl(control);return "held";}}
+  await resetInactiveRepositoryCacheNamespaceV1(invocation,control,partition);return "retired";
+ }catch{checkResourceLeaseControl(control);return "journal";}
+}
+/** 🌱️ The boolean form of the regrow for callers that only ask whether an image was retired or resumed. */
+export async function regrowElasticImageIfQuiescentV1(invocation:ScriptInvocation,control:ResourceLeaseControl,partition:"graph"|"rust"|"products"):Promise<boolean>{return (await regrowElasticImageOutcomeV1(invocation,control,partition))==="retired";}
+/** ♻️ Returns the host blocks an idle, bloated image holds but no longer uses, without recreating it or touching its bytes: at the first quiescent moment (a non-waiting exclusive try on the image lease succeeds, no retirement is pending) it detaches the image, attaches it once through the UNMAP-capable stack so the volume trims its free space, waits until the host allocation settles and detaches it again; the next opener attaches it as after a restart. Progress and cancellation reach every step and the image never stays attached by this call. It answers the outcome, or null when the platform has no such mechanism, the image is not bloated, held or retiring, or the cycle failed; cancellation propagates. */
+export async function reclaimImageIfQuiescentV1(invocation:ScriptInvocation,control:ResourceLeaseControl,partition:RepositoryCachePartitionIdV1,progress?:(done:number,total:number)=>void):Promise<NativeImageReclaimOutcomeV1|null>{
+ const mechanism=nativeImageReclaimMechanismV1(process.platform);if(mechanism===null)return null;
+ try{
+  requireIssuedResourceControlInvocationV1(control,invocation);const workspace=callerRepositoryRootV1(invocation.capabilities),directory=repositoryCacheBudgetV1(workspace).partitions[partition].directory;
+  if(nativeRecomputableRetirementPendingV1(directory)||!repositoryPartitionReclaimDueV1(workspace,partition))return null;
+  const lease=await acquireResourceLease({directory:repositoryLeaseDirectoryV1(workspace),resource:"native-fixed-image:"+directory,mode:"exclusive",signal:control.signal,control,timeoutMs:0});
+  try{
+   const image=join(directory,mechanism.imageName),port=existsSync(image)?createNativeImageReclaimPortV1(process.platform,{image,cwd:directory,run:(program,args)=>captureOwnedCommandV1(program,args,directory,{control,output:{maximumBytes:1048576,maximumLines:32768}})}):null;
+   return port===null?null:await reclaimNativeImageV1(port,{check:()=>checkResourceLeaseControl(control),progress});
+  }finally{lease.release();}
+ }catch{checkResourceLeaseControl(control);return null;}
 }

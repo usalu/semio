@@ -618,15 +618,15 @@ impl<T: Send + Sync + 'static> ArtifactOwnedValueRetirementFactory<T> for RoundT
     fn recover_retire_owned<'reply>(&self, _: &mut Option<T>, _: &mut semio_framework_value::RetainedAllocationEffect<'_>, reply:semio_framework_value::FactoryProducerReply<'reply,dyn ErasedSnapshotRetirement,semio_framework_value::OriginalRetirementFailure>) -> semio_framework_value::FactoryProducerReplyComplete<'reply,semio_framework_value::OriginalRetirementFailure> { reply.pending() }
 }
 
-/// 🧪️ Drives one erased retirement to its terminal-empty witness, granting each independent axis exactly its quoted demand.
+/// 🧪️ Drives one erased retirement to its terminal-empty witness, granting each independent axis exactly its quoted demand under one authoring wallet per step, so a shared original keeps its unsourced Work binding across steps like the store's cold close.
 pub fn drive_retirement(owner: &mut dyn ErasedSnapshotRetirement) -> Result<(), ValueError> {
     use semio_framework_value::retained_clone::admit_retained_clone_close;
     for _ in 0..ARTIFACT_STORE_UNSCHEDULED_CLOSE_STEPS {
         if owner.terminal_is_empty() { return Ok(()); }
         let copy = owner.next_copy_byte_demand()?.max(ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: owner.next_capacity_byte_demand(copy)?, maximum_release_bytes: owner.next_release_byte_demand()?, maximum_depth: owner.next_depth_demand()?.max(1) };
-        let Some((poll, _)) = semio_framework_job::OriginalRetirementPump::new().turn(1 << 16, u64::MAX, || Some(0), grant)?.with_effect(|effect| semio_framework_value::close_owner(&mut *owner, copy, effect))? else { continue };
-        let semio_framework_value::RetainedWorkPoll::Complete(turn) = poll else { continue };
+        let mut wallet = semio_framework_value::AuthoringWallet::new(grant, 1 << 16);
+        let Some((turn, _)) = wallet.run_settled(grant, 1 << 16, |effect| semio_framework_value::close_owner(&mut *owner, copy, effect))? else { continue };
         let step = turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)?;
         admit_retained_clone_close(grant, step, owner.terminal_is_empty(), "driven test retirement")?;
         if matches!(step, RetainedCloneStep::Complete(_)) { return Ok(()); }

@@ -33,7 +33,7 @@ semio_s_plugin_norm_app_surface::norm_viewer_commands!(semio_s_artifact_norm_vdi
 
 semio_s_plugin_norm_app_surface::norm_owned_view_tool_job_factory!(Vdi3805ViewBoundedCommandJobFactory, Vdi3805Viewer);
 
-semio_s_plugin_norm_app_surface::norm_viewer_surface!(Vdi3805Viewer, Vdi3805ViewCommand, variant = "vdi3805", report = |d: &Vdi3805Snapshot| semio_s_artifact_norm_vdi3805_inferences::live::report(d), scene = |d: &Vdi3805Snapshot, r: &semio_s_plugin_norm_app_surface::NormViewReport, _| semio_s_artifact_norm_vdi3805_scene::live_scene_of(d, r), diagrams = |d: &Vdi3805Snapshot, r: &semio_s_plugin_norm_app_surface::NormViewReport, focus: Option<&str>| semio_s_plugin_norm_structural_scene::projection::memo_diagrams("vdi3805", d, r, focus.unwrap_or("\u{0}"), || semio_s_artifact_norm_vdi3805_scene::diagrams(d, r, focus)).to_vec());
+semio_s_plugin_norm_app_surface::norm_viewer_surface!(Vdi3805Viewer, Vdi3805ViewCommand, owner = "norm", variant = "vdi3805", report = |d: &Vdi3805Snapshot| semio_s_artifact_norm_vdi3805_inferences::live::report(d), scene = |d: &Vdi3805Snapshot, r: &semio_s_plugin_norm_app_surface::NormViewReport, _| semio_s_artifact_norm_vdi3805_scene::live_scene_of(d, r), diagrams = |d: &Vdi3805Snapshot, r: &semio_s_plugin_norm_app_surface::NormViewReport, focus: Option<&str>| semio_s_plugin_norm_structural_scene::projection::memo_diagrams("vdi3805", d, r, focus.unwrap_or("\u{0}"), || semio_s_artifact_norm_vdi3805_scene::diagrams(d, r, focus)).to_vec());
 //#endregion 🔖️Command
 
 //#region 🔖️Viewer
@@ -150,6 +150,7 @@ pub fn create_vdi3805_viewer() -> semio_plugin::AppDefinition {
     Viewer::builder(VDI3805_DIALECT)
         .document(["semio", "norm", "vdi3805"])
         .interaction(semio_s_plugin_norm_app_surface::viewer_interaction_definition("vdi3805"))
+        .utility(semio_s_plugin_norm_app_surface::transform_utility_definition())
         .icon_id("check-circle")
         .mode_def(view::definition())
         .default_mode_id(semio_s_plugin_norm_app_surface::MODE_VIEW)

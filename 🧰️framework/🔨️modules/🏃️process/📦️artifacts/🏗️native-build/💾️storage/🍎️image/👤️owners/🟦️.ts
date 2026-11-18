@@ -1,8 +1,10 @@
 import{realpathSync}from"node:fs";
 import imageSchema from"../../🧬️schema/🔣️.json" with { type: "json" };
 const protocol=imageSchema.definitions.ImageProtocol.const;
-/** 🔗️ Builds the closed `hdiutil attach` argument list; owners stay on so nested images can attach inside persistent parents. */
-export function nativeImageAttachArgumentsV1(root:string,image:string):readonly string[]{return Object.freeze(["attach",...protocol.attachArguments,"-mountpoint",root,image]);}
+/** 🔗️ Names the program that attaches an image: `diskutil image attach` runs the UNMAP-capable disk image stack, so blocks the volume frees return to the host, which the legacy `hdiutil attach` stack never does. See https://ss64.com/mac/diskutil.html */
+export const nativeImageAttachProgramV1:string=protocol.attachProgram;
+/** 🔗️ Builds the closed `diskutil image attach` argument list; owners stay on so nested images can attach inside persistent parents. */
+export function nativeImageAttachArgumentsV1(root:string,image:string):readonly string[]{return Object.freeze([...protocol.attachArguments,protocol.attachMountPointFlag,root,image]);}
 /** 🔍️ Resolves the innermost mount that hosts `directory` from `mount` output, without a runtime library. */
 export function nativeImageHostMountV1(mountOutput:string,directory:string):Readonly<{mountPoint:string;flags:readonly string[];owners:boolean}>{return nativeImageHostMountOfV1(mountOutput,realpathSync(directory));}
 /** 🖼️ Resolves the innermost mount of an already canonical absolute path from `mount` output. */

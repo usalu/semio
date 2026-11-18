@@ -1,5 +1,5 @@
 syntax = "proto3";
-package semio.s.norm.en1992.mutation.remove_member;
+package semio.s.norm_eurocode_structural.en1992.mutation.remove_member;
 message RemoveMember {
   string member_id = 1;
 }

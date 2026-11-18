@@ -2555,7 +2555,7 @@
       "Binary": [
         [
           1,
-          "s.norm.en1997",
+          "s.norm-eurocode.en1997",
           "1",
           "*",
           1,
@@ -2565,7 +2565,7 @@
       "Text": [
         [
           1,
-          "s.norm.en1997",
+          "s.norm-eurocode.en1997",
           "1",
           "*",
           1,

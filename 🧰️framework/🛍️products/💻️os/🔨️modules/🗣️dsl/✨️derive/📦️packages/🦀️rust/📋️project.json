@@ -19,6 +19,12 @@
     "generate": {
       "executor": "repo:script",
       "cache": true,
+      "inputs": [
+        "default",
+        "{workspaceRoot}/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧬️schema/🔣️.json"
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
         "command": "repo ./📜️script.ts generate"
@@ -31,7 +37,9 @@
         "default",
         "^default",
         "reads",
-        "cargoToolchain"
+        "cargoToolchain",
+        "{workspaceRoot}/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
       ],
       "cache": true,
       "options": {
@@ -43,6 +51,12 @@
     "check-generated": {
       "executor": "repo:script",
       "cache": true,
+      "inputs": [
+        "default",
+        "{workspaceRoot}/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧬️schema/🔣️.json"
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
         "command": "repo ./📜️script.ts check-generated"

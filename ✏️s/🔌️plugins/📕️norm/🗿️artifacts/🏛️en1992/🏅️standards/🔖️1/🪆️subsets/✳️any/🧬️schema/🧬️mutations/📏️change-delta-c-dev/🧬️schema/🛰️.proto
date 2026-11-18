@@ -1,5 +1,5 @@
 syntax = "proto3";
-package semio.s.norm.en1992.mutation.change_delta_c_dev;
+package semio.s.norm_eurocode_structural.en1992.mutation.change_delta_c_dev;
 message ChangeDeltaCDev {
   double new_delta_c_dev = 1;
 }

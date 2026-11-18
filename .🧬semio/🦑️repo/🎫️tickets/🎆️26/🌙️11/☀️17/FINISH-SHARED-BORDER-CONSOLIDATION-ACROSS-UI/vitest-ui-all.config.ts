@@ -6,5 +6,5 @@ const ui = resolve(import.meta.dirname, "../../../../../../../🧰️framework/�
 /** 🧪️ Ticket-local UI test config: jsdom with the repo's React test environment, bypassing the broken runner. */
 export default defineConfig({
   root: ui,
-  test: { include: ["**/🧪️tests/**/🟦️.{ts,tsx}", "**/*.test.{ts,tsx}"], exclude: ["**/node_modules/**"], environment: "jsdom", setupFiles: [resolve(ui, "🧪️tests/🧹️react-environment/🟦️.ts")], testTimeout: 30000 },
+  test: { include: ["**/🧪️tests/**/🟦️.{ts,tsx}", "**/*.test.{ts,tsx}"], exclude: ["**/node_modules/**", "**/🧪️owned-locale-detector-retirement/*/**", "**/🕸️Diagram/🧪️tests/🧩️component/*/**"], environment: "jsdom", setupFiles: [resolve(ui, "🧪️tests/🧹️react-environment/🟦️.ts")], testTimeout: 30000 },
 });

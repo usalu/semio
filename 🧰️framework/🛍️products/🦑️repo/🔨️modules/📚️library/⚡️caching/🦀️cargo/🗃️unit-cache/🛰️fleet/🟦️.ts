@@ -71,9 +71,16 @@ export async function fetchFleetUnitV1(unit:FleetUnitV1):Promise<"hit"|"miss"|"f
  if(outcome!=="hit")return outcome;
  try{
   markOfferedV1(unit.root,unit.key);
-  await Promise.race([unit.client.claimSlot(unit.key,unit.slot),new Promise<void>(done=>{const wait=setTimeout(done,600);wait.unref?.();})]);
+  const pending=Promise.race([unit.client.claimSlot(unit.key,unit.slot).then(()=>undefined,()=>undefined),new Promise<void>(done=>{const wait=setTimeout(done,600);wait.unref?.();})]);
+  settling.add(pending);void pending.finally(()=>settling.delete(pending));
  }catch{}
  return "hit";
+}
+
+const settling=new Set<Promise<void>>();
+/** ⏳️ Waits (at most 600 ms, the bound of each claim) for the slot claims that fleet hits started and did not wait for: a hit serves its unit while the fleet is told, and the caller awaits this once before the process ends. */
+export async function awaitFleetSettlesV1():Promise<void>{
+ if(settling.size>0)await Promise.allSettled([...settling]);
 }
 
 /** 🫀️ A claim this process holds at the fleet cache and keeps alive while it compiles. */

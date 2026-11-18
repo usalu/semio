@@ -44,17 +44,24 @@ pub enum FemDof {
 /// internally-tagged (`#[value(tag = "…")]`) representations, but `FemDof` is a plain unit-only
 /// "string enum" — the value codec's untagged bare-string representation for an enum with no
 /// `#[value(...)]` attribute at all — so the wire shape here is just the bare variant name.
-impl ToValue for FemDof {
-    fn to_value(&self) -> DslValue {
-        let name = match self {
+impl FemDof {
+    fn key(self) -> &'static str {
+        match self {
             FemDof::Tx => "Tx",
             FemDof::Ty => "Ty",
             FemDof::Tz => "Tz",
             FemDof::Rx => "Rx",
             FemDof::Ry => "Ry",
             FemDof::Rz => "Rz",
-        };
-        DslValue::String(name.to_string())
+        }
+    }
+}
+impl ToValue for FemDof {
+    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<DslValue, ValueError> {
+        control.copy_text(self.key()).map(DslValue::String)
+    }
+    fn to_value(&self) -> DslValue {
+        DslValue::String(self.key().to_string())
     }
 }
 impl FromValue for FemDof {

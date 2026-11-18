@@ -22,3 +22,9 @@ Tests: unit test `grants_one_front_end_thread_to_a_cdylib_final` (passes, run st
 ## Caveat
 
 The scheduler binary is rebuilt by the next driver start. Expected peak roughly 2.5 to 3 GB lower during the front end; the LTO phase is unchanged and unmeasured. If it still dies, the next lever is `release-wasm` `lto` in `🧬️schema/🔣️.json` of `📚️library/🏗️build/🎚️mode/🦀️profile`, which re-keys all 1438 units.
+
+## Second kill and serial back end
+
+Run `wMNmlIz` was jetsam-killed again (peak 5.87 GB, swap 7.2 GB, about 6 GiB disk free so swap cannot grow). `🎟️admission/🦀️.rs` now also has `serial_backend`: an admitted `cdylib` final gets `-Z no-parallel-backend` appended (nightly-2026-07-20 accepts it; verified with the pinned rustc). It keeps the codegen units and ThinLTO but runs LLVM codegen and the ThinLTO jobs one at a time, instead of one per jobserver token. Added at rustc start only, so fingerprints and cache keys are untouched; output is identical (scheduling only). Tests: unit test `serializes_the_back_end_of_a_cdylib_final`, the two cdylib corpus cases now expect the appended flag, the Python oracle agrees on all 15 cases, 11 Rust tests pass standalone.
+
+Expected: the 5.87 GB peak was the 3-token concurrent LTO/codegen phase on top of the 1-thread front end; serial should be about the front-end level (about 3 GB, measured 2.9 GB for one thread) plus one module, so roughly 2 to 3 GB lower, at the cost of a longer final (about 3 times the LTO wall, minutes). Not measured.

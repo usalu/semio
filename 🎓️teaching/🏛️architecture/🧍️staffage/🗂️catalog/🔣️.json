@@ -291,7 +291,7 @@
       "category": "humans",
       "title": { "en": "Sleeping Person", "de": "Schlafende Person" },
       "heightM": 0.45,
-      "widthM": 1.9,
+      "widthM": 1.88,
       "powerW": 70.9,
       "poses": ["supine", "side", "curled"],
       "clips": ["breathing", "turn-over"],
@@ -367,7 +367,7 @@
         "en": "Running Child",
         "de": "Rennendes Kind"
       },
-      "heightM": 1.135,
+      "heightM": 1.13,
       "widthM": 0.281,
       "powerW": 66.1,
       "poses": [
@@ -478,7 +478,7 @@
         "en": "Elderly Person with Cane",
         "de": "Ältere Person mit Gehstock"
       },
-      "heightM": 1.65,
+      "heightM": 1.63,
       "widthM": 0.54,
       "powerW": 125.6,
       "poses": [
@@ -584,7 +584,7 @@
         "en": "Worker Carrying Box",
         "de": "Arbeitende Person mit Kiste"
       },
-      "heightM": 1.81,
+      "heightM": 1.815,
       "widthM": 0.68,
       "powerW": 399.4,
       "poses": [
@@ -3044,7 +3044,7 @@
         "de": "Kurier mit Sackkarre"
       },
       "heightM": 1.82,
-      "widthM": 1.16,
+      "widthM": 1.152,
       "powerW": 177.4,
       "poses": [
         "waiting",
@@ -3095,7 +3095,7 @@
         "en": "Kneeling Gardener",
         "de": "Kniende Gärtnerin"
       },
-      "heightM": 1.145,
+      "heightM": 1.132,
       "widthM": 1.835,
       "powerW": 348.4,
       "poses": [
@@ -3197,7 +3197,7 @@
         "en": "Person on Forearm Crutches",
         "de": "Person an Unterarmgehstützen"
       },
-      "heightM": 1.83,
+      "heightM": 1.82,
       "widthM": 0.556,
       "powerW": 173.7,
       "poses": [
@@ -3404,7 +3404,7 @@
         "en": "Runner with Blade Prosthesis",
         "de": "Läufer mit Prothesenfeder"
       },
-      "heightM": 1.79,
+      "heightM": 1.81,
       "widthM": 0.41,
       "powerW": 154.9,
       "poses": [
@@ -3510,7 +3510,7 @@
         "de": "Skateboardfahrende Person"
       },
       "heightM": 1.774,
-      "widthM": 1.084,
+      "widthM": 1.1,
       "powerW": 268.7,
       "poses": [
         "cruising",
@@ -3820,7 +3820,7 @@
         "de": "Silbermöwe"
       },
       "heightM": 0.51,
-      "widthM": 0.699,
+      "widthM": 0.692,
       "powerW": 5.7,
       "poses": [
         "standing",
@@ -6188,7 +6188,7 @@
         "en": "Steel Spiral Stair",
         "de": "Stahl-Wendeltreppe"
       },
-      "heightM": 3.733,
+      "heightM": 3.75,
       "widthM": 1.6,
       "powerW": 0,
       "poses": [

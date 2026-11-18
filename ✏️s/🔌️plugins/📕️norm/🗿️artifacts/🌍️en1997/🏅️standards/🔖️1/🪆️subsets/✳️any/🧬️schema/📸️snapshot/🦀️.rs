@@ -47,7 +47,7 @@ pub enum ApproachChoice {
 #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[dsl(id = "norm.en1997", layout = "lines")]
-#[artifact_schema(id = "s.norm.en1997")]
+#[artifact_schema(id = "s.norm-eurocode.en1997")]
 pub struct En1997Snapshot {
     #[state(artifact)]
     pub structure_id: String,
@@ -488,7 +488,7 @@ pub fn artifact_kind() -> semio_plugin::ArtifactKindSpec {
 /// 🪪️ This subset's canonical `(artifact_kind, standard, subset)` coordinate (ticket
 /// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1) — lives at the ARTIFACT level, not
 /// under the sibling `editor` module, so a viewer file can read it without ever importing through it.
-pub const EN1997_DIALECT: semio_plugin::app::Dialect = semio_plugin::app::Dialect { artifact_kind: "s.norm.en1997", standard: semio_plugin::app::StandardId("1"), subset: semio_plugin::app::SubsetId::ANY };
+pub const EN1997_DIALECT: semio_plugin::app::Dialect = semio_plugin::app::Dialect { artifact_kind: "s.norm-eurocode.en1997", standard: semio_plugin::app::StandardId("1"), subset: semio_plugin::app::SubsetId::ANY };
 
 pub const EN1997_DOCUMENT_SCHEMA: &str = "semio.norm.en1997/v1";
 

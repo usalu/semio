@@ -41,3 +41,4 @@ semio-framework-value = { path = "../../../../../../🌱️value/📦️packages
 [dev-dependencies]
 semio-framework-test-fixtures = { path = "../../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-ui-viewport = { path = "../../../../../🪟️viewport/📦️packages/🦀️rust" }
+semio-ui-contract-values = { path = "../../../../../🧬️contract/🌱️values/📦️packages/🦀️rust", features = ["testkit"] }

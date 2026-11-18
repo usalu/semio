@@ -2,9 +2,9 @@
  * hairline is drawn and one owner draws it. A flush card has no body padding and its content is a vertical shared-border
  * group of cells; a row list is a group (flush) or a frame (framed) of cells that carry no outline of their own; a
  * segmented choice is a frame whose buttons are cells, or a flush row; a row button and a problem note of a flush card
- * have no border utility. The stylesheet draws no border on a row of a shared list, and its one rule that turns the
- * dividers of the task steps from rows to cells outweighs the design system's, which `lightningcss` (the CSS engine
- * Tailwind runs on) reads as the third-party oracle.
+ * have no border utility. The stylesheet draws no border on a row of a shared list and no dashed guess; cells laid side
+ * by side only set the design system's `--shared-border-flow`, which `lightningcss` (the CSS engine Tailwind runs on)
+ * reads as the third-party oracle.
  *
  * @see ../../🎯️targets/⚛️react/🔨️modules/🪟️chrome/🟦️.tsx
  * @see ../../../../🔨️modules/🖱️ui/🎨️styling/🖌️ui/🎨️.css — the shared-border rules
@@ -104,6 +104,8 @@ describe("🧱️ shared borders", () => {
     expect(flush.className).not.toMatch(BORDER);
     expect(cells(flush)).toHaveLength(2);
     expect(flush.className.split(" ")).toContain("flex-wrap");
+    expect(flush.hasAttribute("data-shared-border-wrap")).toBe(true);
+    expect(framed.hasAttribute("data-shared-border-wrap")).toBe(true);
   });
 
   it("gives a row button and a cell note no outline of their own", () => {
@@ -209,9 +211,12 @@ describe("🎨️ the stylesheet and the shared borders", () => {
     }
   });
 
-  it("turns the dividers of the steps from rows to cells with a rule that outweighs the design system's", () => {
-    expect(stylesheet).toMatch(/\.course-steps\[data-shared-border-group\]\[data-orientation="vertical"\] > \[data-shared-border-cell\]\s*\{\s*border-block-end-width: 0;\s*border-inline-end: var\(--stroke-hairline\) solid var\(--border-normal-color\);/u);
-    expect(stylesheet).toMatch(/\.course-steps\[data-shared-border-group\]\[data-orientation="vertical"\] > \[data-shared-border-cell\]:not\(:has\(~ \[data-shared-border-cell\]\)\)\s*\{\s*border-inline-end-width: 0;/u);
+  it("moves the dividers of side-by-side cells from rows to columns through the design system's flow variable, never a hand-rolled divider", () => {
+    for (const owner of [".course-steps", ".course-classify", ".course-result\\[data-crowd\\]"]) expect(stylesheet).toMatch(new RegExp(`${owner} > \\* \\{\\s*--shared-border-flow: 1;`, "u"));
+    expect(stylesheet).toMatch(/\.course-match > \.course-cards-cell \{\s*--shared-border-flow: 1;/u);
+    expect(stylesheet).not.toMatch(/\[data-shared-border-cell\][^{]*\{[^}]*border-inline-(?:end|start): var\(--stroke-hairline\)/u);
+    expect(stylesheet).not.toMatch(/\.course-guess[^{]*\{[^}]*dashed/u);
+    expect(stylesheet).toMatch(/\.course-guess-entry > input\.course-input:read-only \{\s*background: transparent;/u);
   });
 
   it("draws no frame on a notice, a text field or a narrow guess, and lets a short page's last card end on the footer", () => {
@@ -242,5 +247,16 @@ describe("🛟️ the load fallback and the quiz actions", () => {
     const source = readFileSync(resolve(import.meta.dirname, "../../🎯️targets/⚛️react/🔨️modules/📖️quiz-page/🟦️.tsx"), "utf8");
     expect(source).not.toMatch(/CardAction[^>]*border-e/u);
     expect(source.match(/<CardAction[^>]*\{\.\.\.CELL\}/gu)?.length).toBe(3);
+  });
+
+  it("stacks the result cards with no gap so they interlock", () => {
+    const source = readFileSync(resolve(import.meta.dirname, "../../🎯️targets/⚛️react/🔨️modules/🏁️results/🟦️.tsx"), "utf8");
+    expect(source).toMatch(/className="course-results flex flex-col"/u);
+  });
+
+  it("keeps the sr-only clock announcer inside the progress cell, never in a padded cell of its own", () => {
+    const source = readFileSync(resolve(import.meta.dirname, "../../🎯️targets/⚛️react/🔨️modules/▶️run/🟦️.tsx"), "utf8");
+    expect(source).not.toMatch(/<CardSection>\s*<ClockWatch/u);
+    expect(source).toMatch(/<ClockWatch[^>]*\/> : null\}\s*<\/CardSection>/u);
   });
 });

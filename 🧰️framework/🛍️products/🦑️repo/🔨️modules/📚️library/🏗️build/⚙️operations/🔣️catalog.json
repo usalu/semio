@@ -821,10 +821,15 @@
         {
           "command": "repo run @semio-tech/semio-tech-play:serve --dry-run",
           "description": { "en": "Print the task graph and run nothing.", "de": "Gibt den Task-Graphen aus und führt nichts aus." }
+        },
+        {
+          "command": "repo run @semio-tech/semio-tech-play:serve --exclude-dependencies",
+          "description": { "en": "Run exactly this task, resolved from its own project manifest without inferring any dependency.", "de": "Führt genau diese Task aus, aufgelöst aus ihrem eigenen Projektmanifest, ohne eine Abhängigkeit zu inferieren." }
         }
       ],
       "notes": [
         {"en": "--dry-run prints a DryRunPlan on stdout and executes nothing; --graph is the same flag for every tool and takes an optional file.", "de": "--dry-run gibt einen DryRunPlan auf stdout aus und führt nichts aus; --graph ist für jedes Werkzeug dasselbe Flag und nimmt optional eine Datei."},
+        {"en": "--exclude-dependencies admits only the owner of the named task: its manifest and command source are read, no dependency owner is admitted or inferred, and the task still receives the invocation envelope, caller capabilities, provider designation, task identity and store receipt of a graph-wide run; use it when the dependency graph is unavailable or the prerequisites are already built.", "de": "--exclude-dependencies lässt nur den Eigentümer der benannten Task zu: Sein Manifest und seine Befehlsquelle werden gelesen, kein Abhängigkeits-Eigentümer wird zugelassen oder inferiert, und die Task erhält weiterhin Aufruf-Umschlag, Aufruferfähigkeiten, Anbieterbezeichnung, Task-Identität und Store-Quittung eines graphweiten Laufs; nutzbar, wenn der Abhängigkeitsgraph nicht verfügbar ist oder die Vorbedingungen bereits gebaut sind."},
         {"en": "Bazel: a selection builds exactly the transitive closure of its tasks in one generated workspace; a cached test-family task without declared outputs and without dependents runs as a Bazel test (cached test results; only tests are built when only tests are selected; --skip-cache switches the cached test results off), every other task as a cacheable build action. Test sharding is not offered because the neutral contract defines no shard protocol.", "de": "Bazel: Eine Auswahl baut genau den transitiven Abschluss ihrer Tasks in einem erzeugten Workspace; eine gecachte Test-Task ohne deklarierte Ausgaben und ohne Abhängige läuft als Bazel-Test (gecachte Testergebnisse; sind nur Tests ausgewählt, werden nur Tests gebaut; --skip-cache schaltet die gecachten Testergebnisse ab), jede andere Task als cachebare Build-Aktion. Test-Sharding wird nicht angeboten, weil der neutrale Vertrag kein Shard-Protokoll definiert."}
       ]
     },
@@ -1344,8 +1349,8 @@
           "name": "gc",
           "synopsis": "cache gc [--dry-run] [--area=<id>] [--budget=<size>]", "flags": ["--dry-run", "--area", "--budget", "--json"],
           "summary": {
-            "en": "Collect the cache: remove retired roots, units unused longer than their area allows and the oldest units beyond an area's budget, and entries nobody declared; it never removes a unit that is held by a lease or used recently.",
-            "de": "Sammelt den Cache ein: entfernt stillgelegte Wurzeln, länger als erlaubt unbenutzte Einheiten, die ältesten Einheiten über dem Budget eines Bereichs und nicht deklarierte Einträge; eine durch Lease gehaltene oder kürzlich benutzte Einheit wird nie entfernt."
+            "en": "Collect the cache: remove retired roots, units unused longer than their area allows and the oldest units beyond an area's budget, and entries nobody declared; it never removes a unit that is held by a lease or used recently. It also returns the host blocks that an idle image no longer uses (progress and cancellation included).",
+            "de": "Sammelt den Cache ein: entfernt stillgelegte Wurzeln, länger als erlaubt unbenutzte Einheiten, die ältesten Einheiten über dem Budget eines Bereichs und nicht deklarierte Einträge; eine durch Lease gehaltene oder kürzlich benutzte Einheit wird nie entfernt. Außerdem gibt es die Host-Blöcke zurück, die ein ruhendes Image nicht mehr nutzt (mit Fortschritt und Abbruch)."
           }
         },
         {

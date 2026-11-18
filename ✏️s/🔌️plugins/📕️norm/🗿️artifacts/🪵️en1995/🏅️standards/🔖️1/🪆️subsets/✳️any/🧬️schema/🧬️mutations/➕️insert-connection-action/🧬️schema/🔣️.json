@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/insert-connection-action/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1995/mutation/insert-connection-action/schema.json",
   "title": "InsertConnectionAction",
   "type": "object",
   "additionalProperties": false,
@@ -51,7 +51,7 @@
       }
     },
     "action": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/ConnectionAction",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1995/snapshot.json#/$defs/ConnectionAction",
       "x-semio-ui": {
         "role": "value",
         "label": {

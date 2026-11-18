@@ -722,7 +722,7 @@ fn catalogue_large_table_stays_within_retire_slots_when_windowed() {
 #[test]
 fn norm_fault_notices_cover_the_raised_codes_in_both_languages() {
     let notices = norm_fault_notices();
-    for code in ["mutation.no-op", "mutation.clamped", "mutation.invariant", "mutation.duplicate-id", "norm.edit-unresolved", "norm.value-path", "norm.apply-remedy-missing-check", "norm.set-fields-args", "norm.insert-placement"] {
+    for code in ["mutation.no-op", "mutation.clamped", "mutation.invariant", "mutation.duplicate-id", "norm.editor.edit-unresolved", "norm.editor.value-path", "norm.editor.apply-remedy-missing-check", "norm.editor.set-fields-args", "norm.editor.insert-placement"] {
         assert!(notices.iter().any(|(known, _)| *known == code), "no notice for {code}");
     }
     for (code, label) in notices {

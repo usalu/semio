@@ -170,13 +170,15 @@
     "a.rs"
    ],
    "tokens": 8,
-   "note": "a cdylib final gets one front-end thread whatever the grant",
+   "note": "a cdylib final gets one front-end thread whatever the grant; its back end runs serially",
    "expected": [
     "--crate-type",
     "cdylib",
     "-Z",
     "threads=1",
-    "a.rs"
+    "a.rs",
+    "-Z",
+    "no-parallel-backend"
    ]
   },
   {
@@ -187,11 +189,13 @@
     "a.rs"
    ],
    "tokens": 8,
-   "note": "the joined crate-type spelling is a cdylib final too",
+   "note": "the joined crate-type spelling is a cdylib final too; its back end runs serially",
    "expected": [
     "--crate-type=cdylib",
     "-Zthreads=1",
-    "a.rs"
+    "a.rs",
+    "-Z",
+    "no-parallel-backend"
    ]
   },
   {

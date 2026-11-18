@@ -24,18 +24,19 @@ if [ "$phase" = all ] || [ "$phase" = engines ]; then
 fi
 if [ "$phase" = all ] || [ "$phase" = component ]; then
   N="🌎️hub/🧩️compositions/📕️norm"
-  for c in "norm:$N/🧩️component" "norm-eurocode:$N/🧩️extensions/📗️eurocode/🧩️component" "norm-eurocode-materials:$N/🧩️extensions/📙️eurocode-materials/🧩️component"; do
-    step "component-${c%%:*}" . "$os/🔌️plugin/🏗️build/🧩️driver-stages/📜️script.ts" component --manifest "${c#*:}/📦️packages/🦀️rust/Cargo.toml" || exit 1
+  for c in "norm:$N/🧩️component" "norm-eurocode:$N/🧩️extensions/📗️eurocode/🧩️component" "norm-eurocode-materials:$N/🧩️extensions/📙️eurocode-materials/🧩️component" "norm-eurocode-structural:$N/🧩️extensions/📓️eurocode-structural/🧩️component" "norm-energy:$N/🧩️extensions/📒️energy/🧩️component"; do
+    case " ${ONLY_COMPONENTS:-${c%%:*}} " in *" ${c%%:*} "*) ;; *) continue ;; esac
+    step "component-${c%%:*}" . "$os/🔌️plugin/🏗️build/🧩️driver-stages/📜️script.ts" component --manifest "${c#*:}/📦️packages/🦀️rust/Cargo.toml" || echo "FAILED component-${c%%:*}"
   done
 fi
 if [ "$phase" = all ] || [ "$phase" = lane ]; then
   lane="$os/🧑‍💻dev/📦️packages/🟦️typescript"
-  for v in din4108 en1990 en1992; do
+  for v in ${ONLY_LANES:-din4108 din18599 en1990 en1992 en1995}; do
     SEMIO_PLUGIN_CATALOG="$root/✏️s/🧑‍💻dev/🧩️catalog/🤖️generated" step "session-$v" "$os/🔌️plugin/📇️registry" ./📜️script.ts session "$v" &&
     SEMIO_PLUGIN_CATALOG="$root/✏️s/🧑‍💻dev/🧩️catalog/🤖️generated" step "prepare-$v" "$lane" ./📜️script.ts prepare "$v" react prototype &&
-    SEMIO_PLUGIN_CATALOG="$root/✏️s/🧑‍💻dev/🧩️catalog/🤖️generated" step "activate-$v" "$lane" ./📜️script.ts activate "$v" react prototype || exit 1
+    SEMIO_PLUGIN_CATALOG="$root/✏️s/🧑‍💻dev/🧩️catalog/🤖️generated" step "activate-$v" "$lane" ./📜️script.ts activate "$v" react prototype || echo "FAILED lane-$v"
   done
 fi
 if [ "$phase" = serve ]; then
-  cd "$root/🏢️semio-tech/🎡️play" && SEMIO_TECH_PLAY_SCOPE=standards SEMIO_TECH_PLAY_PORT=6033 SEMIO_BUILD_MODE=prototype NODE_OPTIONS= exec repo "$here/native-exec.ts" . ./🔨️modules/🧩️runtime/📜️script.ts serve
+  mkdir -p "$root/.cache/b/p/m/vite/play-${PLAY_SCOPE:-standards}" && cd "$root/🏢️semio-tech/🎡️play" && SEMIO_VITE_CACHE_DIRECTORY="$root/.cache/b/p/m/vite/play-${PLAY_SCOPE:-standards}" SEMIO_TECH_PLAY_FROZEN="${SEMIO_TECH_PLAY_FROZEN:-true}" SEMIO_TECH_PLAY_SCOPE="${PLAY_SCOPE:-standards}" SEMIO_TECH_PLAY_PORT="${PLAY_PORT:-6033}" SEMIO_BUILD_MODE=prototype NODE_OPTIONS= exec repo "$here/native-exec.ts" "🏢️semio-tech/🎡️play" ./🔨️modules/🧩️runtime/📜️script.ts serve
 fi

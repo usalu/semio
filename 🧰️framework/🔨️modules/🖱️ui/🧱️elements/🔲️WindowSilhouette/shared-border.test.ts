@@ -6,6 +6,8 @@ import schema from "./shared-border.schema.json";
 import { projectSharedBorderPoint, sharedOutlineSegments, sharedBorderJunction, clipSharedOutlineSegments, visibleSharedOutlineSegments } from "./shared-border.ts";
 import junctions from "./junctions.cases.json";
 import junctionSchema from "./junctions.schema.json";
+import spans from "./chip-span.cases.json";
+import spanSchema from "./chip-span.schema.json";
 import { createWindowSilhouetteGeometry, windowSilhouetteOutline } from "./🟦️.tsx";
 
 describe("shared silhouette projection", () => {
@@ -59,5 +61,17 @@ describe("shared silhouette projection", () => {
     expect(segments.some(segment => segment.from.y === 100 && segment.to.y === 100)).toBe(true);
     expect(segments.every(segment => segment.from.x === segment.to.x || segment.from.y === segment.to.y)).toBe(true);
     expect(geometry.borderPath).toBe("M1,1 H30 V21 H80 V1 H99 V99 H1 Z");
+  });
+  test("chip span fixture conforms to its schema", () => expect(new Ajv().validate(spanSchema, spans)).toBe(true));
+  for (const entry of spans.cases) test(`chip span: ${entry.name}`, () => {
+    const geometry = createWindowSilhouetteGeometry({ width: entry.width, height: entry.height, top: { depth: entry.depth, chips: entry.chips.map(([left, right]) => ({ left: left!, right: right! })) }, bottom: { depth: 0, chips: [] } });
+    expect(geometry.outline.map(point => [point.x, point.y])).toEqual(entry.outline);
+    expect(windowSilhouetteOutline(geometry.metrics).map(point => [point.x, point.y])).toEqual(entry.paint);
+  });
+  test("outline and paint outline agree in length for every near-full chip span", () => {
+    for (let left = 0; left <= 3; left += 0.25) for (let right = 56; right <= 59; right += 0.25) {
+      const geometry = createWindowSilhouetteGeometry({ width: 59, height: 80, top: { depth: 30, chips: [{ left, right }] }, bottom: { depth: 0, chips: [] } });
+      expect(windowSilhouetteOutline(geometry.metrics).length).toBe(geometry.outline.length);
+    }
   });
 });

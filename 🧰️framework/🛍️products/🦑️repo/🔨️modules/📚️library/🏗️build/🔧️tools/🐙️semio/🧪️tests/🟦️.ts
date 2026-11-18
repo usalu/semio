@@ -256,6 +256,9 @@ test("the planner resolves dependency patterns, configurations and cycles, and e
  expect(()=>planBuildTasksV1(cyclic,{tasks:["a:x"]})).toThrow("cycle");
  const dangling=graphOf({a:{x:{execution:{kind:"command",command:"1"},dependsOn:["ghost:y"]}}});
  expect(()=>planBuildTasksV1(dangling,{tasks:["a:x"]})).toThrow("not in the build graph");
+ const direct=graphOf({app:{build:{execution:{kind:"command",command:"x"},dependsOn:["^build","lib:build",{target:"codegen",projects:["tools"]},"gen"]},gen:{...noop}}},[["app","lib"]]);
+ expect(planBuildTasksV1(direct,{tasks:["app:build"],excludeDependencies:true}).tasks["app:build"]!.dependencies).toEqual([]);
+ expect(()=>planBuildTasksV1(direct,{tasks:["app:build"]})).toThrow("not in the build graph");
  const dry=buildDryRunPlanV1(plan);
  expect([...dry.tasks.roots].sort()).toEqual(["core:build","tools:codegen"]);expect(dry.selected).toEqual(["app:build"]);expect(dry.tasks.dependencies["app:build"]).toEqual(["app:gen","lib:build"]);
  let adapter:any;
@@ -266,6 +269,8 @@ test("the planner resolves dependency patterns, configurations and cycles, and e
   expect(Object.keys(ours.tasks).sort()).toEqual(Object.keys(theirs.tasks).sort());
   for(const id of Object.keys(ours.tasks)){expect(ours.tasks[id]!.dependencies,id).toEqual(theirs.tasks[id].dependencies);expect(ours.tasks[id]!.label,id).toBe(theirs.tasks[id].label);}
  }
+ expect(adapter.planBazelTasksV1(direct,{tasks:["app:build"],excludeDependencies:true}).tasks["app:build"].dependencies).toEqual([]);
+ expect(()=>adapter.planBazelTasksV1(direct,{tasks:["app:build"]})).toThrow("not in the build graph");
 });
 
 test("input expansion handles named groups, dependency groups, exclusions, environment, outputs of dependencies and refuses what it cannot read",()=>{

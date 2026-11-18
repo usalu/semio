@@ -1,11 +1,27 @@
 import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {readdirSync,readFileSync} from "node:fs";
 import {isAbsolute,join,resolve} from "node:path";
-import {readNxTaskRowsV1,supersedeNxCacheV1,type NxSupersessionV1,type NxTaskReaderV1} from "../../🪢️nx-slots/🟦️.ts";
+import {readNxTaskRowsV1,supersedeNxCacheV1,type NxSupersessionV1,type NxTaskReaderV1,type NxTaskRowV1} from "../../🪢️nx-slots/🟦️.ts";
 import type {NxFlightV1} from "../🚦️single-flight/🟦️.ts";
 
 /** 📋️ What the end of a run did for the slots: tasks it claimed as current at the fleet cache and the local supersession. */
-export type NxSlotSettlementV1=Readonly<{registered:Readonly<{claimed:number;missing:number}>|undefined;local:NxSupersessionV1|undefined}>;
+export type NxSlotSettlementV1=Readonly<{registered:Readonly<{claimed:number;missing:number}>|undefined;local:NxSupersessionV1|undefined;tasks?:readonly NxTaskLedgerRowV1[]}>;
+
+/** 🧾️ One task of a run as the fleet needs to compare machines: `project:target[:configuration]`, the Nx task hash and whether the run stored its cache output or only hit an existing one. */
+export type NxTaskLedgerRowV1=Readonly<{task:string;hash:string;outcome:"stored"|"hit"}>;
+
+/** 🧾️ The tasks whose cache output the run created (`stored`) or only read (`hit`), sorted by task name. */
+export function nxTaskLedgerV1(rows:readonly NxTaskRowV1[],sinceMs:number):readonly NxTaskLedgerRowV1[]{
+ const from=sinceMs-2000,found:NxTaskLedgerRowV1[]=[];
+ for(const row of rows){
+  const stored=(row.createdAt??0)>=from,hit=!stored&&(row.accessedAt??0)>=from;
+  if(stored||hit)found.push(Object.freeze({task:row.project+":"+row.target+(row.configuration?":"+row.configuration:""),hash:row.hash,outcome:stored?"stored":"hit"}));
+ }
+ return found.sort((a,b)=>a.task<b.task?-1:a.task>b.task?1:0);
+}
+
+/** 🧾️ The line of one ledger row, language neutral so logs of machines compare with `diff`. */
+export const nxTaskLedgerLineV1=(row:NxTaskLedgerRowV1):string=>`[nx-task] ${row.task} ${row.hash} ${row.outcome}`;
 
 /** 🗄️ The Nx cache directory of a workspace: the `cacheDirectory` of its nx.json, relative to the root, `.nx/cache` by default. */
 export function nxCacheDirectoryV1(root:string):string{
@@ -24,6 +40,6 @@ export async function settleNxSlotsV1(options:Readonly<{root:string;environment:
    const {Database}=await import("bun:sqlite"),writable=new Database(database,{readwrite:true});
    try{const mark=hashes.map(()=>"?").join(",");writable.query(`DELETE FROM cache_outputs WHERE hash IN (${mark})`).run(...hashes);}finally{writable.close();}
   }});
-  return {registered,local};
+  return {registered,local,tasks:nxTaskLedgerV1(rows,options.sinceMs)};
  }catch{return {registered:undefined,local:undefined};}
 }

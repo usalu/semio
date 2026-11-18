@@ -18,18 +18,18 @@
           "terms": {
             "entries": {
               "dead": {
-                "precondition": "any",
                 "operation": {
                   "kind": "set",
                   "value": 1.0
-                }
+                },
+                "precondition": "any"
               },
               "snow": {
-                "precondition": "any",
                 "operation": {
                   "kind": "set",
                   "value": 0.5
-                }
+                },
+                "precondition": "any"
               }
             }
           }

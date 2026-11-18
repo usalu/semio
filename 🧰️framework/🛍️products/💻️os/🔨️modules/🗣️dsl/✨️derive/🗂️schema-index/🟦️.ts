@@ -8,6 +8,15 @@ const SCHEMA_INDEX_SCHEMA = "semio.dsl.mutation-schema-document-index/v1";
 const SCHEMA_INDEX_EXCLUDED = new Set(["target", "node_modules", "dist", "🗑️generated", "📦️packages"]);
 const SCHEMA_INDEX_COLLECTIONS = new Set(["🧫️fixtures", "🧪️fixtures", "🧫️examples", "🧪️examples", "🧪️tests"]);
 
+/** 🙈️ The bare directory names the workspace ignore list (`.gitignore` at the workspace root) names, such as `temp`, `local` or `generated`: such a directory is machine-local, so a schema inside it never enters the index every machine must produce byte for byte. */
+export function schemaIndexIgnoredNamesV1(repoRoot: string): ReadonlySet<string> {
+  try {
+    return new Set(readFileSync(join(repoRoot, ".gitignore"), "utf8").split(/\r?\n/u).map((line) => line.trim().normalize("NFC")).filter((line) => line.length > 0 && !/^[#!]|[*?/[\\]/u.test(line)));
+  } catch {
+    return new Set();
+  }
+}
+
 /** 🧫️ An example collection keeps its name when that directory is itself a module. */
 function schemaIndexExampleCollection(segments: readonly string[]): boolean {
   return segments.some((part, index) => SCHEMA_INDEX_COLLECTIONS.has(part) && segments[index - 1] !== "🔨️modules");
@@ -30,7 +39,7 @@ function schemaIndexRelative(repoRoot: string, path: string): string {
 }
 
 /** 🗂️ `$id` to absolute path for the production schema documents under `root`, excluding example collections before they are read. */
-export function schemaDocumentIndex(root: string): Map<string, string> {
+export function schemaDocumentIndex(root: string, ignored: ReadonlySet<string> = new Set()): Map<string, string> {
   const segments = root.split(sep).filter((part) => part.length > 0);
   const index = new Map<string, string>();
   if (schemaIndexExampleCollection(segments)) return index;
@@ -41,7 +50,7 @@ export function schemaDocumentIndex(root: string): Map<string, string> {
       const next = [...directorySegments, name];
       const path = join(directory, entry.name);
       if (entry.isDirectory()) {
-        if (name.startsWith(".") || SCHEMA_INDEX_EXCLUDED.has(name) || schemaIndexExampleCollection(next)) continue;
+        if (name.startsWith(".") || SCHEMA_INDEX_EXCLUDED.has(name) || ignored.has(name) || schemaIndexExampleCollection(next)) continue;
         walk(path, next, schema || name === "🧬️schema");
       } else if (schema && entry.isFile() && name.endsWith(".json")) {
         let id: unknown;
@@ -67,21 +76,21 @@ function schemaSearchRoot(schemaDirectory: string): string | undefined {
 }
 
 /** 🧭️ Every plugin and module directory a leaf can select as its search root. */
-function schemaIndexRoots(repoRoot: string): string[] {
+function schemaIndexRoots(repoRoot: string, ignored: ReadonlySet<string>): string[] {
   const roots: string[] = [];
   const walk = (directory: string, segments: readonly string[]): void => {
     for (const entry of schemaIndexEntries(directory)) {
       if (!entry.isDirectory() || entry.isSymbolicLink()) continue;
       const name = entry.name.normalize("NFC");
       const next = [...segments, name];
-      if (name.startsWith(".") || SCHEMA_INDEX_EXCLUDED.has(name) || schemaIndexExampleCollection(next)) continue;
+      if (name.startsWith(".") || SCHEMA_INDEX_EXCLUDED.has(name) || ignored.has(name) || schemaIndexExampleCollection(next)) continue;
       const path = join(directory, entry.name);
       if (name === "🔌️plugins" || name === "🔨️modules") {
         for (const child of schemaIndexEntries(path)) {
           if (!child.isDirectory() || child.isSymbolicLink()) continue;
           const childName = child.name.normalize("NFC");
           const childSegments = [...next, childName];
-          if (childName.startsWith(".") || SCHEMA_INDEX_EXCLUDED.has(childName) || schemaIndexExampleCollection(childSegments)) continue;
+          if (childName.startsWith(".") || SCHEMA_INDEX_EXCLUDED.has(childName) || ignored.has(childName) || schemaIndexExampleCollection(childSegments)) continue;
           roots.push(childSegments.join("/"));
         }
       }
@@ -99,9 +108,10 @@ function schemaIndexRoots(repoRoot: string): string[] {
 /** 🧬️ The schema-document index the mutation derive reads, validated against `MutationSchemaDocumentIndexV1`. */
 export function mutationSchemaDocumentIndexProjection(repoRoot: string): string {
   const roots: Record<string, Record<string, string>> = {};
-  for (const root of schemaIndexRoots(repoRoot)) {
+  const ignored = schemaIndexIgnoredNamesV1(repoRoot);
+  for (const root of schemaIndexRoots(repoRoot, ignored)) {
     const documents: Record<string, string> = {};
-    for (const [id, path] of [...schemaDocumentIndex(join(repoRoot, root))].sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0)) documents[id] = schemaIndexRelative(repoRoot, path);
+    for (const [id, path] of [...schemaDocumentIndex(join(repoRoot, root), ignored)].sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0)) documents[id] = schemaIndexRelative(repoRoot, path);
     if (Object.keys(documents).length > 0) roots[root] = documents;
   }
   const projection = { schema: SCHEMA_INDEX_SCHEMA, roots };

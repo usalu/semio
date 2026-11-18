@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/insert-beam/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1994/mutation/insert-beam/schema.json",
   "title": "InsertBeam",
   "type": "object",
   "additionalProperties": false,
@@ -30,7 +30,7 @@
       }
     },
     "beam": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1994/snapshot.json#/$defs/CompositeBeam",
       "x-semio-ui": {
         "role": "value",
         "label": {

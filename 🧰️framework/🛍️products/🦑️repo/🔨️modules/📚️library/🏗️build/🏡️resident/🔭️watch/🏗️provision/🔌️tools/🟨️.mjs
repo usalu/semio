@@ -1,6 +1,7 @@
 /** 🔌 Binds the watcher provisioning to the tool registry: resolution through `resolveToolV1`, compilation through `runToolV1("cargo")`, the binary kept under the tools partition. Loads only where the tool interface exists. */
 import {dirname,join} from "node:path";
 import {ensureWatcherV1,findInstalledWatcherV1} from "../🟨️.mjs";
+import {machinePathV1} from "../../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {findToolV1,resolveToolV1,runToolV1,systemToolHostV1,toolRootV1,TOOL_REGISTRY_V1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 
@@ -14,7 +15,7 @@ export async function findInstalledResidentWatcherV1(root=toolRootV1(),{environm
 export async function ensureResidentWatcherV1(root=toolRootV1(),{signal,progress,environment=process.env,writable,workRoot}={}){
  const entry=findToolV1("repo-watch",TOOL_REGISTRY_V1),host=systemToolHostV1(root,environment),pinPath=join(root,entry.pin.version.file),rust=dirname(pinPath);
  return(await ensureWatcherV1({
-  sourcePath:join(rust,"🦀️.rs"),pinPath:join(rust,"🔣️.json"),outputRoot:join(root,TOOL_REGISTRY_V1.partitions.tools,"repo-watch"),writable,signal,progress,workRoot,
+  sourcePath:join(rust,"🦀️.rs"),pinPath:join(rust,"🔣️.json"),outputRoot:machinePathV1(root,TOOL_REGISTRY_V1.partitions.tools,"repo-watch"),writable,signal,progress,workRoot,
   locate:async()=>resolveToolV1(entry,host,TOOL_REGISTRY_V1).command??undefined,
   compile:async({directory,signal:cancel})=>{
    await runToolV1("cargo",["build","--release","--manifest-path",join(directory,"Cargo.toml"),"--target-dir",join(directory,"target")],{cwd:directory,root,env:environment,signal:cancel,label:"repo-watch:compile",caller:import.meta.url});

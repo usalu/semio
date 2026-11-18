@@ -111,8 +111,10 @@ export function pollDelay(intervalMs: number, failures: number, retryAfterMs: nu
 }
 
 /** 🔁️ While `enabled`: calls `refresh` now, again {@link pollDelay} after each answer while the document is visible,
- * and at once when it becomes visible again — unless it is backing off, which a look at the tab never cuts short. */
-export function usePolling(refresh: () => Promise<RefreshOutcome>, intervalMs: number, enabled = true): void {
+ * and at once when it becomes visible again — unless it is backing off, which a look at the tab never cuts short. A
+ * backoff ends at once when `revived` (a subscription) says the proctor answers again: a poll that backed off for minutes
+ * while the proctor was away does not keep the board stale after it is back. */
+export function usePolling(refresh: () => Promise<RefreshOutcome>, intervalMs: number, enabled = true, revived?: (listener: () => void) => () => void): void {
   useEffect(() => {
     if (!enabled) return;
     let stopped = false;
@@ -137,14 +139,21 @@ export function usePolling(refresh: () => Promise<RefreshOutcome>, intervalMs: n
       clearTimeout(timer);
       ask();
     };
+    const back = revived?.(() => {
+      if (stopped || asking || failures === 0) return;
+      clearTimeout(timer);
+      failures = 0;
+      ask();
+    });
     ask();
     document.addEventListener("visibilitychange", seen);
     return () => {
       stopped = true;
       clearTimeout(timer);
+      back?.();
       document.removeEventListener("visibilitychange", seen);
     };
-  }, [refresh, intervalMs, enabled]);
+  }, [refresh, intervalMs, enabled, revived]);
 }
 
 /** 🏷️ One column of a leaderboard table. */

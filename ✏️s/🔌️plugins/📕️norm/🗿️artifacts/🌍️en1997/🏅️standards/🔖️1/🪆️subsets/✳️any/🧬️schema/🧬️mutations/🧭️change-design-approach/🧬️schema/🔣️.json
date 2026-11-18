@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-design-approach/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1997/mutation/change-design-approach/schema.json",
   "title": "ChangeDesignApproach",
   "type": "object",
   "additionalProperties": false,
@@ -13,7 +13,7 @@
       "const": "changeDesignApproach"
     },
     "newDesignApproach": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/$defs/ApproachChoice",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1997/snapshot.json#/$defs/ApproachChoice",
       "x-semio-ui": {
         "role": "value",
         "label": {

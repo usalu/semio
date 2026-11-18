@@ -74,7 +74,7 @@ fn routes_lead_down_over_the_rim_by_the_wall_or_a_standing_ladder_never_by_a_rop
     let need = (WALL_HANG_TICKS + climb_ticks(rim_of(&left, PET), 480.0)) as f64;
     assert_eq!(route_of(400.0, &shelf, &floor(), &[Gear::Climb], PET, need, &pitches, &[], &boxed).map(|legs| legs.len()), Some(2));
     assert_eq!(route_of(400.0, &shelf, &floor(), &[Gear::Climb], PET, need - 1.0, &pitches, &[], &boxed), None);
-    let far = perch("far", 20.0, 120.0, 40.0);
+    let far = perch("far", 20.0, 120.0, -140.0);
     assert_eq!(route_of(200.0, &floor(), &far, &every, PET, GRIP_BUDGET, &pitches, &standing, &boxed), None);
     assert_eq!(route_of(400.0, &shelf, &shelf, &every, PET, GRIP_BUDGET, &pitches, &standing, &boxed), None);
     assert_eq!(route_of(200.0, &floor(), &floor(), &every, PET, GRIP_BUDGET, &pitches, &standing, &boxed), None);

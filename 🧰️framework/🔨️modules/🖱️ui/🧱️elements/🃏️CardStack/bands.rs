@@ -37,24 +37,32 @@ pub struct CardBand {
 pub const CARD_BAND_MIN_GAP: f64 = 40.0;
 const ABUT: f64 = 0.25;
 
-fn touch(a: CardBandSpan, b: CardBandSpan) -> bool {
-    let gap = (a.left - b.right).max(b.left - a.right);
-    gap < -1e-6 || (gap > ABUT && gap < CARD_BAND_MIN_GAP)
+/// 🫸️ Whether two chips of one row separated by `gap` read as two lines with a small gap (closer than `CARD_BAND_MIN_GAP`, not abutting); mirrors `chipGapReadsAsSliver`.
+///
+/// See `bands.cases.json`.
+pub fn chip_gap_reads_as_sliver(gap: f64) -> bool {
+    gap > ABUT && gap < CARD_BAND_MIN_GAP
 }
 
-/// 🧮️ Entry `i` describes card `i + 1` against card `i`: one shared band as high as the taller of footer row and cap row, or two stacked bands when chips would meet horizontally.
-pub fn resolve_card_bands(cards: &[CardBandCard]) -> Vec<CardBand> {
+fn touch(a: CardBandSpan, b: CardBandSpan) -> bool {
+    let gap = (a.left - b.right).max(b.left - a.right);
+    gap < -1e-6 || chip_gap_reads_as_sliver(gap)
+}
+
+/// 🧮️ Entry `i` describes card `i + 1` against card `i`: one shared band as high as the taller of footer row and cap row, or two stacked bands when chips would meet horizontally; with painted lines `inset` inside every card box the lower card is lifted a further `2 * inset` so the upper card's bottom line and the lower card's top line are one line. Mirrors `resolveCardBands(cards, inset)`.
+pub fn resolve_card_bands(cards: &[CardBandCard], inset: f64) -> Vec<CardBand> {
+    let seam = 2.0 * inset;
     cards
         .windows(2)
         .map(|pair| {
             let (above, below) = (&pair[0], &pair[1]);
             if above.footer <= 0.0 {
-                CardBand { mode: CardBandMode::None, lift: 0.0, cap: 0.0, footer: 0.0 }
+                CardBand { mode: CardBandMode::None, lift: seam, cap: 0.0, footer: 0.0 }
             } else if above.footer_chips.iter().any(|footer| below.cap_chips.iter().any(|cap| touch(*footer, *cap))) {
-                CardBand { mode: CardBandMode::Stacked, lift: 0.0, cap: 0.0, footer: 0.0 }
+                CardBand { mode: CardBandMode::Stacked, lift: seam, cap: 0.0, footer: 0.0 }
             } else {
                 let band = above.footer.max(below.cap);
-                CardBand { mode: CardBandMode::Shared, lift: band, cap: band, footer: band }
+                CardBand { mode: CardBandMode::Shared, lift: band + seam, cap: band, footer: band }
             }
         })
         .collect()
@@ -63,3 +71,10 @@ pub fn resolve_card_bands(cards: &[CardBandCard]) -> Vec<CardBand> {
 #[cfg(test)]
 #[path = "bands.test.rs"]
 mod tests;
+
+/// 📐️ The smallest height at or above `height` that is a whole number of device pixels (`pixel` is one device pixel in logical px).
+///
+/// See `bands.cases.json`.
+pub fn snap_card_height(height: f64, pixel: f64) -> f64 {
+    (height / pixel - 1e-4).ceil() * pixel
+}

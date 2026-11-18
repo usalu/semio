@@ -44,9 +44,13 @@
         "memoryFloorMegabytes": 1536,
         "megabytesPerJob": 1536,
         "tailLines": 20,
+        "failureWindowBytes": 1048576,
+        "failureNoise": ["^\\[script\\] \\{", "^\\[repository:command\\] still running after [0-9]+ s", "^\\[repo\\] still working after [0-9]+ s", "^Reading the project graph slice \\("],
+        "previousLogSuffix": ".previous.log",
         "loopStableMilliseconds": 60000,
         "sqliteOpenPattern": "unable to open database file",
         "diskDefaultRequirement": {"megabytes": 1024, "inodes": 20000},
+        "diskGrowth": {"keptRuns": 5, "floorMegabytes": 1024, "consumerCount": 5},
         "diskRequirements": {
           "native": {"megabytes": 1024, "inodes": 20000},
           "repo-mcp": {"megabytes": 1024, "inodes": 50000},
@@ -72,6 +76,8 @@
         }
       }
     },
+    "Inflight": {"type": "object", "additionalProperties": false, "required": ["stage", "pid", "startedMs", "exitFile", "log"], "properties": {"stage": {"type": "string"}, "pid": {"type": "integer", "minimum": 1}, "startedMs": {"type": "integer", "minimum": 1}, "exitFile": {"type": "string"}, "log": {"type": "string"}, "supervisor": {"type": "integer", "minimum": 1}}},
+    "Exit": {"type": "object", "additionalProperties": false, "required": ["exit", "signal", "spawnFailed", "endedMs"], "properties": {"exit": {"type": ["integer", "null"]}, "signal": {"type": ["string", "null"]}, "spawnFailed": {"type": "boolean"}, "endedMs": {"type": "integer"}}},
     "Human": {"type": "object", "additionalProperties": false, "required": ["version", "pid", "startedMs"], "properties": {"version": {"const": 1}, "pid": {"type": "integer", "minimum": 1}, "startedMs": {"type": "integer", "minimum": 1}}},
     "Stages": {
       "const": [
@@ -100,15 +106,20 @@
           "human-running": "A person is running the setup on this machine; this machine only observes.",
           "lease-held": "Another runner on this machine (process {holder}) holds the setup lease; this runner waits and observes.",
           "memory-low": "Not enough free memory for stage {stage} ({available} MB free, {needed} MB needed); waiting.",
-          "stage-failed": "Stage {stage} failed with exit status {exit}; retrying with back-off.",
+          "stage-failed": "Stage {stage} failed ({ending}); retrying with back-off.",
           "tooling-compiler": "Stage {stage} ended, but the TypeScript compiler of the tooling is not the declared one: resolved path, found version and wanted version are in the last lines of the tail. Retrying with back-off; if it stays, the dependency install of this machine has to be repaired (repo dependencies sync --all).",
           "stage-timeout": "Stage {stage} did not finish in time and was stopped; retrying with back-off.",
           "stage-stalled": "Stage {stage} showed nothing new for {minutes} minutes; its whole process tree was stopped and the stage starts again in {seconds} seconds (stop {count} of {maximum} in a row, not counted as a failure; after the last one it is a failure with back-off).",
           "stage-stall-exhausted": "Stage {stage} showed nothing new again after {count} restarts in a row, and each time its whole process tree was stopped; it waits for something that does not come, so it is now a failure with back-off: look at the last lines of its log for what it waits for.",
+          "stage-step-overdue": "Stage {stage} ran the step \"{step}\" for {seconds} seconds, although the step declares {bound} seconds and is overdue on this machine after {limit} seconds, and nothing else moved for {quiet} seconds: it waits for something that does not come. Its whole process tree was stopped and the stage starts again with the current code in {pause} seconds (stop {count} of {maximum} in a row, not counted as a failure; after the last one it is a failure with back-off).",
           "stage-code-changed": "Stage {stage} waited {minutes} minutes for a named holder while the code it runs changed ({file}); its whole process tree was stopped and the stage starts again at once with the new code (not counted as a failure).",
           "stage-code-stale": "Stage {stage} had run for at least {minutes} minutes when the code it runs changed ({file}); its whole process tree was stopped and the stage starts again at once with the new code, everything it finished stays stored (not counted as a failure).",
+          "stage-holder-silent": "Stage {stage} waits for process {pid} ({command}), which holds the dependency store but has not renewed its registration for {silent} seconds, so it may be blocked; the stage was stopped after {minutes} minutes without progress and starts again in {seconds} seconds (stop {count} of {maximum} in a row, not counted as a failure). Stop that process to free the store.",
           "store-full": "Stage {stage} cannot create files in {path}: the disk or the quota of the user is full ({errno}); free space there. Retrying with back-off.",
           "disk-short": "Stage {stage} needs {needed} {unit} free in {path} but only {available} {unit} are free ({resource}); the stage does not start until space is free there, checking again every minute.",
+          "disk-collecting": "Stage {stage} needs {needed} {unit} free in {path} but only {available} {unit} are free: freeing space by priority now (derivable caches first, the image slack last), progress is in the log; the stage starts as soon as the need is free.",
+          "disk-unmeasured": "Stage {stage}: the free space in {path} could not be measured ({reason}: {detail}); that is not the same as a full disk, so the stage starts anyway; the space gate of the stage and the write error itself still stop it.",
+          "disk-consumers": "Stage {stage} needs {needed} {unit} free in {path} but only {available} {unit} are free ({resource}) and every automatic collection ran; nothing collectable remains. The largest consumers and what frees each: {consumers}. The stage does not start until space is free there, collecting and checking again every minute.",
           "loop-failed": "The readiness loop of this worker stopped with an error ({message}); it starts again in {seconds} seconds (try {count} in a row).",
           "spawn-failed": "Stage {stage} could not be started; retrying with back-off.",
           "interrupted": "Stage {stage} was stopped before it finished.",
@@ -119,15 +130,20 @@
           "human-running": "Eine Person führt das Setup auf dieser Maschine aus; diese Maschine beobachtet nur.",
           "lease-held": "Ein anderer Läufer auf dieser Maschine (Prozess {holder}) hält die Setup-Sperre; dieser Läufer wartet und beobachtet.",
           "memory-low": "Zu wenig freier Speicher für Stufe {stage} ({available} MB frei, {needed} MB nötig); wartet.",
-          "stage-failed": "Stufe {stage} schlug mit Exit-Status {exit} fehl; neuer Versuch mit Wartezeit.",
+          "stage-failed": "Stufe {stage} schlug fehl ({ending}); neuer Versuch mit Wartezeit.",
           "tooling-compiler": "Stufe {stage} ist zu Ende, aber der TypeScript-Compiler der Werkzeuge ist nicht der deklarierte: aufgelöster Pfad, gefundene und verlangte Version stehen in den letzten Zeilen des Protokollausschnitts. Neuer Versuch mit Wartezeit; bleibt es so, muss die Abhängigkeitsinstallation dieser Maschine repariert werden (repo dependencies sync --all).",
           "stage-timeout": "Stufe {stage} wurde nicht rechtzeitig fertig und wurde gestoppt; neuer Versuch mit Wartezeit.",
           "stage-stalled": "Stufe {stage} zeigte {minutes} Minuten lang nichts Neues; ihr ganzer Prozessbaum wurde beendet und die Stufe startet in {seconds} Sekunden neu (Stopp {count} von {maximum} in Folge, zählt nicht als Fehler; nach dem letzten ist es ein Fehler mit Wartezeit).",
           "stage-stall-exhausted": "Stufe {stage} zeigte nach {count} Neustarts in Folge wieder nichts Neues, und jedes Mal wurde ihr ganzer Prozessbaum beendet; sie wartet auf etwas, das nicht kommt, und ist deshalb jetzt ein Fehler mit Wartezeit: die letzten Zeilen ihres Protokolls sagen, worauf sie wartet.",
+          "stage-step-overdue": "Stufe {stage} führte den Schritt \"{step}\" seit {seconds} Sekunden aus, obwohl der Schritt {bound} Sekunden erklärt und auf dieser Maschine nach {limit} Sekunden überfällig ist, und nichts anderes bewegte sich seit {quiet} Sekunden: sie wartet auf etwas, das nicht kommt. Ihr ganzer Prozessbaum wurde beendet und die Stufe startet in {pause} Sekunden mit dem aktuellen Code neu (Stopp {count} von {maximum} in Folge, zählt nicht als Fehler; nach dem letzten ist es ein Fehler mit Wartezeit).",
           "stage-code-changed": "Stufe {stage} wartete {minutes} Minuten auf einen benannten Halter, während sich der Code änderte, den sie ausführt ({file}); ihr ganzer Prozessbaum wurde beendet und die Stufe startet sofort neu mit dem neuen Code (zählt nicht als Fehler).",
           "stage-code-stale": "Stufe {stage} lief mindestens {minutes} Minuten, als sich der Code änderte, den sie ausführt ({file}); ihr ganzer Prozessbaum wurde beendet und die Stufe startet sofort neu mit dem neuen Code, alles Fertige bleibt gespeichert (zählt nicht als Fehler).",
+          "stage-holder-silent": "Stufe {stage} wartet auf Prozess {pid} ({command}), der den Abhängigkeitsspeicher hält, aber seine Anmeldung seit {silent} Sekunden nicht erneuert hat und daher womöglich blockiert ist; die Stufe wurde nach {minutes} Minuten ohne Fortschritt beendet und startet in {seconds} Sekunden neu (Stopp {count} von {maximum} in Folge, zählt nicht als Fehler). Diesen Prozess beenden, um den Speicher freizugeben.",
           "store-full": "Stufe {stage} kann in {path} keine Dateien anlegen: der Datenträger oder die Quote des Benutzers ist voll ({errno}); dort Platz freigeben. Neuer Versuch mit Wartezeit.",
           "disk-short": "Stufe {stage} braucht {needed} {unit} frei in {path}, aber nur {available} {unit} sind frei ({resource}); die Stufe startet erst, wenn dort Platz frei ist, und prüft jede Minute neu.",
+          "disk-collecting": "Stufe {stage} braucht {needed} {unit} frei in {path}, aber nur {available} {unit} sind frei: Platz wird jetzt nach Priorität freigegeben (zuerst ableitbare Caches, der Image-Überhang zuletzt), der Fortschritt steht im Protokoll; die Stufe startet, sobald der Bedarf frei ist.",
+          "disk-unmeasured": "Stufe {stage}: der freie Platz in {path} konnte nicht gemessen werden ({reason}: {detail}); das ist nicht dasselbe wie ein volles Laufwerk, daher startet die Stufe trotzdem; die Platzprüfung der Stufe und der Schreibfehler selbst halten sie weiterhin an.",
+          "disk-consumers": "Stufe {stage} braucht {needed} {unit} frei in {path}, aber nur {available} {unit} sind frei ({resource}) und jede automatische Sammlung lief; es bleibt nichts Sammelbares. Die größten Verbraucher und was jeden freigibt: {consumers}. Die Stufe startet erst, wenn dort Platz frei ist, und sammelt und prüft jede Minute neu.",
           "loop-failed": "Die Bereitschaftsschleife dieses Arbeiters ist mit einem Fehler beendet worden ({message}); sie startet in {seconds} Sekunden neu (Versuch {count} in Folge).",
           "spawn-failed": "Stufe {stage} konnte nicht gestartet werden; neuer Versuch mit Wartezeit.",
           "interrupted": "Stufe {stage} wurde vor dem Ende gestoppt.",
@@ -137,17 +153,17 @@
     },
     "Reasons": {
       "const": {
-        "en": {"first-run": "First run of stage {stage} on this machine.", "inputs-changed": "Inputs of stage {stage} changed since it last succeeded.", "previous-failed": "Stage {stage} failed before; retrying after the back-off.", "stalled": "Stage {stage} showed nothing new for 10 minutes and was stopped; started again at once.", "code-changed": "Stage {stage} waited more than 10 minutes for a named holder while its code changed and was stopped; started again at once with the new code.", "code-stale": "Stage {stage} had run for at least 30 minutes while its code changed and was stopped; started again at once with the new code, what it finished stays stored.", "adopted": "Adopted stage {stage}, which was already running; not restarted.", "binary-missing": "The repo binary is missing, starting again at stage {stage}."},
-        "de": {"first-run": "Erster Lauf der Stufe {stage} auf dieser Maschine.", "inputs-changed": "Die Eingaben der Stufe {stage} haben sich seit ihrem letzten Erfolg geändert.", "previous-failed": "Stufe {stage} schlug zuvor fehl; neuer Versuch nach der Wartezeit.", "stalled": "Stufe {stage} zeigte 10 Minuten lang nichts Neues und wurde beendet; sofort neu gestartet.", "code-changed": "Stufe {stage} wartete mehr als 10 Minuten auf einen benannten Halter, während sich ihr Code änderte, und wurde beendet; sofort neu gestartet mit dem neuen Code.", "code-stale": "Stufe {stage} lief mindestens 30 Minuten, während sich ihr Code änderte, und wurde beendet; sofort neu gestartet mit dem neuen Code, alles Fertige bleibt gespeichert.", "adopted": "Stufe {stage} übernommen, sie lief schon; nicht neu gestartet.", "binary-missing": "Das repo-Programm fehlt, Neustart bei Stufe {stage}."}
+        "en": {"first-run": "First run of stage {stage} on this machine.", "inputs-changed": "Inputs of stage {stage} changed since it last succeeded.", "previous-failed": "Stage {stage} failed before; retrying after the back-off.", "stalled": "Stage {stage} showed nothing new for 10 minutes and was stopped; started again at once.", "code-changed": "Stage {stage} waited more than 10 minutes for a named holder while its code changed and was stopped; started again at once with the new code.", "code-stale": "Stage {stage} had run for at least 30 minutes while its code changed and was stopped; started again at once with the new code, what it finished stays stored.", "step-overdue": "Stage {stage} ran a step of its read far past the bound the step declares, with nothing else moving, and was stopped; started again with the current code after a short back-off.", "holder-silent": "Stage {stage} waited for a named holder of the dependency store that has not renewed its registration for more than 5 minutes (it may be blocked) and was stopped; started again after the back-off.", "adopted": "Adopted stage {stage}, which was already running; not restarted.", "binary-missing": "The repo binary is missing, starting again at stage {stage}."},
+        "de": {"first-run": "Erster Lauf der Stufe {stage} auf dieser Maschine.", "inputs-changed": "Die Eingaben der Stufe {stage} haben sich seit ihrem letzten Erfolg geändert.", "previous-failed": "Stufe {stage} schlug zuvor fehl; neuer Versuch nach der Wartezeit.", "stalled": "Stufe {stage} zeigte 10 Minuten lang nichts Neues und wurde beendet; sofort neu gestartet.", "code-changed": "Stufe {stage} wartete mehr als 10 Minuten auf einen benannten Halter, während sich ihr Code änderte, und wurde beendet; sofort neu gestartet mit dem neuen Code.", "code-stale": "Stufe {stage} lief mindestens 30 Minuten, während sich ihr Code änderte, und wurde beendet; sofort neu gestartet mit dem neuen Code, alles Fertige bleibt gespeichert.", "step-overdue": "Stufe {stage} führte einen Schritt ihres Lesens weit über die Grenze aus, die der Schritt erklärt, ohne dass sich sonst etwas bewegte, und wurde beendet; nach kurzer Wartezeit mit dem aktuellen Code neu gestartet.", "holder-silent": "Stufe {stage} wartete auf einen benannten Halter des Abhängigkeitsspeichers, der seine Anmeldung seit mehr als 5 Minuten nicht erneuert hat (womöglich blockiert), und wurde beendet; nach der Wartezeit neu gestartet.", "adopted": "Stufe {stage} übernommen, sie lief schon; nicht neu gestartet.", "binary-missing": "Das repo-Programm fehlt, Neustart bei Stufe {stage}."}
       }
     },
     "Reason": {
       "type": "object", "additionalProperties": false, "required": ["code", "en", "de"],
-      "properties": {"code": {"enum": ["first-run", "inputs-changed", "previous-failed", "stalled", "code-changed", "code-stale", "adopted", "binary-missing"]}, "en": {"type": "string"}, "de": {"type": "string"}}
+      "properties": {"code": {"enum": ["first-run", "inputs-changed", "previous-failed", "stalled", "code-changed", "code-stale", "step-overdue", "holder-silent", "adopted", "binary-missing"]}, "en": {"type": "string"}, "de": {"type": "string"}}
     },
     "Refusal": {
       "type": "object", "additionalProperties": false, "required": ["code", "en", "de"],
-      "properties": {"code": {"enum": ["human-running", "lease-held", "memory-low", "stage-failed", "tooling-compiler", "stage-timeout", "stage-stalled", "stage-stall-exhausted", "stage-code-changed", "stage-code-stale", "store-full", "disk-short", "loop-failed", "spawn-failed", "interrupted", "server"]}, "en": {"type": "string"}, "de": {"type": "string"}}
+      "properties": {"code": {"enum": ["human-running", "lease-held", "memory-low", "stage-failed", "tooling-compiler", "stage-timeout", "stage-stalled", "stage-stall-exhausted", "stage-code-changed", "stage-code-stale", "stage-step-overdue", "stage-holder-silent", "store-full", "disk-short", "disk-unmeasured", "disk-collecting", "disk-consumers", "loop-failed", "spawn-failed", "interrupted", "server"]}, "en": {"type": "string"}, "de": {"type": "string"}}
     },
     "Timings": {
       "description": "Per-stage timings of one worker in the store under `v1/origins/<origin>/ready-timings.json`: the last runs, newest last.",
@@ -155,7 +171,7 @@
       "properties": {
         "version": {"const": 1}, "origin": {"type": "string"}, "updatedMs": {"type": "integer"},
         "runs": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["stage", "startedMs", "endedMs", "seconds", "exit", "outcome", "peakMegabytes", "attempts", "digest"],
-          "properties": {"stage": {"type": "string"}, "startedMs": {"type": "integer"}, "endedMs": {"type": "integer"}, "seconds": {"type": "integer"}, "exit": {"type": ["integer", "null"]}, "outcome": {"enum": ["ok", "stage-failed", "stage-timeout", "stalled", "spawn-failed", "interrupted"]}, "peakMegabytes": {"type": ["integer", "null"]}, "attempts": {"type": "integer"}, "digest": {"type": "string"}}}}
+          "properties": {"stage": {"type": "string"}, "startedMs": {"type": "integer"}, "endedMs": {"type": "integer"}, "seconds": {"type": "integer"}, "exit": {"type": ["integer", "null"]}, "outcome": {"enum": ["ok", "stage-failed", "stage-timeout", "stalled", "spawn-failed", "interrupted"]}, "peakMegabytes": {"type": ["integer", "null"]}, "growthMegabytes": {"type": ["integer", "null"]}, "attempts": {"type": "integer"}, "digest": {"type": "string"}}}}
       }
     },
     "Containment": {

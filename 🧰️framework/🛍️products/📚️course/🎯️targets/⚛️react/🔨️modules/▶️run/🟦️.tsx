@@ -489,6 +489,7 @@ export function RunScreen(props: { readonly session: CourseSession; readonly sta
         <CardSection className="course-run-progress flex-row items-center text-sm">
           <progress max={tasks.length} value={done} aria-labelledby={`${scope}-progress`} className="course-progress" />
           <span id={`${scope}-progress`}>{text("course.run.progress", { done, total: tasks.length })}</span>
+          {timed && view.status === "open" ? <ClockWatch tasks={tasks} opened={view.opened} shown={task?.id} now={now} text={text} /> : null}
         </CardSection>
         {ready ? null : (
           <CardSection>
@@ -498,11 +499,6 @@ export function RunScreen(props: { readonly session: CourseSession; readonly sta
           </CardSection>
         )}
         {problem === undefined ? null : <ProblemNote cell problem={problem} text={text} />}
-        {timed && view.status === "open" ? (
-          <CardSection>
-            <ClockWatch tasks={tasks} opened={view.opened} shown={task?.id} now={now} text={text} />
-          </CardSection>
-        ) : null}
       </CourseCard>
       {task === undefined ? null : (
         <AccessGate course={state.course} page={view.quiz} task={task.id} at={at} locale={locale} text={text}>

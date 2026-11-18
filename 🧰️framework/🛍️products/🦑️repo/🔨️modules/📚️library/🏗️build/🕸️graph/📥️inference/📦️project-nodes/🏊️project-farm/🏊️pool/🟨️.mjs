@@ -22,6 +22,23 @@ export const GRAPH_FARM_POLICY_V1 = freeze(structuredClone(schema.$defs.Policy.c
 export const GRAPH_FARM_MESSAGES_V1 = freeze(structuredClone(schema.$defs.Messages.const));
 const P = GRAPH_FARM_POLICY_V1, MEGABYTE = 1048576;
 
+/** ⏱️ What a job is expected to cost in a farm child, in milliseconds, from its kind and the cost table: a look of up to six owners, a verification, a warm settling, or an inference that grows with the megabytes the cost table knows for its owner (`costMegabytes`). The one source of the order of the queue.
+ * @see ./🧪️tests/⏱️queue-order */
+export function farmJobExpectedMillisecondsV1(payload, policy = P) {
+  const q = policy.queue ?? P.queue, known = Number.isFinite(payload?.costMegabytes) && payload.costMegabytes > 0 ? payload.costMegabytes : 0;
+  if (payload?.look === true) return q.lookMilliseconds * Math.max(1, Array.isArray(payload.owners) ? payload.owners.length : 1);
+  if (payload?.warm === true) return q.warmMilliseconds;
+  if (payload?.observe === true) return q.observeMilliseconds;
+  return q.inferMilliseconds + q.perMegabyteMilliseconds * known;
+}
+
+/** 🥇 The queued jobs in the order the farm serves them: the shortest expected job first, every millisecond a job has waited counting `agingPerMille` thousandths of a millisecond against its expected cost, so no long owner waits longer than about its own cost; a job that was sent back (`front`: lost, or capped to run alone) stays in front. Equal scores keep their arrival order.
+ * @see ./🧪️tests/⏱️queue-order */
+export function farmQueueOrderV1(jobs, now, policy = P) {
+  const q = policy.queue ?? P.queue, score = job => job.front === true ? -Infinity : job.expected - (now - job.queued) * q.agingPerMille / 1000;
+  return jobs.map((job, index) => ({ job, index, score: score(job) })).sort((a, b) => a.score === b.score ? a.index - b.index : a.score < b.score ? -1 : 1).map(row => row.job);
+}
+
 /** ⏫️ Claims the priority class of the read farm (`priority.readFarm`, normal) for one child: a child that starts below it is set to it, which an unprivileged process may only do where the platform lets it raise priority (Windows); where the raise is refused (macOS and Linux, a niceness only the superuser lowers) the child keeps what it inherited from its starter and the result says so, so the farm can tell the person who started the read instead of staying silently slow.
  * @see ./🧬️schema/🔣️.json the declared classes */
 export function claimFarmChildPriorityV1(pid, { get = osPriorityV1, set = setOsPriorityV1 } = {}, wanted = P.priority.readFarm) {
@@ -164,7 +181,7 @@ export function createFarmV1({ entry, service, session, workers, megabytes, envi
   const retiring = new Set(), judging = new Set();
   const slots = Array.from({ length: workers }, (_, index) => ({ index, generation: 0, child: undefined, state: "empty", job: undefined, timer: undefined })), queue = [];
   const stats = { workers, jobs: 0, replies: 0, failures: 0, lost: 0, recycled: 0, capped: 0, overruns: 0, started: 0, peakRssMegabytes: 0, peakFootprintMegabytes: 0, queuedMilliseconds: 0, workedMilliseconds: 0, bootMilliseconds: 0 };
-  let nextId = 0, watcher, closed = false, disabled, restarts = 0, sessionDirectory, sessionFile, readyAccept, closeWork, referenced = true, lastLoss;
+  let nextId = 0, watcher, closed = false, disabled, restarts = 0, sessionDirectory, sessionFile, readyAccept, closeWork, referenced = true, lastLoss, accepted = 0;
   const holdChild = child => { try { if (referenced) { child.ref?.(); child.channel?.ref?.(); } else { child.unref?.(); child.channel?.unref?.(); } } catch {} };
   const ready = new Promise(done => { readyAccept = done; });
   const childEnvironment = { ...environment, ...graphFarmRuntimeEnvironmentV1(runtime, megabytes, policy), SEMIO_GRAPH_WORKER: "1", ...(auxiliaryFile === undefined ? {} : { SEMIO_GRAPH_WORKER_SNAPSHOT: auxiliaryFile }) };
@@ -209,9 +226,15 @@ export function createFarmV1({ entry, service, session, workers, megabytes, envi
     retire(slot, false);
     stats.lost++;
     report("lost", { reason: why });
-    if (job) { clearTimeout(job.timer); if (job.attempts >= policy.maximumAttempts) settle(job, { lost: why }); else queue.unshift(job); }
+    if (job) { clearTimeout(job.timer); if (job.attempts >= policy.maximumAttempts) settle(job, { lost: why }); else { job.front = true; queue.unshift(job); } }
     if (++restarts > policy.maximumRestarts) disable("restarts: " + why);
     pump();
+  };
+  const refuse = (slot, why) => {
+    slot.refused = true;
+    report("refused", { worker: slot.index, reason: why });
+    retire(slot, false);
+    if (slots.every(each => each.refused === true)) disable(why);
   };
   const disable = why => {
     if (disabled !== undefined) return;
@@ -237,7 +260,7 @@ export function createFarmV1({ entry, service, session, workers, megabytes, envi
     report("capped", { worker: slot.index, project, megabytes: Math.round(megabytes), cap: Math.round(cap), alone });
     retire(slot, "terminate");
     if (alone) { stats.overruns++; settle(job, { overrun: { project, megabytes: Math.round(megabytes), capMegabytes: Math.round(cap) } }); }
-    else { job.alone = true; job.attempts--; queue.unshift(job); }
+    else { job.alone = true; job.front = true; job.attempts--; queue.unshift(job); }
     pump();
   };
   const armJob = (slot, job) => {
@@ -291,7 +314,8 @@ export function createFarmV1({ entry, service, session, workers, megabytes, envi
       if (slot.child !== child) return;
       if (message?.type === "ready") {
         clearTimeout(slot.timer);
-        if (!accept(message.identity)) { disable("identity differs"); return; }
+        if (!accept(message.identity)) { if (accepted === 0) disable("identity differs"); else refuse(slot, "identity differs"); return; }
+        accepted++;
         slot.state = "idle"; stats.bootMilliseconds += performance.now() - slot.spawned; readyAccept(true); pump();
       } else if (message?.type === "fatal") lose(slot, message.message);
       else if (message?.type === "result" || message?.type === "failure") {
@@ -328,6 +352,7 @@ export function createFarmV1({ entry, service, session, workers, megabytes, envi
   let recheck;
   const pump = () => {
     if (closed || disabled !== undefined) return;
+    if (queue.length > 1) queue.splice(0, queue.length, ...farmQueueOrderV1(queue, performance.now(), policy));
     let held = false;
     try { held = hold() === true; } catch {}
     let busy = slots.filter(slot => slot.state === "busy").length, soloRunning = slots.some(slot => slot.state === "busy" && slot.job?.alone === true);
@@ -348,7 +373,7 @@ export function createFarmV1({ entry, service, session, workers, megabytes, envi
     }
     const solo = soloRunning || queue[0]?.alone === true || crowded(busy);
     let waiting = queue.length - slots.filter(slot => slot.state === "starting").length;
-    for (const slot of slots) if (waiting > 0 && slot.state === "empty" && !((held || solo) && slots.some(other => other !== slot && other.state !== "empty"))) { launch(slot); waiting--; }
+    for (const slot of slots) if (waiting > 0 && slot.state === "empty" && slot.refused !== true && !((held || solo) && slots.some(other => other !== slot && other.state !== "empty"))) { launch(slot); waiting--; }
     if (held && queue.length && recheck === undefined) { recheck = setTimeout(() => { recheck = undefined; pump(); }, policy.holdRecheckMilliseconds); recheck.unref?.(); }
   };
   const close = () => {
@@ -381,6 +406,8 @@ export function createFarmV1({ entry, service, session, workers, megabytes, envi
     get idle() { return slots.some(slot => slot.state === "idle"); },
     get usable() { return !closed && disabled === undefined; },
     get pending() { return queue.length + slots.filter(slot => slot.state === "busy").length; },
+    /** 🔭️ The live count of the slots: children busy, idle, starting and not started, the queued jobs, whether a job runs alone (every other child waits for it) and the restarts; the line of a parked owner names them. */
+    get snapshot() { const count = state => slots.filter(slot => slot.state === state).length; return { busy: count("busy"), idle: count("idle"), starting: count("starting"), empty: count("empty"), refused: slots.filter(slot => slot.refused === true).length, queued: queue.length, alone: slots.some(slot => slot.state === "busy" && slot.job?.alone === true), restarts }; },
     stats: () => ({ ...stats, queuedMilliseconds: Math.round(stats.queuedMilliseconds), workedMilliseconds: Math.round(stats.workedMilliseconds), bootMilliseconds: Math.round(stats.bootMilliseconds), restarts, ...(disabled === undefined ? {} : { disabled }) }),
     refer(on) { referenced = on === true; for (const slot of slots) if (slot.child) holdChild(slot.child); },
     run(payload, options = {}) {
@@ -388,7 +415,7 @@ export function createFarmV1({ entry, service, session, workers, megabytes, envi
       options.signal?.throwIfAborted();
       stats.jobs++;
       return new Promise(resolve => {
-        const job = { id: nextId++, payload, attempts: 0, alone: false, resolve, settled: false, timer: undefined, queued: performance.now(), dispatched: 0 };
+        const job = { id: nextId++, payload, attempts: 0, alone: false, resolve, settled: false, timer: undefined, queued: performance.now(), dispatched: 0, expected: farmJobExpectedMillisecondsV1(payload, policy), front: false };
         queue.push(job);
         if (options.signal) {
           const cancel = () => {

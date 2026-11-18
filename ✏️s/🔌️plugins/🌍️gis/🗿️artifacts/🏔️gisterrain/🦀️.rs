@@ -77,27 +77,27 @@ pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::Ar
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.gis.gisterrain.composer.las")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.las@1.0/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.las@1.0/*")?)?,
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::composition_route(), "20:s.gis.gisterrain@1/*17:s.stdio.las@1.0/*")?)?,
         )?
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.gis.gisterrain.composer.ply")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.ply@1.0/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.ply@1.0/*")?)?,
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::composition_route(), "20:s.gis.gisterrain@1/*17:s.stdio.ply@1.0/*")?)?,
         )?
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.gis.gisterrain.composer.stl")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.stl@ascii/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.stl@ascii/*")?)?,
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::composition_route(), "20:s.gis.gisterrain@1/*19:s.stdio.stl@ascii/*")?)?,
         )?
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.gis.gisterrain.composer.gltf")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.gltf@2.0/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.gltf@2.0/*")?)?,
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::composition_route(), "20:s.gis.gisterrain@1/*18:s.stdio.gltf@2.0/*")?)?,
         )?
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.gis.gisterrain.composer.obj")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.obj@3.0/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.obj@3.0/*")?)?,
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::composition_route(), "20:s.gis.gisterrain@1/*17:s.stdio.obj@3.0/*")?)?,
         )?
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.gis.gisterrain.codec.document")?, ArtifactCapabilityKind::codec())

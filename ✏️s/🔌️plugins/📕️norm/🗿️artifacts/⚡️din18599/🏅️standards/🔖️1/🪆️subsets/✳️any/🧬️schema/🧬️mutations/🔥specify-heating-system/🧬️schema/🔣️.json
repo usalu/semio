@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/specify-heating-system/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/mutation/specify-heating-system/schema.json",
   "title": "SpecifyHeatingSystem",
   "type": "object",
   "additionalProperties": false,
@@ -13,7 +13,7 @@
       "const": "specifyHeatingSystem"
     },
     "newHeating": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/HeatingSystem",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/HeatingSystem",
       "x-semio-ui": {
         "role": "value",
         "label": {

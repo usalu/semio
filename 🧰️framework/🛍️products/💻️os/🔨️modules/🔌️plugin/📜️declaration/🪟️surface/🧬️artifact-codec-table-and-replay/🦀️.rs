@@ -118,7 +118,7 @@ pub struct ArtifactCodecTableV1 {
 /// 🧬️ The [`ArtifactCodecTableV1`] of every app built on `A`.
 pub fn artifact_codec_table<A: ArtifactApp>() -> ArtifactCodecTableV1 {
     fn pack_schema_hash<A: ArtifactApp>() -> Option<[u8; 32]> {
-        <A::Snapshot as pack::snapshot::ArtifactPackMetadata>::native_record_spec_producer().map(|_|<A::Snapshot as pack::snapshot::ArtifactPackMetadata>::native_pack_schema_hash())
+        <A::Snapshot as pack::snapshot::ArtifactPackMetadata>::native_pack_schema_hash()
     }
     fn genesis<A: ArtifactApp>(document_id: &str) -> ArtifactCodecFuture<'_, store::os_store::serialization::ArtifactPackFiles> {
         Box::pin(async move { artifact_app_genesis_pair::<A>(document_id).await.map_err(|error| error.into_fault()) })

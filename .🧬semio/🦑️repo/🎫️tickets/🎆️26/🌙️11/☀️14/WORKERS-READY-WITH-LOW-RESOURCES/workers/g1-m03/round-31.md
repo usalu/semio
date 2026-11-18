@@ -1,10 +1,10 @@
 # Round 31 on g1-m03: Observation Only
 
-Observed 2026-11-18T03:01:32Z. I run no setup command. Try 5 of round 30 was stopped with one SIGINT at 20:52:36Z (see `round-30.md`); my runner is ended.
+Observed 2026-11-18T04:51:34Z. I run no setup command. Try 5 of round 30 was stopped with one SIGINT at 20:52:36Z (see `round-30.md`); my runner is ended.
 
 ## ready.json (`/Volumes/semio-store/v1/origins/g1-m03/ready.json`)
 
-- state=running stage=workspace (5 of 5) attempts=36 exit=1 refusal=null reason=code-stale ready=False peakMegabytes=10473
+- state=ready stage=None (0 of 5) attempts=0 exit=None refusal=null reason=None ready=True peakMegabytes=10473
 
 ```json
 {
@@ -12,80 +12,45 @@ Observed 2026-11-18T03:01:32Z. I run no setup command. Try 5 of round 30 was sto
  "origin": "g1-m03",
  "host": "ueli-workstation-mac-mini-m4-16gb-256gb-03-lan.fritz.box",
  "platform": "macos",
- "pid": 8961,
- "state": "running",
+ "pid": 43179,
+ "state": "ready",
  "digest": "70ffaf3400025b94daf51cd959760f55a1eeee7b8273995439d71c1e4cdab9c3",
- "ready": false,
- "stage": "workspace",
- "stageIndex": 5,
+ "ready": true,
+ "stage": null,
+ "stageIndex": 0,
  "stageCount": 5,
- "attempts": 36,
- "exit": 1,
+ "attempts": 0,
+ "exit": null,
  "refusal": null,
- "reason": {
-  "code": "code-stale",
-  "en": "Stage workspace had run for at least 30 minutes while its code changed and was stopped; started again at once with the new code, what it finished stays stored.",
-  "de": "Stufe workspace lief mindestens 30 Minuten, während sich ihr Code änderte, und wurde beendet; sofort neu gestartet mit dem neuen Code, alles Fertige bleibt gespeichert."
- },
+ "reason": null,
  "peakMegabytes": 10473,
- "tail": [
-  "Reading the project graph slice (420 s): taken 156 of 590."
- ],
+ "tail": [],
  "nextAttemptMs": null,
- "readyMs": null,
- "startedMs": 1794967336062,
- "updatedMs": 1794970892029,
+ "readyMs": 1794974333256,
+ "startedMs": 1794971086445,
+ "updatedMs": 1794977461833,
  "containment": null
 }
 ```
 
-## Last 30 lines of the running stage's log (`ready-log-workspace.txt`)
+## Last 30 lines of the running stage's log (`ready-log-.txt`)
 
 ```
-Reading the project graph slice (364 s).
-Reading the project graph slice (366 s).
-Reading the project graph slice (368 s).
-Reading the project graph slice (370 s).
-Reading the project graph slice (372 s).
-Reading the project graph slice (374 s).
-Reading the project graph slice (376 s).
-Reading the project graph slice (378 s).
-[repo] still working after 380 s; last phase started: door.script
-Reading the project graph slice (380 s).
-Reading the project graph slice (382 s).
-Reading the project graph slice (384 s).
-Reading the project graph slice (386 s).
-Reading the project graph slice (388 s).
-Reading the project graph slice (390 s).
-Reading the project graph slice (392 s).
-Reading the project graph slice (394 s).
-Reading the project graph slice (396 s).
-Reading the project graph slice (398 s).
-Reading the project graph slice (400 s).
-Reading the project graph slice (402 s): taken 4 of 590.
-Reading the project graph slice (404 s): taken 4 of 590.
-Reading the project graph slice (406 s): taken 26 of 590.
-Reading the project graph slice (408 s): taken 26 of 590.
-[repo] still working after 410 s; last phase started: door.script
-Reading the project graph slice (410 s): taken 26 of 590.
-Reading the project graph slice (412 s): taken 98 of 590.
-Reading the project graph slice (414 s): taken 98 of 590.
-Reading the project graph slice (416 s): taken 98 of 590.
-Reading the project graph slice (418 s): taken 156 of 590.
+tail: /Volumes/semio-store/v1/origins/g1-m03/ready-log-.txt: No such file or directory
 ```
 
 ## Memory
 
-- `memory_pressure | tail -1`: System-wide memory free percentage: 45%
+- `memory_pressure | tail -1`: System-wide memory free percentage: 75%
 
 ## Five largest processes by resident size (KiB, pid, ppid, elapsed, command)
 
 ```
-1181312 15375 14988       48:58 /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/157.0.8103.79/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer) --type=renderer --lang=en-US --num-raster-threads=4 --enable-zero-copy --enable-gpu-memory-buffer-compositor-resources --enable-main-frame-before-acti
-1099328 40555 77936       00:17 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.required=false -c diff.ignoreSubmodules=dirty -c diff.submodule=short -c status.submodule
-864320 36675 17460       07:02 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^SM^ZM-oM-8M^Olibrary/M-pM^_M^OM^WM-oM-8M^Obuild/M-pM^_M^OM-!M-oM-8M^Oresident/M-pM^_M^OM^WM-oM-8M^Oc
-786400 37253 37245       06:06 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --experimental-import-meta-resolve --require /Users/ueli/Documents/semio/.cache/b/d/m/j/d22a22b6385877c52eb2/node_modules/vitest/suppress-warnings.cjs --conditions node --conditions development /Users/ueli/Documents/semio/.cache/b/d/m/j/d22a22b6385877c52e
-521376 60816 60813    05:40:48 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M-$M^]M-oM-8M^Oshared-worktree/M-pM^_M^TM^AM-oM-8M^Oreplica/M-pM^_M^[M^_M-oM-8M^Osupervisor/M-pM^_M^_M-&M
+6486448 15375 14988    02:38:59 /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/157.0.8103.79/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer) --type=renderer --lang=en-US --num-raster-threads=4 --enable-zero-copy --enable-gpu-memory-buffer-compositor-resources --enable-main-frame-before-acti
+996368 60816 60813    07:30:49 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M-$M^]M-oM-8M^Oshared-worktree/M-pM^_M^TM^AM-oM-8M^Oreplica/M-pM^_M^[M^_M-oM-8M^Osupervisor/M-pM^_M^_M-&M
+924544 91967 90174       08:11 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^SM^ZM-oM-8M^Olibrary/M-pM^_M^OM^WM-oM-8M^Obuild/M-pM^_M^UM-8M-oM-8M^Ograph/M-pM^_M^SM-%M-oM-8M^Oinferen
+365472 71674 71673    10:14:56 /Users/ueli/Library/Application Support/Claude/claude-code/2.1.325/485fdac4332e/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-format stream-json --effort=medium --model=claude-sonnet-5-5 --permission-prompt-tool=stdio --allowedTools=mcp__computer-use,mcp__ccd_session__spawn_task,mcp__ccd_session__dismiss_task,mcp__ccd_session__mark_ch
+327456 78070 78069 02-20:47:39 /Users/ueli/Library/Application Support/Claude/claude-code/2.1.325/485fdac4332e/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-format stream-json --effort=medium --model=claude-fable-5-2 --permission-prompt-tool=stdio --resume=0a8d2503-4afc-40b0-8bae-66a30cc1ba2a --allowedTools=mcp__computer-use,mcp__ccd_session__spawn_task,mcp__ccd_se
 ```
 
 ## macOS permission dialog
@@ -376,4 +341,47 @@ Reading the project graph slice (418 s): taken 156 of 590.
 2026-11-18T02:41:46Z state=running stage=workspace (5 of 5) attempts=36 exit=1 refusal=null reason=code-stale ready=False peakMegabytes=10473 | System-wide memory free percentage: 61%
 2026-11-18T02:51:25Z state=running stage=workspace (5 of 5) attempts=36 exit=1 refusal=null reason=code-stale ready=False peakMegabytes=10473 | System-wide memory free percentage: 53%
 2026-11-18T03:01:32Z state=running stage=workspace (5 of 5) attempts=36 exit=1 refusal=null reason=code-stale ready=False peakMegabytes=10473 | System-wide memory free percentage: 45%
+2026-11-18T03:11:37Z state=running stage=workspace (5 of 5) attempts=36 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 58%
+2026-11-18T03:21:17Z state=running stage=workspace (5 of 5) attempts=36 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 42%
+2026-11-18T03:30:58Z state=running stage=workspace (5 of 5) attempts=36 exit=1 refusal=null reason=code-stale ready=False peakMegabytes=10473 | System-wide memory free percentage: 58%
+2026-11-18T03:40:39Z state=running stage=workspace (5 of 5) attempts=36 exit=1 refusal=null reason=code-stale ready=False peakMegabytes=10473 | System-wide memory free percentage: 75%
+2026-11-18T03:58:55Z state=ready stage=None (0 of 5) attempts=0 exit=None refusal=null reason=None ready=True peakMegabytes=10473 | System-wide memory free percentage: 66%
+2026-11-18T04:11:01Z state=ready stage=None (0 of 5) attempts=0 exit=None refusal=null reason=None ready=True peakMegabytes=10473 | System-wide memory free percentage: 78%
+2026-11-18T04:51:34Z state=ready stage=None (0 of 5) attempts=0 exit=None refusal=null reason=None ready=True peakMegabytes=10473 | System-wide memory free percentage: 75%
 ```
+
+## Result: ready (2026-11-18)
+
+- `ready.json` says `ready: true` (`state: ready`, readyMs 1794974333256 = 2026-11-18T03:58:53Z, digest 70ffaf3400025b94…). First seen by my observation at 03:58:55Z. The last workspace run of the ready child: 2058 s, exit 0, outcome ok (attempt 37; the 36 before it failed or were stopped, see `round-31.workspace-runs.txt` and `round-31.graph-service.txt`).
+- `.cache/f/native-bootstrap.done` exists.
+- `repo preflight --lang en` in the worktree root: start 2026-11-18T04:41:18Z, end 04:41:22Z, **exit code 0**. Full output: `round-31.preflight.txt` (124 lines). Last 20 lines:
+
+```
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] build:implementation-source · Reading the sources of the build implementation
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"preflight","stage":"running"}
+[script] {"owner":"repository:build","command":"preflight:toolchain","stage":"running","activity":{"resource":"boot-recovery:observe:0/0","mode":"exclusive","elapsedMs":31}}
+[script] {"owner":"repository:build","command":"preflight:toolchain","stage":"running","activity":{"resource":"lease-sweep:claims","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"preflight:toolchain","stage":"running","activity":{"resource":"lease-sweep:resources","mode":"exclusive","elapsedMs":25}}
+[script] {"owner":"repository:build","command":"preflight:toolchain","stage":"running","activity":{"resource":"resource-retirement-inventory:128","mode":"shared","elapsedMs":2}}
+[script] {"owner":"repository:build","command":"preflight:toolchain","stage":"running","activity":{"resource":"lease-sweep:nested","mode":"exclusive","elapsedMs":157}}
+[script] {"owner":"repository:build","command":"preflight:toolchain","stage":"running","activity":{"resource":"boot-recovery:observe:0/0","mode":"exclusive","elapsedMs":18}}
+[script] {"owner":"repository:build","command":"preflight","stage":"complete"}
+[script] {"owner":"repository:build","command":"repo","stage":"complete"}
+```
+
+- Replica `status --lang en` at 04:52Z (exit 0, `round-31.replica-status.txt`): `g1-m03 macos 0s 0/0 cp:0s on ca097b4fae32 196/33/123 … ok`; 0 events behind for every origin. The fleet as a whole is "not in agreement" (g1-m01 diverged, g1-m02/m04/m06 stale, g1-m05/m07/server lagging); that is not about this machine.
+- Other origins' `ready.json` at 04:52Z: ready true on g1-m07 and g1-m08; g1-m01, g1-m02, g1-m06, g1-m10 in workspace, g1-m04 and g1-m05 in tools.
+- A macOS permission dialog: not checked on screen (no screen access from this shell); I clicked nothing during the whole round.
+- I ran no setup command in round 31. Round 31 says to stop after the preflight: observation ended here.
+
+- Replica `verify` afterwards: 07:04Z drift on 3 of 302874 paths (`round-31.replica-verify.txt`), 07:15Z drift on 1 of 302886 paths, a different file each time (edits in flight). Summary and the checks of the old folder's changes: `☀️09/SHARED-WORKTREE-FLEET-OVER-NFS/g1-m03-relocate.md`, section "Update 2026-11-18 07:20 UTC".

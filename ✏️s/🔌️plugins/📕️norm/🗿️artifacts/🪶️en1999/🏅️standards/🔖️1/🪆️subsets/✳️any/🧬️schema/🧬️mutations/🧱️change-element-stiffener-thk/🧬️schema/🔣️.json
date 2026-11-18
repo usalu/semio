@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-element-stiffener-thk/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1999/mutation/change-element-stiffener-thk/schema.json",
   "title": "ChangeElementStiffenerThk",
   "type": "object",
   "additionalProperties": false,

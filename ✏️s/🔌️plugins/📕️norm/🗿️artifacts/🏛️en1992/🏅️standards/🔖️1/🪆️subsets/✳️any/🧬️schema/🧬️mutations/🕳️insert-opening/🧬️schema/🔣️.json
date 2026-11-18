@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/insert-opening/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1992/mutation/insert-opening/schema.json",
   "title": "InsertOpening",
   "type": "object",
   "additionalProperties": false,
@@ -51,7 +51,7 @@
       }
     },
     "opening": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/Opening",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1992/snapshot.json#/$defs/Opening",
       "x-semio-ui": {
         "role": "value",
         "label": {

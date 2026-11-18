@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/insert-column-action/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1994/mutation/insert-column-action/schema.json",
   "title": "InsertColumnAction",
   "type": "object",
   "additionalProperties": false,
@@ -51,7 +51,7 @@
       }
     },
     "action": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/ColumnAction",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1994/snapshot.json#/$defs/ColumnAction",
       "x-semio-ui": {
         "role": "value",
         "label": {

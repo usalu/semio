@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "rows": [
+    {"name": "a coherent volume with an inode table", "row": {"bsize": 4096, "blocks": 1000, "bavail": 250, "files": 5000, "ffree": 4000}, "expected": {"bytes": 1024000, "total": 4096000, "inodes": 4000}},
+    {"name": "a really full volume still has blocks", "row": {"bsize": 4096, "blocks": 1000, "bavail": 0, "files": 5000, "ffree": 4000}, "expected": {"bytes": 0, "total": 4096000, "inodes": 4000}},
+    {"name": "an exhausted inode table is zero inodes", "row": {"bsize": 4096, "blocks": 1000, "bavail": 250, "files": 5000, "ffree": 0}, "expected": {"bytes": 1024000, "total": 4096000, "inodes": 0}},
+    {"name": "a filesystem without an inode table has no inode count", "row": {"bsize": 4096, "blocks": 1000, "bavail": 250, "files": 0, "ffree": 0}, "expected": {"bytes": 1024000, "total": 4096000, "inodes": null}},
+    {"name": "more free inodes than inodes is no count", "row": {"bsize": 4096, "blocks": 1000, "bavail": 250, "files": 10, "ffree": 99}, "expected": {"bytes": 1024000, "total": 4096000, "inodes": null}},
+    {"name": "a negative free inode count is no count", "row": {"bsize": 4096, "blocks": 1000, "bavail": 250, "files": 10, "ffree": -1}, "expected": {"bytes": 1024000, "total": 4096000, "inodes": null}},
+    {"name": "a row that reports nothing at all", "row": {"bsize": 4096, "blocks": 0, "bavail": 0, "files": 0, "ffree": 0}, "expected": null},
+    {"name": "a row of zeros", "row": {"bsize": 0, "blocks": 0, "bavail": 0, "files": 0, "ffree": 0}, "expected": null},
+    {"name": "a block size of zero", "row": {"bsize": 0, "blocks": 1000, "bavail": 250}, "expected": null},
+    {"name": "a negative number of available blocks", "row": {"bsize": 4096, "blocks": 1000, "bavail": -1}, "expected": null},
+    {"name": "available blocks without a volume size", "row": {"bsize": 4096, "blocks": 0, "bavail": 250}, "expected": {"bytes": 1024000, "total": null, "inodes": null}}
+  ]
+}

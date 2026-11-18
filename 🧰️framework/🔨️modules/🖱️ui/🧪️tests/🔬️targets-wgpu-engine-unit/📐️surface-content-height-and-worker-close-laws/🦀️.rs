@@ -47,7 +47,7 @@ fn ui_surface_slot_table_is_heap_first_and_fits_a_bounded_thread_stack() {
 /// `📓️w14b-generation3d-labels-preview-layout.md`).
 #[test]
 fn surface_content_height_measures_the_document_not_the_viewport_it_was_given() {
-    let mut ui = Ui::new(semio_ui_locale::Locale::En);
+    let mut ui = UiFixture::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("panel", &stack_ui(vec![button_ui("one", "One"), button_ui("two", "Two")]));
     drive_layout(&mut ui, "panel", 300.0, 780.0, &mut atlas);
@@ -71,7 +71,7 @@ fn compact_tree_content_height_survives_presentation_and_viewport_changes() {
     for node in nodes {
         document.try_upsert_record(serde_json::from_value(node.clone()).expect("compact row record")).unwrap();
     }
-    let mut ui = Ui::new(semio_ui_locale::Locale::En);
+    let mut ui = UiFixture::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     assert!(ui.publish_document(surface, document));
     drive_scene_lifetime_reconcile(&mut ui, surface, 1);
@@ -118,7 +118,7 @@ fn intrinsic_content_height_cannot_leak_from_a_discarded_candidate() {
         }
         document
     };
-    let mut ui = Ui::new(semio_ui_locale::Locale::En);
+    let mut ui = UiFixture::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     assert!(ui.publish_document(surface, document(sequence[0]["generation"].as_u64().unwrap(), sequence[0]["presentation"].as_str().unwrap())));
     drive_scene_lifetime_reconcile(&mut ui, surface, 1);
@@ -151,7 +151,7 @@ fn retained_input_discard_projects_the_shared_draft_law_and_schedules_paint() {
         ]);
         let mut document = UiDocumentTree::new(UiDocumentLeaseHeader { generation:1, surface:SurfaceId::try_from(window.as_str()).unwrap(), revision:UiRevision(1), root:UiNodeId(0), layout_epoch:1, node_count:2 }).unwrap();
         for record in records.as_array().unwrap() { document.try_upsert_record(serde_json::from_value(record.clone()).unwrap()).unwrap(); }
-        let mut ui = Ui::new(semio_ui_locale::Locale::En);
+        let mut ui = UiFixture::new(semio_ui_locale::Locale::En);
         assert!(ui.publish_document(&window, document));
         drive_scene_lifetime_reconcile(&mut ui, &window, 1);
         acknowledge_scene_lifetime_candidate(&mut ui, &window, index as u64 + 1);
@@ -194,19 +194,20 @@ use semio_framework_job_worker_authority::{BatchJobParams,BatchDriveConfig};
  let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🔬️targets-wgpu-mounted-layout-unit/🧫️fixtures/🫴️receiving.json")).unwrap();
  for copy in law["admission"]["copies"].as_array().unwrap().iter().map(|row|row.as_u64().unwrap()as usize){
   let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:law["grant"]["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:law["grant"]["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:law["grant"]["maximumDepth"].as_u64().unwrap()as usize};
-  let((root,receipt),root_born,root_free)=measured(||semio_framework_job::CancelToken::admit_root(grant).unwrap().unwrap());assert!(receipt.fits(grant));assert_eq!((root_born,root_free),(receipt.retained_capacity_bytes,receipt.released_bytes));
+  let stock=RetainedCloneGrant{maximum_items:1_000_000,maximum_copy_bytes:67_108_864,maximum_capacity_bytes:67_108_864,maximum_release_bytes:67_108_864,maximum_depth:128};let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(OperationId(law["operation"].as_u64().unwrap()),Generation(law["generation"].as_u64().unwrap()),stock,||Some(1),u64::MAX,100_000_000);
+  let((root,receipt),root_born,root_free)=measured(||semio_framework_job::CancelToken::admit_root(grant).result.unwrap().unwrap());assert!(receipt.fits(grant));assert_eq!((root_born,root_free),(receipt.retained_capacity_bytes,receipt.released_bytes));
   let((mut original,pointer),born,free)=measured(||{let error=ValueError::new(ValueRefusalKind::InvariantViolated,"original owned layout refusal 雪🌊️");let pointer=error.message.as_ptr();let mut original=LayoutWorkerAdmission::default();*original.params=Some(BatchJobParams{operation:OperationId(law["operation"].as_u64().unwrap()),generation:Generation(law["admission"]["callerGeneration"].as_u64().unwrap()),cancel:root.clone(),config:BatchDriveConfig{retained:grant,site:"ui.layout-original-receipt",stage:InteractiveStage::UserVisibleSimStep,fuel_per_step:1,step_budget_us:1000},now_us:semio_framework_job::default_now_us});*original.failure=Some(error);(original,pointer)});
   let owned=born-free;let(mut births,mut releases,mut idle)=(0,0,0);
   for turn in 0..100000{
    if original.terminal_is_empty(){break}
-   let(step,born,free)=measured(||original.close_step(RetainedCloneGrant{maximum_items:0,..grant},Some(&root)).unwrap());assert_eq!(step,Some(Default::default()));assert_eq!((born,free),(0,0));
+   if let Ok((step,born,free))=caller.with_effect(RetainedCloneGrant{maximum_items:0,..grant},|effect|measured(||original.close_step(effect,Some(&root)).unwrap())){assert_eq!(step,Some(Default::default()));assert_eq!((born,free),(0,0));}
    if let Some(error)=original.failure.as_ref(){assert_eq!(error.message.as_ptr(),pointer)}
    if let Some(error)=original.failure_close.as_ref().and_then(|owner|owner.original()){assert_eq!(error.message.as_ptr(),pointer)}
    if let Some(cancel)=original.cancel.as_ref(){if !cancel.terminal_is_empty(){assert!(cancel.is_original_alias_witness(&root))}}
-   let(step,born,free)=measured(||original.close_step(grant,Some(&root)).unwrap());let receipt=step.expect("same borrowed root funds original alias return");assert!(receipt.fits(grant));assert_eq!((born,free),(receipt.retained_capacity_bytes,receipt.released_bytes));births+=born;releases+=free;if receipt==Default::default(){idle+=1}else{idle=0}assert!(idle<law["admission"]["maximumZeroTurns"].as_u64().unwrap()as usize,"original layout source stalled copy={copy} turn={turn}");
+   let(step,born,free)=caller.with_effect(grant,|effect|measured(||original.close_step(effect,Some(&root)).unwrap())).ok().expect("the original fixture funds the full layout admission grant");let receipt=step.expect("same borrowed root funds original alias return");assert!(receipt.fits(grant));assert_eq!((born,free),(receipt.retained_capacity_bytes,receipt.released_bytes));births+=born;releases+=free;if receipt==Default::default(){idle+=1}else{idle=0}assert!(idle<law["admission"]["maximumZeroTurns"].as_u64().unwrap()as usize,"original layout source stalled copy={copy} turn={turn}");
   }
   assert!(original.terminal_is_empty());assert_eq!(owned+births,releases);assert_eq!(measured(||drop(original)),((),0,0));assert!(!root.is_cancelled_now());
-  let mut root=semio_framework_async::CancelTokenRetirement::from_token(root);for _ in 0..1000{if root.terminal_is_empty(){break}let(step,born,free)=measured(||root.close_step(grant).unwrap());let receipt=step.progress();assert!(receipt.fits(grant));assert_eq!((born,free),(receipt.retained_capacity_bytes,receipt.released_bytes));births+=born;releases+=free;}assert!(root.terminal_is_empty());assert_eq!(root_born+owned+births,releases);assert_eq!(measured(||drop(root)),((),0,0));
+  let mut root=semio_framework_async::CancelTokenRetirement::from_token(root);for _ in 0..1000{if root.terminal_is_empty(){break}let(step,born,free)=caller.with_effect(grant,|effect|measured(||root.close_step(effect).result.unwrap())).ok().expect("the original fixture funds the root close grant");let receipt=step.progress();assert!(receipt.fits(grant));assert_eq!((born,free),(receipt.retained_capacity_bytes,receipt.released_bytes));births+=born;releases+=free;}assert!(root.terminal_is_empty());assert_eq!(root_born+owned+births,releases);assert_eq!(measured(||drop(root)),((),0,0));caller.retire(stock);
  }
 }
 
@@ -214,7 +215,7 @@ use semio_framework_job_worker_authority::{BatchJobParams,BatchDriveConfig};
 #[test]
 fn original_ui_worker_close_retains_whole_failure_and_original_cx(){
  let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🔬️targets-wgpu-mounted-layout-unit/🧫️fixtures/🧵️original-close.json")).unwrap();
- for copy in law["copyGrants"].as_array().unwrap(){let mut ui=Ui::new(semio_ui_locale::Locale::En);let id="original-worker-failure";let token=ui.try_admit_surface(id).unwrap();assert!(ui.begin_surface_close(token));let((failure,pointers),birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let primary=semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original UI worker cause 源");let receipt=semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"original separate UI receipt 源");let pointers=(primary.message.as_ptr(),receipt.message.as_ptr());({let original=semio_framework_job::OriginalTurnFailure::from(primary);semio_framework_job::OriginalTurnFailure{receipt_refusal:Some(receipt),context_refusal:None,..original}},pointers)});
+ for copy in law["copyGrants"].as_array().unwrap(){let mut ui=UiFixture::new(semio_ui_locale::Locale::En);let id="original-worker-failure";let token=ui.try_admit_surface(id).unwrap();assert!(ui.begin_surface_close(token));let((failure,pointers),birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let primary=semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original UI worker cause 源");let receipt=semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"original separate UI receipt 源");let pointers=(primary.message.as_ptr(),receipt.message.as_ptr());({let original=semio_framework_job::OriginalTurnFailure::from(primary);semio_framework_job::OriginalTurnFailure{receipt_refusal:Some(receipt),context_refusal:None,..original}},pointers)});
   let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||ui.windows.get_token_mut(token).unwrap().retain_layout_close_failure("Layout.CloseSession",failure));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let grant=semio_framework_job::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy.as_u64().unwrap()as usize,maximum_capacity_bytes:262144,maximum_release_bytes:262144,maximum_depth:128};let mut sequence=0;let cancel=semio_framework_job::root_cancel_token();
   for denial in law["denials"].as_array().unwrap(){let denial=denial.as_str().unwrap();let mut receipt=Default::default();let mut cx=semio_framework_job::StepContext::new(semio_framework_job::OperationId(17),semio_framework_job::Generation(9),semio_framework_job::StepBudget::new(if denial=="work"{0}else{1},if denial=="deadline"{0}else{12345},semio_framework_job::RetainedCloneGrant{maximum_items:usize::from(denial!="items"),..grant}),cancel.clone(),||Some(1),&mut sequence,&mut receipt);let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||ui.close_surface_one(token,&mut cx));assert!(matches!(result.unwrap(),UiSurfaceCloseStep::Pending));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(cx.retained_progress(),Default::default());let original=ui.layout_retirement_failure(id).unwrap();assert_eq!((original.primary_value().unwrap().message.as_ptr(),original.receipt_refusal.as_ref().unwrap().message.as_ptr()),pointers);}
   let(mut born,mut freed)=(birth.requested_bytes,birth.released_bytes);for turn in 0..100000{if !ui.layout_retirement_failure_pending(id){break}let mut receipt=Default::default();let mut cx=semio_framework_job::StepContext::new(semio_framework_job::OperationId(17),semio_framework_job::Generation(9),semio_framework_job::StepBudget::new(1,12345,grant),cancel.clone(),||Some(1),&mut sequence,&mut receipt);let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||ui.close_surface_one(token,&mut cx));assert!(matches!(result.unwrap(),UiSurfaceCloseStep::Pending));assert_eq!((heap.requested_bytes,heap.released_bytes),(cx.retained_progress().retained_capacity_bytes,cx.retained_progress().released_bytes));born+=heap.requested_bytes;freed+=heap.released_bytes;assert!(turn<99999)}assert_eq!(born,freed);assert!(!ui.layout_retirement_failure_pending(id));assert!(ui.layout_retirement_refusal(id).is_none());close_surface_to_terminal(&mut ui,token);

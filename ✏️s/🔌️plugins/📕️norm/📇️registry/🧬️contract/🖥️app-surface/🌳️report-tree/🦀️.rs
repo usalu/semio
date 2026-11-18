@@ -17,7 +17,7 @@ pub fn roster_example_snapshot<D: pack::snapshot::ArtifactDsl + Default>(example
     };
     D::parse_dsl(&example.document())
         .map(Some)
-        .map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("norm.set-active-example-invalid"), format!("example '{id}' does not parse: {error:?}")))
+        .map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("norm.editor.set-active-example-invalid"), format!("example '{id}' does not parse: {error:?}")))
 }
 //#endregion 🔖️Examples
 

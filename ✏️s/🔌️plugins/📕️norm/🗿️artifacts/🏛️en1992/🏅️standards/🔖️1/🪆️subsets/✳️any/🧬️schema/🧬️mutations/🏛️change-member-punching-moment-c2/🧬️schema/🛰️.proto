@@ -1,5 +1,5 @@
 syntax = "proto3";
-package semio.s.norm.en1992.mutation.change_member_punching_moment_c2;
+package semio.s.norm_eurocode_structural.en1992.mutation.change_member_punching_moment_c2;
 message ChangeMemberPunchingMomentC2 {
   string member_id = 1;
   double new_punching_moment_c2 = 2;

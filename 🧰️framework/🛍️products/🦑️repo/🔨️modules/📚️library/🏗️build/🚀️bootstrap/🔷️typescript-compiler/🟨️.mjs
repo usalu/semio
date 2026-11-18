@@ -15,7 +15,7 @@ const anchors = (options) => {
 };
 const refuse = (code, fields) => {
   const fill = (language) => TEXTS[language][code].replace(/\{(\w+)\}/gu, (_all, name) => String(name === "missing" ? fields.missing.join(", ") : fields[name] ?? "-"));
-  const refusal = Object.freeze({ code, retry: "never", wanted: fields.wanted, resolved: fields.resolved, found: fields.found, missing: fields.missing, tried: fields.tried, en: fill("en"), de: fill("de") });
+  const refusal = Object.freeze({ code, retry: "never", wanted: fields.wanted, resolved: fields.resolved, found: fields.found, missing: fields.missing, cause: fields.cause ?? null, tried: fields.tried, en: fill("en"), de: fill("de") });
   return refusal;
 };
 
@@ -56,7 +56,7 @@ export function typescriptCompilerFileV1(options) {
   return join(result.match[0].path, result.match[0].main);
 }
 
-/** 🔷️ Loads the TypeScript compiler API of the tooling: the exact version the parser package declares, from the install slot of the parser package or the direct dependency of the workspace root, never by the bare name; checks the version and the API the tooling uses and otherwise throws `TypescriptCompilerRefusalV1`. */
+/** 🔷️ Loads the TypeScript compiler API of the tooling: the exact version the parser package declares, from the install slot of the parser package or the direct dependency of the workspace root, never by the bare name; checks the version and the API the tooling uses and otherwise throws `TypescriptCompilerRefusalV1`; `options.load` answers the module of the declared slot in a process that loads only declared literal requests (a captured implementation), a load that throws is the refusal `typescript-compiler-load` naming the cause. */
 export function typescriptCompilerV1(options) {
   const result = plan(anchors(options));
   if (result.refusal !== undefined) throw new TypescriptCompilerRefusalV1(result.refusal);
@@ -64,11 +64,12 @@ export function typescriptCompilerV1(options) {
   for (const row of result.match) {
     const key = row.path + "\0" + result.wanted;
     if (loaded.has(key)) return loaded.get(key);
-    let compiler;
-    try { compiler = own(join(row.path, row.main)); } catch { compiler = undefined; }
-    const missing = compiler === undefined ? [...API.functions, ...API.objects] : missingApi(compiler);
+    let compiler, cause;
+    try { compiler = options?.load === undefined ? own(join(row.path, row.main)) : options.load(); } catch (error) { cause = String(error?.message ?? error).slice(0, 240); }
+    if (compiler === undefined || compiler === null) { first ??= refuse("typescript-compiler-load", { wanted: result.wanted, resolved: row.path, found: row.found, missing: [], cause: cause ?? "-", tried: result.tried }); continue; }
+    const missing = missingApi(compiler);
     if (missing.length === 0 && compiler.version === result.wanted) { loaded.set(key, compiler); return compiler; }
-    first ??= refuse("typescript-compiler-api", { wanted: result.wanted, resolved: row.path, found: compiler?.version ?? row.found, missing, tried: result.tried });
+    first ??= refuse("typescript-compiler-api", { wanted: result.wanted, resolved: row.path, found: compiler.version ?? row.found, missing, tried: result.tried });
   }
   throw new TypescriptCompilerRefusalV1(first);
 }

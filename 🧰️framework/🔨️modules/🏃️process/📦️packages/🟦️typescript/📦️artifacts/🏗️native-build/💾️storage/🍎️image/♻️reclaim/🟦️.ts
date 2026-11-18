@@ -1,0 +1,3 @@
+/** 🧩️ Public `@semio-tech/process/artifacts/native-build/storage/image/reclaim` entry: explicit re-exports of the source module that owns each member. */
+export { createNativeImageDarwinReclaimPortV1, createNativeImageLinuxReclaimPortV1, createNativeImageReclaimPortV1, createNativeImageWindowsReclaimPortV1, nativeImageReclaimDueV1, nativeImageReclaimMechanismV1, reclaimNativeImageV1 } from "../../../../../../../📦️artifacts/🏗️native-build/💾️storage/🍎️image/♻️reclaim/🟦️.ts";
+export type { NativeImageReclaimHooksV1, NativeImageReclaimOutcomeV1, NativeImageReclaimPortV1, NativeImageReclaimRuleV1 } from "../../../../../../../📦️artifacts/🏗️native-build/💾️storage/🍎️image/♻️reclaim/🟦️.ts";

@@ -64,7 +64,7 @@ export const panelTabButtonClass = cn(
   "inline-flex min-h-0 shrink-0 items-center gap-tiny bg-transparent p-0",
   panelTabButtonDividerClass,
   "cursor-pointer whitespace-nowrap text-xs leading-none text-element transition-colors",
-  "outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-active-base",
+  "outline-none",
   hoverExcludingHandleBgFillClass,
   hoverExcludingHandleTextEmphasizedClass,
 );

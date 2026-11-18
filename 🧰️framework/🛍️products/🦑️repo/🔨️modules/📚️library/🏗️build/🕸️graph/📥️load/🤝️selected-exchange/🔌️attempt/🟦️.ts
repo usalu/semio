@@ -7,7 +7,7 @@ import {graphFleetClientV1,type GraphFleetClientV1} from "../../../../🪪️gra
 import {graphFleetSettingsV1} from "../../../../🪪️graph-state/🧶️nx/🟦️.ts";
 import {remoteCacheFetchV1} from "../../../../🌐️remote-cache/🛰️fleet/🟦️.ts";
 import {createProjectFileIndexV1} from "../../../🧭️file-owner/🟨️.mjs";
-import {registerSliceReportSourceV1} from "../../../../🧠️memory/📋️slice-report/🟨️.mjs";
+import {registerSliceReportSourceV1,sliceReadStepV1,sliceReadActiveV1} from "../../../../🧠️memory/📋️slice-report/🟨️.mjs";
 import {SELECTED_EXCHANGE_TEXTS_V1,selectedGenerationV1,type SelectedAdmissionEntryV1,type SelectedSealedV1} from "../🟦️.ts";
 
 const sha=(text:string):string=>createHash("sha256").update(text).digest("hex");
@@ -62,7 +62,7 @@ export async function loadSelectedThroughFleetV1<G>(port:SelectedAttemptPortV1<G
    const graphTemp=port.path+"."+randomUUID(),receiptTemp=port.authorityPath+"."+randomUUID();
    try{await writeFile(graphTemp,plan.fetched.graph,{flag:"wx"});await writeFile(receiptTemp,authority,{flag:"wx"});await rename(graphTemp,port.path);await rename(receiptTemp,port.authorityPath);}finally{await Promise.all([rm(graphTemp,{force:true}),rm(receiptTemp,{force:true})]);}
   },
-  signal:port.signal,
+  signal:port.signal,alive:()=>sliceReadActiveV1(),step:sliceReadStepV1 as never,
   read:async()=>{ran=true;try{result=await port.attempt();}catch(error){failed=true;failure=error;throw error;}if(!port.sealed(result))return undefined;try{return await sealedOf();}catch{return undefined;}}
  }).catch(error=>{if(failed)throw failure;if(port.signal?.aborted)throw error;return undefined;});
  if(outcome!==undefined){

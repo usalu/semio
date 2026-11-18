@@ -256,3 +256,31 @@ fn tui_dispatch_emits_window_close_signal_on_click() {
     let signals = tui.dispatch(&Event::Mouse(MouseEvent { kind: MouseKind::Down(MouseButton::Left), pos: Pos { x: rect.x + close_x, y: rect.y + 1 }, mods: 0, clicks: 1 }));
     assert_eq!(signals, vec![(window_id, WidgetSignal::WindowClose(0))]);
 }
+
+/// 🫸️ The cell rule is the pixel rule of `bands.cases.json` at 8 px per cell, and no window width leaves a sliver gap between the title chip and the controls.
+#[test]
+fn window_cap_row_chips_abut_instead_of_leaving_a_sliver_gap() {
+    use semio_ui_tui_core::docking::WindowStackCorner;
+    use semio_ui_tui_frame::chrome::{chip_gap_cells_read_as_sliver, TabKind, CELL_WIDTH_PX};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧱️elements/🃏️CardStack/bands.cases.json")).unwrap();
+    for case in fixture["gaps"].as_array().unwrap() {
+        let px = case["gap"].as_f64().unwrap();
+        if px < 0.0 || px.fract() != 0.0 || px % f64::from(CELL_WIDTH_PX) != 0.0 { continue; }
+        assert_eq!(chip_gap_cells_read_as_sliver((px / f64::from(CELL_WIDTH_PX)) as u16), case["sliver"].as_bool().unwrap() && px > 0.0, "{case}");
+    }
+    let mut abutted = 0;
+    for width in 14..90u16 {
+        let rect = Rect::new(0, 0, width, 8);
+        let mut w = WindowState::new("Main").with_stack_tabs(vec!["tab1".into(), "tab2".into()], 0);
+        w.new_tab = true;
+        let layout = window_chip_layout(&w, rect);
+        let Some(left) = layout.groups.iter().find(|g| g.corner == WindowStackCorner::TopLeft) else { continue };
+        let Some(controls) = layout.groups.iter().flat_map(|g| g.tabs.iter()).find(|tab| tab.kind == TabKind::Controls) else { continue };
+        let last = left.tabs.last().unwrap();
+        let wall = last.x + last.interior_width + 1;
+        let gap = controls.x.saturating_sub(wall);
+        assert!(controls.x <= wall || !chip_gap_cells_read_as_sliver(gap), "width {width}: sliver of {gap} cells");
+        abutted += u32::from(controls.x == wall);
+    }
+    assert!(abutted > 0, "the sweep never abutted");
+}

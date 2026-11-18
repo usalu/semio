@@ -42,22 +42,22 @@ pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::Ar
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.architect.program.composer.zip")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.zip@2.0/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.zip@2.0/*")?)?,
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::composition_route(), "23:s.architect.program@1/*17:s.stdio.zip@2.0/*")?)?,
         )?
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.architect.program.composer.csv")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.csv@rfc4180/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.csv@rfc4180/*")?)?,
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::composition_route(), "23:s.architect.program@1/*21:s.stdio.csv@rfc4180/*")?)?,
         )?
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.architect.program.composer.xlsx")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.xlsx@ecma-376/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.xlsx@ecma-376/*")?)?,
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::composition_route(), "23:s.architect.program@1/*23:s.stdio.xlsx@ecma-376/*")?)?,
         )?
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.architect.program.composer.json")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.json@rfc8259/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.json@rfc8259/*")?)?,
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::composition_route(), "23:s.architect.program@1/*22:s.stdio.json@rfc8259/*")?)?,
         )?
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.architect.program.codec.document")?, ArtifactCapabilityKind::codec())

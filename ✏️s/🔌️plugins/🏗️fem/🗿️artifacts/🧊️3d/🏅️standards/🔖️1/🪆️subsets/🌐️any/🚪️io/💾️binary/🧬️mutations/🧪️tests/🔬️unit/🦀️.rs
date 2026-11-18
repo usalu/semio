@@ -27,10 +27,6 @@ fn cantilever_value() -> semio_s_artifact_fem_3d_model::standards::v1::subsets::
     }
 }
 
-fn cantilever_fixture() -> semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot {
-    semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot::from_reference(cantilever_value()).expect("fixture snapshot")
-}
-
 #[test]
 fn op_binary_round_trips_and_agrees_with_text() {
     let operation = Fem3dMutation::UpdateAnalysisSettings(semio_s_artifact_fem_3d_analysis::standards::v1::subsets::any::schema::mutations::update_analysis_settings::UpdateAnalysisSettings { settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } });
@@ -53,12 +49,11 @@ fn material_field_intent_binary_round_trips_and_agrees_with_text() {
 
 /// 🧬️ The whole-document mutation that used to seed this store round-trip test is
 /// banned outright (`📓️taxonomy.md`'s forbidden vocabulary — no replacement mutation). Builds the
-/// same `cantilever_fixture` content through a real sequence of semantic mutations instead, still
-/// exercising every collection kind (id-keyed create + a nested load) for the text/pack codecs.
+/// same `cantilever_value` content through a real sequence of semantic mutations instead, still
+/// exercising every collection kind (id-keyed create + a nested load) through the persistent snapshot.
 #[semio_framework_async_macros::async_test]
-async fn fem3d_document_text_round_trips_through_the_store() {
+async fn fem3d_mutations_apply_through_the_store() {
     let value = cantilever_value();
-    let fixture = cantilever_fixture();
     let mut store = ::semio_framework_async::poll::resolve_ready(crate::standards::v1::subsets::any::schema::mutations::Fem3dStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(create_document_envelope(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FEM_3D_SCHEMA, "fem3d", schema::empty_fem3d_snapshot(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid store");
     store.install_document_store_owners_exact(semio_os_kernel::os_store::document_store_owners::funded_bounded_artifact_store_owners::<semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot, Fem3dMutation>().expect("funded bounded document owners")).unwrap_or_else(|(error, _)| panic!("bounded document owners install refused: {error}"));
     let mutations = vec![
@@ -71,7 +66,7 @@ async fn fem3d_document_text_round_trips_through_the_store() {
         Fem3dMutation::CreateLoadCase(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::create_load_case::CreateLoadCase { load_case: value.load_cases[0].clone(), index: None }),
     ];
     store.dispatch(ArtifactCommand::Apply { mutations, transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
-    assert_eq!(store.snapshot().expect("snapshot"), fixture);
+    assert_eq!(store.snapshot().expect("snapshot").to_reference(), value);
     semio_os_kernel::os_store::test_support::assert_document_text_round_trip(&store).await;
     semio_os_kernel::os_store::test_support::assert_document_pack_round_trip(&store).await;
     store.close_owned_unscheduled().expect("fem3d document store closes through its exact bounded owners");

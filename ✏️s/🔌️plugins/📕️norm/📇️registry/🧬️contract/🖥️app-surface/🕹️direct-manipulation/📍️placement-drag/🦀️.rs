@@ -113,7 +113,7 @@ where
     M: protocol::Mutation<D> + protocol::ColdMutation<D> + semio_framework_value::retirement::RetireOwned,
     F: FnMut(&D, &NormEdit) -> Result<Vec<M>, String>,
 {
-    let mutations = resolve_placed_fields(document, writes, standing, resolve).map_err(|error| semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("norm.edit-unresolved"), error))?;
+    let mutations = resolve_placed_fields(document, writes, standing, resolve).map_err(|error| semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("norm.editor.edit-unresolved"), error))?;
     crate::commit_snapshot_fields(mutations)
 }
 

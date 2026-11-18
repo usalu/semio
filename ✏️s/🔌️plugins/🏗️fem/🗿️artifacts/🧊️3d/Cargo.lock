@@ -6926,6 +6926,7 @@ dependencies = [
  "semio-plugin-decl-tool-contract",
  "semio-plugin-ownership",
  "semio-plugin-retained-command",
+ "semio-ui-contract-values",
  "serde",
  "serde_json",
 ]
@@ -7888,9 +7889,11 @@ dependencies = [
 name = "semio-s-artifact-fem-3d"
 version = "0.1.0"
 dependencies = [
+ "semio-framework",
  "semio-framework-artifact-reference",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
+ "semio-framework-job",
  "semio-framework-pack",
  "semio-framework-schema-composition",
  "semio-framework-schema-registry",
@@ -7900,6 +7903,7 @@ dependencies = [
  "semio-framework-value-native-owned",
  "semio-os-kernel",
  "semio-plugin",
+ "semio-plugin-reactor-app",
  "semio-s-artifact-fem-2d-model",
  "semio-s-artifact-fem-3d-diff-document",
  "semio-s-artifact-fem-3d-editor",
@@ -8146,8 +8150,10 @@ name = "semio-s-artifact-fem-3d-editor-session"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-job",
  "semio-framework-job-payload",
+ "semio-framework-pack-json",
  "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-registry",
@@ -8164,6 +8170,7 @@ dependencies = [
  "semio-s-fem-app-surface",
  "semio-s-fem-mesh",
  "semio-s-fem-model",
+ "semio-s-fem-node",
  "semio-s-fem-sparse",
  "semio-s-fem-sparse-ldlt",
  "semio-s-fem-sparse-pcg",
@@ -8189,16 +8196,21 @@ name = "semio-s-artifact-fem-3d-editor-visual-job"
 version = "0.1.0"
 dependencies = [
  "semio-framework-job",
+ "semio-framework-job-payload",
+ "semio-framework-trace",
  "semio-framework-value",
  "semio-os-kernel",
  "semio-plugin",
+ "semio-s-artifact-fem-3d-engine",
  "semio-s-artifact-fem-3d-model",
  "semio-s-artifact-fem-3d-scene",
  "semio-s-fem-analyses-assembly",
  "semio-s-fem-analyses-model",
  "semio-s-fem-elements3d",
+ "semio-s-fem-material",
  "semio-s-fem-mesh",
  "semio-s-fem-model",
+ "semio-s-fem-node",
  "semio-s-fem-payload-turns",
  "semio-s-fem-sparse",
  "semio-s-fem-sparse-ldlt",
@@ -8206,6 +8218,7 @@ dependencies = [
  "semio-s-fem-sparse-subspace",
  "semio-s-fem-static",
  "semio-ui-scene",
+ "serde_json",
 ]
 
 [[package]]
@@ -8328,6 +8341,7 @@ dependencies = [
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
  "semio-framework-pack-json",
+ "semio-framework-test-fixtures",
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-framework-value-native-owned",
@@ -12916,6 +12930,7 @@ name = "semio-ui-contract-values"
 version = "0.1.0"
 dependencies = [
  "semio-framework-job",
+ "semio-framework-job-testing-caller",
  "semio-framework-value",
  "semio-framework-value-native-owned",
  "semio-framework-value-persistent",

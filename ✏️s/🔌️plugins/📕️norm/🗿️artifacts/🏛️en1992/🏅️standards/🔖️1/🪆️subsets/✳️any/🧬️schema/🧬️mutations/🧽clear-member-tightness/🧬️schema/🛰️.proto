@@ -1,5 +1,5 @@
 syntax = "proto3";
-package semio.s.norm.en1992.mutation.clear_member_tightness;
+package semio.s.norm_eurocode_structural.en1992.mutation.clear_member_tightness;
 message ClearMemberTightness {
   string member_id = 1;
 }

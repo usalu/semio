@@ -32,6 +32,10 @@ def plan(case):
         grew=False
         for pid,par in parent.items():
             if par in spared and pid not in spared:spared.add(pid);grew=True
+    for pid in case.get("spare",[]):
+        if pid in depth:
+            at=parent.get(pid);guard=0
+            while at is not None and at!=case["root"]["pid"] and guard<256:protected.add(at);at=parent.get(at);guard+=1
     members=[(pid,d) for pid,d in depth.items() if pid>P["reservedPids"] and pid not in protected and pid not in spared]
     return [pid for pid,d in sorted(members,key=lambda x:(-x[1],x[0]))]
 def cpu(case):

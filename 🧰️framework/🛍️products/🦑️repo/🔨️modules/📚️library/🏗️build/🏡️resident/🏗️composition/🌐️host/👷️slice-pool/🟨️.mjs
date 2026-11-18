@@ -103,7 +103,7 @@ export function createSlicePoolV1({workerUrl,maximum=2,heartbeatMilliseconds=200
     if(error?.restart!==true||signal?.aborted)throw error;
     totalRestarts++;
     const lasted=error.ranMilliseconds>=restartPolicy.progressMilliseconds;
-    const cause=String(error.workerCause??"");sameCause=!lasted&&cause!==""&&cause===lastCause?sameCause+1:cause!==""?1:0;lastCause=lasted?"":cause;
+    const cause=String(error.workerCause??"");sameCause=cause!==""&&cause===lastCause?sameCause+1:cause!==""?1:0;lastCause=cause;
     if(cause!==""&&sameCause>=(restartPolicy.sameCauseMaximum??Infinity))throw Object.assign(new Error(Object.values(renderBothV1("host-slice-worker-failing",{count:sameCause,exit:error.exit,cause})).join("\n")),{code:"slice-worker-failing",cause,count:sameCause,exit:error.exit});
     if(lasted){churnSince=undefined;streak=0;}
     churnSince??=now()-(error.ranMilliseconds??0);

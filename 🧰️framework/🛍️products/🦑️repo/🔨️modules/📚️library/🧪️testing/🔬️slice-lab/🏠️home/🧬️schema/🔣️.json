@@ -55,9 +55,9 @@
         },
         "primeTools": ["uv"],
         "warm": [
-          {"stage": "dependencies", "partition": "d", "items": [{"id": "bun-cache", "path": "bun-cache", "tools": []}]},
+          {"stage": "dependencies", "partition": "d", "items": [{"id": "bun-cache", "path": "bun-cache", "tools": [], "registryKeys": true}]},
           {"stage": "tools", "partition": "t", "items": [
-            {"id": "downloads", "path": "downloads", "tools": []},
+            {"id": "downloads", "path": "downloads", "tools": [], "registryKeys": true},
             {"id": "repo-watch", "path": "repo-watch", "tools": []},
             {"id": "bun", "path": "bun", "tools": ["bun"]},
             {"id": "go", "path": "native/go", "tools": ["go"]},

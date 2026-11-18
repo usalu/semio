@@ -322,7 +322,7 @@ protocol::list_delta! {
 #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
-#[artifact_schema(id = "s.norm.en1990")]
+#[artifact_schema(id = "s.norm-eurocode.en1990")]
 pub struct En1990Diff {
     #[state(artifact)]
     pub annex: Option<AnnexChoice>,

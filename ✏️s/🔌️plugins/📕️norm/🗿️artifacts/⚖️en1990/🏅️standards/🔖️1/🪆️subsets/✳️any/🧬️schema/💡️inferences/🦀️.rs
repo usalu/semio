@@ -17,7 +17,7 @@ use framework_schema::ArtifactSchema;
 #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.norm.en1990.inference")]
+#[artifact_schema(id = "s.norm-eurocode.en1990.inference")]
 pub struct En1990Inference {
     #[derived]
     pub outline: En1990Outline,
@@ -34,14 +34,14 @@ impl protocol::Inference<En1990Snapshot> for En1990Inference {
 
 impl protocol::InferenceSpec<En1990Snapshot> for En1990Inference {
     fn inference_schema_id() -> &'static str {
-        "s.norm.en1990.inference"
+        "s.norm-eurocode.en1990.inference"
     }
     fn schema_version() -> u32 {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec {
-            id: "s.norm.en1990.inference.outline",
+            id: "s.norm-eurocode.en1990.inference.outline",
             reads: &[
                 "annex",
                 "projectId",
@@ -76,10 +76,10 @@ impl protocol::InferenceSpec<En1990Snapshot> for En1990Inference {
 //#endregion 🔖️Inference
 
 //#region 🔖️Descriptor
-/// 💡️ Registers `s.norm.en1990.inference`'s facet leaves into the OS-wide inference catalog.
+/// 💡️ Registers `s.norm-eurocode.en1990.inference`'s facet leaves into the OS-wide inference catalog.
 pub fn en1990_artifact_inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {
     semio_framework_schema_registry::ArtifactInferenceDescriptor {
-        id: "s.norm.en1990.inference",
+        id: "s.norm-eurocode.en1990.inference",
         inference: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),

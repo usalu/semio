@@ -1,5 +1,5 @@
 {
-  "dialect": "s.norm.en1999@1/*",
+  "dialect": "s.norm-eurocode-materials.en1999@1/*",
   "snapshot": {
     "annex": "De",
     "reliabilityClass": "RC3",

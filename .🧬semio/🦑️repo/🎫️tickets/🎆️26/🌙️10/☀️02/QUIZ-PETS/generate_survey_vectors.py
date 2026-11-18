@@ -11,9 +11,11 @@ geometry is plain interval arithmetic. All boxes are multiples of 0.5 px, so eve
 point and the suite compares without a tolerance.
 
 The rules of work package N: everything is cut down to what its clipping ancestors let one see before it counts (a
-keep-out that is scrolled away blocks nothing); the visible box of every surface element is a keep-out of its own,
-grown by the keep-out margin to the left and the right only (pets stand on things, never in front of them or shoulder
-to shoulder with their sides — which also cuts the edge of a body where a tab stands on it);
+keep-out that is scrolled away blocks nothing); the visible box of every surface element that stands on the
+top edge of another one (its bottom on that edge, within its width: the tab on its body) or on the floor of the stage (the footer) is a keep-out of its own,
+grown by the keep-out margin to the left and the right only (pets stand on things, never in front of a part that stands
+on them — which cuts the edge of a body where a tab stands on it; a card that fills the cell above another one stands
+on nothing, its face is no solid, and what it shows is kept free by its own text and controls);
 and the margin of a keep-out never reaches over an edge the element lies under (text at the top of a body does not
 block the edge of that body), except for a focused surface, which keeps its whole halo.
 
@@ -38,7 +40,7 @@ import json
 import os
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "..", "..", ".."))
-OUT = os.path.join(ROOT, "🧰️framework", "🛍️products", "🐾️pets", "🧫️fixtures", "📡️surface-survey", "🔣️.json")
+OUT = os.path.join(ROOT, "🧰️framework", "🛍️products", "🐾️pets", "🧪️tests", "🧫️fixtures", "📡️surface-survey", "🔣️.json")
 
 SURFACE_WIDTH = 48
 KEEPOUT_MARGIN = 4
@@ -205,7 +207,7 @@ def expectation(scene, is_surface, is_keepout, is_wall=lambda item: False, is_pr
     grounds = set()
     carriers = set()
     surfaces = []
-    solids = []
+    parts = []
     lines = []
     for item, ancestors in walk(scene["nodes"]):
         if not is_surface(item) or unseen(item, ancestors):
@@ -215,11 +217,16 @@ def expectation(scene, is_surface, is_keepout, is_wall=lambda item: False, is_pr
         region = visible(item, ancestors)
         if region is None or staged(region, stage) is None:
             continue
-        solids.append({"x": region[0] - stage[0] - KEEPOUT_MARGIN, "y": region[1] - stage[1], "width": region[2] - region[0] + 2 * KEEPOUT_MARGIN, "height": region[3] - region[1]})
-        if region[1] > edges(item)[1] or region[2] - region[0] < SURFACE_WIDTH:
+        carries = not (region[1] > edges(item)[1] or region[2] - region[0] < SURFACE_WIDTH)
+        parts.append((region, carries))
+        if not carries:
             continue
         surfaces.append({"element": item["key"], "x0": region[0] - stage[0], "x1": region[2] - stage[0], "y": region[1] - stage[1]})
         lines.append({"x0": region[0], "x1": region[2], "y": region[1]})
+    solids = []
+    for region, _ in parts:
+        if abs(region[3] - stage[1] - stage[3]) <= 0.5 or any(carries and other is not region and abs(other[1] - region[3]) <= 0.5 and region[0] >= other[0] - 0.5 and region[2] <= other[2] + 0.5 for other, carries in parts):
+            solids.append({"x": region[0] - stage[0] - KEEPOUT_MARGIN, "y": region[1] - stage[1], "width": region[2] - region[0] + 2 * KEEPOUT_MARGIN, "height": region[3] - region[1]})
     surfaces.append({"element": "floor", "x0": 0, "x1": stage[2], "y": stage[3]})
     lines.append({"x0": stage[0], "x1": stage[0] + stage[2], "y": stage[1] + stage[3]})
     keepouts = []
@@ -439,7 +446,7 @@ SCENES = [
         frame=(0, 0, 0, 0),
     ),
     scene(
-        "a silhouette of parts: the tab and the body each carry pets, each part is solid, and what lies under an edge does not reach over it",
+        "a silhouette of parts: the tab and the body each carry pets, a part is solid where it stands on an edge, and what lies under an edge does not reach over it",
         [
             node("bar", "header", (0, 0, 1200, 30), {"data-bar": ""}, children=[
                 node("mark", "span", (4, 4, 22, 22)),

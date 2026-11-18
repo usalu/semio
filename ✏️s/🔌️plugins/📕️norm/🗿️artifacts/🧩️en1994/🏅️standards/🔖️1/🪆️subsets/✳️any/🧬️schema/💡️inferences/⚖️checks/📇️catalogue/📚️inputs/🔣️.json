@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemas.assets.semio-tech.com/s/norm/compliance/design-case/schema.json",
-  "artifact": "s.norm.en1994",
+  "artifact": "s.norm-eurocode-structural.en1994",
   "inputs": [
     {
       "key": "d_stud",

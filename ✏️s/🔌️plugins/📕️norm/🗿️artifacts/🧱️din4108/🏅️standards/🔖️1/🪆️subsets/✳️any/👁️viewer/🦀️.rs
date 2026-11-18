@@ -33,7 +33,7 @@ semio_s_plugin_norm_app_surface::norm_viewer_commands!(semio_s_artifact_norm_din
 
 semio_s_plugin_norm_app_surface::norm_owned_view_tool_job_factory!(Din4108ViewBoundedCommandJobFactory, Din4108Viewer);
 
-semio_s_plugin_norm_app_surface::norm_viewer_surface!(Din4108Viewer, Din4108ViewCommand, variant = "din4108", report = |d: &Din4108Snapshot| semio_s_plugin_norm_app_surface::paint_report::<Din4108ViewFamily>(d), scene = |d: &Din4108Snapshot, r: &semio_s_plugin_norm_app_surface::NormViewReport, _| semio_s_artifact_norm_din4108_scene::live_scene_of(d, r), diagrams = |d: &Din4108Snapshot, r: &semio_s_plugin_norm_app_surface::NormViewReport, focus: Option<&str>| semio_s_plugin_norm_structural_scene::projection::memo_diagrams("din4108", d, r, focus.unwrap_or("\u{0}"), || semio_s_artifact_norm_din4108_scene::diagrams(d, r, focus)).to_vec());
+semio_s_plugin_norm_app_surface::norm_viewer_surface!(Din4108Viewer, Din4108ViewCommand, owner = "norm", variant = "din4108", report = |d: &Din4108Snapshot| semio_s_plugin_norm_app_surface::paint_report::<Din4108ViewFamily>(d), scene = |d: &Din4108Snapshot, r: &semio_s_plugin_norm_app_surface::NormViewReport, _| semio_s_artifact_norm_din4108_scene::live_scene_of(d, r), diagrams = |d: &Din4108Snapshot, r: &semio_s_plugin_norm_app_surface::NormViewReport, focus: Option<&str>| semio_s_plugin_norm_structural_scene::projection::memo_diagrams("din4108", d, r, focus.unwrap_or("\u{0}"), || semio_s_artifact_norm_din4108_scene::diagrams(d, r, focus)).to_vec());
 //#endregion 🔖️Command
 
 //#region 🧩️ViewFamily
@@ -184,6 +184,7 @@ pub fn create_din4108_viewer() -> semio_plugin::AppDefinition {
     Viewer::builder(DIN4108_DIALECT)
         .document(["semio", "norm", "din4108"])
         .interaction(semio_s_plugin_norm_app_surface::viewer_interaction_definition("din4108"))
+        .utility(semio_s_plugin_norm_app_surface::transform_utility_definition())
         .icon_id("check-circle")
         .mode_def(view::definition())
         .default_mode_id(semio_s_plugin_norm_app_surface::MODE_VIEW)

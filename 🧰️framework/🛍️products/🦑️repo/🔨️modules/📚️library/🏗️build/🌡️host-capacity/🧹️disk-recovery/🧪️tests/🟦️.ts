@@ -40,7 +40,7 @@ test("the registry is closed: unique ids and priorities, a command and a bound i
  expect(priority("leaked-images")).toBeLessThan(priority("cas-lru"));
  expect(priority("cas-lru")).toBeLessThan(priority("replica-lost"));
  expect(priority("replica-lost")).toBeLessThan(priority("image-slack"));
- for(const item of rows)expect(item.command.startsWith("repo ")||item.command.startsWith("hdiutil ")).toBe(true);
+ for(const item of rows)expect(item.command.startsWith("repo ")||item.command.startsWith("hdiutil ")||item.command.startsWith("cd ")).toBe(true);
  expect(()=>requireDiskWritersV1([row("a",1),row("a",2)])).toThrow();
  expect(()=>requireDiskWritersV1([row("a",1,{collector:"manual"}),row("b",2)])).toThrow();
 });
@@ -50,7 +50,7 @@ test("every command the registry names is a command that exists: a cache area th
  for(const item of DISK_WRITERS_V1){
   const named=/--area=([a-z0-9,-]+)/u.exec(item.command)?.[1];
   if(named)for(const id of named.split(","))expect(areas.has(id)).toBe(true);
-  expect(["repo cache gc","repo cache cas gc","repo doctor --fix --only=host"].some(command=>item.command.startsWith(command))||item.collector==="manual").toBe(true);
+  expect(["repo cache gc","repo cache cas gc","repo doctor --fix --only=host"].some(command=>item.command.startsWith(command))||["manual","image-reset","store-compaction"].includes(item.collector)).toBe(true);
  }
 });
 

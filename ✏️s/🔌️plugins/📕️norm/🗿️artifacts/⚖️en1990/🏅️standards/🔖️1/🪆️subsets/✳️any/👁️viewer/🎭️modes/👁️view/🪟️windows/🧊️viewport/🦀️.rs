@@ -9,7 +9,7 @@ use semio_s_plugin_norm_app_surface::{interaction_domain_id, view_options_of};
 
 //#region 🔖️Constants
 pub const WINDOW_VIEWPORT: &str = "norm-en1990-viewport";
-pub const CONTROLLER: &str = "s.norm.en1990@1/*#viewer";
+pub const CONTROLLER: &str = "s.norm-eurocode.en1990@1/*#viewer";
 pub const BODY_VIEWPORT: &str = "norm.en1990.view.viewport";
 //#endregion 🔖️Constants
 

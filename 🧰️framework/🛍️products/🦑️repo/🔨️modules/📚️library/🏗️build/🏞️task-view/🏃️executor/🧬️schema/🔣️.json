@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schemas/build/task-view-executor.schema.json",
+  "title": "Task view executor",
+  "description": "How a task runs on a pinned view of its inputs: the bounds of re-pinning after a moved input and of a rerun after an in-place edit, and the texts of what happens. / Wie eine Aufgabe auf einer fixierten Sicht ihrer Eingaben läuft.",
+  "definitions": {
+    "Policy": {
+      "const": { "version": 1, "maximumPins": 4, "maximumReruns": 1 },
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "maximumPins", "maximumReruns"],
+      "properties": {
+        "version": { "const": 1 },
+        "maximumPins": { "type": "integer", "minimum": 1, "maximum": 8 },
+        "maximumReruns": { "type": "integer", "minimum": 0, "maximum": 3 }
+      }
+    },
+    "Texts": {
+      "const": {
+        "en": {
+          "repinned": "The inputs of the task changed while they were pinned (attempt {attempt} of {maximum}, first {first}). They are hashed and pinned again.",
+          "pinsExhausted": "The inputs of the task kept changing in all {maximum} attempts to pin them. The task runs on the live tree and is checked and rerun if it changes.",
+          "refused": "The task runs on the live tree: {reason}",
+          "rerun": "A file of the view was edited in place while the task ran ({first}). The task is run again on a new view (rerun {rerun} of {maximum}).",
+          "rerunsExhausted": "The view of the task kept changing in all {maximum} reruns.",
+          "outputInside": "The output directory {path} lies inside the view {root}: outputs belong to their declared locations."
+        },
+        "de": {
+          "repinned": "Die Eingaben der Aufgabe haben sich während der Fixierung geändert (Versuch {attempt} von {maximum}, zuerst {first}). Sie werden erneut gehasht und fixiert.",
+          "pinsExhausted": "Die Eingaben der Aufgabe änderten sich in allen {maximum} Fixierungsversuchen. Die Aufgabe läuft auf dem lebenden Baum und wird bei einer Änderung geprüft und neu gestartet.",
+          "refused": "Die Aufgabe läuft auf dem lebenden Baum: {reason}",
+          "rerun": "Eine Datei der Sicht wurde während der Aufgabe an Ort und Stelle bearbeitet ({first}). Die Aufgabe läuft erneut auf einer neuen Sicht (Wiederholung {rerun} von {maximum}).",
+          "rerunsExhausted": "Die Sicht der Aufgabe änderte sich in allen {maximum} Wiederholungen.",
+          "outputInside": "Das Ausgabeverzeichnis {path} liegt innerhalb der Sicht {root}: Ausgaben gehören an ihre erklärten Orte."
+        }
+      },
+      "type": "object",
+      "required": ["en", "de"]
+    }
+  }
+}

@@ -318,7 +318,7 @@ impl DrawList {
         if self.layers.is_empty() {
             self.layers.try_push(DrawLayer::default()).map_err(|_| RetainedOutputError::Allocation)?;
         }
-        let border_limit = self.shared_borders.len().checked_add(items).ok_or(RetainedOutputError::Capacity)?;
+        let border_limit = self.shared_borders.whole_page_capacity(self.shared_borders.len().checked_add(items).ok_or(RetainedOutputError::Capacity)?);
         while self.shared_borders.capacity() < border_limit {
             let bytes = self.shared_borders.next_capacity_allocation_bytes(border_limit).map_err(|_| RetainedOutputError::Capacity)?.ok_or(RetainedOutputError::Capacity)?;
             self.shared_borders.reserve_exact_capacity_one_cold(border_limit, bytes).map_err(|_| RetainedOutputError::Allocation)?;
@@ -341,12 +341,12 @@ impl DrawList {
             return Err(RetainedOutputError::AlreadyActive);
         }
         self.try_reserve_retained_items(item_limit)?;
-        let layer_limit = self.layers.len().checked_add(item_limit).ok_or(RetainedOutputError::Capacity)?;
+        let layer_limit = self.layers.whole_page_capacity(self.layers.len().checked_add(item_limit).ok_or(RetainedOutputError::Capacity)?);
         while self.layers.capacity() < layer_limit {
             let bytes = self.layers.next_capacity_allocation_bytes(layer_limit).map_err(|_| RetainedOutputError::Capacity)?.ok_or(RetainedOutputError::Capacity)?;
             self.layers.reserve_exact_capacity_one_cold(layer_limit, bytes).map_err(|_| RetainedOutputError::Allocation)?;
         }
-        let glass_limit = self.glass_regions.len().checked_add(item_limit).ok_or(RetainedOutputError::Capacity)?;
+        let glass_limit = self.glass_regions.whole_page_capacity(self.glass_regions.len().checked_add(item_limit).ok_or(RetainedOutputError::Capacity)?);
         while self.glass_regions.capacity() < glass_limit {
             let bytes = self.glass_regions.next_capacity_allocation_bytes(glass_limit).map_err(|_| RetainedOutputError::Capacity)?.ok_or(RetainedOutputError::Capacity)?;
             self.glass_regions.reserve_exact_capacity_one_cold(glass_limit, bytes).map_err(|_| RetainedOutputError::Allocation)?;

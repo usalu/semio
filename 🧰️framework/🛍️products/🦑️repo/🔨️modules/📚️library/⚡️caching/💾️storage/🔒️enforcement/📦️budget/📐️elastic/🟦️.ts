@@ -1,5 +1,6 @@
 import {mkdirSync,readFileSync,writeFileSync} from "node:fs";
 import {basename,dirname,join} from "node:path";
+import {nativeImageReclaimDueV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/♻️reclaim/🟦️.ts";
 import {nativeFreeSpaceSyncV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 
 /** 🔄️ The partitions whose image is sized elastically when it is created (`elastic` of the policy). */
@@ -50,8 +51,7 @@ export function pinnedCapacityV1(directory:string,declaredBytes:number):number{
  return typeof receipt==="number"&&receipt<=declaredBytes?receipt:declaredBytes;
 }
 
-/** 🧲️ Whether a raw fixed image holds host blocks it no longer uses: freed blocks inside an image are never returned to the host, so the host allocation is compared with the bytes used inside (at least the ratio and at least the floor, an eighth of the floor while the host volume is nearly full). */
-export function elasticBloatedV1(rule:ElasticRuleV1,allocatedBytes:number,usedBytes:number,hostFreeBytes:number):boolean{
- const floor=hostFreeBytes<rule.reclaimTightHostFreeBytes?Math.floor(rule.reclaimFloorBytes/8):rule.reclaimFloorBytes;
- return allocatedBytes-usedBytes>=floor&&allocatedBytes*100>=usedBytes*rule.reclaimRatioPercent;
+/** 🧲️ Whether an image holds host blocks it no longer uses: the host allocation is compared with the bytes used inside (at least the ratio and at least the floor, an eighth of the floor while the host volume is nearly full). The decision is the framework's `nativeImageReclaimDueV1`; the rule only carries the three numbers. */
+export function elasticBloatedV1(rule:Pick<ElasticRuleV1,"reclaimFloorBytes"|"reclaimRatioPercent"|"reclaimTightHostFreeBytes">,allocatedBytes:number,usedBytes:number,hostFreeBytes:number):boolean{
+ return nativeImageReclaimDueV1(rule,allocatedBytes,usedBytes,hostFreeBytes);
 }

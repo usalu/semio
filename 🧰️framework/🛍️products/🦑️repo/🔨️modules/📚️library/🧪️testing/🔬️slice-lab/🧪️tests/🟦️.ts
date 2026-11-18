@@ -1,14 +1,26 @@
 import {describe,expect,test} from "bun:test";
 import {join} from "node:path";
-import {mkdirSync,mkdtempSync,rmSync,utimesSync,writeFileSync} from "node:fs";
+import {createRequire} from "node:module";
+import {existsSync,lstatSync,mkdirSync,mkdtempSync,readdirSync,realpathSync,rmSync,symlinkSync,utimesSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
-import {SLICE_LAB_POLICY_V1 as P,readSliceLabOptionsV1,sliceLabEnvironmentV1,sliceLabImagesV1,sliceLabActivityV1,sliceLabLimitMegabytesV1,sliceLabLiveFilesV1,sliceLabDuplicatesV1,sliceLabFleetSummaryV1,treeChurnV1,sliceLabPhaseV1,sliceLabPlansV1,sliceLabProcessRowsV1,sliceLabReportV1,sliceLabStagesV1,sliceLabTextV1,sliceLabVerdictV1,type SliceLabSampleV1} from "../🟦️.ts";
+import {SLICE_LAB_POLICY_V1 as P,readSliceLabOptionsV1,sliceLabEnvironmentV1,sliceLabNxLinkV1,sliceLabWatcherPidsV1,sliceLabImagesV1,sliceLabActivityV1,sliceLabDiskPreflightV1,sliceLabLimitMegabytesV1,sliceLabLiveFilesV1,sliceLabDuplicatesV1,sliceLabFleetSummaryV1,treeChurnV1,sliceLabPhaseV1,sliceLabPlansV1,sliceLabProcessRowsV1,sliceLabReportV1,sliceLabStagesV1,sliceLabTextV1,sliceLabVerdictV1,type SliceLabSampleV1} from "../🟦️.ts";
+import budget from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
+import {machinePathV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {hostProfileV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🪞️profile/🟦️.ts";
 
 /** 🔬️ The slice lab: options are closed, the stage plan replaces only what provisions tools, the environment of a machine declares its state root and its host, the verdict names the wall, the process table and the image table are read from their text. */
 const options=readSliceLabOptionsV1({machines:2,memoryMegabytes:8192,cores:4,slice:["a","b"],timeoutSeconds:60});
 const sample=(patch:Partial<SliceLabSampleV1>={}):SliceLabSampleV1=>({atSeconds:2,machine:"m1",stage:"workspace",state:"running",phase:"taking",done:3,total:40,owners:{},processes:4,busy:2,footprintMegabytes:900,cpu:100,loopLagMs:null,activity:"-",...patch});
 describe("slice lab",()=>{
+ test("a lab starts only on a volume that can carry the fixed rust image and its own footprint",()=>{
+  const gib=1073741824;
+  expect(P.minimumFreeBytes).toBeGreaterThanOrEqual(budget.elastic.rust.minimumBytes+8*gib);
+  expect(sliceLabDiskPreflightV1(P.minimumFreeBytes)).toMatchObject({ok:true,needBytes:P.minimumFreeBytes});
+  expect(sliceLabDiskPreflightV1(P.minimumFreeBytes-1).ok).toBe(false);
+  expect(sliceLabDiskPreflightV1(31.4*gib).ok).toBe(false);
+  expect(sliceLabTextV1("en","disk",{path:"/tmp",free:31,need:40})).toContain("31 GiB free");
+  expect(sliceLabTextV1("de","disk",{path:"/tmp",free:31,need:40})).toContain("31 GiB frei");
+ });
  test("options are closed",()=>{
   expect(()=>readSliceLabOptionsV1({...options,machines:9})).toThrow();
   expect(()=>readSliceLabOptionsV1({...options,memoryMegabytes:12000})).toThrow();
@@ -122,5 +134,56 @@ describe("slice lab",()=>{
    writeFileSync(join(root,"🧰️framework","node_modules","dep.js"),"3");utimesSync(join(root,"🧰️framework","node_modules","dep.js"),future,future);
    expect(treeChurnV1(root,marker)).toEqual({count:1,sample:[join("🧰️framework","a","new.ts")]});
   }finally{rmSync(root,{recursive:true,force:true});}
+ });
+});
+
+const nxInstallationDirectoryModule=():{getNxInstallationPath:(root:string)=>string}|undefined=>{
+ for(let directory=import.meta.dir;directory!==join(directory,"..");directory=join(directory,"..")){
+  const store=join(directory,".cache","b","t","m","nx");
+  if(!existsSync(store))continue;
+  for(const digest of readdirSync(store)){const file=join(store,digest,"node_modules","nx","dist","src","utils","installation-directory.js");if(existsSync(file))return createRequire(import.meta.url)(file);}
+ }
+ return undefined;
+};
+describe("slice lab: a checkout of its own for every machine",()=>{
+ test("with own checkouts every machine has its root below its directory and its declared state beside it; without them all share the root",()=>{
+  const shared=sliceLabPlansV1(options,"ab12","/tmp/work","/checkout"),own=sliceLabPlansV1(options,"ab12","/tmp/work","/checkout",true);
+  expect(shared.map(plan=>plan.root)).toEqual(["/checkout","/checkout"]);
+  expect(own.map(plan=>plan.root)).toEqual([join("/tmp/work","m1","r"),join("/tmp/work","m2","r")]);
+  expect(own.map(plan=>plan.state)).toEqual(shared.map(plan=>plan.state));
+  expect(new Set(own.map(plan=>plan.root)).size).toBe(2);
+ });
+ test("the .nx of a checkout reaches the state the build keeps it in: the installation link the build publishes is found where the Nx client looks (the Nx package itself as the independent check)",()=>{
+  const work=realpathSync(mkdtempSync(join(tmpdir(),"slab-nx-"))),[plan]=sliceLabPlansV1({...options,machines:1},"ab12",work,work,true),before=process.env.SEMIO_MACHINE_STATE_DIRECTORY;
+  try{
+   mkdirSync(plan!.root,{recursive:true});
+   expect(sliceLabNxLinkV1(plan!)).toBe(true);
+   expect(lstatSync(join(plan!.root,".nx")).isSymbolicLink()).toBe(true);
+   expect(sliceLabNxLinkV1(plan!)).toBe(false);
+   process.env.SEMIO_MACHINE_STATE_DIRECTORY=plan!.state;
+   const published=machinePathV1(plan!.root,".nx","installation"),generation=join(work,"generation");
+   expect(published).toBe(join(plan!.state,"nx","installation"));
+   mkdirSync(generation);symlinkSync(generation,published);
+   expect(realpathSync(join(plan!.root,".nx","installation"))).toBe(generation);
+   const nx=nxInstallationDirectoryModule();
+   if(nx!==undefined)expect(realpathSync(nx.getNxInstallationPath(plan!.root))).toBe(generation);
+  }finally{if(before===undefined)delete process.env.SEMIO_MACHINE_STATE_DIRECTORY;else process.env.SEMIO_MACHINE_STATE_DIRECTORY=before;rmSync(work,{recursive:true,force:true});}
+ });
+ test("a checkout that has its own .nx keeps it",()=>{
+  const work=realpathSync(mkdtempSync(join(tmpdir(),"slab-nx2-"))),[plan]=sliceLabPlansV1({...options,machines:1},"ab12",work,work,true);
+  try{mkdirSync(join(plan!.root,".nx"),{recursive:true});expect(sliceLabNxLinkV1(plan!)).toBe(false);expect(lstatSync(join(plan!.root,".nx")).isDirectory()).toBe(true);}
+  finally{rmSync(work,{recursive:true,force:true});}
+ });
+ test("the resident watchers of a lab are the watcher processes below its work directory and nothing else",()=>{
+  const work="/private/tmp/slw-ab12",table=[
+   "  101 /private/tmp/slw-ab12/m1/s/b/t/m/repo-watch/3c3435d32d55ecac/semio-repo-watch serve",
+   "  102 /Users/me/Documents/semio/.cache/b/t/m/repo-watch/3c3435d32d55ecac/semio-repo-watch serve",
+   "  103 /private/tmp/slw-ab123/m1/s/b/t/m/repo-watch/x/semio-repo-watch serve",
+   "  104 /private/tmp/slw-ab12/m2/s/b/t/m/repo-watch/y/semio-repo-watch serve",
+   "  105 /private/tmp/slw-ab12/m1/r/bun run semio-repo-watch-notes",
+   "  106 /bin/zsh -c cd /private/tmp/slw-ab12/m1 && /private/tmp/slw-ab12/m1/semio-repo-watch serve"
+  ].join("\n");
+  expect(sliceLabWatcherPidsV1(table,work)).toEqual([101,104]);
+  expect(sliceLabWatcherPidsV1("",work)).toEqual([]);
  });
 });

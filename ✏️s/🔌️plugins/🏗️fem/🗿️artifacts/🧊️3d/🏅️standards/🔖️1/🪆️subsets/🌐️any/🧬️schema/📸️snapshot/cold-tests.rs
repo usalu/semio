@@ -25,7 +25,7 @@ fn cold_builder_crosses_page_boundaries_and_retires_its_roots(){
   value.nodes=(0..count).map(|i|FemNodeValue{id:format!("n{i}"),x:1.,y:2.,z:3.,}).collect();
   let snapshot=Fem3dSnapshot::from_reference(value).unwrap();
   assert_eq!(snapshot.nodes.len(),count);
-  if count>0{assert_eq!(snapshot.nodes.get(count-1).unwrap().id.as_str(),format!("n{}",count-1));}
+  if count>0{assert_eq!(snapshot.nodes.get().get(count-1).unwrap().id.as_str(),format!("n{}",count-1));}
   <Fem3dSnapshot as semio_framework_value::FromValue>::retire_decoded(snapshot);
  }
 }

@@ -40,7 +40,6 @@ impl ArtifactPack for NoConfig {
  fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{let(envelope,body)=store::semio_format::unwrap_binary(bytes).map_err(|e|store::PackError::from(e.into_value_error()))?;if !envelope.matches_identity(Self::__DSL_ENVELOPE_ID,store::semio_format::Component::Pack,1){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"empty lane Pack envelope differs").into())}let(record,_)=store::pack_rt::decode_document(&body,&Self::__dsl_spec(),options)?;Self::__dsl_from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)}
  fn record_spec()->Option<semio_framework_dsl_record::RecordSpec>{Some(Self::__dsl_spec())}
  fn record_spec_producer()->Option<store::RecordSpecProducer>{Some(Self::__artifact_record_spec_producer())}
- fn borrowed_record_spec_producer()->Option<store::BorrowedRecordSpecProducer>{Some(Self::__artifact_borrowed_record_spec_producer())}
 }
 impl store::os_store::codec_registry::native_snapshot::OriginalArtifactPackReceiving for NoConfig{
  type Receiving=store::os_store::codec_registry::native_snapshot::OriginalSnapshotRecordReceiving<Self>;

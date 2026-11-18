@@ -10,7 +10,7 @@ import schema from"../🧬️schema/🔣️.json"with{type:"json"};
 import fixture from"./🔣️.json"with{type:"json"};
 import{nativeImageVolumeBytesV1}from"../../📏️capacity/🟦️.ts";
 import{createNativeImageVolumeSilenceSeedV1,nativeImageSeededCreateArgumentsV1}from"../../🤫️silence/🟦️.ts";
-import{nativeImageAttachArgumentsV1}from"../../👤️owners/🟦️.ts";
+import{nativeImageAttachArgumentsV1,nativeImageAttachProgramV1}from"../../👤️owners/🟦️.ts";
 import{nativeImageHdiutilProgramV1}from"../../🛠️hdiutil/🟦️.ts";
 import{nativeImageBackingAllocatedBytesV1}from"../../../🪶️extent/🟦️.ts";
 import catalog from"../../../../../../📖️texts/🔣️.json"with{type:"json"};
@@ -45,11 +45,11 @@ test.skipIf(process.platform!=="darwin")("a real sparse image costs its content,
    const file=lstatSync(image);expect(file.isFile()&&file.nlink===1).toBe(true);expect(file.size).toBe(row.backingBytes);
    expect(file.blocks*512).toBeLessThan(fixture.initialAllocatedLimitBytes);expect(nativeImageBackingAllocatedBytesV1(file)).toBe(row.backingBytes);
    const du=Number(run("/usr/bin/du",["-k",image]).split(/\s/u)[0])*1024;expect(du).toBe(file.blocks*512);
-   run(nativeImageHdiutilProgramV1,nativeImageAttachArgumentsV1(root,image));
+   run(nativeImageAttachProgramV1,nativeImageAttachArgumentsV1(root,image));
    try{
     const fs=statfsSync(root);expect(fs.blocks*fs.bsize).toBe(row.volumeBytes);
     const payload=row.imageBytes>=512*MiB?192*MiB:8*MiB,result=oracle(root,join(root,"probe"),payload);expect(result.swap).toBe(0);expect(result.after).toEqual([["y"],["x"]]);expect(result.caseDistinct).toEqual(["Case","case"]);expect(result.volumeBytes).toBe(row.volumeBytes);
-    const grown=lstatSync(image);expect(grown.size).toBe(row.backingBytes);expect(grown.ino).toBe(file.ino);expect(grown.blocks*512).toBeGreaterThanOrEqual(file.blocks*512);expect(grown.blocks*512).toBeLessThan(file.blocks*512+payload+64*MiB);if(payload>MiB*100)expect(grown.blocks*512).toBeGreaterThanOrEqual(file.blocks*512+100*MiB);
+    const grown=lstatSync(image);expect(grown.size).toBe(row.backingBytes);expect(grown.ino).toBe(file.ino);expect(grown.blocks*512).toBeLessThan(file.blocks*512+payload+64*MiB);if(payload>MiB*100)expect(grown.blocks*512).toBeGreaterThanOrEqual(100*MiB);
    }finally{run(nativeImageHdiutilProgramV1,["detach",root]);}
    expect(lstatSync(image).ino).toBe(file.ino);rmSync(image);
   }
@@ -79,7 +79,7 @@ test.skipIf(process.platform!=="darwin")("blocks freed inside a raw fixed image 
  const make=(name:string)=>{const image=join(directory,name);run(nativeImageHdiutilProgramV1,nativeImageSeededCreateArgumentsV1(2*GiB,image,seed.directory));run(nativeImageHdiutilProgramV1,nativeImageSparseGrowArgumentsV1(2*GiB,image)!);return image;};
  const allocated=(image:string)=>lstatSync(image).blocks*512;
  try{
-  const first=make("first.dmg");mkdirSync(mount);run(nativeImageHdiutilProgramV1,nativeImageAttachArgumentsV1(mount,first));
+  const first=make("first.dmg");mkdirSync(mount);run(nativeImageAttachProgramV1,nativeImageAttachArgumentsV1(mount,first));
   try{
    run("/bin/dd",["if=/dev/urandom","of="+join(mount,"big"),"bs=1m","count=400"]);run("/bin/sync",[]);
    const written=allocated(first);expect(written).toBeGreaterThan(350*MiB);

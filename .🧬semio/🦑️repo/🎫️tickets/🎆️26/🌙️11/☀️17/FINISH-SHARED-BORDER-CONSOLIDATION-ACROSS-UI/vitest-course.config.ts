@@ -9,6 +9,7 @@ export default defineConfig({
   root: product,
   test: {
     include: ["🧪️tests/*/🟦️.tsx", "🎯️targets/⚛️react/🧪️tests/📚️course-shell/🟦️.tsx"],
+    exclude: ["**/node_modules/**", "**/*-kit/**"],
     environment: "jsdom",
     css: { include: [/🎨️\.css(?:\?|$)/u] },
     setupFiles: [resolve(repo, "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧹️react-environment/🟦️.ts"), resolve(product, "🧪️tests/🌐️preloaded-locales/🟦️.ts")],

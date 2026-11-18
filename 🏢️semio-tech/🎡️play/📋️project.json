@@ -45,6 +45,8 @@
         "@semio-tech/framework-os-dev:prepare-din4108-react-prototype",
         "@semio-tech/framework-os-dev:prepare-en1990-react-prototype",
         "@semio-tech/framework-os-dev:prepare-en1992-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-din18599-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-en1995-react-prototype",
         "@semio-tech/framework-os-dev:prepare-note-react-prototype",
         "@semio-tech/framework-os-dev:prepare-writer-react-prototype",
         "@semio-tech/framework-os-dev:prepare-forms-react-prototype",
@@ -117,6 +119,8 @@
         "@semio-tech/framework-os-dev:activate-din4108-react-prototype",
         "@semio-tech/framework-os-dev:activate-en1990-react-prototype",
         "@semio-tech/framework-os-dev:activate-en1992-react-prototype",
+        "@semio-tech/framework-os-dev:activate-din18599-react-prototype",
+        "@semio-tech/framework-os-dev:activate-en1995-react-prototype",
         "@semio-tech/framework-os-dev:activate-note-react-prototype",
         "@semio-tech/framework-os-dev:activate-writer-react-prototype",
         "@semio-tech/framework-os-dev:activate-forms-react-prototype",
@@ -248,7 +252,9 @@
       "dependsOn": [
         "@semio-tech/framework-os-dev:activate-din4108-react-prototype",
         "@semio-tech/framework-os-dev:activate-en1990-react-prototype",
-        "@semio-tech/framework-os-dev:activate-en1992-react-prototype"
+        "@semio-tech/framework-os-dev:activate-en1992-react-prototype",
+        "@semio-tech/framework-os-dev:activate-din18599-react-prototype",
+        "@semio-tech/framework-os-dev:activate-en1995-react-prototype"
       ]
     },
     "build": {
@@ -319,7 +325,9 @@
                 "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🦀️native-transpile",
                 "command": [
                   "repo",
-                  "./📜️stage.ts"
+                  "./📜️script.ts",
+                  "build",
+                  "--host-platform={hostPlatform}"
                 ],
                 "after": [],
                 "profile": "release",
@@ -828,6 +836,8 @@
         "@semio-tech/framework-os-dev:activate-din4108-react-prototype",
         "@semio-tech/framework-os-dev:activate-en1990-react-prototype",
         "@semio-tech/framework-os-dev:activate-en1992-react-prototype",
+        "@semio-tech/framework-os-dev:activate-din18599-react-prototype",
+        "@semio-tech/framework-os-dev:activate-en1995-react-prototype",
         "workspace:deps-browsers"
       ],
       "options": {

@@ -7,11 +7,37 @@ import { resolve } from "node:path";
 import Ajv from "ajv/dist/2020.js";
 import cases from "./compositor.cases.json";
 import schema from "./compositor.schema.json";
-import { BorderCompositor, flushWithUndrawnParentEdge, isSharedBorderCellFrame, retainSharedBorderRoot, useSharedBorderFrameRef, useSharedWindowBorder } from "./shared-border.ts";
+import { BorderCompositor, flushWithUndrawnParentEdge, isSharedBorderCellFrame, retainSharedBorderRoot, sizeSharedBorderOverlay, useSharedBorderFrameRef, useSharedWindowBorder } from "./shared-border.ts";
 import { measureWindowSilhouetteMetrics } from "./🟦️.tsx";
 import { createWindowSilhouetteGeometry } from "../🔲️WindowSilhouette/🟦️.tsx";
 
 const geometry = createWindowSilhouetteGeometry({ width: 100, height: 100, top: { depth: 0, chips: [] }, bottom: { depth: 0, chips: [] } });
+
+describe("overlay origin", () => {
+  const overlay = (left: number, top: number) => {
+    const parent = document.createElement("div");
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    parent.append(svg);
+    vi.spyOn(parent, "getBoundingClientRect").mockReturnValue({ left, top, right: left + 59, bottom: top + 40, width: 59.078, height: 40, x: left, y: top, toJSON: () => ({}) } as DOMRect);
+    return svg;
+  };
+
+  test("moves the overlay onto the snapped corner of its parent, so neighbours at different fractions share one seam coordinate", () => {
+    const first = overlay(472.609, 10.25), second = overlay(531.688, 10.25);
+    sizeSharedBorderOverlay(first, 59, 40);
+    sizeSharedBorderOverlay(second, 59, 40);
+    expect(first.style.getPropertyValue("translate")).toBe("0.391px -0.25px");
+    expect(second.style.getPropertyValue("translate")).toBe("0.312px -0.25px");
+    expect(472.609 + 0.391).toBeCloseTo(473, 3);
+    expect(531.688 + 0.312).toBeCloseTo(532, 3);
+  });
+
+  test("leaves an overlay on a whole device pixel untouched", () => {
+    const svg = overlay(100, 20);
+    sizeSharedBorderOverlay(svg, 59, 40);
+    expect(svg.style.getPropertyValue("translate")).toBe("");
+  });
+});
 
 describe("root border compositor", () => {
   test("neutral compositor schema", () => expect(new Ajv().validate(schema, cases)).toBe(true));

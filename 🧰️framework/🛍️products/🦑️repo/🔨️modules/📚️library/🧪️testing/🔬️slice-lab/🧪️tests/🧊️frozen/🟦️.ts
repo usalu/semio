@@ -4,7 +4,7 @@ import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {spawnSync} from "node:child_process";
 import {SLICE_LAB_POLICY_V1 as P,readSliceLabOptionsV1,sliceLabReportV1,sliceLabVerdictV1,treeChurnV1,type SliceLabSampleV1} from "../../🟦️.ts";
-import {editFrozenFileV1,freezeSliceLabRootV1,frozenRootV1,linkAmbientV1,relinkFrozenRootV1} from "../../🧊️frozen/🟦️.ts";
+import {editFrozenFileV1,freezeSliceLabRootV1,frozenRootV1,linkAmbientV1,cloneFrozenRootV1} from "../../🧊️frozen/🟦️.ts";
 
 /** 🧊️ The frozen view of the slice lab: a clone of the files a read sees, outside the tree, with a git index of its own, in which a later edit of the live tree is invisible and the churn reads 0. */
 const git=(cwd:string,...args:string[])=>spawnSync("git",["-c","core.fsmonitor=false","-c","core.quotepath=off",...args],{cwd,encoding:"utf8"});
@@ -90,18 +90,25 @@ describe("frozen slice lab root",()=>{
  test("cleanup",()=>{rmSync(live,{recursive:true,force:true});rmSync(work,{recursive:true,force:true});});
 });
 
-describe("frozen slice lab root after a real dependencies stage",()=>{
- test("the links the stage pointed into the lab's state are made again as the live tree has them, the root node_modules is a directory of entry links again",()=>{
-  const live=fixture(),work=realpathSync(mkdtempSync(join(tmpdir(),"frz-rl-"))),frozen=join(work,"r"),gen=join(work,"s","j","g1");
+describe("machine checkout of a frozen root",()=>{
+ test("a machine's checkout equals the frozen root file for file (diff -r as the independent check), starts without state, has the ambient links, and an edit in it never reaches the frozen root",()=>{
+  const live=fixture(),work=realpathSync(mkdtempSync(join(tmpdir(),"frz-mc-"))),frozen=join(work,"r"),own=join(work,"m1","r");
   try{
    freezeSliceLabRootV1(live,frozen);
-   mkdirSync(join(gen,"node_modules"),{recursive:true});
-   const member=join(frozen,"🧰️framework","lib","node_modules");rmSync(member,{force:true});symlinkSync(join(gen,"node_modules"),member);
-   rmSync(join(frozen,"node_modules"),{recursive:true,force:true});symlinkSync(join(gen,"node_modules"),join(frozen,"node_modules"));
-   expect(relinkFrozenRootV1(live,frozen,work)).toBe(2);
-   expect(readlinkSync(member)).toBe("/nonexistent-store/deps");
-   expect(lstatSync(join(frozen,"node_modules")).isDirectory()).toBe(true);expect(readdirSync(join(frozen,"node_modules"))).toContain("pkg");
-   expect(relinkFrozenRootV1(live,frozen,work)).toBe(0);
-  }finally{rmSync(work,{recursive:true,force:true});}
+   mkdirSync(join(frozen,".cache","b","junk"),{recursive:true});writeFileSync(join(frozen,".cache","b","junk","x"),"left by an earlier run");
+   const made=cloneFrozenRootV1(frozen,live,own);
+   expect(made.root).toBe(own);
+   const diff=spawnSync("diff",["-r","-q","--no-dereference",frozen,own],{encoding:"utf8"}).stdout.split("\n").filter(Boolean);
+   expect(diff.every(line=>line.includes(".cache"))).toBe(true);
+   expect(existsSync(join(own,".cache","b","junk"))).toBe(false);
+   expect(readFileSync(join(frozen,".cache","b","junk","x"),"utf8")).toBe("left by an earlier run");
+   expect(readFileSync(join(own,"🧰️framework","lib","a.ts"),"utf8")).toBe("export const a=1;\n");
+   expect(readlinkSync(join(own,"🧰️framework","lib","link.ts"))).toBe("a.ts");
+   expect(lstatSync(join(own,"node_modules")).isDirectory()).toBe(true);
+   for(const name of P.frozen.ambient)if(existsSync(join(live,name)))expect(readlinkSync(join(own,name))).toBe(join(live,name));
+   writeFileSync(join(own,"🧰️framework","lib","a.ts"),"export const a=2;\n");
+   expect(readFileSync(join(frozen,"🧰️framework","lib","a.ts"),"utf8")).toBe("export const a=1;\n");
+   expect(()=>cloneFrozenRootV1(frozen,live,own)).toThrow(/exists/u);
+  }finally{rmSync(work,{recursive:true,force:true});rmSync(live,{recursive:true,force:true});}
  });
 });

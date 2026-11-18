@@ -1,5 +1,5 @@
 import {spawn,spawnSync} from "node:child_process";
-import {mkdirSync,readFileSync,readdirSync,renameSync,rmSync,statSync,writeFileSync} from "node:fs";
+import {mkdirSync,readFileSync,renameSync,rmSync,writeFileSync} from "node:fs";
 import {join} from "node:path";
 import {scaledMillisecondsV1} from "../../../../🐢️speed/🟨️.mjs";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
@@ -23,11 +23,19 @@ export function readyIdentityV1(known:ReadyKnownV1,table:readonly ReadyProcessV1
  return known.startMs===0||near(row.startMs,known.startMs,tolerance)?"same":"reused";
 }
 
-/** 🌲️ The processes to stop, leaf first (`spare` and everything below it never: a service that other agents use stays up): the root (if it is still the same process), everything below it in the table, and every process recorded in an earlier sample that is still there with its recorded start time (the orphans whose parent has already exited) with everything below those. A child counts as below its parent only when it did not start before the parent (a reused parent pid is not a parent). Never this process or its ancestors, never the system pids. A pure function.
+/** 🏔️ Whether a worker is busy with its readiness: its `ready.json` says not ready in a state of work (running, waiting, backing off) and was written within `foregroundFreshMilliseconds`, so a loop that died never holds a graph server back for ever. The graph server of the machine neither serves nor refreshes meanwhile: readiness is the foreground, a whole-workspace read is not. A pure function.
+ * @see ./🧪️tests/🤝️holder-custody/🐍️.py */
+export function readyForegroundBusyV1(status:unknown,nowMs:number,policy:typeof P=P):boolean{
+ if(status===null||typeof status!=="object")return false;
+ const row=status as{ready?:unknown;state?:unknown;updatedMs?:unknown};
+ return row.ready===false&&(row.state==="running"||row.state==="waiting"||row.state==="backoff")&&typeof row.updatedMs==="number"&&Number.isFinite(row.updatedMs)&&nowMs-row.updatedMs<=policy.foregroundFreshMilliseconds;
+}
+
+/** 🌲️ The processes to stop, leaf first (`spare` and everything below it never, nor a shared system process of `sharedSystemProcesses` such as `diskimages-helper`, which serves the mounted disk images of every stage and every other agent of the machine: ending it with the first stage that attached an image dropped the writes in flight to the partitions of the worker, nor the launchers between a spared service and the root, which own it: a service that other agents use stays up): the root (if it is still the same process), everything below it in the table, and every process recorded in an earlier sample that is still there with its recorded start time (the orphans whose parent has already exited) with everything below those. A child counts as below its parent only when it did not start before the parent (a reused parent pid is not a parent). Never this process or its ancestors, never the system pids. A pure function.
  * @see ./🧪️tests/🐍️.py */
 export function readyKillPlanV1(input:Readonly<{table:readonly ReadyProcessV1[];root:ReadyKnownV1;known:readonly ReadyKnownV1[];self:number;tolerance?:number;spare?:ReadonlySet<number>}>):readonly number[]{
- const tolerance=input.tolerance??P.toleranceMilliseconds,byPid=new Map(input.table.map(row=>[row.pid,row])),children=new Map<number,ReadyProcessV1[]>();
- for(const row of input.table){const parent=byPid.get(row.ppid);if(parent!==undefined&&row.startMs>=parent.startMs-tolerance&&row.pid!==row.ppid){const list=children.get(row.ppid)??[];list.push(row);children.set(row.ppid,list);}}
+ const tolerance=input.tolerance??P.toleranceMilliseconds,byPid=new Map(input.table.map(row=>[row.pid,row])),children=new Map<number,ReadyProcessV1[]>(),parentOf=new Map<number,number>();
+ for(const row of input.table){const parent=byPid.get(row.ppid);if(parent!==undefined&&row.startMs>=parent.startMs-tolerance&&row.pid!==row.ppid){const list=children.get(row.ppid)??[];list.push(row);children.set(row.ppid,list);parentOf.set(row.pid,row.ppid);}}
  const protectedPids=new Set<number>();
  for(let at:number|undefined=input.self,depth=0;at!==undefined&&depth<256&&!protectedPids.has(at);at=byPid.get(at)?.ppid,depth++)protectedPids.add(at);
  const depthOf=new Map<number,number>(),queue:{pid:number;depth:number}[]=[];
@@ -39,7 +47,8 @@ export function readyKillPlanV1(input:Readonly<{table:readonly ReadyProcessV1[];
  }
  const spared=new Set<number>();
  for(const pid of input.spare??[])if(depthOf.has(pid))for(const stack=[pid];stack.length>0;){const at=stack.pop()!;if(!spared.has(at)){spared.add(at);for(const child of children.get(at)??[])stack.push(child.pid);}}
- return[...depthOf].filter(([pid])=>pid>P.reservedPids&&!protectedPids.has(pid)&&!spared.has(pid)).sort((a,b)=>b[1]-a[1]||a[0]-b[0]).map(([pid])=>pid);
+ for(const pid of input.spare??[])if(depthOf.has(pid))for(let at=parentOf.get(pid),guard=0;at!==undefined&&at!==input.root.pid&&guard<256;at=parentOf.get(at),guard++)protectedPids.add(at);
+ return[...depthOf].filter(([pid])=>pid>P.reservedPids&&!protectedPids.has(pid)&&!spared.has(pid)&&!P.sharedSystemProcesses.includes(byPid.get(pid)?.name??"")).sort((a,b)=>b[1]-a[1]||a[0]-b[0]).map(([pid])=>pid);
 }
 
 /** 🌲️ The processes of the tree of `root` now (root included), as `{pid, startMs}` rows for the record of the next sample. */
@@ -62,7 +71,7 @@ export function readyLeaseVerdictV1(input:Readonly<{lease:Readonly<{pid:number;s
 /** 🐢️ The tree policy for a machine `factor` times slower than the reference: the windows without progress (the stall window, the stall stop and the wait for a holder) are lengthened by it, so a small machine that waits more often is not stopped for waiting; the caps of other kinds stay as authored.
  * @see ./🧪️tests/🟦️.ts */
 export function readyScaledTreePolicyV1(factor:number,policy:typeof P=P):typeof P{
- return {...policy,stallMilliseconds:scaledMillisecondsV1(policy.stallMilliseconds,factor),stallStopMilliseconds:scaledMillisecondsV1(policy.stallStopMilliseconds,factor),holderWaitRestartMilliseconds:scaledMillisecondsV1(policy.holderWaitRestartMilliseconds,factor),staleStageMilliseconds:scaledMillisecondsV1(policy.staleStageMilliseconds,factor)};
+ return {...policy,speedFactor:Math.max(1,factor),stallMilliseconds:scaledMillisecondsV1(policy.stallMilliseconds,factor),stallStopMilliseconds:scaledMillisecondsV1(policy.stallStopMilliseconds,factor),holderWaitRestartMilliseconds:scaledMillisecondsV1(policy.holderWaitRestartMilliseconds,factor),holderSilentMilliseconds:scaledMillisecondsV1(policy.holderSilentMilliseconds,factor),holderYieldMilliseconds:scaledMillisecondsV1(policy.holderYieldMilliseconds,factor),staleStageMilliseconds:scaledMillisecondsV1(policy.staleStageMilliseconds,factor)};
 }
 
 /** 🔁️ What follows the `consecutive`-th stop in a row of one silent stage: a restart after an exponential back-off (`stallRestartBackoffMilliseconds` doubling up to `stallRestartBackoffMaximumMilliseconds`), and a failed state once more than `stallRestartMaximum` stops followed each other, so a stage that waits for something that never comes ends with its reason instead of being stopped every ten minutes for ever. A pure function.
@@ -118,6 +127,46 @@ export function readyStallTrackerV1(policy:typeof P=P):Readonly<{observe(lines:r
  * @see ./🧪️tests/🐍️.py */
 export function readyStalledV1(sinceProgressMs:number,policy:typeof P=P):boolean{return sinceProgressMs>=policy.stallStopMilliseconds;}
 
+/** 🪜️ A step of the read as its progress line states it: the step in both languages (without the note that it passed its bound), the seconds it has run and the bound it declared. */
+export type ReadyStepV1=Readonly<{text:string;seconds:number;bound:number}>;
+
+/** 🪜️ The step the newest step line of `lines` names (`stepLinePatterns`: the progress line of the slice worker whose phase is `<English> / <German>` and whose counter is the seconds the step has run of the seconds it is bounded by), `undefined` when no line is one. The note `beyond the expected N s` is cut from the text, so the same step is the same text before and after its bound. A pure function.
+ * @see ./🧪️tests/🪜️step-overdue */
+export function readyStepOfV1(lines:readonly string[],policy:typeof P=P):ReadyStepV1|undefined{
+ const expressions=policy.stepLinePatterns.map(pattern=>new RegExp(pattern,"u")),over=new RegExp(policy.stepOverBoundPattern,"gu");
+ for(let index=lines.length-1;index>=0;index--)for(const expression of expressions){
+  const found=expression.exec(lines[index]!.replace(/\r/gu,"").trim());
+  if(found?.groups!==undefined)return{text:found.groups.step!.replace(over,""),seconds:Number(found.groups.done),bound:Number(found.groups.bound)};
+ }
+ return undefined;
+}
+
+/** 🪜️ The seconds a step may run before it is overdue: its declared bound, written for the reference machine and lengthened by the speed factor of this machine like every other limit (`scaledMillisecondsV1`), plus the window without progress that already ends a silent stage here (`stallStopMilliseconds`, scaled the same way). So a step is overdue exactly when it has been past what this machine is expected to need for as long as a stage may be silent; both parts follow the speed factor and nothing is a number of its own. A pure function.
+ * @see ./🧪️tests/🪜️step-overdue */
+export function readyStepOverdueSecondsV1(boundSeconds:number,policy:typeof P=P):number{
+ return Math.ceil((scaledMillisecondsV1(boundSeconds*1000,policy.speedFactor)+policy.stallStopMilliseconds)/1000);
+}
+
+/** 🪜️ The step watch of one stage run: `observe` takes the last lines of the log and the clock and answers the newest step, whether it is overdue and for how long nothing else moved. Something else moved when a line that is no step line is new after normalisation (a counter such as `taken 8 of 590`, an owner finished, a message) or when the step is another step than before; the seconds counter of the step itself, the processor time of the tree and a repeated heartbeat are not progress, because a wait that re-reads the same thing for hours shows all of them. Overdue is the step past `readyStepOverdueSecondsV1` and nothing else moved for `stallStopMilliseconds`. A pure function of the lines and clocks seen so far.
+ * @see ./🧪️tests/🪜️step-overdue */
+export function readyStepWatchV1(policy:typeof P=P):Readonly<{observe(lines:readonly string[],nowMs:number):Readonly<{step:ReadyStepV1|undefined;overdue:boolean;quietMs:number}>}>{
+ const seen=new Set<string>(),expressions=policy.stepLinePatterns.map(pattern=>new RegExp(pattern,"u"));let movedAt:number|null=null,identity:string|null=null;
+ return Object.freeze({observe(lines,nowMs){
+  if(movedAt===null)movedAt=nowMs;
+  for(const line of lines){
+   if(expressions.some(expression=>expression.test(line.replace(/\r/gu,"").trim())))continue;
+   const key=readyNormaliseLineV1(line,policy.normalisePatterns);
+   if(key===""||seen.has(key))continue;
+   if(seen.size>=policy.stallSeenMaximum)seen.clear();
+   seen.add(key);movedAt=nowMs;
+  }
+  const step=readyStepOfV1(lines,policy),key=step===undefined?null:readyNormaliseLineV1(step.text,policy.normalisePatterns);
+  if(key!==null&&key!==identity){if(identity!==null)movedAt=nowMs;identity=key;}
+  const quietMs=nowMs-movedAt;
+  return{step,overdue:step!==undefined&&step.seconds>=readyStepOverdueSecondsV1(step.bound,policy)&&quietMs>=policy.stallStopMilliseconds,quietMs};
+ }});
+}
+
 /** 🪤️ The tracker of a wait on a named holder (a log line matching `holderWaitPatterns`): `observe` takes the last lines of the log and the clock and answers for how long the stage has waited for a holder without a round that showed none; a round without a holder line starts the count again.
  * @see ./🧪️tests/🐍️.py */
 export function readyHolderWaitTrackerV1(policy:typeof P=P):Readonly<{observe(lines:readonly string[],nowMs:number):number}>{
@@ -126,6 +175,54 @@ export function readyHolderWaitTrackerV1(policy:typeof P=P):Readonly<{observe(li
   if(!lines.some(line=>expressions.some(expression=>expression.test(line)))){since=null;return 0;}
   since??=nowMs;return nowMs-since;
  }});
+}
+
+/** 🫱️ The holder a wait line of the dependency store names (English or German): who, since when, how long the waiter has waited, the bound it states and, when the waiter judged the holder silent, for how many seconds. */
+export type ReadyHolderWaitV1=Readonly<{pid:number;command:string;since:string;silentSeconds:number|null;seconds:number;limitSeconds:number}>;
+
+/** 🔎️ The holder the newest wait line of `lines` names, `undefined` when none does. A pure function.
+ * @see ./🧪️tests/🤝️holder-custody/🐍️.py */
+export function readyHolderWaitOfV1(lines:readonly string[],policy:typeof P=P):ReadyHolderWaitV1|undefined{
+ const expressions=policy.holderNamedPatterns.map(pattern=>new RegExp(pattern,"u"));
+ for(let index=lines.length-1;index>=0;index--){
+  const line=lines[index]!.replace(/\r$/u,"");
+  for(const expression of expressions){
+   const groups=expression.exec(line)?.groups;
+   if(groups!==undefined)return Object.freeze({pid:Number(groups.pid),command:groups.command!,since:groups.since!,silentSeconds:groups.silent===undefined?null:Number(groups.silent),seconds:Number(groups.seconds),limitSeconds:Number(groups.limit)});
+  }
+ }
+ return undefined;
+}
+
+/** 🪪️ What the lease registry of the worker says about one holder: its pid, the start it registered, the last time it renewed its entry and its command. */
+export type ReadyHolderEntryV1=Readonly<{pid:number;startedAtMs:number;updatedAtMs?:number;command:string}>;
+/** ⚖️ The judgement of a wait: `progressing` (the holder lives with the start it registered and renews its entry, the stated bound is not spent), `silent` (it lives but has not renewed its entry for `holderSilentMilliseconds`, so it may be blocked), `gone` (no such process, or the pid belongs to another process: the waiter reclaims the lease by itself), `bound` (the stated bound is spent), `unknown` (the process table could not be read). */
+export type ReadyHolderVerdictV1=Readonly<{kind:"progressing"|"silent"|"gone"|"bound"|"unknown";silentMs:number}>;
+
+/** ⚖️ Judges a wait on a named holder from the process table, its registry entry and the clock: a waiter behind a live holder that renews its entry is not stalled however long it waits within the bound it states; a holder that is gone or whose pid was reused is reclaimed by the waiter and is no stall either; only a silent or a bound-spent holder is named as the problem. The liveness comes from the process table (on Windows the CIM rows with the creation time, so a reused pid has another start). A pure function.
+ * @see ./🧪️tests/🤝️holder-custody/🐍️.py */
+export function readyHolderCustodyV1(input:Readonly<{wait:ReadyHolderWaitV1;entry:ReadyHolderEntryV1|undefined;table:readonly ReadyProcessV1[];nowMs:number;policy?:typeof P}>):ReadyHolderVerdictV1{
+ const policy=input.policy??P,wait=input.wait;
+ if(wait.seconds>=wait.limitSeconds)return Object.freeze({kind:"bound",silentMs:0});
+ if(input.table.length===0)return Object.freeze({kind:"unknown",silentMs:0});
+ const identity=input.entry===undefined?(input.table.some(row=>row.pid===wait.pid)?"same":"gone"):readyIdentityV1({pid:wait.pid,startMs:input.entry.startedAtMs},input.table,policy.toleranceMilliseconds);
+ if(identity!=="same")return Object.freeze({kind:"gone",silentMs:0});
+ const silentMs=input.entry?.updatedAtMs!==undefined&&Number.isFinite(input.entry.updatedAtMs)?Math.max(0,input.nowMs-input.entry.updatedAtMs):(wait.silentSeconds??0)*1000;
+ return Object.freeze({kind:silentMs>policy.holderSilentMilliseconds?"silent":"progressing",silentMs});
+}
+
+/** 🧾️ What the detached runner of a graph read keeps in `read-record.json`: the kind of read, the runner, the read, when the runner started, and the end status once it ended. */
+export type ReadyReadRecordV1=Readonly<{reason:"request"|"refresh";runner:number;read:number|null;startedMs:number;status:number|null;endedMs:number|null}>;
+
+/** 🧘️ The processes to stop so that a foreground stage gets the dependency store from a background reader of the machine's own graph server: the runner of the running read recorded by the graph server (alive with its recorded start, not ended) and everything below it, only when `holder` is among them. Nothing otherwise: a holder of a person, another agent or another checkout is never a victim. A pure function.
+ * @see ./🧪️tests/🤝️holder-custody/🐍️.py */
+export function readyBackgroundReaderV1(input:Readonly<{record:ReadyReadRecordV1|undefined;holder:number;table:readonly ReadyProcessV1[];self:number;policy?:typeof P}>):Readonly<{root:ReadyKnownV1;plan:readonly number[];reason:"request"|"refresh"}>|undefined{
+ const policy=input.policy??P,record=input.record;
+ if(record===undefined||record.status!==null||record.endedMs!==null)return undefined;
+ const row=input.table.find(each=>each.pid===record.runner);
+ if(row===undefined||readyIdentityV1({pid:record.runner,startMs:record.startedMs},input.table,policy.toleranceMilliseconds)!=="same")return undefined;
+ const root={pid:row.pid,startMs:row.startMs},plan=readyKillPlanV1({table:input.table,root,known:[],self:input.self,tolerance:policy.toleranceMilliseconds});
+ return plan.includes(input.holder)&&!plan.includes(input.self)?Object.freeze({root,plan,reason:record.reason}):undefined;
 }
 
 /** 🔁️ Whether a stage that waits on a named holder is stopped to start again with the new code: it has waited `holderWaitRestartMilliseconds` and the code it runs changed since it started. A pure function.
@@ -151,20 +248,21 @@ export function readyStagePhaseV1(lines:readonly string[],previous:ReadyPhaseV1,
  * @see ./🧪️tests/🕰️stale-stage */
 export function readyStaleStopV1(phase:ReadyPhaseV1,phaseAgeMs:number,policy:typeof P=P):boolean{return phase!=="executing"&&readyStaleRestartV1(phaseAgeMs,true,policy);}
 
-/** 🧬️ The first file below `codeRoots` of `root` (relative path, extensions `codeExtensions`, no directory of `codeSkipDirectories`, no link) that was modified after `sinceMs`, `null` when none was: the code a stage loaded at its start has changed. Reads metadata only and stops at the first hit. */
-export function readyCodeChangedSinceV1(root:string,sinceMs:number,policy:typeof P=P):string|null{
- const skip=new Set(policy.codeSkipDirectories),stack=[...policy.codeRoots];
- while(stack.length>0){
-  const relative=stack.pop()!;let entries;
-  try{entries=readdirSync(join(root,relative),{withFileTypes:true});}catch{continue;}
-  for(const entry of entries){
-   if(entry.isSymbolicLink())continue;
-   const next=join(relative,entry.name);
-   if(entry.isDirectory()){if(!skip.has(entry.name))stack.push(next);continue;}
-   if(!entry.isFile()||!policy.codeExtensions.some(extension=>entry.name.endsWith(extension)))continue;
-   try{if(statSync(join(root,next)).mtimeMs>sinceMs)return next;}catch{}
-  }
+/** 🧬️ The declared semantics of the code a stage loaded: the value of every `semanticsSources` pointer, keyed by file and pointer, `null` for a source that cannot be read now (a landing may be replacing it). A stage that loaded one semantics produces results that another process accepts exactly while the semantics are the same; an edit of any other file changes nothing a result says. Reads two small files, never a tree. A source is bumped when a result changes that another process accepts or reads (the head key a peer accepts from a sealed read, the persisted record format); it is NOT bumped for a change of how a read waits, what it counts as progress or what it says (R184 changed a wait bound and a progress sign: a bump would hand over every healthy read of the fleet and make peers refuse each other's sealed reads for a change that alters no result). A read that does not end itself on old code is ended from outside by the step rule (`readyStepWatchV1`, reason `step-overdue`). */
+export function readySemanticsV1(root:string,policy:typeof P=P):Readonly<Record<string,string|null>>{
+ const rows:Record<string,string|null>={};
+ for(const source of policy.semanticsSources){
+  let value:string|null=null;
+  try{let node:unknown=JSON.parse(readFileSync(join(root,source.file),"utf8"));for(const part of source.pointer.split("/").slice(1)){node=(node as Record<string,unknown>)?.[part.replaceAll("~1","/").replaceAll("~0","~")];}if(node!==undefined)value=JSON.stringify(node);}catch{value=null;}
+  rows[source.file+"#"+source.pointer]=value;
  }
+ return Object.freeze(rows);
+}
+
+/** 🧬️ The first semantics source (its file as written in the policy) whose value is now another value than `before`, `null` when none is: the code a stage loaded at its start can no longer produce a result another process would accept. A source that cannot be read now or could not be read before is no change. A pure function of the two files. */
+export function readySemanticsChangedV1(root:string,before:Readonly<Record<string,string|null>>,policy:typeof P=P):string|null{
+ const now=readySemanticsV1(root,policy);
+ for(const source of policy.semanticsSources){const key=source.file+"#"+source.pointer,was=before[key],is=now[key];if(was!==null&&was!==undefined&&is!==null&&is!==undefined&&was!==is)return source.file;}
  return null;
 }
 
@@ -214,10 +312,13 @@ export function readyTableCommandV1(platform:NodeJS.Platform=process.platform):R
   :{command:"ps",args:["-A","-o","pid=,ppid=,etime=,comm="]};
 }
 
-/** 📜️ Reads the process table of this machine; an empty list when the command fails or takes longer than `timeoutMilliseconds`. */
-export function readyReadTableV1(timeoutMilliseconds:number=20000,platform:NodeJS.Platform=process.platform,now:()=>number=Date.now):Promise<readonly ReadyProcessV1[]>{
+/** 📜️ Reads the process table of this machine; an empty list when the command fails or takes longer than `timeoutMilliseconds`. The start times are counted from the moment the command was started, not from the moment it ended: `ps` states the elapsed time of a process as of its own start, so a table that took 30 s on a swapping machine otherwise made every process look 30 s younger and the stage wrapper "another process that reused the pid". `run` replaces the command (a test); it answers the text or `null`.
+ * @see ./🧪️tests/🪜️step-overdue */
+export function readyReadTableV1(timeoutMilliseconds:number=20000,platform:NodeJS.Platform=process.platform,now:()=>number=Date.now,run?:(command:string,args:readonly string[],timeoutMilliseconds:number)=>Promise<string|null>):Promise<readonly ReadyProcessV1[]>{
+ const {command,args}=readyTableCommandV1(platform),sampledAt=now();
+ const parse=(out:string|null):readonly ReadyProcessV1[]=>out===null?[]:platform==="win32"?readyParseWindowsTableV1(out):readyParseUnixTableV1(out,sampledAt);
+ if(run!==undefined)return run(command,args,timeoutMilliseconds).then(parse,()=>[]);
  return new Promise(done=>{
-  const {command,args}=readyTableCommandV1(platform);
   let out="",finished=false;
   const end=(table:readonly ReadyProcessV1[])=>{if(!finished){finished=true;clearTimeout(timer);done(table);}};
   let child:ReturnType<typeof spawn>;
@@ -225,7 +326,7 @@ export function readyReadTableV1(timeoutMilliseconds:number=20000,platform:NodeJ
   const timer=setTimeout(()=>{try{child.kill();}catch{}end([]);},timeoutMilliseconds);
   child.stdout?.on("data",chunk=>{out+=String(chunk);});
   child.on("error",()=>end([]));
-  child.on("close",()=>end(platform==="win32"?readyParseWindowsTableV1(out):readyParseUnixTableV1(out,now())));
+  child.on("close",()=>end(parse(out)));
  });
 }
 

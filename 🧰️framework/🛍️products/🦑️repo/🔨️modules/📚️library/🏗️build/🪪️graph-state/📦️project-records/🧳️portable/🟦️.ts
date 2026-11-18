@@ -118,14 +118,16 @@ const localOwner=(providers:readonly string[],policy:PortableRowsPolicyV1)=>(tex
  return providers.find(id=>providerPrefix(id,policy)===prefix)??text;
 };
 
-type Direction=Readonly<{host:HostV1;keys:KeyMapV1;owner:(text:string)=>string;path:(text:string)=>string;text:(text:string)=>string}>;
+type Direction=Readonly<{host:HostV1;keys:KeyMapV1;owner:(text:string)=>string;path:(text:string)=>string;text:(text:string)=>string;item?:(text:string)=>string}>;
 const mapPathJson=(text:string,change:(item:unknown,index:number)=>unknown):string=>{
- try{const parsed=JSON.parse(text);return Array.isArray(parsed)?JSON.stringify(parsed.map(change)):text;}catch{return text;}
+ let parsed:unknown;
+ try{parsed=JSON.parse(text);}catch{return text;}
+ return Array.isArray(parsed)?JSON.stringify(parsed.map(change)):text;
 };
 function convertRow(row:ObservationRowV1,way:Direction,policy:PortableRowsPolicyV1):ObservationRowV1{
  const{kind}=row;
  if(policy.jsonKinds.includes(kind)){
-  const path=mapPathJson(row.path,(item,index)=>index===0&&typeof item==="string"?way.path(item):index===1&&kind==="closure"&&typeof item==="string"?way.keys.get(item)??item:index===0?item:mapStrings(item,way.text));
+  const path=mapPathJson(row.path,(item,index)=>index===0&&typeof item==="string"?way.path(item):index===1&&kind==="closure"&&typeof item==="string"?way.keys.get(item)??item:index===0?item:mapStrings(item,way.item??way.text));
   const fact=kind==="closure"&&typeof row.fact==="string"?way.text(row.fact):policy.factPathKinds.includes(kind)&&typeof row.fact==="string"?way.path(row.fact):row.fact;
   return{...row,path,...fact===undefined?{}:{fact}};
  }
@@ -133,6 +135,7 @@ function convertRow(row:ObservationRowV1,way:Direction,policy:PortableRowsPolicy
   const fact=row.fact as Record<string,unknown>,nested=Array.isArray(fact.nestedObservations)?(fact.nestedObservations as ObservationRowV1[]).map(item=>convertRow(item,way,policy)):fact.nestedObservations;
   return{...row,path:way.path(row.path),fact:{...fact,...typeof fact.provider==="string"?{provider:way.owner(fact.provider)}:{},...nested===undefined?{}:{nestedObservations:nested}}};
  }
+ if(kind==="field"&&row.fact!==null&&typeof row.fact==="object")return{...row,path:way.path(row.path),fact:mapStrings(row.fact,way.item??way.text)};
  if(policy.pathKinds.includes(kind))return{...row,path:way.path(row.path),...policy.factPathKinds.includes(kind)&&typeof row.fact==="string"?{fact:way.path(row.fact)}:{}};
  return{...row,path:way.text(row.path),...typeof row.fact==="string"?{fact:way.text(row.fact)}:{}};
 }
@@ -147,7 +150,7 @@ export function unstampRowV1(row:ObservationRowV1,policy:PortableRowsPolicyV1=po
  const source=body.source!==null&&typeof body.source==="object"&&!Array.isArray(body.source)?zeroStamps(body.source as Record<string,unknown>,policy):body.source,nested=Array.isArray(body.nestedObservations)?(body.nestedObservations as ObservationRowV1[]).map(item=>unstampRowV1(item,policy)):body.nestedObservations;
  return{...row,fact:{...body,...source===undefined?{}:{source},...nested===undefined?{}:{nestedObservations:nested}}};
 }
-const neutralWay=(host:HostV1,keys:KeyMapV1,policy:PortableRowsPolicyV1):Direction=>({host,keys,owner:text=>neutralOwner(text,policy),path:text=>neutralPathV1(text,host,policy),text:text=>neutralTextV1(text,host,policy)});
+const neutralWay=(host:HostV1,keys:KeyMapV1,policy:PortableRowsPolicyV1):Direction=>({host,keys,owner:text=>neutralOwner(text,policy),path:text=>neutralPathV1(text,host,policy),text:text=>neutralTextV1(text,host,policy),item:text=>relativeToRootV1(text,host)===undefined?neutralTextV1(text,host,policy):neutralPathV1(text,host,policy)});
 const localWay=(host:HostV1,keys:KeyMapV1,providers:readonly string[],policy:PortableRowsPolicyV1):Direction=>({host,keys,owner:localOwner(providers,policy),path:text=>localPathV1(text,host,policy),text:text=>localTextV1(text,host,policy)});
 
 /** 🧠️ What one conversion remembers per row object, valid for one host, one key map and one policy: the converted row (null for a dropped location row) and the generation ids of the converted rows. A closure entry names the same row objects in thousands of layers, so a conversion that shares a memo converts each distinct row once. */

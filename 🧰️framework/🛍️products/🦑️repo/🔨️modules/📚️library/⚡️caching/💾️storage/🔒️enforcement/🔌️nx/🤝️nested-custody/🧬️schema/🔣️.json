@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio://repo/caching/nx-nested-custody/v1",
+  "title": "Nx nested cache custody",
+  "description": "A cache operation inside an open fixed-cache custody (a remote hit restored inside the batch resolution, a put inside a task) must be the same workspace, tooling, process environment, graph and implementation. A reader that holds no output may become a writer: a custody holds the image shared in both modes, and the outputs are leased per output. A reader that holds outputs may not.",
+  "definitions": {
+    "Rule": {"enum": ["workspace", "tooling", "environment", "graph", "implementation", "reader-holds-outputs"]},
+    "Mode": {"enum": ["shared", "exclusive"]},
+    "Refusal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "code", "rule", "task", "paths", "heldMode", "requestedMode", "held", "requested", "en", "de"],
+      "properties": {
+        "version": {"const": 1},
+        "code": {"const": "nx-nested-cache-custody-refused"},
+        "rule": {"$ref": "#/definitions/Rule"},
+        "task": {"type": ["string", "null"], "maxLength": 512},
+        "paths": {"type": "array", "maxItems": 4096, "items": {"type": "string", "minLength": 1, "maxLength": 4096}},
+        "heldMode": {"$ref": "#/definitions/Mode"},
+        "requestedMode": {"$ref": "#/definitions/Mode"},
+        "held": {"type": ["string", "null"], "maxLength": 4096},
+        "requested": {"type": ["string", "null"], "maxLength": 4096},
+        "en": {"type": "string", "minLength": 1, "maxLength": 16384},
+        "de": {"type": "string", "minLength": 1, "maxLength": 16384}
+      }
+    }
+  }
+}

@@ -12,7 +12,7 @@ export const NX_FLIGHT_POLICY_V1=schema.definitions.Policy.const;
 const policy=NX_FLIGHT_POLICY_V1,HASH=/^[a-z0-9_-]{1,128}$/u,SLOT=/^[0-9a-f]{64}$/u,INSTANCE=/^[a-z0-9][a-z0-9._-]{0,63}$/u;
 
 /** ⏱️ The tunable durations in milliseconds and the breaker threshold of one front. */
-export type NxFlightTimingV1=Readonly<{claimTtlMilliseconds:number;heartbeatMilliseconds:number;awaitSliceMilliseconds:number;waitBudgetMilliseconds:number;maximumHoldMilliseconds:number;claimTimeoutMilliseconds:number;upstreamTimeoutMilliseconds:number;failureThreshold:number;breakerMilliseconds:number}>;
+export type NxFlightTimingV1=Readonly<{claimTtlMilliseconds:number;expectedMilliseconds:number;heartbeatMilliseconds:number;awaitSliceMilliseconds:number;waitBudgetMilliseconds:number;maximumHoldMilliseconds:number;claimTimeoutMilliseconds:number;upstreamTimeoutMilliseconds:number;failureThreshold:number;breakerMilliseconds:number}>;
 /** 📊️ What one front did.
  * @see ./🧬️schema/🔣️.json */
 export type NxFlightCountersV1=Readonly<{hits:number;misses:number;claimed:number;waited:number;served:number;taken:number;duplicated:number;unclaimed:number;puts:number;released:number;guarded:number}>;
@@ -64,7 +64,7 @@ export async function startNxFlightV1(options:NxFlightOptionsV1):Promise<NxFligh
  };
  const claim=async(key:string):Promise<Outcome>=>{
   if(!usable())return {state:"unavailable"};
-  const response=await call("POST",key,{owner,ttlMilliseconds:timing.claimTtlMilliseconds},timing.claimTimeoutMilliseconds);
+  const response=await call("POST",key,{owner,ttlMilliseconds:timing.claimTtlMilliseconds,expectedMilliseconds:timing.expectedMilliseconds},timing.claimTimeoutMilliseconds);
   if(!response){failed();return {state:"unavailable"};}
   if([401,403,404,405].includes(response.status)){await response.body?.cancel();refused=true;note();return {state:"unavailable"};}
   const body=await answer(response);

@@ -1,0 +1,24 @@
+{
+  "queue": { "lookMilliseconds": 30000, "observeMilliseconds": 60000, "warmMilliseconds": 90000, "inferMilliseconds": 300000, "perMegabyteMilliseconds": 400, "agingPerMille": 1000 },
+  "cases": [
+    { "name": "short jobs first, long owner last", "now": 1000, "jobs": [
+      { "id": "rust-infer", "payload": { "costMegabytes": 2500 }, "queued": 0 },
+      { "id": "warm", "payload": { "warm": true }, "queued": 10 },
+      { "id": "verify", "payload": { "observe": true }, "queued": 20 },
+      { "id": "look-6", "payload": { "look": true, "owners": [1, 2, 3, 4, 5, 6] }, "queued": 30 },
+      { "id": "look-1", "payload": { "look": true, "owners": [1] }, "queued": 40 },
+      { "id": "small-infer", "payload": { "costMegabytes": 100 }, "queued": 50 } ],
+      "expected": ["look-1", "verify", "warm", "look-6", "small-infer", "rust-infer"] },
+    { "name": "aging: a long owner that waited its own cost goes first", "now": 1500000, "jobs": [
+      { "id": "late-look", "payload": { "look": true, "owners": [1] }, "queued": 1499000 },
+      { "id": "old-rust", "payload": { "costMegabytes": 2500 }, "queued": 0 },
+      { "id": "late-verify", "payload": { "observe": true }, "queued": 1499500 } ],
+      "expected": ["old-rust", "late-look", "late-verify"] },
+    { "name": "a job sent back stays in front and ties keep arrival order", "now": 5000, "jobs": [
+      { "id": "a", "payload": { "observe": true }, "queued": 100 },
+      { "id": "b", "payload": { "observe": true }, "queued": 100 },
+      { "id": "capped", "payload": { "costMegabytes": 4000 }, "queued": 4000, "front": true },
+      { "id": "lost", "payload": { "look": true, "owners": [1] }, "queued": 4500, "front": true } ],
+      "expected": ["capped", "lost", "a", "b"] }
+  ]
+}

@@ -215,8 +215,7 @@
   vertical-align: middle;
 }
 
-/* 🔗️ The heading link of an overview card: keyboard focus draws a ring inside the chip, not only an underline. */
+/* 🔗️ The heading link of an overview card: keyboard focus recolours the chip's own lines (chip-focus.ts), never a ring inside them. */
 .course-card-link:focus-visible {
-  outline: var(--stroke-default) solid var(--active-base);
-  outline-offset: -2px;
+  outline: none;
 }

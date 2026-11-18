@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio://repo/caching/nx-graph-release-failure/v1",
+  "title": "Nx graph release failure",
+  "description": "Two or more failures while releasing a graph namespace, a graph store or its leases: the typed error names the operation, the namespace, every failed step with its own message in release order, and keeps the first failure first; a single failure is never wrapped.",
+  "definitions": {
+    "Operation": {"enum": ["namespace-release", "store-close", "cleanup"]},
+    "Step": {"enum": ["readers", "child", "lease", "namespace"]},
+    "Failure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "code", "operation", "where", "first", "steps", "en", "de"],
+      "properties": {
+        "version": {"const": 1},
+        "code": {"const": "nx-graph-release-failed"},
+        "operation": {"$ref": "#/definitions/Operation"},
+        "where": {"type": "string", "maxLength": 4096},
+        "first": {"type": "string", "maxLength": 2048},
+        "steps": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 4096,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["step", "message"],
+            "properties": {"step": {"$ref": "#/definitions/Step"}, "message": {"type": "string", "maxLength": 2048}}
+          }
+        },
+        "en": {"type": "string", "minLength": 1, "maxLength": 16384},
+        "de": {"type": "string", "minLength": 1, "maxLength": 16384}
+      }
+    }
+  }
+}

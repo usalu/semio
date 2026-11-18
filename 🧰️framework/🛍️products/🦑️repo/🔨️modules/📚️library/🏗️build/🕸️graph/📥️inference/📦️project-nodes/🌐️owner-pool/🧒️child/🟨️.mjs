@@ -21,6 +21,7 @@ export async function runOwnerPoolChildV1({ args, write, input, environment = pr
   if (opening.revision !== undefined && head.revision !== undefined && head.revision !== opening.revision) { write({ t: "end", reason: "revision", revision: opening.revision }); opening.close?.(); return OWNER_POOL_CHILD_EXIT_V1.revision; }
   const known = new Set(), presence = args.presence, load = () => { try { for (const line of readFileSync(presence, "utf8").split("\n")) { const at = line.indexOf(" "); if (at > 0 && Date.now() - Number(line.slice(0, at)) < P.presenceMaximumAgeMilliseconds) known.add(line.slice(at + 1)); } } catch {} };
   if (presence !== undefined) { try { mkdirSync(dirname(presence), { recursive: true }); } catch {} load(); }
+  const published = typeof args.store === "string" && typeof args.origin === "string" ? join(args.store, "v1", "origins", args.origin, "pool-published-" + String(args.dir).split("/").pop().slice(0, 12) + ".txt") : undefined;
   let drain = false, recycle = false, running = 0, cpu = process.cpuUsage(), latest;
   const leave = () => { drain = true; setTimeout(() => process.exit(OWNER_POOL_CHILD_EXIT_V1.drained), P.drainExitMilliseconds).unref(); };
   input?.on("data", chunk => { if (String(chunk).includes("drain")) leave(); });
@@ -32,7 +33,7 @@ export async function runOwnerPoolChildV1({ args, write, input, environment = pr
   let stats, fleet = [], fleetAt = -Infinity;
   try {
     stats = await pullOwnerPoolV1({
-      units: () => units, known, stored: unit => { if (presence !== undefined) { try { appendFileSync(presence, Date.now() + " " + unit.name + "\n"); } catch {} } }, fits: unit => ownerPoolFitsV1(unit, args.grantMegabytes ?? Infinity), turn: unit => { if (!ownerPoolHeavyV1(unit) || args.origin === undefined) return 0; if (Date.now() - fleetAt > 5000) { fleet = ownerPoolReadFleetV1(args.store); fleetAt = Date.now(); } return ownerPoolTurnMillisecondsV1(args.origin, fleet, unit.megabytes ?? 0, Date.now()) ?? 0; }, puller: args.puller, slots: () => (over() ? 0 : 1), stop: over,
+      units: () => units, known, stored: unit => { if (presence !== undefined) { try { appendFileSync(presence, Date.now() + " " + unit.name + "\n"); } catch {} } if (published !== undefined) { try { appendFileSync(published, unit.name + "\n"); } catch {} } }, fits: unit => ownerPoolFitsV1(unit, args.grantMegabytes ?? Infinity), turn: unit => { if (!ownerPoolHeavyV1(unit) || args.origin === undefined) return 0; if (Date.now() - fleetAt > 5000) { fleet = ownerPoolReadFleetV1(args.store); fleetAt = Date.now(); } return ownerPoolTurnMillisecondsV1(args.origin, fleet, unit.megabytes ?? 0, Date.now()) ?? 0; }, puller: args.puller, slots: () => (over() ? 0 : 1), stop: over,
       claim: async unit => { await opening.resend?.().catch(() => undefined); return opening.claim(unit); }, run: unit => opening.run(unit), fail: (name, message, deterministic, code) => { write({ t: "fail", name, message: message.slice(0, 300), deterministic, code: code ?? "" }); opening.fail?.(name, message, deterministic); },
       busy: count => { running = count; }, progress: stats => { latest = { ...stats }; },
       done: (unit, ok, milliseconds) => {

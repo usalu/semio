@@ -8,7 +8,7 @@ fn accepted_control_tooltip_reveals_after_dwell_paints_in_overlay_and_dismisses_
     let generation = 1;
     let label = fixture["text"]["label"].as_str().expect("tooltip label");
     let shortcut = fixture["text"]["shortcut"].as_str().expect("tooltip shortcut");
-    let mut ui = Ui::new(semio_ui_locale::Locale::En);
+    let mut ui = UiFixture::new(semio_ui_locale::Locale::En);
     assert!(ui.publish_document(window_id, tooltip_document(window_id, generation, label, shortcut)));
     drive_scene_lifetime_reconcile(&mut ui, window_id, generation);
     let mut atlas = FontAtlas::builtin();
@@ -89,7 +89,7 @@ fn tooltip_keeps_accepted_text_across_candidate_discard_and_retires_after_replac
     let window_id = "accepted-tooltip-text";
     let label = fixture["text"]["label"].as_str().expect("tooltip label");
     let shortcut = fixture["text"]["shortcut"].as_str().expect("tooltip shortcut");
-    let mut ui = Ui::new(semio_ui_locale::Locale::En);
+    let mut ui = UiFixture::new(semio_ui_locale::Locale::En);
     assert!(ui.publish_document(window_id, tooltip_document(window_id, 1, label, shortcut)));
     drive_scene_lifetime_reconcile(&mut ui, window_id, 1);
     let mut atlas = FontAtlas::builtin();
@@ -134,23 +134,10 @@ fn retained_walk_leaf(discriminant: u32, ordinal: u32, value: &str) -> semio_ui_
     )
 }
 
-fn drive_layout(ui: &mut Ui, window_id: &str, width: f32, height: f32, atlas: &mut FontAtlas) {
+fn drive_layout(ui: &mut UiFixture, window_id: &str, width: f32, height: f32, atlas: &mut FontAtlas) {
     ui.set_viewport(window_id, width, height);
-    let operation = semio_framework_job::allocate_operation_id();
-    let cancel = semio_framework_job::CancelToken::root_now();
     let pool = test_layout_pool();
-    let mut preview_sequence = 0;
-    for _ in 0..262_144 {
-        if ui.layout_is_dirty(window_id) {
-            ui.request_layout(window_id);
-        }
-        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
-        let mut cx = StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), test_clock, &mut preview_sequence,&mut actual_retained_progress);
-        if matches!(ui.step_layouts(&pool, atlas, &mut cx), UiLayoutStep::Idle) && !ui.layout_is_dirty(window_id) {
-            return;
-        }
-    }
-    panic!("retained layout never completed: {}", ui.paint_stall_census(window_id));
+    assert!(ui.settle_layout(window_id, &pool, atlas), "retained layout never completed: {}", ui.paint_stall_census(window_id));
 }
 
 fn accessibility_document() -> UiDocumentTree {

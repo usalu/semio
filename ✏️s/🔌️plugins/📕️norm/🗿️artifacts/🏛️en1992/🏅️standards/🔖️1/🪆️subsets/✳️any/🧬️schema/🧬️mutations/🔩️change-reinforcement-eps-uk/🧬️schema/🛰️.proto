@@ -1,5 +1,5 @@
 syntax = "proto3";
-package semio.s.norm.en1992.mutation.change_reinforcement_eps_uk;
+package semio.s.norm_eurocode_structural.en1992.mutation.change_reinforcement_eps_uk;
 message ChangeReinforcementEpsUk {
   string grade_id = 1;
   double new_eps_uk = 2;

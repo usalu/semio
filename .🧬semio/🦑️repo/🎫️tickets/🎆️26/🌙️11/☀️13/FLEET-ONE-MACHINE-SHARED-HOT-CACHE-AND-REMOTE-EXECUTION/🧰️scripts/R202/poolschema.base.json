@@ -1,0 +1,334 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:graph-farm:v2",
+  "title": "Graph inference farm",
+  "description": "A pool of worker processes that each infer whole projects into a private staging directory of their own; the parent adopts the finished leaves under its writer custody and every message is plain data and a worker starts from its environment, not from a message. A retiring worker continues to own its slot until its process exits. Replacement may start only after that exit, and pool close joins all retiring generations before returning. A refused or declined pool returns its capacity only after its worker processes settle, while still releasing before the overall graph closes. EN: While the process tree of the plan stands at the hard share of its memory ceiling (`hold` of the pool answers true) the pool dispatches no further job and starts no further worker as long as one job is running or one worker exists, and looks again every `holdRecheckMilliseconds` at a tree footprint no older than `holdMeterMilliseconds` (the footprint gate of the process answers from a reading up to five seconds old, a farm child grew the tree by gigabytes within that time); the first job always runs, so a held pool never stops making progress. EN: Every worker that runs a job is watched: its physical footprint is read every `footprintMilliseconds`; a worker above `capMegabytes` of `farmChildFootprintMegabytes` in the plan stage policy (2500 MB: a live child measured 1719 MB at most over twelve minutes and a heavy owner alone 1432 MB at most, and a parent of 1300 MB, one more child at 1719 MB and this cap stay under the hard share of 5570 MB of a 6553 MB ceiling) is stopped (SIGTERM, SIGKILL after `terminateGraceMilliseconds`, only the child of this pool) and its job returns to the head of the queue to run alone, with no job beside it and no further worker started; a job above `aloneCapMegabytes` of the same policy (4200 MB: what the hard share leaves beside a parent of 1300 MB) even alone fails with the typed refusal naming its project, so no job can grow a worker without bound. DE: Steht der Prozessbaum des Plans am harten Anteil seiner Speicherobergrenze (`hold` des Pools antwortet wahr), vergibt der Pool keine weitere Aufgabe und startet keinen weiteren Worker, solange eine Aufgabe läuft oder ein Worker existiert, und prüft alle `holdRecheckMilliseconds` erneut, mit einer Prozessbaum-Messung, die höchstens `holdMeterMilliseconds` alt ist (die Messung des Footprint-Tors des Prozesses ist bis zu fünf Sekunden alt, ein Farm-Kind ließ den Baum in dieser Zeit um Gigabyte wachsen); die erste Aufgabe läuft immer, ein gehaltener Pool hört also nie auf voranzukommen. DE: Jeder Worker, der eine Aufgabe ausführt, wird überwacht: sein physischer Footprint wird alle `footprintMilliseconds` gelesen; ein Worker über `capMegabytes` of `farmChildFootprintMegabytes` in the plan stage policy (2500 MB: ein lebendes Kind maß höchstens 1719 MB in zwölf Minuten, ein schwerer Projekt-Eigentümer allein höchstens 1432 MB, und ein Elternprozess von 1300 MB, ein weiteres Kind mit 1719 MB und diese Obergrenze bleiben unter dem harten Anteil von 5570 MB einer Obergrenze von 6553 MB) wird gestoppt (SIGTERM, nach `terminateGraceMilliseconds` SIGKILL, nur das Kind dieses Pools) und seine Aufgabe kommt an den Anfang der Warteschlange und läuft allein, ohne Aufgabe daneben und ohne weiteren gestarteten Worker; eine Aufgabe über `aloneCapMegabytes` of the same policy (4200 MB: was der harte Anteil neben einem Elternprozess von 1300 MB übrig lässt) auch allein scheitert mit der typisierten Ablehnung, die ihr Projekt nennt, so dass keine Aufgabe einen Worker unbegrenzt wachsen lassen kann.",
+  "$defs": {
+    "Policy": {
+      "const": {
+        "version": 2,
+        "languages": [
+          "en",
+          "de"
+        ],
+        "workersEnvironment": "SEMIO_GRAPH_WORKERS",
+        "planEnvironment": "SEMIO_HOST_CAPACITY_PLAN",
+        "ownWorkers": 1,
+        "workerMegabytes": 1536,
+        "minimumGrantedWorkers": 1,
+        "phasesEnvironment": "SEMIO_GRAPH_PHASES",
+        "initEnvironment": "SEMIO_GRAPH_WORKER_INIT",
+        "minimumProjects": 24,
+        "grantWaitMilliseconds": 60000,
+        "holdMilliseconds": 190000,
+        "idleCloseMilliseconds": 300000,
+        "missBasisPoints": 2500,
+        "projectsPerWorker": 6,
+        "cpuReserve": 1,
+        "maximumForcedWorkers": 64,
+        "maximumRestarts": 8,
+        "maximumAttempts": 2,
+        "loopsPerWorker": 3,
+        "recycleMemoryRatio": 1,
+        "recycleGrowthRatio": 1,
+        "recycleCeilingFactor": 1.5,
+        "recycleAfterProjects": 96,
+        "retainedBasisPoints": 1000,
+        "retainedMinimumMegabytes": 64,
+        "initTimeoutMilliseconds": 180000,
+        "jobTimeoutMilliseconds": 1800000,
+        "shutdownGraceMilliseconds": 3000,
+        "holdRecheckMilliseconds": 500,
+        "holdMeterMilliseconds": 1000,
+        "footprintMilliseconds": 1000,
+        "terminateGraceMilliseconds": 2000,
+        "priority": { "readFarm": 0, "fleetPool": 10 },
+        "temporaryDirectories": {
+          "prefixes": {
+            "staging": "semio-graph-farm-",
+            "image": "semio-graph-farm-image-",
+            "session": "semio-farm-session-"
+          },
+          "pattern": "^semio-(?:graph-farm|graph-farm-image|farm-session)-(?<pid>[1-9][0-9]{0,9})-[A-Za-z0-9]{6}$"
+        },
+        "runtime": {
+          "bun": {
+            "ramFactor": 0.75,
+            "heap": {
+              "variable": "BUN_JSC_forceRAMSize",
+              "unit": "bytes"
+            },
+            "environment": {
+              "BUN_JSC_numberOfGCMarkers": "1",
+              "BUN_JSC_useConcurrentGC": "0"
+            }
+          },
+          "node": {
+            "ramFactor": 1,
+            "heap": {
+              "variable": "NODE_OPTIONS",
+              "prefix": "--max-old-space-size=",
+              "unit": "megabytes"
+            },
+            "environment": {}
+          }
+        }
+      }
+    },
+    "Messages": {
+      "const": {
+        "en": {
+          "waiting": "graph: asking the host for up to {workers} worker processes for {projects} projects; the projects wait for them",
+          "starting": "graph: inferring projects with {workers} worker processes ({megabytes} MB each)",
+          "own": "graph: {workers} worker process inside the capacity grant of this process ({megabytes} MB) infers projects now, the host is asked for more",
+          "serial": "graph: inferring {projects} projects in this process ({reason})",
+          "refused": "graph: worker processes were not used because they differ from this process ({reason}); projects are inferred in this process",
+          "lost": "graph: a worker process was lost ({reason}); its project is inferred again",
+          "priority": "graph: the worker processes run at niceness {nice} instead of {wanted} because the process that started this read already had it (a background job of the shell does, and a process cannot lower its niceness); start the read in the foreground or through the graph server to run at full speed",
+          "degraded": "graph: no more worker processes ({reason}); the remaining projects are inferred in this process",
+          "failed": "graph: a worker could not infer project {project} ({reason}); it is inferred in this process",
+          "declined": "graph: the graph cache declined the leaves of project {project}; it is inferred in this process",
+          "holding": "graph: the worker processes are starting; this process infers no project meanwhile and holds them for the workers; a project that waits longer than {seconds} s says why",
+          "reused": "graph: the worker processes of the earlier waves are ready; the {projects} projects of this wave go to them",
+          "recycled": "graph: worker {worker} restarted after {megabytes} MB",
+          "workerRefused": "graph: worker {worker} was not used because it differs from this process ({reason}); the other worker processes go on",
+          "capped": "graph: worker {worker} held {megabytes} MB while inferring {project}, above its cap of {cap} MB; it was stopped and {project} runs alone now",
+          "cappedAlone": "graph: worker {worker} held {megabytes} MB while inferring {project} alone, above its cap of {cap} MB; it was stopped",
+          "overrun": "graph: project {project} needed {megabytes} MB in a worker process even when it ran alone, above the cap of {cap} MB; the process was stopped and a worker cannot infer it",
+          "finished": "graph: {adopted} of {projects} projects inferred by {workers} worker processes in {seconds} s ({failed} failed, {lost} lost, {recycled} restarts)"
+        },
+        "de": {
+          "waiting": "Graph: beim Rechner werden bis zu {workers} Worker-Prozesse für {projects} Projekte angefragt; die Projekte warten auf sie",
+          "starting": "Graph: Projekte werden mit {workers} Worker-Prozessen abgeleitet ({megabytes} MB je Prozess)",
+          "own": "Graph: {workers} Worker-Prozess innerhalb der Kapazitätszusage dieses Prozesses ({megabytes} MB) leitet jetzt Projekte ab, beim Rechner werden weitere angefragt",
+          "serial": "Graph: {projects} Projekte werden in diesem Prozess abgeleitet ({reason})",
+          "refused": "Graph: Worker-Prozesse wurden nicht verwendet, weil sie von diesem Prozess abweichen ({reason}); Projekte werden in diesem Prozess abgeleitet",
+          "lost": "Graph: ein Worker-Prozess ging verloren ({reason}); sein Projekt wird erneut abgeleitet",
+          "priority": "Graph: die Worker-Prozesse laufen mit Nice-Wert {nice} statt {wanted}, weil der Prozess, der diesen Lesevorgang gestartet hat, ihn schon hatte (ein Hintergrundauftrag der Shell hat ihn, und ein Prozess kann seinen Nice-Wert nicht senken); den Lesevorgang im Vordergrund oder über den Graph-Server starten, um mit voller Geschwindigkeit zu laufen",
+          "degraded": "Graph: keine Worker-Prozesse mehr ({reason}); die übrigen Projekte werden in diesem Prozess abgeleitet",
+          "failed": "Graph: ein Worker-Prozess konnte Projekt {project} nicht ableiten ({reason}); es wird in diesem Prozess abgeleitet",
+          "declined": "Graph: der Graph-Cache hat die Blätter von Projekt {project} abgelehnt; es wird in diesem Prozess abgeleitet",
+          "holding": "Graph: die Worker-Prozesse starten; dieser Prozess leitet unterdessen kein Projekt ab und hält sie für die Worker zurück; ein Projekt, das länger als {seconds} s wartet, nennt den Grund",
+          "reused": "Graph: die Worker-Prozesse der früheren Wellen sind bereit; die {projects} Projekte dieser Welle gehen an sie",
+          "recycled": "Graph: Worker-Prozess {worker} nach {megabytes} MB neu gestartet",
+          "workerRefused": "Graph: Worker-Prozess {worker} wurde nicht verwendet, weil er von diesem Prozess abweicht ({reason}); die übrigen Worker-Prozesse arbeiten weiter",
+          "capped": "Graph: Worker-Prozess {worker} belegte {megabytes} MB beim Ableiten von {project}, über seiner Obergrenze von {cap} MB; er wurde gestoppt und {project} läuft jetzt allein",
+          "cappedAlone": "Graph: Worker-Prozess {worker} belegte {megabytes} MB beim Ableiten von {project} allein, über seiner Obergrenze von {cap} MB; er wurde gestoppt",
+          "overrun": "Graph: Projekt {project} brauchte in einem Worker-Prozess auch allein {megabytes} MB, über der Obergrenze von {cap} MB; der Prozess wurde gestoppt und ein Worker kann es nicht ableiten",
+          "finished": "Graph: {adopted} von {projects} Projekten von {workers} Worker-Prozessen in {seconds} s abgeleitet ({failed} fehlgeschlagen, {lost} verloren, {recycled} Neustarts)"
+        }
+      }
+    },
+    "Reasons": {
+      "enum": [
+        "disabled",
+        "forced",
+        "small",
+        "work",
+        "cpu"
+      ]
+    },
+    "Plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "workers",
+        "reason"
+      ],
+      "properties": {
+        "workers": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reason": {
+          "$ref": "#/$defs/Reasons"
+        }
+      }
+    },
+    "Start": {
+      "description": "What a worker reads from the environment variable named by the policy (`initEnvironment`) when it starts: the service module to import, the session file to open, the slot and generation it serves and the megabytes its parent reserved for it (what `retainedBasisPoints` of it, at least `retainedMinimumMegabytes`, bounds the managed memory the worker keeps from the owners it finished: it drops the rest after a job; DE: der Anteil `retainedBasisPoints` davon, mindestens `retainedMinimumMegabytes`, begrenzt den verwalteten Speicher, den der Worker von fertigen Projekten behält, den Rest gibt er nach einer Aufgabe frei). A worker needs no message of its parent to start, so a busy event loop of the parent never delays it; it announces itself with `ready`.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "service",
+        "sessionFile",
+        "slot",
+        "generation"
+      ],
+      "properties": {
+        "service": {
+          "type": "string",
+          "pattern": "^file:///"
+        },
+        "sessionFile": {
+          "type": "string",
+          "minLength": 1
+        },
+        "slot": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "megabytes": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "Ready": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "pid",
+        "identity"
+      ],
+      "properties": {
+        "type": {
+          "const": "ready"
+        },
+        "pid": {
+          "type": "integer"
+        },
+        "identity": {}
+      }
+    },
+    "Run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "id",
+        "jobFile"
+      ],
+      "properties": {
+        "type": {
+          "const": "run"
+        },
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "jobFile": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "Result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "id",
+        "reply",
+        "rssMegabytes"
+      ],
+      "properties": {
+        "type": {
+          "const": "result"
+        },
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reply": {},
+        "rssMegabytes": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "Failure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "id",
+        "name",
+        "message",
+        "rssMegabytes"
+      ],
+      "properties": {
+        "type": {
+          "const": "failure"
+        },
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rssMegabytes": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "Fatal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "name",
+        "message"
+      ],
+      "properties": {
+        "type": {
+          "const": "fatal"
+        },
+        "name": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "Shutdown": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "const": "shutdown"
+        }
+      }
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/Ready"
+    },
+    {
+      "$ref": "#/$defs/Run"
+    },
+    {
+      "$ref": "#/$defs/Result"
+    },
+    {
+      "$ref": "#/$defs/Failure"
+    },
+    {
+      "$ref": "#/$defs/Fatal"
+    },
+    {
+      "$ref": "#/$defs/Shutdown"
+    }
+  ]
+}

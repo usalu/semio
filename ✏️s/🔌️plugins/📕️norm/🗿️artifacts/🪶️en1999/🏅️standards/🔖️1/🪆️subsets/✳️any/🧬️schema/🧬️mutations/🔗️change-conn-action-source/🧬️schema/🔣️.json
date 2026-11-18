@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-conn-action-source/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1999/mutation/change-conn-action-source/schema.json",
   "title": "ChangeConnActionSource",
   "type": "object",
   "additionalProperties": false,
@@ -55,7 +55,7 @@
       }
     },
     "newSource": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/ActionSource",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1999/snapshot.json#/$defs/ActionSource",
       "x-semio-ui": {
         "label": {
           "en": "source",

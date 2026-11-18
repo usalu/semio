@@ -1,0 +1,105 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/build/task-view/v1",
+  "title": "Task view: the declared inputs of one task, pinned as a private root for the whole run",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "executionRoot": {
+          "environment": "SEMIO_TASK_ROOT",
+          "default": "live",
+          "classes": {
+            "readiness-probe": "view",
+            "interactive": "live"
+          }
+        },
+        "layout": {
+          "directory": ["f", "tv"],
+          "root": "r",
+          "manifest": "manifest.json",
+          "ledger": "mtimes.json",
+          "leases": ".use",
+          "temporaryPrefix": ".tmp-",
+          "maximumRootCharacters": 120,
+          "maximumPathCharacters": 240
+        },
+        "materialise": {
+          "strategies": ["reflink", "copy", "hardlink"],
+          "concurrency": 32,
+          "maximumFiles": 200000,
+          "maximumCopyBytes": 536870912,
+          "maximumHardlinkFiles": 50000,
+          "maximumLedgerEntries": 400000,
+          "progressEvery": 256,
+          "verify": "digest"
+        },
+        "collection": {
+          "maximumViews": 48,
+          "maximumLogicalBytes": 17179869184,
+          "maximumIdleMilliseconds": 21600000,
+          "minimumIdleMilliseconds": 600000,
+          "leaseMilliseconds": 86400000
+        }
+      }
+    },
+    "Input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1, "maxLength": 240, "description": "Relative, forward slashes, no dot segments."},
+        "digest": {"type": "string", "pattern": "^[0-9a-f]{64}$", "description": "sha256 of the bytes of a regular file the task hash was computed from."},
+        "bytes": {"type": "integer", "minimum": 0},
+        "link": {"type": "string", "minLength": 1, "description": "Target of a symbolic link (recreated, never followed)."}
+      }
+    },
+    "Manifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "hash", "strategy", "createdAt", "files", "bytes", "inputs"],
+      "properties": {
+        "version": {"const": 1},
+        "hash": {"type": "string", "pattern": "^[0-9A-Za-z]{8,64}$"},
+        "strategy": {"enum": ["reflink", "copy", "hardlink"]},
+        "createdAt": {"type": "integer", "minimum": 0},
+        "files": {"type": "integer", "minimum": 0},
+        "bytes": {"type": "integer", "minimum": 0},
+        "inputs": {"type": "string", "pattern": "^[0-9a-f]{64}$", "description": "sha256 over the sorted rows path NUL digest or link LF."},
+        "rows": {"type": "array", "items": {"type": "array", "minItems": 4, "maxItems": 4}, "description": "[path, size, mtimeMs, ino] of the view at publication; ino is kept for the hardlink strategy only."}
+      }
+    },
+    "Receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hash", "root", "strategy", "reused", "files", "bytes", "milliseconds"],
+      "properties": {
+        "hash": {"type": "string"},
+        "root": {"type": "string"},
+        "strategy": {"enum": ["reflink", "copy", "hardlink"]},
+        "reused": {"type": "boolean"},
+        "files": {"type": "integer", "minimum": 0},
+        "bytes": {"type": "integer", "minimum": 0},
+        "milliseconds": {"type": "number", "minimum": 0}
+      }
+    },
+    "Texts": {
+      "const": {
+        "en": {
+          "moved": "The inputs of task {hash} changed between hashing and pinning ({count} files, first {first}). The task hash is taken again from the live tree.",
+          "tooLarge": "The inputs of task {hash} ({files} files, {bytes} bytes) are too large to pin on a file system without clone support (limit {limit}). The task runs on the live tree and is checked and rerun if it changes.",
+          "pathTooLong": "The pinned root of task {hash} would make a path {length} characters long (limit {limit}). The task runs on the live tree.",
+          "hardlinkMoved": "A file of the pinned root of task {hash} was edited in place ({first}). The task is run again on a new view.",
+          "unsupported": "{path} is not a regular file or symbolic link and cannot be pinned."
+        },
+        "de": {
+          "moved": "Die Eingaben der Aufgabe {hash} haben sich zwischen Hash und Fixierung geändert ({count} Dateien, zuerst {first}). Der Aufgaben-Hash wird erneut aus dem lebenden Baum gebildet.",
+          "tooLarge": "Die Eingaben der Aufgabe {hash} ({files} Dateien, {bytes} Bytes) sind zu groß, um sie auf einem Dateisystem ohne Klon-Unterstützung zu fixieren (Grenze {limit}). Die Aufgabe läuft auf dem lebenden Baum und wird bei einer Änderung geprüft und neu gestartet.",
+          "pathTooLong": "Die fixierte Wurzel der Aufgabe {hash} ergäbe einen Pfad von {length} Zeichen (Grenze {limit}). Die Aufgabe läuft auf dem lebenden Baum.",
+          "hardlinkMoved": "Eine Datei der fixierten Wurzel der Aufgabe {hash} wurde an Ort und Stelle bearbeitet ({first}). Die Aufgabe läuft erneut auf einer neuen Sicht.",
+          "unsupported": "{path} ist weder eine reguläre Datei noch ein symbolischer Link und kann nicht fixiert werden."
+        }
+      }
+    }
+  }
+}

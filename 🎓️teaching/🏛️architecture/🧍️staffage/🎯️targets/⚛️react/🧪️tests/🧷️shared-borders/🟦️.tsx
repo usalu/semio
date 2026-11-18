@@ -91,4 +91,9 @@ describe("🧷️ shared borders", () => {
     expect(source).toMatch(/className="absolute inset-y-0 w-2/u);
     expect(source).toMatch(/aria-hidden="true" data-border-probe-art=""/u);
   });
+
+  it("shows the navbar search only where it has room, never squeezed to zero width beside the language choice", () => {
+    const app = readFileSync(resolve(import.meta.dirname, "../../📦️packages/🟦️typescript/📚️app/🟦️.tsx"), "utf8");
+    expect(app).toMatch(/key: "search",\s*className: "hidden min-w-0 shrink lg:flex"/u);
+  });
 });

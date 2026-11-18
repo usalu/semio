@@ -1,5 +1,5 @@
 syntax = "proto3";
-package semio.s.norm.en1998;
+package semio.s.norm_eurocode.en1998;
 message En1998Diff {
   // @state artifact
   optional string annex = 1;

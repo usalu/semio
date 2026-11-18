@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/insert-diaphragm/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1998/mutation/insert-diaphragm/schema.json",
   "title": "InsertDiaphragm",
   "type": "object",
   "additionalProperties": false,
@@ -36,7 +36,7 @@
       }
     },
     "diaphragm": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/$defs/En1998Diaphragm",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1998/snapshot.json#/$defs/En1998Diaphragm",
       "x-semio-ui": {
         "role": "value",
         "label": {

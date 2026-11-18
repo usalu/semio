@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-joint-bolt-to-web/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1993/mutation/change-joint-bolt-to-web/schema.json",
   "title": "ChangeJointBoltToWeb",
   "type": "object",
   "additionalProperties": false,

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/insert-uplift-case/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1997/mutation/insert-uplift-case/schema.json",
   "title": "InsertUpliftCase",
   "type": "object",
   "additionalProperties": false,
@@ -34,7 +34,7 @@
       }
     },
     "upliftCase": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/$defs/UpliftCase",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1997/snapshot.json#/$defs/UpliftCase",
       "x-semio-ui": {
         "role": "value",
         "label": {

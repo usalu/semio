@@ -162,7 +162,7 @@ use semio_s_artifact_norm_en1996_mut_movement_joints::remove_movement_joint;
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
-#[mutations(snapshot = En1996Snapshot, diff = En1996Diff, schema = "s.norm.en1996", reference = En1996Snapshot, reference_diff = En1996Diff)]
+#[mutations(snapshot = En1996Snapshot, diff = En1996Diff, schema = "s.norm-eurocode-materials.en1996", reference = En1996Snapshot, reference_diff = En1996Diff)]
 pub enum En1996Mutation {
     ChangeConcentratedBearingLength(change_concentrated_bearing_length::ChangeConcentratedBearingLength),
     ChangeSlabSpan(change_slab_span::ChangeSlabSpan),

@@ -1,6 +1,6 @@
 {
   "$schema":"http://json-schema.org/draft-07/schema#",
-  "$id":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/artifact.json",
+  "$id":"https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1994/artifact.json",
   "title":"En1994Artifact",
   "type":"object",
   "additionalProperties":false,
@@ -33,5 +33,5 @@
     "CaseText":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string"},"value":{"type":"string"}},"required":["id","value"]},
     "CaseRow":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string"},"labelEn":{"type":"string"},"labelDe":{"type":"string"},"entryId":{"type":"string"},"numbers":{"type":"array","items":{"$ref":"#/$defs/CaseNumber"}},"texts":{"type":"array","items":{"$ref":"#/$defs/CaseText"}}},"required":["id","labelEn","labelDe","entryId","numbers","texts"]}
   },
-  "x-semio-rust":{"doc":["🧬️ Full En1994 artifact state across the artifact and presence lanes."],"derive":["Clone","Debug","PartialEq","ArtifactSchema","semio_framework_dsl_record_derive::DslRecord","value_derive::ToValue","value_derive::FromValue"],"artifactSchema":"s.norm.en1994","attributes":["#[cfg_attr(any(test, feature = \"test-support\"), derive(serde::Serialize, serde::Deserialize))]","#[cfg_attr(any(test, feature = \"test-support\"), serde(rename_all = \"camelCase\"))]","#[value(rename_all = \"camelCase\")]"]}
+  "x-semio-rust":{"doc":["🧬️ Full En1994 artifact state across the artifact and presence lanes."],"derive":["Clone","Debug","PartialEq","ArtifactSchema","semio_framework_dsl_record_derive::DslRecord","value_derive::ToValue","value_derive::FromValue"],"artifactSchema":"s.norm-eurocode-structural.en1994","attributes":["#[cfg_attr(any(test, feature = \"test-support\"), derive(serde::Serialize, serde::Deserialize))]","#[cfg_attr(any(test, feature = \"test-support\"), serde(rename_all = \"camelCase\"))]","#[value(rename_all = \"camelCase\")]"]}
 }

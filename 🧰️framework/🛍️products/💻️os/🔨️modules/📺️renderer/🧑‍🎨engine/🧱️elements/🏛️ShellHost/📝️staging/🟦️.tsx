@@ -15,6 +15,6 @@ export function StagedActionDialog({host}:{readonly host:StagedActionHost}){
   {state.pending||state.executing||state.closing?<div role="status" aria-live="polite"><progress aria-label={state.closing?text.closing:state.executing?text.executing:text.pending}/><span>{state.closing?text.closing:state.executing?text.executing:text.pending}</span></div>:null}
   {state.controls?<OwnedStagedBodyView owner={state.controls}/>:null}
   {state.error?<p role="alert">{state.error}</p>:null}</div>
-  <SharedBorderRow framed={false} className="w-full border-t"><Button icon="x" type="button" variant="outline" aria-label={text.cancel} disabled={state.closing} onClick={host.cancel}>{text.cancel}</Button><Button icon="check" type="button" variant="outline" aria-label={text.execute} disabled={!state.ready} onClick={host.execute}>{text.execute}</Button></SharedBorderRow>
+  <SharedBorderRow edges={["top"]} className="w-full"><Button icon="x" type="button" variant="outline" aria-label={text.cancel} disabled={state.closing} onClick={host.cancel}>{text.cancel}</Button><Button icon="check" type="button" variant="outline" aria-label={text.execute} disabled={!state.ready} onClick={host.execute}>{text.execute}</Button></SharedBorderRow>
  </dialog>;
 }

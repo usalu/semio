@@ -6,7 +6,7 @@
     "animate": "addTile", "architect": "addElement", "block": "addHandleKind", "cad": "addNode", "dag": "addNode",
     "demonstrator": "changeSchema", "draw": "addLayer", "energy": "create-zone", "fem": "addNode", "flow": "addWidget",
     "forms": "addStep", "gis": "addFeature", "imperative": "addStep", "layout": "addPage", "lowpoly": "addPrimitive",
-    "mathematical": "nodeGraphEdit", "norm": "setSnapshot", "norm-eurocode": "setSnapshot", "norm-eurocode-materials": "setSnapshot", "note": "addBlock", "playbook": "addStep",
+    "mathematical": "nodeGraphEdit", "norm": "setSnapshot", "norm-energy": "setSnapshot", "norm-eurocode": "setSnapshot", "norm-eurocode-structural": "setSnapshot", "norm-eurocode-materials": "setSnapshot", "note": "addBlock", "playbook": "addStep",
     "playbook-module-procedural": "importSolidGeometry", "procedural": "addWidget", "process": "addStep",
     "puzzle": "addNode", "raster": "addLayer", "reasoning": "addNode", "remodel": "addStream", "sequence": "addStep",
     "shooting": "addShot", "sourcing": "curationSetCount", "space": "renameArtifact", "stdio": "set-cell",

@@ -10,11 +10,18 @@ export function lookBatchSizeV1(owners, children, policy = LOOK_POLICY_V1) {
   return Math.max(1, Math.min(policy.maximumOwnersPerJob, Math.ceil(owners / (Math.max(1, children) * policy.jobsPerChild))));
 }
 
-/** 🔭️ The batches of the lanes of a take pass in the order the farm serves them: one batch of each lane in turn, so the owners of a short lane never wait behind thousands of the long one. Every name is in exactly one batch, in its lane's order.
- * @see ./🧪️tests/🟦️.ts */
-export function lookBatchesV1(lanes, size) {
+/** 🔭️ The batches of the lanes of a take pass in the order the farm serves them: one batch of each lane in turn, so the owners of a short lane never wait behind thousands of the long one; an owner that `isolated` names (its look computes the assembly authority of a native or release owner, minutes under load while a plain owner takes seconds) is a batch of its own, because a job answers only when its slowest owner is done. Every name is in exactly one batch, in its lane's order.
+ * @see ./🧪️tests/🧱️isolated */
+export function lookBatchesV1(lanes, size, isolated = () => false) {
   const rest = lanes.map(lane => [...lane]), batches = [];
-  for (let live = rest.filter(lane => lane.length > 0); live.length > 0; live = live.filter(lane => lane.length > 0)) for (const lane of live) batches.push(lane.splice(0, size));
+  for (let live = rest.filter(lane => lane.length > 0); live.length > 0; live = live.filter(lane => lane.length > 0)) for (const lane of live) {
+    const batch = [];
+    while (lane.length > 0 && batch.length < size) {
+      if (isolated(lane[0])) { if (batch.length === 0) batch.push(lane.shift()); break; }
+      batch.push(lane.shift());
+    }
+    batches.push(batch);
+  }
   return batches;
 }
 
@@ -22,7 +29,7 @@ export function lookBatchesV1(lanes, size) {
 export const lookQueuedTextV1 = (language, fields) => fill(TEXTS[language === "de" ? "de" : "en"].queued, fields);
 
 /**
- * 🔭️ The queue of owner looks of a read: every look is a job of a farm child (the assembly authority, the verdict on the stored record and the closure references of up to `maximumOwnersPerJob` owners; `shared` is what every job carries, read in the flow of the caller of `start` or `ask` when it is a function), the parent only dispatches the jobs and hands each owner its answer. At most as many jobs run at once as children are ready (re-read at every settlement and whenever the farm grows through `kick`), a job is dispatched only while the answers nobody asked for yet stay below a lead of `leadJobsPerChild` jobs per child, and an owner that asks before its job was dispatched moves it to the front (it is then also exempt from the lead). `ask(name)` answers the reply of the owner once (a second ask looks again, as does an answer older than `freshMilliseconds`), undefined when the farm is gone, and rejects with `refuse(name, reason)` when the farm could not look at it.
+ * 🔭️ The queue of owner looks of a read: every look is a job of a farm child (the assembly authority, the verdict on the stored record and the closure references of up to `maximumOwnersPerJob` owners; `shared` is what every job carries, read in the flow of the caller of `start` or `ask` when it is a function), the parent only dispatches the jobs and hands each owner its answer. At most as many jobs run at once as children are ready (re-read at every settlement and whenever the farm grows through `kick`), a job is dispatched only while the answers nobody asked for yet stay below a lead of `leadJobsPerChild` jobs per child, and an owner that asks before its job was dispatched leaves its batch and goes to the front in a job of its own (exempt from the lead), so it never waits for the slowest owner of a batch. `ask(name)` answers the reply of the owner once (a second ask looks again, as does an answer older than `freshMilliseconds`), undefined when the farm is gone, and rejects with `refuse(name, reason)` when the farm could not look at it.
  * @param {{ farm: { width(): number, observe(job: object): Promise<{ looks?: object[] } | undefined> }, jobOf: (name: string) => object, shared?: object | (() => object), refuse: (name: string, reason: string) => Error, say?: (text: (language: string) => string) => void, policy?: typeof LOOK_POLICY_V1, now?: () => number }} options
  * @see ./🧪️tests/🟦️.ts
  */
@@ -70,11 +77,11 @@ export function createLookQueueV1({ farm, jobOf, shared = {}, refuse, say = () =
   };
   return Object.freeze({
     /** 🔭️ Queues the looks of all lanes of a take pass, in batches. */
-    start(lanes) {
+    start(lanes, isolated) {
       const names = lanes.reduce((total, lane) => total + lane.length, 0);
       if (names === 0) return;
       size = lookBatchSizeV1(names, farm.width() || policy.assumedChildren, policy);
-      const batches = lookBatchesV1(lanes, size);
+      const batches = lookBatchesV1(lanes, size, isolated);
       for (const names of batches) enqueue(names, false);
       counts.owners += names.length;
       say(language => lookQueuedTextV1(language, { owners: names, jobs: batches.length, size, children: farm.width() || policy.assumedChildren }));
@@ -88,7 +95,15 @@ export function createLookQueueV1({ farm, jobOf, shared = {}, refuse, say = () =
       let entry = entries.get(name);
       if (entry !== undefined && entry.ready && now() - entry.at > policy.freshMilliseconds) { held--; entries.delete(name); entry = undefined; counts.again++; }
       if (entry === undefined) { enqueue([name], true); entry = entries.get(name); }
-      if (entry.batch.state === "queued") { queue.splice(queue.indexOf(entry.batch), 1); entry.batch.urgent = true; queue.unshift(entry.batch); pump(); }
+      if (entry.batch.state === "queued") {
+        const batch = entry.batch;
+        if (batch.names.length > 1) {
+          batch.names = batch.names.filter(each => each !== name);
+          entry.batch = { names: [name], state: "queued", urgent: true, shared: batch.shared };
+          queue.unshift(entry.batch);
+        } else { queue.splice(queue.indexOf(batch), 1); batch.urgent = true; queue.unshift(batch); }
+        pump();
+      }
       const settled = entry;
       return settled.promise.finally(() => { if (entries.get(name) === settled) { entries.delete(name); if (settled.ready) held--; } });
     },

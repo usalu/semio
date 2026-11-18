@@ -17,7 +17,7 @@ use framework_schema::ArtifactSchema;
 #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.norm.en1996.inference")]
+#[artifact_schema(id = "s.norm-eurocode-materials.en1996.inference")]
 pub struct En1996Inference {
     #[derived]
     pub outline: En1996Outline,
@@ -34,14 +34,14 @@ impl protocol::Inference<En1996Snapshot> for En1996Inference {
 
 impl protocol::InferenceSpec<En1996Snapshot> for En1996Inference {
     fn inference_schema_id() -> &'static str {
-        "s.norm.en1996.inference"
+        "s.norm-eurocode-materials.en1996.inference"
     }
     fn schema_version() -> u32 {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec {
-            id: "s.norm.en1996.inference.outline",
+            id: "s.norm-eurocode-materials.en1996.inference.outline",
             reads: &["annex", "reliabilityClass", "masonryClass", "designSituation", "storeys", "walls"],
         }]
     }
@@ -51,7 +51,7 @@ impl protocol::InferenceSpec<En1996Snapshot> for En1996Inference {
 //#region 🔖️Descriptor
 pub fn en1996_artifact_inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {
     semio_framework_schema_registry::ArtifactInferenceDescriptor {
-        id: "s.norm.en1996.inference",
+        id: "s.norm-eurocode-materials.en1996.inference",
         inference: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),

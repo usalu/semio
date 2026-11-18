@@ -13997,8 +13997,20 @@
               "kind": "poly",
               "points": [
                 [
-                  null,
-                  null
+                  -0.0166,
+                  0
+                ],
+                [
+                  -0.0166,
+                  0.0531
+                ],
+                [
+                  0.0883,
+                  0.0531
+                ],
+                [
+                  0.0883,
+                  0
                 ]
               ],
               "closed": true,
@@ -14009,7 +14021,15 @@
               "filled": true,
               "tone": 0.84,
               "region": "head-skin",
-              "material": "skin"
+              "material": "skin",
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "head",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
             },
             {
               "kind": "poly",

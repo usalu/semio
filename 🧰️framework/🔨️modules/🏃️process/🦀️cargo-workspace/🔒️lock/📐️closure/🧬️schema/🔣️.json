@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/process/cargo-workspace/lock/closure/v1",
+  "title": "Closure projection of a Cargo.lock for one build",
+  "definitions": {
+    "Hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "Protocol": {
+      "const": {
+        "domain": "semio.cargo-lock-closure/1",
+        "maximumBytes": 33554432,
+        "maximumPackages": 65536,
+        "readAttempts": 4,
+        "readPauseMilliseconds": 25,
+        "keeps": [
+          "header",
+          "closure-packages",
+          "non-package-sections",
+          "parsed-manifest-without-comments-and-workspace-member-lists"
+        ],
+        "dependencyForms": [
+          "name",
+          "name version",
+          "name version (source)"
+        ],
+        "manifestDomain": "semio.cargo-manifest-closure/1",
+        "manifestElided": [
+          "members",
+          "exclude",
+          "default-members"
+        ]
+      }
+    },
+    "Projection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "whole",
+        "digest",
+        "packages"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "whole": {
+          "type": "boolean"
+        },
+        "digest": {
+          "$ref": "#/definitions/Hash"
+        },
+        "packages": {
+          "type": "array",
+          "maxItems": 65536,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        }
+      }
+    },
+    "Roots": {
+      "type": "array",
+      "maxItems": 4096,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      }
+    }
+  }
+}

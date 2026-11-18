@@ -167,13 +167,13 @@ fn the_table_twin_lines_up_with_the_checks() {
 #[test]
 fn remedy_chips_of_live_editors_trigger_ghost_previews_and_a_clear_row() {
     let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
-    let live = render(&report(), &ChecksViewState { selected: Some(1), ..ChecksViewState::default() }, &ChecksWindowSpec { controller_id: Some("s.norm.en1993@1/*#editor"), ..ChecksWindowSpec::default() }, Locale::En);
+    let live = render(&report(), &ChecksViewState { selected: Some(1), ..ChecksViewState::default() }, &ChecksWindowSpec { controller_id: Some("s.norm-eurocode-structural.en1993@1/*#editor"), ..ChecksWindowSpec::default() }, Locale::En);
     assert!(live.contains("previewRemedy") && live.contains("clearPreview") && live.contains("Preview"), "{live}");
-    let german = render(&report(), &ChecksViewState { selected: Some(1), ..ChecksViewState::default() }, &ChecksWindowSpec { controller_id: Some("s.norm.en1993@1/*#editor"), ..ChecksWindowSpec::default() }, Locale::De);
+    let german = render(&report(), &ChecksViewState { selected: Some(1), ..ChecksViewState::default() }, &ChecksWindowSpec { controller_id: Some("s.norm-eurocode-structural.en1993@1/*#editor"), ..ChecksWindowSpec::default() }, Locale::De);
     assert!(german.contains("Vorschau"), "{german}");
     let other = render(&report(), &ChecksViewState { selected: Some(1), ..ChecksViewState::default() }, &ChecksWindowSpec { controller_id: Some("s.norm.x@1/*#editor"), ..ChecksWindowSpec::default() }, Locale::En);
     assert!(!other.contains("previewRemedy") && other.contains("applyRemedy"), "{other}");
-    assert!(controller_is_live("s.norm.en1990@1/*#editor") && !controller_is_live("s.norm.din4108@1/*#editor"));
+    assert!(controller_is_live("s.norm-eurocode.en1990@1/*#editor") && !controller_is_live("s.norm.din4108@1/*#editor"));
 }
 
 #[test]

@@ -362,7 +362,7 @@ function startShow(host: HTMLElement, menagerie: Menagerie, seed: number, tempo:
 
   const measure = (tick: number): StageEvent[] => {
     const box = stageBox(page, host);
-    const seen = survey(page, { surfaces: direction.surfaces, keepouts: direction.keepouts, walls: direction.walls, props: direction.props, pointer, frame: host });
+    const seen = survey(page, { surfaces: direction.surfaces, keepouts: direction.keepouts, walls: direction.walls, props: direction.props, controls: direction.controls, pointer, frame: host });
     lifting.measured();
     const events: StageEvent[] = [];
     origin = { x: box.x, y: box.y };

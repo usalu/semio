@@ -27,6 +27,7 @@
     "🖥️composite": {
       "patch": false,
       "cases": {
+        "card-stack": "🗂️card-stack",
         "color-input": "🎨️color-input",
         "dialog": "💭️dialog",
         "dialog-choices": "🔀️dialog-choices",

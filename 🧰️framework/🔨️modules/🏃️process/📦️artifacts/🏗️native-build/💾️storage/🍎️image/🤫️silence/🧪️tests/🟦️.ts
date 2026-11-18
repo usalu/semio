@@ -7,7 +7,7 @@ import fixture from"./🔣️.json"with{type:"json"};
 import schema from"../🧬️schema/🔣️.json"with{type:"json"};
 import imageSchema from"../../../🧬️schema/🔣️.json"with{type:"json"};
 import{validateJsonSchemaSubset}from"../../../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import{nativeImageAttachArgumentsV1}from"../../👤️owners/🟦️.ts";
+import{nativeImageAttachArgumentsV1,nativeImageAttachProgramV1}from"../../👤️owners/🟦️.ts";
 import{applyNativeImageVolumeSilenceV1,createNativeImageVolumeSilenceSeedV1,decideNativeImageVolumeSilenceV1,hasNativeImageVolumeSilenceMarkerV1,nativeImageSeededCreateArgumentsV1,nativeImageVolumeSilencedV1,observeNativeImageVolumeSilenceV1,type NativeImageVolumeSilenceFactsV1}from"../🟦️.ts";
 const protocol=schema.definitions.Protocol.const,hex=(index:number)=>index.toString(16).padStart(16,"0");
 const run=(program:string,args:readonly string[])=>{const result=spawnSync(program,[...args],{encoding:"utf8",env:{PATH:"/usr/bin:/bin:/usr/sbin:/sbin",LANG:"C",LC_ALL:"C"}});return{status:result.status,stdout:result.stdout,stderr:result.stderr};};
@@ -90,7 +90,7 @@ test.skipIf(process.platform!=="darwin")("a seeded image attached with productio
   expect(run("/usr/bin/hdiutil",["create","-size","32m","-type",protocolImage.format,"-nospotlight","-fs",protocolImage.filesystem,"-volname","semio",plain]).status).toBe(0);
   const format=(path:string)=>run("/usr/bin/python3",["-I","-c","import plistlib,subprocess,sys\nprint(plistlib.loads(subprocess.run(['/usr/bin/hdiutil','imageinfo','-plist',sys.argv[1]],capture_output=True).stdout)['Format'])",path]).stdout.trim();
   expect(format(image)).toBe(format(plain));expect(lstatSync(image).size).toBe(lstatSync(plain).size);
-  expect(run("/usr/bin/hdiutil",nativeImageAttachArgumentsV1(mount,image)).status).toBe(0);attached.push(mount);
+  expect(run(nativeImageAttachProgramV1,nativeImageAttachArgumentsV1(mount,image)).status).toBe(0);attached.push(mount);
   expect(await settle(join(mount,protocol.serviceDirectory))).toBe(true);
   expect(owner(join(mount,protocol.serviceDirectory))).toBe(process.getuid!());expect(owner(join(mount,protocol.serviceDirectory,protocol.serviceMarker))).toBe(process.getuid!());
   expect(nativeImageVolumeSilencedV1(mount,"attach")).toBe(true);

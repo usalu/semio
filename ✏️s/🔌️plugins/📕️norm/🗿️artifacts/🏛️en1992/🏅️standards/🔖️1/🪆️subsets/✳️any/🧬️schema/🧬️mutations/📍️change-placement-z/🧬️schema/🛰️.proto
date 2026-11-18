@@ -1,5 +1,5 @@
 syntax = "proto3";
-package semio.s.norm.en1992.mutation.change_placement_z;
+package semio.s.norm_eurocode_structural.en1992.mutation.change_placement_z;
 message ChangePlacementZ {
   string id = 1;
   double new_z = 2;

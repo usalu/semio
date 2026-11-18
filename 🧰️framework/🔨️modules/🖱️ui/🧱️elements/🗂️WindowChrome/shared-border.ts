@@ -41,10 +41,18 @@ export function pruneSharedBorderMotion(motion: Map<Element, Set<string>>): void
   }
 }
 
-/** 🛡️ Inline important geometry prevents ancestor icon selectors from shrinking frame paint. */
+/** 🛡️ Inline important geometry prevents ancestor icon selectors from shrinking frame paint. The overlay's origin is moved onto the
+ * parent's device-snapped corner (the compositor resolves every line in snapped space), so two overlays whose parents lie at
+ * different fractions of a pixel (cells of a fractional grid track) paint a shared seam at one coordinate. */
 export function sizeSharedBorderOverlay(svg: SVGSVGElement | null, width: number, height: number): void {
   if (!svg) return;
   for (const [property, value] of Object.entries({ width: `${width}px`, height: `${height}px`, "min-width": "0", "min-height": "0", "max-width": "none", "max-height": "none", "flex-shrink": "0" })) svg.style.setProperty(property, value, "important");
+  const parent = svg.parentElement;
+  if (!parent) return;
+  const snapped = deviceSnappedRect(parent), rect = parent.getBoundingClientRect();
+  const x = (snapped.left - rect.left) / sharedBorderAxisScale(rect.width, parent.offsetWidth), y = (snapped.top - rect.top) / sharedBorderAxisScale(rect.height, parent.offsetHeight);
+  if (x || y) svg.style.setProperty("translate", `${Math.round(x * 1e3) / 1e3}px ${Math.round(y * 1e3) / 1e3}px`, "important");
+  else svg.style.removeProperty("translate");
 }
 
 /** 🎨️ Shared state paint used by automatic frame overlays as well as window segments. */

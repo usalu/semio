@@ -677,6 +677,7 @@
   "closurePreparation": {
     "prerequisites": [
       "@semio-tech/os-plugin-describe-rs:build",
+      "@semio-tech/os-plugin-native-transpile-rs:build",
       "workspace:deps-wasm-opt"
     ],
     "modules": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/🔌️plugin-modules"
@@ -686,6 +687,7 @@
     "command": "component --manifest",
     "dependsOn": [
       "@semio-tech/os-plugin-describe-rs:build",
+      "@semio-tech/os-plugin-native-transpile-rs:build",
       "@semio-tech/framework-plugin-web:support",
       "workspace:deps-wasm-opt"
     ],

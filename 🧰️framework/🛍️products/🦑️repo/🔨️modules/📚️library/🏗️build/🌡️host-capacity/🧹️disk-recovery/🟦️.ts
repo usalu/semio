@@ -4,18 +4,25 @@ import {formatDiskBytesV1} from "../../../../../../../🔨️modules/🏃️proc
 import {casPartitionBudgetV1,type CasPartitionBudgetV1,type CasPartitionV1} from "../../🗄️cas/🌡️partition/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
-/** 📚️ The tuning of the recovery: the time one collector may take, how many consumers a refusal names, the entry budget of one size measurement and the environment variable that marks a child of the recovery. */
-export type DiskRecoveryPolicyV1=Readonly<{version:1;collectorBudgetMilliseconds:number;consumerCount:number;measureEntryLimit:number;environmentChild:string}>;
+/** 📚️ The tuning of the recovery: the time one collector may take, how many consumers a refusal names, the entry budget of one size measurement, the environment variable that marks a child of the recovery and the consumers a refusal always names when they hold bytes (the image slack and the replica store). */
+export type DiskRecoveryPolicyV1=Readonly<{version:1;collectorBudgetMilliseconds:number;consumerCount:number;measureEntryLimit:number;environmentChild:string;namedConsumers:readonly string[]}>;
 export const DISK_RECOVERY_POLICY_V1:DiskRecoveryPolicyV1=Object.freeze(JSON.parse(JSON.stringify(schema.definitions.Policy.const)));
 /** 🗣️ The bilingual catalog of the recovery; its refusal renders at the command line like every other refusal. */
 export const DISK_RECOVERY_TEXTS_V1=bindCatalogV1("disk-recovery",schema.definitions.Messages.const);
 
+/** 🌐️ The language of the lines a recovery reports: one of the two, or `both` for a log that is read by whoever opens it (English, then German, joined by a slash). */
+export type DiskLanguageV1="en"|"de"|"both";
+/** 🗣️ One line of the recovery catalog in the language asked for. */
+export function diskTextV1(key:string,language:DiskLanguageV1,values:Record<string,string|number>={}):string{
+ return language==="both"?handleTextV1(DISK_RECOVERY_TEXTS_V1,key,"en",values)+" / "+handleTextV1(DISK_RECOVERY_TEXTS_V1,key,"de",values):handleTextV1(DISK_RECOVERY_TEXTS_V1,key,language,values);
+}
+
 /** 🗂️ One registered writer: who fills which root, how it is bounded, who collects it and in which order the gate frees it (`priority` ascending), whether freeing it returns bytes to the host volume at once (`relief`), and the exact command that frees it by hand. */
-export type DiskWriterRowV1=Readonly<{id:string;priority:number;class:"derivable"|"recoverable"|"content"|"image";relief:"host"|"image"|"none";root:string;collector:"ledger"|"cas-lru"|"staging-sweep"|"image-sweep"|"age-prune"|"log-rotate"|"manual";command:string;bound:Readonly<{en:string;de:string}>}>;
+export type DiskWriterRowV1=Readonly<{id:string;priority:number;class:"derivable"|"recoverable"|"content"|"store"|"image";relief:"host"|"image"|"none";root:string;collector:"ledger"|"cas-lru"|"staging-sweep"|"image-sweep"|"age-prune"|"log-rotate"|"image-reset"|"store-compaction"|"manual";command:string;bound:Readonly<{en:string;de:string}>}>;
 export const DISK_WRITERS_V1:readonly DiskWriterRowV1[]=Object.freeze(JSON.parse(JSON.stringify(schema.definitions.Writers.const)));
 
 /** 🔌️ A registered writer bound to its collector: what it holds now and how to free it; `collect` answers the bytes it claims to have freed (the recovery trusts the volume, not the claim). */
-export type DiskWriterV1=Readonly<{row:DiskWriterRowV1;root:string;measure(signal?:AbortSignal):Promise<number>|number;collect?(request:Readonly<{needBytes:number;signal?:AbortSignal}>):Promise<number>}>;
+export type DiskWriterV1=Readonly<{row:DiskWriterRowV1;root:string;measure(signal?:AbortSignal):Promise<number>|number;describe?(signal?:AbortSignal):Promise<Readonly<{root?:string;command?:string}>|undefined>;collect?(request:Readonly<{needBytes:number;signal?:AbortSignal}>):Promise<number>}>;
 
 /** 🌡️ What the volume says: its mount, size and the bytes a writer may still use; `undefined` is "not measurable". */
 export type DiskFactsV1=Pick<CasPartitionV1,"partition"|"totalBytes"|"freeBytes">;
@@ -57,40 +64,61 @@ export type DiskConsumerV1=Readonly<{id:string;root:string;bytes:number;command:
 export type DiskRecoveryV1=Readonly<{verdict:"admit"|"refuse"|"fixed-shares";facts:DiskFactsV1|undefined;needBytes:number;mustFreeBytes:number;targetFreeBytes:number;steps:readonly Readonly<{id:string;freedBytes:number;freeBytes:number;failure?:string}>[];consumers:readonly DiskConsumerV1[]}>;
 
 /** 🧹️ Frees space in the order of the registry until the command's declared need fits with its reserve: the writers that give bytes to the host volume run by priority (derivable artefacts first, then the least recently used cache objects), the volume is read again after each one and judges, a failing or too slow collector never stops the next, and cancellation stops between collectors. The command is admitted when `need + cushion` is free, and refused with the largest remaining consumers when it is not. @see ./🧬️schema/🔣️.json */
-export async function recoverDiskV1(input:Readonly<{facts():DiskFactsV1|undefined;needBytes:number;writers:readonly DiskWriterV1[];language:"en"|"de";report?(line:string):void;signal?:AbortSignal;budgetMilliseconds?:number}>):Promise<DiskRecoveryV1>{
- const text=(key:string,values:Record<string,string|number>)=>handleTextV1(DISK_RECOVERY_TEXTS_V1,key,input.language,values),write=input.report??(()=>undefined);
+export async function recoverDiskV1(input:Readonly<{facts():DiskFactsV1|undefined;needBytes:number;writers:readonly DiskWriterV1[];language:DiskLanguageV1;report?(line:string):void;signal?:AbortSignal;budgetMilliseconds?:number}>):Promise<DiskRecoveryV1>{
+ const text=(key:string,values:Record<string,string|number>)=>diskTextV1(key,input.language,values),write=input.report??(()=>undefined);
  let facts=input.facts(),judged=judgeDiskV1(facts,input.needBytes);
  const steps:Array<{id:string;freedBytes:number;freeBytes:number;failure?:string}>=[];
  const done=(verdict:DiskRecoveryV1["verdict"],consumers:readonly DiskConsumerV1[]=[]):DiskRecoveryV1=>Object.freeze({verdict,facts,needBytes:input.needBytes,mustFreeBytes:judged.mustFreeBytes,targetFreeBytes:judged.targetFreeBytes,steps:Object.freeze(steps.slice()),consumers});
  if(facts===undefined||judged.action==="fixed-shares")return done("fixed-shares");
  if(judged.action==="allow")return done("admit");
- write(text("recovery.start",{partition:facts.partition,free:formatDiskBytesV1(facts.freeBytes),target:formatDiskBytesV1(judged.targetFreeBytes)}));
- const order=input.writers.filter(writer=>writer.row.relief==="host"&&writer.row.collector!=="manual"&&writer.collect!==undefined).sort((first,second)=>first.row.priority-second.row.priority);
- for(const writer of order){
-  input.signal?.throwIfAborted();
-  const before=facts.freeBytes;let failure:string|undefined;
-  const limit=AbortSignal.timeout(input.budgetMilliseconds??DISK_RECOVERY_POLICY_V1.collectorBudgetMilliseconds),signal=input.signal?AbortSignal.any([input.signal,limit]):limit;
-  try{await writer.collect!({needBytes:Math.max(0,judged.targetFreeBytes-before),signal});}
-  catch(error){if(input.signal?.aborted)throw error;failure=String((error as Error)?.message??error).slice(0,200);}
-  const next=input.facts();if(next!==undefined)facts=next;
-  const freed=Math.max(0,facts.freeBytes-before);
-  steps.push(failure===undefined?{id:writer.row.id,freedBytes:freed,freeBytes:facts.freeBytes}:{id:writer.row.id,freedBytes:freed,freeBytes:facts.freeBytes,failure});
-  write(failure===undefined?text("recovery.step",{id:writer.row.id,freed:formatDiskBytesV1(freed),free:formatDiskBytesV1(facts.freeBytes)}):text("recovery.failed",{id:writer.row.id,message:failure}));
-  if(facts.freeBytes>=judged.targetFreeBytes)break;
- }
+ facts=(await collectInOrderV1({facts:input.facts,current:facts,targetFreeBytes:judged.targetFreeBytes,writers:input.writers,language:input.language,report:write,signal:input.signal,budgetMilliseconds:input.budgetMilliseconds,steps}))??facts;
  judged=judgeDiskV1(facts,input.needBytes);
  if(facts.freeBytes>=judged.mustFreeBytes){write(text("recovery.done",{partition:facts.partition,free:formatDiskBytesV1(facts.freeBytes)}));return done("admit");}
  return done("refuse",await consumersOfV1(input.writers,input.signal));
 }
 
-/** 🔎️ The largest consumers of the machine by registered writer, biggest first, each with the exact command that frees it; a writer that cannot be measured is skipped, not guessed. */
+/** 🪜️ Runs the collectors that give bytes to the host volume in the order of the registry until `targetFreeBytes` are free: the volume is read again after each one (the claim of a collector is not trusted), a failing or too slow collector never stops the next, progress lines go to `report` in the language asked for and cancellation stops between collectors. Answers the last reading of the volume. */
+export async function collectInOrderV1(input:Readonly<{facts():DiskFactsV1|undefined;current:DiskFactsV1;targetFreeBytes:number;writers:readonly DiskWriterV1[];language:DiskLanguageV1;report?(line:string):void;signal?:AbortSignal;budgetMilliseconds?:number;startKey?:string;steps:Array<{id:string;freedBytes:number;freeBytes:number;failure?:string}>}>):Promise<DiskFactsV1>{
+ const text=(key:string,values:Record<string,string|number>)=>diskTextV1(key,input.language,values),write=input.report??(()=>undefined);
+ let facts=input.current;
+ write(text(input.startKey??"recovery.start",{partition:facts.partition,free:formatDiskBytesV1(facts.freeBytes),target:formatDiskBytesV1(input.targetFreeBytes)}));
+ const order=input.writers.filter(writer=>writer.row.relief==="host"&&writer.row.collector!=="manual"&&writer.collect!==undefined).sort((first,second)=>first.row.priority-second.row.priority);
+ for(const writer of order){
+  input.signal?.throwIfAborted();
+  const before=facts.freeBytes;let failure:string|undefined;
+  const limit=AbortSignal.timeout(input.budgetMilliseconds??DISK_RECOVERY_POLICY_V1.collectorBudgetMilliseconds),signal=input.signal?AbortSignal.any([input.signal,limit]):limit;
+  try{await writer.collect!({needBytes:Math.max(0,input.targetFreeBytes-before),signal});}
+  catch(error){if(input.signal?.aborted)throw error;failure=String((error as Error)?.message??error).slice(0,200);}
+  const next=input.facts();if(next!==undefined)facts=next;
+  const freed=Math.max(0,facts.freeBytes-before);
+  input.steps.push(failure===undefined?{id:writer.row.id,freedBytes:freed,freeBytes:facts.freeBytes}:{id:writer.row.id,freedBytes:freed,freeBytes:facts.freeBytes,failure});
+  write(failure===undefined?text("recovery.step",{id:writer.row.id,freed:formatDiskBytesV1(freed),free:formatDiskBytesV1(facts.freeBytes)}):text("recovery.failed",{id:writer.row.id,message:failure}));
+  if(facts.freeBytes>=input.targetFreeBytes)break;
+ }
+ return facts;
+}
+
+/** 📥️ Makes `needBytes` free on a volume for a stage that waits to start: the collectors of the registry run in priority order (derivable artefacts first, the least recently used cache objects and the user files later, the image slack last) until the volume has the need, with progress lines and cancellation; when nothing collectable remains it answers the largest consumers, each with the exact command that frees it. It judges by the need alone (no cushion or reserve of the derived budget) and works on any volume size. @see ./🧪️tests/🟦️.ts */
+export async function recoverNeedV1(input:Readonly<{facts():DiskFactsV1|undefined;needBytes:number;writers:readonly DiskWriterV1[];language:DiskLanguageV1;report?(line:string):void;signal?:AbortSignal;budgetMilliseconds?:number}>):Promise<DiskRecoveryV1>{
+ const text=(key:string,values:Record<string,string|number>)=>diskTextV1(key,input.language,values),write=input.report??(()=>undefined);
+ let facts=input.facts();
+ const steps:Array<{id:string;freedBytes:number;freeBytes:number;failure?:string}>=[],done=(verdict:DiskRecoveryV1["verdict"],consumers:readonly DiskConsumerV1[]=[]):DiskRecoveryV1=>Object.freeze({verdict,facts,needBytes:input.needBytes,mustFreeBytes:input.needBytes,targetFreeBytes:input.needBytes,steps:Object.freeze(steps.slice()),consumers});
+ if(facts===undefined)return done("fixed-shares");
+ if(facts.freeBytes>=input.needBytes)return done("admit");
+ facts=await collectInOrderV1({facts:input.facts,current:facts,targetFreeBytes:input.needBytes,writers:input.writers,language:input.language,report:write,signal:input.signal,budgetMilliseconds:input.budgetMilliseconds,startKey:"recovery.start-need",steps});
+ if(facts.freeBytes>=input.needBytes){write(text("recovery.done",{partition:facts.partition,free:formatDiskBytesV1(facts.freeBytes)}));return done("admit");}
+ return done("refuse",await consumersOfV1(input.writers,input.signal));
+}
+
+/** 🔎️ The largest consumers of the machine by registered writer, biggest first, each with the exact command that frees it (a writer that knows more than its row, the image with the most slack or the store of this machine, describes its own root and command); the consumers named by the policy are listed besides the largest ones whenever they hold bytes; a writer that cannot be measured is skipped, not guessed. */
 export async function consumersOfV1(writers:readonly DiskWriterV1[],signal?:AbortSignal,count:number=DISK_RECOVERY_POLICY_V1.consumerCount):Promise<readonly DiskConsumerV1[]>{
  const rows:DiskConsumerV1[]=[];
  for(const writer of writers){
   signal?.throwIfAborted();
-  try{const bytes=await writer.measure(signal);if(Number.isFinite(bytes)&&bytes>0)rows.push({id:writer.row.id,root:writer.root,bytes,command:writer.row.command});}catch(error){if(signal?.aborted)throw error;}
+  try{const bytes=await writer.measure(signal);if(Number.isFinite(bytes)&&bytes>0){const detail=await writer.describe?.(signal).catch(()=>undefined);rows.push({id:writer.row.id,root:detail?.root??writer.root,bytes,command:detail?.command??writer.row.command});}}catch(error){if(signal?.aborted)throw error;}
  }
- return Object.freeze(rows.sort((first,second)=>second.bytes-first.bytes||(first.id<second.id?-1:1)).slice(0,count));
+ const sorted=rows.sort((first,second)=>second.bytes-first.bytes||(first.id<second.id?-1:1)),top=sorted.slice(0,count);
+ return Object.freeze([...top,...sorted.slice(count).filter(row=>DISK_RECOVERY_POLICY_V1.namedConsumers.includes(row.id))]);
 }
 
 /** 🚨️ The typed bilingual refusal of a command the volume cannot take even after every automatic collection: it names the volume, its free bytes, what the command needs and the largest remaining consumers by root with their sizes and the exact command that frees each. */

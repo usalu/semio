@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["files"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "files": { "type": "array", "items": { "type": "object", "required": ["file", "mustContain", "mustNotContain"], "additionalProperties": false, "properties": { "file": { "type": "string" }, "mustContain": { "type": "array", "items": { "type": "string" } }, "mustNotContain": { "type": "array", "items": { "type": "string" } } } } }
+  }
+}

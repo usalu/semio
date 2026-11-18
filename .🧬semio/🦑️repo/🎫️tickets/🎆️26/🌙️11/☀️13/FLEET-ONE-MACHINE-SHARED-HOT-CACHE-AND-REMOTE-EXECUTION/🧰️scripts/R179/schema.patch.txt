@@ -1,0 +1,14 @@
+--- base/schema.json	2026-11-18 05:11:43
++++ new/schema.json	2026-11-18 05:11:59
+@@ -15,9 +15,10 @@
+       "const": {
+         "version": 1,
+         "claimTtlMilliseconds": 30000,
++        "expectedMilliseconds": 450000,
+         "heartbeatMilliseconds": 10000,
+         "awaitSliceMilliseconds": 20000,
+-        "waitBudgetMilliseconds": 600000,
++        "waitBudgetMilliseconds": 1800000,
+         "maximumHoldMilliseconds": 1800000,
+         "claimTimeoutMilliseconds": 3000,
+         "upstreamTimeoutMilliseconds": 120000,

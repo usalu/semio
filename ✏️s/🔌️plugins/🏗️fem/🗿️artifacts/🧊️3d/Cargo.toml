@@ -266,6 +266,12 @@ path = "../../⚙️engine/🖥️app-surface/📦️packages/🦀️rust"
 [workspace.dependencies.semio-s-fem-elements3d]
 path = "../../../../🔨️modules/🏗️fem/⚙️engine/🧱️elements3d/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-fem-material]
+path = "../../⚙️engine/🧱️material/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-fem-node]
+path = "../../⚙️engine/📍node/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-fem-mesh]
 path = "../../../../🔨️modules/🏗️fem/⚙️engine/🕸️mesh/📦️packages/🦀️rust"
 

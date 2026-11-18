@@ -526,6 +526,8 @@ export function decodePresenceFrame(value: unknown, path = "presenceFrame"): Pre
       return { type, entries: asArray(row.entries, `${path}.entries`).map((entry, index) => decodePresenceEntry(entry, `${path}.entries[${index}]`)), left: asArray(row.left, `${path}.left`).map((entry, index) => asString(entry, `${path}.left[${index}]`)) };
     case "refused":
       return { type, reason: asString(row.reason, `${path}.reason`) };
+    case "heartbeat":
+      return { type };
     case "watch":
       return { type, scopes: asArray(row.scopes, `${path}.scopes`).map((scope, index) => asString(scope, `${path}.scopes[${index}]`)), intervalMs: asInterval(row.intervalMs, `${path}.intervalMs`) };
     case "watched": {
@@ -557,6 +559,8 @@ export function encodePresenceFrame(value: PresenceFrame): unknown {
       return { type: value.type, entries: value.entries.map(encodePresenceEntry), left: [...value.left] };
     case "refused":
       return { type: value.type, reason: value.reason };
+    case "heartbeat":
+      return { type: value.type };
     case "watch":
       return { type: value.type, scopes: [...value.scopes], intervalMs: value.intervalMs };
     case "watched":

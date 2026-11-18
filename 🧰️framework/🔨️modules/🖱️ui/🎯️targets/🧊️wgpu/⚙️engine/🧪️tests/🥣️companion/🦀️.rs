@@ -29,6 +29,7 @@ use ui_contract::{SurfaceId, UiDocumentLeaseHeader, UiDocumentNodePage, UiFixedL
 pub use semio_ui_surface_identity::{UiSurfaceToken, UI_LAYOUT_SURFACE_SLOTS};
 use semio_ui_wgpu_engine_surface::{LANE_WHEEL, PresentedTooltip, RetainedPaintFrame, RetainedPaintPhase, RetainedPaintWalk, RetainedPaintWalkStep, SurfaceLane, SurfaceLaneEntry, SurfaceLaneRing, SurfaceLayoutReason, ThemePropagationCursor, ThemePropagationPhase, UI_FRAME_OVERLAY_CHROME, UI_RETIRED_COMPONENT_SCENE_CAPACITY, UiCandidateBaseline, UiCandidateBaselineStep, UiDocumentIngress, UiDocumentIngressFault, UiDocumentIngressStatus, UiFramePaintCensus, UiFrameStep, UiLayoutStep, UiOverlayPlacement, UiPresentedCaret, UiPresentedSourceIdentity, UiPresentedTreeLoan, UiSceneHit, UiSealedVisibilityCandidate, UiSurfaceAdmissionRejected, UiSurfaceClosePhase, UiSurfaceCloseStep, UiSurfaceRegistry, UiWindow, UiWindowClockStep, UiWorkerRetirementRefusal, close_layout_worker_session, close_layout_admission, mark_window_paint_dirty, offset_rect, paint_retained_tooltip, presented_caret, register_retained_hit, retained_node_clip, retained_tooltip_paint, retire_surface_scene, scene_slot_for_node_absolute, stage_label, synchronize_presented_tooltip, theme_layout_identity, tooltip_label_in_tree, worker_lane};
 use semio_ui_wgpu_engine::*;
+use semio_ui_wgpu_engine::testkit::UiFixture;
 use semio_ui_wgpu_engine_surface::*;
 use semio_ui_wgpu_engine_surface::LayoutWorkerAdmission;
 use semio_ui_wgpu_engine_surface::RETAINED_PAINT_DEPTH_CREDITS;

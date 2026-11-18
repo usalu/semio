@@ -1,6 +1,7 @@
 {
   "name": "@semio-tech/nx-bootstrap-tools",
   "private": true,
+  "type": "module",
   "exports": {
     "./package.json": "./package.json",
     "./bazel/script": "./🏗️bazel/📜️script.ts",

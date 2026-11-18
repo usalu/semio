@@ -26,3 +26,7 @@ export type GraphFarmRecycleReasonV1="memory"|"projects";
 export function recycleReasonV1(worker:{readonly heldMegabytes:number;readonly baselineMegabytes:number;readonly jobs:number;readonly megabytes:number},policy?:GraphFarmPolicyV1):GraphFarmRecycleReasonV1|undefined;
 /** 🚨️ The typed refusal of a project that passed the footprint cap of a worker process even when it ran alone; its message is the bilingual line of the farm texts. */
 export class GraphFarmOverrunErrorV1 extends Error{readonly code:"graph.farm-overrun";readonly project:string;readonly megabytes:number;readonly capMegabytes:number;constructor(fields:{project:string;megabytes:number;capMegabytes:number},environment?:GraphFarmEnvironmentV1)}
+/** ⏱️ The expected cost of a farm job in milliseconds. */
+export function farmJobExpectedMillisecondsV1(payload:Readonly<Record<string,unknown>>,policy?:GraphFarmPolicyV1):number;
+/** 🥇 The queued jobs, shortest expected first with aging. */
+export function farmQueueOrderV1<T extends{readonly expected:number;readonly queued:number;readonly front?:boolean}>(jobs:readonly T[],now:number,policy?:GraphFarmPolicyV1):T[];

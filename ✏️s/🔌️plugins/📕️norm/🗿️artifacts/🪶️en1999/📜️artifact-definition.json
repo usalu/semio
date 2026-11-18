@@ -1,6 +1,6 @@
 {
   "definition_version": 1,
-  "id": "s.norm.en1999",
+  "id": "s.norm-eurocode-materials.en1999",
   "artifact": "en1999",
   "directory": "\ud83e\udeb6\ufe0fen1999",
   "rust_package": "semio-s-artifact-norm-en1999",

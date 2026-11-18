@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/diff.json",
   "title": "Din18599Diff",
   "type": "object",
   "additionalProperties": false,
@@ -8,7 +8,7 @@
     "buildingCategory": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/properties/buildingCategory"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/properties/buildingCategory"
         },
         {
           "type": "null"
@@ -19,7 +19,7 @@
     "attachment": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/properties/attachment"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/properties/attachment"
         },
         {
           "type": "null"
@@ -30,7 +30,7 @@
     "useClass": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/properties/useClass"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/properties/useClass"
         },
         {
           "type": "null"
@@ -41,7 +41,7 @@
     "method": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/properties/method"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/properties/method"
         },
         {
           "type": "null"
@@ -52,7 +52,7 @@
     "netFloorAreaM2": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/properties/netFloorAreaM2"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/properties/netFloorAreaM2"
         },
         {
           "type": "null"
@@ -63,7 +63,7 @@
     "heatedVolumeM3": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/properties/heatedVolumeM3"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/properties/heatedVolumeM3"
         },
         {
           "type": "null"
@@ -74,7 +74,7 @@
     "gegQpFactor": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/properties/gegQpFactor"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/properties/gegQpFactor"
         },
         {
           "type": "null"
@@ -85,7 +85,7 @@
     "deltaUWbWM2k": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/properties/deltaUWbWM2k"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/properties/deltaUWbWM2k"
         },
         {
           "type": "null"
@@ -96,7 +96,7 @@
     "automationClass": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/properties/automationClass"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/properties/automationClass"
         },
         {
           "type": "null"
@@ -216,7 +216,7 @@
         "thetaEC": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/MonthlyClimate/properties/thetaEC"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/MonthlyClimate/properties/thetaEC"
             },
             {
               "type": "null"
@@ -226,7 +226,7 @@
         "gHWM2": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/MonthlyClimate/properties/gHWM2"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/MonthlyClimate/properties/gHWM2"
             },
             {
               "type": "null"
@@ -262,7 +262,7 @@
       ],
       "properties": {
         "value": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/CoolingSystem/properties/plant"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/CoolingSystem/properties/plant"
         }
       }
     },
@@ -279,7 +279,7 @@
         "specificDemandKwhPersonA": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/DhwSystem/properties/specificDemandKwhPersonA"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/DhwSystem/properties/specificDemandKwhPersonA"
             },
             {
               "type": "null"
@@ -289,7 +289,7 @@
         "storageLossKwhA": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/DhwSystem/properties/storageLossKwhA"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/DhwSystem/properties/storageLossKwhA"
             },
             {
               "type": "null"
@@ -299,7 +299,7 @@
         "distributionLossKwhA": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/DhwSystem/properties/distributionLossKwhA"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/DhwSystem/properties/distributionLossKwhA"
             },
             {
               "type": "null"
@@ -309,7 +309,7 @@
         "energyCarrier": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/DhwSystem/properties/energyCarrier"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/DhwSystem/properties/energyCarrier"
             },
             {
               "type": "null"
@@ -331,7 +331,7 @@
           "minimum": 0
         },
         "row": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/EnvelopeElement"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/EnvelopeElement"
         }
       }
     },
@@ -393,7 +393,7 @@
         "labelEn": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/EnvelopeElement/properties/labelEn"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/EnvelopeElement/properties/labelEn"
             },
             {
               "type": "null"
@@ -403,7 +403,7 @@
         "labelDe": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/EnvelopeElement/properties/labelDe"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/EnvelopeElement/properties/labelDe"
             },
             {
               "type": "null"
@@ -413,7 +413,7 @@
         "kind": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/EnvelopeElement/properties/kind"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/EnvelopeElement/properties/kind"
             },
             {
               "type": "null"
@@ -423,7 +423,7 @@
         "zoneId": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/EnvelopeElement/properties/zoneId"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/EnvelopeElement/properties/zoneId"
             },
             {
               "type": "null"
@@ -433,7 +433,7 @@
         "areaM2": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/EnvelopeElement/properties/areaM2"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/EnvelopeElement/properties/areaM2"
             },
             {
               "type": "null"
@@ -443,7 +443,7 @@
         "uValueWM2k": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/EnvelopeElement/properties/uValueWM2k"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/EnvelopeElement/properties/uValueWM2k"
             },
             {
               "type": "null"
@@ -453,7 +453,7 @@
         "orientationDeg": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/EnvelopeElement/properties/orientationDeg"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/EnvelopeElement/properties/orientationDeg"
             },
             {
               "type": "null"
@@ -463,7 +463,7 @@
         "tiltDeg": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/EnvelopeElement/properties/tiltDeg"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/EnvelopeElement/properties/tiltDeg"
             },
             {
               "type": "null"
@@ -473,7 +473,7 @@
         "gValue": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/EnvelopeElement/properties/gValue"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/EnvelopeElement/properties/gValue"
             },
             {
               "type": "null"
@@ -483,7 +483,7 @@
         "fc": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/EnvelopeElement/properties/fc"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/EnvelopeElement/properties/fc"
             },
             {
               "type": "null"
@@ -493,7 +493,7 @@
         "adjacency": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/EnvelopeElement/properties/adjacency"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/EnvelopeElement/properties/adjacency"
             },
             {
               "type": "null"
@@ -569,7 +569,7 @@
         "generationEfficiency": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/HeatingSystem/properties/generationEfficiency"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/HeatingSystem/properties/generationEfficiency"
             },
             {
               "type": "null"
@@ -579,7 +579,7 @@
         "distributionEfficiency": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/HeatingSystem/properties/distributionEfficiency"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/HeatingSystem/properties/distributionEfficiency"
             },
             {
               "type": "null"
@@ -589,7 +589,7 @@
         "storageEfficiency": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/HeatingSystem/properties/storageEfficiency"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/HeatingSystem/properties/storageEfficiency"
             },
             {
               "type": "null"
@@ -599,7 +599,7 @@
         "transferEfficiency": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/HeatingSystem/properties/transferEfficiency"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/HeatingSystem/properties/transferEfficiency"
             },
             {
               "type": "null"
@@ -609,7 +609,7 @@
         "energyCarrier": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/HeatingSystem/properties/energyCarrier"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/HeatingSystem/properties/energyCarrier"
             },
             {
               "type": "null"
@@ -628,7 +628,7 @@
         "controlFactor": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/LightingSystem/properties/controlFactor"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/LightingSystem/properties/controlFactor"
             },
             {
               "type": "null"
@@ -649,7 +649,7 @@
         "pvAreaM2": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/Renewables/properties/pvAreaM2"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/Renewables/properties/pvAreaM2"
             },
             {
               "type": "null"
@@ -659,7 +659,7 @@
         "pvEfficiency": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/Renewables/properties/pvEfficiency"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/Renewables/properties/pvEfficiency"
             },
             {
               "type": "null"
@@ -669,7 +669,7 @@
         "solarThermalKwhA": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/Renewables/properties/solarThermalKwhA"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/Renewables/properties/solarThermalKwhA"
             },
             {
               "type": "null"
@@ -690,7 +690,7 @@
         "airflowM3H": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/VentilationSystem/properties/airflowM3H"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/VentilationSystem/properties/airflowM3H"
             },
             {
               "type": "null"
@@ -700,7 +700,7 @@
         "heatRecoveryEta": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/VentilationSystem/properties/heatRecoveryEta"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/VentilationSystem/properties/heatRecoveryEta"
             },
             {
               "type": "null"
@@ -710,7 +710,7 @@
         "fanPowerW": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/VentilationSystem/properties/fanPowerW"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/VentilationSystem/properties/fanPowerW"
             },
             {
               "type": "null"
@@ -732,7 +732,7 @@
           "minimum": 0
         },
         "row": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/ThermalZone"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/ThermalZone"
         }
       }
     },
@@ -795,7 +795,7 @@
         "labelEn": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/ThermalZone/properties/labelEn"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/ThermalZone/properties/labelEn"
             },
             {
               "type": "null"
@@ -805,7 +805,7 @@
         "labelDe": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/ThermalZone/properties/labelDe"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/ThermalZone/properties/labelDe"
             },
             {
               "type": "null"
@@ -815,7 +815,7 @@
         "usageProfile": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/ThermalZone/properties/usageProfile"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/ThermalZone/properties/usageProfile"
             },
             {
               "type": "null"
@@ -825,7 +825,7 @@
         "areaM2": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/ThermalZone/properties/areaM2"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/ThermalZone/properties/areaM2"
             },
             {
               "type": "null"
@@ -835,7 +835,7 @@
         "volumeM3": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/ThermalZone/properties/volumeM3"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/ThermalZone/properties/volumeM3"
             },
             {
               "type": "null"
@@ -845,7 +845,7 @@
         "thetaIHeatC": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/ThermalZone/properties/thetaIHeatC"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/ThermalZone/properties/thetaIHeatC"
             },
             {
               "type": "null"
@@ -855,7 +855,7 @@
         "thetaICoolC": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/ThermalZone/properties/thetaICoolC"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/ThermalZone/properties/thetaICoolC"
             },
             {
               "type": "null"
@@ -865,7 +865,7 @@
         "occupants": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/ThermalZone/properties/occupants"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/ThermalZone/properties/occupants"
             },
             {
               "type": "null"
@@ -875,7 +875,7 @@
         "internalGainsWM2": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/ThermalZone/properties/internalGainsWM2"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/ThermalZone/properties/internalGainsWM2"
             },
             {
               "type": "null"
@@ -885,7 +885,7 @@
         "lightingPowerWM2": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/ThermalZone/properties/lightingPowerWM2"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/ThermalZone/properties/lightingPowerWM2"
             },
             {
               "type": "null"
@@ -895,7 +895,7 @@
         "thermalMassClass": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/ThermalZone/properties/thermalMassClass"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/ThermalZone/properties/thermalMassClass"
             },
             {
               "type": "null"
@@ -905,7 +905,7 @@
         "cWirkWhM2k": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/ThermalZone/properties/cWirkWhM2k"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/ThermalZone/properties/cWirkWhM2k"
             },
             {
               "type": "null"

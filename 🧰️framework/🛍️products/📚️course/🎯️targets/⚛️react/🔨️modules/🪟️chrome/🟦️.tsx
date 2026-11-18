@@ -404,14 +404,14 @@ export interface Segment<T extends string> {
  * and sharing the card's edges, with one divider below it. */
 export function Segments<T extends string>(props: { readonly label: string; readonly options: readonly Segment<T>[]; readonly value: T | undefined; readonly onChange: (value: T) => void; readonly flush?: boolean }): ReactElement {
   const { label, options, value, onChange, flush = false } = props;
-  const frame = useSharedBorderFrameRef<HTMLDivElement>();
   return (
-    <div
-      ref={flush ? undefined : frame}
+    <SharedBorderRow
+      wrap
+      framed={!flush}
       role="group"
       aria-label={label}
-      {...(flush ? { ...CELL, "data-shared-border-group": "" } : { "data-shared-border-frame": "", "data-shared-border-edges": "top right bottom left" })}
-      className={cn("flex max-w-full flex-wrap", flush ? "w-full" : "w-fit")}
+      {...(flush ? CELL : undefined)}
+      className={cn("max-w-full", flush ? "w-full" : "w-fit")}
     >
       {options.map((option) => (
         <button
@@ -437,7 +437,7 @@ export function Segments<T extends string>(props: { readonly label: string; read
           )}
         </button>
       ))}
-    </div>
+    </SharedBorderRow>
   );
 }
 

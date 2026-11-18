@@ -376,7 +376,7 @@ export function ResultsScreen(props: { readonly session: CourseSession; readonly
   const shown = crowdShown(crowdGate(props.others ?? "submitted", "results", { asked: false, submitted: true, hidden: false }));
   const crowd = state.crowds[view.quiz];
   return (
-    <div className="course-results flex flex-col gap-double">
+    <div className="course-results flex flex-col">
       <CourseCard
         flush
         id={`${scope}-title`}

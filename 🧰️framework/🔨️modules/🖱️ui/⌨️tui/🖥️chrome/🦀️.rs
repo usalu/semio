@@ -339,6 +339,28 @@ pub const TAB_LABEL_CELLS: u16 = TAB_CHIP_CELLS - 6;
 const MIN_FULL_ROWS_ONE_ROW: u16 = 4;
 const MIN_FULL_ROWS_TWO_ROWS: u16 = 6;
 
+/// 📐️ Pixels one terminal cell stands for when the chip-gap rule of the pixel UIs (`CARD_BAND_MIN_GAP`) is applied to cells.
+pub const CELL_WIDTH_PX: u16 = 8;
+/// 🫸️ The widest open gap in cells that still reads as two lines with a small gap; mirrors `chipGapReadsAsSliver` (`bands.cases.json`) at [CELL_WIDTH_PX] px per cell.
+pub const CHIP_SLIVER_MAX_CELLS: u16 = 4;
+
+/// 🫸️ Whether `cells` columns between the right wall of one chip and the left wall of the next (0 is one shared wall) read as a small gap: at least one and fewer than 40 px.
+pub fn chip_gap_cells_read_as_sliver(cells: u16) -> bool {
+    (1..=CHIP_SLIVER_MAX_CELLS).contains(&cells)
+}
+
+/// 🫸️ Stretches `prev` over a sliver gap to the chip whose left wall is at `next_x`, so both share one wall; wider gaps stay open.
+fn abut_chip_sliver(prev: Option<&mut WindowCornerTab>, next_x: u16) {
+    let Some(prev) = prev else { return };
+    let wall = prev.x + prev.interior_width + 1;
+    let gap = next_x.saturating_sub(wall);
+    if next_x <= wall || !chip_gap_cells_read_as_sliver(gap) {
+        return;
+    }
+    prev.interior.push_str(&" ".repeat(usize::from(gap)));
+    prev.interior_width += gap;
+}
+
 /// 🔩 One chip's seam geometry: `x` is its left-wall column, the interior of `interior_width` cells sits between walls.
 /// `pub(crate)`: shared with `crate::tui::window`'s `paint_window`/`paint_tab_seam`.
 pub(crate) struct WindowTab {
@@ -659,6 +681,12 @@ pub fn window_chip_layout(w: &WindowState, rect: Rect) -> WindowChipLayout {
     if groups.is_empty() {
         return WindowChipLayout::flat(rect);
     }
+    for (left, right) in [(WindowStackCorner::TopLeft, WindowStackCorner::TopRight), (WindowStackCorner::BottomLeft, WindowStackCorner::BottomRight)] {
+        let next_x = groups.iter().find(|group| group.corner == right).and_then(|group| group.tabs.first()).map(|tab| tab.x);
+        if let Some(next_x) = next_x {
+            abut_chip_sliver(groups.iter_mut().find(|group| group.corner == left).and_then(|group| group.tabs.last_mut()), next_x);
+        }
+    }
     groups.sort_by_key(|group| match group.corner {
         WindowStackCorner::TopLeft => 0,
         WindowStackCorner::TopRight => 1,
@@ -692,6 +720,7 @@ fn compact_layout(w: &WindowState, rect: Rect, effective: &[(usize, String, Wind
         chip.x = x;
         chip.maximize_x = chip.maximize_x.map(|o| x + o);
         chip.new_x = chip.new_x.map(|o| x + o);
+        abut_chip_sliver(tabs.last_mut(), chip.x);
         tabs.push(chip);
     }
     WindowChipLayout { mode: ChromeMode::Compact, groups: vec![WindowCornerChipGroup { corner: WindowStackCorner::TopLeft, tabs }], top_body_y: rect.y, bottom_body_y: None }

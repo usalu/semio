@@ -185,10 +185,10 @@ export function sliceLabRegistryRefusalV1(home:string):readonly string[]{
 }
 
 /** 🍲️ One partition item of the warm table: what a stage finds already in its partition on a worker that has run before. */
-export type SliceLabWarmItemV1=Readonly<{stage:string;partition:string;id:string;path:string}>;
+export type SliceLabWarmItemV1=Readonly<{stage:string;partition:string;id:string;path:string;registryKeys:boolean}>;
 /** 🍲️ The items of a stage for the tools prepared: every item without a tool, and every item one of whose tools is prepared (`"all"` takes every item). */
 export function sliceLabWarmItemsV1(stage:string,tools:readonly string[]|"all"):readonly SliceLabWarmItemV1[]{
- return H.warm.filter(row=>row.stage===stage).flatMap(row=>row.items.filter(item=>item.tools.length===0||tools==="all"||item.tools.some(id=>tools.includes(id))).map(item=>({stage:row.stage,partition:row.partition,id:item.id,path:item.path})));
+ return H.warm.filter(row=>row.stage===stage).flatMap(row=>row.items.filter(item=>item.tools.length===0||tools==="all"||item.tools.some(id=>tools.includes(id))).map(item=>({stage:row.stage,partition:row.partition,id:item.id,path:item.path,registryKeys:(item as {registryKeys?:boolean}).registryKeys===true})));
 }
 /** 🍲️ The result of warming one item: `skipped` names the reason (`no-source`, `not-mounted`, `copy-failed`) when nothing was copied. */
 export type SliceLabWarmRowV1=Readonly<{stage:string;id:string;ok:boolean;method:string;seconds:number;megabytes:number}>;
@@ -198,6 +198,19 @@ const copyEntriesV1=(source:string,target:string):boolean=>{
  mkdirSync(target,{recursive:true});
  return spawnSync("sh",["-c",'find "$1" -mindepth 1 -maxdepth 1 -print0 | xargs -0 -P "$3" -I{} cp -R {} "$2"/',"sh",source,target,String(H.warmConcurrency)],{encoding:"utf8"}).status===0;
 };
+/** 🪪️ Makes a copied cache addressable under the registry of the lab: bun names a cache entry after the registry it fetched from (`name@version@@@1` for the default registry, `name@version@@<host>@@@1` for another), and the lab's accounts point every package manager at a refused loopback registry, so an entry stored under the default name is invisible to them and the install asks the registry for a package the cache holds. For every entry of the first two levels named for the default registry a link under the lab's host name is made, and the number made is returned. @see https://bun.sh/docs/install/cache */
+export function sliceLabRegistryAliasV1(root:string,url:string):number{
+ const host=new URL(url).hostname,suffix="@@@1";let made=0;
+ const walk=(directory:string,depth:number):void=>{
+  for(const entry of readdirSync(directory,{withFileTypes:true})){
+   if(!entry.isDirectory())continue;
+   if(entry.name.endsWith(suffix)&&entry.name.split("@@").length===2){const alias=join(directory,`${entry.name.slice(0,-suffix.length)}@@${host}${suffix}`);if(!existsSync(alias)){symlinkSync(entry.name,alias);made++;}}
+   else if(depth<1&&!entry.name.includes("@@"))walk(join(directory,entry.name),depth+1);
+  }
+ };
+ walk(root,0);
+ return made;
+}
 /** 🍲️ Fills the mounted partitions of a lab machine with what the live checkout holds in the same places (a read of the source, a copy into the target: the partitions are images of their own, so no clone exists across them), for one stage and the tools it prepares: a target that already holds entries is left as it is. Never writes below the source; every row says how long it took and how much it moved. `mounted` is the partition test (the real one compares device numbers of `<state>/b/<partition>/m` and its parent). */
 export function sliceLabWarmV1(input:Readonly<{state:string;source:string;stage:string;tools:readonly string[]|"all";mounted?:(state:string,partition:string)=>boolean}>):readonly SliceLabWarmRowV1[]{
  const mounted=input.mounted??mountedPartitionV1;
@@ -207,6 +220,7 @@ export function sliceLabWarmV1(input:Readonly<{state:string;source:string;stage:
   if(!mounted(input.state,item.partition))return row(true,"skipped: not-mounted");
   try{if(readdirSync(target).length>0)return row(true,"present");}catch{}
   if(!copyEntriesV1(source,target))return row(false,"skipped: copy-failed");
+  if(item.registryKeys)sliceLabRegistryAliasV1(target,H.registry.url);
   return row(true,"copy",megabytesOfV1(target));
  });
 }

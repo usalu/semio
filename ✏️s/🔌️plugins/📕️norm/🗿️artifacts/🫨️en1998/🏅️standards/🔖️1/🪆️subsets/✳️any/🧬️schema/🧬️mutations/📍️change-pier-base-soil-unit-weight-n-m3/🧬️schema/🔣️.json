@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-pier-base-soil-unit-weight-n-m3/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1998/mutation/change-pier-base-soil-unit-weight-n-m3/schema.json",
   "title": "ChangePierBaseSoilUnitWeightNM3",
   "type": "object",
   "additionalProperties": false,

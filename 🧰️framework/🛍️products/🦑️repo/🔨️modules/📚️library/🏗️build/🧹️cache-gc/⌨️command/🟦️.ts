@@ -201,4 +201,10 @@ export async function runCacheLedgerV1(root:string,args:readonly string[],invoca
  const verify=async(control:import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts").MemberScanControlV1)=>{const scan=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts"),image=await partitions.openRepositoryCachePartitionV1(root,"graph",phaseControl);try{return await scan.verifyBuildGraphMembersDeepV1(image.root,control);}finally{await image.close();}};
  const code=await runCacheLedgerCommandV1(args,{workspace:root,environment:process.env,write:writeResultLineV1,verify},ports);
  if(code!==0)process.exitCode=code;
+ else if(args[0]==="gc"&&!args.some(arg=>arg==="--area"||arg.startsWith("--area=")))for(const partition of["rust","dependencies","graph","products","tools","diagnostics","nx"]as const){
+  invocation.control.signal.throwIfAborted();
+  if(args.includes("--dry-run")){if((await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts")).repositoryPartitionReclaimDueV1(root,partition))writeResultLineV1("Would reclaim the host blocks of image "+partition);continue;}
+  const outcome=await partitions.reclaimImageIfQuiescentV1(invocation,phaseControl,partition,(done,total)=>routing.advanceScriptInvocation(invocation,"cache:reclaim-"+partition+"-"+done+"-"+total,"running"));
+  if(outcome)writeResultLineV1("Reclaimed image "+partition+": "+formatCacheBytesV1(outcome.beforeBytes)+" -> "+formatCacheBytesV1(outcome.afterBytes)+" on the host"+(outcome.settled?"":" (still shrinking)"));
+ }
 }

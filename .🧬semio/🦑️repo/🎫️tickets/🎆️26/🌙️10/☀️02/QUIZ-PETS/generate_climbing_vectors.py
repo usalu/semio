@@ -66,7 +66,7 @@ def render(value, depth):
 
 def write(directory, document):
     """💾️ Writes one fixture with a trailing newline, after proving that it reads back as the same document."""
-    path = os.path.join(PETS, "🧫️fixtures", directory, "🔣️.json")
+    path = os.path.join(PETS, "🧪️tests", "🧫️fixtures", directory, "🔣️.json")
     text = render(document, 0) + "\n"
     if json.loads(text) != document:
         raise AssertionError("the rendered fixture %s does not read back as its document" % directory)
@@ -653,10 +653,10 @@ AIMS = [
     aim("onto-a-perch-too-narrow-for-two-corners", 400, 480, [perch("pin", 398, 404, 380)], []),
     aim("the-shortest-rope", 400, 480, [perch("stub", 380, 420, 413)], []),
     aim("too-short", 400, 480, [perch("stub", 380, 420, 414)], []),
-    aim("the-longest-rope", 400, 480, [perch("stub", 380, 420, 66)], []),
-    aim("too-long", 400, 480, [perch("stub", 380, 420, 65)], []),
-    aim("long-enough-for-a-large-pet", 400, 480, [perch("stub", 380, 420, 23.6)], [], LARGE),
-    aim("too-long-for-a-small-pet", 400, 480, [perch("stub", 380, 420, 120)], [], SMALL),
+    aim("the-longest-rope", 400, 700, [perch("stub", 380, 420, 94)], []),
+    aim("too-long", 400, 700, [perch("stub", 380, 420, 93)], []),
+    aim("long-enough-for-a-large-pet", 400, 700, [perch("stub", 380, 420, 44.6)], [], LARGE),
+    aim("too-long-for-a-small-pet", 400, 700, [perch("stub", 380, 420, 120)], [], SMALL),
     aim("too-low", 400, 480, [perch("stub", 380, 420, 442)], []),
     aim("too-flat", 100, 420, [perch("shelf", 180, 494, 380)], []),
     aim("over-what-lies-under-the-hook", 280, 480, [FLOOR, EDGE], [EDGE_BOX, keepout(310, 380, 100, 30)]),
@@ -754,7 +754,7 @@ RIGHT_LADDER, _RIGHT_VERDICT = LADDERS.ladder_for("standing ladder", FLOOR, SHEL
 EVERYTHING = ["climb", "ladder", "grapple", "parachute"]
 
 
-def way(name, gear, x=200, start=0, end=1, ladders=(), grip=384, perches=(FLOOR, SHELF, perch("far", 20, 120, 40)), pitches=(SHELF_LEFT, SHELF_RIGHT), keepouts=(SHELF_BOX,), size=PET):
+def way(name, gear, x=200, start=0, end=1, ladders=(), grip=384, perches=(FLOOR, SHELF, perch("far", 20, 120, -140)), pitches=(SHELF_LEFT, SHELF_RIGHT), keepouts=(SHELF_BOX,), size=PET):
     """🧭️ A stage and a wish to get from one of its perches to another."""
     return {"id": name, "size": size, "gear": list(gear), "grip": grip, "x": x, "from": start, "to": end, "perches": list(perches), "pitches": list(pitches), "ladders": list(ladders), "keepouts": list(keepouts)}
 

@@ -43,6 +43,7 @@ fn node(component: crate::Component) -> crate::UiNodeRecord {
 
 #[test]
 fn instance_lifetime_ui_document_terminal_includes_typed_value_descendants() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = fixture();
     let row = &fixture["document"];
     let value: UiValue = serde_json::from_value(row["value"].clone()).unwrap();
@@ -78,6 +79,7 @@ fn instance_lifetime_ui_document_terminal_includes_typed_value_descendants() {
 
 #[test]
 fn instance_lifetime_ui_typed_all_components_account_exact_payload_bytes() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let components: serde_json::Value = serde_json::from_str(include_str!("../../🧩️components.json")).unwrap();
     let fixture = fixture();
     let actual: Vec<_> = components["cases"].as_array().unwrap().iter().map(|row| row["component"]["type"].clone()).collect();
@@ -101,6 +103,7 @@ fn instance_lifetime_ui_typed_all_components_account_exact_payload_bytes() {
 
 #[test]
 fn instance_lifetime_ui_typed_all_patch_variants_close_and_max_surface_progresses() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     use crate::*;
     let raw = serde_json::json!({"x":["🌊"]});
     for grant in [1, 64, 4096] {

@@ -15,9 +15,10 @@
       "const": {
         "version": 1,
         "claimTtlMilliseconds": 30000,
+        "expectedMilliseconds": 450000,
         "heartbeatMilliseconds": 10000,
         "awaitSliceMilliseconds": 20000,
-        "waitBudgetMilliseconds": 600000,
+        "waitBudgetMilliseconds": 1800000,
         "maximumHoldMilliseconds": 1800000,
         "claimTimeoutMilliseconds": 3000,
         "upstreamTimeoutMilliseconds": 120000,

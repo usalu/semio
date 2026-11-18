@@ -33,7 +33,7 @@ semio_s_plugin_norm_app_surface::norm_viewer_commands!(semio_s_artifact_norm_din
 
 semio_s_plugin_norm_app_surface::norm_owned_view_tool_job_factory!(Din18599ViewBoundedCommandJobFactory, Din18599Viewer);
 
-semio_s_plugin_norm_app_surface::norm_viewer_surface!(Din18599Viewer, Din18599ViewCommand, variant = "din18599", report = |d: &Din18599Snapshot| semio_s_plugin_norm_app_surface::paint_report_of(|budget| semio_s_artifact_norm_din18599_inferences::live::responsive(d, budget)), scene = |d: &Din18599Snapshot, r: &semio_s_plugin_norm_app_surface::NormViewReport, _| semio_s_artifact_norm_din18599_scene::live_scene_of(d, r), diagrams = |d: &Din18599Snapshot, r: &semio_s_plugin_norm_app_surface::NormViewReport, focus: Option<&str>| semio_s_plugin_norm_structural_scene::projection::memo_diagrams("din18599", d, r, focus.unwrap_or("\u{0}"), || semio_s_artifact_norm_din18599_scene::diagrams(d, r, focus)).to_vec());
+semio_s_plugin_norm_app_surface::norm_viewer_surface!(Din18599Viewer, Din18599ViewCommand, owner = "norm-energy", variant = "din18599", report = |d: &Din18599Snapshot| semio_s_plugin_norm_app_surface::paint_report_of(|budget| semio_s_artifact_norm_din18599_inferences::live::responsive(d, budget)), scene = |d: &Din18599Snapshot, r: &semio_s_plugin_norm_app_surface::NormViewReport, _| semio_s_artifact_norm_din18599_scene::live_scene_of(d, r), diagrams = |d: &Din18599Snapshot, r: &semio_s_plugin_norm_app_surface::NormViewReport, focus: Option<&str>| semio_s_plugin_norm_structural_scene::projection::memo_diagrams("din18599", d, r, focus.unwrap_or("\u{0}"), || semio_s_artifact_norm_din18599_scene::diagrams(d, r, focus)).to_vec());
 //#endregion 🔖️Command
 
 //#region 🔖️Viewer
@@ -52,7 +52,6 @@ impl ArtifactViewer for Din18599Viewer {
     }
     type Snapshot = Din18599Snapshot;
     type Mutation = semio_s_artifact_norm_din18599_mutations::Din18599Mutation;
-    type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -77,7 +76,7 @@ impl ArtifactViewer for Din18599Viewer {
     semio_plugin::bounded_first_step_tool_proofs! {
         owner: semio_plugin::ViewerApp<Din18599Viewer>,
         owner_file: "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
-        controller: "s.norm.din18599@1/*#viewer",
+        controller: "s.norm-energy.din18599@1/*#viewer",
         artifact_schema: "semio.norm.din18599/v1",
         factory: "Din18599ViewBoundedCommandJobFactory",
         factory_type: Din18599ViewBoundedCommandJobFactory,
@@ -151,6 +150,7 @@ pub fn create_din18599_viewer() -> semio_plugin::AppDefinition {
     Viewer::builder(DIN18599_DIALECT)
         .document(["semio", "norm", "din18599"])
         .interaction(semio_s_plugin_norm_app_surface::viewer_interaction_definition("din18599"))
+        .utility(semio_s_plugin_norm_app_surface::transform_utility_definition())
         .icon_id("check-circle")
         .mode_def(view::definition())
         .default_mode_id(semio_s_plugin_norm_app_surface::MODE_VIEW)

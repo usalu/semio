@@ -172,6 +172,8 @@ pub struct PresenceSettings {
     pub idle: Duration,
     /// 🏓️ How often the server pings every socket.
     pub keepalive: Duration,
+    /// 💓️ How often the server sends every socket a `heartbeat` frame (`presence.heartbeatMs` of the wire fixture).
+    pub heartbeat: Duration,
     /// 📏️ The largest client frame (`state` or `watch`) accepted, in bytes.
     pub max_state_bytes: usize,
     /// 🚦️ How many client frames per second a session may send; the excess is dropped.
@@ -214,6 +216,7 @@ impl Default for PresenceSettings {
             tick: Duration::from_millis(100),
             idle: Duration::from_secs(60),
             keepalive: Duration::from_secs(20),
+            heartbeat: Duration::from_secs(10),
             max_state_bytes: 2048,
             max_states_per_second: 30,
             max_surface_chars: 64,

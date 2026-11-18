@@ -14,9 +14,11 @@ const stageOf=(name:string,timeoutMilliseconds:number)=>({...STAGES.find(stage=>
 const working=(seconds:number)=>`#!/bin/sh\ni=0\nwhile [ $i -lt ${seconds} ]; do i=$((i+1)); echo "Reading the project graph slice ($i s): taken $i of 4455."; sleep 0.3; done\nexit 0\n`;
 const executing=(reads:number,tasks:number)=>`#!/bin/sh\ni=0\nwhile [ $i -lt ${reads} ]; do i=$((i+1)); echo "Reading the project graph slice ($i s): taken $i of 590."; sleep 0.3; done\necho "NX   Running target build for project x and 2 tasks they depend on:"\nj=0\nwhile [ $j -lt ${tasks} ]; do j=$((j+1)); echo "built unit $j"; sleep 0.3; done\nexit 0\n`;
 const silent=(seconds:number)=>`#!/bin/sh\ni=0\nwhile [ $i -lt ${seconds} ]; do i=$((i+1)); echo "working on unit $i"; sleep 0.3; done\nexit 0\n`;
-const policy={...TREE,staleStageMilliseconds:1500,codeCheckMilliseconds:300,codeRoots:["code"],holderWaitRestartMilliseconds:600000,stallStopMilliseconds:600000};
+const policy={...TREE,staleStageMilliseconds:1500,codeCheckMilliseconds:300,semanticsSources:[{file:"code/semantics.json",pointer:"/revision"}],holderWaitRestartMilliseconds:600000,stallStopMilliseconds:600000};
+const declare=(root:string,revision:number)=>{mkdirSync(join(root,"code"),{recursive:true});writeFileSync(join(root,"code","semantics.json"),JSON.stringify({revision}));};
+const bump=(root:string)=>declare(root,Math.floor(Math.random()*1e6)+2);
 const touch=(root:string,name:string,ahead:number)=>{mkdirSync(dirname(join(root,"code",name)),{recursive:true});const at=new Date(Date.now()+ahead);writeFileSync(join(root,"code",name),"y");utimesSync(join(root,"code",name),at,at);};
-const run=(home:string,root:string)=>runReadyStageV1({home,root,environment:{},stage:stageOf("tools",600000),signal:new AbortController().signal,jobs:1,onLine:()=>undefined,tree:policy});
+const run=(home:string,root:string)=>{declare(root,1);return runReadyStageV1({home,root,environment:{},stage:stageOf("tools",600000),signal:new AbortController().signal,jobs:1,onLine:()=>undefined,tree:policy});};
 
 test("a stage that shows progress is stopped for new code only when it has run long enough",()=>{
  expect(TREE.staleStageMilliseconds).toBe(1800000);
@@ -24,23 +26,23 @@ test("a stage that shows progress is stopped for new code only when it has run l
  expect(readyScaledTreePolicyV1(2.83).staleStageMilliseconds).toBe(Math.ceil(1800000*2.83));expect(readyScaledTreePolicyV1(1).staleStageMilliseconds).toBe(1800000);
 });
 
-test("the code a stage loaded includes the build library, whose landings the workers must follow",()=>{
- expect(TREE.codeRoots).toContain("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build");
- expect(TREE.codeSkipDirectories).toContain("🧪️tests");
- expect(treeSchema.definitions.Policy.const.codeRoots).toEqual([...TREE.codeRoots]);
+test("what ends a running stage is a declared semantics source, not the files of the build library",()=>{
+ expect(TREE.semanticsSources.map(source=>source.pointer)).toEqual(["/definitions/Policy/const/revision","/$defs/record/const/stamp"]);
+ expect(treeSchema.definitions.Policy.const.semanticsSources).toEqual([...TREE.semanticsSources]);
+ expect(Object.keys(TREE)).not.toContain("codeRoots");
 });
 
 posix("a stage with progress is stopped with its tree when a source file changed after it started and it has run for the stale age",async()=>{
  const root=temp("root"),home=fakeHome(working(60)),began=Date.now(),pending=run(home,root);
- setTimeout(()=>touch(root,"b.ts",5000),700);
+ setTimeout(()=>bump(root),700);
  const result=await pending;
- expect(result.stalled).toBe(true);expect(result.codeChanged).toBe(join("code","b.ts"));expect(result.codeStale).toBe(true);expect(result.timedOut).toBe(false);
+ expect(result.stalled).toBe(true);expect(result.codeChanged).toBe("code/semantics.json");expect(result.codeStale).toBe(true);expect(result.timedOut).toBe(false);
  expect(Date.now()-began).toBeGreaterThan(1500);expect(Date.now()-began).toBeLessThan(25000);
 },60000);
 
 posix("a young stage is not interrupted by a landing, and an old stage on unchanged code goes on",async()=>{
  const youngRoot=temp("young"),young=fakeHome(working(4)),pendingYoung=run(young,youngRoot);
- setTimeout(()=>touch(youngRoot,"a.ts",5000),200);
+ setTimeout(()=>bump(youngRoot),200);
  const early=await pendingYoung;
  expect(early.exit).toBe(0);expect(early.stalled).toBe(false);expect(early.codeStale).toBeUndefined();
  const quietRoot=temp("quiet"),quiet=fakeHome(working(9));mkdirSync(join(quietRoot,"code"),{recursive:true});writeFileSync(join(quietRoot,"code","a.ts"),"x");utimesSync(join(quietRoot,"code","a.ts"),new Date(Date.now()-600000),new Date(Date.now()-600000));
@@ -75,47 +77,46 @@ test("law: executing never stops for stale code, reading and unknown stop after 
  expect(readyStaleStopV1("reading",readyScaledTreePolicyV1(2).staleStageMilliseconds-1,readyScaledTreePolicyV1(2))).toBe(false);
 });
 
-test("the loaded closure of a stage leaves out tests and testing files",()=>{expect(TREE.codeSkipDirectories).toContain("🧪️testing");for(const pattern of[...TREE.readingPatterns,...TREE.executingPatterns])expect(()=>new RegExp(pattern,"u")).not.toThrow();});
+test("the phase patterns are valid expressions",()=>{for(const pattern of[...TREE.readingPatterns,...TREE.executingPatterns])expect(()=>new RegExp(pattern,"u")).not.toThrow();});
 
 posix("a stage that executes planned tasks is not stopped when the code changes, it runs to its end",async()=>{
  const root=temp("exec"),home=fakeHome(executing(2,14)),pending=run(home,root);
- setTimeout(()=>touch(root,"b.ts",5000),700);
+ setTimeout(()=>bump(root),700);
  const result=await pending;
  expect(result.exit).toBe(0);expect(result.stalled).toBe(false);expect(result.codeStale).toBeUndefined();expect(result.codeChanged).toBeUndefined();
 },60000);
 
 posix("a stage that reads and whose loaded closure changed is stopped as stale",async()=>{
  const root=temp("read"),home=fakeHome(working(60)),pending=run(home,root);
- setTimeout(()=>touch(root,"loaded.mjs",5000),700);
+ setTimeout(()=>bump(root),700);
  const result=await pending;
- expect(result.codeStale).toBe(true);expect(result.codeChanged).toBe(join("code","loaded.mjs"));
+ expect(result.codeStale).toBe(true);expect(result.codeChanged).toBe("code/semantics.json");
 },60000);
 
-posix("a stage that reads is not stopped by a change of a test or a testing file",async()=>{
- const root=temp("tests"),home=fakeHome(working(9)),pending=run(home,root);
- setTimeout(()=>{touch(root,join("🧪️tests","a.ts"),5000);touch(root,join("🧪️testing","b.ts"),5000);},700);
- const result=await pending;
- expect(result.exit).toBe(0);expect(result.stalled).toBe(false);expect(result.codeChanged).toBeUndefined();
+posix("law: a stage that reads while the tooling files change every 100 ms for its whole run is never stopped, only a declared semantics source stops it",async()=>{
+ const root=temp("tests"),home=fakeHome(working(9)),pending=run(home,root);let edits=0;
+ const churn=setInterval(()=>{edits++;touch(root,join("🧪️tests","a.ts"),5000);touch(root,join("🧪️testing","b.ts"),5000);touch(root,"loaded.mjs",5000);touch(root,join("🏗️build","reader.ts"),5000);},100);
+ let result;try{result=await pending;}finally{clearInterval(churn);}
+ expect(edits).toBeGreaterThan(15);expect(result.exit).toBe(0);expect(result.stalled).toBe(false);expect(result.codeChanged).toBeUndefined();
 },60000);
 
 posix("a stage that never reports a phase keeps the old rule",async()=>{
  const root=temp("silent"),home=fakeHome(silent(60)),pending=run(home,root);
- setTimeout(()=>touch(root,"c.ts",5000),700);
+ setTimeout(()=>bump(root),700);
  const result=await pending;
  expect(result.codeStale).toBe(true);expect(result.stalled).toBe(true);
 },60000);
 
-posix("a second read after the tasks counts from its own start",async()=>{
+posix("a second read after the tasks is stopped for semantics declared while the tasks ran, counted from its own start",async()=>{
  const root=temp("again"),script=`#!/bin/sh\necho "NX   Running target build for project x and 2 tasks they depend on:"\ni=0\nwhile [ $i -lt 11 ]; do i=$((i+1)); echo "built unit $i"; sleep 0.3; done\nj=0\nwhile [ $j -lt 80 ]; do j=$((j+1)); echo "Reading the project graph slice ($j s): taken $j of 590."; sleep 0.3; done\n`,home=fakeHome(script),pending=run(home,root);
- setTimeout(()=>touch(root,"early.ts",0),500);
- setTimeout(()=>touch(root,"late.ts",5000),4500);
+ const began=Date.now();setTimeout(()=>bump(root),500);
  const result=await pending;
- expect(result.codeStale).toBe(true);expect(result.codeChanged).toBe(join("code","late.ts"));
+ expect(result.codeStale).toBe(true);expect(result.codeChanged).toBe("code/semantics.json");expect(Date.now()-began).toBeGreaterThan(3300+1500);
 },60000);
 
 posix("the marker of the tasks is seen although the stage prints hundreds of lines before the next look",async()=>{
  const root=temp("flood"),script=`#!/bin/sh\necho "NX   Running target build for project x and 2 tasks they depend on:"\nseq 1 600 | sed 's/^/compiled crate /'\nj=0\nwhile [ $j -lt 14 ]; do j=$((j+1)); echo "built unit $j"; sleep 0.3; done\nexit 0\n`,home=fakeHome(script),pending=run(home,root);
- setTimeout(()=>touch(root,"b.ts",5000),700);
+ setTimeout(()=>bump(root),700);
  const result=await pending;
  expect(result.exit).toBe(0);expect(result.stalled).toBe(false);expect(result.codeChanged).toBeUndefined();
 },60000);

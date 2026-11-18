@@ -55,8 +55,13 @@ const down = async () => {
 };
 await up();
 
+const signal = (name) => async () => {
+  if (!child) throw new Error("the proctor is not running");
+  child.kill(name);
+};
+
 const control = createServer((request, response) => {
-  const act = request.method === "POST" && request.url === "/proctor/stop" ? down : request.method === "POST" && request.url === "/proctor/start" ? up : request.method === "GET" && request.url === "/proctor/spawned" ? async () => { response.setHeader("x-spawned", String(spawned)); } : undefined;
+  const act = request.method === "POST" && request.url === "/proctor/stop" ? down : request.method === "POST" && request.url === "/proctor/start" ? up : request.method === "POST" && request.url === "/proctor/pause" ? signal("SIGSTOP") : request.method === "POST" && request.url === "/proctor/resume" ? signal("SIGCONT") : request.method === "GET" && request.url === "/proctor/spawned" ? async () => { response.setHeader("x-spawned", String(spawned)); } : undefined;
   if (!act) { response.statusCode = 404; return void response.end(); }
   serial(act).then(() => { response.statusCode = 204; response.end(); }, (error) => { response.statusCode = 500; response.end(String(error)); });
 });

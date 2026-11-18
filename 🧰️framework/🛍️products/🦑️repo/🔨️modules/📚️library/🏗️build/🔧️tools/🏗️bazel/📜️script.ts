@@ -175,7 +175,7 @@ export function planBazelTasksV1(graph:BuildGraphV1,request:BazelTaskRequestV1):
   visiting.add(id);const owner=graph.projects[project]!,definition=bazelTargetV1(owner.targets[target]!,identity.configuration),dependencies=new Set<string>();
   for(const dependency of definition.dependsOn??[]){
    const specification=typeof dependency==="string"?{target:dependency}:dependency,pattern=specification.target,fromDependencies=pattern.startsWith("^")||specification.projects==="dependencies"||specification.dependencies===true,operation=pattern.replace(/^\^/u,""),forwarded=specification.params==="forward"?args:[];
-   const add=(value:string)=>{requireBazelDependencyV1(graph,id,value);const dependency=taskIdentity(graph,value,inherited).id;if(dependency!==id&&(!request.excludeDependencies||explicit.has(dependency)))dependencies.add(include(value,forwarded,inherited));};
+   const add=(value:string)=>{if(request.excludeDependencies&&!graph.projects[value.split(":")[0]!])return;requireBazelDependencyV1(graph,id,value);const dependency=taskIdentity(graph,value,inherited).id;if(dependency!==id&&(!request.excludeDependencies||explicit.has(dependency)))dependencies.add(include(value,forwarded,inherited));};
    if(operation.includes(":")){add(operation);continue;}
    const projects=specification.projects===undefined||specification.projects==="self"?[project]:typeof specification.projects==="string"?[specification.projects]:specification.projects;
    let operations=matchedTargets.get(operation);if(!operations){const matcher=new GlobV1(operation);operations=targetNames.filter(name=>matcher.match(name));matchedTargets.set(operation,operations);}

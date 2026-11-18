@@ -1,6 +1,6 @@
 {
   "$schema":"http://json-schema.org/draft-07/schema#",
-  "$id":"https://json.schemas.assets.semio-tech.com/s/norm/en1999/artifact.json",
+  "$id":"https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1999/artifact.json",
   "title":"En1999Artifact",
   "type":"object",
   "additionalProperties":false,
@@ -43,5 +43,5 @@
     "SheetProfile":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string"},"sheetId":{"type":"string"},"pitch":{"type":"number","format":"double"},"topFlange":{"type":"number","format":"double"},"bottomFlange":{"type":"number","format":"double"},"webHeight":{"type":"number","format":"double"}},"required":["id","sheetId","pitch","topFlange","bottomFlange","webHeight"]},
     "FireInsulation":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string"},"fireId":{"type":"string"},"thickness":{"type":"number","format":"double"},"conductivity":{"type":"number","format":"double"},"specificHeat":{"type":"number","format":"double"},"density":{"type":"number","format":"double"}},"required":["id","fireId","thickness","conductivity","specificHeat","density"]}
   },
-  "x-semio-rust":{"doc":["🧬️ EN 1999 document artifact state (mirrors snapshot subject)."],"derive":["Clone","Debug","PartialEq","ArtifactSchema","semio_framework_dsl_record_derive::DslRecord","value_derive::ToValue","value_derive::FromValue"],"artifactSchema":"s.norm.en1999","attributes":["#[cfg_attr(any(test, feature = \"test-support\"), derive(serde::Serialize, serde::Deserialize))]","#[cfg_attr(any(test, feature = \"test-support\"), serde(rename_all = \"camelCase\"))]","#[value(rename_all = \"camelCase\")]"]}
+  "x-semio-rust":{"doc":["🧬️ EN 1999 document artifact state (mirrors snapshot subject)."],"derive":["Clone","Debug","PartialEq","ArtifactSchema","semio_framework_dsl_record_derive::DslRecord","value_derive::ToValue","value_derive::FromValue"],"artifactSchema":"s.norm-eurocode-materials.en1999","attributes":["#[cfg_attr(any(test, feature = \"test-support\"), derive(serde::Serialize, serde::Deserialize))]","#[cfg_attr(any(test, feature = \"test-support\"), serde(rename_all = \"camelCase\"))]","#[value(rename_all = \"camelCase\")]"]}
 }

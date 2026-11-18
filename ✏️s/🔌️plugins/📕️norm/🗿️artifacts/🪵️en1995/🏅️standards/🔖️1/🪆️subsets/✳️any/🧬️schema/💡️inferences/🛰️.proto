@@ -1,5 +1,5 @@
 syntax = "proto3";
-package semio.s.norm.en1995;
+package semio.s.norm_eurocode_materials.en1995;
 message En1995Inference {
   En1995Outline outline = 1;
 }

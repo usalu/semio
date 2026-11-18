@@ -9,7 +9,8 @@
         "collectorBudgetMilliseconds": 600000,
         "consumerCount": 5,
         "measureEntryLimit": 2000000,
-        "environmentChild": "SEMIO_DISK_RECOVERY_CHILD"
+        "environmentChild": "SEMIO_DISK_RECOVERY_CHILD",
+        "namedConsumers": ["image-slack", "replica-store"]
       }
     },
     "Bounds": {
@@ -22,6 +23,12 @@
         "replicaLost": {"maximumAgeMilliseconds": 2592000000, "keepNewest": 16}
       }
     },
+    "ImageSlack": {
+      "const": {"version": 1, "minimumSlackBytes": 1073741824, "minimumSlackPercent": 10, "filesystemOverheadBytes": 67108864, "regrowProfiles": ["graph", "products", "rust"], "command": "repo run repo-cache-reset:cache-regrow-{partition}", "reclaimCommand": "repo run repo-cache-reset:cache-reclaim-{partition}", "reclaimProfiles": ["rust", "tools", "graph", "dependencies", "products", "diagnostics", "nx"]}
+    },
+    "ReplicaStore": {
+      "const": {"version": 1, "serverSuffix": "-server", "machineFile": ".cache/f/machine.json", "topology": "replica.compaction"}
+    },
     "Writer": {
       "type": "object",
       "additionalProperties": false,
@@ -29,10 +36,10 @@
       "properties": {
         "id": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
         "priority": {"type": "integer", "minimum": 1, "maximum": 100},
-        "class": {"enum": ["derivable", "recoverable", "content", "image"]},
+        "class": {"enum": ["derivable", "recoverable", "content", "store", "image"]},
         "relief": {"enum": ["host", "image", "none"]},
         "root": {"type": "string", "minLength": 1},
-        "collector": {"enum": ["ledger", "cas-lru", "staging-sweep", "image-sweep", "age-prune", "log-rotate", "manual"]},
+        "collector": {"enum": ["ledger", "cas-lru", "staging-sweep", "image-sweep", "age-prune", "log-rotate", "image-reset", "store-compaction", "manual"]},
         "command": {"type": "string", "minLength": 1},
         "bound": {"type": "object", "additionalProperties": false, "required": ["en", "de"], "properties": {"en": {"type": "string", "minLength": 1}, "de": {"type": "string", "minLength": 1}}}
       }
@@ -43,6 +50,7 @@
         {"id": "compile-caches", "priority": 62, "class": "derivable", "relief": "host", "root": "{workspace}/.🧬semio/🦑️repo/⚡️cache", "collector": "ledger", "command": "repo cache gc", "bound": {"en": "Go, Vite, Vitest and compile caches below their ledger ages and budgets.", "de": "Go-, Vite-, Vitest- und Compile-Caches unter ihren Ledger-Altern und -Budgets."}},
         {"id": "tool-generations", "priority": 20, "class": "derivable", "relief": "image", "root": "{workspace}/.cache/b/t/m/nx", "collector": "ledger", "command": "repo cache gc --area=nx-tooling,nx-tmp", "bound": {"en": "Newest few Nx tooling generations plus the current one.", "de": "Neueste paar Nx-Werkzeuggenerationen plus die aktuelle."}},
         {"id": "closure-layers", "priority": 30, "class": "derivable", "relief": "image", "root": "{workspace}/.cache/b/g/m", "collector": "ledger", "command": "repo cache gc --area=graph-inference", "bound": {"en": "Superseded closure entries and unreferenced layers after a grace.", "de": "Abgelöste Abschlusseinträge und unreferenzierte Schichten nach einer Karenz."}},
+        {"id": "task-views", "priority": 35, "class": "derivable", "relief": "host", "root": "{workspace}/.cache/f/tv", "collector": "age-prune", "command": "repo cache gc", "bound": {"en": "A pinned task root goes after maximumIdleMilliseconds unused, the least recently used beyond maximumViews or maximumLogicalBytes go first; a view a running task holds is never collected.", "de": "Eine fixierte Aufgabenwurzel geht nach maximumIdleMilliseconds ohne Nutzung, die am längsten ungenutzten jenseits von maximumViews oder maximumLogicalBytes zuerst; eine Sicht, die eine laufende Aufgabe hält, wird nie gesammelt."}},
         {"id": "stale-waves", "priority": 40, "class": "derivable", "relief": "host", "root": "{workspace}/.cache/f/owner-pool-waves", "collector": "age-prune", "command": "repo cache gc", "bound": {"en": "A wave directory goes after maximumAgeMilliseconds without a write, the newest keepNewest stay.", "de": "Ein Wellenverzeichnis geht nach maximumAgeMilliseconds ohne Schreiben, die neuesten keepNewest bleiben."}},
         {"id": "footprint-logs", "priority": 41, "class": "derivable", "relief": "host", "root": "{tmp}/semio-footprint", "collector": "log-rotate", "command": "repo cache gc", "bound": {"en": "At most keepNewest per-process trace logs, none older than maximumAgeMilliseconds.", "de": "Höchstens keepNewest Trace-Protokolle je Prozess, keines älter als maximumAgeMilliseconds."}},
         {"id": "read-verdicts", "priority": 42, "class": "derivable", "relief": "host", "root": "{tmp}/semio-read-verdicts-{uid}", "collector": "age-prune", "command": "repo cache gc", "bound": {"en": "A verdict directory of a finished read goes after maximumAgeMilliseconds.", "de": "Ein Urteilsverzeichnis eines beendeten Lesens geht nach maximumAgeMilliseconds."}},
@@ -51,7 +59,8 @@
         {"id": "leaked-images", "priority": 61, "class": "derivable", "relief": "host", "root": "{workspace}/.cache/test-sandbox", "collector": "image-sweep", "command": "repo doctor --fix --only=host", "bound": {"en": "Disk images of dead test sandboxes are detached and removed.", "de": "Disk-Images toter Test-Sandboxes werden abgehängt und entfernt."}},
         {"id": "cas-lru", "priority": 70, "class": "content", "relief": "host", "root": "{home}/.cache/semio/cas", "collector": "cas-lru", "command": "repo cache cas gc", "bound": {"en": "Capped at capBytes, least recently accessed first, down to the derived low share.", "de": "Auf capBytes begrenzt, die am längsten ungenutzten zuerst, bis zum abgeleiteten unteren Anteil."}},
         {"id": "replica-lost", "priority": 80, "class": "recoverable", "relief": "host", "root": "{workspace}/.cache/f/lost", "collector": "age-prune", "command": "repo cache gc", "bound": {"en": "Files the replica overwrote are kept for maximumAgeMilliseconds, the newest keepNewest stay.", "de": "Vom Replikat überschriebene Dateien bleiben maximumAgeMilliseconds, die neuesten keepNewest bleiben."}},
-        {"id": "image-slack", "priority": 90, "class": "image", "relief": "host", "root": "{workspace}/.cache/b", "collector": "manual", "command": "hdiutil detach {workspace}/.cache/b/<partition>/m && rm -r {workspace}/.cache/b/<partition>", "bound": {"en": "Blocks a fixed image freed are never returned to the host; only retiring an idle recomputable image (graph, nx, rust, products) returns them, with no repo command running.", "de": "Von einem festen Image freigegebene Blöcke gehen nie an den Host zurück; nur das Abräumen eines untätigen, neu berechenbaren Images (Graph, Nx, Rust, Produkte) gibt sie zurück, ohne laufenden repo-Befehl."}}
+        {"id": "replica-store", "priority": 85, "class": "store", "relief": "host", "root": "{store}", "collector": "store-compaction", "command": "cd 🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica && repo ./📜️script.ts compaction --apply", "bound": {"en": "Only on the group server: unreferenced blobs, retired journal segments and superseded snapshots go by the store's own liveness rules (snapshot reference plus safetyHours), under the store-wide compaction lock.", "de": "Nur auf dem Gruppenserver: unreferenzierte Blobs, ablösbare Journalsegmente und abgelöste Schnappschüsse gehen nach den eigenen Lebendigkeitsregeln des Speichers (Schnappschuss-Verweis plus safetyHours), unter der speicherweiten Verdichtungssperre."}},
+        {"id": "image-slack", "priority": 90, "class": "image", "relief": "host", "root": "{workspace}/.cache/b", "collector": "image-reset", "command": "repo run repo-cache-reset:cache-regrow-<partition>", "bound": {"en": "Blocks a fixed image freed are never returned to the host; an idle recomputable elastic image (graph, products, rust) with slack above the floor is retired by the product's exclusive non-waiting regrow, and skipped with a named reason while any command holds it mapped.", "de": "Von einem festen Image freigegebene Blöcke gehen nie an den Host zurück; ein untätiges, neu berechenbares elastisches Image (Graph, Produkte, Rust) mit Überhang über der Schwelle wird durch das ausschließliche, nicht wartende Neuwachsen des Produkts abgeräumt und mit benanntem Grund übersprungen, solange ein Befehl es eingehängt hält."}}
       ]
     },
     "Messages": {
@@ -83,6 +92,58 @@
           "recovery.done": {
             "en": "Partition {partition} has {free} free; the command starts.",
             "de": "Partition {partition} hat {free} frei; der Befehl startet."
+          },
+          "recovery.start-need": {
+            "en": "Partition {partition} has {free} free, below the {target} the waiting stage needs: freeing derivable caches first, then the least recently used cache objects, then the files the replica overwrote and the replica store, the image slack last.",
+            "de": "Partition {partition} hat {free} frei, weniger als die {target}, die die wartende Stufe braucht: zuerst ableitbare Caches, dann die am längsten ungenutzten Cache-Objekte, dann die vom Replikat überschriebenen Dateien und der Replikat-Speicher, zuletzt der Image-Überhang."
+          },
+          "image.reclaimed": {
+            "en": "Image {id}: {slack} of slack returned in place by an unmap cycle, nothing recreated; {freed} returned to the volume.",
+            "de": "Image {id}: {slack} Überhang durch einen Unmap-Zyklus an Ort und Stelle zurückgegeben, nichts neu erzeugt; {freed} an das Volume zurückgegeben."
+          },
+          "image.reclaim-skipped": {
+            "en": "Image {id} could not be reclaimed in place ({slack} of slack): it is held, retiring or not bloated enough.",
+            "de": "Image {id} konnte nicht an Ort und Stelle zurückgegeben werden ({slack} Überhang): es ist gehalten, wird abgeräumt oder nicht genug aufgebläht."
+          },
+          "image.reclaim-failed": {
+            "en": "Image {id} reclaim failed: {message}",
+            "de": "Rückgabe des Images {id} fehlgeschlagen: {message}"
+          },
+          "image.retired": {
+            "en": "Image {id}: retired while idle, {slack} of slack; {freed} returned to the volume.",
+            "de": "Image {id}: im Leerlauf abgeräumt, {slack} Überhang; {freed} an das Volume zurückgegeben."
+          },
+          "image.held": {
+            "en": "Image {id} skipped ({slack} of slack): a command holds it mapped, a later try returns it.",
+            "de": "Image {id} übersprungen ({slack} Überhang): ein Befehl hält es eingehängt, ein späterer Versuch gibt es zurück."
+          },
+          "image.journal": {
+            "en": "Image {id} skipped ({slack} of slack): its journal does not admit whole retirement.",
+            "de": "Image {id} übersprungen ({slack} Überhang): sein Journal erlaubt kein vollständiges Abräumen."
+          },
+          "image.failed": {
+            "en": "Image {id} could not be retired: {message}",
+            "de": "Image {id} konnte nicht abgeräumt werden: {message}"
+          },
+          "store.compacted": {
+            "en": "Replica store compacted: {freed} returned by blobs, segments and snapshots.",
+            "de": "Replikat-Speicher verdichtet: {freed} durch Blobs, Segmente und Schnappschüsse zurückgegeben."
+          },
+          "store.not-server": {
+            "en": "Replica store skipped: only the group server {server} may compact it, and this machine is {origin}.",
+            "de": "Replikat-Speicher übersprungen: nur der Gruppenserver {server} darf ihn verdichten, und diese Maschine ist {origin}."
+          },
+          "store.none": {
+            "en": "Replica store skipped: this machine has no replica store.",
+            "de": "Replikat-Speicher übersprungen: diese Maschine hat keinen Replikat-Speicher."
+          },
+          "store.locked": {
+            "en": "Replica store skipped: another machine holds the compaction lock.",
+            "de": "Replikat-Speicher übersprungen: eine andere Maschine hält die Verdichtungssperre."
+          },
+          "store.refused": {
+            "en": "Replica store skipped: {reason}.",
+            "de": "Replikat-Speicher übersprungen: {reason}."
           },
           "low-space-consumers": {
             "en": "Partition {partition} has only {free} free ({usedPercent}% used): this command needs {must} ({need} for itself and {cushion} cushion), and everything that can be freed automatically is freed. Largest consumers: {consumers}. Free space with the command listed for a consumer, then run the command again.",

@@ -1,4 +1,5 @@
-import { typescriptCompilerFileV1, typescriptCompilerV1 } from "../../🏗️build/🚀️bootstrap/🔷️typescript-compiler/🟨️.mjs";
+import { typescriptCompilerFileV1 } from "../../🏗️build/🚀️bootstrap/🔷️typescript-compiler/🟨️.mjs";
+import { parserTypescriptV1 } from "../../🏗️build/🚀️bootstrap/📦️parsers/🟨️.mjs";
 import { observedFs, observedRequireResolve, registerSourceAnalysisV1, observedSourceAnalysisV1, observedSourceAnalysisAsyncV1 } from "../../🏗️build/👁️observation/🟨️.mjs";
 import { dirname, isAbsolute, relative, resolve } from "node:path";
 import { createRequire, isBuiltin } from "node:module";
@@ -43,7 +44,7 @@ export function readSourceInputContract(path) {
 
 /** 🔗️ Collects module imports conservatively while excluding explicit type-only declarations. */
 function parseRuntimeImports(path, bytes) {
-  const compiler = typescriptCompilerV1(), text = bytes.toString("utf8");
+  const compiler = parserTypescriptV1(), text = bytes.toString("utf8");
   const tree = compiler.createSourceFile(path, text, compiler.ScriptTarget.Latest, true);
   const imports = new Set(), loaders = new Set(["require"]);
   const factory = node => compiler.isCallExpression(node) && compiler.isIdentifier(node.expression) && node.expression.text === "createRequire";

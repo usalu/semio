@@ -109,7 +109,7 @@ export async function registerContextmenuAndMoreTests(vitest: Tests1Vitest, depe
       expect(chrome?.parentElement).toBe(document.body);
       expect(chrome?.style.position).toBe("fixed");
       expect(chrome?.style.left).toBe("123px");
-      expect(chrome?.style.top).toBe("calc(87px - var(--size-medium))");
+      expect(chrome?.style.top).toBe("calc(87px - var(--chip-row-height))");
       expect(document.querySelector('[data-slot="context-menu-title-chip"] [data-icon="list"]')).toBeTruthy();
     });
 
@@ -443,7 +443,7 @@ export async function registerContextmenuAndMoreTests(vitest: Tests1Vitest, depe
       expect(chrome?.className).toContain("overflow-visible");
       const scroller = chrome?.querySelector<HTMLElement>('[data-slot="context-menu-fusion-body"]');
       expect(scroller?.className).toContain("overflow-auto");
-      expect(scroller?.style.maxHeight).toBe("calc(100dvh - var(--size-medium) - 2px)");
+      expect(scroller?.style.maxHeight).toBe("calc(100dvh - var(--chip-row-height) - 2px)");
     });
   });
 

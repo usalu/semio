@@ -58,6 +58,10 @@ mod dispatch_and_overlay_api;
 #[path = "🔬️introspection-queries/🦀️.rs"]
 mod introspection_queries;
 
+#[cfg(feature = "testkit")]
+#[path = "🧪️fixture/🦀️.rs"]
+pub mod testkit;
+
 //#region 🧪️RetainedDocumentHostileFixtures
 //#endregion 🧪️RetainedDocumentHostileFixtures
 

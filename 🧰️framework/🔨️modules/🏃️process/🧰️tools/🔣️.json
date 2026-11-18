@@ -2275,6 +2275,66 @@
       }
     },
     {
+      "id": "diskutil",
+      "kind": "disk-image",
+      "summary": {
+        "en": "macOS disk utility whose image verbs attach the build store images through the UNMAP-capable stack, so blocks freed inside return to the host.",
+        "de": "macOS-Datenträgerprogramm, dessen Image-Verben die Build-Store-Images über den UNMAP-fähigen Stapel anhängen, sodass innen freigegebene Blöcke an den Host zurückgehen."
+      },
+      "capabilities": [
+        "image-attach",
+        "image-reclaim"
+      ],
+      "commands": [
+        "diskutil"
+      ],
+      "platforms": [
+        "darwin"
+      ],
+      "pin": {
+        "state": "system"
+      },
+      "provision": {
+        "kind": "system",
+        "command": "repo tools verify",
+        "hints": {
+          "darwin": "Included with macOS."
+        }
+      },
+      "locate": [
+        {
+          "kind": "environment",
+          "name": "SEMIO_TOOL_DISKUTIL"
+        },
+        {
+          "kind": "path",
+          "directories": [
+            "/usr/sbin"
+          ]
+        }
+      ],
+      "adapter": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🟦️.ts",
+      "adapterScope": [
+        "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/**",
+        "🧰️framework/🔨️modules/🏃️process/🧪️testing/🏖️sandbox/**"
+      ],
+      "allowedCallers": [
+        "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/**",
+        "🧰️framework/🔨️modules/🏃️process/🧪️testing/🏖️sandbox/**",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/**",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/**"
+      ],
+      "environment": {
+        "mode": "allowlist",
+        "pass": [],
+        "deny": [],
+        "set": {}
+      },
+      "capacity": {
+        "mode": "none"
+      }
+    },
+    {
       "id": "docker",
       "kind": "container",
       "summary": {

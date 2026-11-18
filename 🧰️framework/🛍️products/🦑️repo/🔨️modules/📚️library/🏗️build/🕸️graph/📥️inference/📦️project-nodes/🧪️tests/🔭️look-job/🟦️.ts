@@ -25,7 +25,7 @@ test("the verdict of the look is the verdict of the record when it judged the re
 });
 
 test("the take pass starts the queue with its lanes, every look runs in the look scope, the queue follows the children and a read says what its parent computed",()=>{
- expect(source).toContain("lookQueue?.start([...lanes,split.heavy])");
+ expect(source).toContain("lookQueue?.start([...lanes,split.heavy],");
  expect(source).toContain("withTakeLookScopeV1(()=>runClosureTakeV1(()=>lookProject(job,takeAway)))");
  expect(source).toContain("farm?.onReady(()=>lookQueue?.kick())");
  expect(source).toContain("farm===undefined||options?.ownerAdmission?undefined:createLookQueueV1(");

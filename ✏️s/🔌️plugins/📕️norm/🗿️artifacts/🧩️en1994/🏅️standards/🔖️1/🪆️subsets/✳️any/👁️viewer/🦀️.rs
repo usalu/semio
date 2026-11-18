@@ -33,7 +33,7 @@ semio_s_plugin_norm_app_surface::norm_viewer_commands!(semio_s_artifact_norm_en1
 
 semio_s_plugin_norm_app_surface::norm_owned_view_tool_job_factory!(En1994ViewBoundedCommandJobFactory, En1994Viewer);
 
-semio_s_plugin_norm_app_surface::norm_viewer_surface!(En1994Viewer, En1994ViewCommand, variant = "en1994", report = |d: &En1994Snapshot| semio_s_artifact_norm_en1994_inferences::live::report(d), scene = |d: &En1994Snapshot, r: &semio_s_plugin_norm_app_surface::NormViewReport, _| semio_s_artifact_norm_en1994_scene::live_scene_of(d, r), diagrams = |d: &En1994Snapshot, r: &semio_s_plugin_norm_app_surface::NormViewReport, focus: Option<&str>| semio_s_plugin_norm_structural_scene::projection::memo_diagrams("en1994", d, r, focus.unwrap_or("\u{0}"), || semio_s_artifact_norm_en1994_scene::diagrams(d, r, focus)).to_vec());
+semio_s_plugin_norm_app_surface::norm_viewer_surface!(En1994Viewer, En1994ViewCommand, owner = "norm-eurocode-structural", variant = "en1994", report = |d: &En1994Snapshot| semio_s_artifact_norm_en1994_inferences::live::report(d), scene = |d: &En1994Snapshot, r: &semio_s_plugin_norm_app_surface::NormViewReport, _| semio_s_artifact_norm_en1994_scene::live_scene_of(d, r), diagrams = |d: &En1994Snapshot, r: &semio_s_plugin_norm_app_surface::NormViewReport, focus: Option<&str>| semio_s_plugin_norm_structural_scene::projection::memo_diagrams("en1994", d, r, focus.unwrap_or("\u{0}"), || semio_s_artifact_norm_en1994_scene::diagrams(d, r, focus)).to_vec());
 //#endregion 🔖️Command
 
 //#region 🔖️Viewer
@@ -76,7 +76,7 @@ impl ArtifactViewer for En1994Viewer {
     semio_plugin::bounded_first_step_tool_proofs! {
         owner: semio_plugin::ViewerApp<En1994Viewer>,
         owner_file: "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
-        controller: "s.norm.en1994@1/*#viewer",
+        controller: "s.norm-eurocode-structural.en1994@1/*#viewer",
         artifact_schema: "semio.norm.en1994/v1",
         factory: "En1994ViewBoundedCommandJobFactory",
         factory_type: En1994ViewBoundedCommandJobFactory,
@@ -150,6 +150,7 @@ pub fn create_en1994_viewer() -> semio_plugin::AppDefinition {
     Viewer::builder(EN1994_DIALECT)
         .document(["semio", "norm", "en1994"])
         .interaction(semio_s_plugin_norm_app_surface::viewer_interaction_definition("en1994"))
+        .utility(semio_s_plugin_norm_app_surface::transform_utility_definition())
         .icon_id("check-circle")
         .mode_def(view::definition())
         .default_mode_id(semio_s_plugin_norm_app_surface::MODE_VIEW)

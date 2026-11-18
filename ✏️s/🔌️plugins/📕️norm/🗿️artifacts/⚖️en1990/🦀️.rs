@@ -26,28 +26,28 @@ pub fn package_descriptor() -> Result<semio_s_artifact_norm_contract::NormArtifa
 pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
     package_descriptor().map_err(|error| semio_plugin::ArtifactDefinitionError::new("artifact.package-schema", error.to_string()))?;
     use semio_s_artifact_norm_contract::definition::{CapabilitySpec, ClaimSpec, LocalizationSpec};
-    const SCHEMA: &[ClaimSpec] = &[ClaimSpec { namespace: "schema", value: "s.norm.en1990" }];
-    const INFERENCE: &[ClaimSpec] = &[ClaimSpec { namespace: "schema", value: "s.norm.en1990.inference" }];
-    const COMPOSER: &[ClaimSpec] = &[ClaimSpec { namespace: "dialect", value: "s.norm.en1990@1/*" }];
+    const SCHEMA: &[ClaimSpec] = &[ClaimSpec { namespace: "schema", value: "s.norm-eurocode.en1990" }];
+    const INFERENCE: &[ClaimSpec] = &[ClaimSpec { namespace: "schema", value: "s.norm-eurocode.en1990.inference" }];
+    const COMPOSER: &[ClaimSpec] = &[ClaimSpec { namespace: "dialect", value: "s.norm-eurocode.en1990@1/*" }];
     const CODEC: &[ClaimSpec] = &[ClaimSpec { namespace: "codec", value: "semio.norm.en1990/v1" }, ClaimSpec { namespace: "codec-extension", value: "20:semio.norm.en1990/v1:en1990" }];
     const EN: &[LocalizationSpec] = &[LocalizationSpec { locale: "en", text: "EN 1990 basis of structural design" }];
     const DE: &[LocalizationSpec] = &[LocalizationSpec { locale: "de", text: "EN 1990 Grundlagen der Tragwerksplanung" }];
     const CAPABILITIES: &[CapabilitySpec] = &[
-        CapabilitySpec { identity: "s.norm.en1990.standard.v1", kind: "standard", descriptor: "v1", claims: &[], localizations: &[] },
-        CapabilitySpec { identity: "s.norm.en1990.standard.v1.profile.any", kind: "profile", descriptor: "any", claims: &[], localizations: &[] },
-        CapabilitySpec { identity: "s.norm.en1990.schema.artifact", kind: "schema", descriptor: "s.norm.en1990", claims: SCHEMA, localizations: &[] },
-        CapabilitySpec { identity: "s.norm.en1990.inference.outline", kind: "inference", descriptor: "s.norm.en1990.inference", claims: INFERENCE, localizations: &[] },
-        CapabilitySpec { identity: "s.norm.en1990.composer.any", kind: "composer", descriptor: "s.norm.en1990@1/*", claims: COMPOSER, localizations: &[] },
-        CapabilitySpec { identity: "s.norm.en1990.grammar.document", kind: "grammar", descriptor: "en1990.document", claims: &[ClaimSpec { namespace: "grammar", value: "en1990.document" }], localizations: &[] },
-        CapabilitySpec { identity: "s.norm.en1990.grammar.op", kind: "grammar", descriptor: "en1990.op", claims: &[ClaimSpec { namespace: "grammar", value: "en1990.op" }], localizations: &[] },
-        CapabilitySpec { identity: "s.norm.en1990.grammar.diff", kind: "grammar", descriptor: "en1990.diff", claims: &[ClaimSpec { namespace: "grammar", value: "en1990.diff" }], localizations: &[] },
-        CapabilitySpec { identity: "s.norm.en1990.grammar.pack", kind: "grammar", descriptor: "en1990.pack", claims: &[ClaimSpec { namespace: "grammar", value: "en1990.pack" }], localizations: &[] },
-        CapabilitySpec { identity: "s.norm.en1990.grammar.spr", kind: "grammar", descriptor: "en1990.spr", claims: &[ClaimSpec { namespace: "grammar", value: "en1990.spr" }], localizations: &[] },
-        CapabilitySpec { identity: "s.norm.en1990.codec.document.v1", kind: "codec", descriptor: "semio.norm.en1990/v1:en1990", claims: CODEC, localizations: &[] },
-        CapabilitySpec { identity: "s.norm.en1990.localization.en", kind: "localization", descriptor: "EN 1990 basis of structural design", claims: &[], localizations: EN },
-        CapabilitySpec { identity: "s.norm.en1990.localization.de", kind: "localization", descriptor: "EN 1990 Grundlagen der Tragwerksplanung", claims: &[], localizations: DE },
+        CapabilitySpec { identity: "s.norm-eurocode.en1990.standard.v1", kind: "standard", descriptor: "v1", claims: &[], localizations: &[] },
+        CapabilitySpec { identity: "s.norm-eurocode.en1990.standard.v1.profile.any", kind: "profile", descriptor: "any", claims: &[], localizations: &[] },
+        CapabilitySpec { identity: "s.norm-eurocode.en1990.schema.artifact", kind: "schema", descriptor: "s.norm-eurocode.en1990", claims: SCHEMA, localizations: &[] },
+        CapabilitySpec { identity: "s.norm-eurocode.en1990.inference.outline", kind: "inference", descriptor: "s.norm-eurocode.en1990.inference", claims: INFERENCE, localizations: &[] },
+        CapabilitySpec { identity: "s.norm-eurocode.en1990.composer.any", kind: "composer", descriptor: "s.norm-eurocode.en1990@1/*", claims: COMPOSER, localizations: &[] },
+        CapabilitySpec { identity: "s.norm-eurocode.en1990.grammar.document", kind: "grammar", descriptor: "en1990.document", claims: &[ClaimSpec { namespace: "grammar", value: "en1990.document" }], localizations: &[] },
+        CapabilitySpec { identity: "s.norm-eurocode.en1990.grammar.op", kind: "grammar", descriptor: "en1990.op", claims: &[ClaimSpec { namespace: "grammar", value: "en1990.op" }], localizations: &[] },
+        CapabilitySpec { identity: "s.norm-eurocode.en1990.grammar.diff", kind: "grammar", descriptor: "en1990.diff", claims: &[ClaimSpec { namespace: "grammar", value: "en1990.diff" }], localizations: &[] },
+        CapabilitySpec { identity: "s.norm-eurocode.en1990.grammar.pack", kind: "grammar", descriptor: "en1990.pack", claims: &[ClaimSpec { namespace: "grammar", value: "en1990.pack" }], localizations: &[] },
+        CapabilitySpec { identity: "s.norm-eurocode.en1990.grammar.spr", kind: "grammar", descriptor: "en1990.spr", claims: &[ClaimSpec { namespace: "grammar", value: "en1990.spr" }], localizations: &[] },
+        CapabilitySpec { identity: "s.norm-eurocode.en1990.codec.document.v1", kind: "codec", descriptor: "semio.norm.en1990/v1:en1990", claims: CODEC, localizations: &[] },
+        CapabilitySpec { identity: "s.norm-eurocode.en1990.localization.en", kind: "localization", descriptor: "EN 1990 basis of structural design", claims: &[], localizations: EN },
+        CapabilitySpec { identity: "s.norm-eurocode.en1990.localization.de", kind: "localization", descriptor: "EN 1990 Grundlagen der Tragwerksplanung", claims: &[], localizations: DE },
     ];
-    semio_s_artifact_norm_contract::definition::assemble_definition("s.norm.en1990", CAPABILITIES)
+    semio_s_artifact_norm_contract::definition::assemble_definition("s.norm-eurocode.en1990", CAPABILITIES)
 }
 
 pub fn declaration(definition: semio_plugin::ArtifactDefinition) -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {

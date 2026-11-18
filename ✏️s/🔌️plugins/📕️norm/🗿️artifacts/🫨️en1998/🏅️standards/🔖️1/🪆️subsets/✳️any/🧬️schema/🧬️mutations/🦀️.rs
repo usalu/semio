@@ -383,7 +383,7 @@ use semio_s_artifact_norm_en1998_mut_placements::remove_placement;
 #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "test-support"), serde(tag = "mutation", rename_all = "camelCase"))]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = En1998Snapshot, diff = En1998Diff, schema = "s.norm.en1998", reference = En1998Snapshot, reference_diff = En1998Diff)]
+#[mutations(snapshot = En1998Snapshot, diff = En1998Diff, schema = "s.norm-eurocode.en1998", reference = En1998Snapshot, reference_diff = En1998Diff)]
 pub enum En1998Mutation {
     ChangeAnnex(change_annex::ChangeAnnex),
     InsertBuilding(insert_building::InsertBuilding),

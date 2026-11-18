@@ -30,10 +30,11 @@ fn a_shot_needs_a_perch_high_enough_a_rope_of_the_right_length_and_steep_enough_
     let shelf = perch("shelf", 306.0, 494.0, 380.0);
     let boxed = solid(300.0, 500.0, 380.0, 420.0);
     let high = |y: f64, size: Size| shot_for(point(400.0, 480.0), &[perch("stub", 380.0, 420.0, y)], &[], size);
+    let far = |y: f64, size: Size| shot_for(point(400.0, 700.0), &[perch("stub", 380.0, 420.0, y)], &[], size);
     assert!(high(480.0 - ROPE_RISE * 48.0 + 0.5, PET).is_none());
     assert!(high(413.0, PET).is_some_and(|shot| shot.length >= ROPE_SHORT * 48.0) && high(414.0, PET).is_none());
-    assert!(high(66.0, PET).is_some_and(|shot| shot.length <= ROPE_LONG * 48.0) && high(65.0, PET).is_none());
-    assert!(high(480.0 - MUZZLE_HEIGHT * 56.0 - 420.0, LARGE).is_some() && high(480.0 - MUZZLE_HEIGHT * 56.0 - 420.0, PET).is_none());
+    assert!(far(94.0, PET).is_some_and(|shot| shot.length <= ROPE_LONG * 48.0) && far(93.0, PET).is_none());
+    assert!(far(700.0 - MUZZLE_HEIGHT * 56.0 - 620.0, LARGE).is_some() && far(700.0 - MUZZLE_HEIGHT * 56.0 - 620.0, PET).is_none());
     assert!(high(480.0, PET).is_none() && high(520.0, PET).is_none());
     let from = |x: f64, keepouts: &[Rect]| shot_for(point(x, 480.0), &[floor(), shelf.clone()], keepouts, PET);
     assert!(from(240.0, &[boxed]).is_some() && from(140.0, &[boxed]).is_none());

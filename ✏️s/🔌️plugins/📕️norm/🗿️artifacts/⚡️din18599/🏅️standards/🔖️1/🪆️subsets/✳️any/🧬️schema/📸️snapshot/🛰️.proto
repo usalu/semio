@@ -1,5 +1,5 @@
 syntax = "proto3";
-package semio.s.norm.din18599.snapshot;
+package semio.s.norm_energy.din18599.snapshot;
 import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🛰️.proto";
 
 // 🧬️ Din18599Snapshot schema — every field with its state class.

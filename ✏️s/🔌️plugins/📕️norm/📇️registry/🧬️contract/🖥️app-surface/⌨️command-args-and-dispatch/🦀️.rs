@@ -51,7 +51,7 @@ pub fn dispatch_set_field<D, M, F>(document: &D, path: &str, value_json: &str, r
 where
     F: FnOnce(&D, &NormEdit) -> Result<Vec<M>, String>,
 {
-    let value = dsl_value_from_json(value_json).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("norm.set-field-value"), error))?;
+    let value = dsl_value_from_json(value_json).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("norm.editor.set-field-value"), error))?;
     handle_set_field(document, path, value, resolve)
 }
 
@@ -61,7 +61,7 @@ where
     F: FnOnce(&D, &NormEdit) -> Result<Vec<M>, String>,
 {
     let value = match value_json {
-        Some(json) if json != "null" => Some(dsl_value_from_json(json).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("norm.insert-item-value"), error))?),
+        Some(json) if json != "null" => Some(dsl_value_from_json(json).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("norm.editor.insert-item-value"), error))?),
         _ => None,
     };
     handle_insert_item(document, path, index, value, resolve)

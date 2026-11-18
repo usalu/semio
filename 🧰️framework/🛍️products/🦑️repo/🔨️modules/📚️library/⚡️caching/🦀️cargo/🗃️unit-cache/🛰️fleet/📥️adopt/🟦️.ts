@@ -12,6 +12,15 @@ const fleet=FLEET_POLICY_V1,decoder=new TextDecoder("utf-8",{fatal:true}),encode
 /** 📥️ What installing a fleet unit into the local store needs of a unit. */
 export type InstallTargetV1=Readonly<{client:FleetClientV1;root:string;localKey:string;key:string;slot:string;platform:PlatformV1;roots:readonly PortableRootV1[];expected?:readonly string[]}>;
 
+/** ⚡️ Downloads every blob at once, the largest first so the longest transfer overlaps the others, `fleet.limits.maximumDownloadConcurrency` at a time; `undefined` as soon as one is missing, short or corrupt. The digests come from the action result, so the manifest travels with the outputs and a unit costs one round trip for its result and one for its blobs. */
+export async function downloadBlobsV1(client:FleetClientV1,wanted:ReadonlyMap<string,number>):Promise<Map<string,Uint8Array>|undefined>{
+ const downloads=[...wanted.entries()].sort((left,right)=>right[1]-left[1]),bytes=new Map<string,Uint8Array>();let next=0,failed=false;
+ await Promise.all(Array.from({length:Math.min(fleet.limits.maximumDownloadConcurrency,downloads.length)},async()=>{
+  for(;;){const index=next++;if(index>=downloads.length||failed)return;const [sha,size]=downloads[index]!,blob=await client.getBlob(sha,size);if(!blob){failed=true;return;}bytes.set(sha,blob);}
+ }));
+ return failed?undefined:bytes;
+}
+
 /** 📥️ Fetches the unit from the fleet cache and installs it into the local store, as if it had been compiled here: the manifest and every blob are downloaded and verified against their digests (a blob that is missing, short or corrupt, or an output that the unit's command line promises and the manifest lacks, makes the whole entry a miss), paths are put back to this machine's roots and the entry is written as the newest variant of the local key. `hit` means the caller may now serve from the local store, whose second-level check still compares every recorded input file and environment value. */
 export async function installFleetUnitV1(unit:InstallTargetV1):Promise<"hit"|"miss"|"fault">{
  try{
@@ -21,18 +30,15 @@ export async function installFleetUnitV1(unit:InstallTargetV1):Promise<"hit"|"mi
   const result=decodeActionResultV1(answer);
   if(result.slot!==undefined&&result.slot!==unit.slot)return "miss";
   const manifestFile=result.files.find(file=>file.path===fleet.manifestName);if(!manifestFile)return "miss";
-  const manifestBytes=await unit.client.getBlob(manifestFile.digest.hash,manifestFile.digest.size);if(!manifestBytes)return "miss";
-  const manifest=parseRemoteUnitV1(manifestBytes,{key:unit.key});
+  const declared=new Map(result.files.map(file=>[file.path,file.digest])),wanted=new Map<string,number>();
+  for(const digest of[manifestFile.digest,...result.files.filter(file=>file.path.startsWith("out/")).map(file=>file.digest),...[result.stdout,result.stderr].filter((stream):stream is NonNullable<typeof stream>=>stream!==undefined)])wanted.set(digest.hash,digest.size);
+  if(manifestFile.digest.size>fleet.limits.maximumManifestBytes||wanted.size>fleet.limits.maximumBlobs+3||[...wanted.values()].some(size=>size>fleet.limits.maximumBlobBytes))return "miss";
+  const bytes=await downloadBlobsV1(unit.client,wanted);if(bytes===undefined)return "miss";
+  const manifest=parseRemoteUnitV1(bytes.get(manifestFile.digest.hash)!,{key:unit.key});
   if(JSON.stringify(manifest.platform)!==JSON.stringify(unit.platform)||manifest.slot!==unit.slot)return "miss";
   if(unit.expected&&uncoveredOutputsV1(manifest.outputs.map(output=>output.name),unit.expected).length>0)return "miss";
-  const wanted=new Map<string,number>(),declared=new Map(result.files.map(file=>[file.path,file.digest.hash]));
-  for(const output of manifest.outputs){if(declared.get("out/"+output.name)!==output.sha256)return "miss";wanted.set(output.sha256,output.bytes);}
-  for(const [sha,stream] of [[manifest.stdout,result.stdout],[manifest.stderr,result.stderr]] as const){if(sha!==null){if(stream?.hash!==sha)return "miss";wanted.set(sha,stream.size);}}
-  const downloads=[...wanted.entries()],bytes=new Map<string,Uint8Array>();let next=0,failed=false;
-  await Promise.all(Array.from({length:Math.min(fleet.limits.maximumDownloadConcurrency,downloads.length)},async()=>{
-   for(;;){const index=next++;if(index>=downloads.length||failed)return;const [sha,size]=downloads[index]!,blob=await unit.client.getBlob(sha,size);if(!blob){failed=true;return;}bytes.set(sha,blob);}
-  }));
-  if(failed)return "miss";
+  for(const output of manifest.outputs){const file=declared.get("out/"+output.name);if(file?.hash!==output.sha256||file.size!==output.bytes)return "miss";}
+  for(const [sha,stream] of [[manifest.stdout,result.stdout],[manifest.stderr,result.stderr]] as const){if(sha!==null&&stream?.hash!==sha)return "miss";}
   const root=unit.root,cas=casRootV1(),local=(sha:string,text:boolean):Readonly<{sha:string;bytes:number}>=>{
    const blob=bytes.get(sha)!,stored=text?encoder.encode(localTextV1(decoder.decode(blob),unit.roots)):blob;
    return {sha:putCasObjectSyncV1(cas,stored),bytes:stored.length};

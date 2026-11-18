@@ -1,5 +1,5 @@
 syntax = "proto3";
-package semio.s.norm.en1991;
+package semio.s.norm_eurocode.en1991;
 message En1991Mutation {
   oneof kind {
     ChangeAnnex change_annex = 1;

@@ -101,6 +101,16 @@ slow-timeout = { period = "1800s", terminate-after = 1 }
 
 
 [[profile.quick.overrides]]
+filter = 'package(semio-hub-norm-energy)'
+slow-timeout = { period = "1800s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-hub-norm-eurocode-structural)'
+slow-timeout = { period = "1800s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
 filter = 'package(semio-hub-norm-eurocode-materials)'
 slow-timeout = { period = "1800s", terminate-after = 1 }
 

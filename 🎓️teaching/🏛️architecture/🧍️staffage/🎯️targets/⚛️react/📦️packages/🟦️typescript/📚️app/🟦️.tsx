@@ -160,7 +160,7 @@ function Navigation(): ReactElement {
     navbarFillItem("fill"),
     {
       key: "search",
-      className: "min-w-0 shrink",
+      className: "hidden min-w-0 shrink lg:flex",
       content: (
         <SharedBorderRow as="form" role="search" aria-label={t("nav.search")} className="min-w-0" onSubmit={(event) => { event.preventDefault(); navigate({ page: "all" }, new URLSearchParams(query === "" ? "" : { q: query })); }}>
           <input ref={search} type="search" value={query} onChange={(event) => setQuery(event.target.value)} aria-label={t("nav.search")} placeholder={t("nav.searchPlaceholder")} data-shared-border-cell="" className="min-h-6 w-28 min-w-0 px-double py-single text-xs text-foreground sm:w-44" />

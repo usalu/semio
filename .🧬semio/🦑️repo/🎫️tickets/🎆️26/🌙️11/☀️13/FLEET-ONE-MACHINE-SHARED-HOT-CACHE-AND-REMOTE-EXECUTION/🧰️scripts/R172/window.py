@@ -21,9 +21,11 @@ bk=S+"/bk"+start.strftime("%H%M")
 def release():
     try: os.remove(lock+"/owner")
     except Exception: pass
-    os.rmdir(lock)
-def restore(): print(subprocess.run(["python3",S+"/land.py","restore",L[:-1]+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",bk],capture_output=True,text=True).stdout)
-r=subprocess.run(["python3",S+"/land.py","apply",L[:-1]+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",bk],capture_output=True,text=True);print(r.stdout,r.stderr)
+    try: os.rmdir(lock)
+    except Exception: pass
+import atexit;atexit.register(release)
+def restore(): print(subprocess.run(["python3",S+"/land.py","restore",L+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",bk],capture_output=True,text=True).stdout)
+r=subprocess.run(["python3",S+"/land.py","apply",L+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",bk],capture_output=True,text=True);print(r.stdout,r.stderr)
 if r.returncode!=0: release();sys.exit(2)
 bad=[]
 for d in RUN:

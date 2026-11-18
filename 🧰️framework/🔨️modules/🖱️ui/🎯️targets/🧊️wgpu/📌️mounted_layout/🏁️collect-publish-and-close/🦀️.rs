@@ -193,13 +193,20 @@ impl MountedLayoutJob {
 /// renderer, which walks the identical stages one grant at a time through `engine::Ui`.
 #[cfg(any(test, feature = "testkit"))]
 pub fn layout_tree_now(tree: &mut UiTree, root: NodeId, theme: Theme, width: f32, height: f32) -> bool {
+    layout_tree_flowing_now(tree, root, theme, width, height, false, ui_contract::FlowInline::Ltr)
+}
+
+/// 🧭️ [`layout_tree_now`] under an explicit writing flow: `block_reversed` stacks from the block end and `inline` picks the
+/// inline direction, exactly the flow a window hands its own [`MountedLayoutJob`].
+#[cfg(any(test, feature = "testkit"))]
+pub fn layout_tree_flowing_now(tree: &mut UiTree, root: NodeId, theme: Theme, width: f32, height: f32, block_reversed: bool, inline: ui_contract::FlowInline) -> bool {
     let identity = MountedLayoutIdentity { surface: UiSurfaceToken::new(0, 1), generation: 1, revision: 0, theme_revision: 0, viewport_revision: 0 };
-    let Ok(mut job) = MountedLayoutJob::try_new(tree, root, identity, theme, width, height, false, ui_contract::FlowInline::Ltr) else { return false };
+    let Ok(mut job) = MountedLayoutJob::try_new(tree, root, identity, theme, width, height, block_reversed, inline) else { return false };
     let policy = ui_contract::UI_WORKER_RETIREMENT_POLICY;
     let mut caller = fixture_caller();
     let solved = (|| {
         while !job.is_admitted() {
-            let turn = caller.turn(policy, |cx| Ok(job.admit_one(tree, cx))); if let Ok(LayoutJobStep::Fault(label)) = &turn { eprintln!("[DEBUG] admit fault {label}"); } if matches!(turn, Ok(LayoutJobStep::Fault(_) | LayoutJobStep::Cancelled) | Err(_)) { return false; }
+            if matches!(caller.turn(policy, |cx| Ok(job.admit_one(tree, cx))), Ok(LayoutJobStep::Fault(_) | LayoutJobStep::Cancelled) | Err(_)) { return false; }
         }
         while job.stage() != LayoutJobStage::PublishResults {
             let Ok(outcome) = caller.turn(policy, |cx| Ok(job.worker_one(cx).map_err(semio_framework_job::OriginalTurnFailure::from)?.map(semio_framework_job::JobOutcomeBorrow::into_descriptor))) else { return false };
@@ -230,8 +237,7 @@ pub fn layout_tree_now(tree: &mut UiTree, root: NodeId, theme: Theme, width: f32
     loop {
         match job.publish_one(tree, published) {
             LayoutJobStep::Complete => break,
-            LayoutJobStep::Fault(label) => { eprintln!("[DEBUG] publish fault {label}"); return false }
-            LayoutJobStep::Cancelled => return false,
+            LayoutJobStep::Fault(_) | LayoutJobStep::Cancelled => return false,
             LayoutJobStep::Yield { .. } => {}
         }
     }

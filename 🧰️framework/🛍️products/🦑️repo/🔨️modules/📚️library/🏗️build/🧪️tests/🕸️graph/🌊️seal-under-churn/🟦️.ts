@@ -2,7 +2,7 @@
 import{test,expect}from"bun:test";
 import{readFileSync}from"node:fs";
 import{fileURLToPath}from"node:url";
-import{join,dirname}from"node:path";
+import{posix}from"node:path";
 import ts from"typescript";
 import Ajv from"ajv";
 import{createHash}from"node:crypto";
@@ -52,13 +52,13 @@ const world=(seed:number)=>{
   importMetaV1:{url:"file:///owned/graph.ts"},graphSelfUrlsV1:()=>[],physicalSourceOriginV1:(url:string)=>new URL(url),observationV1:observation,
   importModuleV1:async(specifier:string)=>specifier==="../📥️inference/🟨️.mjs"?producer:{},
   requireIssuedResourceControlInvocationV1:()=>{},checkResourceLeaseControl:()=>{},checkScriptInvocation:()=>{},
-  process:{env:{},stderr:{write:(text:string)=>{lines.push(text);return true;}}},performance,JSON,Buffer,URL,join,dirname,
+  process:{env:{},stderr:{write:(text:string)=>{lines.push(text);return true;}}},performance,JSON,Buffer,URL,join:posix.join,dirname:posix.dirname,
   buildGraphPathV1:()=>"/owned/cache/canonical.json",graphDeclarationV1:()=>({properties:{authority:{const:"authority.json"}}}),
   createRequire:()=>(()=>observation),readBuildOwnerRegistryV1:(value:unknown)=>value,buildGraphScopeKeyV1:()=>"scope",
   ownerRegistryInvalidationV1:{kind:"invalidated",reason:"owner-registry"},isOwnerRegistryInvalidationV1:(value:unknown)=>value===undefined?false:(value as{kind?:string})?.kind==="invalidated",
   buildGraphErrorCodeV1:(error:unknown)=>(error as{code?:string})?.code,
   readAdmissionMemoV1:async()=>undefined,writeAdmissionMemoV1:async()=>{},
-  buildGraphProducerAuthorityV1:()=>true,loadedGraphModuleAuthorityV1:{implementation:"same",publication:"same"},
+  buildGraphProducerAuthorityV1:()=>true,loadedGraphModuleAuthorityV1:{implementation:"same",publication:"same"},loadedGraphAdmissionFormatV1:"same",selectedAdmissionFactsV1:{entries:()=>[],seed:()=>{}},packAdmissionMemoV1:(value:unknown)=>value,ownersOfAdmissionMemoV1:()=>[],
   closeBuildOwnerAdmissionV1:async(_selection:unknown,_registry:unknown,inspect:(owner:{name:string},targets:string[],inputs:string[])=>Promise<unknown>)=>{for(const name of names)await inspect({name},[],[]);return admitted();},
   buildGraphMembershipV1:async()=>{advance(INVENTORY);return"membership";},buildGraphMembersV1:(list:string[])=>list,workspaceBuildFilesV1:async()=>[],inventoryDirectoriesV1:new WeakMap(),
   readFile:async(path:string)=>{const text=store.get(path);if(text===undefined)throw Object.assign(Error("absent"),{code:"ENOENT"});return text;},
@@ -73,7 +73,7 @@ const world=(seed:number)=>{
   },
   buildGraphSourceFactsHoldV1:hold,
   mkdir:async()=>{},writeFile:async(path:string,text:string)=>{store.set(path,text);},rename:async(from:string,to:string)=>{store.set(to,store.get(from)!);store.delete(from);},rm:async(path:string)=>{store.delete(path);},
-  createHash:()=>({update:()=>({digest:()=>"digest"})}),randomUUID:()=>"nonce",sealVerdictV1,reportSealV1,
+  createHash:()=>({update:()=>({digest:()=>"digest"})}),randomUUID:()=>"nonce",sealVerdictV1,reportSealV1,sliceReadStepV1:(_id:string,run:()=>unknown)=>run(),
   graphSnapshotPolicyV1:{maximumSnapshotBytes:1<<30},portableInputs:async(_root:string,value:unknown)=>value,readBuildGraphV1:(value:unknown)=>value,
   GRAPH_LIMITS_V1:limits.definitions.Limits.const,observeOwnerFactsMemoizedV1:undefined as unknown,
  };

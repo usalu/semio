@@ -10,6 +10,7 @@
         "generatedDirectories": {
           "field": "generatedDirectories"
         },
+        "machineLocalDirectoryNames": ["🤖️generated"],
         "machineLocalFileNames": [".DS_Store", "Thumbs.db", "desktop.ini", ".localized"],
         "machineLocalFileSuffixes": ["~", ".swp", ".swo"],
         "readers": [

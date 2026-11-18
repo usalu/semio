@@ -559,12 +559,27 @@ async function observedQueueWait(options:QueuedLeaseOptions,queue:string,head:st
     return notice?{...info,...notice}:info;
   }catch{return info;}
 }
-/** 🪦️ Retires one predecessor ticket only when its independent kernel claim proves its requester gone. */
-async function reapQueueTicket(options:QueuedLeaseOptions,queue:string,name:string,pendingOptions:()=>LeaseOptions):Promise<boolean>{
-  const sweepCatalog=await queueClaimCatalog(pendingOptions(),"shared",Date.now(),"queue-sweep");let retired:ResourceLease|undefined;
-  try{retired=await acquireResourceLease({...resourceQueueClaimV1(options.directory,options.resource,name),mode:"exclusive",signal:options.signal,control:options.control,timeoutMs:0,maximumDatabaseBytes:custodySchema.properties.maximumDatabaseBytes.const});rmSync(join(queue,name),leaseRemovalOptionsV1());return true;}
-  catch(error){if(!String(error).includes("Resource lease timed out"))throw error;return false;}
-  finally{retired?.release();sweepCatalog.release();}
+/** 🪦️ Retires abandoned predecessor tickets in one bounded slice under a single shared catalog admission. `names` come ordered by priority (tickets of vanished pids first, then the nearest live-pid ticket alone, as an unbroken chain of live waiters is not probed); a ticket goes only when its independent kernel claim proves the requester gone (a vanished pid orders the work, the claim is the proof), a live one is skipped and never waited for. A slice stops after `reapSliceTickets` probes or `reapSliceMilliseconds` and reports that more remain; the waiter reclaims the rest in the next slice and in later acquisitions, so the admission is never held for a walk of the whole directory.
+ * @see ./⏳️wait/🧬️schema/📜️policy.json */
+async function reapQueueTickets(options:QueuedLeaseOptions,queue:string,names:readonly string[],pendingOptions:()=>LeaseOptions):Promise<Readonly<{reaped:ReadonlySet<string>;probed:ReadonlySet<string>;more:boolean}>>{
+  const reaped=new Set<string>(),probed=new Set<string>();if(!names.length)return{reaped,probed,more:false};
+  const began=Date.now(),sweepCatalog=await queueClaimCatalog(pendingOptions(),"shared",began,"queue-sweep");
+  try{
+    for(const name of names){
+      if(probed.size>=waitPolicy.reapSliceTickets||Date.now()-began>=waitPolicy.reapSliceMilliseconds)return{reaped,probed,more:true};
+      probed.add(name);let retired:ResourceLease|undefined;
+      try{retired=await acquireResourceLease({...resourceQueueClaimV1(options.directory,options.resource,name),mode:"exclusive",signal:options.signal,control:options.control,timeoutMs:0,maximumDatabaseBytes:custodySchema.properties.maximumDatabaseBytes.const});rmSync(join(queue,name),leaseRemovalOptionsV1());reaped.add(name);}
+      catch(error){if(!String(error).includes("Resource lease timed out"))throw error;}
+      finally{retired?.release();}
+    }
+    return{reaped,probed,more:false};
+  }finally{sweepCatalog.release();}
+}
+/** 👻️ Whether the process that wrote a queue ticket no longer exists (`ESRCH`); a permission error means it exists. A hint for the order of the reclaim and for skipping the ticket in the turn decision, never a proof of release: the claim lock is. */
+function ticketPidGoneV1(pid:number,known:Map<number,boolean>):boolean{
+  const seen=known.get(pid);if(seen!==undefined)return seen;
+  let gone=false;try{process.kill(pid,0);}catch(error){gone=(error as NodeJS.ErrnoException).code==="ESRCH";}
+  known.set(pid,gone);return gone;
 }
 function wrapQueuedLease(lease:ResourceLease,turn:QueuedTurn):ResourceLease{
   const queued:ResourceLease={resource:lease.resource,mode:lease.mode,release(){
@@ -578,11 +593,29 @@ function wrapQueuedLease(lease:ResourceLease,turn:QueuedTurn):ResourceLease{
 export function acquireQueuedResourceLease(options: QueuedLeaseOptions): Promise<ResourceLease> {return traceLeaseV1(options,()=>acquireOrderedQueuedResourceLeaseV1(options));}
 async function acquireOrderedQueuedResourceLeaseV1(options: QueuedLeaseOptions): Promise<ResourceLease> {
   if(options.mode==="shared"&&typeof options.resource==="string"&&!internalLeaseResource(options.resource)&&leaseOrderPolicyV1().fairness.reentrantShared!==false&&holdsSharedInProcessV1(resolve(options.directory),options.resource)&&exclusiveTicketQueued(options.directory,options.resource)){const{owner:_owner,sharedCohort:_cohort,...raw}=options;return acquireResourceLease(raw);}
-  const guard=orderGuard(options,true);
-  if(!guard)return acquireQueuedResourceLeaseBody(options);
+  const guard=orderGuard(options,true),began=Date.now();
+  if(!guard)return acquireQueuedResourceLeaseBody(options).catch(async error=>{throw await admissionRefusalV1(error,options,began);});
   let lease:ResourceLease;
-  try{lease=await acquireQueuedResourceLeaseBody(options,guard);}catch(error){guard.finish();throw error;}
+  try{lease=await acquireQueuedResourceLeaseBody(options,guard);}catch(error){guard.finish();throw await admissionRefusalV1(error,options,began);}
   guard.hold(lease);return lease;
+}
+/** 🚪️ Turns a timeout of the directory admission into a typed bilingual refusal (`timeout`, `leases.admission-timeout`) that names the resource waited for, the directory, its entry and claim counts and the longest silent registered processes of the directory, never an unexpected failure; the machine line still starts with the old timeout text and the admission context stays attached, so every existing check of the timeout keeps working. Any other error passes unchanged. A failed lookup of the evidence never hides the refusal.
+ * @see ./🚪️admission/🧬️schema/ the admission context
+ * @see ../📖️texts/🔣️.json the texts */
+async function admissionRefusalV1(error:unknown,options:QueuedLeaseOptions,startedMs:number):Promise<unknown>{
+  if(!(error instanceof Error)||error.message!=="Resource lease timed out: "+admissionResource)return error;
+  const directory=resolve(options.directory),count=(path:string):number=>{try{return readdirSync(path).length;}catch{return 0;}};
+  let holders="-";
+  try{
+    const registry=await import("./🧭️order/🗂️registry/🟦️.ts"),now=Date.now(),silent=(row:ReturnType<typeof registry.readLeaseRegistryEntriesV1>[number]):number=>row.standing.progressAtMs??row.updatedAtMs;
+    const rows=registry.readLeaseRegistryEntriesV1(registry.leaseRegistryRootV1(),directory,now,false).filter(row=>row.pid!==process.pid).sort((left,right)=>silent(left)-silent(right)).slice(0,3);
+    if(rows.length)holders=rows.map(row=>`${row.pid} (${row.command.slice(0,60)}, ${Math.max(0,Math.round((now-silent(row))/1000))} s)`).join("; ");
+  }catch{}
+  const refusal=refuseProcessV1("timeout","leases.admission-timeout",{directory,resource:options.resource,seconds:Math.max(0,Math.round((Date.now()-startedMs)/1000)),entries:count(directory),claims:count(join(directory,custodySchema.properties.claimDirectory.const)),holders},{cause:error});
+  Object.defineProperty(refusal,"message",{value:`${error.message} (${refusal.message})`,configurable:true,writable:true});
+  const context=(error as {resourceLeaseAdmission?:unknown}).resourceLeaseAdmission;
+  if(context!==undefined)Object.defineProperty(refusal,"resourceLeaseAdmission",{value:context,enumerable:true});
+  return refusal;
 }
 async function acquireQueuedResourceLeaseBody(options: QueuedLeaseOptions,guard?:LeaseOrderGuardV1): Promise<ResourceLease> {
   options=Object.freeze({...options});
@@ -643,12 +676,13 @@ async function awaitQueuedTurn(options:QueuedLeaseOptions,started:number,queue:s
   try {
     for (;;) {
       if (remaining(options, started) <= 0 && options.timeoutMs !== 0) throw new Error(`Resource lease timed out: ${options.resource}`);
-      const names=(await retryInterruptedFilesystemRead(options.signal,()=>readdirSync(queue),options.control)).sort((left,right)=>arrival(left)-arrival(right)||left.localeCompare(right,"en")),own=names.indexOf(ticket),live=own<0?[...names]:names.slice(0,own);
-      while(live.length){
-        const name=live[live.length-1]!,at=Date.now(),last=swept.get(name);
-        if(last!==undefined&&at-last<waitPolicy.sweepIntervalMilliseconds)break;
-        swept.set(name,at);if(!await reapQueueTicket(options,queue,name,pendingOptions))break;
-        swept.delete(name);live.pop();
+      const rows=(await retryInterruptedFilesystemRead(options.signal,()=>readdirSync(queue),options.control)).map(name=>{const request=queueTicketRequest(name);return{name,arrivedAtMs:request.arrivedAtMs,pid:request.pid};}).sort((left,right)=>left.arrivedAtMs-right.arrivedAtMs||left.name.localeCompare(right.name,"en")),names=rows.map(row=>row.name),own=names.indexOf(ticket),known=new Map<number,boolean>();
+      let live=own<0?[...names]:names.slice(0,own);
+      {
+        const pids=new Map(rows.map(row=>[row.name,row.pid])),at=Date.now(),due=live.filter(name=>{const last=swept.get(name);return last===undefined||at-last>=waitPolicy.sweepIntervalMilliseconds;}).reverse(),gone=due.filter(name=>ticketPidGoneV1(pids.get(name)!,known)),goneSet=new Set(gone),slice=await reapQueueTickets(options,queue,[...gone,...due.filter(name=>!goneSet.has(name)).slice(0,1)],pendingOptions);
+        for(const name of slice.probed)swept.set(name,at);
+        for(const name of slice.reaped)swept.delete(name);
+        live=live.filter(name=>!slice.reaped.has(name)&&!ticketPidGoneV1(pids.get(name)!,known));
       }
       if(own>=0)live.push(ticket);
       remaining(options, started);

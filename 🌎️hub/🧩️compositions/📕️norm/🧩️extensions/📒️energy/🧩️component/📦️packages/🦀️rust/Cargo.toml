@@ -1,0 +1,42 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-hub-norm-energy-component"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+build = "build.rs"
+description = "The `norm-energy` plugin component: the one cdylib of `semio-hub-norm-energy`, holding only its entry point"
+
+[lints]
+workspace = true
+
+[package.metadata.component]
+package = "semio:norm-energy"
+
+[package.metadata.semio]
+role = "hub"
+deployment-directory = "📒️norm-energy"
+component-kind = "plugin"
+
+[[package.metadata.semio.playground]]
+variant = "din18599"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
+app = "s.norm-energy.din18599@1/*#editor"
+ports = { react = 6093, wgpu = 6193 }
+
+[[package.metadata.semio.build-script.files]]
+path = "🌎️hub/🧩️compositions/📕️norm/🧩️extensions/📒️energy/🧩️component/📦️packages/🦀️rust/build.rs"
+sha256 = "deb0a7f898ec8614efd43a1751ab513c0f5c7f1758f5bbdb26a15706cc2efda8"
+
+[[package.metadata.semio.build-script.files]]
+path = "🌎️hub/🧩️compositions/📕️norm/🏗️builder/🦀️.rs"
+sha256 = "f1790d23efd80bb1e1ddf717de387fa9aa71bed387697d694e8078a288dd726f"
+
+[lib]
+crate-type = ["cdylib"]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-pack = { path = "../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
+semio-hub-norm-energy = { path = "../../../📦️packages/🦀️rust" }
+semio-plugin = { workspace = true }

@@ -47,7 +47,7 @@ pub const LABEL: &str = "EN 1994";
 /// 🆔️ The playground/registry variant key — every body key, window id and schema is derived from it.
 pub const VARIANT: &str = "en1994";
 /// 🆔️ Retained-command / UI action controller id.
-pub const CONTROLLER_ID: &str = "s.norm.en1994@1/*#editor";
+pub const CONTROLLER_ID: &str = "s.norm-eurocode-structural.en1994@1/*#editor";
 pub const DOCUMENT_SCHEMA: &str = "semio.norm.en1994/v1";
 /// 🏷️ The scene entity kinds EN 1994 projects: one interaction granularity each.
 pub const ENTITY_KIND_SCENE_KINDS: &[semio_s_plugin_norm_structural_scene::EntityKind] = &[
@@ -148,7 +148,7 @@ impl ArtifactEditor for En1994PlayApp {
     semio_plugin::bounded_first_step_tool_proofs! {
         owner: semio_plugin::EditorApp<En1994PlayApp>,
         owner_file: "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
-        controller: "s.norm.en1994@1/*#editor",
+        controller: "s.norm-eurocode-structural.en1994@1/*#editor",
         artifact_schema: "semio.norm.en1994/v1",
         factory: "En1994BoundedCommandJobFactory",
         factory_type: En1994BoundedCommandJobFactory,

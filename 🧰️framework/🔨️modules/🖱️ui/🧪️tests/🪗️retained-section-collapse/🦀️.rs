@@ -42,37 +42,17 @@ fn disclosure(fixture: &Value) -> UiNode {
     })
 }
 
-fn drive_layout_with(ui: &mut Ui, atlas: &mut FontAtlas, pool: &semio_framework_async::WorkerPool) {
+fn drive_layout_with(ui: &mut UiFixture, atlas: &mut FontAtlas, pool: &semio_framework_async::WorkerPool) {
     ui.set_viewport("fixture", 320.0, 240.0);
-    let operation = semio_framework_job::allocate_operation_id();
-    let cancel = semio_framework_job::CancelToken::root_now();
-    let mut preview_sequence = 0;
-    for turn in 0..262_144 {
-        if ui.layout_is_dirty("fixture") {
-            ui.request_layout("fixture");
-        }
-        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
-        let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), || Some(0), &mut preview_sequence,&mut actual_retained_progress);
-        let step=ui.step_layouts(pool, atlas, &mut cx);
-        if let UiLayoutStep::Refused{refusal,..}=&step{}
-        if matches!(step, UiLayoutStep::Idle) && !ui.layout_is_dirty("fixture") {
-            return;
-        }
-    }
-    panic!("retained disclosure layout never settled");
+    assert!(ui.settle_layout("fixture", pool, atlas), "retained disclosure layout never settled");
 }
 
-fn advance_to_checked_out_layout(ui: &mut Ui, atlas: &mut FontAtlas, pool: &semio_framework_async::WorkerPool) -> u64 {
-    let operation = semio_framework_job::allocate_operation_id();
-    let cancel = semio_framework_job::CancelToken::root_now();
-    let mut preview_sequence = 0;
+fn advance_to_checked_out_layout(ui: &mut UiFixture, atlas: &mut FontAtlas, pool: &semio_framework_async::WorkerPool) -> u64 {
     for _ in 0..262_144 {
         if ui.layout_is_dirty("fixture") {
             ui.request_layout("fixture");
         }
-        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
-        let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), || Some(0), &mut preview_sequence,&mut actual_retained_progress);
-        let _ = ui.step_layouts(pool, atlas, &mut cx);
+        let _ = ui.step_layouts(pool, atlas);
         let checked_out = ui.windows.get("fixture").and_then(|window| window.layout_session.as_ref().filter(|session| session.poll() == semio_framework_job_worker::WorkerJobPoll::CheckedOut).map(|_| window.layout_generation));
         if let Some(generation) = checked_out {
             return generation;
@@ -160,7 +140,7 @@ fn nested_child_height(ui: &Ui) -> f32 {
 #[test]
 fn closed_open_and_rapidly_reclosed_sections_publish_only_reachable_descendants() {
     let fixture = fixture();
-    let mut ui = Ui::new(semio_ui_locale::Locale::En);
+    let mut ui = UiFixture::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
     ui.apply_tree("fixture", &disclosure(&fixture));
@@ -206,7 +186,7 @@ fn closed_open_and_rapidly_reclosed_sections_publish_only_reachable_descendants(
 
 #[test]
 fn upward_tree_frame_completes_after_empty_nested_and_terminal_cursors() {
-    let mut ui = Ui::new(semio_ui_locale::Locale::En);
+    let mut ui = UiFixture::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
     ui.apply_tree("fixture", &upward_tree());
@@ -226,7 +206,7 @@ fn upward_tree_frame_completes_after_empty_nested_and_terminal_cursors() {
 /// physical close retires that hit and collapses the mounted descendant back to zero height.
 #[test]
 fn upward_nested_disclosure_republishes_one_stable_header_and_retires_its_child() {
-    let mut ui = Ui::new(semio_ui_locale::Locale::En);
+    let mut ui = UiFixture::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
     ui.apply_tree("fixture", &upward_nested_disclosure());
@@ -266,7 +246,7 @@ fn upward_nested_disclosure_republishes_one_stable_header_and_retires_its_child(
 /// after one stable header row and a second physical gutter click retires both geometry and hit.
 #[test]
 fn downward_nested_disclosure_republishes_one_stable_header_and_retires_its_child() {
-    let mut ui = Ui::new(semio_ui_locale::Locale::En);
+    let mut ui = UiFixture::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
     ui.apply_tree("fixture", &upward_nested_disclosure());
@@ -328,7 +308,7 @@ fn a_nested_tree_item_opens_from_its_row_and_keeps_its_action() {
             interaction_domain: None,
         })],
     });
-    let mut ui = Ui::new(semio_ui_locale::Locale::En);
+    let mut ui = UiFixture::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
     ui.apply_tree("fixture", &tree);

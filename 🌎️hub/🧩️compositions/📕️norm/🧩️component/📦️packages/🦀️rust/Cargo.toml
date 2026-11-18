@@ -4,6 +4,7 @@ name = "semio-hub-norm-component"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+build = "build.rs"
 description = "The `norm` plugin component: the one cdylib of `semio-hub-norm`, holding only its entry point"
 
 [lints]
@@ -30,12 +31,6 @@ app = "s.norm.din16798@1/*#editor"
 ports = { react = 6092, wgpu = 6192 }
 
 [[package.metadata.semio.playground]]
-variant = "din18599"
-compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
-app = "s.norm.din18599@1/*#editor"
-ports = { react = 6093, wgpu = 6193 }
-
-[[package.metadata.semio.playground]]
 variant = "iso16757"
 compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.norm.iso16757@1/*#editor"
@@ -49,6 +44,14 @@ ports = { react = 6105, wgpu = 6205 }
 
 [package.metadata.semio.sources]
 artifacts = ["../../../../../../✏️s/🔌️plugins/📕️norm/🗿️artifacts"]
+
+[[package.metadata.semio.build-script.files]]
+path = "🌎️hub/🧩️compositions/📕️norm/🧩️component/📦️packages/🦀️rust/build.rs"
+sha256 = "1bc952301d73d262b526848a8ec652f7704166e4106e4eac594c216dffeb0899"
+
+[[package.metadata.semio.build-script.files]]
+path = "🌎️hub/🧩️compositions/📕️norm/🏗️builder/🦀️.rs"
+sha256 = "f1790d23efd80bb1e1ddf717de387fa9aa71bed387697d694e8078a288dd726f"
 
 [lib]
 crate-type = ["cdylib"]

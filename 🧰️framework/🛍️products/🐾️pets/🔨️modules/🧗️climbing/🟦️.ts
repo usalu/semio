@@ -190,8 +190,8 @@ export const HOOK_RETURN = 1280;
 /** 🧵️ The shortest rope as a fraction of the height. */
 export const ROPE_SHORT = 0.8;
 
-/** 🧶️ The longest rope as a fraction of the height: what the grappling gun shoots, eight heights — the cards of a page stand that far above the footer line its pets live on. */
-export const ROPE_LONG = 8;
+/** 🧶️ The longest rope as a fraction of the height: what the grappling gun shoots, twelve heights — the lowest edge a pet may stand on in a page of 1440 × 900 px or more stands that far above the footer line its pets live on. */
+export const ROPE_LONG = 12;
 
 /** 🌄️ The least rise of a rope per pixel of its length (about 25°): a flatter rope would scrape the face of a card. */
 export const ROPE_ELEVATION = 0.42;

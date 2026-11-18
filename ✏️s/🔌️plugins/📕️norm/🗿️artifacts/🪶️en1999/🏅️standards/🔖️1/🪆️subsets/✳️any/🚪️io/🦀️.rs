@@ -1,10 +1,10 @@
-//! 🚪️ IO s.norm.en1999 (1/✳️any) — no stdio format bridges. W5a (ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT) deleted the five
+//! 🚪️ IO s.norm-eurocode-materials.en1999 (1/✳️any) — no stdio format bridges. W5a (ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT) deleted the five
 //! degenerate leaves (csv/json/txt/xlsx/zip) that either fabricated a one-cell-CSV/raw-DSL-dump
 //! shape or silently defaulted to `En1999Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De)` on import (an honesty bug, not a
 //! real codec). En1999Snapshot is a compliance document (scalar fields plus a handful of nested
 //! records), not a flat row/column table, so no honest whole-artifact CSV round-trip exists to
 //! re-register in their place. Registration flows through 🎹️composer::register (called once from
-//! ⚙️engine::register) for the native `s.norm.en1999` dialect only.
+//! ⚙️engine::register) for the native `s.norm-eurocode-materials.en1999` dialect only.
 
 #![allow(async_fn_in_trait)]
 
@@ -25,7 +25,7 @@ pub mod derived_composition {
     use semio_s_artifact_norm_en1999_model::En1999Snapshot;
     use {semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactComposition,semio_plugin::io::ComposeError,semio_plugin::io::ComposeSource,semio_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
-    const DIALECT: Dialect = Dialect { artifact_kind: "s.norm.en1999", standard: StandardId("1"), subset: SubsetId("*") };
+    const DIALECT: Dialect = Dialect { artifact_kind: "s.norm-eurocode-materials.en1999", standard: StandardId("1"), subset: SubsetId("*") };
 
     pub struct En1999ComposerComposition;
 
@@ -145,7 +145,7 @@ pub mod derived_analysis {
 
     impl ArtifactAnalysis for En1999AnalyzerAnalysis {
         type Parts = En1999Parts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.norm.en1999", standard: StandardId("1"), subset: SubsetId("*") };
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.norm-eurocode-materials.en1999", standard: StandardId("1"), subset: SubsetId("*") };
 
         fn sniff(_source: &AnalyzeSource<'_>) -> semio_plugin::io::Confidence {
             semio_plugin::io::Confidence::Medium

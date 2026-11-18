@@ -7,12 +7,17 @@ import { SHIPPED_COMPONENT_MAX_BYTES, SHIPPED_COMPONENT_PROFILE, componentDelive
 
 const NORM_COMPONENT_BUDGET_BYTES = 200 * 1024 * 1024;
 const PLUGIN_OWNER = "✏️s/🔌️plugins/📕️norm";
-/** 📕️ The three plugins that split the fifteen norm families, each with its hub-relative root and shipped component crate. */
+/** 📕️ The five plugins that split the fifteen norm families, each with its hub-relative root and shipped component crate. */
 const NORM_PLUGINS = [
   { id: "norm", root: ".", component: "semio-hub-norm-component" },
+  { id: "norm-energy", root: "🧩️extensions/📒️energy", component: "semio-hub-norm-energy-component" },
   { id: "norm-eurocode", root: "🧩️extensions/📗️eurocode", component: "semio-hub-norm-eurocode-component" },
+  { id: "norm-eurocode-structural", root: "🧩️extensions/📓️eurocode-structural", component: "semio-hub-norm-eurocode-structural-component" },
   { id: "norm-eurocode-materials", root: "🧩️extensions/📙️eurocode-materials", component: "semio-hub-norm-eurocode-materials-component" },
 ] as const;
+/** 🏷️ The plugin that owns the artifact identity `s.<owner>.<family>` of a norm family: the plugin whose component declares it. */
+const artifactOwner = (family: string): string =>
+  family === "din18599" ? "norm-energy" : ["en1990", "en1991", "en1997", "en1998"].includes(family) ? "norm-eurocode" : ["en1992", "en1993", "en1994"].includes(family) ? "norm-eurocode-structural" : ["en1995", "en1996", "en1999"].includes(family) ? "norm-eurocode-materials" : "norm";
 type WasmSection = { readonly id: number; readonly name: string; readonly bytes: number; readonly body: number };
 type NormComponentCensus = { readonly total: number; readonly module: number; readonly name: number; readonly code: number; readonly data: number };
 type MutationLeafSelector = { readonly kind: "id" | "index" | "implied"; readonly key: string | null };
@@ -339,7 +344,7 @@ export function runSurfaceRenderSourceScript(context: Readonly<{ root: string; r
     const identities = new Set<string>();
     for (const row of value.rows) {
       const expected = (row.role === "editor" ? ["inputs", "results", "artifact", "catalogue", "inspection"].map((key) => `norm.${row.variant}.play.${key}`) : ["framework.window.table"]).concat("framework.body.history");
-      if (!variants.has(row.variant) || row.appId !== `s.norm.${row.variant}@1/*#${row.role}` || identities.has(row.appId) || JSON.stringify([...row.bodyKeys].sort()) !== JSON.stringify(expected.sort())) return false;
+      if (!variants.has(row.variant) || row.appId !== `s.${artifactOwner(row.variant)}.${row.variant}@1/*#${row.role}` || identities.has(row.appId) || JSON.stringify([...row.bodyKeys].sort()) !== JSON.stringify(expected.sort())) return false;
       identities.add(row.appId);
     }
     return identities.size === variants.size * 2;

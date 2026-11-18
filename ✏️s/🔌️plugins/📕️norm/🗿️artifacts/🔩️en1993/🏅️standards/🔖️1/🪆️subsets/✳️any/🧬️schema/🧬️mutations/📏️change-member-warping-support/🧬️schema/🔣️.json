@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-member-warping-support/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1993/mutation/change-member-warping-support/schema.json",
   "title": "ChangeMemberWarpingSupport",
   "type": "object",
   "additionalProperties": false,
@@ -30,7 +30,7 @@
       }
     },
     "newWarpingSupport": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/WarpingSupport",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-structural/en1993/snapshot.json#/$defs/WarpingSupport",
       "x-semio-ui": {
         "label": {
           "en": "Torsion and warping end conditions of the member for the bimoment row (EN 1993-1-1 6.2.7): fork, both ends restrained, restrained at the start with fork end, or cantilever",

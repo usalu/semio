@@ -7,6 +7,8 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
+import { observeChipRowAbuts } from "./chip-abut.ts";
+import { focusedWindowChipPath } from "./chip-focus.ts";
 import { deviceSnappedRect, sharedBorderStroke, useSharedWindowBorder, sizeSharedBorderOverlay } from "./shared-border.ts";
 import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { SurfaceScope, type Level, type SurfaceActiveBindProps } from "../🌈️Surface/🟦️.tsx";
@@ -333,6 +335,19 @@ export const WindowChromeSilhouetteBorder: React.FC<{
     };
   }, [stack]);
 
+  const [focusPath, setFocusPath] = reactHostPort.useState<string | null>(null);
+  reactHostPort.useLayoutEffect(() => {
+    if (!stack) return;
+    const sync = () => setFocusPath(focusedWindowChipPath(stack));
+    stack.addEventListener("focusin", sync);
+    stack.addEventListener("focusout", sync);
+    stack.addEventListener("keydown", sync);
+    return () => {
+      stack.removeEventListener("focusin", sync);
+      stack.removeEventListener("focusout", sync);
+      stack.removeEventListener("keydown", sync);
+    };
+  }, [stack]);
   const windowEl = stack?.querySelector('[data-slot="window"]') ?? introduceTarget ?? stack;
   const kind = resolveWindowSilhouetteBorderKind(windowEl, active);
   const resolvedKind =
@@ -355,6 +370,7 @@ export const WindowChromeSilhouetteBorder: React.FC<{
   const sharedPaint = sharedSegments?.filter(segment => segment.state !== resolvedKind).map((segment, index) => (
     <path key={index} d={segment.d} fill="none" stroke={sharedBorderStroke(segment.state)} strokeLinejoin="miter" strokeLinecap="square" vectorEffect="non-scaling-stroke" className={`window-silhouette-border window-silhouette-border-${segment.state}`} data-shared-border-segment="" data-shared-border-state={segment.state} />
   ));
+  const focusPaint = focusPath ? <path d={focusPath} fill="none" stroke={sharedBorderStroke("focus")} strokeLinejoin="miter" vectorEffect="non-scaling-stroke" className="window-silhouette-border" data-shared-border-segment="" data-shared-border-state="focus" data-focus-on-accent={resolvedKind === "active" ? "" : undefined} /> : null;
   if (resolvedKind === "celebrated") {
     return (
       <svg
@@ -379,6 +395,7 @@ export const WindowChromeSilhouetteBorder: React.FC<{
           <div className="window-silhouette-border-celebrated-fill" style={{ width: "100%", height: "100%" }} />
         </foreignObject>
         {sharedPaint}
+        {focusPaint}
       </svg>
     );
   }
@@ -397,6 +414,7 @@ export const WindowChromeSilhouetteBorder: React.FC<{
     >
       <path d={path} fill="none" stroke={paint.stroke} strokeLinejoin="miter" strokeLinecap="square" vectorEffect="non-scaling-stroke" className={paint.className} data-shared-border-segment="" data-shared-border-state={resolvedKind} />
       {sharedPaint}
+      {focusPaint}
     </svg>
   );
 };
@@ -463,6 +481,26 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
     const bodySurfaceClass = cn("pointer-events-none absolute inset-x-0 z-0 border-0", bodySurfaceClassName ?? glassClass);
     const bodyContentClass = "window-silhouette-content-plane relative border-0";
     const controlsSurfaceClass = cn(windowControlsCapClass, glassClass);
+    const [capEl, setCapEl] = reactHostPort.useState<HTMLDivElement | null>(null);
+    const [footerEl, setFooterEl] = reactHostPort.useState<HTMLDivElement | null>(null);
+    const setCapRef = reactHostPort.useCallback(
+      (element: HTMLDivElement | null) => {
+        setCapEl(element);
+        if (typeof capRef === "function") capRef(element);
+        else if (capRef) (capRef as React.MutableRefObject<HTMLDivElement | null>).current = element;
+      },
+      [capRef],
+    );
+    const setFooterRef = reactHostPort.useCallback(
+      (element: HTMLDivElement | null) => {
+        setFooterEl(element);
+        if (typeof footerRef === "function") footerRef(element);
+        else if (footerRef) (footerRef as React.MutableRefObject<HTMLDivElement | null>).current = element;
+      },
+      [footerRef],
+    );
+    reactHostPort.useLayoutEffect(() => (capEl ? observeChipRowAbuts(capEl) : undefined), [capEl]);
+    reactHostPort.useLayoutEffect(() => (footerEl ? observeChipRowAbuts(footerEl) : undefined), [footerEl]);
     const geometry = useWindowSilhouetteGeometry(stackEl);
     const silhouetteVars = {
       "--window-silhouette-top-clearance": `${geometry.safeClearances.top}px`,
@@ -515,7 +553,7 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
       >
         <WindowChromeSilhouetteBorder stack={stackEl} geometry={geometry} active={active} introduceTarget={introduceTarget} borderKind={borderKind} silhouetteSlot={silhouetteSlot} />
         <div
-          ref={capRef}
+          ref={setCapRef}
           data-slot={capSlot}
           data-ui-reveal-region="window-cap"
           data-dim
@@ -523,7 +561,7 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
           style={{ ...capRowStyle, ...WINDOW_CHROME_CHIP_ROW_STYLE }}
         >
           {titleChips ? (
-            <div data-slot={chipSlot} data-window-silhouette-chip data-dock={capDock} className={cn("relative flex min-h-chip-row min-w-0 shrink items-stretch", chipSurfaceClass)}>
+            <div data-slot={chipSlot} data-window-silhouette-chip data-chip-reach="next" data-dock={capDock} className={cn("relative flex min-h-chip-row min-w-0 shrink items-stretch", chipSurfaceClass)}>
               {titleChips}
             </div>
           ) : null}
@@ -582,10 +620,10 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
         </div>
         {hasFooter ? (
           footerCenterChips ? (
-            <div ref={footerRef} data-slot="window-chrome-footer" data-dim className="relative grid w-full min-w-0 shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-end bg-transparent" style={WINDOW_CHROME_CHIP_ROW_STYLE}>
+            <div ref={setFooterRef} data-slot="window-chrome-footer" data-dim className="relative grid w-full min-w-0 shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-end bg-transparent" style={WINDOW_CHROME_CHIP_ROW_STYLE}>
               <div data-slot="window-chrome-footer-gap-left" data-window-silhouette-gap {...footerGapRest} aria-hidden={footerLeftChips ? undefined : true} className={cn(footerGapClass, "justify-self-start")}>
                 {footerLeftChips ? (
-                  <div data-slot="window-chrome-footer-left" data-window-silhouette-chip data-dock="bottom" className={cn("pointer-events-auto", footerChipClass)}>
+                  <div data-slot="window-chrome-footer-left" data-window-silhouette-chip data-chip-reach="next" data-dock="bottom" className={cn("pointer-events-auto", footerChipClass)}>
                     {footerLeftChips}
                   </div>
                 ) : null}
@@ -597,7 +635,7 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
               </div>
               <div data-slot="window-chrome-footer-gap-right" data-window-silhouette-gap aria-hidden={footerRightChips ? undefined : true} className={cn(footerGapClass, "justify-self-end")}>
                 {footerRightChips ? (
-                  <div data-slot="window-chrome-footer-right" data-window-silhouette-chip data-dock="bottom" className={cn("pointer-events-auto", footerChipClass)}>
+                  <div data-slot="window-chrome-footer-right" data-window-silhouette-chip data-chip-reach="prev" data-dock="bottom" className={cn("pointer-events-auto", footerChipClass)}>
                     {footerRightChips}
                   </div>
                 ) : null}
@@ -605,14 +643,14 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
             </div>
           ) : (
             <div
-              ref={footerRef}
+              ref={setFooterRef}
               data-slot="window-chrome-footer"
               data-dim
               className={cn("relative flex w-full min-w-0 shrink-0 items-stretch bg-transparent", footerLeftChips && !footerRightChips && "justify-start", footerRightChips && !footerLeftChips && "justify-end")}
               style={WINDOW_CHROME_CHIP_ROW_STYLE}
             >
               {footerLeftChips ? (
-                <div data-slot="window-chrome-footer-left" data-window-silhouette-chip data-dock="bottom" className={cn("relative flex min-h-chip-row min-w-0 shrink items-stretch", chipSurfaceClass)}>
+                <div data-slot="window-chrome-footer-left" data-window-silhouette-chip data-chip-reach="next" data-dock="bottom" className={cn("relative flex min-h-chip-row min-w-0 shrink items-stretch", chipSurfaceClass)}>
                   {footerLeftChips}
                 </div>
               ) : null}

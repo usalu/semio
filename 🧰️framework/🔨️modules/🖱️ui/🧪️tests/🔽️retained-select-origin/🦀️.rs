@@ -94,26 +94,10 @@ fn place_fixture_layout(ui: &mut Ui, trigger: Rect, viewport: Rect) {
     window.tree.commit_inactive_layout(generation);
 }
 
-fn settle_layout(ui: &mut Ui, atlas: &mut FontAtlas, viewport: Rect) {
+fn settle_layout(ui: &mut UiFixture, atlas: &mut FontAtlas, viewport: Rect) {
     ui.set_viewport("fixture", viewport.w, viewport.h);
-    let operation = semio_framework_job::allocate_operation_id();
-    let cancel = semio_framework_job::CancelToken::root_now();
     let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
-    let mut preview_sequence = 0;
-    'settle: for _ in 0..64 {
-        for _ in 0..16_384 {
-            let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
-            let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), || Some(0), &mut preview_sequence,&mut actual_retained_progress);
-            if matches!(ui.step_layouts(&pool, atlas, &mut cx), UiLayoutStep::Idle) {
-                break;
-            }
-        }
-        if !ui.layout_is_dirty("fixture") {
-            break 'settle;
-        }
-        ui.request_layout("fixture");
-    }
-    assert!(!ui.layout_is_dirty("fixture"), "retained Select layout never settled");
+    assert!(ui.settle_layout("fixture", &pool, atlas), "retained Select layout never settled");
 }
 
 fn settle_frame(ui: &mut Ui, atlas: &mut FontAtlas, viewport: Rect) -> DrawList {
@@ -140,7 +124,7 @@ fn actual_pointer_open_translates_bottom_and_top_popup_paint_and_hits_by_the_fra
         let trigger = rect(&test_case["triggerLocal"]);
         let expected_menu = rect(&test_case["menuGlobal"]);
         let expected_option = rect(&test_case["firstOptionGlobal"]);
-        let mut ui = Ui::new(semio_ui_locale::Locale::En);
+        let mut ui = UiFixture::new(semio_ui_locale::Locale::En);
         ui.apply_tree("fixture", &select_tree(item_count));
         let mut atlas = FontAtlas::builtin();
         settle_layout(&mut ui, &mut atlas, viewport);
@@ -178,7 +162,7 @@ fn mounted_layout_pointer_open_frame_and_option_activation_share_one_local_autho
     let origin = &law["viewport"]["origin"];
     let size = &law["viewport"]["size"];
     let viewport = Rect::new(origin[0].as_f64().unwrap() as f32, origin[1].as_f64().unwrap() as f32, size[0].as_f64().unwrap() as f32, size[1].as_f64().unwrap() as f32);
-    let mut ui = Ui::new(semio_ui_locale::Locale::En);
+    let mut ui = UiFixture::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("fixture", &upward_tree_select(law["row"]["itemCount"].as_u64().unwrap() as usize));
     ui.set_window_flow("fixture", ui_contract::UiFlow::for_anchor(ui_contract::Anchor::Bottom));
@@ -219,7 +203,7 @@ fn normal_upward_tree_frame_paints_rows_and_each_inline_control_once_at_the_moun
     let origin = &law["viewport"]["origin"];
     let size = &law["viewport"]["size"];
     let viewport = Rect::new(origin[0].as_f64().unwrap() as f32, origin[1].as_f64().unwrap() as f32, size[0].as_f64().unwrap() as f32, size[1].as_f64().unwrap() as f32);
-    let mut ui = Ui::new(semio_ui_locale::Locale::En);
+    let mut ui = UiFixture::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("fixture", &upward_tree_select(law["row"]["itemCount"].as_u64().unwrap() as usize));
     ui.set_window_flow("fixture", ui_contract::UiFlow::for_anchor(ui_contract::Anchor::Bottom));

@@ -96,21 +96,22 @@ function draggedItem(target: EventTarget | null): string | undefined {
 
 /** 📄️ Feeds `presence` from the document: the pointer over its nearest anchor (a card, an item, a category), also while
  * pressed, the item a grip drags until release, nothing once the pointer leaves the page or the window loses focus, and
- * the anchor holding keyboard focus while the keyboard moves it. */
+ * the anchor holding keyboard focus while the keyboard moves it. A press takes its own target; only a pressed move looks beneath the pointer (a captured drag), because hit-testing forces a synchronous layout on the pointerdown task. */
 export function usePresencePointer(presence: CoursePresence, enabled = true): void {
   useEffect(() => {
     if (typeof document === "undefined") return;
     if (!enabled) { presence.point(undefined); presence.focusOn(undefined); presence.drag(undefined); return; }
     let keyboard = false;
-    const move = (event: PointerEvent): void => {
-      const target = event.buttons !== 0 && typeof document.elementFromPoint === "function" ? document.elementFromPoint(event.clientX, event.clientY) ?? event.target : event.target;
+    const point = (event: PointerEvent, beneath: boolean): void => {
+      const target = beneath && event.buttons !== 0 && typeof document.elementFromPoint === "function" ? document.elementFromPoint(event.clientX, event.clientY) ?? event.target : event.target;
       const anchor = anchorOf(target);
       presence.point((anchor === null ? undefined : cursorAt(anchor, event.clientX, event.clientY)) ?? viewportCursor(event.clientX, event.clientY));
     };
+    const move = (event: PointerEvent): void => point(event, true);
     const down = (event: PointerEvent): void => {
       keyboard = false;
       presence.focusOn(undefined);
-      move(event);
+      point(event, false);
       presence.drag(draggedItem(event.target));
     };
     const up = (): void => presence.drag(undefined);

@@ -51,6 +51,9 @@
             },
             "additionalProperties": false
           }
+        },
+        "excludeDependencies": {
+          "const": true
         }
       },
       "additionalProperties": false

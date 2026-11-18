@@ -1,5 +1,5 @@
 syntax = "proto3";
-package semio.s.norm.en1992.mutation.change_member_udl;
+package semio.s.norm_eurocode_structural.en1992.mutation.change_member_udl;
 message ChangeMemberUdl {
   string member_id = 1;
   double new_value = 2;

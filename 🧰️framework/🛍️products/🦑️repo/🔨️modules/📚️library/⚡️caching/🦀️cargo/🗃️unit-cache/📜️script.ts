@@ -17,8 +17,8 @@ import {pathSensitiveV1} from "./🧭️remap/🔍️embedding/🟦️.ts";
 import {externIdentityV1,markExternIdentityV1} from "./🪪️extern/🟦️.ts";
 import {currentHashV1,dependencyDirectoriesV1,interfaceEligibilityV1,interfaceIdentityV1,rebaseRestoredUnitV1,restoredClosureViolationV1,settleUnitInterfaceV1,writeDependenciesV1} from "./🔭️interface/🟦️.ts";
 import {announcedPathsV1,expectedOutputsV1,missingOutputsV1,uncoveredOutputsV1} from "./✅️complete/🟦️.ts";
-import {portableKeyV1,portableRootsV1,portableTextV1} from "./🛰️fleet/🪪️identity/🟦️.ts";
-import {fleetSkipReasonV1,holdFleetKeyV1,leakedRootKindsV1,obtainFleetUnitV1,offerFleetUnitV1,prepareFleetV1,publishRootHintV1,rootHintV1,rootPathsV1,ROOT_KINDS_V1,shareFleetUnitV1,unitBasicsV1,unitToolchainV1,type FleetHoldV1,type FleetUnitV1} from "./🛰️fleet/🟦️.ts";
+import {localKeyV1,portableKeyV1,portableRootsV1,portableTextV1} from "./🛰️fleet/🪪️identity/🟦️.ts";
+import {awaitFleetSettlesV1,fleetSkipReasonV1,holdFleetKeyV1,leakedRootKindsV1,obtainFleetUnitV1,offerFleetUnitV1,prepareFleetV1,publishRootHintV1,rootHintV1,rootPathsV1,ROOT_KINDS_V1,shareFleetUnitV1,unitBasicsV1,unitToolchainV1,type FleetHoldV1,type FleetUnitV1} from "./🛰️fleet/🟦️.ts";
 import {drainUploadsV1} from "./🛰️fleet/📤️uploader/🟦️.ts";
 import {countFallbackV1,countUnitV1,readFallbacksV1} from "./🛰️fleet/📊️counters/🟦️.ts";
 import {OFFLOAD_POLICY_V1,offloadModeV1} from "../../../🏗️build/🌐️remote-execution/🚀️offload/📐️policy/🟦️.ts";
@@ -110,7 +110,7 @@ export async function wrapRustcV1(argv:readonly string[],environment:Environment
   const sourceSha=digestFileV1(resolve(cwd,unit.source),settings.stamps);if(sourceSha===null)throw Error("source");
   for(const row of unit.externs){if(row.path==="")continue;const path=resolve(cwd,row.path),sha=digestFileV1(path,settings.stamps);if(sha===null)throw Error("extern "+row.name);const identity=metadataOnly?interfaceIdentityV1(path,sha):undefined;if(identity!==undefined)ifaceKeyed=true;digests.set(row.path,identity??externIdentityV1(path,sha,settings.stamps)??sha);}
   sensitive=covered?pathSensitiveV1({source:resolve(cwd,unit.source),manifest:manifestDir,cwd}):[...new Set([manifestDir,cwd].filter((path):path is string=>path!==undefined))].sort();
-  keyInput={toolchain:unitToolchainV1({root:settings.root,environment,inner:settings.inner,unit,args},()=>toolchainIdentityV1(settings.root,settings.inner,environment)),normalized:normalizeRustcArgumentsV1(args,digests,settings.laneRoot),sourceSha256:sourceSha,externs:unit.externs.map(row=>({name:row.flags+row.name,sha256:row.path===""?"builtin":digests.get(row.path)!})),environment:[...keyEnvironmentV1(environment,settings.laneRoot),...covered?[["⟨recorded-name⟩",remappedNameV1(remaps,cwd)] as [string,string]]:[]]};key=unitKeyV1(keyInput);parts=unitKeyPartsV1(keyInput);
+  keyInput={toolchain:unitToolchainV1({root:settings.root,environment,inner:settings.inner,unit,args},()=>toolchainIdentityV1(settings.root,settings.inner,environment)),normalized:normalizeRustcArgumentsV1(args,digests,settings.laneRoot),sourceSha256:sourceSha,externs:unit.externs.map(row=>({name:row.flags+row.name,sha256:row.path===""?"builtin":digests.get(row.path)!})),environment:[...keyEnvironmentV1(environment,settings.laneRoot),...covered?[["⟨recorded-name⟩",remappedNameV1(remaps,cwd)] as [string,string]]:[]]};key=localKeyV1(keyInput,roots,sensitive);parts=unitKeyPartsV1(keyInput);
  }catch(error){const outcome=await compile(false);event("bypass",null,Date.now()-started,0,"unreadable-input"+(/^extern /u.test(String((error as Error)?.message))?": "+(error as Error).message:""));return outcome.status;}
  const producer=interfaceEligibilityV1(unit,args)===undefined,crateHashOf=(path:string):string|undefined=>currentHashV1(path,file=>digestFileV1(file,settings.stamps),settings.inner,environment);
  const settle=(outputs:readonly string[],entry:Parameters<typeof settleUnitInterfaceV1>[0]["entry"]):void=>{
@@ -166,7 +166,7 @@ export async function wrapRustcV1(argv:readonly string[],environment:Environment
   if(fleet){
    await adopt();
    const decision=await obtainFleetUnitV1(fleet!,(kind,milliseconds,waitedMs,reason)=>event(kind,key,milliseconds,waitedMs,reason),{},adopt);
-   if(decision.outcome==="hit"){try{if(await serve()){lookup("fleet-hit",fleet.key);countUnitV1(workspaceOf,"remoteHit");return 0;}}catch{}countFallbackV1(settings.root,"hit-unservable");}
+   if(decision.outcome==="hit"){try{if(await serve()){lookup("fleet-hit",fleet.key);countUnitV1(workspaceOf,"remoteHit");await awaitFleetSettlesV1();return 0;}}catch{}countFallbackV1(settings.root,"hit-unservable");}
    else{hold=decision.hold;if(decision.reason!=="granted")countFallbackV1(settings.root,decision.reason);}
   }
   const compiled=Date.now();let remote=await offloadUnitV1();

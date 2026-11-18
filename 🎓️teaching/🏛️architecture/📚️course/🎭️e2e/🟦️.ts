@@ -243,15 +243,16 @@ function proctorEnvironment(repoRoot: string, port: number, data: string, postur
 
 /** 🎛️ The control endpoint of one stack on a free loopback port: `POST /proctor/stop` ends the stack's proctor at once
  * (a crash, as far as the site can tell), `POST /proctor/start` launches it again over the same data and answers once
- * it is ready. */
-function serveControl(proctor: { stop(): Promise<unknown>; start(): Promise<unknown> }): Promise<{ readonly url: string; close(): Promise<void> }> {
+ * it is ready; `POST /proctor/pause` freezes it (`SIGSTOP`: its sockets stay open and nothing answers, a black hole) and
+ * `POST /proctor/resume` thaws it (`SIGCONT`), where signals exist. */
+function serveControl(proctor: { stop(): Promise<unknown>; start(): Promise<unknown>; pause(): Promise<unknown>; resume(): Promise<unknown> }): Promise<{ readonly url: string; close(): Promise<void> }> {
   const server = createServer((request, answer) => {
-    const act = request.method !== "POST" ? undefined : request.url === "/proctor/stop" ? proctor.stop : request.url === "/proctor/start" ? proctor.start : undefined;
+    const act = request.method !== "POST" ? undefined : request.url === "/proctor/stop" ? proctor.stop : request.url === "/proctor/start" ? proctor.start : request.url === "/proctor/pause" ? proctor.pause : request.url === "/proctor/resume" ? proctor.resume : undefined;
     const done = (status: number, body = ""): void => {
       answer.statusCode = status;
       answer.end(body);
     };
-    if (act === undefined) return done(404, "POST /proctor/stop or /proctor/start");
+    if (act === undefined) return done(404, "POST /proctor/stop, /proctor/start, /proctor/pause or /proctor/resume");
     act().then(
       () => done(204),
       (error: unknown) => done(500, error instanceof Error ? error.message : String(error)),
@@ -317,10 +318,14 @@ async function withStack(slot: Slot, run: Run, consume: (stack: Stack) => Promis
       running = undefined;
       await ending?.stop(0);
     };
+    const signalled = async (signal: NodeJS.Signals): Promise<void> => {
+      if (running === undefined) throw new Error("the proctor is not running");
+      running.interrupt(signal);
+    };
     closing.push(stop);
     await start();
     say(`${label}: proctor ready at ${proctor} (${env.PROCTOR_MODE})`);
-    const control = await serveControl({ stop, start });
+    const control = await serveControl({ stop, start, pause: () => signalled("SIGSTOP"), resume: () => signalled("SIGCONT") });
     closing.push(() => control.close());
     const stack: Stack = { topology, label, slot, site, proctor, control: control.url };
     if (topology === "dev") {

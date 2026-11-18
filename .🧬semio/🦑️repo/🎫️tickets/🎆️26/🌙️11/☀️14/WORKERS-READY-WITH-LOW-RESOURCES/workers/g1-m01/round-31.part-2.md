@@ -4641,3 +4641,1434 @@ Reading the project graph slice (1719 s): taken 589 of 590.
 Reading the project graph slice (1721 s): taken 589 of 590.
 Reading the project graph slice (1723 s): taken 589 of 590.
 ```
+
+## Observation 44 (2026-11-18T03:12:19Z)
+
+- `ready.json` (store, written 03:12:19Z): `state=running stage=workspace (5 of 5) try=68 exit=1 ready=False refusal=None reason={'code': 'previous-failed', 'en': 'Stage workspace failed before; retrying after the back-off.', 'de': 'Stufe workspace schlug zuvor fehl; neuer Versuch nach der Wartezeit.'} peakMegabytes=9392 pid=63893`
+- `memory_pressure | tail -1`: `System-wide memory free percentage: 55%`; pressure level 1
+- Permission dialog: `UserNotificationCenter` process is not running, so no system dialog is waiting (the screen itself was not looked at)
+- Five largest processes (resident KiB, pid, command):
+
+```
+1383280 73061 rustc --crate-name semio_s_artifact_stdio_dwg_snapshot_objects --edition=2021 /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️objects/📦️packages/🦀️rust/🦀️.rs --error-fo
+826032 63994 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool
+451984 48287 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval \012const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+433088 96243 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+203168 65855 /Applications/GitKraken.app/Contents/Frameworks/GitKraken Helper (Renderer).app/Contents/MacOS/GitKraken Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/GitKraken --secure-schemes=sentry-ipc --bypasscsp-sc
+```
+- Last 30 lines of the log of stage `workspace` (`workspace.log`, written 03:12:19Z):
+
+```
+Reading the project graph slice (374 s).
+Reading the project graph slice (376 s).
+Collector compile-caches freed 0 B; 5.13 GiB free now.
+Collector cas-lru freed 0 B; 5.13 GiB free now.
+Reading the project graph slice (378 s).
+[repo] still working after 381 s; last phase started: door.script
+Collector replica-lost freed 79.31 MiB; 5.2 GiB free now.
+Partition / has 5.2 GiB free; the command starts.
+Reading the project graph slice (380 s).
+Reading the project graph slice (382 s).
+Reading the project graph slice (384 s).
+Reading the project graph slice (386 s).
+Reading the project graph slice (388 s).
+Reading the project graph slice (390 s).
+Reading the project graph slice (392 s).
+Reading the project graph slice (394 s).
+Reading the project graph slice (396 s).
+Reading the project graph slice (398 s).
+Reading the project graph slice (400 s).
+Reading the project graph slice (402 s).
+Reading the project graph slice (404 s).
+Reading the project graph slice (406 s).
+Reading the project graph slice (408 s).
+[repo] still working after 411 s; last phase started: door.script
+Reading the project graph slice (410 s).
+Reading the project graph slice (412 s).
+Reading the project graph slice (414 s).
+Reading the project graph slice (416 s).
+Reading the project graph slice (418 s).
+Reading the project graph slice (420 s).
+```
+
+## Observation 45 (2026-11-18T03:22:19Z)
+
+- `ready.json` (store, written 03:22:14Z): `state=running stage=workspace (5 of 5) try=68 exit=1 ready=False refusal=None reason={'code': 'previous-failed', 'en': 'Stage workspace failed before; retrying after the back-off.', 'de': 'Stufe workspace schlug zuvor fehl; neuer Versuch nach der Wartezeit.'} peakMegabytes=9392 pid=63893`
+- `memory_pressure | tail -1`: `System-wide memory free percentage: 72%`; pressure level 1
+- Permission dialog: `UserNotificationCenter` process is not running, so no system dialog is waiting (the screen itself was not looked at)
+- Five largest processes (resident KiB, pid, command):
+
+```
+1354272 63994 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-poo
+1184240 96243 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+992832 86743 rustc --crate-name semio_s_artifact_stdio_semio --edition=2021 /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/../../🦀️.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crat
+716688 48287 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval \012const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+296336 86868 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-poo
+```
+- Last 30 lines of the log of stage `workspace` (`workspace.log`, written 03:22:19Z):
+
+```
+Reading the project graph slice (968 s): taken 126 of 591.
+Reading the project graph slice (970 s): taken 134 of 591.
+Reading the project graph slice (972 s): taken 134 of 591.
+Reading the project graph slice (974 s): taken 152 of 591.
+Reading the project graph slice (976 s): taken 152 of 591.
+Reading the project graph slice (978 s): taken 152 of 591.
+[capacity] run-many: grown from 1 to 2 of 8 job(s) after 979s, reservation 2574 MB -> 2574 MB: memory freed up and nothing of ours waits (7123 MB available, 2048 MB floor); work that starts from now on uses the new jobs
+[repo] still working after 981 s; last phase started: door.script
+Reading the project graph slice (980 s): taken 162 of 591.
+Reading the project graph slice (982 s): taken 162 of 591.
+Reading the project graph slice (984 s): taken 162 of 591.
+Reading the project graph slice (986 s): taken 162 of 591.
+Reading the project graph slice (988 s): taken 166 of 591.
+Reading the project graph slice (990 s): taken 166 of 591.
+Reading the project graph slice (992 s): taken 167 of 591.
+Reading the project graph slice (994 s): taken 167 of 591.
+Reading the project graph slice (996 s): taken 167 of 591.
+Reading the project graph slice (998 s): taken 167 of 591.
+Reading the project graph slice (1000 s): taken 167 of 591.
+Reading the project graph slice (1002 s): taken 174 of 591.
+Reading the project graph slice (1004 s): taken 174 of 591.
+Reading the project graph slice (1006 s): taken 174 of 591.
+Reading the project graph slice (1008 s): taken 190 of 591.
+Reading the project graph slice (1010 s): taken 190 of 591.
+[repo] still working after 1014 s; last phase started: door.script
+Reading the project graph slice (1012 s): taken 191 of 591.
+Reading the project graph slice (1014 s): taken 191 of 591.
+Reading the project graph slice (1016 s): taken 191 of 591.
+Reading the project graph slice (1018 s): taken 204 of 591.
+Reading the project graph slice (1020 s): taken 204 of 591.
+```
+
+## Observation 46 (2026-11-18T03:32:20Z)
+
+- `ready.json` (store, written 03:32:15Z): `state=running stage=workspace (5 of 5) try=68 exit=1 ready=False refusal=None reason={'code': 'previous-failed', 'en': 'Stage workspace failed before; retrying after the back-off.', 'de': 'Stufe workspace schlug zuvor fehl; neuer Versuch nach der Wartezeit.'} peakMegabytes=9392 pid=63893`
+- `memory_pressure | tail -1`: `System-wide memory free percentage: 70%`; pressure level 1
+- Permission dialog: `UserNotificationCenter` process is not running, so no system dialog is waiting (the screen itself was not looked at)
+- Five largest processes (resident KiB, pid, command):
+
+```
+1183296 63994 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-poo
+813552  1221 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c fi
+800416 99764 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-poo
+636960 48287 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval \012const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+595632 96243 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+```
+- Last 30 lines of the log of stage `workspace` (`workspace.log`, written 03:32:19Z):
+
+```
+Reading the project graph slice (1564 s): taken 590 of 591.
+Reading the project graph slice (1566 s): taken 590 of 591.
+Reading the project graph slice (1568 s): taken 590 of 591.
+Reading the project graph slice (1570 s): taken 590 of 591.
+Reading the project graph slice (1572 s): taken 590 of 591.
+Reading the project graph slice (1574 s): taken 590 of 591.
+Reading the project graph slice (1579 s): taken 590 of 591.
+Reading the project graph slice (1581 s): taken 590 of 591.
+[repo] still working after 1584 s; last phase started: door.script
+Reading the project graph slice (1583 s): taken 590 of 591.
+Reading the project graph slice (1585 s): taken 590 of 591.
+Reading the project graph slice (1587 s): taken 590 of 591.
+Reading the project graph slice (1589 s): taken 590 of 591.
+Reading the project graph slice (1591 s): taken 590 of 591.
+Reading the project graph slice (1593 s): taken 590 of 591.
+Reading the project graph slice (1595 s): taken 590 of 591.
+Reading the project graph slice (1597 s): taken 590 of 591.
+Reading the project graph slice (1599 s): taken 590 of 591.
+Reading the project graph slice (1601 s): taken 590 of 591.
+Reading the project graph slice (1603 s): taken 590 of 591.
+Reading the project graph slice (1605 s): taken 590 of 591.
+Reading the project graph slice (1607 s): taken 590 of 591.
+Reading the project graph slice (1609 s): taken 590 of 591.
+Reading the project graph slice (1611 s): taken 590 of 591.
+[repo] still working after 1614 s; last phase started: door.script
+Reading the project graph slice (1613 s): taken 590 of 591.
+Reading the project graph slice (1615 s): taken 590 of 591.
+Reading the project graph slice (1617 s): taken 590 of 591.
+Reading the project graph slice (1619 s): taken 590 of 591.
+Reading the project graph slice (1621 s): taken 590 of 591.
+```
+
+## Observation 47 (2026-11-18T03:42:20Z)
+
+- `ready.json` (store, written 03:42:19Z): `state=running stage=workspace (5 of 5) try=68 exit=1 ready=False refusal=None reason={'code': 'code-stale', 'en': 'Stage workspace had run for at least 30 minutes while its code changed and was stopped; started again at once with the new code, what it finished stays stored.', 'de': 'Stufe workspace lief mindestens 30 Minuten, während sich ihr Code änderte, und wurde beendet; sofort neu gestartet mit dem neuen Code, alles Fertige bleibt gespeichert.'} peakMegabytes=9392 pid=63893`
+- `memory_pressure | tail -1`: `System-wide memory free percentage: 79%`; pressure level 1
+- Permission dialog: `UserNotificationCenter` process is not running, so no system dialog is waiting (the screen itself was not looked at)
+- Five largest processes (resident KiB, pid, command):
+
+```
+1693552 13278 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c f
+1508320  4958 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-poo
+767440 48287 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval \012const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+754640 96243 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+559376 61355 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-
+```
+- Last 30 lines of the log of stage `workspace` (`workspace.log`, written 03:42:19Z):
+
+```
+Reading the project graph slice (362 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 68 of 600.
+Reading the project graph slice (364 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 68 of 600.
+Reading the project graph slice (366 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 73 of 600.
+Reading the project graph slice (368 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 73 of 600.
+Reading the project graph slice (370 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 73 of 600.
+Reading the project graph slice (372 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 78 of 600.
+Reading the project graph slice (374 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 78 of 600.
+Reading the project graph slice (376 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 83 of 600.
+Reading the project graph slice (378 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 83 of 600.
+Reading the project graph slice (380 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 83 of 600.
+Reading the project graph slice (382 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 88 of 600.
+Reading the project graph slice (384 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 88 of 600.
+Reading the project graph slice (386 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 88 of 600.
+Reading the project graph slice (388 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 94 of 600.
+Reading the project graph slice (390 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 94 of 600.
+[repo] still working after 393 s; last phase started: door.script
+Reading the project graph slice (392 s): reading the owners (round 1) / Lese die Projekte (Runde 1) 4 of 3600.
+Reading the project graph slice (394 s): reading the owners (round 1) / Lese die Projekte (Runde 1) 4 of 3600.
+Reading the project graph slice (396 s): reading the owners (round 1) / Lese die Projekte (Runde 1) 4 of 3600.
+Reading the project graph slice (398 s): taken 0 of 591.
+Reading the project graph slice (400 s): taken 0 of 591.
+Reading the project graph slice (402 s): reading the owners (round 1) / Lese die Projekte (Runde 1) 14 of 3600.
+Reading the project graph slice (404 s): reading the owners (round 1) / Lese die Projekte (Runde 1) 14 of 3600.
+Reading the project graph slice (406 s): reading the owners (round 1) / Lese die Projekte (Runde 1) 14 of 3600.
+Reading the project graph slice (408 s): reading the owners (round 1) / Lese die Projekte (Runde 1) 19 of 3600.
+Reading the project graph slice (410 s): reading the owners (round 1) / Lese die Projekte (Runde 1) 19 of 3600.
+Reading the project graph slice (412 s): reading the owners (round 1) / Lese die Projekte (Runde 1) 24 of 3600.
+Reading the project graph slice (414 s): reading the owners (round 1) / Lese die Projekte (Runde 1) 24 of 3600.
+Reading the project graph slice (416 s): reading the owners (round 1) / Lese die Projekte (Runde 1) 24 of 3600.
+Reading the project graph slice (418 s): reading the owners (round 1) / Lese die Projekte (Runde 1) 29 of 3600.
+```
+
+## Observation 48 (2026-11-18T03:52:20Z)
+
+- `ready.json` (store, written 03:52:17Z): `state=running stage=workspace (5 of 5) try=68 exit=1 ready=False refusal=None reason={'code': 'code-stale', 'en': 'Stage workspace had run for at least 30 minutes while its code changed and was stopped; started again at once with the new code, what it finished stays stored.', 'de': 'Stufe workspace lief mindestens 30 Minuten, während sich ihr Code änderte, und wurde beendet; sofort neu gestartet mit dem neuen Code, alles Fertige bleibt gespeichert.'} peakMegabytes=9392 pid=63893`
+- `memory_pressure | tail -1`: `System-wide memory free percentage: 71%`; pressure level 1
+- Permission dialog: `UserNotificationCenter` process is not running, so no system dialog is waiting (the screen itself was not looked at)
+- Five largest processes (resident KiB, pid, command):
+
+```
+4710352 29590 rustc --crate-name semio_s_artifact_energy_model_mutations --edition=2021 /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust/../../🦀️.rs --error-format=jso
+1251408  4958 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-poo
+916992 96243 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+759328 48287 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval \012const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+294208 61355 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-
+```
+- Last 30 lines of the log of stage `workspace` (`workspace.log`, written 03:52:19Z):
+
+```
+Reading the project graph slice (962 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 375 of 1800.
+Reading the project graph slice (964 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 375 of 1800.
+Reading the project graph slice (966 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 375 of 1800.
+Reading the project graph slice (968 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 380 of 1800.
+Reading the project graph slice (970 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 380 of 1800.
+Reading the project graph slice (972 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 385 of 1800.
+Reading the project graph slice (974 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 385 of 1800.
+Reading the project graph slice (976 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 385 of 1800.
+Reading the project graph slice (978 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 390 of 1800.
+Reading the project graph slice (980 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 390 of 1800.
+Reading the project graph slice (982 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 390 of 1800.
+Reading the project graph slice (984 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 395 of 1800.
+Reading the project graph slice (986 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 395 of 1800.
+Reading the project graph slice (988 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 400 of 1800.
+Reading the project graph slice (990 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 400 of 1800.
+[repo] still working after 993 s; last phase started: door.script
+Reading the project graph slice (992 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 400 of 1800.
+Reading the project graph slice (994 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 405 of 1800.
+Reading the project graph slice (996 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 405 of 1800.
+Reading the project graph slice (998 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 410 of 1800.
+Reading the project graph slice (1000 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 410 of 1800.
+Reading the project graph slice (1002 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 410 of 1800.
+Reading the project graph slice (1004 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 415 of 1800.
+Reading the project graph slice (1006 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 415 of 1800.
+Reading the project graph slice (1008 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 420 of 1800.
+Reading the project graph slice (1010 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 420 of 1800.
+Reading the project graph slice (1012 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 420 of 1800.
+Reading the project graph slice (1014 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 425 of 1800.
+Reading the project graph slice (1016 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 425 of 1800.
+Reading the project graph slice (1018 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 431 of 1800.
+```
+
+## Observation 49 (2026-11-18T04:02:20Z)
+
+- `ready.json` (store, written 04:02:15Z): `state=running stage=workspace (5 of 5) try=68 exit=1 ready=False refusal=None reason={'code': 'code-stale', 'en': 'Stage workspace had run for at least 30 minutes while its code changed and was stopped; started again at once with the new code, what it finished stays stored.', 'de': 'Stufe workspace lief mindestens 30 Minuten, während sich ihr Code änderte, und wurde beendet; sofort neu gestartet mit dem neuen Code, alles Fertige bleibt gespeichert.'} peakMegabytes=9392 pid=63893`
+- `memory_pressure | tail -1`: `System-wide memory free percentage: 83%`; pressure level 1
+- Permission dialog: `UserNotificationCenter` process is not running, so no system dialog is waiting (the screen itself was not looked at)
+- Five largest processes (resident KiB, pid, command):
+
+```
+1260640  4958 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-poo
+1223152 40214 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c f
+933408 39483 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/📜️script.ts component --manifest 🌎️hub/🧩️compositions/🏗️fem/🧩️
+710144 96243 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+529312 61355 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-
+```
+- Last 30 lines of the log of stage `workspace` (`workspace.log`, written 04:02:20Z):
+
+```
+Reading the project graph slice (1563 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 971 of 1800.
+Reading the project graph slice (1565 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 971 of 1800.
+Reading the project graph slice (1567 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 978 of 1800.
+Reading the project graph slice (1569 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 978 of 1800.
+Reading the project graph slice (1571 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 978 of 1800.
+Reading the project graph slice (1573 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 978 of 1800.
+Reading the project graph slice (1575 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 978 of 1800.
+Reading the project graph slice (1577 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 989 of 1800.
+Reading the project graph slice (1579 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 989 of 1800.
+Reading the project graph slice (1581 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 989 of 1800.
+Reading the project graph slice (1583 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 994 of 1800.
+Reading the project graph slice (1585 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 994 of 1800.
+Reading the project graph slice (1587 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 999 of 1800.
+Reading the project graph slice (1589 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 999 of 1800.
+Reading the project graph slice (1591 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 999 of 1800.
+[repo] still working after 1593 s; last phase started: door.script
+Reading the project graph slice (1593 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1004 of 1800.
+Reading the project graph slice (1595 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1004 of 1800.
+Reading the project graph slice (1597 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1009 of 1800.
+Reading the project graph slice (1599 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1009 of 1800.
+Reading the project graph slice (1601 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1009 of 1800.
+Reading the project graph slice (1603 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1014 of 1800.
+Reading the project graph slice (1605 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1014 of 1800.
+Reading the project graph slice (1607 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1019 of 1800.
+Reading the project graph slice (1609 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1019 of 1800.
+Reading the project graph slice (1611 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1019 of 1800.
+Reading the project graph slice (1613 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1025 of 1800.
+Reading the project graph slice (1615 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1025 of 1800.
+Reading the project graph slice (1617 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1030 of 1800.
+Reading the project graph slice (1619 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1030 of 1800.
+```
+
+## Observation 50 (2026-11-18T04:12:20Z)
+
+- `ready.json` (store, written 04:12:20Z): `state=running stage=workspace (5 of 5) try=68 exit=1 ready=False refusal=None reason={'code': 'code-stale', 'en': 'Stage workspace had run for at least 30 minutes while its code changed and was stopped; started again at once with the new code, what it finished stays stored.', 'de': 'Stufe workspace lief mindestens 30 Minuten, während sich ihr Code änderte, und wurde beendet; sofort neu gestartet mit dem neuen Code, alles Fertige bleibt gespeichert.'} peakMegabytes=9392 pid=63893`
+- `memory_pressure | tail -1`: `System-wide memory free percentage: 72%`; pressure level 1
+- Permission dialog: `UserNotificationCenter` process is not running, so no system dialog is waiting (the screen itself was not looked at)
+- Five largest processes (resident KiB, pid, command):
+
+```
+2900896 45764 rustc --crate-name semio_hub_fem_component --edition=2021 🧩️compositions/🏗️fem/🧩️component/📦️packages/🦀️rust/../../🦀️.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type cdylib --emit=dep-info,link -C opt
+1300416 96243 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+1282000  4958 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-poo
+531680 61355 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-
+388624 61521 /Users/ueli/Library/Application Support/Claude/claude-code/2.1.325/485fdac4332e/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-format stream-json --effort=medium --model=claude-opus-5-5 --permission-prompt-tool=stdi
+```
+- Last 30 lines of the log of stage `workspace` (`workspace.log`, written 04:12:18Z):
+
+```
+[repo] still working after 2163 s; last phase started: door.script
+Reading the project graph slice (2163 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1576 of 1800.
+Reading the project graph slice (2165 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1576 of 1800.
+Reading the project graph slice (2167 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1576 of 1800.
+Reading the project graph slice (2169 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1581 of 1800.
+Reading the project graph slice (2171 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1581 of 1800.
+Reading the project graph slice (2173 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1586 of 1800.
+Reading the project graph slice (2175 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1586 of 1800.
+Reading the project graph slice (2177 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1586 of 1800.
+Reading the project graph slice (2179 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1591 of 1800.
+Reading the project graph slice (2181 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1591 of 1800.
+Reading the project graph slice (2183 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1596 of 1800.
+Reading the project graph slice (2185 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1596 of 1800.
+Reading the project graph slice (2187 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1596 of 1800.
+Reading the project graph slice (2189 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1601 of 1800.
+Reading the project graph slice (2191 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1601 of 1800.
+[repo] still working after 2193 s; last phase started: door.script
+Reading the project graph slice (2193 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1606 of 1800.
+Reading the project graph slice (2195 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1606 of 1800.
+Reading the project graph slice (2197 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1606 of 1800.
+Reading the project graph slice (2199 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1611 of 1800.
+Reading the project graph slice (2201 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1611 of 1800.
+Reading the project graph slice (2203 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1611 of 1800.
+Reading the project graph slice (2205 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1616 of 1800.
+Reading the project graph slice (2207 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1616 of 1800.
+Reading the project graph slice (2209 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1621 of 1800.
+Reading the project graph slice (2211 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1621 of 1800.
+Reading the project graph slice (2213 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1621 of 1800.
+Reading the project graph slice (2215 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1626 of 1800.
+Reading the project graph slice (2217 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1626 of 1800.
+```
+
+## Observation 51 (2026-11-18T04:22:20Z)
+
+- `ready.json` (store, written 04:22:19Z): `state=running stage=workspace (5 of 5) try=68 exit=1 ready=False refusal=None reason={'code': 'code-stale', 'en': 'Stage workspace had run for at least 30 minutes while its code changed and was stopped; started again at once with the new code, what it finished stays stored.', 'de': 'Stufe workspace lief mindestens 30 Minuten, während sich ihr Code änderte, und wurde beendet; sofort neu gestartet mit dem neuen Code, alles Fertige bleibt gespeichert.'} peakMegabytes=9392 pid=63893`
+- `memory_pressure | tail -1`: `System-wide memory free percentage: 78%`; pressure level 1
+- Permission dialog: `UserNotificationCenter` process is not running, so no system dialog is waiting (the screen itself was not looked at)
+- Five largest processes (resident KiB, pid, command):
+
+```
+2273856 63766 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c f
+1342128 50579 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-poo
+1212512 96243 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+998176 62638 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/📜️script.ts component --manifest 🌎️hub/🧩️compositions/🌀️proced
+985360 64073 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-poo
+```
+- Last 30 lines of the log of stage `workspace` (`workspace.log`, written 04:22:19Z):
+
+```
+Reading the project graph slice (476 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 311 of 1800.
+Reading the project graph slice (478 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 311 of 1800.
+Reading the project graph slice (480 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 316 of 1800.
+Reading the project graph slice (482 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 316 of 1800.
+Reading the project graph slice (484 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 321 of 1800.
+Reading the project graph slice (486 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 321 of 1800.
+Reading the project graph slice (488 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 321 of 1800.
+Reading the project graph slice (490 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 326 of 1800.
+Reading the project graph slice (492 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 326 of 1800.
+Reading the project graph slice (494 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 331 of 1800.
+Reading the project graph slice (496 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 331 of 1800.
+Reading the project graph slice (498 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 331 of 1800.
+[repo] still working after 500 s; last phase started: door.script
+Reading the project graph slice (500 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 336 of 1800.
+Reading the project graph slice (502 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 336 of 1800.
+Reading the project graph slice (504 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 341 of 1800.
+Reading the project graph slice (506 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 341 of 1800.
+Reading the project graph slice (508 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 341 of 1800.
+Reading the project graph slice (510 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 346 of 1800.
+Reading the project graph slice (512 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 346 of 1800.
+Reading the project graph slice (514 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 351 of 1800.
+Reading the project graph slice (516 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 351 of 1800.
+Reading the project graph slice (518 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 351 of 1800.
+Reading the project graph slice (520 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 356 of 1800.
+Reading the project graph slice (522 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 356 of 1800.
+Reading the project graph slice (524 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 361 of 1800.
+Reading the project graph slice (526 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 361 of 1800.
+Reading the project graph slice (528 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 361 of 1800.
+[repo] still working after 530 s; last phase started: door.script
+Reading the project graph slice (531 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 366 of 1800.
+```
+
+## Observation 52 (2026-11-18T04:32:21Z)
+
+- `ready.json` (store, written 04:32:19Z): `state=running stage=workspace (5 of 5) try=68 exit=1 ready=False refusal=None reason={'code': 'code-stale', 'en': 'Stage workspace had run for at least 30 minutes while its code changed and was stopped; started again at once with the new code, what it finished stays stored.', 'de': 'Stufe workspace lief mindestens 30 Minuten, während sich ihr Code änderte, und wurde beendet; sofort neu gestartet mit dem neuen Code, alles Fertige bleibt gespeichert.'} peakMegabytes=9392 pid=63893`
+- `memory_pressure | tail -1`: `System-wide memory free percentage: 61%`; pressure level 1
+- Permission dialog: `UserNotificationCenter` process is not running, so no system dialog is waiting (the screen itself was not looked at)
+- Five largest processes (resident KiB, pid, command):
+
+```
+3055120 72609 rustc --crate-name semio_hub_procedural_component --edition=2021 🧩️compositions/🌀️procedural/🧩️component/📦️packages/🦀️rust/../../🦀️.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type cdylib --emit=dep-in
+1331440 50579 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-poo
+1117136 96243 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+1054928 69449 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-po
+390304 61355 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-
+```
+- Last 30 lines of the log of stage `workspace` (`workspace.log`, written 04:32:19Z):
+
+```
+Reading the project graph slice (1077 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 913 of 1800.
+Reading the project graph slice (1079 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 913 of 1800.
+Reading the project graph slice (1081 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 913 of 1800.
+Reading the project graph slice (1083 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 918 of 1800.
+Reading the project graph slice (1085 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 918 of 1800.
+Reading the project graph slice (1087 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 923 of 1800.
+Reading the project graph slice (1089 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 923 of 1800.
+Reading the project graph slice (1091 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 923 of 1800.
+Reading the project graph slice (1093 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 928 of 1800.
+Reading the project graph slice (1095 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 928 of 1800.
+Reading the project graph slice (1097 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 933 of 1800.
+Reading the project graph slice (1099 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 933 of 1800.
+[repo] still working after 1100 s; last phase started: door.script
+Reading the project graph slice (1101 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 933 of 1800.
+Reading the project graph slice (1103 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 938 of 1800.
+Reading the project graph slice (1105 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 938 of 1800.
+Reading the project graph slice (1107 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 943 of 1800.
+Reading the project graph slice (1109 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 943 of 1800.
+Reading the project graph slice (1111 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 943 of 1800.
+Reading the project graph slice (1113 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 948 of 1800.
+Reading the project graph slice (1115 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 948 of 1800.
+Reading the project graph slice (1117 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 953 of 1800.
+Reading the project graph slice (1119 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 953 of 1800.
+Reading the project graph slice (1121 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 953 of 1800.
+Reading the project graph slice (1123 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 958 of 1800.
+Reading the project graph slice (1125 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 958 of 1800.
+Reading the project graph slice (1127 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 963 of 1800.
+Reading the project graph slice (1129 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 963 of 1800.
+[repo] still working after 1130 s; last phase started: door.script
+Reading the project graph slice (1131 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 963 of 1800.
+```
+
+## Observation 53 (2026-11-18T04:42:21Z)
+
+- `ready.json` (store, written 04:42:19Z): `state=running stage=workspace (5 of 5) try=68 exit=1 ready=False refusal=None reason={'code': 'code-stale', 'en': 'Stage workspace had run for at least 30 minutes while its code changed and was stopped; started again at once with the new code, what it finished stays stored.', 'de': 'Stufe workspace lief mindestens 30 Minuten, während sich ihr Code änderte, und wurde beendet; sofort neu gestartet mit dem neuen Code, alles Fertige bleibt gespeichert.'} peakMegabytes=9392 pid=63893`
+- `memory_pressure | tail -1`: `System-wide memory free percentage: 58%`; pressure level 1
+- Permission dialog: `UserNotificationCenter` process is not running, so no system dialog is waiting (the screen itself was not looked at)
+- Five largest processes (resident KiB, pid, command):
+
+```
+2101936 72609 rustc --crate-name semio_hub_procedural_component --edition=2021 🧩️compositions/🌀️procedural/🧩️component/📦️packages/🦀️rust/../../🦀️.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type cdylib --emit=dep-in
+1562976 96243 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+1369328 50579 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-poo
+525776 61355 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-
+304800 61521 /Users/ueli/Library/Application Support/Claude/claude-code/2.1.325/485fdac4332e/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-format stream-json --effort=medium --model=claude-opus-5-5 --permission-prompt-tool=stdi
+```
+- Last 30 lines of the log of stage `workspace` (`workspace.log`, written 04:42:20Z):
+
+```
+Reading the project graph slice (1678 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1514 of 1800.
+Reading the project graph slice (1680 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1514 of 1800.
+Reading the project graph slice (1682 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1514 of 1800.
+Reading the project graph slice (1684 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1519 of 1800.
+Reading the project graph slice (1686 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1519 of 1800.
+Reading the project graph slice (1688 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1524 of 1800.
+Reading the project graph slice (1690 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1524 of 1800.
+Reading the project graph slice (1692 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1524 of 1800.
+Reading the project graph slice (1694 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1529 of 1800.
+Reading the project graph slice (1696 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1529 of 1800.
+Reading the project graph slice (1698 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1534 of 1800.
+Reading the project graph slice (1700 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1534 of 1800.
+[repo] still working after 1700 s; last phase started: door.script
+Reading the project graph slice (1702 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1534 of 1800.
+Reading the project graph slice (1704 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1539 of 1800.
+Reading the project graph slice (1706 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1539 of 1800.
+Reading the project graph slice (1708 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1544 of 1800.
+Reading the project graph slice (1710 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1544 of 1800.
+Reading the project graph slice (1712 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1544 of 1800.
+Reading the project graph slice (1714 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1549 of 1800.
+Reading the project graph slice (1716 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1549 of 1800.
+Reading the project graph slice (1718 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1554 of 1800.
+Reading the project graph slice (1720 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1554 of 1800.
+Reading the project graph slice (1722 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1554 of 1800.
+Reading the project graph slice (1724 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1559 of 1800.
+Reading the project graph slice (1726 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1559 of 1800.
+Reading the project graph slice (1728 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1564 of 1800.
+Reading the project graph slice (1730 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1564 of 1800.
+[repo] still working after 1730 s; last phase started: door.script
+Reading the project graph slice (1732 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1564 of 1800.
+```
+
+## Observation 54 (2026-11-18T04:52:21Z)
+
+- `ready.json` (store, written 04:52:15Z): `state=running stage=workspace (5 of 5) try=68 exit=1 ready=False refusal=None reason={'code': 'code-stale', 'en': 'Stage workspace had run for at least 30 minutes while its code changed and was stopped; started again at once with the new code, what it finished stays stored.', 'de': 'Stufe workspace lief mindestens 30 Minuten, während sich ihr Code änderte, und wurde beendet; sofort neu gestartet mit dem neuen Code, alles Fertige bleibt gespeichert.'} peakMegabytes=9392 pid=63893`
+- `memory_pressure | tail -1`: `System-wide memory free percentage: 78%`; pressure level 1
+- Permission dialog: `UserNotificationCenter` process is not running, so no system dialog is waiting (the screen itself was not looked at)
+- Five largest processes (resident KiB, pid, command):
+
+```
+1967712 96243 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+1247728 82666 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-poo
+1118688 92719 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval \012const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cr
+1031472 83557 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-po
+751568 82689 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval \012const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+```
+- Last 30 lines of the log of stage `workspace` (`workspace.log`, written 04:52:21Z):
+
+```
+Reading the project graph slice (476 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 294 of 1800.
+Reading the project graph slice (478 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 299 of 1800.
+Reading the project graph slice (480 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 299 of 1800.
+Reading the project graph slice (482 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 304 of 1800.
+Reading the project graph slice (484 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 304 of 1800.
+Reading the project graph slice (486 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 304 of 1800.
+Reading the project graph slice (488 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 309 of 1800.
+Reading the project graph slice (490 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 309 of 1800.
+Reading the project graph slice (492 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 314 of 1800.
+Reading the project graph slice (494 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 314 of 1800.
+Reading the project graph slice (496 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 314 of 1800.
+Reading the project graph slice (498 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 319 of 1800.
+[repo] still working after 500 s; last phase started: door.script
+Reading the project graph slice (500 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 319 of 1800.
+Reading the project graph slice (502 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 324 of 1800.
+Reading the project graph slice (504 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 324 of 1800.
+Reading the project graph slice (507 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 324 of 1800.
+Reading the project graph slice (509 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 329 of 1800.
+Reading the project graph slice (511 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 329 of 1800.
+Reading the project graph slice (513 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 334 of 1800.
+Reading the project graph slice (515 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 334 of 1800.
+Reading the project graph slice (517 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 334 of 1800.
+Reading the project graph slice (519 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 339 of 1800.
+Reading the project graph slice (521 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 339 of 1800.
+Reading the project graph slice (523 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 344 of 1800.
+Reading the project graph slice (525 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 344 of 1800.
+Reading the project graph slice (527 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 344 of 1800.
+Reading the project graph slice (529 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 349 of 1800.
+[repo] still working after 530 s; last phase started: door.script
+Reading the project graph slice (531 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 349 of 1800.
+```
+
+## Observation 55 (2026-11-18T05:02:30Z)
+
+- `ready.json` (store, written 05:02:13Z): `state=running stage=workspace (5 of 5) try=68 exit=1 ready=False refusal=None reason={'code': 'adopted', 'en': 'Adopted stage workspace, which was already running; not restarted.', 'de': 'Stufe workspace übernommen, sie lief schon; nicht neu gestartet.'} peakMegabytes=9392 pid=5659`
+- `memory_pressure | tail -1`: `System-wide memory free percentage: 72%`; pressure level 1
+- Permission dialog: `UserNotificationCenter` process is not running, so no system dialog is waiting (the screen itself was not looked at)
+- Five largest processes (resident KiB, pid, command):
+
+```
+1137888 82666 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-poo
+1089760 96243 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+838848  6197 rustc --crate-name semio_framework_tool_run --edition=2021 🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust/🦀️.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat,diagnostic-short --crate-type lib --emit=dep-info,met
+783072  5037 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-poo
+782416  6154 rustc --crate-name semio_ui_declaration --edition=2021 🧰️framework/🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust/../../🦀️.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat,diagnostic-short --crate-type lib --emit=de
+```
+- Last 30 lines of the log of stage `workspace` (`workspace.log`, written 05:02:30Z):
+
+```
+Reading the project graph slice (1085 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 905 of 1800.
+Reading the project graph slice (1087 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 905 of 1800.
+Reading the project graph slice (1089 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 910 of 1800.
+Reading the project graph slice (1091 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 910 of 1800.
+Reading the project graph slice (1093 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 910 of 1800.
+Reading the project graph slice (1095 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 915 of 1800.
+Reading the project graph slice (1097 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 915 of 1800.
+Reading the project graph slice (1099 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 920 of 1800.
+[repo] still working after 1100 s; last phase started: door.script
+Reading the project graph slice (1101 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 920 of 1800.
+Reading the project graph slice (1103 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 920 of 1800.
+Reading the project graph slice (1105 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 925 of 1800.
+Reading the project graph slice (1107 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 925 of 1800.
+Reading the project graph slice (1109 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 930 of 1800.
+Reading the project graph slice (1111 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 930 of 1800.
+Reading the project graph slice (1113 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 930 of 1800.
+Reading the project graph slice (1115 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 935 of 1800.
+Reading the project graph slice (1117 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 935 of 1800.
+Reading the project graph slice (1119 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 940 of 1800.
+Reading the project graph slice (1121 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 940 of 1800.
+Reading the project graph slice (1123 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 940 of 1800.
+Reading the project graph slice (1125 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 945 of 1800.
+Reading the project graph slice (1127 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 945 of 1800.
+Reading the project graph slice (1129 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 945 of 1800.
+[repo] still working after 1130 s; last phase started: door.script
+Reading the project graph slice (1131 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 945 of 1800.
+Reading the project graph slice (1133 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 945 of 1800.
+Reading the project graph slice (1135 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 945 of 1800.
+Reading the project graph slice (1137 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 945 of 1800.
+Reading the project graph slice (1139 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 945 of 1800.
+```
+
+## Observation 56 (2026-11-18T05:12:30Z)
+
+- `ready.json` (store, written 05:12:30Z): `state=running stage=workspace (5 of 5) try=68 exit=1 ready=False refusal=None reason={'code': 'adopted', 'en': 'Adopted stage workspace, which was already running; not restarted.', 'de': 'Stufe workspace übernommen, sie lief schon; nicht neu gestartet.'} peakMegabytes=9392 pid=5659`
+- `memory_pressure | tail -1`: `System-wide memory free percentage: 71%`; pressure level 1
+- Permission dialog: `UserNotificationCenter` process is not running, so no system dialog is waiting (the screen itself was not looked at)
+- Five largest processes (resident KiB, pid, command):
+
+```
+4165520 22230 rustc --crate-name semio_s_artifact_stdio_dwg_snapshot_objects --edition=2021 /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️objects/📦️packages/🦀️rust/🦀️.rs --error-fo
+1126224 82666 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-poo
+1038608 96243 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+703904 20548 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval \012const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+459216 22503 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🟦️.ts pool
+```
+- Last 30 lines of the log of stage `workspace` (`workspace.log`, written 05:12:30Z):
+
+```
+Reading the project graph slice (1686 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1504 of 1800.
+Reading the project graph slice (1688 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1509 of 1800.
+Reading the project graph slice (1690 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1509 of 1800.
+Reading the project graph slice (1692 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1509 of 1800.
+Reading the project graph slice (1694 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1514 of 1800.
+Reading the project graph slice (1696 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1514 of 1800.
+Reading the project graph slice (1698 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1519 of 1800.
+Reading the project graph slice (1700 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1519 of 1800.
+[repo] still working after 1700 s; last phase started: door.script
+Reading the project graph slice (1702 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1519 of 1800.
+Reading the project graph slice (1704 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1524 of 1800.
+Reading the project graph slice (1706 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1524 of 1800.
+Reading the project graph slice (1708 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1529 of 1800.
+Reading the project graph slice (1710 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1529 of 1800.
+Reading the project graph slice (1712 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1529 of 1800.
+Reading the project graph slice (1714 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1529 of 1800.
+Reading the project graph slice (1716 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1529 of 1800.
+Reading the project graph slice (1718 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1529 of 1800.
+Reading the project graph slice (1720 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1529 of 1800.
+Reading the project graph slice (1722 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1529 of 1800.
+Reading the project graph slice (1724 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1529 of 1800.
+Reading the project graph slice (1726 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1547 of 1800.
+Reading the project graph slice (1728 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1547 of 1800.
+Reading the project graph slice (1730 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1547 of 1800.
+[repo] still working after 1730 s; last phase started: door.script
+Reading the project graph slice (1732 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1552 of 1800.
+Reading the project graph slice (1734 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1552 of 1800.
+Reading the project graph slice (1736 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1558 of 1800.
+Reading the project graph slice (1738 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1558 of 1800.
+Reading the project graph slice (1740 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1558 of 1800.
+```
+
+## Observation 57 (2026-11-18T05:22:30Z)
+
+- `ready.json` (store, written 05:22:26Z): `state=running stage=workspace (5 of 5) try=68 exit=1 ready=False refusal=None reason={'code': 'code-stale', 'en': 'Stage workspace had run for at least 30 minutes while its code changed and was stopped; started again at once with the new code, what it finished stays stored.', 'de': 'Stufe workspace lief mindestens 30 Minuten, während sich ihr Code änderte, und wurde beendet; sofort neu gestartet mit dem neuen Code, alles Fertige bleibt gespeichert.'} peakMegabytes=9392 pid=5659`
+- `memory_pressure | tail -1`: `System-wide memory free percentage: 67%`; pressure level 1
+- Permission dialog: `UserNotificationCenter` process is not running, so no system dialog is waiting (the screen itself was not looked at)
+- Five largest processes (resident KiB, pid, command):
+
+```
+1755216 33961 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval \012const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cr
+703776 33297 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool
+657728 34584 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-poo
+652320 24585 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-poo
+586528 20548 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval \012const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+```
+- Last 30 lines of the log of stage `workspace` (`workspace.log`, written 05:22:30Z):
+
+```
+Reading the project graph slice (63 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 31 of 600.
+Reading the project graph slice (65 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 36 of 600.
+Reading the project graph slice (67 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 36 of 600.
+Reading the project graph slice (69 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 41 of 600.
+Reading the project graph slice (71 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 41 of 600.
+Reading the project graph slice (73 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 41 of 600.
+Reading the project graph slice (75 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 47 of 600.
+Reading the project graph slice (77 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 47 of 600.
+Reading the project graph slice (79 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 47 of 600.
+Reading the project graph slice (81 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 52 of 600.
+[repo] still working after 84 s; last phase started: door.script
+Reading the project graph slice (83 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 52 of 600.
+Reading the project graph slice (85 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 57 of 600.
+Reading the project graph slice (87 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 57 of 600.
+Reading the project graph slice (89 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 57 of 600.
+Reading the project graph slice (91 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 62 of 600.
+Reading the project graph slice (94 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 62 of 600.
+Reading the project graph slice (96 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 67 of 600.
+Reading the project graph slice (98 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 67 of 600.
+Reading the project graph slice (100 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 67 of 600.
+Reading the project graph slice (102 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 72 of 600.
+Reading the project graph slice (104 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 72 of 600.
+Reading the project graph slice (106 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 78 of 600.
+Reading the project graph slice (108 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 78 of 600.
+Reading the project graph slice (110 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 78 of 600.
+Reading the project graph slice (112 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 83 of 600.
+[repo] still working after 114 s; last phase started: door.script
+Reading the project graph slice (114 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 83 of 600.
+Reading the project graph slice (116 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 88 of 600.
+Reading the project graph slice (118 s): checking the file inventory of the tree / Prüfe das Dateiverzeichnis des Baums 88 of 600.
+```
+
+## Observation 58 (2026-11-18T05:32:31Z)
+
+- `ready.json` (store, written 05:32:29Z): `state=running stage=workspace (5 of 5) try=68 exit=1 ready=False refusal=None reason={'code': 'adopted', 'en': 'Adopted stage workspace, which was already running; not restarted.', 'de': 'Stufe workspace übernommen, sie lief schon; nicht neu gestartet.'} peakMegabytes=9392 pid=59084`
+- `memory_pressure | tail -1`: `System-wide memory free percentage: 58%`; pressure level 1
+- Permission dialog: `UserNotificationCenter` process is not running, so no system dialog is waiting (the screen itself was not looked at)
+- Five largest processes (resident KiB, pid, command):
+
+```
+1365440 58866 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c f
+1336576 58570 rustc --crate-name semio_s_artifact_stdio_pdf_model --edition=2021 /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📐️model/📦️packages/🦀️rust/🦀️.rs --error-format=json --j
+1139520 33297 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-poo
+522784 58350 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-poo
+501984 20548 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval \012const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+```
+- Last 30 lines of the log of stage `workspace` (`workspace.log`, written 05:32:29Z):
+
+```
+Reading the project graph slice (663 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 118 of 1800.
+Reading the project graph slice (665 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 118 of 1800.
+Reading the project graph slice (667 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 123 of 1800.
+Reading the project graph slice (669 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 123 of 1800.
+Reading the project graph slice (671 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 129 of 1800.
+Reading the project graph slice (673 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 129 of 1800.
+Reading the project graph slice (675 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 129 of 1800.
+Reading the project graph slice (677 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 134 of 1800.
+Reading the project graph slice (679 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 134 of 1800.
+Reading the project graph slice (681 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 139 of 1800.
+Reading the project graph slice (683 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 139 of 1800.
+[repo] still working after 684 s; last phase started: door.script
+Reading the project graph slice (685 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 139 of 1800.
+Reading the project graph slice (687 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 144 of 1800.
+Reading the project graph slice (689 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 144 of 1800.
+Reading the project graph slice (691 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 149 of 1800.
+Reading the project graph slice (693 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 149 of 1800.
+Reading the project graph slice (695 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 149 of 1800.
+Reading the project graph slice (697 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 154 of 1800.
+Reading the project graph slice (699 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 154 of 1800.
+Reading the project graph slice (701 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 159 of 1800.
+Reading the project graph slice (703 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 159 of 1800.
+Reading the project graph slice (705 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 159 of 1800.
+Reading the project graph slice (707 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 164 of 1800.
+Reading the project graph slice (709 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 164 of 1800.
+Reading the project graph slice (711 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 169 of 1800.
+Reading the project graph slice (713 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 169 of 1800.
+[repo] still working after 714 s; last phase started: door.script
+Reading the project graph slice (715 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 169 of 1800.
+Reading the project graph slice (717 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 174 of 1800.
+```
+
+## Observation 59 (2026-11-18T05:42:31Z)
+
+- `ready.json` (store, written 05:42:26Z): `state=running stage=workspace (5 of 5) try=68 exit=1 ready=False refusal=None reason={'code': 'adopted', 'en': 'Adopted stage workspace, which was already running; not restarted.', 'de': 'Stufe workspace übernommen, sie lief schon; nicht neu gestartet.'} peakMegabytes=9392 pid=59084`
+- `memory_pressure | tail -1`: `System-wide memory free percentage: 44%`; pressure level 2
+- Permission dialog: `UserNotificationCenter` process is not running, so no system dialog is waiting (the screen itself was not looked at)
+- Five largest processes (resident KiB, pid, command):
+
+```
+916928 72549 rustc --crate-name semio_s_artifact_energy_model_mutations --edition=2021 /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust/../../🦀️.rs --error-format=json
+853568 75287 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-poo
+612240 33297 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool
+452336 96243 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+391200 20548 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval \012const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+```
+- Last 30 lines of the log of stage `workspace` (`workspace.log`, written 05:42:30Z):
+
+```
+Reading the project graph slice (1264 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 723 of 1800.
+Reading the project graph slice (1266 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 723 of 1800.
+Reading the project graph slice (1268 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 723 of 1800.
+Reading the project graph slice (1270 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 728 of 1800.
+Reading the project graph slice (1272 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 728 of 1800.
+Reading the project graph slice (1274 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 733 of 1800.
+Reading the project graph slice (1276 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 733 of 1800.
+Reading the project graph slice (1278 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 733 of 1800.
+Reading the project graph slice (1280 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 738 of 1800.
+Reading the project graph slice (1282 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 738 of 1800.
+[repo] still working after 1284 s; last phase started: door.script
+Reading the project graph slice (1284 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 738 of 1800.
+Reading the project graph slice (1286 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 743 of 1800.
+Reading the project graph slice (1288 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 743 of 1800.
+Reading the project graph slice (1290 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 748 of 1800.
+Reading the project graph slice (1292 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 748 of 1800.
+Reading the project graph slice (1294 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 748 of 1800.
+Reading the project graph slice (1296 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 753 of 1800.
+Reading the project graph slice (1298 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 753 of 1800.
+Reading the project graph slice (1300 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 758 of 1800.
+Reading the project graph slice (1302 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 758 of 1800.
+Reading the project graph slice (1304 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 758 of 1800.
+Reading the project graph slice (1306 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 763 of 1800.
+Reading the project graph slice (1308 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 763 of 1800.
+Reading the project graph slice (1310 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 768 of 1800.
+Reading the project graph slice (1312 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 768 of 1800.
+[repo] still working after 1314 s; last phase started: door.script
+Reading the project graph slice (1314 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 768 of 1800.
+Reading the project graph slice (1316 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 773 of 1800.
+Reading the project graph slice (1318 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 773 of 1800.
+```
+
+## Observation 60 (2026-11-18T05:52:31Z)
+
+- `ready.json` (store, written 05:52:30Z): `state=running stage=workspace (5 of 5) try=68 exit=1 ready=False refusal=None reason={'code': 'adopted', 'en': 'Adopted stage workspace, which was already running; not restarted.', 'de': 'Stufe workspace übernommen, sie lief schon; nicht neu gestartet.'} peakMegabytes=9392 pid=59084`
+- `memory_pressure | tail -1`: `System-wide memory free percentage: 70%`; pressure level 1
+- Permission dialog: `UserNotificationCenter` process is not running, so no system dialog is waiting (the screen itself was not looked at)
+- Five largest processes (resident KiB, pid, command):
+
+```
+1169504 33297 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-poo
+870512 93017 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c fi
+860432 96243 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+717360 20548 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval \012const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+677040 75287 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-poo
+```
+- Last 30 lines of the log of stage `workspace` (`workspace.log`, written 05:52:30Z):
+
+```
+Reading the project graph slice (1864 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1321 of 1800.
+Reading the project graph slice (1866 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1321 of 1800.
+Reading the project graph slice (1868 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1326 of 1800.
+Reading the project graph slice (1870 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1326 of 1800.
+Reading the project graph slice (1872 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1326 of 1800.
+Reading the project graph slice (1874 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1331 of 1800.
+Reading the project graph slice (1876 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1331 of 1800.
+Reading the project graph slice (1878 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1336 of 1800.
+Reading the project graph slice (1880 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1336 of 1800.
+Reading the project graph slice (1882 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1336 of 1800.
+[repo] still working after 1884 s; last phase started: door.script
+Reading the project graph slice (1884 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1341 of 1800.
+Reading the project graph slice (1886 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1341 of 1800.
+Reading the project graph slice (1888 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1346 of 1800.
+Reading the project graph slice (1890 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1346 of 1800.
+Reading the project graph slice (1892 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1346 of 1800.
+Reading the project graph slice (1894 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1351 of 1800.
+Reading the project graph slice (1896 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1351 of 1800.
+Reading the project graph slice (1898 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1356 of 1800.
+Reading the project graph slice (1900 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1356 of 1800.
+Reading the project graph slice (1902 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1356 of 1800.
+Reading the project graph slice (1904 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1362 of 1800.
+Reading the project graph slice (1906 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1362 of 1800.
+Reading the project graph slice (1908 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1362 of 1800.
+Reading the project graph slice (1910 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1367 of 1800.
+Reading the project graph slice (1912 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1367 of 1800.
+[repo] still working after 1914 s; last phase started: door.script
+Reading the project graph slice (1914 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1372 of 1800.
+Reading the project graph slice (1916 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1372 of 1800.
+Reading the project graph slice (1918 s): waiting for the fleet to infer @semio-tech/s-dev-composition / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet 1372 of 1800.
+```
+
+## Observation 61 (2026-11-18T06:02:32Z)
+
+- `ready.json` (store, written 06:02:28Z): `state=running stage=workspace (5 of 5) try=68 exit=1 ready=False refusal=None reason={'code': 'adopted', 'en': 'Adopted stage workspace, which was already running; not restarted.', 'de': 'Stufe workspace übernommen, sie lief schon; nicht neu gestartet.'} peakMegabytes=9392 pid=8034`
+- `memory_pressure | tail -1`: `System-wide memory free percentage: 76%`; pressure level 1
+- Permission dialog: `UserNotificationCenter` process is not running, so no system dialog is waiting (the screen itself was not looked at)
+- Five largest processes (resident KiB, pid, command):
+
+```
+1237024  8637 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c f
+1179904 33297 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-poo
+1082992 96243 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+751104  8462 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-poo
+741632 20548 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval \012const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+```
+- Last 30 lines of the log of stage `workspace` (`workspace.log`, written 06:02:31Z):
+
+```
+Reading the project graph slice (2465 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 1923 of 1800.
+Reading the project graph slice (2467 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 1923 of 1800.
+Reading the project graph slice (2469 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 1923 of 1800.
+Reading the project graph slice (2471 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 1928 of 1800.
+Reading the project graph slice (2473 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 1928 of 1800.
+Reading the project graph slice (2475 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 1933 of 1800.
+Reading the project graph slice (2477 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 1933 of 1800.
+Reading the project graph slice (2479 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 1933 of 1800.
+Reading the project graph slice (2481 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 1938 of 1800.
+Reading the project graph slice (2483 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 1938 of 1800.
+[repo] still working after 2484 s; last phase started: door.script
+Reading the project graph slice (2485 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 1943 of 1800.
+Reading the project graph slice (2487 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 1943 of 1800.
+Reading the project graph slice (2489 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 1943 of 1800.
+Reading the project graph slice (2491 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 1948 of 1800.
+Reading the project graph slice (2493 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 1948 of 1800.
+Reading the project graph slice (2495 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 1953 of 1800.
+Reading the project graph slice (2497 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 1953 of 1800.
+Reading the project graph slice (2499 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 1958 of 1800.
+Reading the project graph slice (2501 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 1958 of 1800.
+Reading the project graph slice (2503 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 1958 of 1800.
+Reading the project graph slice (2505 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 1963 of 1800.
+Reading the project graph slice (2507 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 1963 of 1800.
+Reading the project graph slice (2509 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 1963 of 1800.
+Reading the project graph slice (2511 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 1968 of 1800.
+Reading the project graph slice (2513 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 1968 of 1800.
+[repo] still working after 2514 s; last phase started: door.script
+Reading the project graph slice (2515 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 1973 of 1800.
+Reading the project graph slice (2517 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 1973 of 1800.
+Reading the project graph slice (2519 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 1973 of 1800.
+```
+
+## Observation 62 (2026-11-18T06:12:32Z)
+
+- `ready.json` (store, written 06:12:28Z): `state=running stage=workspace (5 of 5) try=68 exit=1 ready=False refusal=None reason={'code': 'adopted', 'en': 'Adopted stage workspace, which was already running; not restarted.', 'de': 'Stufe workspace übernommen, sie lief schon; nicht neu gestartet.'} peakMegabytes=9392 pid=11433`
+- `memory_pressure | tail -1`: `System-wide memory free percentage: 58%`; pressure level 1
+- Permission dialog: `UserNotificationCenter` process is not running, so no system dialog is waiting (the screen itself was not looked at)
+- Five largest processes (resident KiB, pid, command):
+
+```
+1711072 23797 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c f
+1138496 33297 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-poo
+883760 96243 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+760224 23613 rustc --crate-name semio_s_artifact_stdio_binary_io_registry --edition=2021 /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/📦️packages/🦀️rust/🦀️.rs --error-format=json --json=diagnostic-rendered-ansi,artifa
+753600 23720 rustc --crate-name semio_framework_artifact_flow_flow_model --edition=2021 /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧱️model/📦️packages/🦀️rust/../../🦀️.rs --error-format=json --json=diagnostic-rend
+```
+- Last 30 lines of the log of stage `workspace` (`workspace.log`, written 06:12:31Z):
+
+```
+Reading the project graph slice (3064 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 2522 of 1800.
+Reading the project graph slice (3066 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 2522 of 1800.
+Reading the project graph slice (3068 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 2527 of 1800.
+Reading the project graph slice (3070 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 2527 of 1800.
+Reading the project graph slice (3072 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 2527 of 1800.
+Reading the project graph slice (3074 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 2532 of 1800.
+Reading the project graph slice (3076 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 2532 of 1800.
+Reading the project graph slice (3078 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 2537 of 1800.
+Reading the project graph slice (3080 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 2537 of 1800.
+Reading the project graph slice (3082 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 2537 of 1800.
+[repo] still working after 3085 s; last phase started: door.script
+Reading the project graph slice (3084 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 2542 of 1800.
+Reading the project graph slice (3086 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 2542 of 1800.
+Reading the project graph slice (3088 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 2547 of 1800.
+Reading the project graph slice (3090 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 2547 of 1800.
+Reading the project graph slice (3092 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 2547 of 1800.
+Reading the project graph slice (3094 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 2552 of 1800.
+Reading the project graph slice (3096 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 2552 of 1800.
+Reading the project graph slice (3098 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 2557 of 1800.
+Reading the project graph slice (3100 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 2557 of 1800.
+Reading the project graph slice (3102 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 2557 of 1800.
+Reading the project graph slice (3104 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 2562 of 1800.
+Reading the project graph slice (3106 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 2562 of 1800.
+Reading the project graph slice (3108 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 2567 of 1800.
+Reading the project graph slice (3110 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 2567 of 1800.
+Reading the project graph slice (3112 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 2567 of 1800.
+[repo] still working after 3115 s; last phase started: door.script
+Reading the project graph slice (3114 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 2572 of 1800.
+Reading the project graph slice (3116 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 2572 of 1800.
+Reading the project graph slice (3118 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 2577 of 1800.
+```
+
+## Observation 63 (2026-11-18T06:22:32Z)
+
+- `ready.json` (store, written 06:22:27Z): `state=running stage=workspace (5 of 5) try=68 exit=1 ready=False refusal=None reason={'code': 'adopted', 'en': 'Adopted stage workspace, which was already running; not restarted.', 'de': 'Stufe workspace übernommen, sie lief schon; nicht neu gestartet.'} peakMegabytes=9392 pid=11433`
+- `memory_pressure | tail -1`: `System-wide memory free percentage: 71%`; pressure level 1
+- Permission dialog: `UserNotificationCenter` process is not running, so no system dialog is waiting (the screen itself was not looked at)
+- Five largest processes (resident KiB, pid, command):
+
+```
+1175424 33297 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-poo
+1061952 96243 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+887904 23559 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-poo
+511248 34922 rustc --crate-name semio_s_artifact_stdio_semio_animation --edition=2021 /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/📦️packages/🦀️rust/../../🦀️.rs --error-format=json --json=diagnost
+473200 34950 rustc --crate-name semio_s_artifact_puzzle_3d_diff --edition=2021 /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📦️packages/🦀️rust/../../🦀️.rs --error-format=json --json=diagnost
+```
+- Last 30 lines of the log of stage `workspace` (`workspace.log`, written 06:22:30Z):
+
+```
+Reading the project graph slice (3664 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3119 of 1800.
+Reading the project graph slice (3666 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3124 of 1800.
+Reading the project graph slice (3668 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3124 of 1800.
+Reading the project graph slice (3670 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3124 of 1800.
+Reading the project graph slice (3672 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3129 of 1800.
+Reading the project graph slice (3674 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3129 of 1800.
+Reading the project graph slice (3676 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3134 of 1800.
+Reading the project graph slice (3678 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3134 of 1800.
+Reading the project graph slice (3680 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3134 of 1800.
+Reading the project graph slice (3682 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3139 of 1800.
+Reading the project graph slice (3684 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3139 of 1800.
+[repo] still working after 3685 s; last phase started: door.script
+Reading the project graph slice (3686 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3144 of 1800.
+Reading the project graph slice (3688 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3144 of 1800.
+Reading the project graph slice (3690 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3144 of 1800.
+Reading the project graph slice (3692 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3149 of 1800.
+Reading the project graph slice (3694 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3149 of 1800.
+Reading the project graph slice (3696 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3154 of 1800.
+Reading the project graph slice (3698 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3154 of 1800.
+Reading the project graph slice (3700 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3154 of 1800.
+Reading the project graph slice (3702 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3159 of 1800.
+Reading the project graph slice (3704 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3159 of 1800.
+Reading the project graph slice (3706 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3165 of 1800.
+Reading the project graph slice (3708 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3165 of 1800.
+Reading the project graph slice (3710 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3165 of 1800.
+Reading the project graph slice (3712 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3170 of 1800.
+[repo] still working after 3715 s; last phase started: door.script
+Reading the project graph slice (3714 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3170 of 1800.
+Reading the project graph slice (3716 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3175 of 1800.
+Reading the project graph slice (3718 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3175 of 1800.
+```
+
+## Observation 64 (2026-11-18T06:32:32Z)
+
+- `ready.json` (store, written 06:32:30Z): `state=running stage=workspace (5 of 5) try=68 exit=1 ready=False refusal=None reason={'code': 'adopted', 'en': 'Adopted stage workspace, which was already running; not restarted.', 'de': 'Stufe workspace übernommen, sie lief schon; nicht neu gestartet.'} peakMegabytes=9392 pid=11433`
+- `memory_pressure | tail -1`: `System-wide memory free percentage: 71%`; pressure level 1
+- Permission dialog: `UserNotificationCenter` process is not running, so no system dialog is waiting (the screen itself was not looked at)
+- Five largest processes (resident KiB, pid, command):
+
+```
+1969696 45102 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c f
+1170160 33297 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-poo
+987584 96243 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+814672 45059 rustc --crate-name semio_hub_demonstrator --edition=2021 🧩️compositions/🎪️demonstrator/📦️packages/🦀️rust/🦀️.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -Z embed-me
+303840  8749 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/📜️script.ts component --manifest 🌎️hub/🧩️compositions/🎪️demons
+```
+- Last 30 lines of the log of stage `workspace` (`workspace.log`, written 06:32:32Z):
+
+```
+Reading the project graph slice (4265 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3723 of 1800.
+Reading the project graph slice (4267 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3723 of 1800.
+Reading the project graph slice (4269 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3728 of 1800.
+Reading the project graph slice (4271 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3728 of 1800.
+Reading the project graph slice (4273 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3728 of 1800.
+Reading the project graph slice (4275 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3733 of 1800.
+Reading the project graph slice (4277 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3733 of 1800.
+Reading the project graph slice (4279 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3738 of 1800.
+Reading the project graph slice (4281 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3738 of 1800.
+Reading the project graph slice (4283 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3738 of 1800.
+[repo] still working after 4285 s; last phase started: door.script
+Reading the project graph slice (4285 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3743 of 1800.
+Reading the project graph slice (4287 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3743 of 1800.
+Reading the project graph slice (4289 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3748 of 1800.
+Reading the project graph slice (4291 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3748 of 1800.
+Reading the project graph slice (4293 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3748 of 1800.
+Reading the project graph slice (4295 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3753 of 1800.
+Reading the project graph slice (4297 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3753 of 1800.
+Reading the project graph slice (4299 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3758 of 1800.
+Reading the project graph slice (4301 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3758 of 1800.
+Reading the project graph slice (4303 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3758 of 1800.
+Reading the project graph slice (4305 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3763 of 1800.
+Reading the project graph slice (4307 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3763 of 1800.
+Reading the project graph slice (4309 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3768 of 1800.
+Reading the project graph slice (4311 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3768 of 1800.
+Reading the project graph slice (4313 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3768 of 1800.
+[repo] still working after 4315 s; last phase started: door.script
+Reading the project graph slice (4315 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3773 of 1800.
+Reading the project graph slice (4317 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3773 of 1800.
+Reading the project graph slice (4319 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 3778 of 1800.
+```
+
+## Observation 65 (2026-11-18T06:42:33Z)
+
+- `ready.json` (store, written 06:42:30Z): `state=running stage=workspace (5 of 5) try=68 exit=1 ready=False refusal=None reason={'code': 'adopted', 'en': 'Adopted stage workspace, which was already running; not restarted.', 'de': 'Stufe workspace übernommen, sie lief schon; nicht neu gestartet.'} peakMegabytes=9392 pid=11433`
+- `memory_pressure | tail -1`: `System-wide memory free percentage: 37%`; pressure level 2
+- Permission dialog: `UserNotificationCenter` process is not running, so no system dialog is waiting (the screen itself was not looked at)
+- Five largest processes (resident KiB, pid, command):
+
+```
+1129616 33297 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-poo
+1058992 53637 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c f
+634912 47063 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-poo
+422320 96243 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+305200 46905 rustc --crate-name semio_hub_demonstrator_component --edition=2021 🧩️compositions/🎪️demonstrator/🧩️component/📦️packages/🦀️rust/../../🦀️.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type cdylib --emit=dep
+```
+- Last 30 lines of the log of stage `workspace` (`workspace.log`, written 06:42:31Z):
+
+```
+Reading the project graph slice (4864 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4320 of 1800.
+Reading the project graph slice (4866 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4320 of 1800.
+Reading the project graph slice (4868 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4325 of 1800.
+Reading the project graph slice (4870 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4325 of 1800.
+Reading the project graph slice (4872 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4330 of 1800.
+Reading the project graph slice (4874 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4330 of 1800.
+Reading the project graph slice (4876 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4330 of 1800.
+Reading the project graph slice (4878 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4335 of 1800.
+Reading the project graph slice (4880 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4335 of 1800.
+Reading the project graph slice (4882 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4340 of 1800.
+Reading the project graph slice (4884 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4340 of 1800.
+[repo] still working after 4885 s; last phase started: door.script
+Reading the project graph slice (4886 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4340 of 1800.
+Reading the project graph slice (4888 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4345 of 1800.
+Reading the project graph slice (4890 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4345 of 1800.
+Reading the project graph slice (4892 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4350 of 1800.
+Reading the project graph slice (4894 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4350 of 1800.
+Reading the project graph slice (4896 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4350 of 1800.
+Reading the project graph slice (4898 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4355 of 1800.
+Reading the project graph slice (4900 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4355 of 1800.
+Reading the project graph slice (4902 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4360 of 1800.
+Reading the project graph slice (4904 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4360 of 1800.
+Reading the project graph slice (4906 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4360 of 1800.
+Reading the project graph slice (4908 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4365 of 1800.
+Reading the project graph slice (4910 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4365 of 1800.
+Reading the project graph slice (4912 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4371 of 1800.
+Reading the project graph slice (4914 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4371 of 1800.
+[repo] still working after 4915 s; last phase started: door.script
+Reading the project graph slice (4916 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4371 of 1800.
+Reading the project graph slice (4918 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4376 of 1800.
+```
+
+## Observation 66 (2026-11-18T06:52:33Z)
+
+- `ready.json` (store, written 06:52:31Z): `state=running stage=workspace (5 of 5) try=68 exit=1 ready=False refusal=None reason={'code': 'adopted', 'en': 'Adopted stage workspace, which was already running; not restarted.', 'de': 'Stufe workspace übernommen, sie lief schon; nicht neu gestartet.'} peakMegabytes=9392 pid=11433`
+- `memory_pressure | tail -1`: `System-wide memory free percentage: 44%`; pressure level 2
+- Permission dialog: `UserNotificationCenter` process is not running, so no system dialog is waiting (the screen itself was not looked at)
+- Five largest processes (resident KiB, pid, command):
+
+```
+1163616 33297 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-poo
+991712 47063 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-poo
+892416 46905 rustc --crate-name semio_hub_demonstrator_component --edition=2021 🧩️compositions/🎪️demonstrator/🧩️component/📦️packages/🦀️rust/../../🦀️.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type cdylib --emit=dep
+596480 96243 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+490672 61355 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-
+```
+- Last 30 lines of the log of stage `workspace` (`workspace.log`, written 06:52:32Z):
+
+```
+Reading the project graph slice (5465 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4922 of 1800.
+Reading the project graph slice (5467 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4922 of 1800.
+Reading the project graph slice (5469 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4927 of 1800.
+Reading the project graph slice (5471 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4927 of 1800.
+Reading the project graph slice (5473 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4927 of 1800.
+Reading the project graph slice (5475 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4932 of 1800.
+Reading the project graph slice (5477 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4932 of 1800.
+Reading the project graph slice (5479 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4937 of 1800.
+Reading the project graph slice (5481 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4937 of 1800.
+Reading the project graph slice (5484 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4937 of 1800.
+[repo] still working after 5485 s; last phase started: door.script
+Reading the project graph slice (5486 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4942 of 1800.
+Reading the project graph slice (5488 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4942 of 1800.
+Reading the project graph slice (5490 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4947 of 1800.
+Reading the project graph slice (5492 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4947 of 1800.
+Reading the project graph slice (5494 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4952 of 1800.
+Reading the project graph slice (5496 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4952 of 1800.
+Reading the project graph slice (5498 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4952 of 1800.
+Reading the project graph slice (5500 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4958 of 1800.
+Reading the project graph slice (5502 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4958 of 1800.
+Reading the project graph slice (5504 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4963 of 1800.
+Reading the project graph slice (5506 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4963 of 1800.
+Reading the project graph slice (5508 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4963 of 1800.
+Reading the project graph slice (5510 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4968 of 1800.
+Reading the project graph slice (5512 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4968 of 1800.
+Reading the project graph slice (5514 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4973 of 1800.
+[repo] still working after 5515 s; last phase started: door.script
+Reading the project graph slice (5516 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4973 of 1800.
+Reading the project graph slice (5518 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4973 of 1800.
+Reading the project graph slice (5520 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 4978 of 1800.
+```
+
+## Observation 67 (2026-11-18T07:02:33Z)
+
+- `ready.json` (store, written 07:02:29Z): `state=running stage=workspace (5 of 5) try=68 exit=1 ready=False refusal=None reason={'code': 'adopted', 'en': 'Adopted stage workspace, which was already running; not restarted.', 'de': 'Stufe workspace übernommen, sie lief schon; nicht neu gestartet.'} peakMegabytes=9392 pid=71510`
+- `memory_pressure | tail -1`: `System-wide memory free percentage: 43%`; pressure level 2
+- Permission dialog: `UserNotificationCenter` process is not running, so no system dialog is waiting (the screen itself was not looked at)
+- Five largest processes (resident KiB, pid, command):
+
+```
+1137424 33297 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-poo
+736576 96243 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+650832 46905 rustc --crate-name semio_hub_demonstrator_component --edition=2021 🧩️compositions/🎪️demonstrator/🧩️component/📦️packages/🦀️rust/../../🦀️.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type cdylib --emit=dep
+245424 61384 /Applications/Claude.app/Contents/Frameworks/Claude Helper.app/Contents/MacOS/Claude Helper --type=utility --utility-sub-type=node.mojom.NodeService --lang=en-US --service-sandbox-type=none --user-data-dir=/Users/ueli/Library/Application Support/C
+225856 71509 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🟦️.ts pool
+```
+- Last 30 lines of the log of stage `workspace` (`workspace.log`, written 07:02:33Z):
+
+```
+Reading the project graph slice (6066 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 5521 of 1800.
+Reading the project graph slice (6068 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 5526 of 1800.
+Reading the project graph slice (6070 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 5526 of 1800.
+Reading the project graph slice (6072 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 5531 of 1800.
+Reading the project graph slice (6074 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 5531 of 1800.
+Reading the project graph slice (6076 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 5531 of 1800.
+Reading the project graph slice (6078 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 5536 of 1800.
+Reading the project graph slice (6080 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 5536 of 1800.
+Reading the project graph slice (6082 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 5541 of 1800.
+Reading the project graph slice (6084 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 5541 of 1800.
+[repo] still working after 6085 s; last phase started: door.script
+Reading the project graph slice (6086 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 5541 of 1800.
+Reading the project graph slice (6088 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 5546 of 1800.
+Reading the project graph slice (6090 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 5546 of 1800.
+Reading the project graph slice (6092 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 5551 of 1800.
+Reading the project graph slice (6094 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 5551 of 1800.
+Reading the project graph slice (6096 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 5551 of 1800.
+Reading the project graph slice (6098 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 5556 of 1800.
+Reading the project graph slice (6100 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 5556 of 1800.
+Reading the project graph slice (6102 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 5561 of 1800.
+Reading the project graph slice (6104 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 5561 of 1800.
+Reading the project graph slice (6106 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 5561 of 1800.
+Reading the project graph slice (6108 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 5566 of 1800.
+Reading the project graph slice (6110 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 5566 of 1800.
+Reading the project graph slice (6112 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 5571 of 1800.
+Reading the project graph slice (6114 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 5571 of 1800.
+[repo] still working after 6115 s; last phase started: door.script
+Reading the project graph slice (6116 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 5571 of 1800.
+Reading the project graph slice (6118 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 5576 of 1800.
+Reading the project graph slice (6120 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 5576 of 1800.
+```
+
+## Observation 68 (2026-11-18T07:12:33Z)
+
+- `ready.json` (store, written 07:12:31Z): `state=running stage=workspace (5 of 5) try=68 exit=1 ready=False refusal=None reason={'code': 'adopted', 'en': 'Adopted stage workspace, which was already running; not restarted.', 'de': 'Stufe workspace übernommen, sie lief schon; nicht neu gestartet.'} peakMegabytes=9392 pid=71510`
+- `memory_pressure | tail -1`: `System-wide memory free percentage: 38%`; pressure level 2
+- Permission dialog: `UserNotificationCenter` process is not running, so no system dialog is waiting (the screen itself was not looked at)
+- Five largest processes (resident KiB, pid, command):
+
+```
+1161760 33297 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-poo
+683232 96243 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+359808 46905 rustc --crate-name semio_hub_demonstrator_component --edition=2021 🧩️compositions/🎪️demonstrator/🧩️component/📦️packages/🦀️rust/../../🦀️.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type cdylib --emit=dep
+263792 61384 /Applications/Claude.app/Contents/Frameworks/Claude Helper.app/Contents/MacOS/Claude Helper --type=utility --utility-sub-type=node.mojom.NodeService --lang=en-US --service-sandbox-type=none --user-data-dir=/Users/ueli/Library/Application Support/C
+245888 61355 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-
+```
+- Last 30 lines of the log of stage `workspace` (`workspace.log`, written 07:12:31Z):
+
+```
+Reading the project graph slice (6665 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6123 of 1800.
+Reading the project graph slice (6667 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6123 of 1800.
+Reading the project graph slice (6669 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6123 of 1800.
+Reading the project graph slice (6671 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6128 of 1800.
+Reading the project graph slice (6673 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6128 of 1800.
+Reading the project graph slice (6675 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6133 of 1800.
+Reading the project graph slice (6677 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6133 of 1800.
+Reading the project graph slice (6679 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6133 of 1800.
+Reading the project graph slice (6681 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6138 of 1800.
+Reading the project graph slice (6683 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6138 of 1800.
+[repo] still working after 6685 s; last phase started: door.script
+Reading the project graph slice (6685 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6144 of 1800.
+Reading the project graph slice (6687 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6144 of 1800.
+Reading the project graph slice (6689 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6144 of 1800.
+Reading the project graph slice (6691 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6149 of 1800.
+Reading the project graph slice (6693 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6149 of 1800.
+Reading the project graph slice (6695 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6154 of 1800.
+Reading the project graph slice (6697 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6154 of 1800.
+Reading the project graph slice (6699 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6154 of 1800.
+Reading the project graph slice (6701 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6159 of 1800.
+Reading the project graph slice (6703 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6159 of 1800.
+Reading the project graph slice (6705 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6164 of 1800.
+Reading the project graph slice (6707 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6164 of 1800.
+Reading the project graph slice (6709 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6164 of 1800.
+Reading the project graph slice (6711 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6169 of 1800.
+Reading the project graph slice (6713 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6169 of 1800.
+[repo] still working after 6715 s; last phase started: door.script
+Reading the project graph slice (6715 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6174 of 1800.
+Reading the project graph slice (6717 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6174 of 1800.
+Reading the project graph slice (6719 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6174 of 1800.
+```
+
+## Observation 69 (2026-11-18T07:22:33Z)
+
+- `ready.json` (store, written 07:22:29Z): `state=running stage=workspace (5 of 5) try=68 exit=1 ready=False refusal=None reason={'code': 'adopted', 'en': 'Adopted stage workspace, which was already running; not restarted.', 'de': 'Stufe workspace übernommen, sie lief schon; nicht neu gestartet.'} peakMegabytes=9392 pid=71510`
+- `memory_pressure | tail -1`: `System-wide memory free percentage: 43%`; pressure level 2
+- Permission dialog: `UserNotificationCenter` process is not running, so no system dialog is waiting (the screen itself was not looked at)
+- Five largest processes (resident KiB, pid, command):
+
+```
+1177408 33297 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-poo
+846176 46905 rustc --crate-name semio_hub_demonstrator_component --edition=2021 🧩️compositions/🎪️demonstrator/🧩️component/📦️packages/🦀️rust/../../🦀️.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type cdylib --emit=dep
+629680 96243 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+256384 61384 /Applications/Claude.app/Contents/Frameworks/Claude Helper.app/Contents/MacOS/Claude Helper --type=utility --utility-sub-type=node.mojom.NodeService --lang=en-US --service-sandbox-type=none --user-data-dir=/Users/ueli/Library/Application Support/C
+244352  8749 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/📜️script.ts component --manifest 🌎️hub/🧩️compositions/🎪️demons
+```
+- Last 30 lines of the log of stage `workspace` (`workspace.log`, written 07:22:33Z):
+
+```
+Reading the project graph slice (7266 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6721 of 1800.
+Reading the project graph slice (7268 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6726 of 1800.
+Reading the project graph slice (7270 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6726 of 1800.
+Reading the project graph slice (7272 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6731 of 1800.
+Reading the project graph slice (7274 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6731 of 1800.
+Reading the project graph slice (7276 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6731 of 1800.
+Reading the project graph slice (7278 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6736 of 1800.
+Reading the project graph slice (7280 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6736 of 1800.
+Reading the project graph slice (7282 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6741 of 1800.
+Reading the project graph slice (7284 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6741 of 1800.
+[repo] still working after 7285 s; last phase started: door.script
+Reading the project graph slice (7286 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6741 of 1800.
+Reading the project graph slice (7288 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6746 of 1800.
+Reading the project graph slice (7290 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6746 of 1800.
+Reading the project graph slice (7292 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6751 of 1800.
+Reading the project graph slice (7294 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6751 of 1800.
+Reading the project graph slice (7296 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6751 of 1800.
+Reading the project graph slice (7298 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6756 of 1800.
+Reading the project graph slice (7300 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6756 of 1800.
+Reading the project graph slice (7302 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6756 of 1800.
+Reading the project graph slice (7304 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6761 of 1800.
+Reading the project graph slice (7306 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6761 of 1800.
+Reading the project graph slice (7308 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6766 of 1800.
+Reading the project graph slice (7310 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6766 of 1800.
+Reading the project graph slice (7312 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6766 of 1800.
+Reading the project graph slice (7314 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6771 of 1800.
+[repo] still working after 7315 s; last phase started: door.script
+Reading the project graph slice (7316 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6771 of 1800.
+Reading the project graph slice (7318 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6776 of 1800.
+Reading the project graph slice (7320 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 6776 of 1800.
+```
+
+## Observation 70 (2026-11-18T07:32:34Z)
+
+- `ready.json` (store, written 07:32:30Z): `state=running stage=workspace (5 of 5) try=68 exit=1 ready=False refusal=None reason={'code': 'adopted', 'en': 'Adopted stage workspace, which was already running; not restarted.', 'de': 'Stufe workspace übernommen, sie lief schon; nicht neu gestartet.'} peakMegabytes=9392 pid=96651`
+- `memory_pressure | tail -1`: `System-wide memory free percentage: 55%`; pressure level 1
+- Permission dialog: `UserNotificationCenter` process is not running, so no system dialog is waiting (the screen itself was not looked at)
+- Five largest processes (resident KiB, pid, command):
+
+```
+1747840 89880 /Users/ueli/Documents/semio/.cache/b/t/m/binaryen/130/darwin-arm64-79d3ab9f417d9e215f15f598f523d001a7d9ac1e59367e5c869fbdabd1cba72e/bin/wasm-opt /Users/ueli/Documents/semio/.cache/b/r/m/components/runs/wtU3d0O/w/semio-hub-demonstrator-component/t
+1176288 33297 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-poo
+975488 96243 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+956112 96537 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-poo
+446896 97054 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c fi
+```
+- Last 30 lines of the log of stage `workspace` (`workspace.log`, written 07:32:32Z):
+
+```
+Reading the project graph slice (7866 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7321 of 1800.
+Reading the project graph slice (7868 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7326 of 1800.
+Reading the project graph slice (7870 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7326 of 1800.
+Reading the project graph slice (7872 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7331 of 1800.
+Reading the project graph slice (7874 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7331 of 1800.
+Reading the project graph slice (7876 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7331 of 1800.
+Reading the project graph slice (7878 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7336 of 1800.
+Reading the project graph slice (7880 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7336 of 1800.
+Reading the project graph slice (7882 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7341 of 1800.
+Reading the project graph slice (7884 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7341 of 1800.
+[repo] still working after 7886 s; last phase started: door.script
+Reading the project graph slice (7886 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7341 of 1800.
+Reading the project graph slice (7888 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7346 of 1800.
+Reading the project graph slice (7890 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7346 of 1800.
+Reading the project graph slice (7892 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7351 of 1800.
+Reading the project graph slice (7894 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7351 of 1800.
+Reading the project graph slice (7896 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7351 of 1800.
+Reading the project graph slice (7898 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7356 of 1800.
+Reading the project graph slice (7900 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7356 of 1800.
+Reading the project graph slice (7902 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7356 of 1800.
+Reading the project graph slice (7904 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7361 of 1800.
+Reading the project graph slice (7906 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7361 of 1800.
+Reading the project graph slice (7908 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7366 of 1800.
+Reading the project graph slice (7910 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7366 of 1800.
+Reading the project graph slice (7912 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7366 of 1800.
+Reading the project graph slice (7914 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7371 of 1800.
+[repo] still working after 7916 s; last phase started: door.script
+Reading the project graph slice (7916 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7371 of 1800.
+Reading the project graph slice (7918 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7376 of 1800.
+Reading the project graph slice (7920 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7376 of 1800.
+```
+
+## Observation 71 (2026-11-18T07:42:34Z)
+
+- `ready.json` (store, written 07:42:32Z): `state=running stage=workspace (5 of 5) try=68 exit=1 ready=False refusal=None reason={'code': 'adopted', 'en': 'Adopted stage workspace, which was already running; not restarted.', 'de': 'Stufe workspace übernommen, sie lief schon; nicht neu gestartet.'} peakMegabytes=9392 pid=96651`
+- `memory_pressure | tail -1`: `System-wide memory free percentage: 62%`; pressure level 1
+- Permission dialog: `UserNotificationCenter` process is not running, so no system dialog is waiting (the screen itself was not looked at)
+- Five largest processes (resident KiB, pid, command):
+
+```
+2821424 10520 rustc --crate-name semio_s_artifact_energy_model_snapshot --edition=2021 /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust/../../🦀️.rs --error-format=json 
+1143728 33297 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-poo
+853552 11679 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c fi
+800352  9418 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-poo
+377360 96243 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+```
+- Last 30 lines of the log of stage `workspace` (`workspace.log`, written 07:42:32Z):
+
+```
+Reading the project graph slice (8466 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7923 of 1800.
+Reading the project graph slice (8468 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7923 of 1800.
+Reading the project graph slice (8470 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7928 of 1800.
+Reading the project graph slice (8472 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7928 of 1800.
+Reading the project graph slice (8474 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7928 of 1800.
+Reading the project graph slice (8476 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7933 of 1800.
+Reading the project graph slice (8478 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7933 of 1800.
+Reading the project graph slice (8480 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7938 of 1800.
+Reading the project graph slice (8482 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7938 of 1800.
+Reading the project graph slice (8484 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7938 of 1800.
+[repo] still working after 8486 s; last phase started: door.script
+Reading the project graph slice (8486 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7943 of 1800.
+Reading the project graph slice (8488 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7943 of 1800.
+Reading the project graph slice (8490 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7948 of 1800.
+Reading the project graph slice (8492 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7948 of 1800.
+Reading the project graph slice (8494 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7948 of 1800.
+Reading the project graph slice (8496 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7953 of 1800.
+Reading the project graph slice (8498 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7953 of 1800.
+Reading the project graph slice (8500 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7958 of 1800.
+Reading the project graph slice (8502 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7958 of 1800.
+Reading the project graph slice (8504 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7958 of 1800.
+Reading the project graph slice (8506 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7963 of 1800.
+Reading the project graph slice (8508 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7963 of 1800.
+Reading the project graph slice (8510 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7968 of 1800.
+Reading the project graph slice (8512 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7968 of 1800.
+Reading the project graph slice (8514 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7968 of 1800.
+[repo] still working after 8516 s; last phase started: door.script
+Reading the project graph slice (8516 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7973 of 1800.
+Reading the project graph slice (8518 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7973 of 1800.
+Reading the project graph slice (8520 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 7978 of 1800.
+```
+
+## Note (2026-11-18T07:43:08Z): attempt 69 has waited over two hours for one project of the fleet
+
+`workspace.log` at 07:42Z: `Reading the project graph slice (8540 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) … 7998 of 1800`. The same project has been named since 04:11Z (`1571 of 1800` then). This machine's own part of the read was done at 02:38Z (`taken 589 of 590`). `ready.json`: `running`, attempts 68, no exit; the run neither ends nor retries. Replica healthy (`store: ok`), 71.9 GiB free. Last `graph:` lines of the service log that name the project:
+
+```
+
+```
+
+## Observation 72 (2026-11-18T07:52:34Z)
+
+- `ready.json` (store, written 07:52:29Z): `state=running stage=workspace (5 of 5) try=68 exit=1 ready=False refusal=None reason={'code': 'adopted', 'en': 'Adopted stage workspace, which was already running; not restarted.', 'de': 'Stufe workspace übernommen, sie lief schon; nicht neu gestartet.'} peakMegabytes=9392 pid=96651`
+- `memory_pressure | tail -1`: `System-wide memory free percentage: 43%`; pressure level 2
+- Permission dialog: `UserNotificationCenter` process is not running, so no system dialog is waiting (the screen itself was not looked at)
+- Five largest processes (resident KiB, pid, command):
+
+```
+1637792 21131 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c f
+1141056 33297 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-poo
+719744  9418 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-poo
+632320 17992 rustc --crate-name semio_s_artifact_energy_model_mutations --edition=2021 /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust/../../🦀️.rs --error-format=json
+441824 96243 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+```
+- Last 30 lines of the log of stage `workspace` (`workspace.log`, written 07:52:34Z):
+
+```
+Reading the project graph slice (9067 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 8523 of 1800.
+Reading the project graph slice (9069 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 8528 of 1800.
+Reading the project graph slice (9071 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 8528 of 1800.
+Reading the project graph slice (9073 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 8528 of 1800.
+Reading the project graph slice (9075 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 8533 of 1800.
+Reading the project graph slice (9078 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 8533 of 1800.
+Reading the project graph slice (9080 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 8533 of 1800.
+Reading the project graph slice (9082 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 8538 of 1800.
+Reading the project graph slice (9084 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 8538 of 1800.
+[repo] still working after 9086 s; last phase started: door.script
+Reading the project graph slice (9086 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 8543 of 1800.
+Reading the project graph slice (9088 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 8543 of 1800.
+Reading the project graph slice (9090 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 8543 of 1800.
+Reading the project graph slice (9092 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 8549 of 1800.
+Reading the project graph slice (9094 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 8549 of 1800.
+Reading the project graph slice (9096 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 8554 of 1800.
+Reading the project graph slice (9098 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 8554 of 1800.
+Reading the project graph slice (9100 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 8554 of 1800.
+Reading the project graph slice (9102 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 8559 of 1800.
+Reading the project graph slice (9104 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 8559 of 1800.
+Reading the project graph slice (9106 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 8564 of 1800.
+Reading the project graph slice (9108 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 8564 of 1800.
+Reading the project graph slice (9110 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 8564 of 1800.
+Reading the project graph slice (9112 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 8569 of 1800.
+Reading the project graph slice (9114 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 8569 of 1800.
+[repo] still working after 9116 s; last phase started: door.script
+Reading the project graph slice (9116 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 8574 of 1800.
+Reading the project graph slice (9118 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 8574 of 1800.
+Reading the project graph slice (9120 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 8574 of 1800.
+Reading the project graph slice (9122 s): waiting for the fleet to infer @semio-tech/s-dev-composition (beyond the expected 1800 s) / Warte darauf, dass die Flotte @semio-tech/s-dev-composition ableitet (über den erwarteten 1800 s) 8579 of 1800.
+```
+
+## Continued In `round-31.part-3.md` (2026-11-18T08:03:13Z)

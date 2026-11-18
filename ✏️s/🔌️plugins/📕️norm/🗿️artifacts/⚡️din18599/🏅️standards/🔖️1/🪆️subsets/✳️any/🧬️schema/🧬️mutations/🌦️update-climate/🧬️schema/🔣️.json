@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/update-climate/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/mutation/update-climate/schema.json",
   "title": "UpdateClimate",
   "type": "object",
   "additionalProperties": false,
@@ -13,7 +13,7 @@
       "const": "updateClimate"
     },
     "newClimate": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/MonthlyClimate",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/MonthlyClimate",
       "x-semio-ui": {
         "role": "value",
         "label": {

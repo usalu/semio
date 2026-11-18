@@ -14,7 +14,7 @@ test("the runner resolves the deployed descriptor and all declared suites", () =
   expect(actual.suites).toEqual(plan.suites.map(path => join(plugin, path)));
   expect(actual.suites.every(existsSync)).toBe(true);
   const descriptors = actual.descriptors.map(path => JSON.parse(readFileSync(path, "utf8")));
-  expect(descriptors).toHaveLength(3);
+  expect(descriptors).toHaveLength(5);
   const editors = descriptors.flatMap(descriptor => descriptor.manifest.apps).filter((app: { role: string }) => app.role === "editor");
   expect(editors).toHaveLength(plan.expectedEditors);
   const cohort = JSON.parse(readFileSync(join(plugin, "📇️registry/🧬️contract/🧪️tests/🧫️fixtures/🧫️retained-command-dispositions/🔣️.json"), "utf8"));

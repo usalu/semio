@@ -141,7 +141,7 @@ fn sqlite_snapshot_en1991_large_owned_text_cancels_before_projection_reconstruct
 async fn sqlite_snapshot_en1991_actual_erased_codec_and_declaration_preserve_all_owned_words() {
     use {semio_framework_artifact_reference::ArtifactDialect,store::io::IoPayload,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot};
     semio_plugin::PluginBuilder::<_, semio_plugin::app::NoPluginApp>::new("norm").label("EN1991 owned SQLite").version("0.0.1").package_id("semio:norm").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
-    let codec = store::os_store::codec_registry::document_codec(semio_s_artifact_norm_en1991_model::EN1991_DOCUMENT_SCHEMA).await.unwrap().unwrap(); let provider = codec.snapshot_sqlite.as_ref().unwrap(); let dialect = ArtifactDialect { artifact_kind: "s.norm.en1991".into(), standard: "1".into(), subset: "*".into() };
+    let codec = store::os_store::codec_registry::document_codec(semio_s_artifact_norm_en1991_model::EN1991_DOCUMENT_SCHEMA).await.unwrap().unwrap(); let provider = codec.snapshot_sqlite.as_ref().unwrap(); let dialect = ArtifactDialect { artifact_kind: "s.norm-eurocode.en1991".into(), standard: "1".into(), subset: "*".into() };
     let corpus: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔢️binary64.json")).unwrap();
     for word in corpus["ieee754Binary64Bits"].as_array().unwrap() {
         let mut snapshot = fixture(); set_every_word(&mut snapshot, f64::from_bits(word.as_str().unwrap().parse().unwrap())); let expected = database(&snapshot);

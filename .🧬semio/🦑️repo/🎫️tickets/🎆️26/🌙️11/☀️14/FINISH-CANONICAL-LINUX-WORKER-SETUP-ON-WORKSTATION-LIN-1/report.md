@@ -98,3 +98,10 @@ From `/home/deck/semio`, 2026-11-14 09:27 to 09:35 CET.
 - `verify --json`: 275399 checked, refused 0 (the 87 links are gone), drift 52, all `extra-local` loose objects under `.git/objects`. Every origin shows the same 52 queued in `fleet`, so they are in transit in the fleet, not a fault of this replica.
 - `fleet`: g1-m04 runs the same code `1c863927612f` as the Macs and reports the view 347/12/500 against 347/14/500 (the case variant above). All origins are `lagging (not settled … still moving)` because the fleet is publishing; g1-m05 and g1-m07 are `stale`. At that moment the worktree code did not start for anyone (`🔁️replica/🥾️bootstrap/🧺️packs/🧬️schema/🔣️.json: schema without definitions`) and the sealed code ran instead.
 - Paths: `/srv/semio` does not exist; `/home/deck/semio` is the only semio repository of the account.
+
+## Status on 2026-11-16, 22:50 UTC
+
+- Rounds 2 to 31 of the coordinator ticket `☀️14/WORKERS-READY-WITH-LOW-RESOURCES` are reported in its folder `workers/g1-m04/` (`round-N.md`). Since round 31 the machine drives its own setup; stages `native`, `repo-mcp` and `dependencies` passed, `tools` (4 of 5) was running in try 38, `workspace` was not reached. `.cache/f/native-bootstrap.done` is absent.
+- 14:10 to 18:27 UTC: out of the fleet because the home volume had no free file slots (leftover owner-pool staging folders); cleared, see `round-31.md`, section "Standstill".
+- 22:07 UTC: a SteamOS update switched the system slot at reboot. The store line in `/etc/fstab`, the mount point, the sysctl file, the compact timer unit and the passwordless sudo rule are gone; the store is not mounted and the machine is out of the fleet. See `round-31.md`, section "Out of the Fleet Since 22:07 UTC".
+- Open, needs root (the owner): activate `/home/semio-swap`, then run `🥾️provision/🐚️.sh g1 g1-m04 --user deck` and stop it with Ctrl+C when it prints `step 9: native bootstrap` (round 31: the machine runs that stage itself).

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/insert-ring-stiffener/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1999/mutation/insert-ring-stiffener/schema.json",
   "title": "InsertRingStiffener",
   "type": "object",
   "additionalProperties": false,
@@ -35,7 +35,7 @@
       }
     },
     "ringStiffener": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/RingStiffener",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1999/snapshot.json#/$defs/RingStiffener",
       "x-semio-ui": {
         "role": "value",
         "label": {

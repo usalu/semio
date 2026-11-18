@@ -279,6 +279,7 @@ pub struct PresenceEntry {
 /// last sent that scope, or — flagged `snapshot` — the beginning of its roster, sent when the scope
 /// becomes watched and whenever the watcher fell too far behind, replacing what the client held for
 /// that scope. `watched` frames are bounded the same way, over all watched scopes per interval.
+/// `heartbeat` (server → client, no payload) tells an idle client the socket still lives.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
 pub enum PresenceFrame {
@@ -286,6 +287,10 @@ pub enum PresenceFrame {
     State { state: OpaqueJson },
     Batch { entries: Vec<PresenceEntry>, left: Vec<String> },
     Refused { reason: String },
+    /// 💓️ Server → client, no payload, every [`PresenceSettings::heartbeat`] on an open socket: the
+    /// liveness a browser cannot read off protocol-level pings. A client that received no frame for
+    /// 2.5 heartbeats closes the socket and joins again.
+    Heartbeat,
     Watch {
         scopes: Vec<Scope>,
         #[serde(rename = "intervalMs")]

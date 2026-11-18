@@ -4,7 +4,7 @@
 
 import type { IntroductionDefinition, ShellBrand, ShellLocale, ShellTerminology } from "@semio-tech/framework";
 import type { IconName } from "../../🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icons/🟦️.ts";
-import { PLAY_GROUPS, PLAY_HOST, PLAY_RUNTIME_PANES } from "./🔨️modules/🧩️runtime/🟦️.ts";
+import { PLAY_GROUPS, PLAY_HOST, PLAY_RUNTIME_PANES } from "./🔨️modules/🧩️runtime/📇️catalog/🟦️.ts";
 export { PLAY_HOST };
 
 //#region 🏷️PlayShared

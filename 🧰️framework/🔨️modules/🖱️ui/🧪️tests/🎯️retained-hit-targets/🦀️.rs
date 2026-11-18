@@ -25,7 +25,8 @@ use semio_ui_declaration::layout::ActionDescriptor;
 use semio_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode, UiNode, UiPresence, UiStackNode, UiTextNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
 use semio_ui_draw_contract::{DrawList, IconAtlas};
 use semio_ui_wgpu_engine::Ui;
-use semio_ui_wgpu_engine_surface::{UiFrameStep, UiLayoutStep};
+use semio_ui_wgpu_engine::testkit::UiFixture;
+use semio_ui_wgpu_engine_surface::UiFrameStep;
 use semio_ui_theme::geometry::Rect;
 use semio_ui_wgpu_hosting::scene_slots::{SceneHost, ScenePaintCursor, ScenePaintStep, SceneSlot};
 use semio_ui_text::FontAtlas;
@@ -210,26 +211,9 @@ fn layout_pool() -> semio_framework_async::WorkerPool {
 
 /// 🧵️ Drives the real layout queue and then the real retained paint of one window into a caller-owned
 /// draw list — the production entry, whose `Hits` phase is what this law is about.
-fn drive(ui: &mut Ui, window_id: &str, body: Rect, atlas: &mut FontAtlas) {
+fn drive(ui: &mut UiFixture, window_id: &str, body: Rect, atlas: &mut FontAtlas) {
     ui.set_viewport(window_id, body.w, body.h);
-    let operation = semio_framework_job::allocate_operation_id();
-    let cancel = semio_framework_job::CancelToken::root_now();
-    let pool = layout_pool();
-    let mut preview_sequence = 0;
-    'settle: for _ in 0..64 {
-        for _ in 0..16_384 {
-            let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
-            let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), || Some(0), &mut preview_sequence,&mut actual_retained_progress);
-            if matches!(ui.step_layouts(&pool, atlas, &mut cx), UiLayoutStep::Idle) {
-                break;
-            }
-        }
-        if !ui.layout_is_dirty(window_id) {
-            break 'settle;
-        }
-        ui.request_layout(window_id);
-    }
-    assert!(!ui.layout_is_dirty(window_id), "{window_id}: layout never settled");
+    assert!(ui.settle_layout(window_id, &layout_pool(), atlas), "{window_id}: layout never settled");
     let mut draw = DrawList::default();
     let mut host = LawSceneHost;
     for _ in 0..131_072 {
@@ -254,10 +238,10 @@ fn load_registry(ui: &Ui, window_id: &str, body: Rect) -> InputState<ActionDescr
     input
 }
 
-fn mount(case: &Value) -> (Ui, InputState<ActionDescriptor>, String, Rect) {
+fn mount(case: &Value) -> (UiFixture, InputState<ActionDescriptor>, String, Rect) {
     let window_id = case["windowId"].as_str().expect("window id").to_string();
     let body = body_rect(case);
-    let mut ui = Ui::new(semio_ui_locale::Locale::En);
+    let mut ui = UiFixture::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree(&window_id, &ui_node(&case["tree"]));
     drive(&mut ui, &window_id, body, &mut atlas);

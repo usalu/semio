@@ -3,11 +3,11 @@ import {afterAll,expect,test} from "bun:test";
 import {spawn,spawnSync} from "node:child_process";
 import {mkdirSync,mkdtempSync,rmSync,utimesSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
-import {join} from "node:path";
+import {join,resolve} from "node:path";
 import {fileURLToPath} from "node:url";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🔣️.json" with {type:"json"};
-import {READY_TREE_POLICY_V1 as P,readyDeadlineV1,readyScaledTreePolicyV1,readyStallRestartV1,readyForgetTreeV1,readyIdentityV1,readyKillPlanV1,readyKillTreeV1,readyLeaseVerdictV1,readyParseUnixTableV1,readyParseWindowsTableV1,readyProcessStartSyncV1,readyElapsedMillisecondsV1,readyProgressKeyV1,readyNormaliseLineV1,readyStallTrackerV1,readyStalledV1,readyReadTableV1,readyReadTreeV1,readyTableCommandV1,readyHolderRestartV1,readyHolderWaitTrackerV1,readyCodeChangedSinceV1,readyTreeMembersV1,readyWriteTreeV1,readyCpuMillisecondsV1,readyLivenessV1,readyTreeCpuV1,type ReadyProcessV1} from "../🟦️.ts";
+import {READY_TREE_POLICY_V1 as P,readyDeadlineV1,readyScaledTreePolicyV1,readyStallRestartV1,readyForgetTreeV1,readyIdentityV1,readyKillPlanV1,readyKillTreeV1,readyLeaseVerdictV1,readyParseUnixTableV1,readyParseWindowsTableV1,readyProcessStartSyncV1,readyElapsedMillisecondsV1,readyProgressKeyV1,readyNormaliseLineV1,readyStallTrackerV1,readyStalledV1,readyReadTableV1,readyReadTreeV1,readyTableCommandV1,readyHolderRestartV1,readyHolderWaitTrackerV1,readySemanticsChangedV1, readySemanticsV1,readyTreeMembersV1,readyWriteTreeV1,readyCpuMillisecondsV1,readyLivenessV1,readyTreeCpuV1,type ReadyProcessV1} from "../🟦️.ts";
 
 /** 🌲️ Contract: a stage that is stopped is stopped with every process below it, including the orphans of exited parents, never a process that only has the same pid; a lease or an in-flight record names `{pid, startMs}` and a reused pid frees it; a stage that moves its counters is not stopped at the soft cap, one that stands still is. The fixture is language-agnostic; a Python oracle derives the same verdicts again. */
 const scratch:string[]=[],ajv=new Ajv({strict:false});
@@ -64,21 +64,31 @@ test("progress is a change in what is worked on, never elapsed time in any spell
  expect(tracker.observe([line("javascript-selected-payload:48022","3.1")])).toBe(true);expect(tracker.observe([line("javascript-selected-payload:48022","9.9")])).toBe(false);expect(tracker.observe([line("javascript-selected-payload:48054","9.9")])).toBe(true);
 });
 
-test("code changed since the stage started: the first modified source file below the code roots, not before, not in a skipped directory, not another extension",()=>{
- const root=mkdtempSync(join(tmpdir(),"semio-r83-code-"));scratch.push(root);
- const policy={...P,codeRoots:["code/a","code/b"]},started=Date.now()-60000,old=new Date(started-120000),fresh=new Date(started+30000);
- const put=(relative:string,when:Date)=>{const path=join(root,...relative.split("/"));mkdirSync(join(path,".."),{recursive:true});writeFileSync(path,"x");utimesSync(path,when,when);};
- put("code/a/one.ts",old);put("code/b/deep/two.json",old);put("code/a/node_modules/x/three.ts",fresh);put("code/a/notes.md",fresh);put("code/a/🧪️tests/four.ts",fresh);put("other/five.ts",fresh);
- expect(readyCodeChangedSinceV1(root,started,policy)).toBeNull();
- put("code/b/deep/two.json",fresh);expect(readyCodeChangedSinceV1(root,started,policy)).toBe(join("code","b","deep","two.json"));
- expect(readyCodeChangedSinceV1(root,Date.now()+60000,policy)).toBeNull();
- expect(readyCodeChangedSinceV1(join(root,"missing"),started,policy)).toBeNull();
+test("semantics changed since the stage started: only a declared source whose value moved, never another file, an unreadable source is no change",()=>{
+ const root=mkdtempSync(join(tmpdir(),"semio-r181-semantics-"));scratch.push(root);
+ const policy={...P,semanticsSources:[{file:"code/exchange.json",pointer:"/definitions/Policy/const/revision"},{file:"code/record.json",pointer:"/$defs/record/const/stamp"}]};
+ const put=(relative:string,text:string)=>{const path=join(root,...relative.split("/"));mkdirSync(join(path,".."),{recursive:true});writeFileSync(path,text);};
+ put("code/exchange.json",JSON.stringify({definitions:{Policy:{const:{revision:1,other:1}}}}));put("code/record.json",JSON.stringify({"$defs":{record:{const:{stamp:"semio.graph-record/2"}}}}));
+ const before=readySemanticsV1(root,policy);expect(Object.values(before)).toEqual(["1",JSON.stringify("semio.graph-record/2")]);
+ put("code/exchange.json",JSON.stringify({definitions:{Policy:{const:{revision:1,other:2,claimTtlMilliseconds:30000}}}}));put("code/other.ts","x");put("code/a/🧪️tests/b.ts","x");
+ expect(readySemanticsChangedV1(root,before,policy)).toBeNull();
+ put("code/record.json",JSON.stringify({"$defs":{record:{const:{stamp:"semio.graph-record/3"}}}}));expect(readySemanticsChangedV1(root,before,policy)).toBe("code/record.json");
+ put("code/exchange.json",JSON.stringify({definitions:{Policy:{const:{revision:2}}}}));expect(readySemanticsChangedV1(root,before,{...policy,semanticsSources:[policy.semanticsSources[0]!]})).toBe("code/exchange.json");
+ put("code/exchange.json","{ half a landing");expect(readySemanticsChangedV1(root,before,{...policy,semanticsSources:[policy.semanticsSources[0]!]})).toBeNull();
+ expect(readySemanticsChangedV1(join(root,"missing"),before,policy)).toBeNull();expect(readySemanticsChangedV1(root,readySemanticsV1(join(root,"missing"),policy),policy)).toBeNull();
+});
+
+test("the declared sources of the policy are the revision of the selected generation exchange and the stamp of the persisted record, both readable and in the checkout",()=>{
+ const checkout=resolve(import.meta.dir,"../../../../../../../../../../..");
+ expect(P.semanticsSources.length).toBe(2);
+ const values=readySemanticsV1(checkout);for(const source of P.semanticsSources){expect(values[source.file+"#"+source.pointer],source.file).not.toBeNull();}
+ expect(Object.values(values)[0]).toMatch(/^\d+$/u);expect(Object.values(values)[1]).toMatch(/^"semio\.graph-record\/\d+"$/u);
 });
 
 test("a stage that waited ten minutes on a named holder is restarted for changed code and for nothing else",()=>{
  expect(P.holderWaitRestartMilliseconds).toBe(600000);
  expect(readyHolderRestartV1(600000,true)).toBe(true);expect(readyHolderRestartV1(599999,true)).toBe(false);expect(readyHolderRestartV1(9e9,false)).toBe(false);
- for(const pattern of [...P.holderWaitPatterns,...P.codeSkipDirectories.map(()=>"x")])expect(()=>new RegExp(pattern,"u")).not.toThrow();
+ for(const pattern of P.holderWaitPatterns)expect(()=>new RegExp(pattern,"u")).not.toThrow();
 });
 
 test("identity: the same process, a gone one and a reused pid are told apart",()=>{
@@ -152,6 +162,6 @@ test("the pause before the restart of a silent stage doubles from 30 s up to 10 
 test("the windows without progress are lengthened for a slower machine and nothing else changes",()=>{
  const scaled=readyScaledTreePolicyV1(2.83);
  expect(scaled.stallMilliseconds).toBe(Math.ceil(P.stallMilliseconds*2.83));expect(scaled.stallStopMilliseconds).toBe(1698000);expect(scaled.holderWaitRestartMilliseconds).toBe(1698000);expect(scaled.staleStageMilliseconds).toBe(Math.ceil(P.staleStageMilliseconds*2.83));
- expect({...scaled,stallMilliseconds:0,stallStopMilliseconds:0,holderWaitRestartMilliseconds:0,staleStageMilliseconds:0}).toEqual({...P,stallMilliseconds:0,stallStopMilliseconds:0,holderWaitRestartMilliseconds:0,staleStageMilliseconds:0});
+ expect(scaled.speedFactor).toBe(2.83);expect({...scaled,speedFactor:1,stallMilliseconds:0,stallStopMilliseconds:0,holderWaitRestartMilliseconds:0,holderSilentMilliseconds:0,holderYieldMilliseconds:0,staleStageMilliseconds:0}).toEqual({...P,stallMilliseconds:0,stallStopMilliseconds:0,holderWaitRestartMilliseconds:0,holderSilentMilliseconds:0,holderYieldMilliseconds:0,staleStageMilliseconds:0});
  expect(readyScaledTreePolicyV1(1)).toEqual(P);expect(readyScaledTreePolicyV1(0.5)).toEqual(P);
 });

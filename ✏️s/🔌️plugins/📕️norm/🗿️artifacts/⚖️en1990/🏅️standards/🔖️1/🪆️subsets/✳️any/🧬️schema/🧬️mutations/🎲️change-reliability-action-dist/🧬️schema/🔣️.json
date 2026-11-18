@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-reliability-action-dist/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1990/mutation/change-reliability-action-dist/schema.json",
   "title": "ChangeReliabilityActionDist",
   "type": "object",
   "additionalProperties": false,
@@ -34,7 +34,7 @@
       }
     },
     "newActionDistribution": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/$defs/DistributionKind",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1990/snapshot.json#/$defs/DistributionKind",
       "x-semio-ui": {
         "label": {
           "en": "Action distribution",

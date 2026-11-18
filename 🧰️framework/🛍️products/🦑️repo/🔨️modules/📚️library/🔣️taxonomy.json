@@ -9493,6 +9493,8 @@
         "💠️lowpoly",
         "➗️mathematical",
         "📕️norm",
+        "📓️norm-eurocode-structural",
+        "📒️norm-energy",
         "📗️norm-eurocode",
         "📙️norm-eurocode-materials",
         "🗒️note",
@@ -30548,6 +30550,26 @@
         }
       ],
       "reason": "The framework export test owns one byte-checked TypeScript manifest"
+    },
+    "framework-plugin-registry": {
+      "ownership": "owned",
+      "ownerPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+      "target": "@semio-tech/plugin-registry:generate",
+      "previewTarget": "@semio-tech/plugin-registry:preview-generated",
+      "checkTarget": "@semio-tech/plugin-registry:check-generated",
+      "inputPatterns": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📋️project.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🔣️.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts"
+      ],
+      "outputRoots": [
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated",
+          "inclusion": "ignored"
+        }
+      ],
+      "reason": "The neutral framework publication of the plugin registry is ignored output that its own specs and graph walks import, so a walk resolves the import to this producer instead of reading a file that exists only after a build"
     },
     "graph-catalog": {
       "ownership": "owned",

@@ -50,7 +50,7 @@ use semio_os_store_engine::lifted_store::ArtifactStore;
 pub fn native_artifact_codec<P>(schema:impl Into<String>)->ArtifactCodec
 where P:pack::snapshot::ArtifactPackMetadata+ArtifactStoreSnapshot+'static,
 {
-    ArtifactCodec{schema:schema.into(),extension:P::EXTENSION,native_identity:ArtifactNativeSnapshotIdentity::typed::<P>(),snapshot_sqlite:P::sqlite_snapshot_codec(),pack_schema_hash:P::native_pack_schema_hash(),reference:None}
+    ArtifactCodec{schema:schema.into(),extension:P::EXTENSION,native_identity:ArtifactNativeSnapshotIdentity::typed::<P>(),snapshot_sqlite:P::sqlite_snapshot_codec(),pack_schema_hash:P::native_pack_schema_hash().unwrap_or([0;32]),reference:None}
 }
 
 /// 🪶️ Constructs a document kind's codec with a required, actual relational snapshot implementation, over

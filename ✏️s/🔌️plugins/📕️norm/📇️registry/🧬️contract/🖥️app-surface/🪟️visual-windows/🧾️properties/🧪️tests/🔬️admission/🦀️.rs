@@ -57,7 +57,7 @@ fn readonly_scalars_keep_accessible_localized_values_and_have_no_mutation_afford
         let model = semio_plugin::ViewModel::new(locale, semio_ui_locale::Terminology::Native);
         let windows = semio_plugin::TreeWindows::for_body(&model, "norm.admission.inputs");
         let report = readonly_report();
-        let node = render_inspector_value(&tree, &report, locale, "s.norm.en1990@1/*#editor", Some(metadata), &windows, &InspectorOptions::new(UnitSystem::Engineering, Tier::Expert)).expect("read-only inspector");
+        let node = render_inspector_value(&tree, &report, locale, "s.norm-eurocode.en1990@1/*#editor", Some(metadata), &windows, &InspectorOptions::new(UnitSystem::Engineering, Tier::Expert)).expect("read-only inspector");
         let json = projection(node);
         let copy = law["locales"].as_array().unwrap().iter().find(|copy| copy["id"] == tag).unwrap();
         assert!(json.contains(copy["readOnly"].as_str().unwrap()), "{json}");

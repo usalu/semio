@@ -103,6 +103,12 @@ describe("shared theme geometry", () => {
     for (const file of ["🔨️modules/⚓️panel-anchor/🟦️.ts", "🧱️elements/🔝️Navbar/🟦️.tsx", "🧱️elements/🔚️Footer/🟦️.tsx"]) expect(readFileSync(resolve(import.meta.dir, "../../../../", file), "utf8")).not.toMatch(/round\(nearest,\s*var\(--(?:navbar|footer)-height/);
   });
 
+  it("sizes the chip rows of the shell bands to the bands, whatever the touch spacing makes of a card's chip row", () => {
+    const css = readFileSync(resolve(import.meta.dir, "../../../🖌️ui/🎨️.css"), "utf8");
+    expect(css).toMatch(/\[data-slot="navbar"\] \{\s*--chip-row-height: var\(--navbar-band-height\);\s*\}/);
+    expect(css).toMatch(/\[data-slot="footer"\] \{\s*--chip-row-height: var\(--footer-band-height\);\s*\}/);
+  });
+
   it("uses projected chrome metrics in React shell placement", () => {
     const root = resolve(import.meta.dir, "../../../../🧱️elements");
     expect(readFileSync(resolve(root, "🔝️Navbar/🟦️.tsx"), "utf8")).toContain("h-[var(--navbar-band-height)]");

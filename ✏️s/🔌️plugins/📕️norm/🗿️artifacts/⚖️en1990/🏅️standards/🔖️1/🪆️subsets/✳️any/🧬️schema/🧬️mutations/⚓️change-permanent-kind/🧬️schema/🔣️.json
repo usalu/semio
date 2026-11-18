@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-permanent-kind/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1990/mutation/change-permanent-kind/schema.json",
   "title": "ChangePermanentKind",
   "type": "object",
   "additionalProperties": false,
@@ -34,7 +34,7 @@
       }
     },
     "newKind": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/$defs/PermanentKind",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1990/snapshot.json#/$defs/PermanentKind",
       "x-semio-ui": {
         "label": {
           "en": "kind",

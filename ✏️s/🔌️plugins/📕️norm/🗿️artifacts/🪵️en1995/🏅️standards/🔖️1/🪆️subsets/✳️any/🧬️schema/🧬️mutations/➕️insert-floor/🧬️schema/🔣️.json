@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/insert-floor/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1995/mutation/insert-floor/schema.json",
   "title": "InsertFloor",
   "type": "object",
   "additionalProperties": false,
@@ -30,7 +30,7 @@
       }
     },
     "floor": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/Floor",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode-materials/en1995/snapshot.json#/$defs/Floor",
       "x-semio-ui": {
         "role": "value",
         "label": {

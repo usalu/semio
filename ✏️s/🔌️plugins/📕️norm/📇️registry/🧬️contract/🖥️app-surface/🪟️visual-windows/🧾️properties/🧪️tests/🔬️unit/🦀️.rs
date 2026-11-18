@@ -349,7 +349,7 @@ fn the_unit_picker_marks_the_chosen_system_and_writes_the_view_lane_in_live_edit
     let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let view = open_everything();
     let draw = |controller: &'static str, system| project(render_inspector_value(&document(), &CheckReport::default(), Locale::De, controller, Some(member_meta), &TreeWindows::for_body(&view, BODY), &InspectorOptions { preset: system, unit_picker: true, ..InspectorOptions::new(UnitSystem::Engineering, Tier::Expert) }).expect("inspector"));
-    let live = draw("s.norm.en1990@1/*#editor", UnitSystem::Si);
+    let live = draw("s.norm-eurocode.en1990@1/*#editor", UnitSystem::Si);
     assert!(live.contains("viewportSetUnits") && live.contains("viewportAct") && live.contains("○ Ingenieureinheiten") && live.contains("● SI-Basiseinheiten") && live.contains("Länge (m)"), "{live}");
     assert!(!draw("norm.mock", UnitSystem::Si).contains("viewportSetUnits"), "apps without the viewport tool get no picker");
 }

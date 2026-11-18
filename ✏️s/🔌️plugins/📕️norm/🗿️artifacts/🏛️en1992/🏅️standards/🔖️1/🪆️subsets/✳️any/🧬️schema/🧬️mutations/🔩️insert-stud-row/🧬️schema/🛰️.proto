@@ -1,5 +1,5 @@
 syntax = "proto3";
-package semio.s.norm.en1992.mutation.insert_stud_row;
+package semio.s.norm_eurocode_structural.en1992.mutation.insert_stud_row;
 message InsertStudRow {
   string member_id = 1;
   uint64 index = 2;

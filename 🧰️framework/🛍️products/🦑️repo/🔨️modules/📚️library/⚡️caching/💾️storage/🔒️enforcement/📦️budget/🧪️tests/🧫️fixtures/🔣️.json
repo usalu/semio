@@ -196,13 +196,13 @@
       "id": "host-ample",
       "minimumBytes": 51539607552,
       "hostFreeBytes": 139586437120,
-      "capacityBytes": 69793218560
+      "capacityBytes": 51539607552
     },
     {
       "id": "this host: 123 GiB free",
       "minimumBytes": 51539607552,
       "hostFreeBytes": 132070244352,
-      "capacityBytes": 65498251264
+      "capacityBytes": 51539607552
     },
     {
       "id": "host-free-binds",
@@ -226,9 +226,9 @@
       "id": "host-huge",
       "minimumBytes": 51539607552,
       "hostFreeBytes": 2147483648000,
-      "capacityBytes": 103079215104
+      "capacityBytes": 51539607552
     },
-    {"id":"this host 2026-11-13: 91 GiB free, below the 96 GiB declared capacity","minimumBytes":34359738368,"hostFreeBytes":97886126080,"capacityBytes":48318382080},
+    {"id":"this host 2026-11-13: 91 GiB free, below the 96 GiB declared capacity","minimumBytes":34359738368,"hostFreeBytes":97886126080,"capacityBytes":42949672960},
     {"id":"256 GB Mac mini with 60 GiB free","minimumBytes":34359738368,"hostFreeBytes":64424509440,"capacityBytes":34359738368}
   ],
   "imageBackends": [

@@ -13,6 +13,7 @@ import { registerShipsVectorsRuleSurveyTests } from "./🔶️ships-vectors-rule
 import { registerTellsSurveyWentStaleTests } from "./🔸️tells-survey-went-stale/🟦️.tsx";
 import { registerTurnsPointerStageEventsTests } from "./🟠️turns-pointer-stage-events/🟦️.tsx";
 import { registerNamesFixtureOnceGoodTests } from "./🟢️names-fixture-once-good/🟦️.tsx";
+import { registerLinesAndOpenFacesTests } from "./🟤️lines-and-open-faces/🟦️.tsx";
 
 afterEach(() => {
   document.body.replaceChildren();
@@ -26,4 +27,5 @@ describe("📡️ surface survey", () => {
   registerTellsSurveyWentStaleTests();
   registerTurnsPointerStageEventsTests();
   registerNamesFixtureOnceGoodTests();
+  registerLinesAndOpenFacesTests();
 });

@@ -14,7 +14,7 @@ const scratch=():string=>mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR?re
 const gibibyte=1073741824;
 
 test("a statfs row is judged exactly as the independent Python reading judges it, and an incoherent row is unknown",()=>{
- const program="import json,sys,math\nout=[]\nfor r in json.loads(sys.argv[1]):\n b,k,a=r['bsize'],r['blocks'],r['bavail']\n if not(b>=1) or not(a>=0) or not math.isfinite(a*b):\n  out.append(None);continue\n out.append([a*b,b*k if (k>0 and k>=a and math.isfinite(b*k)) else None])\nprint(json.dumps(out))";
+ const program="import json,sys,math\nout=[]\nfor r in json.loads(sys.argv[1]):\n b,k,a=r['bsize'],r['blocks'],r['bavail']\n if not(b>=1) or not(a>=0) or not math.isfinite(a*b) or (not(k>0) and a==0):\n  out.append(None);continue\n out.append([a*b,b*k if (k>0 and k>=a and math.isfinite(b*k)) else None])\nprint(json.dumps(out))";
  const independent=ask(program,JSON.stringify(fixture.rows.map(row=>row.row))) as ([number,number|null]|null)[];
  fixture.rows.forEach((row,index)=>{
   const actual=freeSpaceOfRowV1(row.row),shape=actual===undefined?null:[actual.availableBytes,actual.totalBytes??null];

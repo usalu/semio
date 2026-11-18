@@ -9,7 +9,7 @@ export function nxBuildEngineReferencesV1(source:string):readonly Readonly<{kind
 export function nxBuildEngineSourceFileV1(owner:string,specifier:string):string;
 export function nxBuildEngineWorkspacePackageFileV1(root:string,specifier:string):string|undefined;
 export function nxBuildEngineClosureV1(policy?:import("./⚡️caching/🚀️bootstrap/🔌️nx-plugin/🧮️engine-digest/🟦️.ts").NxEnginePolicyV1):Readonly<{files:readonly string[];packages:readonly string[]}>;
-export function nxBuildEngineFilesDigestV1(root:string,files:readonly string[],unkeyedPrefixes?:readonly string[]):string;
+export function nxBuildEngineFilesDigestV1(root:string,files:readonly string[],identity?:readonly string[]):string;
 export function nxBuildEngineDigestV1(family?:"generic"|"native"):string;
 export function nxBuildEngineInputsV1(family?:"generic"|"native"):readonly unknown[];
 export function nxOutputsCacheableV1(outputs:readonly unknown[]):boolean;

@@ -65,7 +65,7 @@ pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::Ar
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.flow.flow.composer.json")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.json@rfc8259/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.json@rfc8259/*")?)?,
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::composition_route(), "15:s.flow.flow@1/*22:s.stdio.json@rfc8259/*")?)?,
         )?
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.flow.flow.codec.document")?, ArtifactCapabilityKind::codec())

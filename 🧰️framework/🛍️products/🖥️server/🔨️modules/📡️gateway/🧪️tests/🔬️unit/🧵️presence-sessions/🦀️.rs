@@ -84,6 +84,24 @@ async fn an_idle_session_is_closed_and_leaves_the_room() {
     assert!(state.presence_rooms.roster(&presence_lane(&Scope("room-idle".into()))).is_empty());
 }
 
+#[tokio::test]
+async fn an_idle_socket_is_sent_a_heartbeat_every_interval_and_a_client_may_not_send_one() {
+    let state = presence_server(PresenceSettings { heartbeat: Duration::from_millis(60), ..quick_presence(Duration::from_secs(30)) }).await;
+    let (client, mut frames, _task) = connect(&state, "room-beat", "home");
+    assert!(matches!(next_frame(&mut frames).await, PresenceFrame::Welcome { .. }));
+    let started = Instant::now();
+    for _ in 0..3 {
+        assert_eq!(next_frame(&mut frames).await, PresenceFrame::Heartbeat);
+    }
+    assert!(started.elapsed() >= Duration::from_millis(150), "one heartbeat per interval, not a burst: {:?}", started.elapsed());
+    say(&client, r#"{"type":"heartbeat"}"#);
+    let mut answer = next_frame(&mut frames).await;
+    while answer == PresenceFrame::Heartbeat {
+        answer = next_frame(&mut frames).await;
+    }
+    assert_eq!(answer, PresenceFrame::Refused { reason: REFUSED_INVALID.into() }, "heartbeat travels server → client only");
+}
+
 fn scopes(names: &[&str]) -> BTreeSet<String> {
     names.iter().map(|name| (*name).to_string()).collect()
 }

@@ -1,7 +1,8 @@
 import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
+import{readFreeSpaceV1,type FreeSpaceOptionsV1,type FreeSpaceUnknownReasonV1}from"../../../../../../../../🔨️modules/🏃️process/🆓️free-space/🟦️.ts";
 import{createHash}from"node:crypto";
 import{spawn,spawnSync}from"node:child_process";
-import{closeSync,existsSync,mkdirSync,openSync,readFileSync,readSync,renameSync,rmSync,statSync,statfsSync,writeFileSync,writeSync}from"node:fs";
+import{closeSync,existsSync,mkdirSync,openSync,readFileSync,readSync,renameSync,rmSync,statSync,writeFileSync,writeSync}from"node:fs";
 import{availableParallelism,homedir,hostname,setPriority,tmpdir}from"node:os";
 import{delimiter,join}from"node:path";
 import{validateJsonSchemaSubset}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -9,7 +10,8 @@ import{fleetHostReadingV1}from"../../../🧠️memory/🟨️.mjs";
 import{remoteExecutionOriginV1}from"../../🌡️load/🟦️.ts";
 import type{RemoteExecutionSidecarContextV1}from"../🧰️shared/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
-import{readyDeadlineV1,readyForgetTreeV1,readyStallTrackerV1,readyStalledV1,readyIdentityV1,readyKillTreeV1,readyKillPlanV1,readyLivenessV1,readyTreeCpuV1,readyLeaseVerdictV1,readyHolderRestartV1,readyStaleStopV1,readyStagePhaseV1,type ReadyPhaseV1,readyHolderWaitTrackerV1,readyScaledTreePolicyV1,readyStallRestartV1,readyCodeChangedSinceV1,readyProcessStartSyncV1,readyProgressKeyV1,readyReadTableV1,readyReadTreeV1,readyTreeMembersV1,readyWriteTreeV1,READY_TREE_POLICY_V1,type ReadyKnownV1,type ReadyProcessV1}from"./🌲️process-tree/🟦️.ts";
+import{readyDeadlineV1,readyForgetTreeV1,readyStallTrackerV1,readyStalledV1,readyIdentityV1,readyKillTreeV1,readyKillPlanV1,readyLivenessV1,readyTreeCpuV1,readyLeaseVerdictV1,readyHolderRestartV1,readyStaleStopV1,readyStagePhaseV1,type ReadyPhaseV1,readyHolderWaitTrackerV1,readyHolderWaitOfV1,readyHolderCustodyV1,readyBackgroundReaderV1,readyForegroundBusyV1,type ReadyHolderWaitV1,type ReadyReadRecordV1,readyScaledTreePolicyV1,readyStallRestartV1,readyStepWatchV1,readyStepOverdueSecondsV1,type ReadyStepV1,readySemanticsV1,readySemanticsChangedV1,readyProcessStartSyncV1,readyProgressKeyV1,readyReadTableV1,readyReadTreeV1,readyTreeMembersV1,readyWriteTreeV1,READY_TREE_POLICY_V1,type ReadyKnownV1,type ReadyProcessV1}from"./🌲️process-tree/🟦️.ts";
+import{CAS_RESERVE_FACTOR_V1}from"../../../🗄️cas/🧬️schema/🟦️.ts";
 import{localMachineSpeedFactorV1,scaledMillisecondsV1}from"../../../🐢️speed/🟨️.mjs";
 import{inspectTypescriptCompilerV1}from"../../../🚀️bootstrap/🔷️typescript-compiler/🟨️.mjs";
 import{READY_CONTAINMENT_POLICY_V1,readyContainmentLineV1,readyContainmentStatusV1,readyHeirsV1,readyKillRecorderV1,readyOwnerTokenV1,readyReapOrphansV1,readyRegistryEntriesV1,readyRegistryRootV1,readySharedPidsV1,readySampleDelayV1,readyStopV1,readyStoppedWindowsV1,readySweepRostersV1,type ReadyKillReasonV1,type ReadyContainmentResultV1,type ReadyContainmentV1,type ReadyPersonV1,type ReadyReapedV1,type ReadyWindowV1}from"./🌲️process-tree/🧹️containment/🟦️.ts";
@@ -22,18 +24,23 @@ export const READY_STAGES_V1=schema.definitions.Stages.const as readonly ReadySt
 export const READY_PROBES_V1=schema.definitions.Probes.const as Readonly<{version:1;target:string;projects:readonly Readonly<{name:string;kind:string}>[]}>;
 /** 🧬️ The schema of `ready.json`. */
 export const READY_STATUS_SCHEMA_V1=schema.definitions.Status;
+/** 🏔️ Whether the readiness loop of `origin` is busy (see `readyForegroundBusyV1`), read from its `ready.json` in `store`; a store that is not there or a file that cannot be read says no, so a machine without a readiness loop (the group server) is never held back. */
+export function readyForegroundBusyOfStoreV1(store:string|undefined,origin:string,nowMs:number=Date.now()):boolean{
+ if(store===undefined||store==="")return false;
+ try{return readyForegroundBusyV1(JSON.parse(readFileSync(join(store,"v1","origins",origin,READY_POLICY_V1.statusName),"utf8")),nowMs);}catch{return false;}
+}
 const P=READY_POLICY_V1,ZERO="0".repeat(64),sha=(text:string|Uint8Array):string=>createHash("sha256").update(text).digest("hex");
 
 export type ReadyStageV1=Readonly<{name:string;kind:"bootstrap"|"repo";arguments:readonly string[];timeoutMilliseconds:number;inputs:readonly string[];bootstrapInput:boolean}>;
 export type ReadyPlatformV1="linux"|"macos"|"windows";
-export type ReadyCodeV1="human-running"|"lease-held"|"memory-low"|"stage-failed"|"tooling-compiler"|"stage-timeout"|"stage-stalled"|"stage-stall-exhausted"|"stage-code-changed"|"stage-code-stale"|"store-full"|"disk-short"|"loop-failed"|"spawn-failed"|"interrupted"|"server";
-export type ReadyReasonCodeV1="first-run"|"inputs-changed"|"previous-failed"|"stalled"|"code-changed"|"code-stale"|"adopted"|"binary-missing";
+export type ReadyCodeV1="human-running"|"lease-held"|"memory-low"|"stage-failed"|"tooling-compiler"|"stage-timeout"|"stage-stalled"|"stage-stall-exhausted"|"stage-code-changed"|"stage-code-stale"|"stage-step-overdue"|"stage-holder-silent"|"store-full"|"disk-short"|"disk-unmeasured"|"disk-collecting"|"disk-consumers"|"loop-failed"|"spawn-failed"|"interrupted"|"server";
+export type ReadyReasonCodeV1="first-run"|"inputs-changed"|"previous-failed"|"stalled"|"code-changed"|"code-stale"|"step-overdue"|"holder-silent"|"adopted"|"binary-missing";
 export type ReadyReasonV1=Readonly<{code:ReadyReasonCodeV1;en:string;de:string}>;
 export type ReadyRefusalV1=Readonly<{code:ReadyCodeV1;en:string;de:string}>;
 export type ReadyStateNameV1="ready"|"running"|"waiting"|"backoff"|"observing"|"server";
 export type ReadyStatusV1={version:1;origin:string;host:string;platform:ReadyPlatformV1;pid:number;state:ReadyStateNameV1;digest:string;ready:boolean;stage:string|null;stageIndex:number;stageCount:number;attempts:number;exit:number|null;refusal:ReadyRefusalV1|null;reason:ReadyReasonV1|null;containment?:ReadyContainmentV1|null;peakMegabytes:number|null;tail:string[];nextAttemptMs:number|null;readyMs:number|null;startedMs:number;updatedMs:number};
-export type ReadyTimingV1=Readonly<{stage:string;startedMs:number;endedMs:number;seconds:number;exit:number|null;outcome:"ok"|"stage-failed"|"stage-timeout"|"stalled"|"spawn-failed"|"interrupted";peakMegabytes:number|null;attempts:number;digest:string}>;
-export type ReadyFailureV1=Readonly<{digest:string;stage:string;attempts:number;exit:number|null;code:ReadyCodeV1;nextAttemptMs:number;atMs:number;tail:readonly string[]}>;
+export type ReadyTimingV1=Readonly<{stage:string;startedMs:number;endedMs:number;seconds:number;exit:number|null;outcome:"ok"|"stage-failed"|"stage-timeout"|"stalled"|"spawn-failed"|"interrupted";peakMegabytes:number|null;growthMegabytes?:number|null;attempts:number;digest:string}>;
+export type ReadyFailureV1=Readonly<{digest:string;stage:string;attempts:number;exit:number|null;signal?:string|null;code:ReadyCodeV1;nextAttemptMs:number;atMs:number;tail:readonly string[]}>;
 export type ReadyLocalStateV1={version:1;stages:Record<string,{digest:string;doneMs:number}>;failure:ReadyFailureV1|null;attempts:number;peakMegabytes:number|null;readyMs:number|null;adopted:boolean};
 
 /** 🖥️ The platform name of the fleet for a Node platform. */
@@ -45,9 +52,17 @@ export function readyReasonV1(code:ReadyReasonCodeV1,stage:string):ReadyReasonV1
  return Object.freeze({code,en:fill("en"),de:fill("de")});
 }
 
+/** 🪦️ How a stage process ended in words of both languages: an exit status, the signal that ended it, or neither (the process vanished without leaving an exit file, so something outside the supervisor ended its wrapper). A pure function.
+ * @see ./🧪️tests/🪦️ending */
+export function readyEndingV1(exit:number|null,signal:string|null|undefined):Readonly<{en:string;de:string}>{
+ if(exit!==null)return{en:`exit status ${exit}`,de:`Exit-Status ${exit}`};
+ if(signal!==null&&signal!==undefined)return{en:`no exit status, ended by signal ${signal}`,de:`kein Exit-Status, durch das Signal ${signal} beendet`};
+ return{en:"no exit status and no signal: the stage process vanished, the last lines of its log say how",de:"kein Exit-Status und kein Signal: der Stufenprozess verschwand, die letzten Zeilen seines Protokolls sagen wie"};
+}
+
 /** 🗣️ The refusal with its text in English and German. */
-export function readyRefusalV1(code:ReadyCodeV1,fields:Readonly<Record<string,string|number>>={}):ReadyRefusalV1{
- const fill=(language:"en"|"de"):string=>(schema.definitions.Texts.const[language] as Record<string,string>)[code]!.replace(/\{(\w+)\}/gu,(_all,name:string)=>String(fields[name]??""));
+export function readyRefusalV1(code:ReadyCodeV1,fields:Readonly<Record<string,string|number|Readonly<{en:string;de:string}>>>={}):ReadyRefusalV1{
+ const fill=(language:"en"|"de"):string=>(schema.definitions.Texts.const[language] as Record<string,string>)[code]!.replace(/\{(\w+)\}/gu,(_all,name:string)=>{const value=fields[name];return String(value!==null&&typeof value==="object"?value[language]:value??"");});
  return Object.freeze({code,en:fill("en"),de:fill("de")});
 }
 
@@ -84,35 +99,70 @@ export function readyStoreFullV1(lines:readonly string[]):Readonly<{errno:string
  return null;
 }
 
-/** 📦️ What a filesystem says it has free at a path: bytes available to the user and free inodes, `null` for a fact the platform does not report (Windows reports no inodes, a network share may report nothing). */
-export type ReadyFilesystemFactsV1=Readonly<{freeBytes:number|null;freeInodes:number|null}>;
+/** 📦️ What a filesystem says it has free at a path: bytes available to the user and free inodes, `null` for a fact the platform does not report (Windows reports no inodes, a network share may report nothing). `freeBytes` is `null` exactly when the volume could not be measured, and then `unknown` says why: an unknown measurement is never read as zero bytes free. */
+export type ReadyFilesystemFactsV1=Readonly<{freeBytes:number|null;freeInodes:number|null;unknown?:Readonly<{reason:FreeSpaceUnknownReasonV1;detail:string}>}>;
+/** 🕳️ A path whose free space could not be measured, with the reason and a short detail. */
+export type ReadyDiskUnknownV1=Readonly<{path:string;reason:string;detail:string}>;
 /** 💽️ The first resource a stage lacks before it starts: the directory, `space` or `inodes`, what the stage needs and what is free (megabytes for `space`). */
 export type ReadyDiskShortV1=Readonly<{path:string;resource:"space"|"inodes";needed:number;available:number}>;
 
-/** 🔎️ The facts of the filesystem that holds `path` (its nearest existing ancestor when it is not there yet), from `statfs`; `null` when nothing can be read. A filesystem that reports no inode table (`files` 0, as on Windows and some network shares) has `freeInodes` `null`, never 0.
+/** 🧾️ One consumer a short disk names: the writer, its root, the bytes it holds and the exact command that frees it. */
+export type ReadyDiskConsumerV1=Readonly<{id:string;root:string;bytes:number;command:string}>;
+/** 🧹️ What the collection for a waiting stage answered: whether the need fits now and, when it does not, the largest consumers that remain. */
+export type ReadyDiskRecoveryV1=Readonly<{fits:boolean;consumers:readonly ReadyDiskConsumerV1[]}>;
+/** 📐️ What a stage needs free, in megabytes and inodes, and where the number comes from: the declared estimate (`diskRequirements`) until the machine has measured the stage, then the largest net growth of free space over the last successful runs times the safety factor of the workspace scale family (read from the cas budget, not copied), never below the floor. */
+export function readyDiskNeedV1(stage:string,runs:readonly ReadyTimingV1[]=[]):Readonly<{megabytes:number;inodes:number;source:"declared"|"measured"}>{
+ const declared=(P.diskRequirements as Record<string,{megabytes:number;inodes:number}>)[stage]??P.diskDefaultRequirement;
+ const grown=runs.filter(run=>run.stage===stage&&run.outcome==="ok"&&typeof run.growthMegabytes==="number").slice(-P.diskGrowth.keptRuns).map(run=>run.growthMegabytes as number);
+ if(grown.length===0)return Object.freeze({megabytes:declared.megabytes,inodes:declared.inodes,source:"declared" as const});
+ return Object.freeze({megabytes:Math.max(P.diskGrowth.floorMegabytes,Math.ceil(Math.max(...grown)*CAS_RESERVE_FACTOR_V1)),inodes:declared.inodes,source:"measured" as const});
+}
+
+/** 🔎️ The facts of the filesystem that holds `path` (its nearest existing ancestor when it is not there yet), from the one free-space question of the build system (`readFreeSpaceV1`: `statfs` on POSIX, `GetDiskFreeSpaceExW` on Windows, where the runtime's `statfs` answers a row of zeros). A volume that cannot be measured has `freeBytes` `null` and the reason; a filesystem that reports no inode table (NTFS, btrfs, some network shares) has `freeInodes` `null`, never 0. Disk quotas of a user are not visible to `statfs` (only project quotas of a directory are), so a quota shortage still shows as the write error that the stage classifier names.
+ * @see ../../../../../../../../🔨️modules/🏃️process/🆓️free-space/🟦️.ts
  * @see https://man7.org/linux/man-pages/man2/statfs.2.html */
-export function readyFilesystemFactsV1(path:string):ReadyFilesystemFactsV1|null{
- for(let at=path;;){
-  try{const row=statfsSync(at);return Object.freeze({freeBytes:Number(row.bavail)*Number(row.bsize),freeInodes:Number(row.files)>0?Number(row.ffree):null});}catch{}
-  const parent=join(at,"..");if(parent===at)return null;at=parent;
- }
+export function readyFilesystemFactsV1(path:string,options?:Omit<FreeSpaceOptionsV1,"nearest">):ReadyFilesystemFactsV1{
+ const facts=readFreeSpaceV1(path,{nearest:true,...options});
+ return facts.known?Object.freeze({freeBytes:facts.availableBytes,freeInodes:facts.freeInodes}):Object.freeze({freeBytes:null,freeInodes:null,unknown:Object.freeze({reason:facts.reason,detail:facts.detail})});
 }
 
 /** 💽️ Whether the paths a stage writes to hold what it needs (`diskRequirements` of the schema, megabytes and inodes): the first resource that is short, `null` when all hold or nothing is known. Checked before the stage starts, so a full disk or an exhausted inode table is a typed refusal that names path, need and what is free, and not the raw database error the stage dies with half an hour later. A pure function of the facts provider.
  * @see ./🧪️tests/🔁️resume/🟦️.ts */
-export function readyDiskShortV1(input:Readonly<{stage:string;paths:readonly string[];facts(path:string):ReadyFilesystemFactsV1|null}>):ReadyDiskShortV1|null{
- const need=(P.diskRequirements as Record<string,{megabytes:number;inodes:number}>)[input.stage]??P.diskDefaultRequirement;
+export function readyDiskShortV1(input:Readonly<{stage:string;paths:readonly string[];facts(path:string):ReadyFilesystemFactsV1|null;runs?:readonly ReadyTimingV1[]}>):ReadyDiskShortV1|null{
+ const need=readyDiskNeedV1(input.stage,input.runs);
  for(const path of input.paths){
   const facts=input.facts(path);if(facts===null)continue;
-  if(facts.freeBytes!==null&&facts.freeBytes<need.megabytes*1048576)return Object.freeze({path,resource:"space" as const,needed:need.megabytes,available:Math.floor(facts.freeBytes/1048576)});
-  if(facts.freeInodes!==null&&facts.freeInodes<need.inodes)return Object.freeze({path,resource:"inodes" as const,needed:need.inodes,available:facts.freeInodes});
+  const bytes=facts.freeBytes!==null&&Number.isFinite(facts.freeBytes)&&facts.freeBytes>=0?facts.freeBytes:null,inodes=facts.freeInodes!==null&&Number.isFinite(facts.freeInodes)&&facts.freeInodes>=0?facts.freeInodes:null;
+  if(bytes!==null&&bytes<need.megabytes*1048576)return Object.freeze({path,resource:"space" as const,needed:need.megabytes,available:Math.floor(bytes/1048576)});
+  if(inodes!==null&&inodes<need.inodes)return Object.freeze({path,resource:"inodes" as const,needed:need.inodes,available:inodes});
  }
  return null;
 }
 
+/** 🕳️ The paths a stage writes to whose free bytes could not be measured (the provider answered nothing, or `freeBytes` is `null`, not finite or negative): the stage starts anyway with a warning, because "unknown" is not "full"; the gate of the stage and the write error itself stay. A pure function of the facts provider. */
+export function readyDiskUnknownV1(input:Readonly<{paths:readonly string[];facts(path:string):ReadyFilesystemFactsV1|null}>):readonly ReadyDiskUnknownV1[]{
+ const rows:ReadyDiskUnknownV1[]=[];
+ for(const path of input.paths){
+  const facts=input.facts(path);
+  if(facts===null)rows.push(Object.freeze({path,reason:"unreadable",detail:"-"}));
+  else if(facts.freeBytes===null||!Number.isFinite(facts.freeBytes)||facts.freeBytes<0)rows.push(Object.freeze({path,reason:facts.unknown?.reason??"incoherent-row",detail:facts.unknown?.detail??String(facts.freeBytes)}));
+ }
+ return Object.freeze(rows);
+}
+
+/** 🗣️ The warning of a stage that starts although a path could not be measured: English and German. */
+export function readyDiskUnmeasuredV1(stage:string,row:ReadyDiskUnknownV1):ReadyRefusalV1{
+ return readyRefusalV1("disk-unmeasured",{stage,path:row.path,reason:row.reason,detail:row.detail});
+}
+
 /** 🗣️ The refusal of a stage that lacks disk: English and German with the unit of the resource. */
-export function readyDiskRefusalV1(stage:string,short:ReadyDiskShortV1):ReadyRefusalV1{
- return readyRefusalV1("disk-short",{stage,path:short.path,resource:short.resource,unit:short.resource==="space"?"MB":"inodes",needed:short.needed,available:short.available});
+export function readyDiskRefusalV1(stage:string,short:ReadyDiskShortV1,consumers?:readonly ReadyDiskConsumerV1[]):ReadyRefusalV1{
+ const fields={stage,path:short.path,resource:short.resource,unit:short.resource==="space"?"MB":"inodes",needed:short.needed,available:short.available};
+ return consumers===undefined?readyRefusalV1("disk-short",fields):readyRefusalV1("disk-consumers",{...fields,consumers:consumers.map(row=>`${row.root} (${Math.round(row.bytes/1048576)} MB): \`${row.command}\``).join("; ")||"-"});
+}
+/** 🧹️ The refusal of a stage whose need is being freed right now by the collectors of the registry. */
+export function readyDiskCollectingV1(stage:string,short:ReadyDiskShortV1):ReadyRefusalV1{
+ return readyRefusalV1("disk-collecting",{stage,path:short.path,unit:"MB",needed:short.needed,available:short.available});
 }
 
 /** 🩹️ The tail of a failed stage with the cause named: a database that "unable to open database file" while a path is out of space or inodes is a full disk, so the tail gets the line the classifier knows (`storeFullPattern`) for that path. */
@@ -240,14 +290,14 @@ export function createReadyStatusV1(input:Readonly<{store:string|undefined;origi
  });
 }
 
-export type ReadyRunResultV1=Readonly<{containment?:ReadyContainmentResultV1;exit:number|null;timedOut:boolean;spawnFailed:boolean;cancelled:boolean;stalled:boolean;codeChanged?:string;codeStale?:boolean;detached:boolean;startedMs:number;peakMegabytes:number|null;tail:readonly string[]}>;
+export type ReadyRunResultV1=Readonly<{containment?:ReadyContainmentResultV1;signal?:string|null;stepOverdue?:Readonly<ReadyStepV1&{limit:number;quiet:number}>;holderSilent?:Readonly<{pid:number;command:string;seconds:number}>;exit:number|null;timedOut:boolean;spawnFailed:boolean;cancelled:boolean;stalled:boolean;codeChanged?:string;codeStale?:boolean;detached:boolean;startedMs:number;peakMegabytes:number|null;tail:readonly string[];failure?:readonly string[]}>;
 export type ReadyPortsV1=Readonly<{
  server:boolean;stages?:readonly ReadyStageV1[];now():number;sleep(milliseconds:number,signal:AbortSignal):Promise<void>;jitter:number;cores:number;
  digests():Promise<Readonly<{digest:string;stages:readonly Readonly<{name:string;digest:string}>[]}>>;
  state:Readonly<{read():ReadyLocalStateV1;write(state:ReadyLocalStateV1):void}>;
  marker:Readonly<{exists():boolean;write():void}>;repoPresent():boolean;human():boolean;
  lease:ReturnType<typeof createReadyLeaseV1>;inflight?():string|undefined;
- memory():Readonly<{availableMegabytes:number|null;ok:boolean}>;disk?(stage:string):ReadyDiskShortV1|null;compiler?():Readonly<{en:string;de:string}>|null;
+ memory():Readonly<{availableMegabytes:number|null;ok:boolean}>;disk?(stage:string):ReadyDiskShortV1|null;diskUnknown?(stage:string):readonly ReadyDiskUnknownV1[];recover?(request:Readonly<{stage:string;short:ReadyDiskShortV1;signal:AbortSignal;report(line:string):void}>):Promise<ReadyDiskRecoveryV1>;freeMegabytes?():number|null;compiler?():Readonly<{en:string;de:string}>|null;
  run(stage:ReadyStageV1,options:Readonly<{signal:AbortSignal;jobs:number;onLine(line:string):void;mirror?(stage:string,lines:readonly string[]):void}>):Promise<ReadyRunResultV1>;
  status:Readonly<{update(patch:Partial<ReadyStatusV1>):void}>;
  mirror?(stage:string,lines:readonly string[]):void;timing?(run:ReadyTimingV1):void;
@@ -276,7 +326,7 @@ export async function runReadyV1(ports:ReadyPortsV1,signal:AbortSignal):Promise<
 async function runReadyLoopV1(ports:ReadyPortsV1,signal:AbortSignal):Promise<void>{
  if(ports.server)return;
  const plan=ports.stages??READY_STAGES_V1,names=plan.map(stage=>stage.name);
- const stalls=new Map<string,number>();
+ const stalls=new Map<string,number>(),warnedUnmeasured=new Set<string>();
  let renew:ReturnType<typeof setInterval>|undefined,stalledStage:string|undefined,stalledReason:ReadyReasonCodeV1="stalled",lastContainment:ReadyContainmentV1|null=null;
  const leave=():void=>{if(renew!==undefined)clearInterval(renew);renew=undefined;ports.lease.release();};
  try{
@@ -291,7 +341,7 @@ async function runReadyLoopV1(ports:ReadyPortsV1,signal:AbortSignal):Promise<voi
    const memory=ports.memory(),lease=ports.lease.peek();
    const decision=readyDecideV1({server:false,digest,stages,done,marker,repo,human:ports.human(),lease,memoryOk:memory.ok,failure:state.failure===null?null:{digest:state.failure.digest,nextAttemptMs:state.failure.nextAttemptMs},now,restartPending:ports.restartPending?.()});
    const base:Partial<ReadyStatusV1>={digest,attempts:state.attempts,peakMegabytes:state.peakMegabytes,readyMs:state.readyMs,stageCount:names.length,exit:state.failure?.exit??null,tail:[...state.failure?.tail??[]],containment:lastContainment};
-   const full=state.failure===null?null:readyStoreFullV1(state.failure.tail),failure=state.failure!==null&&state.failure.digest===digest?readyRefusalV1(state.failure.code,{stage:state.failure.stage,exit:state.failure.exit??"-",path:full?.path??"-",errno:full?.errno??"-",count:READY_TREE_POLICY_V1.stallRestartMaximum}):null;
+   const full=state.failure===null?null:readyStoreFullV1(state.failure.tail),failure=state.failure!==null&&state.failure.digest===digest?readyRefusalV1(state.failure.code,{stage:state.failure.stage,ending:readyEndingV1(state.failure.exit,state.failure.signal),path:full?.path??"-",errno:full?.errno??"-",count:READY_TREE_POLICY_V1.stallRestartMaximum}):null;
    const stage=decision.stageIndex>=0?names[decision.stageIndex]!:null;
    if(decision.action==="idle"){leave();lastContainment=null;ports.status.update({...base,state:"ready",ready:true,stage:null,stageIndex:0,refusal:null,reason:null,containment:null,nextAttemptMs:null,exit:null,tail:[]});}
    else if(decision.action==="mark"){ports.marker.write();continue;}
@@ -305,10 +355,24 @@ async function runReadyLoopV1(ports:ReadyPortsV1,signal:AbortSignal):Promise<voi
     ports.status.update({...base,state:"backoff",ready:false,stage,stageIndex:decision.stageIndex+1,refusal:failure,nextAttemptMs:state.failure!.nextAttemptMs});
    }
    else if(decision.action==="run"){
-    const short=ports.disk?.(plan[decision.stageIndex]!.name)??null;
+    const diskStage=plan[decision.stageIndex]!.name;
+    let short=ports.inflight?.()===diskStage?null:ports.disk?.(diskStage)??null,remaining:readonly ReadyDiskConsumerV1[]|undefined;
+    if(ports.inflight?.()!==diskStage)for(const row of ports.diskUnknown?.(diskStage)??[]){const key=`${diskStage}\0${row.path}\0${row.reason}`;if(!warnedUnmeasured.has(key)){warnedUnmeasured.add(key);const warning=readyDiskUnmeasuredV1(diskStage,row);ports.say(`${warning.en} / ${warning.de}`);}}
+    if(short!==null&&short.resource==="space"&&ports.recover!==undefined){
+     leave();
+     ports.status.update({...base,state:"waiting",ready:false,stage,stageIndex:decision.stageIndex+1,refusal:readyDiskCollectingV1(diskStage,short),nextAttemptMs:null});
+     try{
+      const outcome=await ports.recover({stage:diskStage,short,signal,report:line=>ports.say(line)});
+      if(signal.aborted)break;
+      if(outcome.fits)short=ports.disk?.(diskStage)??null;else remaining=outcome.consumers;
+     }catch(error){
+      if(signal.aborted)break;
+      remaining=[];ports.say(`collecting space for stage ${diskStage} failed (${String((error as Error)?.message??error).slice(0,200)}) / Platz für Stufe ${diskStage} sammeln fehlgeschlagen`);
+     }
+    }
     if(short!==null){
      leave();
-     const refusal=readyDiskRefusalV1(plan[decision.stageIndex]!.name,short);
+     const refusal=readyDiskRefusalV1(diskStage,short,remaining);
      ports.status.update({...base,state:"waiting",ready:false,stage,stageIndex:decision.stageIndex+1,refusal,nextAttemptMs:ports.now()+P.memoryPollMilliseconds});
      ports.say(`${refusal.en} / ${refusal.de}`);
      await ports.sleep(P.memoryPollMilliseconds,signal);
@@ -321,25 +385,28 @@ async function runReadyLoopV1(ports:ReadyPortsV1,signal:AbortSignal):Promise<voi
     ports.status.update({...base,state:"running",ready:false,stage:row.name,stageIndex:decision.stageIndex+1,refusal:null,reason,containment:null,nextAttemptMs:null});
     ports.say(`stage ${row.name} starts with ${jobs} job(s) / Stufe ${row.name} startet mit ${jobs} Job(s)`);
     ports.busy?.(true);stalledStage=undefined;
+    const freeBefore=ports.inflight?.()!==undefined?null:ports.freeMegabytes?.()??null;
     let result:ReadyRunResultV1;
     try{result=await ports.run(row,{signal,jobs,onLine:line=>{ports.status.update({tail:[line.slice(0,P.tailCharacters)]});},...ports.mirror===undefined?{}:{mirror:(stage,lines)=>ports.mirror!(stage,lines)}});}finally{ports.busy?.(false);}
     if(!result.detached&&!signal.aborted)lastContainment=result.containment===undefined?null:readyContainmentStatusV1({stage:row.name,...result.containment});
     const peak=Math.max(state.peakMegabytes??0,result.peakMegabytes??0)||state.peakMegabytes;
     const wrong=row.name==="dependencies"&&result.exit===0&&!result.timedOut&&!result.spawnFailed?ports.compiler?.()??null:null;
     const stalledOut=result.stalled&&!result.timedOut&&!result.cancelled&&!signal.aborted,outcome=result.exit===0&&!result.timedOut&&!result.spawnFailed&&!(row.name==="native"&&!ports.repoPresent())&&wrong===null?"ok":stalledOut?"stalled":result.timedOut?"stage-timeout":result.spawnFailed?"spawn-failed":result.cancelled?"interrupted":"stage-failed";
-    if(!result.detached&&!signal.aborted)ports.timing?.({stage:row.name,startedMs:result.startedMs,endedMs:ports.now(),seconds:Math.max(0,Math.round((ports.now()-result.startedMs)/1000)),exit:result.exit,outcome,peakMegabytes:result.peakMegabytes,attempts:state.attempts+(outcome==="ok"?0:1),digest:stages[decision.stageIndex]!.digest.slice(0,12)});
+    if(!result.detached&&!signal.aborted)ports.timing?.({stage:row.name,startedMs:result.startedMs,endedMs:ports.now(),seconds:Math.max(0,Math.round((ports.now()-result.startedMs)/1000)),exit:result.exit,outcome,peakMegabytes:result.peakMegabytes,growthMegabytes:freeBefore===null?null:((free:number|null)=>free===null?null:Math.max(0,freeBefore-free))(ports.freeMegabytes?.()??null),attempts:state.attempts+(outcome==="ok"?0:1),digest:stages[decision.stageIndex]!.digest.slice(0,12)});
     if(result.detached||signal.aborted){ports.state.write({...state,peakMegabytes:peak});break;}
     if(!stalledOut)stalls.delete(row.name);
     const stallCount=stalledOut&&result.codeChanged===undefined?(stalls.get(row.name)??0)+1:0,stallVerdict=stallCount>0?readyStallRestartV1({consecutive:stallCount}):undefined,stallExhausted=stallVerdict?.action==="fail";
     if(stalledOut&&!stallExhausted){
-     const byCode=result.codeChanged!==undefined,stale=result.codeStale===true,minutes=Math.round((stale?READY_TREE_POLICY_V1.staleStageMilliseconds:byCode?READY_TREE_POLICY_V1.holderWaitRestartMilliseconds:READY_TREE_POLICY_V1.stallStopMilliseconds)/60000),pause=stallVerdict?.waitMilliseconds??0;
+     const byCode=result.codeChanged!==undefined,stale=result.codeStale===true,silent=result.codeChanged===undefined?result.holderSilent:undefined,over=result.codeChanged===undefined&&silent===undefined?result.stepOverdue:undefined,minutes=Math.round((stale?READY_TREE_POLICY_V1.staleStageMilliseconds:byCode?READY_TREE_POLICY_V1.holderWaitRestartMilliseconds:READY_TREE_POLICY_V1.stallStopMilliseconds)/60000),pause=stallVerdict?.waitMilliseconds??0;
      if(stallCount>0)stalls.set(row.name,stallCount);
-     stalledStage=row.name;stalledReason=stale?"code-stale":byCode?"code-changed":"stalled";
+     stalledStage=row.name;stalledReason=stale?"code-stale":byCode?"code-changed":silent!==undefined?"holder-silent":over!==undefined?"step-overdue":"stalled";
      ports.mirror?.(`${row.name}-stalled`,result.tail);
      if(stale)ports.say(`stage ${row.name} had run for at least ${minutes} min when its code changed (${result.codeChanged}), its process tree was stopped, it starts again at once with the new code and keeps what it finished / Stufe ${row.name} lief mindestens ${minutes} Min., als sich ihr Code änderte (${result.codeChanged}), ihr Prozessbaum wurde beendet, sie startet sofort neu mit dem neuen Code und behält alles Fertige`);
      else if(byCode)ports.say(`stage ${row.name} waited ${minutes} min for a named holder while its code changed (${result.codeChanged}), its process tree was stopped, it starts again at once with the new code / Stufe ${row.name} wartete ${minutes} Min. auf einen benannten Halter, während sich ihr Code änderte (${result.codeChanged}), ihr Prozessbaum wurde beendet, sie startet sofort neu mit dem neuen Code`);
+     else if(silent!==undefined)ports.say(`stage ${row.name} waited for process ${silent.pid} (${silent.command}) that holds the dependency store but has not renewed its registration for ${silent.seconds} s, it may be blocked; its process tree was stopped, the stage starts again in ${Math.round(pause/1000)} s / Stufe ${row.name} wartete auf Prozess ${silent.pid} (${silent.command}), der den Abhängigkeitsspeicher hält, aber seine Anmeldung seit ${silent.seconds} s nicht erneuert hat und womöglich blockiert ist; ihr Prozessbaum wurde beendet, sie startet in ${Math.round(pause/1000)} s neu`);
+     else if(over!==undefined)ports.say(`stage ${row.name} ran the step "${over.text}" for ${over.seconds} s although it declares ${over.bound} s (overdue on this machine after ${over.limit} s) and nothing else moved for ${over.quiet} s; its process tree was stopped, the stage starts again with the current code in ${Math.round(pause/1000)} s (stop ${stallCount} of ${READY_TREE_POLICY_V1.stallRestartMaximum}) / Stufe ${row.name} führte den Schritt "${over.text}" seit ${over.seconds} s aus, obwohl er ${over.bound} s erklärt (auf dieser Maschine überfällig nach ${over.limit} s), und nichts anderes bewegte sich seit ${over.quiet} s; ihr Prozessbaum wurde beendet, die Stufe startet in ${Math.round(pause/1000)} s mit dem aktuellen Code neu (Stopp ${stallCount} von ${READY_TREE_POLICY_V1.stallRestartMaximum})`);
      else ports.say(`stage ${row.name} showed nothing new for ${minutes} min, its process tree was stopped, it starts again in ${Math.round(pause/1000)} s (stop ${stallCount} of ${READY_TREE_POLICY_V1.stallRestartMaximum}) / Stufe ${row.name} zeigte ${minutes} Min. nichts Neues, ihr Prozessbaum wurde beendet, sie startet in ${Math.round(pause/1000)} s neu (Stopp ${stallCount} von ${READY_TREE_POLICY_V1.stallRestartMaximum})`);
-     ports.status.update({...base,state:"waiting",ready:false,stage:row.name,stageIndex:decision.stageIndex+1,refusal:stale?readyRefusalV1("stage-code-stale",{stage:row.name,minutes,file:result.codeChanged!}):byCode?readyRefusalV1("stage-code-changed",{stage:row.name,minutes,file:result.codeChanged!}):readyRefusalV1("stage-stalled",{stage:row.name,minutes,seconds:Math.round(pause/1000),count:stallCount,maximum:READY_TREE_POLICY_V1.stallRestartMaximum}),containment:lastContainment,nextAttemptMs:pause>0?ports.now()+pause:null});
+     ports.status.update({...base,state:"waiting",ready:false,stage:row.name,stageIndex:decision.stageIndex+1,refusal:stale?readyRefusalV1("stage-code-stale",{stage:row.name,minutes,file:result.codeChanged!}):byCode?readyRefusalV1("stage-code-changed",{stage:row.name,minutes,file:result.codeChanged!}):silent!==undefined?readyRefusalV1("stage-holder-silent",{stage:row.name,minutes,pid:silent.pid,command:silent.command,silent:silent.seconds,seconds:Math.round(pause/1000),count:stallCount,maximum:READY_TREE_POLICY_V1.stallRestartMaximum}):over!==undefined?readyRefusalV1("stage-step-overdue",{stage:row.name,step:over.text,seconds:over.seconds,bound:over.bound,limit:over.limit,quiet:over.quiet,pause:Math.round(pause/1000),count:stallCount,maximum:READY_TREE_POLICY_V1.stallRestartMaximum}):readyRefusalV1("stage-stalled",{stage:row.name,minutes,seconds:Math.round(pause/1000),count:stallCount,maximum:READY_TREE_POLICY_V1.stallRestartMaximum}),containment:lastContainment,nextAttemptMs:pause>0?ports.now()+pause:null});
      leave();
      if(pause>0)await ports.sleep(pause,signal);
      continue;
@@ -354,10 +421,10 @@ async function runReadyLoopV1(ports:ReadyPortsV1,signal:AbortSignal):Promise<voi
     }
     const failedTail=wrong!==null?[wrong.en,wrong.de]:readyTailWithDiskCauseV1(result.tail,result.tail.some(line=>line.includes(P.sqliteOpenPattern))?ports.disk?.(row.name)??null:null);
     const attempts=state.attempts+1,code:ReadyCodeV1=wrong!==null?"tooling-compiler":stallExhausted?"stage-stall-exhausted":result.timedOut?"stage-timeout":result.spawnFailed?"spawn-failed":result.cancelled?"interrupted":readyStoreFullV1(failedTail)!==null?"store-full":"stage-failed",at=ports.now();
-    const next:ReadyFailureV1={digest,stage:row.name,attempts,exit:result.exit,code,nextAttemptMs:at+readyBackoffV1(result.exit===P.retryExit?1:attempts,ports.jitter),atMs:at,tail:failedTail.slice(-P.tailLines)};
+    const next:ReadyFailureV1={digest,stage:row.name,attempts,exit:result.exit,signal:result.signal??null,code,nextAttemptMs:at+readyBackoffV1(result.exit===P.retryExit?1:attempts,ports.jitter),atMs:at,tail:failedTail.slice(-P.tailLines)};
     ports.state.write({...state,failure:next,attempts,peakMegabytes:peak});
-    ports.mirror?.(`${row.name}-failed`,next.tail);
-    ports.say(`stage ${row.name} failed (${code}, exit ${result.exit ?? "-"}), next attempt in ${Math.round((next.nextAttemptMs-at)/1000)} s / Stufe ${row.name} fehlgeschlagen, nächster Versuch in ${Math.round((next.nextAttemptMs-at)/1000)} s`);
+    ports.mirror?.(`${row.name}-failed`,wrong!==null?next.tail:result.failure??next.tail);
+    ports.say(`stage ${row.name} failed (${code}, ${readyEndingV1(result.exit,result.signal).en}), next attempt in ${Math.round((next.nextAttemptMs-at)/1000)} s / Stufe ${row.name} fehlgeschlagen (${readyEndingV1(result.exit,result.signal).de}), nächster Versuch in ${Math.round((next.nextAttemptMs-at)/1000)} s`);
     leave();
     continue;
    }
@@ -390,7 +457,7 @@ export function readyRepoBinaryV1(home:string,environment:Readonly<Record<string
 const alive=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return(error as NodeJS.ErrnoException).code==="EPERM";}};
 
 /** 🧾️ The record of the stage in flight, `<worktree>/.cache/f/ready/running.json`: which stage, which process group, when it started, where its exit file and log are. */
-export type ReadyInflightV1=Readonly<{stage:string;pid:number;startedMs:number;exitFile:string;log:string}>;
+export type ReadyInflightV1=Readonly<{stage:string;pid:number;startedMs:number;exitFile:string;log:string;supervisor?:number}>;
 
 function readInflightV1(file:string):ReadyInflightV1|undefined{try{return JSON.parse(readFileSync(file,"utf8")) as ReadyInflightV1;}catch{return undefined;}}
 
@@ -417,6 +484,25 @@ function logSinceV1(log:string,offset:number):Readonly<{lines:string[];offset:nu
  }catch{return{lines:[],offset};}
 }
 
+/** 🧷️ The lines that tell why a stage failed: the last `failureWindowBytes` of its log without the machine rows and the heartbeat sentences of `failureNoise` (a flood of them after the failure text, or before it, is no cover), the last `count` of them cut to `width`; a log that has nothing else keeps its own last lines. */
+function failureLinesV1(log:string,count:number,width:number):string[]{
+ try{
+  const size=statSync(log).size,start=Math.max(0,size-P.failureWindowBytes),buffer=Buffer.alloc(size-start),handle=openSync(log,"r");
+  try{readSync(handle,buffer,0,buffer.length,start);}finally{closeSync(handle);}
+  const all=buffer.toString("utf8").split(/\r?\n/u).filter(line=>line!==""),noise=P.failureNoise.map(pattern=>new RegExp(pattern,"u")),quiet=all.filter(line=>!noise.some(expression=>expression.test(line)));
+  return(quiet.length>0?quiet:all).slice(-count).map(line=>LONG_LINE_V1.test(line)?line.slice(0,P.refusalLineCharacters):line.slice(0,width));
+ }catch{return[];}
+}
+
+/** 🪦️ The line that says a stage process vanished: no exit file, no signal, so its wrapper was ended from outside the supervisor; when it was last seen alive and whether this supervisor had sent a stop signal itself. */
+const vanishedLineV1=(pid:number,lastSeenSeconds:number,stopped:boolean):string=>`the stage process ${pid} is gone: it left no exit file and no signal was recorded, so its wrapper was ended without a chance to write the end (a SIGKILL from a person or a program, the system under memory pressure, or a restart of the machine); it was last seen alive ${lastSeenSeconds} s ago and this supervisor ${stopped?"had sent a stop signal to its tree":"sent no signal"} / Der Stufenprozess ${pid} ist weg: er hinterließ keine Exit-Datei und es wurde kein Signal festgehalten, sein Wrapper wurde also beendet, ohne das Ende schreiben zu können (ein SIGKILL einer Person oder eines Programms, das System unter Speicherdruck oder ein Neustart der Maschine); zuletzt lebend gesehen vor ${lastSeenSeconds} s, und dieser Aufseher ${stopped?"hatte ein Stoppsignal an seinen Baum gesandt":"sandte kein Signal"}`;
+
+/** 🪦️ The line that says the process table gave the stage pid another start time twice in a row: the recorded and the seen start, the tolerance and how long the table read took, so a slow table can be told from a reused pid. */
+const changedLineV1=(pid:number,recordedMs:number,seenMs:number,firstMs:number,toleranceMs:number,tableMs:number):string=>`process ${pid} stands in the process table with a start time ${Math.round(Math.abs(seenMs-recordedMs)/1000)} s away from the recorded one (recorded ${new Date(recordedMs).toISOString()}, seen ${new Date(seenMs).toISOString()} and before ${new Date(firstMs).toISOString()}, tolerance ${Math.round(toleranceMs/1000)} s, the last table read took ${Math.round(tableMs/1000)} s) in two reads in a row, so it is judged another process that reused the pid and the stage is ended / Prozess ${pid} steht mit einer um ${Math.round(Math.abs(seenMs-recordedMs)/1000)} s abweichenden Startzeit in der Prozesstabelle (festgehalten ${new Date(recordedMs).toISOString()}, gesehen ${new Date(seenMs).toISOString()} und zuvor ${new Date(firstMs).toISOString()}, Toleranz ${Math.round(toleranceMs/1000)} s, das letzte Lesen der Tabelle dauerte ${Math.round(tableMs/1000)} s) in zwei Lesungen hintereinander, er gilt daher als anderer Prozess mit wiederverwendeter pid und die Stufe wird beendet`;
+
+/** 🪦️ The line that names the signal that ended a stage process (the wrapper records it; a bare exit status cannot tell a kill from a failure). */
+const exitSignalLineV1=(signal:string):string=>`the stage process was ended by signal ${signal} / Der Stufenprozess wurde durch das Signal ${signal} beendet`;
+
 function logTailV1(log:string,count:number=P.tailLines,width:number=P.tailCharacters):string[]{
  try{
   const size=statSync(log).size,start=Math.max(0,size-P.tailBytes),buffer=Buffer.alloc(size-start),handle=openSync(log,"r");
@@ -428,7 +514,7 @@ function logTailV1(log:string,count:number=P.tailLines,width:number=P.tailCharac
 /** 🧹️ What a stage runner needs to find the orphans of earlier tries: the lease registry folder of the user, the windows of this worker's stopped tries and the working window of a person. */
 export type ReadyOrphanPortsV1=Readonly<{registryRoot:string;windows():readonly ReadyWindowV1[];human():ReadyPersonV1|null}>;
 
-/** 🏃️ Runs one stage, or adopts the one already in flight, as a process of its own that outlives this one: a detached wrapper (`./🏃️wrapper/🟦️.ts`) starts `bash <bootstrap> setup` with `SKIP_REPO_BOOTSTRAP=1` (PowerShell with `-SkipRepoBootstrap` on Windows) or the `repo` binary of the account, with the account's tool directories on PATH, the language of the machine, the fleet variables and no cache override, `CARGO_BUILD_JOBS` and `MAKEFLAGS` bounded by `jobs`, its output in `.cache/f/ready/<stage>.log`; the record `running.json` lets a restarted runner (the agent restarts for new code every few minutes, and a stage takes longer) wait for the same process instead of killing it. The runner polls for the exit file, the resident size of the process tree (the peak), the last output lines, the timeout and the cancel request (a file `.cache/f/ready/cancel`, which ends the whole process group: SIGTERM, SIGKILL after the grace). Aborting `signal` only stops waiting (`detached: true`), the stage goes on. */
+/** 🏃️ Runs one stage, or adopts the one already in flight, as a process of its own that outlives this one: a detached wrapper (`./🏃️wrapper/🟦️.ts`) starts `bash <bootstrap> setup` with `SKIP_REPO_BOOTSTRAP=1` (PowerShell with `-SkipRepoBootstrap` on Windows) or the `repo` binary of the account, with the account's tool directories on PATH, the language of the machine, the fleet variables and no cache override, `CARGO_BUILD_JOBS` and `MAKEFLAGS` bounded by `jobs`, its output in `.cache/f/ready/<stage>.log` (the file descriptor belongs to the stage, so no supervisor restart loses a line; the log of the try before stays as `<stage>.previous.log`, and a failure is mirrored with its provenance and without the machine rows, see `failureLinesV1`); the record `running.json` lets a restarted runner (the agent restarts for new code every few minutes, and a stage takes longer) wait for the same process instead of killing it. The runner polls for the exit file, the resident size of the process tree (the peak), the last output lines, the timeout and the cancel request (a file `.cache/f/ready/cancel`, which ends the whole process group: SIGTERM, SIGKILL after the grace). Aborting `signal` only stops waiting (`detached: true`), the stage goes on. */
 export async function runReadyStageV1(input:Readonly<{root:string;environment:Readonly<Record<string,string|undefined>>;stage:ReadyStageV1;signal:AbortSignal;jobs:number;home?:string;onLine(line:string):void;mirror?(stage:string,lines:readonly string[]):void;tree?:typeof READY_TREE_POLICY_V1;orphans?:ReadyOrphanPortsV1;containment?:typeof READY_CONTAINMENT_POLICY_V1;speed?:number}>):Promise<ReadyRunResultV1>{
  const speed=input.speed??localMachineSpeedFactorV1(input.environment),stageTimeout=scaledMillisecondsV1(input.stage.timeoutMilliseconds,speed);
  const windows=process.platform==="win32",directory=machinePathV1(input.root,...P.directory),home=input.home??homedir(),inflightFile=join(directory,P.inflightName),cancelFile=join(directory,P.cancelName);
@@ -444,9 +530,9 @@ export async function runReadyStageV1(input:Readonly<{root:string;environment:Re
  if(record===undefined){await sweepRosters();const swept=await reapRegistry(null,"registry");earlier.reaped.push(...swept.reaped);earlier.survivors.push(...swept.survivors);}
  const wait=async(inflight:ReadyInflightV1):Promise<ReadyRunResultV1>=>new Promise<ReadyRunResultV1>(finish=>{
   let peak=0,timedOut=false,cancelled=false,stalled=false,tick=0,last="",killed=false,known:readonly ReadyKnownV1[]=readyReadTreeV1(directory,inflight.stage)?.processes??[],sampling=false,progressKey:string|null=null,progressAt=Date.now(),stallAt=Date.now(),codeFile:string|undefined,codeStale=false,codeCheckedAt=0,phase:ReadyPhaseV1=null,phaseAt=inflight.startedMs,phaseOffset=0,finishing=false,reaping=false,reapedAt=0,nextSample=0,sampledAt=Date.now();
-  const treePolicy=input.tree??readyScaledTreePolicyV1(speed),tracker=readyStallTrackerV1(treePolicy),holder=readyHolderWaitTrackerV1(treePolicy),holderLines=treePolicy.holderWaitPatterns.map(pattern=>new RegExp(pattern,"u")),left=new Map<number,ReadyKnownV1>(earlier.survivors.map(row=>[row.pid,row])),reaped:ReadyReapedV1[]=[...earlier.reaped];
+  const treePolicy=input.tree??readyScaledTreePolicyV1(speed),semanticsAtStart=readySemanticsV1(input.root,treePolicy),tracker=readyStallTrackerV1(treePolicy),stepWatch=readyStepWatchV1(treePolicy),holder=readyHolderWaitTrackerV1(treePolicy),holderLines=treePolicy.holderWaitPatterns.map(pattern=>new RegExp(pattern,"u")),left=new Map<number,ReadyKnownV1>(earlier.survivors.map(row=>[row.pid,row])),reaped:ReadyReapedV1[]=[...earlier.reaped];
   const rootOf=():ReadyKnownV1=>({pid:inflight.pid,startMs:inflight.startedMs});
-  let killReason:ReadyKillReasonV1="stall",cpuBefore:ReadonlyMap<number,number>=new Map();
+  let overdueStep:Readonly<ReadyStepV1&{limit:number;quiet:number}>|undefined,aliveAt=Date.now(),tableMilliseconds=0,confirming=false,killReason:ReadyKillReasonV1="stall",cpuBefore:ReadonlyMap<number,number>=new Map(),inspecting=false,inspectedAt=0,silentHolder:Readonly<{pid:number;command:string;seconds:number}>|undefined;const yielded=new Set<number>();
   const recorder=(reason:ReadyKillReasonV1)=>readyKillRecorderV1({directory,stage:inflight.stage,owner:ownerOf(inflight.stage,inflight.startedMs),reason,seconds:Math.round(treePolicy.stallStopMilliseconds/1000),say,policy:contain});
   const stopTree=async(signal:"SIGTERM"|"SIGKILL"):Promise<void>=>{const table=await readyReadTableV1(),spared=spare(table),plan=await readyKillTreeV1({root:rootOf(),known,signal,...table.length===0?{}:{table,spare:spared},record:recorder(killReason)});if(process.platform!=="win32"&&plan.includes(inflight.pid)&&(spared.size===0||readyKillPlanV1({table,root:rootOf(),known,self:process.pid}).length===plan.length))try{process.kill(-inflight.pid,signal);}catch{}};
   const kill=(reason:ReadyKillReasonV1):void=>{if(killed)return;killed=true;killReason=reason;void stopTree("SIGTERM");setTimeout(()=>{void stopTree("SIGKILL");},P.graceMilliseconds).unref();};
@@ -458,24 +544,43 @@ export async function runReadyStageV1(input:Readonly<{root:string;environment:Re
    readyWriteTreeV1(directory,inflight.stage,rootOf(),result.survivors,Date.now());
    for(const row of result.survivors)say(readyContainmentLineV1("survivor",{pid:row.pid,name:row.name??"?",passes:result.passes}));
   };
-  const done=(result:ReadyRunResultV1):void=>{clearInterval(timer);input.signal.removeEventListener("abort",detach);const full=result.detached?result:{...result,containment:{reaped:[...reaped],survivors:[...left.values()]}};finish(codeFile===undefined||result.detached?full:{...full,codeChanged:codeFile,...codeStale?{codeStale:true}:{}});};
+  const readRecord=():ReadyReadRecordV1|undefined=>{try{const value=JSON.parse(readFileSync(machinePathV1(input.root,...treePolicy.readRecord),"utf8")) as Partial<ReadyReadRecordV1>;return Number.isSafeInteger(value.runner)&&Number.isFinite(value.startedMs)&&(value.reason==="request"||value.reason==="refresh")?{reason:value.reason,runner:value.runner!,read:value.read??null,startedMs:value.startedMs!,status:value.status??null,endedMs:value.endedMs??null}:undefined;}catch{return undefined;}};
+  const inspect=async(named:ReadyHolderWaitV1,waiting:number):Promise<void>=>{
+   const table=await readyReadTableV1(),entries=input.orphans===undefined?[]:readyRegistryEntriesV1(input.orphans.registryRoot,contain),entry=entries.filter(row=>row.pid===named.pid).sort((left,right)=>right.startedAtMs-left.startedAtMs)[0],verdict=readyHolderCustodyV1({wait:named,entry,table,nowMs:Date.now(),policy:treePolicy});
+   if(killed)return;
+   silentHolder=verdict.kind==="silent"?{pid:named.pid,command:named.command,seconds:Math.round(verdict.silentMs/1000)}:undefined;
+   if(verdict.kind==="progressing"||verdict.kind==="gone"){stallAt=Date.now();progressAt=Date.now();}
+   if(verdict.kind!=="progressing"&&verdict.kind!=="silent"||waiting<treePolicy.holderYieldMilliseconds||yielded.has(named.pid))return;
+   const reader=readyBackgroundReaderV1({record:readRecord(),holder:named.pid,table,self:process.pid,policy:treePolicy});
+   if(reader===undefined)return;
+   yielded.add(named.pid);
+   const seconds=Math.round(waiting/1000),record=readyKillRecorderV1({directory,stage:inflight.stage,owner:ownerOf(inflight.stage,inflight.startedMs),reason:"yield",seconds,say,policy:contain});
+   say(readyContainmentLineV1("yielded-reader",{stage:inflight.stage,seconds,pid:named.pid,name:named.command.slice(0,80),reason:reader.reason}));
+   await readyKillTreeV1({root:reader.root,known:[],signal:"SIGTERM",table,spare:new Set<number>(),record});
+   setTimeout(()=>{void readyKillTreeV1({root:reader.root,known:[],signal:"SIGKILL",spare:new Set<number>(),record});},P.graceMilliseconds).unref();
+  };
+  const done=(result:ReadyRunResultV1):void=>{clearInterval(timer);input.signal.removeEventListener("abort",detach);const full=result.detached?result:{...result,containment:{reaped:[...reaped],survivors:[...left.values()]},...silentHolder!==undefined&&result.stalled?{holderSilent:silentHolder}:{},...overdueStep!==undefined&&result.stalled?{stepOverdue:overdueStep}:{}};finish(codeFile===undefined||result.detached?full:{...full,codeChanged:codeFile,...codeStale?{codeStale:true}:{}});};
+  const watchedMs=Date.now(),stamp=(milliseconds:number):string=>new Date(milliseconds).toISOString();
+  const provenance=():string=>{const started=inflight.supervisor,same=started===process.pid;return same?`stage ${inflight.stage} (process ${inflight.pid}) started ${stamp(inflight.startedMs)} and watched by supervisor ${process.pid} / Stufe ${inflight.stage} (Prozess ${inflight.pid}) gestartet ${stamp(inflight.startedMs)} und von Aufseher ${process.pid} überwacht`:`stage ${inflight.stage} (process ${inflight.pid}) started ${stamp(inflight.startedMs)} by supervisor ${started??"?"}, adopted by supervisor ${process.pid} at ${stamp(watchedMs)} / Stufe ${inflight.stage} (Prozess ${inflight.pid}) gestartet ${stamp(inflight.startedMs)} von Aufseher ${started??"?"}, übernommen von Aufseher ${process.pid} um ${stamp(watchedMs)}`;};
+  const ending=(signal:string|null,why?:string):Readonly<{tail:string[];failure:string[]}>=>{const note=signal!==null?[exitSignalLineV1(signal)]:why===undefined?[]:[why];return{tail:[...failureLinesV1(inflight.log,P.tailLines-note.length,P.tailCharacters),...note],failure:[provenance(),...failureLinesV1(inflight.log,P.mirrorLines-1-note.length,P.mirrorLineCharacters),...note]};};
   const detach=():void=>done({exit:null,timedOut:false,spawnFailed:false,cancelled:false,stalled:false,detached:true,startedMs:inflight.startedMs,peakMegabytes:peak>0?peak:null,tail:logTailV1(inflight.log)});
   const timer=setInterval(()=>{
    tick++;
    if(finishing)return;
    if(existsSync(inflight.exitFile)){
-    let exit:number|null=null,spawnFailed=false;
-    try{const row=JSON.parse(readFileSync(inflight.exitFile,"utf8")) as {exit:number|null;spawnFailed:boolean};exit=row.exit;spawnFailed=row.spawnFailed;}catch{}
+    let exit:number|null=null,spawnFailed=false,signal:string|null=null;
+    try{const row=JSON.parse(readFileSync(inflight.exitFile,"utf8")) as {exit:number|null;signal?:string|null;spawnFailed:boolean};exit=row.exit;spawnFailed=row.spawnFailed;signal=row.signal??null;}catch{}
     if(exit===0)readyForgetTreeV1(directory,inflight.stage);
     input.mirror?.(inflight.stage,logTailV1(inflight.log,P.mirrorLines,P.mirrorLineCharacters));
     rmSync(inflight.exitFile,{force:true});rmSync(inflightFile,{force:true});
-    return done({exit,timedOut,spawnFailed,cancelled,stalled,detached:false,startedMs:inflight.startedMs,peakMegabytes:peak>0?peak:null,tail:logTailV1(inflight.log)});
+    return done({exit,signal,timedOut,spawnFailed,cancelled,stalled,detached:false,startedMs:inflight.startedMs,peakMegabytes:peak>0?peak:null,...exit===0?{tail:logTailV1(inflight.log)}:ending(signal)});
    }
-   if(!alive(inflight.pid)){rmSync(inflightFile,{force:true});finishing=true;void settle().finally(()=>done({exit:null,timedOut,spawnFailed:false,cancelled,stalled,detached:false,startedMs:inflight.startedMs,peakMegabytes:peak>0?peak:null,tail:logTailV1(inflight.log)}));return;}
+   if(!alive(inflight.pid)){rmSync(inflightFile,{force:true});finishing=true;const why=vanishedLineV1(inflight.pid,Math.round((Date.now()-aliveAt)/1000),killed);void settle().finally(()=>done({exit:null,signal:null,timedOut,spawnFailed:false,cancelled,stalled,detached:false,startedMs:inflight.startedMs,peakMegabytes:peak>0?peak:null,...ending(null,why)}));return;}
+   aliveAt=Date.now();
    if(input.mirror!==undefined&&tick%mirrorEvery===0)input.mirror(inflight.stage,logTailV1(inflight.log,P.mirrorLines,P.mirrorLineCharacters));
-   if(tick%progressEvery===0){const lines=logTailV1(inflight.log),line=lines.at(-1)??"",key=readyProgressKeyV1(lines);if(key!==null&&key!==progressKey){progressKey=key;progressAt=Date.now();}if(line!==""&&line!==last){last=line;input.onLine(line);}const recent=logTailV1(inflight.log,60);if(tracker.observe(recent)){stallAt=Date.now();progressAt=Date.now();}const waiting=holder.observe(recent,Date.now()),fed=logSinceV1(inflight.log,phaseOffset),seenPhase=readyStagePhaseV1(fed.lines,phase,treePolicy);phaseOffset=fed.offset;if(seenPhase!==phase){if(phase!==null||seenPhase!=="reading")phaseAt=Date.now();phase=seenPhase;}if(!killed&&!reaping&&input.orphans!==undefined&&Date.now()-reapedAt>=contain.holderReapMilliseconds&&recent.some(line=>holderLines.some(expression=>expression.test(line)))){reaping=true;reapedAt=Date.now();void reapRegistry({root:rootOf(),known},"holder").then(swept=>{reaped.push(...swept.reaped);for(const row of swept.reaped)left.delete(row.pid);for(const row of swept.survivors)left.set(row.pid,row);}).finally(()=>{reaping=false;});}if(!killed&&(waiting>=treePolicy.holderWaitRestartMilliseconds||readyStaleStopV1(phase,Date.now()-phaseAt,treePolicy))&&Date.now()-codeCheckedAt>=treePolicy.codeCheckMilliseconds){codeCheckedAt=Date.now();const holder=readyHolderRestartV1(waiting,true,treePolicy),file=readyCodeChangedSinceV1(input.root,holder?inflight.startedMs:phaseAt,treePolicy);if(file!==null&&(holder||readyStaleStopV1(phase,Date.now()-phaseAt,treePolicy))){codeFile=file;codeStale=!holder;stalled=true;kill("restart");}}}
+   if(tick%progressEvery===0){const lines=logTailV1(inflight.log),line=lines.at(-1)??"",key=readyProgressKeyV1(lines);if(key!==null&&key!==progressKey){progressKey=key;progressAt=Date.now();}if(line!==""&&line!==last){last=line;input.onLine(line);}const recent=logTailV1(inflight.log,60);if(tracker.observe(recent)){stallAt=Date.now();progressAt=Date.now();}const waiting=holder.observe(recent,Date.now()),fed=logSinceV1(inflight.log,phaseOffset),seenPhase=readyStagePhaseV1(fed.lines,phase,treePolicy);phaseOffset=fed.offset;if(!killed&&!inspecting&&waiting>0&&Date.now()-inspectedAt>=treePolicy.holderCheckMilliseconds){const named=readyHolderWaitOfV1(recent,treePolicy);if(named!==undefined){inspecting=true;inspectedAt=Date.now();void inspect(named,waiting).catch(()=>undefined).finally(()=>{inspecting=false;});}}if(seenPhase!==phase){if(phase!==null||seenPhase!=="reading")phaseAt=Date.now();phase=seenPhase;}const watched=stepWatch.observe(recent,Date.now());if(!killed&&phase!=="executing"&&watched.overdue&&watched.step!==undefined){overdueStep={...watched.step,limit:readyStepOverdueSecondsV1(watched.step.bound,treePolicy),quiet:Math.round(watched.quietMs/1000)};stalled=true;kill("overdue");}if(!killed&&!reaping&&input.orphans!==undefined&&Date.now()-reapedAt>=contain.holderReapMilliseconds&&recent.some(line=>holderLines.some(expression=>expression.test(line)))){reaping=true;reapedAt=Date.now();void reapRegistry({root:rootOf(),known},"holder").then(swept=>{reaped.push(...swept.reaped);for(const row of swept.reaped)left.delete(row.pid);for(const row of swept.survivors)left.set(row.pid,row);}).finally(()=>{reaping=false;});}if(!killed&&(waiting>=treePolicy.holderWaitRestartMilliseconds||readyStaleStopV1(phase,Date.now()-phaseAt,treePolicy))&&Date.now()-codeCheckedAt>=treePolicy.codeCheckMilliseconds){codeCheckedAt=Date.now();const holder=readyHolderRestartV1(waiting,true,treePolicy),file=readySemanticsChangedV1(input.root,semanticsAtStart,treePolicy);if(file!==null&&(holder||readyStaleStopV1(phase,Date.now()-phaseAt,treePolicy))){codeFile=file;codeStale=!holder;stalled=true;kill("restart");}}}
    if(!killed&&readyStalledV1(Date.now()-stallAt,treePolicy)){stalled=true;kill("stall");}
-   if(Date.now()>=nextSample&&!sampling&&!killed){sampling=true;void readyReadTableV1().then(table=>{sampling=false;nextSample=Date.now()+readySampleDelayV1(Date.now()-inflight.startedMs,contain);if(table.length===0||killed)return;const root=rootOf();if(readyIdentityV1(root,table)==="reused"&&!existsSync(inflight.exitFile)){rmSync(inflightFile,{force:true});readyForgetTreeV1(directory,inflight.stage);return done({exit:null,timedOut,spawnFailed:false,cancelled,stalled,detached:false,startedMs:inflight.startedMs,peakMegabytes:peak>0?peak:null,tail:logTailV1(inflight.log)});}known=readyTreeMembersV1(table,root,[...known,...readyHeirsV1({table,previous:[root,...known],sinceMs:sampledAt})]);sampledAt=Date.now();readyWriteTreeV1(directory,inflight.stage,root,known,sampledAt);});}
+   if(Date.now()>=nextSample&&!sampling&&!killed){sampling=true;const tableBegan=Date.now();void readyReadTableV1().then(table=>{sampling=false;tableMilliseconds=Date.now()-tableBegan;nextSample=Date.now()+readySampleDelayV1(Date.now()-inflight.startedMs,contain);if(table.length===0||killed)return;const root=rootOf();if(readyIdentityV1(root,table)==="reused"&&!existsSync(inflight.exitFile)&&!confirming&&!finishing){confirming=true;const first=table.find(row=>row.pid===root.pid)!;void readyReadTableV1().then(second=>{confirming=false;if(finishing||killed||existsSync(inflight.exitFile)||second.length===0||readyIdentityV1(root,second)!=="reused")return;const again=second.find(row=>row.pid===root.pid)!,why=changedLineV1(root.pid,root.startMs,again.startMs,first.startMs,P.toleranceMilliseconds,tableMilliseconds);rmSync(inflightFile,{force:true});readyForgetTreeV1(directory,inflight.stage);finishing=true;void settle().finally(()=>done({exit:null,signal:null,timedOut,spawnFailed:false,cancelled,stalled,detached:false,startedMs:inflight.startedMs,peakMegabytes:peak>0?peak:null,...ending(null,why)}));});return;}known=readyTreeMembersV1(table,root,[...known,...readyHeirsV1({table,previous:[root,...known],sinceMs:sampledAt})]);sampledAt=Date.now();readyWriteTreeV1(directory,inflight.stage,root,known,sampledAt);});}
    if(!windows&&tick%sampleEvery===0){const rows=spawnSync("ps",["-A","-o","pid=,ppid=,rss=,time="],{encoding:"utf8"});if(rows.status===0){peak=Math.max(peak,readyTreeMegabytesV1(rows.stdout,inflight.pid));const cpu=readyTreeCpuV1(rows.stdout,inflight.pid,known.map(member=>member.pid));if(!killed&&readyLivenessV1(cpuBefore,cpu,treePolicy)){stallAt=Date.now();progressAt=Date.now();}cpuBefore=cpu;}}
    {const elapsed=Date.now()-inflight.startedMs;if(elapsed>stageTimeout){const verdict=readyDeadlineV1({elapsedMs:elapsed,softMs:stageTimeout,sinceProgressMs:Date.now()-progressAt,policy:treePolicy});if(verdict==="timeout"||verdict==="stalled"){timedOut=true;kill("timeout");}}}
    if(existsSync(cancelFile)){cancelled=true;rmSync(cancelFile,{force:true});kill("cancel");}
@@ -500,6 +605,7 @@ export async function runReadyStageV1(input:Readonly<{root:string;environment:Re
  const log=join(directory,`${input.stage.name}.log`),exitFile=join(directory,`${input.stage.name}.exit`);
  rmSync(exitFile,{force:true});rmSync(cancelFile,{force:true});
  let child:ReturnType<typeof spawn>;
+ try{renameSync(log,`${log.slice(0,-4)}${P.previousLogSuffix}`);}catch{}
  const handle=openSync(log,"w");
  if(lines.length>0)writeSync(handle,`${lines.join("\n")}\n`);
  try{child=spawn(process.execPath,[join(import.meta.dir,"🏃️wrapper","🟦️.ts"),exitFile,command,...args],{cwd:input.root,env,stdio:["ignore",handle,handle],detached:true,windowsHide:true});}
@@ -507,7 +613,7 @@ export async function runReadyStageV1(input:Readonly<{root:string;environment:Re
  closeSync(handle);
  child.on("error",()=>undefined);child.unref();
  if(child.pid===undefined)return Promise.resolve(failed(`${command} could not be started / ${command} konnte nicht gestartet werden`,true));
- const started:ReadyInflightV1={stage:input.stage.name,pid:child.pid,startedMs,exitFile,log};
+ const started:ReadyInflightV1={stage:input.stage.name,pid:child.pid,startedMs,exitFile,log,supervisor:process.pid};
  writeFileSync(inflightFile,JSON.stringify(started));
  return wait(started);
 }
@@ -517,6 +623,7 @@ export function createReadyPortsV1(input:Readonly<{facts?(path:string):ReadyFile
  const directory=machinePathV1(input.root,...P.directory),stateFile=join(directory,P.stateName),marker=machinePathV1(input.root,".cache","f",P.markerName),windows=process.platform==="win32";
  const status=createReadyStatusV1({store:input.environment.SEMIO_FLEET_STORE_ROOT,origin:input.origin});
  const hashOf=(path:string):string|undefined=>{try{return readyInputHashV1(path,readFileSync(join(input.root,...path.split("/")),"utf8"));}catch{return undefined;}};
+ const recentRuns=():readonly ReadyTimingV1[]=>{try{return(JSON.parse(readFileSync(join(directory,P.timingsName),"utf8")) as {runs:ReadyTimingV1[]}).runs;}catch{return[];}};
  const owner=`${process.pid}:${Math.random().toString(16).slice(2)}`,jitter=parseInt(sha(input.origin).slice(0,8),16)/0x100000000;
  return{
   server:isServer(input.origin,input.group),...input.stages===undefined?{}:{stages:input.stages},now:Date.now,jitter,cores:availableParallelism(),
@@ -531,7 +638,16 @@ export function createReadyPortsV1(input:Readonly<{facts?(path:string):ReadyFile
   human:()=>readyHumanActiveV1(directory),
   lease:createReadyLeaseV1({directory,owner}),
   inflight:()=>{try{const row=JSON.parse(readFileSync(join(directory,P.inflightName),"utf8")) as {stage:string;pid:number};return alive(row.pid)?row.stage:undefined;}catch{return undefined;}},
-   disk:stage=>readyDiskShortV1({stage,paths:[machinePathV1(input.root,".cache"),tmpdir()],facts:input.facts??readyFilesystemFactsV1}),
+   disk:stage=>readyDiskShortV1({stage,paths:[machinePathV1(input.root,".cache"),tmpdir()],facts:input.facts??readyFilesystemFactsV1,runs:recentRuns()}),
+   diskUnknown:()=>readyDiskUnknownV1({paths:[machinePathV1(input.root,".cache"),tmpdir()],facts:input.facts??readyFilesystemFactsV1}),
+   freeMegabytes:()=>{const free=[machinePathV1(input.root,".cache"),tmpdir()].map(path=>(input.facts??readyFilesystemFactsV1)(path)?.freeBytes).filter((bytes):bytes is number=>typeof bytes==="number");return free.length===0?null:Math.floor(Math.min(...free)/1048576);},
+   recover:async request=>{
+    const facts=input.facts??readyFilesystemFactsV1,reading=()=>{const row=facts(request.short.path);return row===null||row.freeBytes===null?undefined:{partition:request.short.path,totalBytes:row.freeBytes,freeBytes:row.freeBytes};};
+    const{recoverNeedV1}=await import("../../../🌡️host-capacity/🧹️disk-recovery/🟦️.ts"),{realDiskWritersV1}=await import("../../../🌡️host-capacity/🧹️disk-recovery/🔌️real/🟦️.ts");
+    const writers=realDiskWritersV1({workspace:input.root,home:input.home??homedir(),tmp:tmpdir(),uid:process.getuid?.()??0,environment:input.environment,language:"both",report:request.report,free:()=>reading()?.freeBytes});
+    const outcome=await recoverNeedV1({facts:reading,needBytes:request.short.needed*1048576,writers,language:"both",report:request.report,signal:request.signal});
+    return{fits:outcome.verdict!=="refuse",consumers:outcome.consumers};
+   },
    compiler:()=>{const seen=inspectTypescriptCompilerV1({root:input.root});return seen.ok||(seen.refusal.code==="typescript-compiler-declaration"&&seen.refusal.found===null&&!existsSync(seen.refusal.resolved))?null:{en:seen.refusal.en,de:seen.refusal.de};},
  memory:()=>{const reading=fleetHostReadingV1({environment:input.environment}),free=reading.availableMegabytes;return{availableMegabytes:free,ok:free===null||free>=P.memoryFloorMegabytes};},
   run:(stage,options)=>runReadyStageV1({root:input.root,environment:input.environment,stage,...input.home===undefined?{}:{home:input.home},orphans:{registryRoot:readyRegistryRootV1(input.environment,process.platform,input.home??homedir()),windows:()=>{try{return readyStoppedWindowsV1((JSON.parse(readFileSync(join(directory,P.timingsName),"utf8")) as {runs:ReadyTimingV1[]}).runs);}catch{return[];}},human:()=>{try{return readyHumanRecordV1(readFileSync(join(directory,P.humanName),"utf8"));}catch{return null;}}},...options}),

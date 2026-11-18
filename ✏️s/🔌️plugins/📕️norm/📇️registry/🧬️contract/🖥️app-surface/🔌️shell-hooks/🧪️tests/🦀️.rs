@@ -12,8 +12,8 @@ fn key(scope: &str, key: &str, ctrl: bool, alt: bool, shift: bool) -> ShellKeyEv
     ShellKeyEvent { scope: scope.to_owned(), key: key.to_owned(), ctrl, alt, shift, meta: false }
 }
 
-const EDITOR: &str = "s.norm.en1993#editor";
-const VIEWER: &str = "s.norm.en1993#viewer";
+const EDITOR: &str = "s.norm-eurocode-structural.en1993#editor";
+const VIEWER: &str = "s.norm-eurocode-structural.en1993#viewer";
 
 #[test]
 fn the_hook_chooses_the_named_layout_of_the_device_class() {
@@ -152,6 +152,16 @@ fn a_focus_chord_in_a_window_of_no_artifact_is_left_to_the_shell_and_no_focus_ac
     let outcome = NormShellHooks.handle_key(&ShellKeyEvent { scope: "unrelated".to_owned(), key: "3".to_owned(), alt: true, ..ShellKeyEvent::default() });
     assert!(matches!(outcome, ShellKeyOutcome::Ignored | ShellKeyOutcome::Verb { .. }), "never an app action: {outcome:?}");
     assert!(shortcut_action_definitions().iter().all(|definition| !definition.id.contains("focus-")), "the focus shortcuts are framework verbs, no app actions");
+}
+
+#[test]
+fn every_window_action_of_the_visual_windows_is_classified_for_interactive_jobs() {
+    let windows = [crate::viewport_window_definition("en1993", semio_ui_locale::LocalizedLabel::native("Viewport", "Ansicht"), "viewport", "box"), crate::diagram_window_definition("en1993", semio_ui_locale::LocalizedLabel::native("Diagrams", "Diagramme"), "diagrams", "chart-line")];
+    for window in &windows {
+        for action in &window.actions {
+            assert_ne!(action.semantics.execution.interactive_job, semio_plugin::InteractiveJobClassification::Unclassified, "{} of {} is unclassified", action.id, window.id);
+        }
+    }
 }
 
 #[test]

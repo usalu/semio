@@ -6,6 +6,5 @@ include!("../🧰️laws/🎯️action-args/🦀️.rs");
 
 value_tree_case!(din4108_declares_its_value_tree_arguments, semio_s_artifact_norm_din4108_editor::create_din4108_app);
 value_tree_case!(din16798_declares_its_value_tree_arguments, semio_s_artifact_norm_din16798_editor::create_din16798_app);
-value_tree_case!(din18599_declares_its_value_tree_arguments, semio_s_artifact_norm_din18599_editor::create_din18599_app);
 value_tree_case!(iso16757_declares_its_value_tree_arguments, semio_s_artifact_norm_iso16757_editor::create_iso16757_app);
 value_tree_case!(vdi3805_declares_its_value_tree_arguments, semio_s_artifact_norm_vdi3805_editor::create_vdi3805_app);

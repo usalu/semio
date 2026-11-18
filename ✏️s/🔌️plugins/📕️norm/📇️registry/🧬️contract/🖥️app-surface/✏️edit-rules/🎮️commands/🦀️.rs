@@ -8,7 +8,7 @@ pub(crate) mod tests;
 
 //#region 🔖️Commands
 fn unresolved(error: String) -> Fault {
-    Fault::new(FaultOrigin::App, FaultCode::new("norm.edit-unresolved"), error)
+    Fault::new(FaultOrigin::App, FaultCode::new("norm.editor.edit-unresolved"), error)
 }
 
 /// ✏️ Generic `setField` — `{path, value}` over the document value tree, resolved by the family to concrete kinds.
@@ -52,7 +52,7 @@ pub enum RemedyEdit {
 pub fn remedy_edit(report: &CheckReport, check_id: &str, remedy_index: usize, option_index: usize, tree: &semio_framework_value::DslValue) -> Result<(String, semio_framework_value::DslValue), Fault> {
     match remedy_resolution(report, check_id, remedy_index, option_index, tree)? {
         RemedyEdit::Set { path, value } => Ok((path, value)),
-        RemedyEdit::Remove { path } => Err(Fault::new(FaultOrigin::App, FaultCode::new("norm.remedy-removes-row"), format!("remedy {remedy_index} on '{check_id}' removes the row '{path}' and writes no value"))),
+        RemedyEdit::Remove { path } => Err(Fault::new(FaultOrigin::App, FaultCode::new("norm.editor.remedy-removes-row"), format!("remedy {remedy_index} on '{check_id}' removes the row '{path}' and writes no value"))),
         RemedyEdit::Insert { path, .. } => Err(Fault::new(FaultOrigin::App, FaultCode::new("norm.remedy-inserts-row"), format!("remedy {remedy_index} on '{check_id}' inserts a row into '{path}' and writes no value"))),
     }
 }
@@ -81,20 +81,20 @@ fn remedy_row(remedy: &Remedy, rows: &[semio_framework_value::DslValue]) -> Resu
 
 /// 🩹 Resolves a remedy into its [`RemedyEdit`]: [`RemedyBound::Remove`] selects the row of the target path (it must exist), [`RemedyBound::Insert`] appends its typed row to the list of the target path, every other bound writes a value like [`remedy_edit`].
 pub fn remedy_resolution(report: &CheckReport, check_id: &str, remedy_index: usize, option_index: usize, tree: &semio_framework_value::DslValue) -> Result<RemedyEdit, Fault> {
-    let check = report.checks.iter().find(|check| check.id == check_id).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("norm.apply-remedy-missing-check"), format!("check '{check_id}' not in report")))?;
-    let remedy = check.remedies.get(remedy_index).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("norm.apply-remedy-missing-remedy"), format!("remedy {remedy_index} missing on '{check_id}'")))?;
+    let check = report.checks.iter().find(|check| check.id == check_id).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("norm.editor.apply-remedy-missing-check"), format!("check '{check_id}' not in report")))?;
+    let remedy = check.remedies.get(remedy_index).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("norm.editor.apply-remedy-missing-remedy"), format!("remedy {remedy_index} missing on '{check_id}'")))?;
     if !remedy.applicable {
-        return Err(Fault::new(FaultOrigin::App, FaultCode::new("norm.apply-remedy-not-applicable"), format!("remedy {remedy_index} on '{check_id}' is not applicable")));
+        return Err(Fault::new(FaultOrigin::App, FaultCode::new("norm.editor.apply-remedy-not-applicable"), format!("remedy {remedy_index} on '{check_id}' is not applicable")));
     }
     let path = remedy.target.path.clone();
     if path.is_empty() {
-        return Err(Fault::new(FaultOrigin::App, FaultCode::new("norm.apply-remedy-empty-path"), format!("remedy {remedy_index} on '{check_id}' has empty target path")));
+        return Err(Fault::new(FaultOrigin::App, FaultCode::new("norm.editor.apply-remedy-empty-path"), format!("remedy {remedy_index} on '{check_id}' has empty target path")));
     }
-    let current = get_value_at_path(tree, &path).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("norm.value-path"), error))?;
+    let current = get_value_at_path(tree, &path).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("norm.editor.value-path"), error))?;
     let value = match remedy.bound {
         RemedyBound::Remove => {
-            if !matches!(parse_path(&path).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("norm.value-path"), error))?.last(), Some(PathSegment::Index(_) | PathSegment::Id(_))) {
-                return Err(Fault::new(FaultOrigin::App, FaultCode::new("norm.apply-remedy-remove-path"), format!("remove remedy {remedy_index} on '{check_id}' must target a list row, not '{path}'")));
+            if !matches!(parse_path(&path).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("norm.editor.value-path"), error))?.last(), Some(PathSegment::Index(_) | PathSegment::Id(_))) {
+                return Err(Fault::new(FaultOrigin::App, FaultCode::new("norm.editor.apply-remedy-remove-path"), format!("remove remedy {remedy_index} on '{check_id}' must target a list row, not '{path}'")));
             }
             return Ok(RemedyEdit::Remove { path });
         }
@@ -107,19 +107,19 @@ pub fn remedy_resolution(report: &CheckReport, check_id: &str, remedy_index: usi
             let option = remedy
                 .options
                 .get(option_index)
-                .ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("norm.apply-remedy-missing-option"), format!("option {option_index} missing on OneOf remedy {remedy_index} for '{check_id}'")))?;
+                .ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("norm.editor.apply-remedy-missing-option"), format!("option {option_index} missing on OneOf remedy {remedy_index} for '{check_id}'")))?;
             match current {
                 semio_framework_value::DslValue::Bool(_) => semio_framework_value::DslValue::Bool(option.eq_ignore_ascii_case("true") || option == "1"),
                 semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(_)) => {
-                    let parsed = option.parse::<u64>().map_err(|_| Fault::new(FaultOrigin::App, FaultCode::new("norm.apply-remedy-option-type"), format!("OneOf option '{option}' is not a u64 for '{path}'")))?;
+                    let parsed = option.parse::<u64>().map_err(|_| Fault::new(FaultOrigin::App, FaultCode::new("norm.editor.apply-remedy-option-type"), format!("OneOf option '{option}' is not a u64 for '{path}'")))?;
                     semio_framework_value::DslValue::uint(parsed)
                 }
                 semio_framework_value::DslValue::Number(semio_framework_value::Number::Int(_)) => {
-                    let parsed = option.parse::<i64>().map_err(|_| Fault::new(FaultOrigin::App, FaultCode::new("norm.apply-remedy-option-type"), format!("OneOf option '{option}' is not an i64 for '{path}'")))?;
+                    let parsed = option.parse::<i64>().map_err(|_| Fault::new(FaultOrigin::App, FaultCode::new("norm.editor.apply-remedy-option-type"), format!("OneOf option '{option}' is not an i64 for '{path}'")))?;
                     semio_framework_value::DslValue::int(parsed)
                 }
                 semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(_)) => {
-                    let parsed = option.parse::<f64>().map_err(|_| Fault::new(FaultOrigin::App, FaultCode::new("norm.apply-remedy-option-type"), format!("OneOf option '{option}' is not a float for '{path}'")))?;
+                    let parsed = option.parse::<f64>().map_err(|_| Fault::new(FaultOrigin::App, FaultCode::new("norm.editor.apply-remedy-option-type"), format!("OneOf option '{option}' is not a float for '{path}'")))?;
                     semio_framework_value::DslValue::float(parsed)
                 }
                 _ => semio_framework_value::DslValue::String(option.clone()),
@@ -129,13 +129,13 @@ pub fn remedy_resolution(report: &CheckReport, check_id: &str, remedy_index: usi
             semio_framework_value::DslValue::Bool(_) => semio_framework_value::DslValue::Bool(remedy.required.value >= 0.5),
             semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(_)) => {
                 if !remedy.required.value.is_finite() || remedy.required.value < 0.0 {
-                    return Err(Fault::new(FaultOrigin::App, FaultCode::new("norm.apply-remedy-uint"), format!("required {} is not a u64 for '{path}'", remedy.required.value)));
+                    return Err(Fault::new(FaultOrigin::App, FaultCode::new("norm.editor.apply-remedy-uint"), format!("required {} is not a u64 for '{path}'", remedy.required.value)));
                 }
                 semio_framework_value::DslValue::uint(remedy.required.value.round() as u64)
             }
             semio_framework_value::DslValue::Number(semio_framework_value::Number::Int(_)) => {
                 if !remedy.required.value.is_finite() {
-                    return Err(Fault::new(FaultOrigin::App, FaultCode::new("norm.apply-remedy-int"), format!("required {} is not an i64 for '{path}'", remedy.required.value)));
+                    return Err(Fault::new(FaultOrigin::App, FaultCode::new("norm.editor.apply-remedy-int"), format!("required {} is not an i64 for '{path}'", remedy.required.value)));
                 }
                 semio_framework_value::DslValue::int(remedy.required.value.round() as i64)
             }
@@ -154,7 +154,7 @@ pub fn apply_remedy_edit(report: &CheckReport, check_id: &str, remedy_index: usi
         RemedyEdit::Remove { path } => remove_value_at_path(tree, &path, 0),
         RemedyEdit::Insert { path, index, value } => insert_value_at_path(tree, &path, index, Some(value)),
     };
-    outcome.map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("norm.value-path"), error))
+    outcome.map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("norm.editor.value-path"), error))
 }
 
 /// 🩹 Generic `applyRemedy` — re-evaluates, finds `checkId`, writes SI `required` (or OneOf option) into `remedy.target.path`.

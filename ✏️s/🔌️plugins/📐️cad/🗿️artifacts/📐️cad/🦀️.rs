@@ -84,7 +84,7 @@ pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::Ar
         ("s.cad.cad.schema.artifact", "schema", "s.cad.cad", &[("schema", "s.cad.cad")], None),
         ("s.cad.cad.inference.artifact", "inference", "s.cad.cad.inference", &[("schema", "s.cad.cad.inference")], None),
         ("s.cad.cad.composer.native", "composer", "s.cad.cad@1/*", &[("dialect", "s.cad.cad@1/*")], None),
-        ("s.cad.cad.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.cad.cad.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("composition-route", "13:s.cad.cad@1/*22:s.stdio.json@rfc8259/*")], None),
         ("s.cad.cad.grammar.document", "grammar", "cad.document", &[("grammar", "cad.document")], None),
         ("s.cad.cad.grammar.op", "grammar", "cad.op", &[("grammar", "cad.op")], None),
         ("s.cad.cad.grammar.diff", "grammar", "cad.diff", &[("grammar", "cad.diff")], None),

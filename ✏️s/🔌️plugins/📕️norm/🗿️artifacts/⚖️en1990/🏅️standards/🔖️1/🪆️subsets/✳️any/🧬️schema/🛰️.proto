@@ -1,5 +1,5 @@
 syntax = "proto3";
-package semio.s.norm.en1990;
+package semio.s.norm_eurocode.en1990;
 message En1990Artifact {
   // @state artifact
   string annex = 1;

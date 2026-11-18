@@ -12,7 +12,6 @@ Walls are numbered from 80.
 - Removed `GOFLAGS=-mod=mod` from the forced variables (wall 82).
 - Tests: `🏠️home/🧪️tests` 24 (was 16): registry file honoured by the real bun against a loopback server, warm table names known tools and stages, warm copy equals source (`diff -r` as the independent check), skip reasons, real mount test, warm build keeps present items, no Go flag forced, stage environment, tools command spelling.
 
-(more below)
 
 ## 6. The `native` stage: what a fresh worker downloads, and whether it is sliceable (read from the code, not run; proposal only)
 
@@ -57,9 +56,26 @@ This Mac cannot run the stage as it is: `~/.dotnet/dotnet` is a 10-byte stub (R1
 | 7 | 16 GB / 8 cores, load 40 to 50 | skipped (1 s) | 67 s ok | 1328 s ok | 10 s ok | 16 s failed: Rust asked for at the graph service start (wall 89) | wall 89 |
 | 8 | 16 GB / 8 cores, wall 89 fixed in my frozen root | skipped (2 s) | 67 s ok | 1228 s ok | 9 s ok | 386 s failed: `Authored bounded Nx cache directory required` after the slice was read (wall 90) | wall 90 |
 | 5 | 16 GB / 8 cores, before wall 85 | skipped | 80 s ok | 1395 s ok | 0 s failed (wall 85) | not reached | wall 85 |
-| 9 | 8 GB / 4 cores, same state as run 8 | see section 3 | | | | | |
+| 9 | 8 GB / 4 cores, same state as run 8 | skipped (1 s) | 351 s ok | 1127 s ok | 9 s ok | 345 s failed: same wall 90 | wall 90 |
 Preparation before the stages, per run: launcher build 14 to 16 s, tool and dependency warm copy about 100 s (the bun cache 70 to 82 s), home seeds 45 s (the `.rustup` clone 16 to 20 s). Runs 1 to 4 and 6 are the failed attempts of walls 82, 81, 85, 88.
 
 ### The `tools` stage, measured (wall item 2)
 - `repo tools setup toolchains bun go`: 9 to 10 s with a warm partition, log lines only `bun 1.4.2 already matches its pin.` and `go 1.26.9 already matches its pin.`: **a Go slice prepares exactly `bun go`, proven by a run** (before: prime plus the 12 s of provisioning by hand). No step of the real stage (`tools setup all`) is slow in the slice; the one declared step `compiler-helpers` (cap 1200 s) runs only for `names.length === 0`, i.e. never for a slice.
 - What a real worker's `tools setup all` costs was not run (it would provision rustup, nextest, llvm-cov, wasm tools, dotnet, uv, python, cmake, chromium and bazel). Mechanism faults in the code that decides it, from reading `runToolchainsSetupV1` (not run): the provisioning is serial in table order (`setupToolsV1` loops one tool after the other; the tools are independent: bun, go, uv, cmake, ninja, nextest, llvm-cov, python, dotnet could be fetched in parallel), the `compiler-helpers` step (cargo helper build, cap 1200 s) runs after all tools and only when the whole table is selected, and the verification of every tool is repeated after provisioning (`verifyToolV1` twice per tool). The first can be proven only by timing `tools setup all` on a fresh partition, which needs the network; not done.
+
+## 3. Reading of the numbers (items 1 and 4)
+- 16 GB / 8 cores against 8 GB / 4 cores: `repo-mcp` 67 s against 351 s (5 times: the Go build and the graph service start compete for 4 cores and 8 GB under load 40 to 50; the capacity gate admitted 1 of 8 jobs at 16 GB and the stage wall is dominated by the build), `dependencies` 1228 against 1127 s (not machine-bound: it is the ownership walk of the installed store, one thread), `tools` 9 s on both, `workspace` 386 against 345 s up to the same wall 90. Load average of the Mac was 38 to 50 in all runs, so the numbers are upper bounds of a quiet machine.
+- `dependencies` seeded the only way that works without a download: the bun cache. The producer then really installs all 12 scopes (no network, `downloads.log` empty) and spends about 20 minutes, of which the install is a small part: with a warm cache and no generation a worker still pays the whole ownership walk (R162's wall 73). A seed of generations would need `.installed.json` and `.installed.ndjson` derived on the machine (R168), not copied: not tried.
+- Sizes: warm directory 4.7 GB on the Data volume (cache 3.3 GB, tools 1.4 GB with the Go slice needing 0.3 GB); each lab copies the bun cache cross-volume (75 s) and the tool items (20 s) into its own images.
+
+## 4. Go launcher and fleet store behind `machinePathV1` (item 3)
+Landed: `MachinePath` (Go spelling, table compared with the TypeScript schema by a test) is used by the fleet store pointer, the tools partition of a runtime install and the managed workspace generation root. Not covered, with reason: the shell spellings `$root/.cache/b/t/m/native/go/...` in `🥾️bootstrap/🐚️.sh` and `🚀️launcher/📥️install/🐚️.sh` (shell cannot import the table; the lab seeds `go-pinned` for it), the `PowerShell` twins (Windows, not run), and the TypeScript mirror of the managed workspace contract (not read for the same path; the Go test is the only proof). Windows and Linux of all of this: not run.
+
+## 7. Not verified
+- the `workspace` stage past wall 90, so `ready: true` of the Go slice and the final read are not shown; `--execute`; two machines; Linux and Windows; a lab with the real `native` stage (this Mac: R157 walls 62, 63).
+- A real worker's `tools setup all` timing (needs the network); the claims about serial provisioning are from reading.
+- Wall 85/88/89 fixes are proven on this Mac's lab and by unit tests; the live tree itself has not been run through a fresh worker since 03:30.
+- The Go repair of landing 2 was not run through `repo-mcp:build` of the live tree (the lab ran the same sources in my frozen root).
+
+## 8. State left
+`/tmp/slw-r161/` (warm 4.7 GB, `r` frozen root 1.8 GB with R161 edits, scripts); `scratchpad/R161/`. Lab directories of mine: none left. Delete `/tmp/slw-r161` when done (`realpath` check; `r` holds links into the live `.cache`).

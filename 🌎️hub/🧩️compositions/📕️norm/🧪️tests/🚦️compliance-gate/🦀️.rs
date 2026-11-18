@@ -113,14 +113,6 @@ fn compliance_gate_all_families() {
             ("noncompliant_office", semio_s_artifact_norm_din16798_examples::noncompliant_office::PRIMARY_TEXT),
         ],
     ));
-    results.push(gate_family::<semio_s_artifact_norm_din18599_editor::DinV18599Family>(
-        "din18599",
-        &[
-            ("demo", semio_s_artifact_norm_din18599_examples::demo::PRIMARY_TEXT),
-            ("compliant_detached", semio_s_artifact_norm_din18599_examples::compliant_detached::PRIMARY_TEXT),
-            ("noncompliant_detached", semio_s_artifact_norm_din18599_examples::noncompliant_detached::PRIMARY_TEXT),
-        ],
-    ));
     results.push(gate_family::<semio_s_artifact_norm_iso16757_editor::Iso16757Family>(
         "iso16757",
         &[
@@ -144,8 +136,8 @@ fn compliance_gate_all_families() {
             failed += 1;
         }
     }
-    assert_eq!(results.len(), 5, "gate must cover all 5 families this plugin owns");
+    assert_eq!(results.len(), 4, "gate must cover all 4 families this plugin owns");
     if failed > 0 {
-        panic!("{failed}/5 families failed compliance gate:\n{summary}");
+        panic!("{failed}/4 families failed compliance gate:\n{summary}");
     }
 }

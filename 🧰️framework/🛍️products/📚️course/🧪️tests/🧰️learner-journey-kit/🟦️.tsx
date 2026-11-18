@@ -377,7 +377,8 @@ export async function answerCurrentTask(user: ReturnType<typeof userEvent.setup>
         .getAllByRole("listitem")
         .map((item) => item.querySelector(".course-sort-label")?.textContent ?? "");
     for (const [position, label] of target.entries()) {
-      while (order().indexOf(label) > position) {
+      for (let attempts = 0; order().indexOf(label) > position; attempts += 1) {
+        expect(attempts, `${label} stays at ${order().indexOf(label)}`).toBeLessThan(10);
         screen.getByRole("button", { name: `Move ${label} up` }).focus();
         await user.keyboard("{Enter}");
       }

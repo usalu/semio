@@ -147,10 +147,10 @@ fn readonly_windows_render_the_same_picked_owner_without_edit_actions() {
     let picked = [crate::viewport3d::picking::entity_address(EntityKind::Solid, "B2").unwrap()];
     let frame = NormViewerFrame::new(report, ViewLane { check: Some(0), ..Default::default() }, &picked);
     assert_eq!((frame.selection.check, frame.diagram_focus().as_deref()), (Some(1), Some("B2")));
-    let viewport = projected("viewport", frame.render_viewport("norm.en1993.view.viewport", &scene, "norm.en1993", "s.norm.en1993@1/*#viewer", semio_ui_locale::Locale::En).expect("viewer viewport"));
+    let viewport = projected("viewport", frame.render_viewport("norm.en1993.view.viewport", &scene, "norm.en1993", "s.norm-eurocode-structural.en1993@1/*#viewer", semio_ui_locale::Locale::En).expect("viewer viewport"));
     assert!(contains_selected(&viewport, "B2"), "{viewport}");
     assert!(!viewport.to_string().contains("setFields"));
-    let checks = projected("checks", frame.render_checks(&semio_plugin::TreeWindows::unhosted(), "norm.en1993", "s.norm.en1993@1/*#viewer", semio_ui_locale::Locale::En).expect("viewer checks"));
+    let checks = projected("checks", frame.render_checks(&semio_plugin::TreeWindows::unhosted(), "norm.en1993", "s.norm-eurocode-structural.en1993@1/*#viewer", semio_ui_locale::Locale::En).expect("viewer checks"));
     assert!(contains_selected(&checks, "check b"), "{checks}");
     assert!(!checks.to_string().contains("setSelectedCheckIndex") && !checks.to_string().contains("applyRemedy"));
     assert!(checks.to_string().contains(&crate::check_address("b").unwrap()));

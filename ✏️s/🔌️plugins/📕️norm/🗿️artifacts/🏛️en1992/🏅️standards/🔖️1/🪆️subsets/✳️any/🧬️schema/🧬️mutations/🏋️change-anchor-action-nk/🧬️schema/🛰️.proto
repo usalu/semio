@@ -1,5 +1,5 @@
 syntax = "proto3";
-package semio.s.norm.en1992.mutation.change_anchor_action_nk;
+package semio.s.norm_eurocode_structural.en1992.mutation.change_anchor_action_nk;
 message ChangeAnchorActionNK {
   string anchor_id = 1;
   string action_id = 2;

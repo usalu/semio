@@ -69,3 +69,5 @@ Fix (`datepalm-all.sh` replays it from the snapshot `datepalm-work/s2.json`, `da
 4. `stem-3-rings` at 1:50: pen 0.93 mm (4.7 cm) set to 0.222 mm like `stem-2-rings`, ends inside the bark (+-0.2).
 Traps: `at` of a loft section outside the plate plane cannot be drawn by a flat plate; revolved detail outlines are projected differently from extruded plates; the apex of a slit between two plates is the most sensitive boundary of the guard.
 Tools: `datepalm-axes.ts` (extreme solids per axis and scale), `datepalm-ext.ts` (extent of a solid in the bone frame), `datepalm-rings.ts` (evaluated rings), `datepalm-run.sh`.
+
+The snapshot `s2.json` and the work folder were deleted as generated output; to replay, restore the file from `git show HEAD:` first, then run `datepalm-rachis.py` (the snapshot had it applied) before `datepalm-all.sh`. Verified: triage 0 fails, `validateAsset` 0 issues, vitest `catalog-silhouette` date-palm, `three-views`, `fill-rule`, `schema-conformance` (only tour-guide fails) pass.

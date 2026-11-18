@@ -20,6 +20,7 @@ import {nxBatchCapableV1,nxWorkerSettingsV1} from "./🛠️tools/👷️workers
 import {resolveRemoteCacheV1} from "../../🏗️build/🌐️remote-cache/🛰️fleet/🟦️.ts";
 import {nxRemoteCacheV1} from "./🛠️tools/🌐️remote-cache/🟦️.ts";
 import {createNxFailureTailV1,settleNxRunReportedV1,type NxFailureTailV1} from "../../🏗️build/🔧️tools/🧶️nx/🪵️failure-tail/🟦️.ts";
+import {readBuildCountersV1,unitLedgerLinesV1,unitLedgerV1} from "../🦀️cargo/🗃️unit-cache/🛰️fleet/📊️counters/🟦️.ts";
 import {withRepositoryNxStorageV1,boundedNxNamespaceV1,boundedNxSocketNamespaceV1,type BoundNxNamespaceV1} from "../💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { createScriptProcessEnvelope, readScriptProcessEnvelope, scriptProcessEnvironment, SCRIPT_PROCESS_INVOCATION_ENV, withScriptProcessEnvelope } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -445,7 +446,7 @@ export class NxScript extends Script {
     const invocation = resolveNxInvocation(segments,{...process.env,SEMIO_BUILD_MODE:readNativeCallerAuthorityV1(this.invocation.capabilities).original.buildMode},this.root), children: ReturnType<typeof spawnNxProcess>[] = [], spooling: Promise<void>[] = [];
     const toolingIdentity=basename(dirname(tooling.modulePath));if(!/^[a-f0-9]{64}$/u.test(toolingIdentity))throw new Error("Original loaded Nx tooling receipt required");
     return withNxToolingUseV1(nxToolingUseStorageV1(this.root),{identity:toolingIdentity,toolkitRoot:dirname(tooling.modulePath),invocation:this.invocation},phaseControl,async(_witness,actualPhase)=>{
-    const hold:{release?:()=>Promise<void>;stopFlight?:()=>Promise<void>;settleSlots?:()=>Promise<unknown>}={};
+    const hold:{release?:()=>Promise<void>;stopFlight?:()=>Promise<void>;settleSlots?:()=>Promise<unknown>}={},unitsBefore=readBuildCountersV1(this.root).unit;
     try{
     const check=()=>checkResourceLeaseControl(actualPhase);check();
     const projection=createRequire(import.meta.url)("../../🟨️.mjs"),admission=projectionAdmissionV1(projection),admitProjection=()=>{check();admission.admit();check();};admitProjection();
@@ -552,7 +553,7 @@ export class NxScript extends Script {
         }
         const launchedAt = Date.now();
         const child=launch(invocation.args,Boolean(invocation.watch));
-        const status=new Promise<number>((accept,reject) => { child.once("error",reject);child.once("close",code=>accept(code??1)); });void status.catch(()=>{});
+        const status=new Promise<number>((accept,reject) => { child.once("error",reject);child.once("close",(code,signal)=>accept(nxCloseCodeV1(code,signal,cancelled))); });void status.catch(()=>{});
         if(invocation.watch) {
           const watchTarget=invocation.watch;
           const prepared=invocation.watch.includes(":activate-") ? waitForNxTargetStart(child,invocation.args[1]!) : Promise.resolve();
@@ -582,16 +583,16 @@ export class NxScript extends Script {
           env.NX_FORCE_REUSE_CACHED_GRAPH = "false";
           env.SEMIO_NX_GRAPH_SEAL_REUSE = "false";
           attemptStart = Date.now(); completed = launch(invocation.args);
-          code = await new Promise<number>((accept, reject) => { completed.once("error", reject); completed.once("close", value => accept(value ?? 1)); });
+          code = await new Promise<number>((accept, reject) => { completed.once("error", reject); completed.once("close", (value, signal) => accept(nxCloseCodeV1(value, signal, cancelled))); });
         }
         if (code !== 0 && !cancelled && !invocation.watch && env.NX_DAEMON === "true" && graphChanges.get(completed)?.slotsTaken) {
           check(); sayBootstrapV1("nx.daemon-slots-taken-running-without",{});
           env.NX_DAEMON = "false"; attemptStart = Date.now(); completed = launch(invocation.args);
-          code = await new Promise<number>((accept, reject) => { completed.once("error", reject); completed.once("close", value => accept(value ?? 1)); });
+          code = await new Promise<number>((accept, reject) => { completed.once("error", reject); completed.once("close", (value, signal) => accept(nxCloseCodeV1(value, signal, cancelled))); });
         }
         if (code !== 0 && !cancelled && !invocation.watch) code = await settleNxRunReportedV1({ code, tail: graphChanges.get(completed)?.output.text() ?? "" }, invocation.args.join(" "), async () => {
           check(); attemptStart = Date.now(); completed = launch(invocation.args);
-          const next = await new Promise<number>((accept, reject) => { completed.once("error", reject); completed.once("close", value => accept(value ?? 1)); });
+          const next = await new Promise<number>((accept, reject) => { completed.once("error", reject); completed.once("close", (value, signal) => accept(nxCloseCodeV1(value, signal, cancelled))); });
           return { code: next, tail: graphChanges.get(completed)?.output.text() ?? "" };
         }, { signal: actualPhase.signal });
         if(pendingGeneration!==undefined&&code===0&&!cancelled&&!invocation.watch){
@@ -625,7 +626,7 @@ export class NxScript extends Script {
       process.removeListener("SIGINT", interrupt);
       process.removeListener("SIGTERM", terminate);
     }
-    }finally{await hold.settleSlots?.().catch(()=>undefined);await hold.stopFlight?.().catch(()=>undefined);await hold.release?.();}
+    }finally{const settled=await hold.settleSlots?.().catch(()=>undefined) as {tasks?:readonly import("../../🏗️build/🌐️remote-cache/🧶️nx/🪢️slot-settle/🟦️.ts").NxTaskLedgerRowV1[]}|undefined;try{const{nxTaskLedgerLineV1}=await import("../../🏗️build/🌐️remote-cache/🧶️nx/🪢️slot-settle/🟦️.ts");for(const row of settled?.tasks??[])process.stderr.write(nxTaskLedgerLineV1(row)+"\n");for(const line of unitLedgerLinesV1(unitLedgerV1(unitsBefore,readBuildCountersV1(this.root).unit)))process.stderr.write(line+"\n");}catch{}await hold.stopFlight?.().catch(()=>undefined);await hold.release?.();}
     });
   }
 }
@@ -637,6 +638,12 @@ export function resolveNxInvocation(segments: string[], environment: NodeJS.Proc
 }
 //#endregion 🔖️NxScript
 
+
+/** 🪦️ The exit status of an Nx process that closed: a process that ended by a signal has no status (`null`), which was reported as a plain exit 1 and hid a kill from outside (this run did not send it unless `cancelled`); now it is said in both languages, with the signal, before the status 1 is reported. */
+export function nxCloseCodeV1(code:number|null,signal:NodeJS.Signals|null,cancelled:unknown):number{
+ if(code===null&&!cancelled)console.error(`[nx] The Nx process was ended by signal ${signal??"unknown"} that this run did not send (killed from outside); exit status 1 is only reported / Der Nx-Prozess wurde durch das Signal ${signal??"unbekannt"} beendet, das dieser Lauf nicht gesendet hat (von außen beendet); Exit-Status 1 wird nur gemeldet`);
+ return code??1;
+}
 
 /** 🌳️ Runs a newly owned outer Nx invocation whose resources come from the current process environment, within the caller's remaining deadline. The run holds the per-host graph service open for its whole length, because the remote cache endpoint it writes its task results to lives in that service and a long task must not let the idle rule retire it. */
 export async function runOwnedNxInvocationV1(root:string,args:readonly string[],parent:ScriptInvocation,phaseControl:ResourceLeaseControl):Promise<void>{

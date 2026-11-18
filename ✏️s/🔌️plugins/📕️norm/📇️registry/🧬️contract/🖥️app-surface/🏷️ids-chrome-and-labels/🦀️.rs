@@ -144,41 +144,37 @@ pub fn format_quantity(quantity: &Quantity) -> String {
     }
 }
 
-/// 🆔️ Editor controller id for a norm variant (`s.norm.<variant>@1/*#editor`).
-pub fn editor_controller_id(variant: &str) -> String {
-    format!("s.norm.{variant}@1/*#editor")
+/// 🆔️ Editor controller id for a norm variant (`s.<owner>.<variant>@1/*#editor`), `owner` being the plugin that declares the family.
+pub fn editor_controller_id(owner: &str, variant: &str) -> String {
+    format!("s.{owner}.{variant}@1/*#editor")
 }
 //#endregion 🔖️LocaleChrome
 
 //#region 🔖️FaultNotices
-/// 📢️ The localized notice of every refusal and warning code the norm editors raise (`mutation.*`, `norm.*`), the table each norm editor and viewer declares as `fault_notices`; one fixed sentence per code, never the English developer detail.
+/// 📢️ The localized notice of every refusal and warning code the norm editors raise (`norm.editor.*`), the table each norm editor and viewer declares as `fault_notices`; one fixed sentence per code, never the English developer detail.
 pub fn norm_fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
     static NOTICES: std::sync::LazyLock<Vec<(&'static str, LocalizedLabel)>> = std::sync::LazyLock::new(|| {
         [
-            ("mutation.no-op", "Nothing changed: the value is already set.", "Keine Änderung: Der Wert ist bereits gesetzt."),
-            ("mutation.clamped", "The position was past the end of the list; the item was added at the end.", "Die Position lag hinter dem Listenende; das Element wurde am Ende eingefügt."),
-            ("mutation.invariant", "The value breaks a rule of this standard and was not applied.", "Der Wert verletzt eine Regel dieser Norm und wurde nicht übernommen."),
-            ("mutation.duplicate-id", "Another row already uses this id.", "Eine andere Zeile verwendet diese Id bereits."),
-            ("norm.unhandled-action", "The norm editor does not handle this action.", "Der Norm-Editor verarbeitet diese Aktion nicht."),
-            ("norm.value-path", "The field path is not valid.", "Der Feldpfad ist ungültig."),
-            ("norm.set-field-value", "The value does not fit this field.", "Der Wert passt nicht zu diesem Feld."),
-            ("norm.set-active-example-invalid", "This example is not available.", "Dieses Beispiel ist nicht verfügbar."),
-            ("norm.insert-item-value", "The row could not be inserted.", "Die Zeile konnte nicht eingefügt werden."),
-            ("norm.set-fields-args", "The live edit arguments are incomplete or malformed.", "Die Argumente der Live-Änderung sind unvollständig oder fehlerhaft."),
-            ("norm.insert-placement", "The item could not be placed at this position.", "Das Element konnte an dieser Position nicht platziert werden."),
-            ("norm.edit-unresolved", "The edit could not be resolved against the document.", "Die Änderung konnte im Dokument nicht aufgelöst werden."),
-            ("norm.apply-remedy-option-type", "The chosen remedy option has the wrong type.", "Die gewählte Abhilfe-Variante hat den falschen Typ."),
-            ("norm.apply-remedy-uint", "The remedy value must be a non-negative whole number.", "Der Abhilfewert muss eine nicht negative ganze Zahl sein."),
-            ("norm.apply-remedy-int", "The remedy value must be a whole number.", "Der Abhilfewert muss eine ganze Zahl sein."),
-            ("norm.apply-remedy-not-applicable", "This remedy cannot be applied to the check.", "Diese Abhilfe kann auf den Nachweis nicht angewendet werden."),
-            ("norm.apply-remedy-missing-remedy", "The check offers no such remedy.", "Der Nachweis bietet diese Abhilfe nicht an."),
-            ("norm.apply-remedy-missing-option", "The remedy offers no such option.", "Die Abhilfe bietet diese Variante nicht an."),
-            ("norm.apply-remedy-missing-check", "The check no longer exists.", "Der Nachweis existiert nicht mehr."),
-            ("norm.apply-remedy-empty-path", "The remedy names no field to change.", "Die Abhilfe nennt kein zu änderndes Feld."),
-            ("norm.apply-remedy-remove-path", "A removing remedy must target a list row.", "Eine entfernende Abhilfe muss auf eine Listenzeile zielen."),
-            ("norm.entity-delete-empty", "Select at least one row to delete.", "Mindestens eine Zeile zum Löschen auswählen."),
-            ("norm.entity-delete-unknown", "A selected row no longer exists, so nothing was deleted.", "Eine ausgewählte Zeile existiert nicht mehr, daher wurde nichts gelöscht."),
-            ("norm.remedy-removes-row", "This remedy removes a row and writes no value.", "Diese Abhilfe entfernt eine Zeile und schreibt keinen Wert."),
+            ("norm.editor.unhandled-action", "The norm editor does not handle this action.", "Der Norm-Editor verarbeitet diese Aktion nicht."),
+            ("norm.editor.value-path", "The field path is not valid.", "Der Feldpfad ist ungültig."),
+            ("norm.editor.set-field-value", "The value does not fit this field.", "Der Wert passt nicht zu diesem Feld."),
+            ("norm.editor.set-active-example-invalid", "This example is not available.", "Dieses Beispiel ist nicht verfügbar."),
+            ("norm.editor.insert-item-value", "The row could not be inserted.", "Die Zeile konnte nicht eingefügt werden."),
+            ("norm.editor.set-fields-args", "The live edit arguments are incomplete or malformed.", "Die Argumente der Live-Änderung sind unvollständig oder fehlerhaft."),
+            ("norm.editor.insert-placement", "The item could not be placed at this position.", "Das Element konnte an dieser Position nicht platziert werden."),
+            ("norm.editor.edit-unresolved", "The edit could not be resolved against the document.", "Die Änderung konnte im Dokument nicht aufgelöst werden."),
+            ("norm.editor.apply-remedy-option-type", "The chosen remedy option has the wrong type.", "Die gewählte Abhilfe-Variante hat den falschen Typ."),
+            ("norm.editor.apply-remedy-uint", "The remedy value must be a non-negative whole number.", "Der Abhilfewert muss eine nicht negative ganze Zahl sein."),
+            ("norm.editor.apply-remedy-int", "The remedy value must be a whole number.", "Der Abhilfewert muss eine ganze Zahl sein."),
+            ("norm.editor.apply-remedy-not-applicable", "This remedy cannot be applied to the check.", "Diese Abhilfe kann auf den Nachweis nicht angewendet werden."),
+            ("norm.editor.apply-remedy-missing-remedy", "The check offers no such remedy.", "Der Nachweis bietet diese Abhilfe nicht an."),
+            ("norm.editor.apply-remedy-missing-option", "The remedy offers no such option.", "Die Abhilfe bietet diese Variante nicht an."),
+            ("norm.editor.apply-remedy-missing-check", "The check no longer exists.", "Der Nachweis existiert nicht mehr."),
+            ("norm.editor.apply-remedy-empty-path", "The remedy names no field to change.", "Die Abhilfe nennt kein zu änderndes Feld."),
+            ("norm.editor.apply-remedy-remove-path", "A removing remedy must target a list row.", "Eine entfernende Abhilfe muss auf eine Listenzeile zielen."),
+            ("norm.editor.entity-delete-empty", "Select at least one row to delete.", "Mindestens eine Zeile zum Löschen auswählen."),
+            ("norm.editor.entity-delete-unknown", "A selected row no longer exists, so nothing was deleted.", "Eine ausgewählte Zeile existiert nicht mehr, daher wurde nichts gelöscht."),
+            ("norm.editor.remedy-removes-row", "This remedy removes a row and writes no value.", "Diese Abhilfe entfernt eine Zeile und schreibt keinen Wert."),
         ]
         .into_iter()
         .map(|(code, en, de)| (code, LocalizedLabel::native(en, de)))

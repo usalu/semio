@@ -21,7 +21,7 @@ catalog() {
 generators() {
   python3 "$T/native-generators.py" "$ROOT" | while IFS=$'\t' read -r name cwd cmd; do eval "set -- $cmd"; MEM=1500 step "gen-$name" "$cwd" "$@" </dev/null; done
 }
-site() { for attempt in 1 2 3 4; do [ -f "$G/site-build.log" ] && mv "$G/site-build.log" "$G/site-build-$(date +%H%M%S).log"; LAUNCH=native-build-launch.ts TASK=@semio-tech/semio-tech-play:build OP=${OP:-cargo} JOBS=${JOBS:-6} step site-build "🏢️semio-tech/🎡️play" repo ./🔨️modules/📦️site/📜️script.ts build && return 0; echo "[retry] site-build attempt $attempt failed"; done; return 1; }
+site() { for attempt in 1 2 3 4 5 6 7 8; do FORCE=1 catalog || return 1; [ -f "$G/site-build.log" ] && mv "$G/site-build.log" "$G/site-build-$(date +%H%M%S).log"; LAUNCH=native-build-launch.ts TASK=@semio-tech/semio-tech-play:build OP=${OP:-cargo} JOBS=${JOBS:-6} step site-build "🏢️semio-tech/🎡️play" repo ./🔨️modules/📦️site/📜️script.ts build && return 0; echo "[retry] site-build attempt $attempt failed"; done; return 1; }
 PLAY="🏢️semio-tech/🎡️play"
 routing() { FORCE=1 step release-routing "" "$(ls -d "$ROOT"/.cache/b/t/m/bun/*/bun | head -1)" test "./$PLAY/🧪️tests/🧪️playrelease/🟦️.ts"; }
 browsers() { ls "$ROOT"/.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright/chromium-* >/dev/null 2>&1 && ls "$ROOT"/.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright/chromium_headless_shell-* >/dev/null 2>&1 || FORCE=1 step browsers "" repo "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts" sync browsers; }

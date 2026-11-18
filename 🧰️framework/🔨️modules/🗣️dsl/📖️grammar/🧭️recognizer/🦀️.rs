@@ -138,14 +138,14 @@ impl Recognizer {
                 if let Some(production) = self.find_production(name) {
                     self.match_production_tracked(production, tokens, pos, covered, text)
                 } else if let Some(matcher) = self.macros.iter().find(|m| m.name == name) {
-                    self.match_macro_span(matcher, tokens, pos)
+                    self.match_macro_span(matcher, tokens, pos, text)
                 } else {
                     None
                 }
             }
             Symbol::Macro(name, _args) => {
                 let matcher = self.macros.iter().find(|m| m.name == name)?;
-                self.match_macro_span(matcher, tokens, pos)
+                self.match_macro_span(matcher, tokens, pos, text)
             }
             Symbol::Group(alts) => {
                 let mut found = None;
@@ -189,9 +189,9 @@ impl Recognizer {
     /// floor (`pos..` rather than `pos + 1..`) only ever fires for a matcher whose `try_match`
     /// accepts the empty string — `hex`'s does (an empty hex-encoded value is valid) — so this is a
     /// strict widening: every pre-existing macro's behavior on non-empty spans is unchanged.
-    fn match_macro_span(&self, matcher: &MacroMatcher, tokens: &[crate::SpannedToken], pos: usize) -> Option<usize> {
+    fn match_macro_span(&self, matcher: &MacroMatcher, tokens: &[crate::SpannedToken], pos: usize, text: &str) -> Option<usize> {
         for end in (pos..=tokens.len()).rev() {
-            let slice_text = slice_source_text(&tokens[pos..end]);
+            let slice_text = slice_source_text(&tokens[pos..end], text);
             if (matcher.try_match)(&slice_text) {
                 return Some(end);
             }
@@ -241,8 +241,11 @@ fn match_hex_bytes(tokens: &[crate::SpannedToken], pos: usize, text: &str) -> Op
     (tokens.get(next-1)?.byte_range.1 as usize == end).then_some(next)
 }
 
-fn slice_source_text(tokens: &[crate::SpannedToken]) -> String {
-    tokens.iter().map(|t| t.text.as_str().to_string()).collect::<Vec<_>>().join(" ")
+fn slice_source_text(tokens: &[crate::SpannedToken], text: &str) -> String {
+    match (tokens.first(), tokens.last()) {
+        (Some(first), Some(last)) => text.get(first.byte_range.0 as usize..last.byte_range.1 as usize).map_or_else(String::new, str::to_string),
+        _ => String::new(),
+    }
 }
 
 /// 🏷️ Explicit terminal predicates — BOOL is Ident true|false.

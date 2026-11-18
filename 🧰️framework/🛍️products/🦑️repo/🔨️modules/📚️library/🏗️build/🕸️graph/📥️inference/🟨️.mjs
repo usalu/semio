@@ -2,7 +2,7 @@
 import { createBoundedCacheV1 } from "../../🧊️bounded/🟨️.mjs";
 import managersV1 from "../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs";
 const javascriptManagerV1 = managersV1.selectedManagerV1("javascript");
-import { registerSourceAnalysisV1 } from "../../../🏗️build/👁️observation/🟨️.mjs";
+import { registerSourceAnalysisV1, registerLoadedImplementationRowsV1 } from "../../../🏗️build/👁️observation/🟨️.mjs";
 import { fileURLToPath } from "node:url";
 import { createRevisionIdentity, createRevisionLoader, readComponentRoster, wireRevisionedComponents } from "./🪢️revision-graph/🟨️.mjs";
 import manifest from "./🗂️components/🔣️.json" with { type: "json" };
@@ -79,6 +79,7 @@ loader.adopt(revisionIdentity.revision, current);
 
 /** 📋️ The authored files of the implementation this module loaded with the bytes they had at load. */
 export const loadedImplementationRowsV1 = Object.freeze(current.modules.revision.implementationRows());
+registerLoadedImplementationRowsV1(loadedImplementationRowsV1);
 
 /** 🔖️ Turns implementation rows into the facts a generation names: the declared stamp of each inferrer and the content of the data no inferrer covers. */
 export const classifyImplementationRowsV1 = current.modules.stamps.classifyImplementationRowsV1;

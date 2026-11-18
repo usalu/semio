@@ -1,5 +1,5 @@
 /** 🟠️ The footer items phase of useCanvasAndFooter. */
-import { shellFooterNavbarItem } from "../../../🏛️ShellFooter/🟦️.tsx";
+import { shellFooterCreditsCompact, shellFooterCreditsMenuItem, shellFooterNavbarItem } from "../../../🏛️ShellFooter/🟦️.tsx";
 import { useCallback, useEffect, useMemo } from "../../../⚛️react-port/🟦️.ts";
 import { FRAMEWORK_PANEL_TAB_ARTIFACT_ID } from "@semio-tech/framework";
 import { documentRuntimeKeyV1 } from "@semio-tech/framework/backbone";
@@ -23,11 +23,17 @@ export function useFooterItemsState({ uiDevice, mobile, buildPanelSelectionProps
           { key: "bottomMiddlePanelTabs", centered: true, content: <PanelChromeTabBar anchor="bottom-middle" compactLabels={compactFooter} {...buildPanelSelectionProps("bottom-middle")} /> },
         ];
     const credits = brand?.footerItems ?? [];
-    if (credits.some((item) => item.placement === "leading")) items.push({ key: "footerLeadingGap", className: "w-huge", content: null });
-    for (const item of credits.filter((item) => item.placement === "leading")) items.push(shellFooterNavbarItem(item, uiLocale, mobile));
-    items.push(navbarFillItem("footerLeadingFill"));
-    for (const item of credits.filter((item) => item.placement === "trailing")) items.push(shellFooterNavbarItem(item, uiLocale, mobile));
-    if (credits.some((item) => item.placement === "trailing")) items.push({ key: "footerTrailingGap", className: "w-huge", content: null });
+    const compactCredits = shellFooterCreditsCompact(mobile, compactFooter);
+    if (compactCredits) {
+      items.push(navbarFillItem("footerLeadingFill"));
+      if (credits.length > 0) items.push(shellFooterCreditsMenuItem(credits, uiLocale));
+    } else {
+      if (credits.some((item) => item.placement === "leading")) items.push({ key: "footerLeadingGap", className: "w-huge", content: null });
+      for (const item of credits.filter((item) => item.placement === "leading")) items.push(shellFooterNavbarItem(item, uiLocale, false));
+      items.push(navbarFillItem("footerLeadingFill"));
+      for (const item of credits.filter((item) => item.placement === "trailing")) items.push(shellFooterNavbarItem(item, uiLocale, false));
+      if (credits.some((item) => item.placement === "trailing")) items.push({ key: "footerTrailingGap", className: "w-huge", content: null });
+    }
     if (!mobile && !(compactFooter && presencePeers.length === 0)) items.push({ key: "presenceBar", content: <PresenceBar id="s-presence-peers" peers={timeTravelPeers.peers} /> });
     if (agentBridge.pendingApprovals.length > 0) items.push({ key: "agentApprovals", content: <AgentApprovalsNotice approvals={agentBridge.pendingApprovals} onReview={revealAgentApproval} /> });
     if (agentBridge.status === "unavailable" || agentBridge.status === "incompatible") items.push({ key: "agentBridgeNotice", content: <AgentPresence status={agentBridge.status} presence={agentBridge.presence} versionMismatch={agentBridge.versionMismatch} /> });

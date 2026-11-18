@@ -1,7 +1,7 @@
 
 import { receiveScriptProcessInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { PLAY_HOST } from "../🧩️runtime/🟦️.ts";
+import { PLAY_HOST } from "../🧩️runtime/📇️catalog/🟦️.ts";
 import { publishPlayPageCohortV1 } from "./📄pages/📦️publication/🟦️.ts";
 import { runBuildScript, runMapTilesScript, runBundleSiteScript, runVerifyScript } from "./🟦️.ts";
 

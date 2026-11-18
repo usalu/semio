@@ -135,3 +135,43 @@
 ### 13. Native transpile in place
 
 - `semio-native-transpile` (js-component-bindgen 2.16.0, the version behind the vendored jco) replaces jco in `transpilePluginComponentModulesAsync`; output is byte-identical to jco on the 137 MB component and the 379 MB energy component transpiles natively in 5.4 s at 1.28 GB. Stage it with `repo ./📜️stage.ts` in its folder before a component build. Details: `🦀️native-transpile.md`.
+
+### 13. Disk at 100 %, fem at describe
+
+- At 20:00 the data volume had 1.7 GiB free; energy's final crate was jetsam-killed again (4.6 GB). With the developer's approval, the unused 4 GB `🗑️generated` folder of ticket 26/11/14 PERFECT-HANDCRAFTED-3D-MODELS-PER-SCALE-AND-MODE-FOR-EVERY-STAFFAGE, `~/.cache/uv`, `~/.cache/codex-runtimes` and regenerable app caches were deleted. Root cause: raw fixed images never return freed space (`💽️image-reclaim.md`).
+- The final cdylib now also runs its LLVM back end serially (`-Z no-parallel-backend`).
+- Fem compiled and linked a 128 MB component (bloat cuts), passed the ABI validator and transpile, then describe refused it: every app-ownership probe failed with `native io: original interpreter deadline requires its caller clock`. A fix is in progress.
+
+### 14. Describe refusals: caller clock, procedural claims, fem record spec
+
+- Clock (fixed, verified): the owned runtime's codec path never bound the original caller clock. `assemble_codec_origin` and `origin_instance` in `🔌️plugin/🧠️interpreter/🏃️runtime/🔄️owned-runtime/🦀️.rs` built `OwnedGuestInstance` with `original_job_clock:None` (only `describe_observed` bound it), so `original_deadline_at` refused. Both now bind `(budget.retained.work.clock_binding, self.original_clock)`. Verified with the rebuilt tool (`repo cargo --store=isolated -- run -p semio-plugin-describe`): the clock error is gone on the fem wasm. The staged binary is NOT replaced yet (gate: component builds running); `repo cargo` cannot emit a binary to scratch.
+- Fem (second defect, fixed in source, unverified): after the clock fix, `fem.2d`/`fem.3d` fail with `artifact codec schema has no structural record specification`. The codec table reads `ArtifactPackMetadata::native_record_spec_producer()`, i.e. `ArtifactPack::borrowed_record_spec_producer()`; the Fem2d/Fem3d snapshots only overrode `record_spec()`. Added `borrowed_record_spec_producer()` (`BorrowedRecordSpecProducer::of::<FemNdSnapshotValue>()`) to both `🏗️fem/🗿️artifacts/{◻️2d,🧊️3d}/…/💾️binary/📸️snapshot/🦀️.rs`. Needs a fem component rebuild. Many other artifacts (flow, process3d, cad, block, demonstrator playground, dag, raster, ...) also lack it; a bundle whose kinds all lack it will hit the same refusal.
+- Procedural (separate defect, fixed in source, unverified): `composer_identity_claims` requires `composition-route` claims for foreign-output composers, but `generation2d`/`generation3d` `definition()` declared plain `dialect` claims for svg/pdf/png/json/dxf/txt. Replaced with framed `composition-route` claims (`🌀️procedural/🗿️artifacts/{🌀️generation2d,🧊️generation3d}/🦀️.rs`). Needs a procedural component rebuild.
+- Disk fell to 2.8 GiB during verification; isolated builds stopped.
+
+## 15. Pack schema hash gate keyed on the wrong source
+
+Root cause: `artifact_codec_table::pack_schema_hash` (plugin declaration surface) gated on `ArtifactPackMetadata::native_record_spec_producer()` (borrowed producer), but the hash itself comes from `ArtifactPack::record_spec()`. The producer was consumed nowhere else, so every snapshot with `record_spec()` but no producer (fem, flow, process3d, cad, block, playground, dag, ...) faulted with "no structural record specification" at describe.
+
+Fix: `ArtifactPackMetadata::native_pack_schema_hash()` now returns `Option<[u8;32]>` straight from `record_spec()` (single source, trait file `🧰️framework/🔨️modules/🚪️io/💾️binary/📸️snapshot/🦀️.rs`); `native_record_spec_producer` and the dead `ArtifactPack::borrowed_record_spec_producer` (plus all 9 overrides, the derive helper `__artifact_borrowed_record_spec_producer`, and the fem Fem2d/Fem3d overrides) removed. Store codec registration uses `.unwrap_or([0;32])`; native-registration fixture updated.
+
+Check (wasm32-wasip2, release, isolated): fem, demonstrator, energy, procedural all pass with no errors. `cargo test -p semio-framework-pack` does not compile because of unrelated in-flight edits in semio-framework-value (`PagedListAllocationError.work`, `RetainedCloneSourceTake`, `admit_owned`), not this change.
+
+### 16. Disk reclaimed; demonstrator compiles
+
+- The rust image was reclaimed through `diskutil image attach` (host allocation 99.8 GB → 19.5 GB); the data volume went from 3.7 GiB to 80 GiB free. `repo cache gc` now reclaims idle bloated images (`💽️image-reclaim.md`).
+- With one front-end thread and a serial back end, the demonstrator's final crate compiled (1441 units, 4557 s; component 359 MB) and passed transpile through the native tool.
+- Describe refused it: `plugin assembly failed — no declared composer capability owns the runtime claims`, as for procedural, whose six generation2d/3d declarations were fixed. The remaining declarations of the bundled plugins are being fixed, and the refusal will name the unowned claims.
+
+### 15. Composer claims: demonstrator and every chained declaration
+
+- Rule kept, data fixed: `composer_identity_claims` (identity crate, contract and shooting) requires `composition-route` claims for foreign outputs; only declarations chained through `.composers(entries())` are checked, so plain `dialect` claims on foreign composer rows fail assembly there.
+- Demonstrator: the only declaration it chains is `playground` (zip and json rows). Fixed. The same defect in flow, gis (gismap, gisterrain), architect, process3d, lowpoly, layout, cad, imperative procedure, raster and space home (49 rows) is fixed by `composition-route-fix.py`.
+- Deferred until the energy/fem/procedural chain is quiet: energy model (3 rows) and the diagnostics change (names the definition and the unowned claims), both in `apply-deferred-describe-fixes.py` (the identity crate is compiled into every component). The staged describe binary must be rebuilt afterwards.
+- Verified: the staged binary reproduces the demonstrator refusal. Rebuilt components needed: demonstrator, energy, and the other hubs above.
+
+## Energy composition routes (2026-11-18)
+- Root cause: idf export entry read `[MODEL_DIALECT, s.stdio.json]`; `composer_identity_claims` refuses foreign output routes that read non-owned dialects, so the route rows could never pass.
+- Fix: export reads only the artifact-owned `s.energy.model@1/*`; removed the json-bridge source branch and `MODEL_JSON_BRIDGE_DIALECT` from `rebuild_native_snapshot` (no other entry read it, so export behaviour from the native model is unchanged). The three `composition-route` rows (idf, zip, json) are now exactly one route each, matching the runtime sets.
+- Removed unused `BorrowedRecordSpecProducer` import in the energy carrier.
+- Verified statically only (no builds).

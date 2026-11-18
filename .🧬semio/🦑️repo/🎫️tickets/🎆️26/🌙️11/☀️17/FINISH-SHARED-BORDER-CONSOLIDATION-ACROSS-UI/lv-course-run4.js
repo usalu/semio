@@ -13,22 +13,22 @@ export async function pages(hashes) {
   }
 }
 async function run(id, level) {
-  const Lv = level[0].toUpperCase() + level.slice(1);
-  if (document.querySelector(".course-steps")) { R.click(/^Course overview/); await R.sleep(1200); }
+  const de = document.documentElement.lang === "de"; const Lv = de ? { easy: "Leicht", medium: "Mittel", hard: "Schwer", expert: "Experte" }[level] : level[0].toUpperCase() + level.slice(1);
+  if (document.querySelector(".course-steps")) { R.click(/^(Course overview|Kursübersicht)/); await R.sleep(1200); }
   location.hash = "#" + id;
   await R.sleep(2600);
   const scope = () => document.querySelector(`[data-page="quiz:${id}"]`) ?? document;
   scope().querySelector(`input.course-radio[value="${level}"]`)?.click();
   await R.sleep(400);
   await R.rec(`${id}/${level} quiz-page`);
-  R.click(new RegExp(`\\(${Lv}\\)`), scope()) || R.click(/^(Start|Resume|Continue|Again)/, scope());
+  R.click(new RegExp(`\\(${Lv}\\)`), scope()) || R.click(/^(Start|Resume|Continue|Again|Starten|Fortsetzen|Weiter|Nochmal)/, scope());
   await R.sleep(1800);
   for (let k = 0; k < 3 && !document.querySelector(".course-steps"); k++) {
     const dlg = [...document.querySelectorAll("dialog[open],[data-course-dialog],[role=dialog]")].filter(d => d.getBoundingClientRect().width > 0 && !d.closest("[inert]"));
     if (!dlg.length) break;
     await R.rec(`${id}/${level} dialog${k}`);
-    if (/How do you want to appear/.test(dlg[0].textContent)) { R.click(/^Continue/, dlg[0]); await R.sleep(2500); location.hash = "#" + id; await R.sleep(2200); R.click(new RegExp(`\\(${Lv}\\)`), scope()) || R.click(/^(Start|Resume|Continue|Again)/, scope()); await R.sleep(1800); }
-    else { R.click(/^Discard and start|^Start|^Confirm/, dlg[0]); await R.sleep(2000); }
+    if (/How do you want to appear|Wie möchtest du/.test(dlg[0].textContent)) { R.click(/^(Continue|Weiter)/, dlg[0]); await R.sleep(2500); location.hash = "#" + id; await R.sleep(2200); R.click(new RegExp(`\\(${Lv}\\)`), scope()) || R.click(/^(Start|Resume|Continue|Again|Starten|Fortsetzen|Weiter|Nochmal)/, scope()); await R.sleep(1800); }
+    else { R.click(/^Discard and start|^Start|^Confirm|^Verwerfen|^Starten|^Bestätigen/, dlg[0]); await R.sleep(2000); }
   }
   if (!document.querySelector(".course-steps")) { R.rows.push(`${id}/${level}: no run opened`); return; }
   const n = document.querySelectorAll(".course-steps > li button").length;
@@ -48,9 +48,9 @@ export async function quizzes(ids, levels, { results = true } = {}) {
     try {
       await run(id, lv);
       if (results && document.querySelector(".course-steps")) {
-        const ok = R.click(/Submit quiz/);
+        const ok = R.click(/Submit quiz|Quiz abgeben|Abgeben/);
         await R.sleep(1500);
-        if (document.querySelector("[data-course-dialog]")) { await R.rec(`${id}/${lv} submit-dialog`); R.click(/^Submit|^Confirm|^Yes/); await R.sleep(2500); }
+        if (document.querySelector("[data-course-dialog]")) { await R.rec(`${id}/${lv} submit-dialog`); R.click(/^Submit|^Confirm|^Yes|^Abgeben|^Bestätigen|^Ja/); await R.sleep(2500); }
         await R.rec(`${id}/${lv} results(${ok})`);
       }
     } catch (e) { R.rows.push(`ERR quiz ${k} ${e.message}`); }

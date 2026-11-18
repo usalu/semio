@@ -4,12 +4,11 @@ import {profilePhaseV1} from "../../../🏗️build/⏱️profile/🟨️.mjs";
 import {prepareNxDaemonNativeV1} from "./🧲️native/🟦️.ts";
 import {withRepositoryToolingStoreV1} from "../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import {withNxDaemonServiceBirthV1} from "./🚦️service/🟦️.ts";
-import {graphResourceLeaseDirectoryV1} from "./🗃️lease-directory/🟦️.ts";
+import {graphCheckoutRootV1,graphResourceLeaseDirectoryV1} from "./🗃️lease-directory/🟦️.ts";
 import {createHash} from "node:crypto";
-import {dirname,resolve} from "node:path";
-import {fileURLToPath} from "node:url";
+import {resolve} from "node:path";
 import {checkResourceLeaseControl,requireMaterializedPathV1,withResourceLeases,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import {findWorkspaceRoot,receiveScriptProcessInvocation,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {receiveScriptProcessInvocation,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 
 type Environment=Readonly<Record<string,string|undefined>>;
@@ -29,7 +28,7 @@ const steps:NxDaemonStartupStepsV1=Object.freeze({
  admit:original=>scriptCompilerAdmissionControlV1(original,"nx:daemon-startup",0),
  native:prepareNxDaemonNativeV1,
  entries:(original,control,run)=>withRepositoryRuntimeEntriesV1(readNativeCallerAuthorityV1(original.capabilities).repositoryRoot,original,control,run),
- store:(original,control,run)=>withRepositoryToolingStoreV1(findWorkspaceRoot(dirname(fileURLToPath(import.meta.url))),original,control,(_store,storePhase)=>run(storePhase)),
+ store:(original,control,run)=>withRepositoryToolingStoreV1(graphCheckoutRootV1(),original,control,(_store,storePhase)=>run(storePhase)),
  birth:(original,phase,namespace,toolingIdentity,environment,run)=>withNxDaemonServiceBirthV1(original,phase,namespace,toolingIdentity,environment,run),
  lease:(phase,resource,run)=>withResourceLeases({directory:graphResourceLeaseDirectoryV1(),resources:[{resource,mode:"exclusive"}],signal:phase.signal,control:phase},run)
 });

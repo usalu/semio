@@ -3,14 +3,15 @@ use semio_framework_value::{OriginalRetirementFailure,RetainedAllocationEffect,r
 #[path="../../../../🌱️value/♻️retirement/📦️owner/🧪️work/effect.rs"]
 mod effect;
 use effect::{settled,with_effect};
+const BODY:usize=4096;
 pub(crate) use semio_framework_value_testing_allocator::observe_retirement_allocations as observed;
-fn step_observed(owner:&mut ControlledRetirement<LocalizedLabel>,funding:RetainedCloneGrant)->(Result<RetainedCloneStep,OriginalRetirementFailure>,(usize,usize)){let(poll,physical)=with_effect(funding,8,&mut None,|effect|observed(||owner.step(effect)));(settled(poll).result,physical)}
+fn step_observed(owner:&mut ControlledRetirement<LocalizedLabel>,funding:RetainedCloneGrant)->(Result<RetainedCloneStep,OriginalRetirementFailure>,(usize,usize)){let(poll,physical)=with_effect(funding,8,&mut None,|effect|observed(||owner.step(BODY,effect)));(settled(poll).result,physical)}
 /// 🛑 A denied grant is either a no-progress step or a limit refusal; any other refusal kind is the wrong answer.
 fn denied(result:&Result<RetainedCloneStep,OriginalRetirementFailure>)->bool{match result{Ok(step)=>step.progress()==RetainedCloneProgress::default(),Err(failure)=>failure.primary().is_some_and(|error|matches!(error.kind,semio_framework_value::ValueRefusalKind::OwnershipLimit|semio_framework_value::ValueRefusalKind::DepthLimit|semio_framework_value::ValueRefusalKind::WorkLimit))}}
-fn cursor_observed(cursor:&mut LocalizedLabelRetirement,funding:RetainedCloneGrant)->(RetirementStep,(usize,usize)){with_effect(funding,8,&mut None,|effect:&mut RetainedAllocationEffect<'_>|observed(||cursor.close_step(effect)))}
+fn cursor_observed(cursor:&mut LocalizedLabelRetirement,funding:RetainedCloneGrant)->(RetirementStep,(usize,usize)){with_effect(funding,8,&mut None,|effect:&mut RetainedAllocationEffect<'_>|observed(||cursor.close_step(BODY,effect)))}
 fn grant(owner:&ControlledRetirement<LocalizedLabel>)->RetainedCloneGrant{let copy=owner.next_copy_byte_demand().unwrap();RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()}}
 fn original(row:&serde_json::Value)->LocalizedLabel{
- let mut cells=std::array::from_fn(|_|std::array::from_fn(|_|Cow::Borrowed("")));
+ let mut cells:[super::super::LabelRow;Terminology::COUNT]=std::array::from_fn(|_|super::super::LabelRow(std::array::from_fn(|_|Cow::Borrowed(""))));
  for(index,input)in row["cells"].as_array().unwrap().iter().enumerate(){let text=input["text"].as_str().unwrap();cells[index/Locale::COUNT][index%Locale::COUNT]=if input["owned"]==true{let mut owned=String::with_capacity(input["capacity"].as_u64().unwrap()as usize);owned.push_str(text);Cow::Owned(owned)}else{Cow::Borrowed(match text{"English"=>"English","Deutsch"=>"Deutsch","Reuse"=>"Reuse","Wiederverwenden"=>"Wiederverwenden",""=>"",_=>panic!("undeclared borrowed fixture")})};}
  LocalizedLabel{cells}
 }

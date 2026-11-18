@@ -157,6 +157,7 @@ export function openProjectFarmV1({ workspaceRoot, context, contracts, closureSt
         if (event === "recycled") { counts.recycled++; sayHub("recycled", fields); }
         else if (event === "lost") { counts.lost++; sayHub("lost", fields); }
         else if (event === "priority") sayHub("priority", fields);
+        else if (event === "refused") sayHub("workerRefused", fields);
         else if (event === "capped") { counts.capped++; sayHub(fields.alone ? "cappedAlone" : "capped", fields); }
         else if (event === "disabled") sayHub(String(fields.reason).startsWith("identity") ? "refused" : "degraded", hub.refusal === undefined ? fields : { ...fields, reason: fields.reason + ": " + hub.refusal });
       },
@@ -251,7 +252,7 @@ export function openProjectFarmV1({ workspaceRoot, context, contracts, closureSt
     warmReasons() { return { ...warmWhy }; },
     exists() { return exists(); },
     /** 🔍️ What the children are doing right now, for the line of a parked owner: busy, idle, starting and empty slots, the queue, whether a job runs alone (every other child waits for it) and the restarts. */
-    describe() { return pools.filter(pool => !pool.closing && pool.farm?.snapshot !== undefined).map(pool => { const s = pool.farm.snapshot; return "children busy " + s.busy + ", idle " + s.idle + ", starting " + s.starting + ", not started " + s.empty + ", queued jobs " + s.queued + (s.alone ? ", a job runs alone and the others wait" : "") + ", restarts " + s.restarts; }).join("; ") || "no children"; },
+    describe() { return pools.filter(pool => !pool.closing && pool.farm?.snapshot !== undefined).map(pool => { const s = pool.farm.snapshot; return "children busy " + s.busy + ", idle " + s.idle + ", starting " + s.starting + ", not started " + s.empty + (s.refused ? ", refused " + s.refused : "") + ", queued jobs " + s.queued + (s.alone ? ", a job runs alone and the others wait" : "") + ", restarts " + s.restarts; }).join("; ") || (hub.state === "off" ? "the farm is off" + (hub.refusal ? ": " + hub.refusal : "") : "no children"); },
     async observe(job) {
       let failures = 0, lost = 0, told = -Infinity;
       for (;;) {

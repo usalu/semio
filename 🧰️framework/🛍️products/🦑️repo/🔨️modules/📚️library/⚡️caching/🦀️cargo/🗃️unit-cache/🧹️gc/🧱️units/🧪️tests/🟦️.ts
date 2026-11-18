@@ -56,7 +56,7 @@ test("profiles are found below the declared bases at two levels, units need a fi
  try{
   const first=unit(store,"b/p/prototype","serde","aaaa",65536,5),second=unit(store,"b/p/wasm32-unknown-unknown/prototype","serde","bbbb",131072,30);unit(store,"u/l/d/prototype","tokio","cccc",4096,1);
   mkdirSync(join(store,"b/p/prototype/build/serde/notaunit/out"),{recursive:true});mkdirSync(join(store,"b/p/prototype/incremental"),{recursive:true});
-  expect(unitProfilesV1(store).map(row=>row.profileDirectory.slice(store.length+1))).toEqual(["b/p/prototype","b/p/wasm32-unknown-unknown/prototype","u/l/d/prototype"]);
+  expect(unitProfilesV1(store).map(row=>relative(store,row.profileDirectory).split(sep).join("/"))).toEqual(["b/p/prototype","b/p/wasm32-unknown-unknown/prototype","u/l/d/prototype"]);
   expect(unitProfilesV1(store).map(row=>row.profile)).toEqual(["prototype","prototype","prototype"]);expect(unitProfilesV1(store)[1]!.buildDirectory).toBe(join(store,"b/p"));
   const now=Date.now(),rows=await measureUnitsV1(unitProfilesV1(store),{nowMs:now,busy:()=>false,lock:()=>"missing"});
   expect(rows.length).toBe(3);const byPath=new Map(rows.map(row=>[row.path,row]));
@@ -135,3 +135,11 @@ test("every message exists in both languages with the same placeholders",()=>{
 });
 
 test("canonical lane discovery separates build profiles from marker namespaces and preserves explicit target ownership",()=>{const root=mkdtempSync(join(tmpdir(),"lane-scan-"));try{for(const path of fixture.discovery.directories)mkdirSync(join(root,path),{recursive:true});expect(new Ajv({strict:false}).validate({...componentSchema, $ref:"#/definitions/Discovery"},fixture.discovery)).toBe(true);const found=unitProfilesV1(root).map(row=>join(row.profileDirectory,"build"));expect(found.map(path=>path.slice(root.length+1).replaceAll("\\","/")).sort()).toEqual(fixture.discovery.expected);expect(existsSync(join(root,"u/l/d1/v/prototype/build"))).toBe(true);expect(existsSync(join(root,"u/l/d1/m/prototype/build"))).toBe(true);}finally{rmSync(root,{recursive:true,force:true});}});
+
+test("every measured unit is grouped under its profile on any path separator, and a unit outside the declared profiles is reported by its own profile directory instead of crashing",async()=>{
+ const root=mkdtempSync(join(realpathSync(tmpdir()),"units-")),store=join(root,"m");
+ try{
+  const old=unit(store,"b/p/prototype","a","1",65536,40),newest=unit(store,"b/p/prototype","a","2",65536,1),result=await collectUnitsV1(store,{dryRun:false,needBytes:()=>10**9,leases:async()=>({release:()=>undefined}),lock:()=>({release:()=>undefined})});
+  expect(result.removed.map(row=>row.path)).toContain(old);expect(existsSync(old)).toBe(false);expect(newest.length).toBeGreaterThan(0);expect(Object.keys(result.profiles).every(key=>!key.includes("\\"))).toBe(true);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/insert-wind-bridge/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1991/mutation/insert-wind-bridge/schema.json",
   "title": "InsertWindBridge",
   "type": "object",
   "additionalProperties": false,
@@ -30,7 +30,7 @@
       }
     },
     "item": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindBridge",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1991/snapshot.json#/$defs/WindBridge",
       "x-semio-ui": {
         "role": "value",
         "label": {

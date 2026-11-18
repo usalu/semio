@@ -105,4 +105,12 @@ describe("round 3 framework shared-border findings", () => {
     expect(read("../🪟️Window/🟦️.tsx")).toContain("inlineEdgeReservePx={controlsWidthPx}");
     expect(read("../📐️Layout/📖️stories/🧪️.story.tsx")).toContain("useState(false);\n    const [topLeftPath");
   });
+  it("moves a vertical owner's one divider per seam from the block end to the inline end through the registered flow variable, so products hand-roll no divider", () => {
+    expect(css).toMatch(/@property --shared-border-flow \{\s*syntax: "<integer>";\s*inherits: false;\s*initial-value: 0;/);
+    expect(css).toContain("border-inline-end-width: calc(var(--stroke-hairline) * var(--shared-border-flow));");
+    expect(css).toContain("border-block-end: calc(var(--stroke-hairline) * (1 - var(--shared-border-flow))) solid var(--border-normal-color);");
+  });
+  it("paints the staged action dialog footer through the row's top edge, not a raw border", () => {
+    expect(read("../../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📝️staging/🟦️.tsx")).toContain('<SharedBorderRow edges={["top"]} className="w-full">');
+  });
 });

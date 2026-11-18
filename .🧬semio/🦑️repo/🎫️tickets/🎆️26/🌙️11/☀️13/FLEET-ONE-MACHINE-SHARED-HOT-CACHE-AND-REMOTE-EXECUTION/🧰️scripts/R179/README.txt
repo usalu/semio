@@ -1,0 +1,5 @@
+R179 staged (not landed). Live files and staged copies (live sha256 at staging time):
+a6bd454ab6c5b87b35637dd2d9ece23891377bf08ed59beb3545351fbca4bea2  🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🧶️nx/🚦️single-flight/🟦️.ts
+200a657d972ad6d89204b02d01ab73d94945268b97983094a13aa99a8cb19ed4  🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🧶️nx/🚦️single-flight/🧬️schema/🔣️.json
+Apply: flight.patch.txt to 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🧶️nx/🚦️single-flight/🟦️.ts ; schema.patch.txt to 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🧶️nx/🚦️single-flight/🧬️schema/🔣️.json ; long-holder.test.ts.txt to 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🧶️nx/🚦️single-flight/🧪️tests/🕰️long-holder/🟦️.ts
+Run (red on base, green on new): scratch map JSON {live path: staged path} + preload.ts.txt (copy of R177 preload), BUN_RUNTIME_TRANSPILER_CACHE_PATH=0 R177_MAP=<map> bun test --preload preload.ts ./long-holder.test.ts

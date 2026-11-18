@@ -1,0 +1,13 @@
+{
+  "cases": [
+    { "name": "plain owners batch by size, a native owner stands alone", "size": 3, "isolated": ["n2", "n5"],
+      "lanes": [["a0", "a1", "n2", "a3", "a4", "a5", "a6"], ["b0", "n5"]],
+      "expected": [["a0", "a1"], ["b0"], ["n2"], ["n5"], ["a3", "a4", "a5"], ["a6"]] },
+    { "name": "no isolated owner keeps the plain batches", "size": 2, "isolated": [],
+      "lanes": [["a", "b", "c"], ["d"]],
+      "expected": [["a", "b"], ["d"], ["c"]] },
+    { "name": "all isolated gives one batch per owner in lane order", "size": 6, "isolated": ["x", "y", "z"],
+      "lanes": [["x", "y"], ["z"]],
+      "expected": [["x"], ["z"], ["y"]] }
+  ]
+}

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-zone-theta-i-heat-c/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/mutation/change-zone-theta-i-heat-c/schema.json",
   "title": "ChangeZoneThetaIHeatC",
   "type": "object",
   "additionalProperties": false,

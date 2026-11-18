@@ -279,11 +279,21 @@ fn card_stack_cards(geometry: &[CardGeometry], row: f64) -> Vec<semio_ui_wgpu_li
     geometry.iter().map(|card| {
         let width = f64::from(card.rect.w);
         CardStackCard {
-            height: f64::from(card.rect.h) + if card.shares_footer { row } else { 0.0 },
+            height: f64::from(card.rect.h),
             top: CardStackEdge { depth: row, chips: vec![CardBandSpan { left: 0.0, right: f64::from(card.title_chip) }] },
             bottom: CardStackEdge { depth: if card.footer.is_some() { row } else { 0.0 }, chips: if card.footer.is_some() { vec![CardBandSpan { left: width - f64::from(card.footer_chip), right: width }] } else { Vec::new() } },
         }
-    }).collect()
+    }).collect::<Vec<_>>()
+}
+
+/// 🪢️ Extends every card that shares its footer band with the next card by that band's lift, so the model's next top equals the laid-out one whatever lift `resolve_card_bands` (the single source of truth, `bands.cases.json`) decides.
+fn lift_shared_cards(mut cards: Vec<semio_ui_wgpu_light::card_stack::CardStackCard>) -> Vec<semio_ui_wgpu_light::card_stack::CardStackCard> {
+    use semio_ui_wgpu_light::card_bands::{resolve_card_bands, CardBandCard};
+    let bands = resolve_card_bands(&cards.iter().map(|card| CardBandCard { cap: card.top.depth, footer: card.bottom.depth, cap_chips: card.top.chips.clone(), footer_chips: card.bottom.chips.clone() }).collect::<Vec<_>>(), 0.0);
+    for (card, band) in cards.iter_mut().zip(bands) {
+        card.height += band.lift;
+    }
+    cards
 }
 
 /// 🃏️ Paints one step of a native card stack: the interlocked silhouettes as shared-border lines (each coincident line once), then every chip text.
@@ -303,17 +313,16 @@ pub(super) fn paint_card_stack_node_step(
     let texts = geometry.len() * 2;
     if cursor.phase == 0 {
         let Some(first) = geometry.first() else {
-            cursor.advance(1);
+            cursor.advance(cursor.phase + 1);
             return RetainedNodePaintStep::Pending;
         };
-        let cards = card_stack_cards(&geometry, row);
+        let cards = lift_shared_cards(card_stack_cards(&geometry, row));
         let outlines = semio_ui_wgpu_light::card_stack::card_stack_outlines(f64::from(first.rect.x), f64::from(first.rect.y), f64::from(first.rect.w), &cards);
         let items = outlines.iter().map(Vec::len).sum::<usize>();
         let result = retained_fixed_output_budgeted(draw, items, |draw| {
             semio_ui_wgpu_light::card_stack::paint_card_stack(draw, &outlines, theme.stroke_hairline, theme.border_normal, semio_ui_draw_contract::SharedBorderState::Normal);
         });
-        if let Err(error) = &result { eprintln!("[DEBUG] card outlines fault {error:?} items {items}"); }
-        cursor.advance(1);
+        cursor.advance(cursor.phase + 1);
         return if result.is_err() { RetainedNodePaintStep::Fault } else { RetainedNodePaintStep::Pending };
     }
     if usize::from(cursor.phase) <= texts {
@@ -328,16 +337,16 @@ pub(super) fn paint_card_stack_node_step(
             (card.footer.as_deref(), card.rect.x + card.rect.w - card.footer_chip, card.footer_chip, y, theme.text_muted)
         };
         let Some(text) = text else {
-            cursor.advance(1);
+            cursor.advance(cursor.phase + 1);
             return RetainedNodePaintStep::Pending;
         };
         let rect = Rect::new(x + pad, y + (theme.control_height - line) * 0.5, (chip - pad * 2.0).max(0.0), line);
         return match retained_text_node_step_weighted(text, rect, theme.font_size_body, color, semio_ui_text::TextWeight::of(slot % 2 == 0), atlas, draw, cursor) {
             RetainedNodePaintStep::Complete => {
-                cursor.advance(1);
+                cursor.advance(cursor.phase + 1);
                 RetainedNodePaintStep::Pending
             }
-            step => { if step == RetainedNodePaintStep::Fault { eprintln!("[DEBUG] card text fault slot {slot}"); } step }
+            step => step,
         };
     }
     retained_presence_step(draw, bounds, theme, presence)

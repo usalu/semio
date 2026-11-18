@@ -6,7 +6,8 @@
     "version",
     "maximumBytes",
     "maximumControlBytes",
-    "partitions"
+    "partitions",
+    "reclaim"
   ],
   "properties": {
     "version": {
@@ -62,6 +63,9 @@
         }
       }
     },
+    "reclaim": {
+      "$ref": "#/$defs/reclaimRule"
+    },
     "elastic": {
       "type": "object",
       "additionalProperties": false,
@@ -84,6 +88,17 @@
     }
   },
   "$defs": {
+    "reclaimRule": {
+      "description": "When the host allocation of an image counts as bloat for every partition without an elastic rule of its own; an idle bloated image is reclaimed in place by `repo cache gc` (an attach through the UNMAP-capable stack returns the blocks freed inside to the host), never recreated.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reclaimFloorBytes", "reclaimRatioPercent", "reclaimTightHostFreeBytes"],
+      "properties": {
+        "reclaimFloorBytes": {"type": "integer", "minimum": 1048576, "maximum": 103080263680},
+        "reclaimRatioPercent": {"type": "integer", "minimum": 101, "maximum": 10000},
+        "reclaimTightHostFreeBytes": {"type": "integer", "minimum": 0, "maximum": 1099511627776}
+      }
+    },
     "filesystemOverhead": {
       "const": {
         "tinyCapacityBytes": 268435456
@@ -240,7 +255,7 @@
           "maximum": 103080263680
         },
         "reclaimFloorBytes": {
-          "description": "Raw fixed images never hand blocks freed inside them back to the host. A quiescent image is recreated when its host allocation exceeds the bytes used inside by at least this floor and by the ratio below.",
+          "description": "An idle image is reclaimed in place by `repo cache gc` when its host allocation exceeds the bytes used inside by at least this floor and by the ratio below.",
           "type": "integer",
           "minimum": 1048576,
           "maximum": 103080263680

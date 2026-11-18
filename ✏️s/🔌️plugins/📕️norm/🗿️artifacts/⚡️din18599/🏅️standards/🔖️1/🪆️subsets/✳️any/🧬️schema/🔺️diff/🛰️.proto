@@ -1,5 +1,5 @@
 syntax = "proto3";
-package semio.s.norm.din18599.diff;
+package semio.s.norm_energy.din18599.diff;
 
 message Din18599ZonesPatch {
   optional string label_en = 1;

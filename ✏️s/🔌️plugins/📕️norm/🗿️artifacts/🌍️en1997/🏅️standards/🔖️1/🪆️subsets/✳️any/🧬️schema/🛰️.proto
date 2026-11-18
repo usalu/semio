@@ -1,5 +1,5 @@
 syntax = "proto3";
-package semio.s.norm.en1997;
+package semio.s.norm_eurocode.en1997;
 message En1997Artifact {
   // @state artifact
   string structure_id = 1;

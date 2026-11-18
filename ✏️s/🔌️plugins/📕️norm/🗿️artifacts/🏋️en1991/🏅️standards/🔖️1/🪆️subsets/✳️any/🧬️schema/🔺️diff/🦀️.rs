@@ -872,7 +872,7 @@ protocol::list_delta! {
 #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
-#[artifact_schema(id = "s.norm.en1991")]
+#[artifact_schema(id = "s.norm-eurocode.en1991")]
 pub struct En1991Diff {
     #[state(artifact)]
     pub annex: Option<semio_s_plugin_norm_compliance::AnnexChoice>,

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-zone-thermal-mass/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/mutation/change-zone-thermal-mass/schema.json",
   "title": "ChangeZoneThermalMass",
   "type": "object",
   "additionalProperties": false,
@@ -35,7 +35,7 @@
       }
     },
     "newThermalMassClass": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/ThermalMassClass",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/ThermalMassClass",
       "x-semio-ui": {
         "role": "value",
         "label": {

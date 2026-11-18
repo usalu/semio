@@ -1,0 +1,82 @@
+Replica g1-m08 of group g1, store /Volumes/semio-store: reachable
+Replica g1-m08 der Gruppe g1, Speicher /Volumes/semio-store: erreichbar
+Synchronization: on
+Synchronisierung: an
+Daemon: running (pid 82702)
+Daemon: läuft (pid 82702)
+315393 files tracked; queued: 10 incoming, ? outgoing; 47 overwritten files kept in .cache/f/lost
+315393 Dateien verfolgt; wartend: 10 eingehend, ? ausgehend; 47 überschriebene Dateien in .cache/f/lost aufbewahrt
+Recurring failures of kind unstable: 7 times, last 33 s ago.
+Wiederkehrende Fehler der Art unstable: 7 Mal, zuletzt vor 33 s.
+Recurring failures of kind round: 1 times, last 24517 s ago.
+Wiederkehrende Fehler der Art round: 1 Mal, zuletzt vor 24517 s.
+Recurring failures of kind loop-blocked-restart: 13 times, last 84821 s ago.
+Wiederkehrende Fehler der Art loop-blocked-restart: 13 Mal, zuletzt vor 84821 s.
+Sidecar build-agent: running (process 83352, 0 restart(s), 25706 s in this state, last exit -).
+Sidecar build-agent: läuft (Prozess 83352, 0 Neustart(s), seit 25706 s in diesem Zustand, letztes Ende -).
+Sidecar build-scheduler: off on this machine (process -, 0 restart(s), 25736 s in this state, last exit -).
+Sidecar build-scheduler: auf dieser Maschine aus (Prozess -, 0 Neustart(s), seit 25736 s in diesem Zustand, letztes Ende -).
+Sidecar build-cache: off on this machine (process -, 0 restart(s), 25736 s in this state, last exit -).
+Sidecar build-cache: auf dieser Maschine aus (Prozess -, 0 Neustart(s), seit 25736 s in diesem Zustand, letztes Ende -).
+Journal: 59.25 MiB in 48 segments of 10 origins.
+Journal: 59.25 MiB in 48 Segmenten von 10 Origins.
+Newest snapshot by g1-m02: 5713s old, 97.20 MiB.
+Neuester Schnappschuss von g1-m02: 5713s alt, 97.20 MiB.
+Reclaimable now: 35 journal segments (47.87 MiB).
+Jetzt freigebbar: 35 Journal-Segmente (47.87 MiB).
+Last compaction 327064s ago: 861 blobs (27.00 GiB) removed; 88 blobs (129.23 MiB) were still too young.
+Letzte Verdichtung vor 327064s: 861 Blobs (27.00 GiB) entfernt; 88 Blobs (129.23 MiB) waren noch zu jung.
+Git state: shared (the stage of the group server and commits replicate; a stage made here is replaced by the group server's); stage tree c6169d73a2d126ee208a3e27833705f0635f78e7.
+Git-Zustand: geteilt (die Stage des Gruppenservers und Commits werden repliziert; eine hier gemachte Stage wird durch die des Gruppenservers ersetzt); Stage-Baum c6169d73a2d126ee208a3e27833705f0635f78e7.
+Background tiers, last pass (cost, duty cycle of one core): hot 3 ms 1%, directory sweep 932 ms 10%, file sweep 3127 ms 4.1%, tree walk 34351 ms 1.6%, git view 59700 ms 5%.
+Hintergrundstufen, letzter Durchlauf (Kosten, Auslastung eines Kerns): heiß 3 ms 1%, Verzeichnisdurchlauf 932 ms 10%, Dateidurchlauf 3127 ms 4.1%, Baumdurchlauf 34351 ms 1.6%, Git-Ansicht 59700 ms 5%.
+Latency over the last 92 publishes and 100 applies: publish p50 718 ms, p95 3151 ms; apply p50 539 ms, p95 3998 ms.
+Latenz über die letzten 92 Veröffentlichungen und 100 Anwendungen: Veröffentlichen p50 718 ms, p95 3151 ms; Anwenden p50 539 ms, p95 3998 ms.
+g1-m01: 0 events (0 B) behind, last event 186s ago
+g1-m01: 0 Ereignisse (0 B) zurück, letztes Ereignis vor 186s
+g1-m02: 0 events (0 B) behind, last event 2114s ago
+g1-m02: 0 Ereignisse (0 B) zurück, letztes Ereignis vor 2114s
+g1-m03: 0 events (0 B) behind, last event 390s ago
+g1-m03: 0 Ereignisse (0 B) zurück, letztes Ereignis vor 390s
+g1-m04: 0 events (0 B) behind, last event 108375s ago
+g1-m04: 0 Ereignisse (0 B) zurück, letztes Ereignis vor 108375s
+g1-m05: 0 events (0 B) behind, last event 63s ago
+g1-m05: 0 Ereignisse (0 B) zurück, letztes Ereignis vor 63s
+g1-m06: 0 events (0 B) behind, last event 153207s ago
+g1-m06: 0 Ereignisse (0 B) zurück, letztes Ereignis vor 153207s
+g1-m07: 0 events (0 B) behind, last event 59s ago
+g1-m07: 0 Ereignisse (0 B) zurück, letztes Ereignis vor 59s
+g1-m08: 0 events (0 B) behind, last event 25s ago
+g1-m08: 0 Ereignisse (0 B) zurück, letztes Ereignis vor 25s
+g1-m10: 0 events (0 B) behind, last event 33s ago
+g1-m10: 0 Ereignisse (0 B) zurück, letztes Ereignis vor 33s
+g1-server: 0 events (0 B) behind, last event 1111s ago
+g1-server: 0 Ereignisse (0 B) zurück, letztes Ereignis vor 1111s
+Fleet: origin platform age lag (origins behind/queued) basis (cp:s = compared at its checkpoint taken s seconds ago, now = compared as it is now) sync code view (modified/deleted/untracked) latency (publish p50/p95 ms | apply p50/p95 ms) verdict
+Flotte: Ursprung Plattform Alter Rückstand (Ursprünge zurück/eingereiht) Grundlage (cp:s = verglichen an seinem Prüfpunkt von vor s Sekunden, now = verglichen wie er jetzt ist) Sync Code Ansicht (geändert/gelöscht/unversioniert) Latenz (Veröffentlichen p50/p95 ms | Anwenden p50/p95 ms) Urteil
+  g1-m01 macos 3s 0/0 cp:3s on ca097b4fae32 126/31/58 14051/40104|527/3821 diverged
+  g1-m01 macos 3s 0/0 cp:3s an ca097b4fae32 126/31/58 14051/40104|527/3821 abweichend
+  g1-m02 macos 2149s 8/0 cp:2149s on ca097b4fae32 34/31/22 7392/29777|18277/56494 stale (attestation too old)
+  g1-m02 macos 2149s 8/0 cp:2149s an ca097b4fae32 34/31/22 7392/29777|18277/56494 veraltet (Bescheinigung zu alt)
+  g1-m03 macos 1s 0/0 cp:1s on ca097b4fae32 126/31/58 1116/6095|698/3739 lagging (not settled: no common checkpoint within 60 s yet, still moving)
+  g1-m03 macos 1s 0/0 cp:1s an ca097b4fae32 126/31/58 1116/6095|698/3739 im Rückstand (nicht abgeglichen: noch kein gemeinsamer Prüfpunkt innerhalb von 60 s, noch in Bewegung)
+  g1-m04 linux 107913s 8/0 cp:107913s on b4c6513b87ef 452/11/1504 190/16614|302/142793 stale (attestation too old)
+  g1-m04 linux 107913s 8/0 cp:107913s an b4c6513b87ef 452/11/1504 190/16614|302/142793 veraltet (Bescheinigung zu alt)
+  g1-m05 windows 2s 0/228 cp:- on ca097b4fae32 126/31/58 9877/62580|8190/49827 lagging (not settled: no common checkpoint within 60 s yet, still moving)
+  g1-m05 windows 2s 0/228 cp:- an ca097b4fae32 126/31/58 9877/62580|8190/49827 im Rückstand (nicht abgeglichen: noch kein gemeinsamer Prüfpunkt innerhalb von 60 s, noch in Bewegung)
+  g1-m06 macos 152626s 9/0 cp:152626s on b4c6513b87ef 365/11/1142 139/508|307/841 stale (attestation too old)
+  g1-m06 macos 152626s 9/0 cp:152626s an b4c6513b87ef 365/11/1142 139/508|307/841 veraltet (Bescheinigung zu alt)
+  g1-m07 macos 5s 0/0 cp:5s on ca097b4fae32 126/31/57 1091/10309|24213/110799 lagging (not settled: no common checkpoint within 60 s yet, still moving)
+  g1-m07 macos 5s 0/0 cp:5s an ca097b4fae32 126/31/57 1091/10309|24213/110799 im Rückstand (nicht abgeglichen: noch kein gemeinsamer Prüfpunkt innerhalb von 60 s, noch in Bewegung)
+  g1-m08 macos 0s 0/0 cp:0s on ca097b4fae32 126/31/58 718/3151|539/3998 ok
+  g1-m08 macos 0s 0/0 cp:0s an ca097b4fae32 126/31/58 718/3151|539/3998 ok
+  g1-m10 macos 0s 0/0 cp:0s on ca097b4fae32 126/31/58 37338/87446|756/5538 ok
+  g1-m10 macos 0s 0/0 cp:0s an ca097b4fae32 126/31/58 37338/87446|756/5538 ok
+  g1-server macos 3s 0/0 cp:3s on ca097b4fae32 126/31/58 23763/65395|628/6830 lagging (not settled: no common checkpoint within 60 s yet, still moving)
+  g1-server macos 3s 0/0 cp:3s an ca097b4fae32 126/31/58 23763/65395|628/6830 im Rückstand (nicht abgeglichen: noch kein gemeinsamer Prüfpunkt innerhalb von 60 s, noch in Bewegung)
+  warning: g1-m09 is registered in the store (fleet-auth.json) but has never attested: start the replica on that machine (run the provisioning script there, then `status`), or take it out of the fleet with `retire g1-m09`
+  Warnung: g1-m09 ist im Store registriert (fleet-auth.json), hat aber nie bescheinigt: das Replikat auf dieser Maschine starten (dort das Provisionierungsskript ausführen, danach `status`) oder sie mit `retire g1-m09` aus der Flotte nehmen
+  g1-m01 differs in indexTree at a common checkpoint: - instead of c6169d73a2d126ee208a3e27833705f0635f78e7 (#n = bucket n of 256 of the paths, value = its digest)
+  g1-m01 weicht in indexTree an einem gemeinsamen Prüfpunkt ab: - statt c6169d73a2d126ee208a3e27833705f0635f78e7 (#n = Fach n von 256 der Pfade, Wert = dessen Digest)
+The fleet is not in agreement (10 origins; fresh and checkpoint age mean within 60 s; lagging is not wrong, only not yet comparable).
+Die Flotte ist nicht einig (10 Ursprünge; frisch und Prüfpunkt-Alter heißen innerhalb von 60 s; Rückstand ist nicht falsch, nur noch nicht vergleichbar).

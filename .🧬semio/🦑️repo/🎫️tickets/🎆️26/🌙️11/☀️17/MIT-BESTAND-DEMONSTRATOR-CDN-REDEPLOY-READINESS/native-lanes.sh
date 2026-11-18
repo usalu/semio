@@ -31,5 +31,5 @@ components() {
 }
 component() { local crate="🌎️hub/🧩️compositions/$1"; step "component-$1" "" repo "$OSM/🔌️plugin/🏗️build/🧩️driver-stages/📜️script.ts" component --manifest "$crate/🧩️component/📦️packages/🦀️rust/Cargo.toml"; }
 session() { step "session-$1" "$OSM/🔌️plugin/📇️registry" repo ./📜️script.ts session "$1"; }
-prepare() { step "prepare-$1" "$OSM/🧑‍💻dev/📦️packages/🟦️typescript" repo ./♻️activation/🧰️preparation/📜️script.ts prepare "$1" react release; }
+prepare() { step "prepare-$1" "$OSM/🧑‍💻dev/📦️packages/🟦️typescript" repo ./📜️script.ts prepare "$1" react release; }
 "$@"

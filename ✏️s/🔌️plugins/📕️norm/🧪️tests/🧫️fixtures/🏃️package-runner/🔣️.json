@@ -2,7 +2,9 @@
   "schemaVersion": 1,
   "descriptors": [
     "🌎️hub/🧩️compositions/📕️norm/🧩️component/🔣️.json",
+    "🌎️hub/🧩️compositions/📕️norm/🧩️extensions/📒️energy/🧩️component/🔣️.json",
     "🌎️hub/🧩️compositions/📕️norm/🧩️extensions/📗️eurocode/🧩️component/🔣️.json",
+    "🌎️hub/🧩️compositions/📕️norm/🧩️extensions/📓️eurocode-structural/🧩️component/🔣️.json",
     "🌎️hub/🧩️compositions/📕️norm/🧩️extensions/📙️eurocode-materials/🧩️component/🔣️.json"
   ],
   "suites": [

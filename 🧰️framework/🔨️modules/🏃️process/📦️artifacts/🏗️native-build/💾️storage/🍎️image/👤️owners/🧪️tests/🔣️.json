@@ -2,7 +2,7 @@
   "attach": {
     "root": "/fixture/m",
     "image": "/fixture/fixed.dmg",
-    "expected": ["attach", "-nobrowse", "-noautoopen", "-owners", "on", "-mountpoint", "/fixture/m", "/fixture/fixed.dmg"]
+    "expected": ["image", "attach", "--nobrowse", "--mountOptions", "owners", "--mountPoint", "/fixture/m", "/fixture/fixed.dmg"]
   },
   "mountTable": [
     "/dev/disk3s1s1 on / (apfs, sealed, local, read-only, journaled)",

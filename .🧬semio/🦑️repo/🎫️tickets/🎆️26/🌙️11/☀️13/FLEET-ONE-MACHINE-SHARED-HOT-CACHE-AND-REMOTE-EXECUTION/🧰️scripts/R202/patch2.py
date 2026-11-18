@@ -1,0 +1,20 @@
+import sys,json
+K=sys.argv[1];OUT=sys.argv[2]
+def rd(n): return open(K+'/'+n,encoding='utf8').read()
+def wr(n,t): open(OUT+'/'+n,'w',encoding='utf8').write(t)
+def sub(t,old,new,count=1):
+    assert t.count(old)==count,(old[:70],t.count(old))
+    return t.replace(old,new)
+t=rd('take.base2.mjs')
+t=sub(t,'    line(language) { return fill(TEXTS[language === "de" ? "de" : "en"].progress, counts()); },','    line(language) { return fill(TEXTS[language === "de" ? "de" : "en"].progress, counts()); },\n    staleLine(language, name) { return fill(TEXTS[language === "de" ? "de" : "en"].staleOwner, { name, count: counts().stale }); },')
+wr('take.new2.mjs',t)
+s=rd('takeschema.base2.json')
+s=sub(s,'"tailPool": "The pool of this machine is {state} with {children} children, {running} owners running, {rate} owners per minute: {reason}" },','"tailPool": "The pool of this machine is {state} with {children} children, {running} owners running, {rate} owners per minute: {reason}", "staleOwner": "owner {name} was found in the fleet cache and taken, but its record does not hold against this tree ({count} stale so far)" },')
+s=sub(s,'"tailPool": "Der Pool dieser Maschine ist {state} mit {children} Kindprozessen, {running} Projekten in Arbeit, {rate} Projekten pro Minute: {reason}" }','"tailPool": "Der Pool dieser Maschine ist {state} mit {children} Kindprozessen, {running} Projekten in Arbeit, {rate} Projekten pro Minute: {reason}", "staleOwner": "Projekt {name} wurde im Flottenspeicher gefunden und geholt, sein Eintrag gilt aber für diesen Baum nicht ({count} bisher veraltet)" }')
+json.loads(s)
+wr('takeschema.new2.json',s)
+p=rd('pn.base2.mjs')
+p=sub(p,'mark:(name,outcome)=>{ledger.mark(name,outcome);if(outcome==="present"||outcome==="fetched")finished++;}','mark:(name,outcome)=>{ledger.mark(name,outcome);if(outcome==="stale"&&staleTold++<200)takeSay(language=>ledger.staleLine(language,name));if(outcome==="present"||outcome==="fetched")finished++;}')
+p=sub(p,'const flight={flying:0},warmStop=new AbortController()','let staleTold=0;const flight={flying:0},warmStop=new AbortController()')
+wr('pn.new2.mjs',p)
+print('ok')

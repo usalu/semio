@@ -130,9 +130,9 @@ describe("OverviewCard", () => {
     expect(screen.getByRole("button").querySelector("[data-overview-card-paint]")?.className.split(" ")).toContain("-translate-y-0.5");
   });
 
-  it("never lifts a card tiled in a stack or grid, so hover cannot break a shared line", () => {
+  it("never lifts a card tiled in a stack or grid or swiped in the layered overview, so hover and reveal cannot break a shared line", () => {
     const css = readFileSync(resolve(import.meta.dirname, "../../../../🎨️styling/🖌️ui/🎨️.css"), "utf8");
-    const rule = css.match(/:is\(\[data-card-stack\], \[data-card-grid\]\) \[data-overview-card-paint\] \{([^}]*)\}/u);
+    const rule = css.match(/:is\(\[data-card-stack\], \[data-card-grid\], \[data-layered-overview\]\) \[data-overview-card-paint\] \{([^}]*)\}/u);
     expect(rule?.[1]).toMatch(/translate: none !important/u);
     expect(rule?.[1]).toMatch(/transform: none !important/u);
   });

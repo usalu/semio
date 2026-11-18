@@ -6,6 +6,7 @@
 
 use semio_framework_test_fixtures::fixture_path;
 use semio_ui_retained_tree::reconcile::*;
+use semio_ui_wgpu_engine::testkit::UiFixture;
 use semio_ui_wgpu_engine::Ui;
 use semio_ui_wgpu_engine_surface::UiLayoutStep;
 use semio_ui_text::FontAtlas;
@@ -66,8 +67,14 @@ impl semio_ui_wgpu_hosting::scene_slots::SceneHost for NoSceneHost {
 
 /// 🌳️ Publishes, reconciles, lays out and paints one snapshot in its own window; answers the engine and
 /// the painted UI instance count.
-fn mount(window: &str, snapshot: &serde_json::Value) -> (Ui, usize) {
-    let mut ui = Ui::new(semio_ui_locale::Locale::En);
+fn mount(window: &str, snapshot: &serde_json::Value) -> (UiFixture, usize) {
+    let mut ui = UiFixture::new(semio_ui_locale::Locale::En);
+    let instances = mount_into(&mut ui, window, snapshot);
+    (ui, instances)
+}
+
+/// 🪟️ Mounts one more window into the test's own `Ui`; the scope is process-serialized, so a law owns exactly one.
+fn mount_into(ui: &mut UiFixture, window: &str, snapshot: &serde_json::Value) -> usize {
     assert!(ui.publish_document(window, document(snapshot, 1)), "{window}: the document publishes");
     let operation = semio_framework_job::allocate_operation_id();
     let cancel = semio_framework_job::CancelToken::root_now();
@@ -89,23 +96,9 @@ fn mount(window: &str, snapshot: &serde_json::Value) -> (Ui, usize) {
     let mut atlas = FontAtlas::builtin();
     ui.set_viewport(window, 960.0, 720.0);
     let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
-    let mut preview_sequence = 0;
-    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(120);
-    let settled = loop {
-        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
-        let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), test_clock, &mut preview_sequence,&mut actual_retained_progress);
-        if matches!(ui.step_layouts(&pool, &mut atlas, &mut cx), UiLayoutStep::Idle) {
-            break true;
-        }
-        if std::time::Instant::now() > deadline {
-            break false;
-        }
-        std::thread::yield_now();
-    };
-    assert!(settled, "{window}: layout settles");
+    assert!(ui.settle_layout(window, &pool, &mut atlas), "{window}: layout settles");
     let draw = ui.frame::<NoSceneHost>(window, 960.0, 720.0, &mut atlas, None, None).unwrap_or_else(|| panic!("{window}: a mounted document paints"));
-    let instances = draw.layers.iter().map(|layer| layer.ui_instances.len() + layer.vector_vertices.len() + layer.raster_instances.len()).sum();
-    (ui, instances)
+    draw.layers.iter().map(|layer| layer.ui_instances.len() + layer.vector_vertices.len() + layer.raster_instances.len()).sum()
 }
 
 fn node_of<'a>(ui: &'a Ui, window: &str, id: u64) -> &'a UiNode {
@@ -119,7 +112,7 @@ fn node_of<'a>(ui: &'a Ui, window: &str, id: u64) -> &'a UiNode {
 #[test]
 fn every_accept_case_of_the_corpus_mounts_every_record() {
     let cases = accept_cases();
-    assert_eq!(cases.len(), 55, "the shape groups hold every accept case of the corpus");
+    assert_eq!(cases.len(), 56, "the shape groups hold every accept case of the corpus");
     for (group, case, snapshot, expectation) in &cases {
         let window = format!("conformance.{case}");
         let (ui, instances) = mount(&window, snapshot);
@@ -140,12 +133,12 @@ fn every_accept_case_of_the_corpus_mounts_every_record() {
 fn slider_with_snaps_paints_one_tick_per_detent() {
     let snapshot = read(&corpus_dir().join("🧩️component/🧲️slider-with-snaps/📸️snapshot.json"));
     let snaps: Vec<f64> = snapshot["nodes"][0]["component"]["snaps"].as_array().expect("snaps").iter().map(|snap| snap.as_f64().expect("snap")).collect();
-    let (ui, with_ticks) = mount("conformance.snaps", &snapshot);
+    let (mut ui, with_ticks) = mount("conformance.snaps", &snapshot);
     let UiNode::Slider(slider) = node_of(&ui, "conformance.snaps", 0) else { panic!("a slider node") };
     assert_eq!(slider.snaps, snaps);
     let mut bare = snapshot.clone();
     bare["nodes"][0]["component"].as_object_mut().expect("component").remove("snaps");
-    let (_, without_ticks) = mount("conformance.bare", &bare);
+    let without_ticks = mount_into(&mut ui, "conformance.bare", &bare);
     assert_eq!(with_ticks - without_ticks, snaps.len(), "one tick instance per detent");
     let rail = semio_ui_theme::geometry::Rect::new(10.0, 0.0, 100.0, 4.0);
     let ticks: Vec<f32> = semio_ui_wgpu_controls::slider::slider_tick_rects(rail, 0.0, 10.0, ui_contract::UiNumberScale::Linear, &snaps, 2.0, 8.0).map(|tick| tick.x + tick.w * 0.5).collect();
@@ -213,11 +206,11 @@ fn tree_rows_render_recipe_content_in_their_value_column() {
 #[test]
 fn precision_reaches_the_stepper_and_every_vector_axis() {
     let stepper = read(&corpus_dir().join("🧩️component/🎯️stepper-precision/📸️snapshot.json"));
-    let (ui, _) = mount("conformance.stepper", &stepper);
+    let (mut ui, _) = mount("conformance.stepper", &stepper);
     let UiNode::NumberStepper(node) = node_of(&ui, "conformance.stepper", 0) else { panic!("a stepper node") };
     assert_eq!((node.precision, semio_ui_wgpu_controls::stepper::stepper_value_text(node.value, node.precision, node.display_factor)), (Some(2), "2.50".to_string()));
     let vector = read(&corpus_dir().join("🖥️composite/🧭️vector-input/📸️snapshot.json"));
-    let (ui, _) = mount("conformance.vector", &vector);
+    mount_into(&mut ui, "conformance.vector", &vector);
     for id in [2, 4] {
         let UiNode::Input(input) = node_of(&ui, "conformance.vector", id) else { panic!("a number field") };
         assert_eq!((input.input_kind.as_str(), input.precision, input.step, input.snaps.clone()), ("number", Some(1), Some(0.5), vec![0.0]));
@@ -321,14 +314,14 @@ fn peer_notes_are_announced_after_a_tree_rows_description() {
 #[test]
 fn the_g6_number_control_cases_carry_and_paint_every_facet() {
     let dial = read(&corpus_dir().join("🧩️component/🧭️dial-with-snaps/📸️snapshot.json"));
-    let (ui, with_ticks) = mount("conformance.dial", &dial);
+    let (mut ui, with_ticks) = mount("conformance.dial", &dial);
+    let mut bare = dial.clone();
+    bare["nodes"][0]["component"].as_object_mut().expect("component").remove("snaps");
+    let without_ticks = mount_into(&mut ui, "conformance.dial.bare", &bare);
     let UiNode::Slider(angle) = node_of(&ui, "conformance.dial", 0) else { panic!("a dial node") };
     assert_eq!((angle.appearance, angle.unit.as_deref(), angle.display_unit.as_deref(), angle.snaps.len()), (ui_contract::SliderAppearance::Dial, Some("rad"), Some("°"), 5));
     assert_eq!((angle.readout(angle.value), angle.unit_label()), ("90".to_string(), Some("90 °".to_string())));
     assert_eq!(angle.limits, Some(ui_contract::UiNumberLimits::default()), "a dial without hard bounds has open limits");
-    let mut bare = dial.clone();
-    bare["nodes"][0]["component"].as_object_mut().expect("component").remove("snaps");
-    let (_, without_ticks) = mount("conformance.dial.bare", &bare);
     assert!(with_ticks > without_ticks, "the dial paints its detent ticks");
     let track = semio_ui_theme::geometry::Rect::new(0.0, 0.0, 200.0, 40.0);
     let face = semio_ui_wgpu_controls::slider::dial_face(track);
@@ -348,7 +341,7 @@ fn the_g6_number_control_cases_carry_and_paint_every_facet() {
     assert_eq!(page, std::f64::consts::FRAC_PI_2, "a page key jumps to the next detent");
 
     let log = read(&corpus_dir().join("🧩️component/📈️log-slider/📸️snapshot.json"));
-    let (ui, _) = mount("conformance.log", &log);
+    mount_into(&mut ui, "conformance.log", &log);
     let UiNode::Slider(factor) = node_of(&ui, "conformance.log", 0) else { panic!("a log slider node") };
     assert_eq!((factor.scale, factor.precision, factor.readout(factor.value)), (ui_contract::UiNumberScale::Log, Some(2), "1.00".to_string()));
     let rail = semio_ui_theme::geometry::Rect::new(0.0, 0.0, 100.0, 4.0);
@@ -361,20 +354,20 @@ fn the_g6_number_control_cases_carry_and_paint_every_facet() {
     assert_eq!(semio_ui_wgpu_events::typed_number("20", factor.display_factor, factor.precision, [factor.value], Some(factor.min), Some(factor.max), factor.limits.as_ref()), Ok(20.0), "a soft travel admits a typed value beyond it");
 
     let heading = read(&corpus_dir().join("🧩️component/🔁️display-factor/📸️snapshot.json"));
-    let (ui, _) = mount("conformance.heading", &heading);
+    mount_into(&mut ui, "conformance.heading", &heading);
     let UiNode::NumberStepper(stepper) = node_of(&ui, "conformance.heading", 0) else { panic!("a stepper node") };
     assert_eq!((stepper.value_text(stepper.value), stepper.unit.as_deref()), ("45 °".to_string(), Some("°")));
     assert_eq!(semio_ui_wgpu_events::typed_number("90", stepper.display_factor, stepper.precision, std::iter::once(stepper.value).chain(stepper.snaps.iter().copied()), stepper.min, stepper.max, stepper.limits.as_ref()), Ok(std::f64::consts::FRAC_PI_2), "a typed 90 keeps the exact π/2 detent");
 
     let gap = read(&corpus_dir().join("🧩️component/📍️stepper-detents/📸️snapshot.json"));
-    let (ui, _) = mount("conformance.gap", &gap);
+    mount_into(&mut ui, "conformance.gap", &gap);
     let UiNode::NumberStepper(stepper) = node_of(&ui, "conformance.gap", 0) else { panic!("a stepper node") };
     assert_eq!((stepper.snaps.clone(), stepper.value_text(stepper.value)), (vec![0.0, 5.0, 10.0], "2.0 mm".to_string()));
     assert_eq!(ui_contract::ui_number_key_value(stepper.value, stepper.min, stepper.max, stepper.step, stepper.precision, stepper.display_factor, stepper.snaps.iter().copied(), ui_contract::SliderKey::PageUp, false), 5.0);
     assert_eq!(semio_ui_wgpu_events::typed_number("12", None, stepper.precision, [stepper.value], stepper.min, stepper.max, stepper.limits.as_ref()), Err("Must be at most 10 mm".to_string()));
 
     let width = read(&corpus_dir().join("🧩️component/⛔️hard-bound-refusal/📸️snapshot.json"));
-    let (ui, _) = mount("conformance.width", &width);
+    mount_into(&mut ui, "conformance.width", &width);
     let UiNode::Input(field) = node_of(&ui, "conformance.width", 0) else { panic!("a number field") };
     let limits = field.limits.as_ref().expect("the field carries its limits");
     for (typed, verdict) in [("-1", Err("Must be greater than 0".to_string())), ("0", Err("Must be greater than 0".to_string())), ("120", Err("Must be at most 100".to_string())), ("4.5", Ok(4.5)), ("x", Err(String::new()))] {

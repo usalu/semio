@@ -157,6 +157,386 @@
           }
         }
       }
+    },
+    "cache-regrow-graph": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "repo ./📜️script.ts regrow graph --pressed",
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          },
+          "dashboard": {
+            "title": {
+              "en": "Regrow Idle Graph Image Under Disk Pressure",
+              "de": "Untätiges Graph-Image bei Plattendruck neu wachsen lassen"
+            },
+            "description": {
+          "en": "Retire the idle graph image whose blocks the volume needs back; any holder ends it silently and a command that holds the image mapped is never waited for.",
+          "de": "Das untätige graph-Image abräumen, dessen Blöcke das Volume zurückbraucht; jeder Halter beendet es still, und auf einen Befehl, der das Image eingehängt hält, wird nie gewartet."
+        }
+          }
+        }
+      }
+    },
+    "cache-regrow-products": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "repo ./📜️script.ts regrow products --pressed",
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          },
+          "dashboard": {
+            "title": {
+              "en": "Regrow Idle Products Image Under Disk Pressure",
+              "de": "Untätiges Produkte-Image bei Plattendruck neu wachsen lassen"
+            },
+            "description": {
+          "en": "Retire the idle products image whose blocks the volume needs back; any holder ends it silently and a command that holds the image mapped is never waited for.",
+          "de": "Das untätige products-Image abräumen, dessen Blöcke das Volume zurückbraucht; jeder Halter beendet es still, und auf einen Befehl, der das Image eingehängt hält, wird nie gewartet."
+        }
+          }
+        }
+      }
+    },
+    "cache-regrow-rust": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "repo ./📜️script.ts regrow rust --pressed",
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          },
+          "dashboard": {
+            "title": {
+              "en": "Regrow Idle Rust Image Under Disk Pressure",
+              "de": "Untätiges Rust-Image bei Plattendruck neu wachsen lassen"
+            },
+            "description": {
+          "en": "Retire the idle rust image whose blocks the volume needs back; any holder ends it silently and a command that holds the image mapped is never waited for.",
+          "de": "Das untätige rust-Image abräumen, dessen Blöcke das Volume zurückbraucht; jeder Halter beendet es still, und auf einen Befehl, der das Image eingehängt hält, wird nie gewartet."
+        }
+          }
+        }
+      }
+    },
+    "cache-reclaim-rust": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "repo ./📜️script.ts reclaim rust",
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          },
+          "dashboard": {
+            "title": {
+     "en": "Reclaim Idle Rust Image Blocks In Place",
+     "de": "Blöcke des untätigen Rust-Images an Ort und Stelle zurückgeben"
+    },
+            "description": {
+     "en": "Return the blocks the idle Rust image holds but no longer uses to the volume through one unmap cycle; nothing is recreated, a held or retiring image is skipped and never waited for.",
+     "de": "Die Blöcke, die das untätige Rust-Image hält, aber nicht mehr nutzt, durch einen Unmap-Zyklus an das Volume zurückgeben; nichts wird neu erzeugt, ein gehaltenes oder abgeräumtes Image wird übersprungen und nie abgewartet."
+    }
+          }
+        }
+      }
+    },
+    "cache-reclaim-tools": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "repo ./📜️script.ts reclaim tools",
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          },
+          "dashboard": {
+            "title": {
+     "en": "Reclaim Idle Tools Image Blocks In Place",
+     "de": "Blöcke des untätigen Werkzeug-Images an Ort und Stelle zurückgeben"
+    },
+            "description": {
+     "en": "Return the blocks the idle Tools image holds but no longer uses to the volume through one unmap cycle; nothing is recreated, a held or retiring image is skipped and never waited for.",
+     "de": "Die Blöcke, die das untätige Werkzeug-Image hält, aber nicht mehr nutzt, durch einen Unmap-Zyklus an das Volume zurückgeben; nichts wird neu erzeugt, ein gehaltenes oder abgeräumtes Image wird übersprungen und nie abgewartet."
+    }
+          }
+        }
+      }
+    },
+    "cache-reclaim-graph": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "repo ./📜️script.ts reclaim graph",
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          },
+          "dashboard": {
+            "title": {
+     "en": "Reclaim Idle Graph Image Blocks In Place",
+     "de": "Blöcke des untätigen Graph-Images an Ort und Stelle zurückgeben"
+    },
+            "description": {
+     "en": "Return the blocks the idle Graph image holds but no longer uses to the volume through one unmap cycle; nothing is recreated, a held or retiring image is skipped and never waited for.",
+     "de": "Die Blöcke, die das untätige Graph-Image hält, aber nicht mehr nutzt, durch einen Unmap-Zyklus an das Volume zurückgeben; nichts wird neu erzeugt, ein gehaltenes oder abgeräumtes Image wird übersprungen und nie abgewartet."
+    }
+          }
+        }
+      }
+    },
+    "cache-reclaim-dependencies": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "repo ./📜️script.ts reclaim dependencies",
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          },
+          "dashboard": {
+            "title": {
+     "en": "Reclaim Idle Dependencies Image Blocks In Place",
+     "de": "Blöcke des untätigen Abhängigkeiten-Images an Ort und Stelle zurückgeben"
+    },
+            "description": {
+     "en": "Return the blocks the idle Dependencies image holds but no longer uses to the volume through one unmap cycle; nothing is recreated, a held or retiring image is skipped and never waited for.",
+     "de": "Die Blöcke, die das untätige Abhängigkeiten-Image hält, aber nicht mehr nutzt, durch einen Unmap-Zyklus an das Volume zurückgeben; nichts wird neu erzeugt, ein gehaltenes oder abgeräumtes Image wird übersprungen und nie abgewartet."
+    }
+          }
+        }
+      }
+    },
+    "cache-reclaim-products": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "repo ./📜️script.ts reclaim products",
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          },
+          "dashboard": {
+            "title": {
+     "en": "Reclaim Idle Products Image Blocks In Place",
+     "de": "Blöcke des untätigen Produkte-Images an Ort und Stelle zurückgeben"
+    },
+            "description": {
+     "en": "Return the blocks the idle Products image holds but no longer uses to the volume through one unmap cycle; nothing is recreated, a held or retiring image is skipped and never waited for.",
+     "de": "Die Blöcke, die das untätige Produkte-Image hält, aber nicht mehr nutzt, durch einen Unmap-Zyklus an das Volume zurückgeben; nichts wird neu erzeugt, ein gehaltenes oder abgeräumtes Image wird übersprungen und nie abgewartet."
+    }
+          }
+        }
+      }
+    },
+    "cache-reclaim-diagnostics": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "repo ./📜️script.ts reclaim diagnostics",
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          },
+          "dashboard": {
+            "title": {
+     "en": "Reclaim Idle Diagnostics Image Blocks In Place",
+     "de": "Blöcke des untätigen Diagnose-Images an Ort und Stelle zurückgeben"
+    },
+            "description": {
+     "en": "Return the blocks the idle Diagnostics image holds but no longer uses to the volume through one unmap cycle; nothing is recreated, a held or retiring image is skipped and never waited for.",
+     "de": "Die Blöcke, die das untätige Diagnose-Image hält, aber nicht mehr nutzt, durch einen Unmap-Zyklus an das Volume zurückgeben; nichts wird neu erzeugt, ein gehaltenes oder abgeräumtes Image wird übersprungen und nie abgewartet."
+    }
+          }
+        }
+      }
+    },
+    "cache-reclaim-nx": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "repo ./📜️script.ts reclaim nx",
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          },
+          "dashboard": {
+            "title": {
+     "en": "Reclaim Idle Nx Image Blocks In Place",
+     "de": "Blöcke des untätigen Nx-Images an Ort und Stelle zurückgeben"
+    },
+            "description": {
+     "en": "Return the blocks the idle Nx image holds but no longer uses to the volume through one unmap cycle; nothing is recreated, a held or retiring image is skipped and never waited for.",
+     "de": "Die Blöcke, die das untätige Nx-Image hält, aber nicht mehr nutzt, durch einen Unmap-Zyklus an das Volume zurückgeben; nichts wird neu erzeugt, ein gehaltenes oder abgeräumtes Image wird übersprungen und nie abgewartet."
+    }
+          }
+        }
+      }
     }
   }
 }

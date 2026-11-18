@@ -28,7 +28,7 @@ impl SubsetRoundtripSpec for En1990AnyRoundtrip {
     type Inference = En1990Inference;
 
     async fn dialect() -> semio_framework_artifact_reference::ArtifactDialect {
-        semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.norm.en1990".into(), standard: "1".into(), subset: "*".into() }
+        semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.norm-eurocode.en1990".into(), standard: "1".into(), subset: "*".into() }
     }
 
     async fn fidelity() -> IoFidelityClass {

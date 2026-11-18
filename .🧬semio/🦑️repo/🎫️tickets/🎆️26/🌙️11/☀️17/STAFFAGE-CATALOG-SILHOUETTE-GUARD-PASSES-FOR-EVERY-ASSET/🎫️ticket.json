@@ -1,8 +1,9 @@
 {
   "title": "Staffage Catalog Silhouette Guard Passes For Every Asset",
   "emoji": "🧍",
-  "status": "open",
+  "status": "closed",
   "description": "Make the staffage library guard catalog-silhouette pass for every catalog asset by fixing authored drawings, volumes or declared dimensions per mismatch, never loosening the guard.",
+  "summary": "catalog-silhouette now passes for all 152 staffage assets (guard unchanged). Final run: validate-all 0 failing of 152, validate-manifest 0 issues, vitest catalog-silhouette, schema-conformance, asset-power, three-views, fill-rule, plan-projection, section-views 7 files / 608 tests passed, React suite 29 files / 276 tests passed. Work was split by category across subagents; per mismatch the drawing, volume or declared dimension was corrected (tracing drawings from the volume projection, matching members/strokes, fixing declared dimensions, one-cell slits, end-on bar dots). Follow-ups fixed three-views spread failures (pigeon, person-cooking, city-bicycle, horse, jogger), a malformed tour-guide shape, tealight 1:200 sharp-vs-owned raster disagreement and the sectional-garage-door coil (285 MB SVG). Declared dimensions corrected for several assets and 11 manifest entries synced. Notes: silhouette-*.md files in the ticket folder. Caveat: several drawings now hold traced polygons (large files for dairy-cow, horse, scots-pine, english-oak); some results sit at the limit (e.g. tower-crane 1:100 front 0.0300 vs 0.03, rollator 1:50 plan 15.0 mm).",
   "goal": "runningproducts",
   "sessions": [
     "c67232e5-1dff-4cc7-9741-6908e642486f"
@@ -17,6 +18,15 @@
       "checkpoint": "",
       "prompt": "Make the staffage library guard catalog-silhouette pass for every catalog asset by fixing authored drawings, volumes or declared dimensions per mismatch, never loosening the guard.",
       "llm": "sonnet-5-5"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-18 13:20:02",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "3cde99d423d750f904ede624e37dcf25f28a99da",
+      "summary": "catalog-silhouette now passes for all 152 staffage assets (guard unchanged). Final run: validate-all 0 failing of 152, validate-manifest 0 issues, vitest catalog-silhouette, schema-conformance, asset-power, three-views, fill-rule, plan-projection, section-views 7 files / 608 tests passed, React suite 29 files / 276 tests passed. Work was split by category across subagents; per mismatch the drawing, volume or declared dimension was corrected (tracing drawings from the volume projection, matching members/strokes, fixing declared dimensions, one-cell slits, end-on bar dots). Follow-ups fixed three-views spread failures (pigeon, person-cooking, city-bicycle, horse, jogger), a malformed tour-guide shape, tealight 1:200 sharp-vs-owned raster disagreement and the sectional-garage-door coil (285 MB SVG). Declared dimensions corrected for several assets and 11 manifest entries synced. Notes: silhouette-*.md files in the ticket folder. Caveat: several drawings now hold traced polygons (large files for dairy-cow, horse, scots-pine, english-oak); some results sit at the limit (e.g. tower-crane 1:100 front 0.0300 vs 0.03, rollator 1:50 plan 15.0 mm)."
     }
   ]
 }

@@ -27,12 +27,15 @@ test("visual modules resolve every relative import and export", () => {
   expect(scenes).toBe(vectors.expectedSceneImports);
 });
 
+const artifactOwner = (family: string): string =>
+  family === "din18599" ? "norm-energy" : ["en1990", "en1991", "en1997", "en1998"].includes(family) ? "norm-eurocode" : ["en1992", "en1993", "en1994"].includes(family) ? "norm-eurocode-structural" : ["en1995", "en1996", "en1999"].includes(family) ? "norm-eurocode-materials" : "norm";
+
 test("editor and viewer twins publish the current dialect and mode", async () => {
   for (const artifact of vectors.artifacts) {
     const name = artifact.slice(artifact.indexOf("en")).toUpperCase();
     for (const [role, mode] of Object.entries(vectors.roles)) {
       const module = await import(join(plugin, "🗿️artifacts", artifact, "🏅️standards/🔖️1/🪆️subsets/✳️any", role, "🟦️.ts"));
-      expect(module[`${name}_${mode === "edit" ? "EDITOR" : "VIEWER"}_DIALECT`]).toEqual({ artifactKind: `s.norm.${name.toLowerCase()}`, standard: "1", subset: "*" });
+      expect(module[`${name}_${mode === "edit" ? "EDITOR" : "VIEWER"}_DIALECT`]).toEqual({ artifactKind: `s.${artifactOwner(name.toLowerCase())}.${name.toLowerCase()}`, standard: "1", subset: "*" });
       expect(module[`${name}_${mode.toUpperCase()}_MODE_ID`]).toBe(mode);
     }
   }

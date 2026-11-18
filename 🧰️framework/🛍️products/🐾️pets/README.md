@@ -349,7 +349,7 @@ does not cut them away. Frames are written by script
 and show as written: nothing in the layer transitions, whatever the host's stylesheet says (`transition-property: none
 !important` on the layer and everything in it) — a host that shortens every transition for a device that asks for
 reduced motion would otherwise start one with every write of a frame. Besides the keep-outs of the
-selector, every surface is solid (pets stand on a thing, never in front of another one) and the focused element
+selector — a text block of `PET_LINES` line by line, where its words are —, every surface that stands on the top edge of another one (the tab on its body) or on the floor of the stage (the footer) is solid, and a card that fills the cell above another one is not: pets stand in front of its empty face but never of its text or its controls; and the focused element
 keeps `FOCUS_MARGIN` (8 px) free around itself. A pet stays whole under a pointer that rests on it — it perks up
 instead (design-v2 §17); it turns see-through only while it is in the air, on a wall, a ladder or a rope in front of a
 control or of text the page keeps free, and is whole again once it is past it. Nothing runs

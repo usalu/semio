@@ -4,6 +4,7 @@ name = "semio-hub-norm-eurocode-component"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+build = "build.rs"
 description = "The `norm-eurocode` plugin component: the one cdylib of `semio-hub-norm-eurocode`, holding only its entry point"
 
 [lints]
@@ -20,26 +21,34 @@ component-kind = "plugin"
 [[package.metadata.semio.playground]]
 variant = "en1990"
 compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
-app = "s.norm.en1990@1/*#editor"
+app = "s.norm-eurocode.en1990@1/*#editor"
 ports = { react = 6094, wgpu = 6194 }
 
 [[package.metadata.semio.playground]]
 variant = "en1991"
 compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
-app = "s.norm.en1991@1/*#editor"
+app = "s.norm-eurocode.en1991@1/*#editor"
 ports = { react = 6095, wgpu = 6195 }
 
 [[package.metadata.semio.playground]]
 variant = "en1997"
 compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
-app = "s.norm.en1997@1/*#editor"
+app = "s.norm-eurocode.en1997@1/*#editor"
 ports = { react = 6101, wgpu = 6201 }
 
 [[package.metadata.semio.playground]]
 variant = "en1998"
 compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
-app = "s.norm.en1998@1/*#editor"
+app = "s.norm-eurocode.en1998@1/*#editor"
 ports = { react = 6102, wgpu = 6202 }
+
+[[package.metadata.semio.build-script.files]]
+path = "🌎️hub/🧩️compositions/📕️norm/🧩️extensions/📗️eurocode/🧩️component/📦️packages/🦀️rust/build.rs"
+sha256 = "deb0a7f898ec8614efd43a1751ab513c0f5c7f1758f5bbdb26a15706cc2efda8"
+
+[[package.metadata.semio.build-script.files]]
+path = "🌎️hub/🧩️compositions/📕️norm/🏗️builder/🦀️.rs"
+sha256 = "f1790d23efd80bb1e1ddf717de387fa9aa71bed387697d694e8078a288dd726f"
 
 [lib]
 crate-type = ["cdylib"]

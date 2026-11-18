@@ -1,19 +1,18 @@
 import{refuseBuildV1}from"../../../../🏗️build/📖️texts/🟦️.ts";
-import{buildSchedulingNativePrefixesV1,buildSchedulingPrefixesV1}from"../../../../🏗️build/📥️source/🔏️closure/🗓️scheduling/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json" with { type: "json" };
 import table from"./🔣️.json" with { type: "json" };
 
-/** 🧊️ One domain of Nx engine code that never computes the bytes of an Nx task: directory prefixes and its contract in English and German. See `./🔣️.json` (the policy) and `./🧪️tests/🟦️.ts` (the law). */
-export interface NxEngineDomainV1{readonly id:string;readonly contract:{readonly en:string;readonly de:string};readonly prefixes:readonly string[];readonly keyedFor?:readonly NxEngineFamilyV1[]}
-
 /** 🌱️ One file reference a module only uses to start a program, not to load its code. */
 export interface NxEngineSpawnV1{readonly owner:string;readonly reference:string;readonly contract:{readonly en:string;readonly de:string}}
 
-/** 📚️ The closed policy of all domains that stay out of the Nx engine digest beside the scheduling domains, and the references the engine closure does not follow. */
-export interface NxEnginePolicyV1{readonly version:1;readonly spawnOnly?:readonly NxEngineSpawnV1[];readonly domains:readonly NxEngineDomainV1[]}
+/** 🔖️ The declared task semantics: the revision number, the exact executor surface files every task is keyed by, and the directory prefixes of the Cargo argument builders that only the native family adds. See `./🔣️.json` and `./🧪️tests/🔖️task-semantics`. */
+export interface NxEngineSemanticsV1{readonly revision:number;readonly contract:{readonly en:string;readonly de:string};readonly surface:readonly string[];readonly nativeSurface:readonly string[];readonly excludedSegments:readonly string[]}
 
-/** 🧬️ The two engine families: `generic` keys every Nx command, `native` keys the commands that compile Rust and therefore also the scheduling prefixes that build Cargo arguments. */
+/** 📚️ The closed policy of the Nx engine digest: the task semantics and the references the engine closure does not follow. */
+export interface NxEnginePolicyV1{readonly version:2;readonly semantics:NxEngineSemanticsV1;readonly spawnOnly:readonly NxEngineSpawnV1[]}
+
+/** 🧬️ The two engine families: `generic` keys every Nx command, `native` keys the commands that compile Rust and therefore also the Cargo argument builders. */
 export type NxEngineFamilyV1="generic"|"native";
 
 /** 🏷️ The engine families in the order their named inputs and digests are produced. */
@@ -21,16 +20,14 @@ export const nxEngineFamiliesV1:readonly NxEngineFamilyV1[]=Object.freeze(["gene
 
 let declared:NxEnginePolicyV1|undefined;
 
-/** 🔐️ Admits a policy: closed by its schema, unique domain ids, clean directory prefixes no other prefix contains; any other table is refused so nothing leaves the digest by accident. */
+/** 🔐️ Admits a policy: closed by its schema, no duplicate or nested prefix, no surface file under a prefix twice, no parent segment; any other table is refused so nothing enters a task hash by accident. */
 export function nxEnginePolicyV1(candidate:unknown=table):NxEnginePolicyV1{
  if(candidate===table&&declared)return declared;
  if(validateJsonSchemaSubset(schema,candidate).length)throw refuseBuildV1("invalid","nx-engine.table-required");
- const value=candidate as NxEnginePolicyV1,ids=new Set<string>(),prefixes:string[]=[];
- for(const domain of value.domains){
-  if(ids.has(domain.id))throw refuseBuildV1("invalid","nx-engine.table-required");ids.add(domain.id);
-  for(const prefix of domain.prefixes){if(prefix.split("/").slice(0,-1).some(part=>part===""||part==="."||part===".."))throw refuseBuildV1("invalid","nx-engine.table-required");prefixes.push(prefix);}
- }
+ const value=candidate as NxEnginePolicyV1,prefixes=value.semantics.nativeSurface;
+ for(const name of [...value.semantics.surface,...prefixes])if(name.split("/").some(part=>part==="."||part===".."))throw refuseBuildV1("invalid","nx-engine.table-required");
  for(const [index,prefix] of prefixes.entries())if(prefixes.some((other,at)=>at!==index&&other.startsWith(prefix)))throw refuseBuildV1("invalid","nx-engine.table-required");
+ if(value.semantics.surface.some(file=>prefixes.some(prefix=>file.startsWith(prefix))))throw refuseBuildV1("invalid","nx-engine.table-required");
  const frozen=Object.freeze(value);if(candidate===table)declared=frozen;return frozen;
 }
 
@@ -44,14 +41,12 @@ export function nxEngineFamilyV1(name:unknown):NxEngineFamilyV1{
  throw refuseBuildV1("invalid","nx-engine.family-required",{family:String(name)});
 }
 
-/** 📏️ The sorted directory prefixes that stay out of the digest of a family: the domains of this policy that are not keyed for it and the scheduling prefixes, those of the `native` family without the ones that build Cargo arguments. */
-export function nxEngineUnkeyedPrefixesV1(family:NxEngineFamilyV1="generic",value:NxEnginePolicyV1=nxEnginePolicyV1()):readonly string[]{
- return [...new Set([...value.domains.filter(domain=>!domain.keyedFor?.includes(family)).flatMap(domain=>domain.prefixes),...(family==="native"?buildSchedulingNativePrefixesV1():buildSchedulingPrefixesV1())])].sort();
+/** 🎯️ The sorted workspace-relative files the digest of a family covers: the declared surface files and, for `native`, the closure files below a declared Cargo argument prefix outside the excluded segments. Every other file is in no task hash. */
+export function nxEngineSurfaceV1(closureFiles:readonly string[],family:NxEngineFamilyV1="generic",value:NxEnginePolicyV1=nxEnginePolicyV1()):readonly string[]{
+ const {surface,nativeSurface,excludedSegments}=value.semantics,files=new Set<string>(surface);
+ if(family==="native")for(const file of closureFiles)if(nativeSurface.some(prefix=>file.startsWith(prefix))&&!file.split("/").some(part=>excludedSegments.includes(part)))files.add(file);
+ return [...files].sort();
 }
 
-/** ✂️ Splits workspace-relative engine files into the keyed ones, which the digest covers, and the unkeyed ones its prefixes name. */
-export function splitNxEngineFilesV1(files:readonly string[],family:NxEngineFamilyV1="generic",value:NxEnginePolicyV1=nxEnginePolicyV1()):{readonly keyed:readonly string[];readonly unkeyed:readonly string[]}{
- const prefixes=nxEngineUnkeyedPrefixesV1(family,value),keyed:string[]=[],unkeyed:string[]=[];
- for(const file of files)(prefixes.some(prefix=>file.startsWith(prefix))?unkeyed:keyed).push(file);
- return {keyed,unkeyed};
-}
+/** 🪪️ The rows the digest of a family carries beside the file bytes: the declared task semantics revision and the family name, so a bump or another family re-keys without a byte changing. */
+export function nxEngineIdentityV1(family:NxEngineFamilyV1="generic",value:NxEnginePolicyV1=nxEnginePolicyV1()):readonly string[]{return [`semantics ${value.semantics.revision}`,`family ${family}`];}

@@ -1,7 +1,7 @@
 import {createHash} from "node:crypto";
 import {spawn} from "node:child_process";
 import {appendFileSync,mkdirSync,readdirSync,readFileSync} from "node:fs";
-import {homedir} from "node:os";
+import {homedir,tmpdir,userInfo} from "node:os";
 import {dirname,isAbsolute,join} from "node:path";
 import {readyForgetTreeV1,readyIdentityV1,readyKillPlanV1,readyReadTableV1,readyReadTreeV1,readyTaskkillArgumentsV1,readyTreeMembersV1,readyWriteTreeV1,READY_TREE_POLICY_V1,type ReadyKnownV1,type ReadyProcessV1} from "../🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
@@ -12,7 +12,7 @@ export const READY_CONTAINMENT_POLICY_V1=schema.definitions.Policy.const;
 const C=READY_CONTAINMENT_POLICY_V1,TEXTS=schema.definitions.Texts.const as Readonly<Record<"en"|"de",Readonly<Record<string,string>>>>;
 
 /** 🪪️ The part of a lease registry entry the reaper reads: who registered (`pid`, `startedAtMs`, `command`), where, what it holds. */
-export type ReadyRegistryEntryV1=Readonly<{pid:number;startedAtMs:number;command:string;directory:string;session?:string;owner?:string;holds?:readonly Readonly<{resource:string;sinceMs?:number}>[]}>;
+export type ReadyRegistryEntryV1=Readonly<{pid:number;startedAtMs:number;updatedAtMs?:number;command:string;directory:string;session?:string;owner?:string;holds?:readonly Readonly<{resource:string;sinceMs?:number}>[]}>;
 /** 🪟️ A stopped try of this worker: its stage, its start (which names its owner token) and its end in milliseconds since the epoch. */
 export type ReadyWindowV1=Readonly<{stage:string;startedMs:number;endedMs:number}>;
 /** 🧑️ The working window of a person: the process of the wrapper they started (pid, when known) and when. */
@@ -75,11 +75,32 @@ export function readyOrphanPlanV1(input:Parameters<typeof readyOrphanVerdictsV1>
  return[...readyOrphanVerdictsV1(input)].filter(([,row])=>row.verdict==="orphan").map(([pid,row])=>Object.freeze({pid,startMs:row.entry.startedAtMs,name:byPid.get(pid)?.name??"?",command:row.entry.command.slice(0,160),owner:row.entry.owner??"",held:Object.freeze((row.entry.holds??[]).map(hold=>hold.resource))})).sort((left,right)=>left.pid-right.pid);
 }
 
-/** 🤝️ The pids of the live processes that other agents use: registry entries whose process is alive with the registered start time and whose command is a resident service (`sharedCommandPattern`). A stop never touches them or anything below them. A pure function.
+/** 🤝️ The pids of the live processes that other agents use: registry entries whose process is alive with the registered start time and whose command is a resident service (`sharedCommandPattern`), and the live hosts named by their own descriptors (`readyHostPidsV1`). A stop never touches them or anything below them. A pure function.
  * @see ./🧪️tests/🐍️.py */
-export function readySharedPidsV1(entries:readonly ReadyRegistryEntryV1[],table:readonly ReadyProcessV1[],policy:typeof C=C,tolerance:number=READY_TREE_POLICY_V1.toleranceMilliseconds):ReadonlySet<number>{
+export function readySharedPidsV1(entries:readonly ReadyRegistryEntryV1[],table:readonly ReadyProcessV1[],policy:typeof C=C,tolerance:number=READY_TREE_POLICY_V1.toleranceMilliseconds,hostDirectories:readonly string[]=readyHostDirectoriesV1()):ReadonlySet<number>{
  const shared=new RegExp(policy.sharedCommandPattern,"u");
- return new Set(entries.filter(entry=>shared.test(entry.command)&&readyIdentityV1({pid:entry.pid,startMs:entry.startedAtMs},table,tolerance)==="same").map(entry=>entry.pid));
+ return new Set([...entries.filter(entry=>shared.test(entry.command)&&readyIdentityV1({pid:entry.pid,startMs:entry.startedAtMs},table,tolerance)==="same").map(entry=>entry.pid),...readyHostPidsV1(table,hostDirectories,tolerance)]);
+}
+
+/** 🏡️ The directories that hold the descriptors of the resident hosts of this user (`host-<tag>.json`): `<tmp>/semio-repo/<uid>` and the short form `<tmp>/sr<uid>` (POSIX; Windows hosts speak over named pipes and are known by their registry entry alone). */
+export function readyHostDirectoriesV1(base:string=tmpdir(),uid:string=(()=>{try{return String(userInfo().uid);}catch{return"0";}})(),platform:NodeJS.Platform=process.platform):readonly string[]{return platform==="win32"?[]:[join(base,"semio-repo",uid),join(base,"sr"+uid)];}
+
+/** 🏠️ The pids of the live resident hosts named by their own descriptors, whether or not they publish a lease registry entry at this moment: a descriptor `{pid, startedAt, stopping?}` counts while its pid is in the table, started no later than the descriptor says and not more than `hostStartWindowMilliseconds` before it, and the host is not stopping. A live predicate of the service itself, so a try never stops the service that the next try or another agent needs; a damaged descriptor or an unreadable directory names nothing. A pure function of the table and the directories.
+ * @see ./🧪️tests/🟦️.ts */
+export function readyHostPidsV1(table:readonly ReadyProcessV1[],directories:readonly string[]=readyHostDirectoriesV1(),tolerance:number=READY_TREE_POLICY_V1.toleranceMilliseconds):ReadonlySet<number>{
+ const found=new Set<number>(),byPid=new Map(table.map(row=>[row.pid,row]));
+ for(const directory of directories){
+  let names:string[];try{names=readdirSync(directory).filter(name=>/^host-[0-9a-f]+\.json$/u.test(name)).slice(0,C.registryEntryLimit);}catch{continue;}
+  for(const name of names){
+   try{
+    const value=JSON.parse(readFileSync(join(directory,name),"utf8")) as {pid?:unknown;startedAt?:unknown;stopping?:unknown};
+    if(!Number.isSafeInteger(value.pid)||!Number.isFinite(value.startedAt)||value.stopping===true)continue;
+    const row=byPid.get(value.pid as number),startedAt=value.startedAt as number;
+    if(row!==undefined&&row.startMs<=startedAt+tolerance&&startedAt-row.startMs<=C.hostStartWindowMilliseconds)found.add(row.pid);
+   }catch{}
+  }
+ }
+ return found;
 }
 
 /** 🗺️ The lease registry of this user, where every process that holds a lease publishes its entry: the same folder as the registry itself names, `SEMIO_LEASE_REGISTRY_DIRECTORY` first, then the cache of the platform. A law compares it with the registry's own answer on all three platforms.
@@ -159,12 +180,12 @@ export async function readyStopV1(input:ReadyStopPortsV1&Readonly<{root:ReadyKno
 const fill=(language:"en"|"de",kind:string,fields:Readonly<Record<string,string|number>>):string=>TEXTS[language][kind]!.replace(/\{(\w+)\}/gu,(_all,name:string)=>String(fields[name]??""));
 
 /** 🗣️ One line of the log in English and German, `<English> / <German>`. */
-export function readyContainmentLineV1(kind:"reaped-roster"|"reaped-registry"|"reaped-holder"|"survivor",fields:Readonly<Record<string,string|number>>):string{return`${fill("en",kind,fields)} / ${fill("de",kind,fields)}`;}
+export function readyContainmentLineV1(kind:"reaped-roster"|"reaped-registry"|"reaped-holder"|"yielded-reader"|"survivor",fields:Readonly<Record<string,string|number>>):string{return`${fill("en",kind,fields)} / ${fill("de",kind,fields)}`;}
 
 const reasonOf=(language:"en"|"de",reason:ReadyKillReasonV1,seconds:number):string=>fill(language,`reason-${reason}`,{seconds});
 
-/** 🪪️ Why the stage runner stops a process: `orphan`, `holder`, `roster`, `stall`, `restart`, `timeout`, `cancel` or `settle`. */
-export type ReadyKillReasonV1="orphan"|"holder"|"roster"|"stall"|"restart"|"timeout"|"cancel"|"settle";
+/** 🪪️ Why the stage runner stops a process: `orphan`, `holder`, `roster`, `stall`, `overdue` (a step of the read ran far past its own bound with nothing else moving), `restart`, `yield` (a background graph read gives way to the stage that waits behind it), `timeout`, `cancel` or `settle`. */
+export type ReadyKillReasonV1="orphan"|"holder"|"roster"|"stall"|"overdue"|"restart"|"yield"|"timeout"|"cancel"|"settle";
 
 /** 🗣️ The record of one signal in English and German, `<English> / <German>`: who (the runner process `killer`), which stage and owner token, why. */
 export function readyKillRecordLineV1(input:Readonly<{pid:number;name:string;signal:"SIGTERM"|"SIGKILL";killer:number;stage:string;owner:string;reason:ReadyKillReasonV1;seconds?:number}>):string{

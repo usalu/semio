@@ -286,18 +286,6 @@
             "y": 296,
             "width": 208,
             "height": 48
-          },
-          {
-            "x": 96,
-            "y": 200,
-            "width": 308,
-            "height": 180
-          },
-          {
-            "x": 496.5,
-            "y": 260,
-            "width": 408.0,
-            "height": 200
           }
         ],
         "walls": [
@@ -503,12 +491,6 @@
             "y": 492,
             "width": 276,
             "height": 48
-          },
-          {
-            "x": 636,
-            "y": 480,
-            "width": 308,
-            "height": 200
           }
         ],
         "walls": [
@@ -686,12 +668,6 @@
             "y": 96,
             "width": 208,
             "height": 40
-          },
-          {
-            "x": 36,
-            "y": 80,
-            "width": 328,
-            "height": 180
           }
         ],
         "walls": [
@@ -908,30 +884,6 @@
             "y": 16,
             "width": 208,
             "height": 48
-          },
-          {
-            "x": 16,
-            "y": 100,
-            "width": 55.5,
-            "height": 100
-          },
-          {
-            "x": 96,
-            "y": 100,
-            "width": 56,
-            "height": 100
-          },
-          {
-            "x": -54,
-            "y": 400,
-            "width": 308,
-            "height": 100
-          },
-          {
-            "x": 496,
-            "y": 760,
-            "width": 308,
-            "height": 100
           }
         ],
         "walls": [
@@ -1200,44 +1152,7 @@
             "y": 800
           }
         ],
-        "keepouts": [
-          {
-            "x": 116,
-            "y": 100,
-            "width": 308,
-            "height": 60
-          },
-          {
-            "x": 116,
-            "y": 200,
-            "width": 308,
-            "height": 100
-          },
-          {
-            "x": 96,
-            "y": 320,
-            "width": 248,
-            "height": 100
-          },
-          {
-            "x": 656,
-            "y": 320,
-            "width": 48,
-            "height": 100
-          },
-          {
-            "x": 796,
-            "y": 180,
-            "width": 308,
-            "height": 80
-          },
-          {
-            "x": 816,
-            "y": 150,
-            "width": 208,
-            "height": 10
-          }
-        ],
+        "keepouts": [],
         "walls": [
           {
             "element": "scrolled-away",
@@ -1419,12 +1334,6 @@
             "y": 96,
             "width": 408,
             "height": 308
-          },
-          {
-            "x": 16,
-            "y": 100,
-            "width": 408,
-            "height": 300
           }
         ],
         "walls": [
@@ -1526,12 +1435,6 @@
             "height": 40
           },
           {
-            "x": 96,
-            "y": 200,
-            "width": 408,
-            "height": 300
-          },
-          {
             "x": 108,
             "y": 252,
             "width": 112,
@@ -1621,18 +1524,6 @@
           }
         ],
         "keepouts": [
-          {
-            "x": 96,
-            "y": 200,
-            "width": 408,
-            "height": 300
-          },
-          {
-            "x": 596,
-            "y": 200,
-            "width": 408,
-            "height": 300
-          },
           {
             "x": 92,
             "y": 192,
@@ -1747,12 +1638,6 @@
             "y": 196,
             "width": 408,
             "height": 68
-          },
-          {
-            "x": 96,
-            "y": 200,
-            "width": 408,
-            "height": 300
           }
         ],
         "walls": [
@@ -1923,18 +1808,6 @@
             "y": 336,
             "width": 328,
             "height": 56
-          },
-          {
-            "x": 36,
-            "y": 100,
-            "width": 328,
-            "height": 200
-          },
-          {
-            "x": 396,
-            "y": 100,
-            "width": 328,
-            "height": 200
           }
         ],
         "walls": [
@@ -2081,18 +1954,6 @@
             "y": 162,
             "width": 276,
             "height": 48
-          },
-          {
-            "x": 96,
-            "y": 150,
-            "width": 308,
-            "height": 150
-          },
-          {
-            "x": 696,
-            "y": 200,
-            "width": 308,
-            "height": 150
           }
         ],
         "walls": [
@@ -2174,14 +2035,7 @@
             "y": 600
           }
         ],
-        "keepouts": [
-          {
-            "x": 96,
-            "y": 200,
-            "width": 308,
-            "height": 150
-          }
-        ],
+        "keepouts": [],
         "walls": [
           {
             "element": "only",
@@ -2202,7 +2056,7 @@
       }
     },
     {
-      "name": "a silhouette of parts: the tab and the body each carry pets, each part is solid, and what lies under an edge does not reach over it",
+      "name": "a silhouette of parts: the tab and the body each carry pets, a part is solid where it stands on an edge, and what lies under an edge does not reach over it",
       "viewport": {
         "width": 1200,
         "height": 800
@@ -2472,7 +2326,7 @@
             "x": 118,
             "y": 199.5,
             "width": 72,
-            "height": 26.0
+            "height": 26
           },
           {
             "x": 103,
@@ -2511,22 +2365,10 @@
             "height": 26.5
           },
           {
-            "x": 96,
-            "y": 226,
-            "width": 408,
-            "height": 100
-          },
-          {
             "x": 596,
             "y": 199.5,
             "width": 48,
             "height": 26.5
-          },
-          {
-            "x": 596,
-            "y": 226,
-            "width": 308,
-            "height": 73.5
           },
           {
             "x": -4,
@@ -2820,18 +2662,6 @@
             "y": 496,
             "width": 308,
             "height": 48
-          },
-          {
-            "x": 336,
-            "y": 500,
-            "width": 208,
-            "height": 100
-          },
-          {
-            "x": 336,
-            "y": 100,
-            "width": 208,
-            "height": 40
           }
         ],
         "walls": [
@@ -2948,18 +2778,6 @@
             "y": 200,
             "width": 208,
             "height": 36
-          },
-          {
-            "x": 96,
-            "y": 200,
-            "width": 408,
-            "height": 300
-          },
-          {
-            "x": 596,
-            "y": 200,
-            "width": 408,
-            "height": 300
           },
           {
             "x": 108,
@@ -3200,12 +3018,6 @@
             "y": 256,
             "width": 128,
             "height": 32
-          },
-          {
-            "x": 96,
-            "y": 300,
-            "width": 908,
-            "height": 200
           }
         ],
         "walls": [
@@ -3380,7 +3192,7 @@
             "x": 118,
             "y": 199.5,
             "width": 72,
-            "height": 26.0
+            "height": 26
           },
           {
             "x": 103,
@@ -3397,20 +3209,8 @@
           {
             "x": 96.5,
             "y": 199.5,
-            "width": 98.0,
+            "width": 98,
             "height": 26.5
-          },
-          {
-            "x": 96.5,
-            "y": 226,
-            "width": 408.0,
-            "height": 124
-          },
-          {
-            "x": 616,
-            "y": 260,
-            "width": 40,
-            "height": 20
           },
           {
             "x": -4,
@@ -3649,38 +3449,7 @@
             "y": 800
           }
         ],
-        "keepouts": [
-          {
-            "x": 446,
-            "y": 100,
-            "width": 208,
-            "height": 60
-          },
-          {
-            "x": 116,
-            "y": 200,
-            "width": 308,
-            "height": 100
-          },
-          {
-            "x": 96,
-            "y": 320,
-            "width": 148,
-            "height": 60
-          },
-          {
-            "x": 556,
-            "y": 320,
-            "width": 148,
-            "height": 60
-          },
-          {
-            "x": 296,
-            "y": 450,
-            "width": 208,
-            "height": 50
-          }
-        ],
+        "keepouts": [],
         "walls": [
           {
             "element": "pane-under-the-top",
@@ -3854,12 +3623,6 @@
             "y": 162,
             "width": 276,
             "height": 48
-          },
-          {
-            "x": 276,
-            "y": 150,
-            "width": 308,
-            "height": 150
           }
         ],
         "walls": [
@@ -5180,12 +4943,6 @@
             "y": 396,
             "width": 608,
             "height": 38
-          },
-          {
-            "x": 946,
-            "y": 150,
-            "width": 128,
-            "height": 60
           }
         ],
         "walls": [

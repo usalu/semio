@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-fire-occupancy/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1991/mutation/change-fire-occupancy/schema.json",
   "title": "ChangeFireOccupancy",
   "type": "object",
   "additionalProperties": false,
@@ -9,7 +9,7 @@
   ],
   "properties": {
     "newFireOccupancy": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/FireOccupancy",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1991/snapshot.json#/$defs/FireOccupancy",
       "x-semio-ui": {
         "role": "value",
         "label": {

@@ -5,7 +5,7 @@ import{existsSync,mkdirSync,mkdtempSync,readdirSync,realpathSync,rmSync,writeFil
 import{join}from"node:path";
 import{testScratchRootV1}from"../../../../../../🧪️testing/🏖️sandbox/🟦️.ts";
 import{createNativeImageVolumeSilenceSeedV1,nativeImageSeededCreateArgumentsV1}from"../../../🍎️image/🤫️silence/🟦️.ts";
-import{nativeImageAttachArgumentsV1}from"../../../🍎️image/👤️owners/🟦️.ts";
+import{nativeImageAttachArgumentsV1,nativeImageAttachProgramV1}from"../../../🍎️image/👤️owners/🟦️.ts";
 import{allocateNativeDirectoryV1,nativeDirectoryCaseModeV1,nativeDirectoryFoldCollisionsV1,nativeDirectoryProtocolV1,readNativeDirectoryAnchorFileV1,type NativeDirectoryPlatformPortV1}from"../../🟦️.ts";
 const protocol=nativeDirectoryProtocolV1(),scratch=()=>realpathSync(mkdtempSync(join(testScratchRootV1("fold"),"fold-")));
 const port=(kind:"exchange"|"journaled",prepare:()=>void):NativeDirectoryPlatformPortV1=>({kind,swap:()=>{},flush:()=>{},pending:()=>false,recover:()=>"clean",prepareVolume:prepare});
@@ -37,7 +37,7 @@ test.skipIf(process.platform!=="darwin")("every pair a real case-insensitive APF
  const base=scratch(),seed=createNativeImageVolumeSilenceSeedV1();let mount="";
  try{
   const image=join(base,"fold.dmg");mount=join(base,"m");mkdirSync(mount);
-  const create=[...nativeImageSeededCreateArgumentsV1(67108864,image,seed.directory)];create[create.indexOf("Case-sensitive APFS")]="APFS";run(create);run(nativeImageAttachArgumentsV1(mount,image));
+  const create=[...nativeImageSeededCreateArgumentsV1(67108864,image,seed.directory)];create[create.indexOf("Case-sensitive APFS")]="APFS";run(create);spawnSync(nativeImageAttachProgramV1,[...nativeImageAttachArgumentsV1(mount,image)],{encoding:"utf8"});
   const names=["a","A","Readme","README","readme","café","café","CAFÉ","Straße","STRASSE","strasse","İ","i","ǅ","ǆ","Ǆ","ω","Ω","ꙁ","Ꙁ","x","y"],survivors=new Map<string,string>();
   for(const name of names){try{writeFileSync(join(mount,name),name,{flag:"wx"});survivors.set(name,name);}catch(error){if((error as NodeJS.ErrnoException).code!=="EEXIST")throw error;}}
   const stored=readdirSync(mount).filter(name=>!name.startsWith("."));expect(stored.length).toBeLessThan(names.length);

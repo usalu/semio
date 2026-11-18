@@ -32,10 +32,23 @@ export function readRepositoryCacheBudgetV1(value:unknown):RepositoryCacheBudget
 /** 🚦️ Declares the one bounded queued whole-image maintenance wait that ordinary commands use instead of refusing concurrent invocations; callers start it before taking their own shared pin on that partition because later readers queue behind it. */
 export function repositoryCacheOrdinaryMaintenanceV1():Readonly<{version:1;mode:"queued";maximumWaitMilliseconds:number}>{const row=schema.$defs.ordinaryMaintenance.const;return Object.freeze({version:1 as const,mode:"queued" as const,maximumWaitMilliseconds:row.maximumWaitMilliseconds});}
 export {effectiveCapacityV1,elasticBloatedV1,elasticCapacityV1,elasticGrowthV1,pinnedCapacityV1,writeElasticGrowthV1,type ElasticPartitionIdV1,type ElasticRuleV1} from "./📐️elastic/🟦️.ts";
-/** 🌱️ Whether an elastic image should be recreated now: its rule is automatic and either its host allocation is bloated (blocks freed inside a raw image never return to the host), or the mounted image has less free space than the pressure floor and the elastic size the host allows exceeds its capacity. */
+/** 🌱️ Whether an elastic image should be recreated now: its rule is automatic, the mounted image has less free space than the pressure floor and the elastic size the host allows exceeds its capacity. Bloat is never a reason: it is reclaimed in place. */
 export function repositoryPartitionRegrowDueV1(workspace:string,partition:ElasticPartitionIdV1):boolean{
  const rule=policy.elastic?.[partition];if(!rule?.automatic)return false;
- try{const declared=policy.partitions[partition],directory=machinePathV1(requireMaterializedPathV1(resolve(workspace)),declared.directory),mount=join(directory,"m"),image=statfsSync(mount);if(statSync(mount).dev===statSync(directory).dev)return false;const hostNow=statfsSync(dirname(directory));if(elasticBloatedV1(rule,statSync(join(directory,"fixed.dmg")).blocks*512,(image.blocks-image.bfree)*image.bsize,hostNow.bavail*hostNow.bsize))return true;if(image.bavail*image.bsize>=rule.pressureFreeBytes)return false;const host=hostNow;const capacity=effectiveCapacityV1(directory,rule.minimumBytes,rule);return elasticGrowthV1(rule,capacity,host.bavail*host.bsize,statSync(join(directory,"fixed.dmg")).blocks*512)>capacity;}catch{return false;}
+ try{const declared=policy.partitions[partition],directory=machinePathV1(requireMaterializedPathV1(resolve(workspace)),declared.directory),mount=join(directory,"m"),image=statfsSync(mount);if(statSync(mount).dev===statSync(directory).dev)return false;const hostNow=statfsSync(dirname(directory));if(image.bavail*image.bsize>=rule.pressureFreeBytes)return false;const host=hostNow;const capacity=effectiveCapacityV1(directory,rule.minimumBytes,rule);return elasticGrowthV1(rule,capacity,host.bavail*host.bsize,statSync(join(directory,"fixed.dmg")).blocks*512)>capacity;}catch{return false;}
+}
+/** ♻️ The bloat rule of a partition: its elastic rule when it has one, else the policy's common `reclaim` rule. */
+export function repositoryPartitionReclaimRuleV1(partition:RepositoryCachePartitionIdV1):Readonly<{reclaimFloorBytes:number;reclaimRatioPercent:number;reclaimTightHostFreeBytes:number}>{
+ return (policy.elastic as Record<string,ElasticRuleV1>|undefined)?.[partition]??policy.reclaim;
+}
+/** 🧲️ Whether the mounted image of a partition holds host blocks it no longer uses (host allocation of its file against the bytes used inside by the partition's bloat rule); an image that is not mounted cannot say what it uses and is not due. */
+export function repositoryPartitionReclaimDueV1(workspace:string,partition:RepositoryCachePartitionIdV1):boolean{
+ try{
+  const declared=policy.partitions[partition],directory=machinePathV1(requireMaterializedPathV1(resolve(workspace)),declared.directory),mount=join(directory,"m");
+  if(statSync(mount).dev===statSync(directory).dev)return false;
+  const image=statfsSync(mount),host=statfsSync(dirname(directory));
+  return elasticBloatedV1(repositoryPartitionReclaimRuleV1(partition),statSync(join(directory,"fixed.dmg")).blocks*512,(image.blocks-image.bfree)*image.bsize,host.bavail*host.bsize);
+ }catch{return false;}
 }
 /** 📝️ Records the size the next image of a pressed elastic partition is born with (the image that is about to be recreated has less free space than the pressure floor), so the recreation grows instead of repeating the same size; answers the recorded bytes, or 0 when the image is not pressed or cannot grow. */
 export function repositoryPartitionGrowthRecordV1(workspace:string,partition:ElasticPartitionIdV1):number{

@@ -1,5 +1,5 @@
 {
-  "schema": "s.norm.en1990.physical-public-factory.v1",
+  "schema": "s.norm-eurocode.en1990.physical-public-factory.v1",
   "bodyBytes": 4096,
   "maximumTurns": 100000,
   "copyBytes": 4096,

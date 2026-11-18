@@ -20,7 +20,7 @@ export { CHUTE_DOME, CHUTE_RISE, CHUTE_SPAN, GUN_HEIGHT, GUN_MUZZLE, GUN_REACH, 
 export type { Equipment, GearBearer, GearCarriedLadder, GearChute, GearGun, GearHook, GearLadder, GearRope, GearSpecies, GearTool, LadderRack } from "./🔨️modules/🧰️gear/🟦️.ts";
 export { PUFF_CLOUDS, PUFF_OUTLINE, PUFF_RING, PUFF_RISE, paintEffects, paintPuffs, puffShape, retireEffects, stageEffects, stockEffects, strikeEffects, tintEffects } from "./🔨️modules/✨️effects/🟦️.ts";
 export type { EffectEmitter, EffectParticle, EffectPuff, EffectSpecies, Effects, PuffShape } from "./🔨️modules/✨️effects/🟦️.ts";
-export { FIXTURE_ELEMENTS, FLOOR, FOCUS_MARGIN, KEEPOUT_MARGIN, PET_CONTROLS, PET_KEEPOUTS, PET_PRESS_CONTROLS, PET_PROPS, PET_SURFACES, PET_TEXTS, PROP_KEY, SURFACE_WIDTH, SURVEY_ATTRIBUTES, UNCOPYABLE, copyable, fixtureId, stageBox, surfaceId, survey, wallId, watchPointer, watchSurvey } from "./🔨️modules/📡️survey/🟦️.ts";
+export { FIXTURE_ELEMENTS, FLOOR, FOCUS_MARGIN, KEEPOUT_MARGIN, LINE_GAP, PET_CONTROLS, PET_KEEPOUTS, PET_LINES, PET_PRESS_CONTROLS, PET_PROPS, PET_SURFACES, PET_TEXTS, PROP_KEY, SURFACE_WIDTH, SURVEY_ATTRIBUTES, UNCOPYABLE, copyable, fixtureId, stageBox, surfaceId, survey, wallId, watchPointer, watchSurvey } from "./🔨️modules/📡️survey/🟦️.ts";
 export type { PointerOptions, SurveyHost, SurveyOptions, SurveyWatchOptions } from "./🔨️modules/📡️survey/🟦️.ts";
 export { LIFT_LOOK, LIFT_REACH, RECLAIMS, copyOf, liftFixtures } from "./🔨️modules/🪞️lifting/🟦️.ts";
 export type { Lifting, LiftingOptions } from "./🔨️modules/🪞️lifting/🟦️.ts";

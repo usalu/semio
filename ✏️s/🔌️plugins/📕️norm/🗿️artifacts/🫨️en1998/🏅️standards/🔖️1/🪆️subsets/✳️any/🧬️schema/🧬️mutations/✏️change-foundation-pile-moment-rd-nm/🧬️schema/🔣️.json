@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-foundation-pile-moment-rd-nm/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1998/mutation/change-foundation-pile-moment-rd-nm/schema.json",
   "title": "ChangeFoundationPileMomentRdNm",
   "type": "object",
   "additionalProperties": false,

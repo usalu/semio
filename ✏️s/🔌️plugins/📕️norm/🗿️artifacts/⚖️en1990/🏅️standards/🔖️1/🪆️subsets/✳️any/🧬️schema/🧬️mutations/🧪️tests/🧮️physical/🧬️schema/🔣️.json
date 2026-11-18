@@ -4,7 +4,7 @@
   "required": ["schema", "bodyBytes", "maximumTurns", "copyBytes", "capacityBytes", "releaseBytes", "depth", "cancelAfter", "operationIndices", "expected"],
   "additionalProperties": false,
   "properties": {
-    "schema": {"const": "s.norm.en1990.physical-public-factory.v1"},
+    "schema": {"const": "s.norm-eurocode.en1990.physical-public-factory.v1"},
     "bodyBytes": {"type": "integer", "minimum": 1},
     "maximumTurns": {"type": "integer", "minimum": 1},
     "copyBytes": {"type": "integer", "minimum": 1},

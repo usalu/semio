@@ -377,10 +377,12 @@ export async function arrive(device: Device, timeout?: number): Promise<void> {
   await expect(screen(device.page, "introduction")).toBeVisible({ timeout });
 }
 
-/** 👋️ Dismisses the overview's walkthrough and explicitly opens its sign-in dialog. */
+/** 👋️ Dismisses the overview's walkthrough and explicitly opens its sign-in dialog. A click that a page busy booting under a crowd's load swallows is made again until the walkthrough is gone. */
 export async function readIntroduction(device: Pick<Device, "page">): Promise<void> {
-  await screen(device.page, "introduction").locator('[data-slot="introduction-close"]').click();
-  await expect(screen(device.page, "introduction")).toHaveCount(0);
+  await expect(async () => {
+    if ((await screen(device.page, "introduction").count()) > 0) await screen(device.page, "introduction").locator('[data-slot="introduction-close"]').click({ timeout: 10_000 });
+    await expect(screen(device.page, "introduction")).toHaveCount(0, { timeout: 10_000 });
+  }).toPass({ timeout: 400_000, intervals: [500, 1_000, 2_000] });
   await primary(card(device.page, "learner")).click();
   await expect(screen(device.page, "identity")).toBeVisible();
 }

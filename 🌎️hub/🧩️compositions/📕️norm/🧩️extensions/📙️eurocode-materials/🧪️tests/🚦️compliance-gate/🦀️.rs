@@ -10,29 +10,6 @@ include!("../../../../🧪️tests/🚦️compliance-gate/🧰️harness/🦀️
 fn compliance_gate_all_families() {
     let mut results = Vec::new();
 
-    results.push(gate_family::<semio_s_artifact_norm_en1992_editor::En1992Family>(
-        "en1992",
-        &[
-            ("compliant_office_frame", semio_s_artifact_norm_en1992_examples::compliant_office_frame::PRIMARY_TEXT),
-            ("failing_under_reinforced", semio_s_artifact_norm_en1992_examples::failing_under_reinforced::PRIMARY_TEXT),
-            ("liquid_retaining_fem_anchor", semio_s_artifact_norm_en1992_examples::liquid_retaining_fem_anchor::PRIMARY_TEXT),
-        ],
-    ));
-    results.push(gate_family::<semio_s_artifact_norm_en1993_editor::En1993Family>(
-        "en1993",
-        &[
-            ("heb240_compliant", semio_s_artifact_norm_en1993_examples::heb240_compliant::PRIMARY_TEXT),
-            ("high_strength_connection", semio_s_artifact_norm_en1993_examples::high_strength_connection::PRIMARY_TEXT),
-        ],
-    ));
-    results.push(gate_family::<semio_s_artifact_norm_en1994_editor::En1994Family>(
-        "en1994",
-        &[
-            ("composite_floor_beam", semio_s_artifact_norm_en1994_examples::composite_floor_beam::PRIMARY_TEXT),
-            ("composite_floor_beam_failing", semio_s_artifact_norm_en1994_examples::composite_floor_beam_failing::PRIMARY_TEXT),
-            ("composite_bridge_girder", semio_s_artifact_norm_en1994_examples::composite_bridge_girder::PRIMARY_TEXT),
-        ],
-    ));
     results.push(gate_family::<semio_s_artifact_norm_en1995_editor::En1995Family>(
         "en1995",
         &[
@@ -63,8 +40,8 @@ fn compliance_gate_all_families() {
             failed += 1;
         }
     }
-    assert_eq!(results.len(), 6, "gate must cover all 6 families this plugin owns");
+    assert_eq!(results.len(), 3, "gate must cover all 3 families this plugin owns");
     if failed > 0 {
-        panic!("{failed}/6 families failed compliance gate:\n{summary}");
+        panic!("{failed}/3 families failed compliance gate:\n{summary}");
     }
 }

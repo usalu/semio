@@ -33,9 +33,8 @@
     grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
   }
 
-  .course-result[data-crowd][data-shared-border-group][data-orientation="vertical"] > [data-shared-border-cell]:first-child {
-    border-block-end-width: 0;
-    border-inline-end: var(--stroke-hairline) solid var(--border-normal-color);
+  .course-result[data-crowd] > * {
+    --shared-border-flow: 1;
   }
 }
 
@@ -117,9 +116,19 @@
 }
 
 .course-input:focus-visible,
-.course-app select:focus-visible {
-  outline: var(--stroke-default) solid var(--active-base);
-  outline-offset: 1px;
+.course-app select:focus-visible,
+.course-field > input.course-input:focus-visible + .course-input {
+  border-color: var(--active-base);
+  outline: none;
+}
+
+.course-cell:focus-visible,
+.course-cell:focus-visible + .course-cell {
+  border-inline-start-color: var(--active-base);
+}
+
+.course-cell:focus-visible {
+  outline: none;
 }
 
 .course-backdrop {

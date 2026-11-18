@@ -68,3 +68,10 @@ File `workers/g1-m05/round-31.tools-capacity-error.md`. The slow phase does end 
 ## Terminal Window Flood Stopped (2026-11-17T20:50Z, on the Owner's Order)
 
 File `workers/g1-m05/round-31.console-windows.md`. After the reboot of 20:13Z the build agent's worker pool opened terminal windows in bursts of eight (45 console hosts within five minutes): processes started detached have no console on Windows, and their children were started without `windowsHide`. Added `windowsHide: true` at 13 spawn sites of the pool, the farms, the sidecar and the resident host, restarted the agent's processes, and measured no new console in 270 s. The scheduled tasks' windows are fixed in the task definition (`conhost.exe --headless`, proven with two temporary tasks) but not applied here: re-registering needs an elevated shell (`headless-task.ps1` in this folder does it for one task). Scripts of the probes are in this folder.
+
+## Eighth Contribution: Store Contention Between the Graph Read and the Tools Stage (2026-11-18T03:07Z)
+
+- Observation only. Since 2026-11-17T20:34Z the `tools` stage made 30 `stalled` tries in a row: the build agent's graph read (`repo show projects`) holds the dependency store for more than two hours per read, and the stage runner stops the waiting stage after 600 s.
+- Reported to the coordinator as `round-31.store-contention.md` in `workers/g1-m05/` of ticket `26/11/14/WORKERS-READY-WITH-LOW-RESOURCES`, with two possible rule changes and the offer to end the running read once on the coordinator's word.
+- Terminal windows: one console host for more than six hours, no new flood.
+- The full observer (`round-31-observe.ps1`) runs again; the one of the previous session had not appended to `round-31.md`.

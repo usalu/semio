@@ -49,7 +49,7 @@ impl OriginalActorGuestEntry{
   if !self.context.is_ready(){let mut call=self.admit_step(input,budget.step_budget(),clock);if let Ok(admission)=call.result.as_mut(){admission.ready=false;}return call}
   if self.has_close_failure()||self.fault.is_some()||self.retirement.is_some()||self.value_fault.is_some()||self.value_retirement.is_some(){return OriginalActorCall{input,receipt_spent:Default::default(),work_units_spent:0,result:Err(refusal("plugin bootstrap retains its original failed owner").into())}}
   let ui=&mut self.ui_arena;let mut spent=RetainedCloneProgress::default();let call=self.context.dispatch_step(input,budget.step_budget(),&mut spent,clock,|cx|->Result<bool,OriginalTurnFailure>{
-   if !cx.admit_original_core_wire_delivery()?{return Ok(false)}if !cx.admit_original_return_table()?{return Ok(false)}if !cx.admit_original_escrow_publisher()?{return Ok(false)}
+   if !cx.admit_original_core_wire_delivery()?{return Ok(false)}if !cx.admit_original_escrow_publisher()?{return Ok(false)}
    while !ui.ready(){let before=(cx.retained_progress(),cx.fuel_remaining());if ui.advance(cx)?{break}if cx.should_yield()||cx.is_cancelled()||before==(cx.retained_progress(),cx.fuel_remaining()){return Ok(false)}}
    if cx.should_yield()||cx.is_cancelled(){return Ok(false)}ensure(cx)?;Ok(true)
   });let result=match call.result{Ok(ready)=>Ok(OriginalActorAdmission{ready,progress:call.receipt_spent}),Err(OriginalActorCallError::Authority(error))=>Err(error.into()),Err(OriginalActorCallError::Semantic(error))=>{*self.value_fault=Some(error);Err(refusal("original plugin UI admission retains its failed Source").with_retained_progress(call.receipt_spent).into())}};OriginalActorCall{input:call.input,receipt_spent:call.receipt_spent,work_units_spent:call.work_units_spent,result}
@@ -137,6 +137,8 @@ impl OriginalActorGuestEntry{
  pub fn original_job_source(&self)->Option<&OriginalJobSource>{self.jobs.source()}
  pub fn has_original_job_source(&self)->bool{self.jobs.has_source()}
  pub fn original_value_fault(&self)->Option<&ValueError>{self.value_fault.as_ref().and_then(OriginalTurnFailure::primary_value)}
+ /// 🔬️ Temporary: both sides of the next-epoch currency comparison.
+ pub fn debug_currency(&self,retained:semio_framework_actor::RetainedTurnInput)->Option<String>{self.context.debug_currency(retained)}
  pub fn original_job_refusal(&self)->Option<&OriginalTurnFailure>{self.value_fault.as_ref()}
  pub fn original_cleanup_refusal(&self)->Option<&OriginalTurnFailure>{self.cleanup_fault.as_ref()}
  pub fn original_fault(&self)->Option<&Fault>{self.fault.as_ref()}

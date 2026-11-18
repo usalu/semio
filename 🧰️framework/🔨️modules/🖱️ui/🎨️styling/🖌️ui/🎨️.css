@@ -57,6 +57,15 @@
   --chip-row-height: round(nearest, max(1.5rem, calc(7 * var(--ui-spacing))), var(--device-pixel));
 }
 
+/* 🧱️ A chip row inside a shell band is exactly as high as the band: the touch spacing of a tablet grows the chip row of a card past the theme-owned band height, and chips taller than their band would draw their top line one pixel above the band's own line. */
+[data-slot="navbar"] {
+  --chip-row-height: var(--navbar-band-height);
+}
+
+[data-slot="footer"] {
+  --chip-row-height: var(--footer-band-height);
+}
+
 .h-screen {
   height: var(--ui-available-height, 100dvh);
 }
@@ -1450,8 +1459,10 @@
   }
 }
 
-.window-silhouette-border {
-  stroke-width: var(--stroke-hairline);
+@layer shared-border-ownership {
+  .window-silhouette-border {
+    stroke-width: var(--stroke-hairline);
+  }
 }
 
 .window-silhouette-border-introduced {
@@ -6803,11 +6814,18 @@
 :is(.shared-border-frame, [data-shared-border-frame]) > :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):not(:has(~ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]))) {
   border-inline-end-width: 0;
 }
+/* A vertical owner lays its cells out in one column; a product that lays them side by side at a width sets `--shared-border-flow: 1` on those cells (a cell's own value, never inherited), so the same one divider per seam moves from the block end to the inline end. */
+@property --shared-border-flow {
+  syntax: "<integer>";
+  inherits: false;
+  initial-value: 0;
+}
 :is([data-shared-border-frame], [data-shared-border-group])[data-orientation="vertical"] > :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]) {
-  border-inline-end-width: 0;
-  border-block-end: var(--stroke-hairline) solid var(--border-normal-color);
+  border-inline-end-width: calc(var(--stroke-hairline) * var(--shared-border-flow));
+  border-block-end: calc(var(--stroke-hairline) * (1 - var(--shared-border-flow))) solid var(--border-normal-color);
 }
 :is([data-shared-border-frame], [data-shared-border-group])[data-orientation="vertical"] > :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):not(:has(~ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]))) {
+  border-inline-end-width: 0;
   border-block-end-width: 0;
 }
 /* A framed cell that leaves its bottom edge to another owner (a card grid that closes it) draws no block-end divider either: the owner paints that one line. */
@@ -6859,6 +6877,33 @@ details:not([open])[data-orientation="vertical"]:is([data-shared-border-frame], 
   border-color: var(--border-emphasized-color) !important;
 }
 [data-shared-border-segment][data-shared-border-state="hover"] { stroke: var(--border-emphasized-color) !important; }
+/* ⌨️ A whole-card button recolours the card's own silhouette lines on keyboard focus. */
+[data-overview-card]:is(button):focus-visible [data-window-silhouette-border] path { stroke: var(--active-base) !important; }
+
+/* ⌨️ Keyboard focus on a bordered control of a shared-border frame or cell is the recolour of its lines (cells: the seams of both incident cells above; a frame: its own edge and the compositor's focus segments), never a ring, inset shadow or outline 0-3 px from them. Pointer focus keeps the controls' own treatment. */
+:is(.shared-border-cell, [data-shared-border-cell], .shared-border-frame, [data-shared-border-frame], [data-shared-border-cells] > [data-shared-border-frame]):focus-visible,
+:is(.shared-border-cell, [data-shared-border-cell], .shared-border-frame, [data-shared-border-frame]):has(> :is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"]):focus-visible) {
+  outline: none !important;
+  box-shadow: none !important;
+}
+:is(.shared-border-frame, [data-shared-border-frame]):focus-visible,
+:is(.shared-border-frame, [data-shared-border-frame]):has(> :is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"]):focus-visible) {
+  border-color: var(--active-base) !important;
+}
+/* ⌨️ A focusable tabpanel is the window it holds: its focus is the recolour of the window edge it coincides with (one 1 px line on that edge), never the browser ring. */
+[role="tabpanel"]:focus-visible {
+  outline: 1px solid var(--active-base) !important;
+  outline-offset: -1px;
+}
+/* ⌨️ A control that already paints the accent (selected, pressed, active) cannot show focus by recolouring its seam, so keyboard focus underlines its label, and inside an active window chip the focus path doubles its weight (below). */
+:is([data-state="active"], [data-state="on"], [aria-selected="true"], [aria-pressed="true"], [data-active="true"]):not([role="tabpanel"], [data-window-silhouette]):focus-visible,
+:is([data-state="active"], [data-state="on"], [aria-selected="true"], [aria-pressed="true"], [data-active="true"]):not([role="tabpanel"], [data-window-silhouette], [data-slot="window"]) > :is(button, [role="button"], [role="tab"], a[href], select, input, [tabindex]):focus-visible {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.2em;
+}
+/* ⌨️ A chip of an active window already paints the accent, so its focus path doubles the line weight instead of repeating the colour. The base weight lives in a lower layer, so this wins by layer order, never by !important. */
+[data-shared-border-segment][data-shared-border-state="focus"][data-focus-on-accent] { stroke-width: calc(var(--stroke-hairline) * 2); }
 [data-slot="mode-dock-tabs"] > [data-slot="mode-dock-tab"]:is(:hover, :has(+ [data-slot="mode-dock-tab"]:hover)) {
   border-inline-end-color: var(--border-emphasized-color) !important;
 }
@@ -6873,8 +6918,12 @@ details:not([open])[data-orientation="vertical"]:is([data-shared-border-frame], 
   [data-slot="mode-dock-tabs"] > [data-slot="mode-dock-tab"]:is(:hover, :has(+ [data-slot="mode-dock-tab"]:hover)) {
     border-inline-end-color: Highlight !important;
   }
+  :is(.shared-border-frame, [data-shared-border-frame]):focus-visible { border-color: Highlight !important; }
+  [role="tabpanel"]:focus-visible { outline-color: Highlight !important; }
+  [data-shared-border-segment][data-shared-border-state="focus"][data-focus-on-accent] { stroke-width: 2; }
+  [data-overview-card]:is(button):focus-visible [data-window-silhouette-border] path { stroke: Highlight !important; }
   [data-shared-border-segment] { stroke: CanvasText !important; }
-  [data-shared-border-segment][data-shared-border-state="hover"] { stroke: Highlight !important; }
+  [data-shared-border-segment]:is([data-shared-border-state="hover"], [data-shared-border-state="focus"]) { stroke: Highlight !important; }
 }
 }
 /* Suppress only replaced paint, never border layout: measurement must remain stable. */
@@ -7519,6 +7568,23 @@ details:not([open])[data-orientation="vertical"]:is([data-shared-border-frame], 
   border-style: none;
 }
 
+/* 🫸️ Two chips of one cap or footer row whose open gap would drop under the card-band minimum abut instead (chip-abut.ts): the reaching chip stretches over the gap and the pair shares one seam. */
+[data-window-silhouette-chip][data-chip-abut] {
+  flex: 1 1 auto;
+}
+
+[data-window-silhouette-chip][data-chip-abut] + [data-window-silhouette-gap] {
+  flex: 0 0 0;
+}
+
+[data-slot^="window-chrome-footer-"]:has(> [data-window-silhouette-chip][data-chip-abut]) {
+  justify-self: stretch;
+}
+
+[data-anchor] > [data-window-silhouette]:has(> [data-window-silhouette-chip][data-chip-abut]) {
+  min-inline-size: var(--chip-abut-size);
+}
+
 /* 🪟️ A folded pane chip stretched to the width of the control group hanging under it: the chip and its toggle fill the stack, so both share the same left and right lines. */
 [data-pane-chip-fill] > [data-window-silhouette-chip] {
   flex: 1 1 auto;
@@ -7528,10 +7594,10 @@ details:not([open])[data-orientation="vertical"]:is([data-shared-border-frame], 
   flex: 1 1 auto;
 }
 
-/* ⌨️ Docked controls keep an explicit inset keyboard indicator inside the silhouette stroke. */
-[data-window-silhouette-chip] > :focus-visible,
-[data-window-silhouette-chip] :is(button, [role="button"], [tabindex]):focus-visible {
-  box-shadow: inset 0 0 0 var(--stroke-default) var(--active-base);
+/* ⌨️ Keyboard focus on a docked control is the recolour of its chip's own lines (the silhouette paints them in the focus colour, chip-focus.ts), never a ring inside them. */
+[data-window-silhouette-chip] :is(button, [role="button"], [tabindex], a[href], input, select, textarea):focus-visible {
+  outline: none;
+  box-shadow: none;
 }
 
 /* 🎛️ The silhouette chip already paints this level's glass. Immediate control-group shells must
@@ -7566,8 +7632,8 @@ details:not([open])[data-orientation="vertical"]:is([data-shared-border-frame], 
   margin-block-start: calc(var(--card-stack-lift, 0px) * -1);
 }
 
-/* 🪢️ Tiled cards never lift: a translate would break the shared line with the neighbour, so hover emphasis stays on colour and outline. */
-:is([data-card-stack], [data-card-grid]) [data-overview-card-paint] {
+/* 🪢️ Cards never lift in a stack, a grid or the layered overview (a swiped card shares its lines with the neighbour hints): a translate would break the shared line, so hover emphasis stays on colour and outline. */
+:is([data-card-stack], [data-card-grid], [data-layered-overview]) [data-overview-card-paint] {
   translate: none !important;
   transform: none !important;
 }

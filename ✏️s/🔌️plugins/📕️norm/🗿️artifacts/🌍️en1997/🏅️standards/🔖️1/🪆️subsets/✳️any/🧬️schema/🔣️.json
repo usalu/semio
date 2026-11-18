@@ -1,6 +1,6 @@
 {
   "$schema":"http://json-schema.org/draft-07/schema#",
-  "$id":"https://json.schemas.assets.semio-tech.com/s/norm/en1997/artifact.json",
+  "$id":"https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1997/artifact.json",
   "title":"En1997Artifact",
   "type":"object",
   "additionalProperties":false,
@@ -42,5 +42,5 @@
     "ParameterBasis":{"title":"ParameterBasis","type":"string","enum":["declared","derived"],"x-semio-ui":{"options":{"declared":{"en":"Declared on the layer","de":"Auf der Schicht angegeben"},"derived":{"en":"Derived from investigations","de":"Aus Erkundungen abgeleitet"}}}},
     "CharacteristicBasis":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string"},"layerId":{"type":"string"},"parameter":{"$ref":"#/$defs/CharacteristicParameter"},"basis":{"$ref":"#/$defs/ParameterBasis"}},"required":["id","layerId","parameter","basis"]}
   },
-  "x-semio-rust":{"doc":["🧬️ EN 1997 document artifact state (mirrors snapshot)."],"derive":["Clone","Debug","PartialEq","ArtifactSchema","semio_framework_dsl_record_derive::DslRecord","value_derive::ToValue","value_derive::FromValue"],"artifactSchema":"s.norm.en1997","attributes":["#[cfg_attr(any(test, feature = \"test-support\"), derive(serde::Serialize, serde::Deserialize))]","#[cfg_attr(any(test, feature = \"test-support\"), serde(rename_all = \"camelCase\"))]","#[value(rename_all = \"camelCase\")]"]}
+  "x-semio-rust":{"doc":["🧬️ EN 1997 document artifact state (mirrors snapshot)."],"derive":["Clone","Debug","PartialEq","ArtifactSchema","semio_framework_dsl_record_derive::DslRecord","value_derive::ToValue","value_derive::FromValue"],"artifactSchema":"s.norm-eurocode.en1997","attributes":["#[cfg_attr(any(test, feature = \"test-support\"), derive(serde::Serialize, serde::Deserialize))]","#[cfg_attr(any(test, feature = \"test-support\"), serde(rename_all = \"camelCase\"))]","#[value(rename_all = \"camelCase\")]"]}
 }

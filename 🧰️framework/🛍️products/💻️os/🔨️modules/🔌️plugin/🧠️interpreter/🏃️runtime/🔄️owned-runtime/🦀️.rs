@@ -78,7 +78,7 @@ impl OwnedRuntime {
             return Err(TurnFault::Host(PluginHostError::Plugin("owned actor has an undriven start function".to_string())));
         }
         let instance_id = self.next_instance_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        let mut state = OwnedGuestInstance { original_job_clock:None, artifact: Arc::clone(&owned.artifact), actor:Some(actor), original_core:std::mem::ManuallyDrop::new(None),original_source:std::mem::ManuallyDrop::new(None),original_startup_input:None,original_call:None,original_unit:None,original_host:None, pending: None, original_receipt: None, poisoned: false, diagnostics: Vec::new(), context: 0, next_resource: 1, instance_id };
+        let mut state = OwnedGuestInstance { original_job_clock:Some((budget.retained.work.clock_binding,self.original_clock)), artifact: Arc::clone(&owned.artifact), actor:Some(actor), original_core:std::mem::ManuallyDrop::new(None),original_source:std::mem::ManuallyDrop::new(None),original_startup_input:None,original_call:None,original_unit:None,original_host:None, pending: None, original_receipt: None, poisoned: false, diagnostics: Vec::new(), context: 0, next_resource: 1, instance_id };
         admit_owned_channel(&mut state)?;
         let encoded = serde_json::to_vec(&OwnedCodecInput { artifact_schema: OWNED_CODEC_ORIGIN_SCHEMA, document_id: "", pack: &[], spr: &[], ops: &[] }).map_err(|error| PluginHostError::Json(error.to_string()))?;
         begin_owned_operation(&mut state, OwnedOperation::PackSchemaHash, Some(encoded))?;
@@ -91,15 +91,15 @@ impl OwnedRuntime {
     }
 
     /// 🧬️ A throwaway instance of `owned` in its codec origin's state.
-    fn origin_instance(&self, owned: &OwnedCompiledGuest, origin: &OwnedCodecOrigin) -> OwnedGuestInstance {
+    fn origin_instance(&self, owned: &OwnedCompiledGuest, origin: &OwnedCodecOrigin, budget: Budget) -> OwnedGuestInstance {
         let instance_id = self.next_instance_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        OwnedGuestInstance { original_job_clock:None, artifact: Arc::clone(&owned.artifact), actor:Some(origin.actor.clone()),original_core:std::mem::ManuallyDrop::new(None),original_source:std::mem::ManuallyDrop::new(None),original_startup_input:None,original_call:None,original_unit:None,original_host:None, pending: None, original_receipt: None, poisoned: false, diagnostics: origin.diagnostics.clone(), context: origin.context, next_resource: origin.next_resource, instance_id }
+        OwnedGuestInstance { original_job_clock:Some((budget.retained.work.clock_binding,self.original_clock)), artifact: Arc::clone(&owned.artifact), actor:Some(origin.actor.clone()),original_core:std::mem::ManuallyDrop::new(None),original_source:std::mem::ManuallyDrop::new(None),original_startup_input:None,original_call:None,original_unit:None,original_host:None, pending: None, original_receipt: None, poisoned: false, diagnostics: origin.diagnostics.clone(), context: origin.context, next_resource: origin.next_resource, instance_id }
     }
 
     /// 🧬️ Opens a temporary codec-origin instance.
     pub fn codec_instance(&self, compiled: &OwnedCompiledGuest, budget: Budget, progress: &mut impl FnMut(u64, std::time::Duration), cancellation: Option<&GuestCallCancellation>) -> Result<(OwnedGuestInstance, u64), TurnFault> {
         let used = self.codec_origin(compiled, budget, progress, cancellation)?;
-        Ok((self.origin_instance(compiled, &used.origin), used.spent_fuel))
+        Ok((self.origin_instance(compiled, &used.origin, budget), used.spent_fuel))
     }
 
     fn actor_context_call(&self,state:&mut OwnedGuestInstance,operation:OwnedOperation,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<original_actor_context::OriginalActorFixedCall,TurnFault>{
@@ -157,7 +157,7 @@ impl OwnedRuntime {
     /// 🌱️ Invokes a component codec through its admitted compiled origin.
     pub(super) fn codec_call<T: serde::de::DeserializeOwned, I: serde::Serialize>(&self, compiled: &OwnedCompiledGuest, operation: OwnedOperation, input: &I, budget: Budget, mut progress: impl FnMut(u64, std::time::Duration), cancellation: Option<&GuestCallCancellation>) -> Result<T, TurnFault> {
         let used = self.codec_origin(compiled, budget, &mut progress, cancellation)?;
-        let state = &mut self.origin_instance(compiled, &used.origin);
+        let state = &mut self.origin_instance(compiled, &used.origin, budget);
         let encoded = serde_json::to_vec(input).map_err(|error| PluginHostError::Json(error.to_string()))?;
         begin_owned_operation(state, operation, Some(encoded))?;
         let invocation = resume_owned_operation_observed(state, operation, budget.fuel.saturating_sub(used.spent_fuel), budget.deadline_us, OwnedDeadline::Original, |fuel, elapsed| progress(used.reported_fuel.saturating_add(fuel), elapsed), cancellation)?;
@@ -166,7 +166,7 @@ impl OwnedRuntime {
 
     fn codec_call_authored<T:serde::de::DeserializeOwned,I:serde::Serialize,O:FnMut(semio_framework_value::native_encoding::NativeEncodeProgress)->bool+?Sized>(&self,compiled:&OwnedCompiledGuest,operation:OwnedOperation,input:&I,budget:Budget,mut progress:impl FnMut(u64,std::time::Duration),cancellation:Option<&GuestCallCancellation>,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_,O>)->Result<T,TurnFault>{
         let used=self.codec_origin(compiled,budget,&mut progress,cancellation)?;
-        let state=&mut self.origin_instance(compiled,&used.origin);
+        let state=&mut self.origin_instance(compiled,&used.origin,budget);
         let input=identity.encode(|control|operation::input::encode_json_input(input,control)).map_err(identity_turn_fault)?;
         identity.encode(|control|control.charge(input.len())).map_err(identity_turn_fault)?;
         begin_owned_operation(state,operation,Some(input))?;

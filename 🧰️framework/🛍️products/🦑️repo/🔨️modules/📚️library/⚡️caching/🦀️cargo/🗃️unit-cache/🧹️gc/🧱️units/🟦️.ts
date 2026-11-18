@@ -1,5 +1,5 @@
 import {existsSync,lstatSync,readdirSync,rmSync,rmdirSync} from "node:fs";
-import {basename,dirname,join} from "node:path";
+import {basename,dirname,join,relative} from "node:path";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {acquireResourceLease} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {tryLockSessionV1,type IncrementalLockPortV1} from "../🌱️incremental/🟦️.ts";
@@ -130,16 +130,16 @@ export async function collectUnitsV1(store:string,options:Readonly<{dryRun:boole
  say("scan",{root:store});
  const profiles=unitProfilesV1(store),busy=new Set<string>();
  for(const profile of profiles){const probe=await leases(profile);if(probe==="busy"){busy.add(profile.profileDirectory);say("busyProfile",{profile:profile.profile,directory:profile.buildDirectory,hours:Math.round(policy.busyMinimumAgeMilliseconds/3600000)});}else probe.release();}
- const units=await measureUnitsV1(profiles,{nowMs,busy:profile=>busy.has(profile.profileDirectory),lock,signal:options.signal,progress:options.progress}),plan=planUnitsV1({needBytes:options.needBytes(),nowMs,units}),removed:UnitRemovalV1[]=[],crates=new Set<string>(),newest=newestUnitsV1(units),byPath=new Map(units.map(unit=>[unit.path,unit])),profileOf=(path:string)=>profiles.find(profile=>path.startsWith(profile.profileDirectory+"/"))!;
+ const units=await measureUnitsV1(profiles,{nowMs,busy:profile=>busy.has(profile.profileDirectory),lock,signal:options.signal,progress:options.progress}),plan=planUnitsV1({needBytes:options.needBytes(),nowMs,units}),removed:UnitRemovalV1[]=[],crates=new Set<string>(),newest=newestUnitsV1(units),byPath=new Map(units.map(unit=>[unit.path,unit])),profileByDirectory=new Map(profiles.map(profile=>[profile.profileDirectory,profile])),profileOf=(path:string):UnitProfileV1=>profileByDirectory.get(dirname(dirname(dirname(path))))??{buildDirectory:dirname(dirname(dirname(path))),profileDirectory:dirname(dirname(dirname(path))),profile:basename(dirname(dirname(dirname(path))))};
  const reason=(row:UnitRemovalV1)=>report?unitTextV1(`reason.${row.reason}` as keyof typeof messages,report.language,{hours:Math.round(policy.idleMilliseconds/3600000)}):"";
  let held=units.filter(unit=>unit.held).length;
  if(options.dryRun){
   for(const row of plan){removed.push(row);if(removed.length<=policy.reportedRemovals)say("would",{path:row.path,bytes:size(row.bytes),reason:reason(row)});}
  }else{
-  const groups=new Map<string,UnitRemovalV1[]>();for(const row of plan)groups.set(profileOf(row.path).profileDirectory,[...(groups.get(profileOf(row.path).profileDirectory)??[]),row]);
+  const groups=new Map<string,UnitRemovalV1[]>();for(const row of plan){const key=profileOf(row.path).profileDirectory;groups.set(key,[...(groups.get(key)??[]),row]);}
   let done=0;
   for(const[directory,rows]of groups){
-   const profile=profiles.find(row=>row.profileDirectory===directory)!,held_=await leases(profile),exclusive=held_!=="busy";
+   const profile=profileOf(join(directory,policy.directory,"_","_")),held_=await leases(profile),exclusive=held_!=="busy";
    try{
     for(const row of rows){
      options.signal?.throwIfAborted();
@@ -157,6 +157,6 @@ export async function collectUnitsV1(store:string,options:Readonly<{dryRun:boole
  }
  const freedBytes=removed.reduce((sum,row)=>sum+row.bytes,0);
  say(options.dryRun?"summaryPlan":"summaryApply",{count:removed.length,total:units.length,bytes:size(freedBytes),held,kept:units.length-removed.length-held});
- const gone=new Set(removed.map(row=>row.path)),totals:Record<string,number>={};for(const unit of units)if(!gone.has(unit.path)||options.dryRun){const name=profileOf(unit.path).profileDirectory.slice(store.length+1);totals[name]=(totals[name]??0)+unit.bytes;}
+ const gone=new Set(removed.map(row=>row.path)),totals:Record<string,number>={};for(const unit of units)if(!gone.has(unit.path)||options.dryRun){const name=relative(store,profileOf(unit.path).profileDirectory).replaceAll("\\","/");totals[name]=(totals[name]??0)+unit.bytes;}
  return Object.freeze({dryRun:options.dryRun,total:units.length,removed:Object.freeze(removed),freedBytes,held,kept:units.length-removed.length-held,busyProfiles:busy.size,profiles:Object.freeze(totals)});
 }

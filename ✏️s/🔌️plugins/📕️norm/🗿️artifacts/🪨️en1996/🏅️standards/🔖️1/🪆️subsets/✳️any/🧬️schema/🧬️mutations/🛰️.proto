@@ -1,5 +1,5 @@
 syntax = "proto3";
-package semio.s.norm.en1996;
+package semio.s.norm_eurocode_materials.en1996;
 message En1996Mutation {
   oneof kind {
     ChangeConcentratedBearingLength change_concentrated_bearing_length = 1;

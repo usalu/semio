@@ -1,5 +1,5 @@
 {
-  "artifact": "s.norm.din18599",
+  "artifact": "s.norm-energy.din18599",
   "standard": "1",
   "subsets": {
     "*": {
@@ -7,5 +7,5 @@
     }
   },
   "subsetPolicy": "single",
-  "subsetPolicyRationale": "`s.norm.din18599@1` is this plugin's own self-contained DIN V 18599 building-energy-balance document — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (change-use-class, specify-heating-system, update-ventilation, insert-zone, change-zone-area-m2, change-element-u, update-climate, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch regardless of which field, record or nested collection it touches. `✳️any` remains this artifact's only real scope."
+  "subsetPolicyRationale": "`s.norm-energy.din18599@1` is this plugin's own self-contained DIN V 18599 building-energy-balance document — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (change-use-class, specify-heating-system, update-ventilation, insert-zone, change-zone-area-m2, change-element-u, update-climate, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch regardless of which field, record or nested collection it touches. `✳️any` remains this artifact's only real scope."
 }

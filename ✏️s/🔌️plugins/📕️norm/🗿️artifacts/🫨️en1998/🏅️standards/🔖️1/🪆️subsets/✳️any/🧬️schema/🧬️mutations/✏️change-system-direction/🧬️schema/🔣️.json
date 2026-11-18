@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-system-direction/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1998/mutation/change-system-direction/schema.json",
   "title": "ChangeSystemDirection",
   "type": "object",
   "additionalProperties": false,
@@ -55,7 +55,7 @@
       }
     },
     "newDirection": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/$defs/AnalysisDirection",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1998/snapshot.json#/$defs/AnalysisDirection",
       "x-semio-ui": {
         "role": "value",
         "label": {

@@ -354,6 +354,49 @@ function agreeingOn(proctor: FakeProctor, area: StorageArea, clock: { now: numbe
   return session;
 }
 
+describe("🩺️ a proctor that is back", () => {
+  it("is found again without any call of the page's own, by asking for its contract until it answers — and never asked while it answers", { timeout: 30_000 }, async () => {
+    const proctor = new FakeProctor();
+    const session = deputisedOn(proctor, memoryStorageOrigin().tab());
+    await waitFor(() => expect(session.getSnapshot().connection.reachability).toBe("reachable"));
+    const calm = proctor.instances;
+    await new Promise((done) => setTimeout(done, 50));
+    expect(proctor.instances).toBe(calm);
+    const returned = vi.fn();
+    const off = session.revived(returned);
+    proctor.away = true;
+    await session.refreshLeaderboard();
+    await waitFor(() => expect(session.getSnapshot().connection).toMatchObject({ reachability: "unreachable", pending: 0 }));
+    expect(returned).not.toHaveBeenCalled();
+    await new Promise((done) => setTimeout(done, 50));
+    expect(session.getSnapshot().connection.reachability).toBe("unreachable");
+    proctor.away = false;
+    await waitFor(() => expect(session.getSnapshot().connection.reachability).toBe("reachable"), { timeout: 5_000 });
+    expect(returned).toHaveBeenCalledTimes(1);
+    expect(proctor.instances).toBeGreaterThan(calm);
+    const after = proctor.instances;
+    await new Promise((done) => setTimeout(done, 50));
+    expect(proctor.instances).toBe(after);
+    off();
+    session.stop();
+  });
+
+  it("stops asking for good once the session is stopped", { timeout: 30_000 }, async () => {
+    const proctor = new FakeProctor();
+    const session = deputisedOn(proctor, memoryStorageOrigin().tab());
+    await waitFor(() => expect(session.getSnapshot().connection.reachability).toBe("reachable"));
+    proctor.away = true;
+    await session.refreshLeaderboard();
+    await waitFor(() => expect(session.getSnapshot().connection.reachability).toBe("unreachable"));
+    session.stop();
+    const asked = proctor.requests.length;
+    proctor.away = false;
+    await new Promise((done) => setTimeout(done, 100));
+    expect(proctor.requests).toHaveLength(asked);
+    expect(session.getSnapshot().connection.reachability).toBe("unreachable");
+  });
+});
+
 describe("🧩️ a proctor of another contract", () => {
   it("never sends a command or a query to a proctor of an older contract: the device decides, keeps everything and delivers it once the proctor agrees", { timeout: 30_000 }, async () => {
     const proctor = new FakeProctor();

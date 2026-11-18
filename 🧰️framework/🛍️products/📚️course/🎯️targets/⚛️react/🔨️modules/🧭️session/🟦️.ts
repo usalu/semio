@@ -78,6 +78,7 @@ export class CourseSession {
   private readonly settlement: Settlement;
   private readonly adoption: Adoption;
   private readonly attention: Attention;
+  private reviving: AbortSignal | undefined;
 
   constructor(options: CourseSessionOptions) {
     const clock = options.now ?? Date.now;
@@ -134,6 +135,7 @@ export class CourseSession {
         const before = reached;
         reached = this.proctor.reachability();
         if (reached === "reachable" && before !== "throttled") this.outbox.wake();
+        this.revive();
         this.state.notify();
       }),
     );
@@ -144,6 +146,7 @@ export class CourseSession {
     this.outbox.start();
     void this.refreshCourse();
     void this.refreshLearner();
+    this.revive();
     this.state.notify();
   }
 
@@ -161,6 +164,32 @@ export class CourseSession {
     this.outbox.wake();
     void this.refreshCourse();
     void this.refreshLearner();
+    this.revive();
+  }
+
+  /** 📣️ Calls `listener` each time the proctor answers again after it counted as unreachable or of another contract;
+   * returns the unsubscribe function. */
+  readonly revived = (listener: () => void): (() => void) => {
+    let before = this.proctor.reachability();
+    return this.proctor.subscribe(() => {
+      const was = before;
+      before = this.proctor.reachability();
+      if (before === "reachable" && (was === "unreachable" || was === "incompatible")) listener();
+    });
+  };
+
+  /** 🫀️ While the proctor counts as unreachable or of another contract, asks it for its contract now and then until it
+   * answers and agrees: what flips the connection back to calm must not depend on a call that happens to be made — a
+   * page with nothing to send, or one whose polls back off for minutes, would stay away for good. One probe at a time
+   * per lifetime. */
+  private revive(): void {
+    const reachability = this.proctor.reachability();
+    const signal = this.lifecycle.signal;
+    if (signal.aborted || this.reviving === signal || (reachability !== "unreachable" && reachability !== "incompatible")) return;
+    this.reviving = signal;
+    void this.link.revive(signal).catch(() => undefined).finally(() => {
+      if (this.reviving === signal) this.reviving = undefined;
+    });
   }
 
   /** 🫡️ Seats the deputy of material that arrived after the session began ({@link Deputising.seatDeputy}); from then on

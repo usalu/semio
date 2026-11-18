@@ -123,6 +123,8 @@ use mounted_job::*;
 mod session_api;
 pub use session_api::*;
 use session_api::{identity_live, source_version, record_terminal, RequestKey, PhysicalRequestSpec};
+#[cfg(test)]
+use session_api::{identity_version, request_key, resolve_request, prepare_result_demand, prepare_snapshot_admission, same_result_source, select_result_shell, physical_parts};
 
 #[path = "🧹️recovery-and-close/🦀️.rs"]
 mod recovery_and_close;

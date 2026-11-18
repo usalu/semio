@@ -25,5 +25,5 @@ test("raw empty arguments are invalid while typed empty selection has its domain
   const { document } = readDeleteEntitiesFixtureV1();
   const resolve = () => { throw Error("A refusal must never resolve a mutation"); };
   expect(executeDeleteEntitiesV1(document, { collection: "beams", ids: [] }, resolve)).toEqual({ outcome: "invalid", error: "an entity command needs at least one id" });
-  expect(executeDeleteSelectionV1(document, "beams", [], resolve)).toMatchObject({ outcome: "refused", code: "norm.entity-delete-empty" });
+  expect(executeDeleteSelectionV1(document, "beams", [], resolve)).toMatchObject({ outcome: "refused", code: "norm.editor.entity-delete-empty" });
 });

@@ -47,6 +47,12 @@ test("a worker that dies early again with the same text stops the plan with that
  await silent.run("/tmp/silent");await silent.pool.close();expect(silent.started.length).toBe(5);
 });
 
+test("a worker that ran long before it died on the same missing module again and again stops the plan too, because the churn clock restarts with every long run",async()=>{
+ const long=harness([{exit:75,tail:MISSING},{exit:75,tail:MISSING},{exit:75,tail:MISSING},{exit:"done"}],{backoffMilliseconds:[1],settleMilliseconds:60000,progressMilliseconds:0,totalMaximum:100,sameCauseMaximum:3});
+ const failure:any=await long.run("/tmp/long").then(()=>undefined,reason=>reason);await long.pool.close();
+ expect(failure.code).toBe("slice-worker-failing");expect(failure.cause).toBe(MISSING);expect(failure.count).toBe(3);expect(long.started.length).toBe(3);
+});
+
 test("the declared policy bounds the same-cause restarts at a small number",()=>{
  const maximum=(HOST_POLICY_V1 as unknown as{sliceRestartSameCauseMaximum:number}).sliceRestartSameCauseMaximum;
  expect(Number.isInteger(maximum)&&maximum>=2&&maximum<=5).toBe(true);

@@ -73,7 +73,7 @@ describe("routeOf", () => {
   });
 
   it("finds no way between perches nothing joins, onto the perch the actor is on, or without terrain", () => {
-    const far = perch("far", 20, 120, 40);
+    const far = perch("far", 20, 120, -140);
     expect(routeOf(200, FLOOR, far, ["climb", "ladder", "grapple"], PET, GRIP_BUDGET, [left, right], [standing], [box])).toBeNull();
     expect(routeOf(400, shelf, shelf, ["climb", "ladder", "grapple"], PET, GRIP_BUDGET, [left, right], [standing], [box])).toBeNull();
     expect(routeOf(200, FLOOR, FLOOR, ["climb", "ladder", "grapple"], PET, GRIP_BUDGET, [left, right], [standing], [box])).toBeNull();
@@ -96,10 +96,10 @@ describe("chainOf", () => {
 });
 
 describe("the constants", () => {
-  it("are the starting values of the research brief, but for the reach of the telescopic ladder and of the grappling gun (eight heights: what the real pages need)", () => {
+  it("are the starting values of the research brief, but for the reach of the telescopic ladder (eight heights) and of the grappling gun (twelve heights: what the real pages need)", () => {
     const numbers = Object.fromEntries(Object.entries(climbing).filter(([, value]) => typeof value === "number"));
     for (const [name, value] of Object.entries(numbers)) expect(Number.isFinite(value) && (value as number) > 0, name).toBe(true);
-    expect(numbers).toMatchObject({ CLIMB_RISE: 30, CLIMB_DESCENT: 40, GRIP_BUDGET: 384, SLIDE_START: 30, SLIDE_GAIN: 600, SLIDE_SPEED: 160, SLIP_PUSH: 140, SLIP_LIFT: 160, MANTLE_TICKS: 28, LADDER_LEAN: 0.25, LADDER_STEEP: 0.14, LADDER_FLAT: 0.4, LADDER_SHORT: 0.8, LADDER_TALL: 8, LADDER_RISE: 26, LADDER_DESCENT: 34, HOOK_SPEED: 640, HOOK_RETURN: 1280, ROPE_SHORT: 0.8, ROPE_LONG: 8, ROPE_ELEVATION: 0.42, ZIP_SLANT: 0.35, ZIP_SPEED: 150 });
+    expect(numbers).toMatchObject({ CLIMB_RISE: 30, CLIMB_DESCENT: 40, GRIP_BUDGET: 384, SLIDE_START: 30, SLIDE_GAIN: 600, SLIDE_SPEED: 160, SLIP_PUSH: 140, SLIP_LIFT: 160, MANTLE_TICKS: 28, LADDER_LEAN: 0.25, LADDER_STEEP: 0.14, LADDER_FLAT: 0.4, LADDER_SHORT: 0.8, LADDER_TALL: 8, LADDER_RISE: 26, LADDER_DESCENT: 34, HOOK_SPEED: 640, HOOK_RETURN: 1280, ROPE_SHORT: 0.8, ROPE_LONG: 12, ROPE_ELEVATION: 0.42, ZIP_SLANT: 0.35, ZIP_SPEED: 150 });
     expect(REEL_LEAST).toBe(0.9);
     expect(LADDER_FOLLOW).toBe(8);
     expect(LADDER_SHIFT).toBe(12);

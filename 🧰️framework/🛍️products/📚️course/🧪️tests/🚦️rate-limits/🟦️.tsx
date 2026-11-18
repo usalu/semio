@@ -63,8 +63,8 @@ function answer(task: string): RecordAnswerCommand {
   return { type: "record-answer", id: newId(), learner: LEARNER, run: RUN, task, answer: { kind: "sorting", order: ["a", "b"] }, at: 1 };
 }
 
-function Poller(props: { readonly refresh: () => Promise<RefreshOutcome>; readonly intervalMs: number }): null {
-  usePolling(props.refresh, props.intervalMs);
+function Poller(props: { readonly refresh: () => Promise<RefreshOutcome>; readonly intervalMs: number; readonly revived?: (listener: () => void) => () => void }): null {
+  usePolling(props.refresh, props.intervalMs, true, props.revived);
   return null;
 }
 
@@ -290,6 +290,34 @@ describe("🚦️ polling", () => {
     await vi.advanceTimersByTimeAsync(100_000);
     expect(calls).toHaveLength(count);
   });
+
+  it("ends a backoff the moment the proctor answers again, and lets go of the subscription once it unmounts", async () => {
+    vi.useFakeTimers();
+    vi.spyOn(Math, "random").mockReturnValue(0.5);
+    const listeners = new Set<() => void>();
+    const revived = (listener: () => void): (() => void) => (listeners.add(listener), () => void listeners.delete(listener));
+    const outcomes: RefreshOutcome[] = [{ answered: false }, { answered: false }, { answered: true }];
+    const calls: number[] = [];
+    const started = Date.now();
+    const refresh = async (): Promise<RefreshOutcome> => {
+      calls.push(Date.now() - started);
+      return outcomes.shift() ?? { answered: true };
+    };
+    const { unmount } = render(<Poller refresh={refresh} intervalMs={10_000} revived={revived} />);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(20_000);
+    });
+    expect(calls).toEqual([0, 15_000]);
+    act(() => listeners.forEach((listener) => listener()));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10_000);
+    });
+    expect(calls).toEqual([0, 15_000, 20_000, 30_000]);
+    act(() => listeners.forEach((listener) => listener()));
+    expect(calls).toHaveLength(4);
+    unmount();
+    expect(listeners.size).toBe(0);
+  });
 });
 
 describe("🚦️ presence sockets", () => {
@@ -317,6 +345,7 @@ describe("🚦️ presence sockets", () => {
       parse: (state) => state as CursorState,
       timing: fixture.rejoin.timing,
       random: () => 1,
+      joinMs: 2 ** 31 - 1,
     });
     const flap = async (stayMs = 0): Promise<void> => {
       const socket = sockets.at(-1)!;

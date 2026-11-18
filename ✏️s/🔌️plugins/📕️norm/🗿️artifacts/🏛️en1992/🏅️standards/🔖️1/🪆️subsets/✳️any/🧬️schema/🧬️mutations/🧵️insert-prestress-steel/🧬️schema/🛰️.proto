@@ -1,5 +1,5 @@
 syntax = "proto3";
-package semio.s.norm.en1992.mutation.insert_prestress_steel;
+package semio.s.norm_eurocode_structural.en1992.mutation.insert_prestress_steel;
 message InsertPrestressSteel {
   uint64 index = 1;
   PrestressSteel prestress_steel = 2;

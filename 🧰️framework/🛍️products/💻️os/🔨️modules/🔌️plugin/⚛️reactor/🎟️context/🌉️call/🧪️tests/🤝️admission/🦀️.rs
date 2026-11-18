@@ -31,6 +31,13 @@ fn original_public_actor_guest_entry_keeps_same_fault_and_raw_receipts_through_p
 }
 
 #[test]
+fn original_plugin_bootstrap_births_table_and_publisher_in_one_chain_under_the_whole_grant(){
+ let stock=RetainedCloneGrant{maximum_items:4096,maximum_copy_bytes:1048576,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:64};let mut input=RetainedTurnInput{operation:8852,generation:1,epoch:1,work:OriginalActorTurnWork{clock_binding:8852,absolute_deadline_us:10000,fuel:10000},grant:stock};let mut entry=guest_context::OriginalActorGuestEntry::new();let mut ready=false;
+ for _ in 0..256{let call=entry.admit_plugin_step(semio_framework_actor::OriginalJobBudget{input,retained_policy:input.grant,fuel:input.work.fuel,deadline_us:input.work.absolute_deadline_us,cancelled:false},||Some(1),|_|Ok(()));assert!(call.result.is_ok());ready=matches!(&call.result,Ok(admission) if admission.ready);let returned=input.return_original(call.receipt_spent,call.work_units_spent).unwrap();input.epoch+=1;input.grant=returned.remaining;input.work.fuel=returned.remaining_fuel;if ready{break}}assert!(ready);
+ for _ in 0..1024{if entry.terminal_is_empty(){break}let call=entry.close_plugin_step(semio_framework_actor::OriginalJobBudget{input,retained_policy:input.grant,fuel:input.work.fuel,deadline_us:input.work.absolute_deadline_us,cancelled:true});assert!(call.result.is_ok());let returned=input.return_original(call.receipt_spent,call.work_units_spent).unwrap();input.epoch+=1;input.grant=returned.remaining;input.work.fuel=returned.remaining_fuel}assert!(entry.terminal_is_empty());
+}
+
+#[test]
 fn original_plugin_publisher_receipt_failure_retains_complete_cause(){
  use semio_framework_job::StepBudget;
  fn next(input:&mut RetainedTurnInput,spent:RetainedCloneProgress,work:u64){let returned=input.return_original(spent,work).unwrap();input.epoch+=1;input.grant=returned.remaining;input.work.fuel=returned.remaining_fuel;}

@@ -8,6 +8,7 @@ const skipped=new Set(["node_modules",".git",".cache","target","dist","🧪️te
 const interfaceFile="🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🔷️typescript-compiler/🟨️.mjs";
 
 const left:Readonly<Record<string,string>>={
+ "🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers/🟨️.mjs":"the one request beside the manifest that pins the version: a captured implementation admits only declared literal requests, so this site is the installed package at the pinned version in every process shape; the interface checks version and API of the answer",
  "🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️typescript/🧩️units/🔌️repository/🟦️.ts":"typecheck unit of one project, anchored at that project's directory: runs the compiler of that project, which a workspace member may declare in another version than the tooling",
  "🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🟦️.ts":"spawns the tsc binary of the workspace it builds, anchored at that workspace directory (two sites)",
  "🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🧬️declarations/🟦️.ts":"emits declarations with the compiler of the workspace it builds, anchored at that workspace directory (a fixture workspace carries its own)",

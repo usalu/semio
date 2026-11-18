@@ -1,5 +1,5 @@
 syntax = "proto3";
-package semio.s.norm.en1992.mutation.change_member_punch_column_width;
+package semio.s.norm_eurocode_structural.en1992.mutation.change_member_punch_column_width;
 message ChangeMemberPunchColumnWidth {
   string member_id = 1;
   double new_punching_column_width = 2;

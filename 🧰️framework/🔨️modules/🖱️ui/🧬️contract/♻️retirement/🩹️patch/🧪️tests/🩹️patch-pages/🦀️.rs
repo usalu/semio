@@ -6,6 +6,7 @@ fn fixture() -> serde_json::Value {
 
 #[test]
 fn instance_lifetime_ui_patch_pending_cancel_never_allocates_a_payload_page() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = fixture();
     for grant in [1, 64, 4096] {
         let mut owner = UiPendingPatchOp::default();
@@ -32,6 +33,7 @@ fn instance_lifetime_ui_patch_pending_cancel_never_allocates_a_payload_page() {
 
 #[test]
 fn instance_lifetime_ui_patch_pending_placement_requires_full_inline_grant() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut owner = UiPendingPatchOp::default();
     *owner.source_mut().unwrap() = Some(UiPatchOp::SetRoot { id: UiNodeId(7) });
     let mut target = UiPatchOps::default();
@@ -54,6 +56,7 @@ fn instance_lifetime_ui_patch_pending_placement_requires_full_inline_grant() {
 
 #[test]
 fn instance_lifetime_ui_patch_storage_first_payload_does_not_reserve_logical_capacity() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = fixture();
     let mut operations = UiPatchOps::default();
     operations.try_push(UiPatchOp::SetRoot { id: UiNodeId(7) }).unwrap();
@@ -72,6 +75,7 @@ fn instance_lifetime_ui_patch_storage_first_payload_does_not_reserve_logical_cap
 
 #[test]
 fn instance_lifetime_ui_patch_storage_reservation_placement_and_cancel_preserve_exact_owners() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = fixture();
     for grant in fixture["placementGrants"].as_array().unwrap() {
         let grant = grant.as_u64().unwrap() as usize;
@@ -118,6 +122,7 @@ fn instance_lifetime_ui_patch_storage_reservation_placement_and_cancel_preserve_
 
 #[test]
 fn instance_lifetime_ui_patch_storage_wire_oracle_and_full_capacity_are_unchanged() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = fixture();
     let mut operations: UiPatchOps = serde_json::from_value(fixture["operations"].clone()).unwrap();
     assert_eq!(serde_json::to_value(&operations).unwrap(), fixture["operations"]);
@@ -149,6 +154,7 @@ fn instance_lifetime_ui_patch_storage_wire_oracle_and_full_capacity_are_unchange
 
 #[test]
 fn instance_lifetime_ui_patch_storage_typed_unicode_close_is_in_place_and_resumable() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = fixture();
     for grant in fixture["semanticGrants"].as_array().unwrap().iter().skip(1) {
         let grant = grant.as_u64().unwrap() as usize;

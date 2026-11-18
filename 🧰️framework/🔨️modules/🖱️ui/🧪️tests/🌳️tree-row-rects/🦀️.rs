@@ -16,10 +16,8 @@
 
 use semio_ui_arena::NodeId;
 use semio_ui_declaration::ui::{ActionDescriptor, UiNode, UiPresence, UiState, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
-use semio_ui_wgpu_engine::UiSurfaceToken;
 use semio_ui_wgpu_events::hit_test;
-use semio_ui_wgpu_layout::flex::{LayoutJobStage, LayoutJobStep};
-use semio_ui_wgpu_mounted_layout::{MountedLayoutIdentity, MountedLayoutJob};
+use semio_ui_wgpu_mounted_layout::layout_tree_flowing_now;
 use semio_ui_theme::Theme;
 use semio_ui_retained_tree::tree::{NodeKey, UiTree};
 use semio_ui_locale::Label;
@@ -84,28 +82,7 @@ fn laid_out_presented(case: &Value, block_reversed: bool, presentation: ui_contr
     let mut tree = UiTree::new();
     tree.apply_tree(&tree_node(&case["tree"], presentation));
     let root = tree.root.unwrap_or_else(|| panic!("tree row law root"));
-    let identity = MountedLayoutIdentity { surface: UiSurfaceToken::new(1, 1), generation: 5, revision: 7, theme_revision: 11, viewport_revision: 13 };
-    let mut job = MountedLayoutJob::try_new(&tree, root, identity, Theme::default(), width, height, block_reversed, ui_contract::FlowInline::Ltr).unwrap_or_else(|fault| panic!("tree row law job: {fault:?}"));
-    let cancel = semio_framework_job::CancelToken::root_now();
-    let mut preview = 0;
-    while !job.is_admitted() {
-        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
-        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(5), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), || Some(0), &mut preview,&mut actual_retained_progress);
-        assert!(!matches!(job.admit_one(&tree, &mut cx), LayoutJobStep::Fault(_)));
-    }
-    while job.stage() != LayoutJobStage::PublishResults {
-        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
-        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(5), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), || Some(0), &mut preview,&mut actual_retained_progress);
-        let _ = semio_framework_job::InteractiveJob::step(&mut job, &mut cx);
-    }
-    let published = job.identity();
-    loop {
-        match job.publish_one(&mut tree, published) {
-            LayoutJobStep::Complete => break,
-            LayoutJobStep::Fault(fault) => panic!("tree row law publish: {fault}"),
-            _ => {}
-        }
-    }
+    assert!(layout_tree_flowing_now(&mut tree, root, Theme::default(), width, height, block_reversed, ui_contract::FlowInline::Ltr), "tree row law layout pass");
     (tree, root)
 }
 
@@ -144,6 +121,7 @@ fn the_row_metric_is_the_one_the_fixture_was_pinned_against() {
 
 #[test]
 fn every_fixture_row_is_published_at_the_rect_the_painter_draws_it_at() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let law = law();
     for entry in law["cases"].as_array().expect("cases") {
         let (tree, root) = laid_out(entry);
@@ -162,6 +140,7 @@ fn every_fixture_row_is_published_at_the_rect_the_painter_draws_it_at() {
 
 #[test]
 fn a_pointer_aimed_at_a_painted_row_hits_that_row() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let law = law();
     for probe in law["hitTests"].as_array().expect("hitTests") {
         let entry = case(&law, probe["case"].as_str().expect("case"));
@@ -181,6 +160,7 @@ fn a_pointer_aimed_at_a_painted_row_hits_that_row() {
 
 #[test]
 fn the_defect_geometry_is_refused() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let law = law();
     let entry = case(&law, "two-sections-stack-in-order");
     let (tree, root) = laid_out(entry);
@@ -192,6 +172,7 @@ fn the_defect_geometry_is_refused() {
 
 #[test]
 fn upward_flow_reverses_sections_and_rows_while_leaving_section_triggers_on_the_block_end() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let law = law();
     let entry = case(&law, "two-sections-stack-in-order");
     let (tree, root) = laid_out_with_flow(entry, true);
@@ -207,6 +188,7 @@ fn upward_flow_reverses_sections_and_rows_while_leaving_section_triggers_on_the_
 
 #[test]
 fn a_touch_tree_lays_every_row_out_at_least_44_pixels_tall_and_the_standard_tree_does_not() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let law = law();
     let entry = case(&law, "one-labelled-section-of-three-flat-rows");
     let (standard, standard_root) = laid_out_presented(entry, false, ui_contract::TreePresentation::Standard);

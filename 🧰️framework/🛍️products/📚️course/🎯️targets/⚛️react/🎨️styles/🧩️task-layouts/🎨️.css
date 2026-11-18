@@ -49,13 +49,8 @@
     min-inline-size: 0;
   }
 
-  .course-steps[data-shared-border-group][data-orientation="vertical"] > [data-shared-border-cell] {
-    border-block-end-width: 0;
-    border-inline-end: var(--stroke-hairline) solid var(--border-normal-color);
-  }
-
-  .course-steps[data-shared-border-group][data-orientation="vertical"] > [data-shared-border-cell]:not(:has(~ [data-shared-border-cell])) {
-    border-inline-end-width: 0;
+  .course-steps > * {
+    --shared-border-flow: 1;
   }
 
   .course-step {
@@ -137,13 +132,12 @@
     inset-block-start: 0;
   }
 
-  .course-classify[data-shared-border-group][data-orientation="vertical"] > .course-pool[data-shared-border-cell] {
-    border-block-end-width: 0;
+  .course-classify > * {
+    --shared-border-flow: 1;
   }
 
-  .course-classify[data-shared-border-group][data-orientation="vertical"] > .course-categories[data-shared-border-cell] {
+  .course-classify > .course-categories {
     align-self: stretch;
-    border-inline-start: var(--stroke-hairline) solid var(--border-normal-color);
   }
 }
 
@@ -348,9 +342,8 @@
     grid-area: cards;
   }
 
-  .course-match[data-shared-border-group][data-orientation="vertical"] > .course-cards-cell[data-shared-border-cell] {
-    border-block-end-width: 0;
-    border-inline-end: var(--stroke-hairline) solid var(--border-normal-color);
+  .course-match > .course-cards-cell {
+    --shared-border-flow: 1;
   }
 
   .course-cards {

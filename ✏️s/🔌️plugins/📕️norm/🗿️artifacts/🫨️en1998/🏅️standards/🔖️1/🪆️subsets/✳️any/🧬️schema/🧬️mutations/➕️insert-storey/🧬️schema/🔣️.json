@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/insert-storey/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1998/mutation/insert-storey/schema.json",
   "title": "InsertStorey",
   "type": "object",
   "additionalProperties": false,
@@ -57,7 +57,7 @@
       }
     },
     "storey": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/$defs/En1998Storey",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1998/snapshot.json#/$defs/En1998Storey",
       "x-semio-ui": {
         "role": "value",
         "label": {
