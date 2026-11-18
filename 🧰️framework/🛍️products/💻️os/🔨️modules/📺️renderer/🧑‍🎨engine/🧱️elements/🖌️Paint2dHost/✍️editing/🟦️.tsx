@@ -3,7 +3,7 @@ import { parsePixelLayerSelectionV1 } from "@semio-tech/framework/pixels/selecti
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent, type WheelEvent, type RefObject } from "../../⚛️react-port/🟦️.ts";
 import { GestureRecognizer,type Paint2dEditingOptions } from "@semio-tech/framework";
 import { canvasPinchCamera, type CanvasCamera } from "../../📐️Canvas2dHost/📷️camera-math/🟦️.ts";
-import { useTranslation } from "@semio-tech/ui-react";
+import { SharedBorderRow, SharedBorderRowCell, SharedBorderRowField, useTranslation } from "@semio-tech/ui-react";
 import { validateExtent, type PixelImage, type PixelPoint, type SelectionMerge } from "@semio-tech/framework/pixels/editing";
 import { STROKE_POINT_CAP, cursorAnnouncement, keyboardCameraStep, keyboardMarquee, keyboardStampPath, rolloverStroke, stepKeyboardCursor, strokeLimitState, type PixelCursor } from "./⌨️keyboard/🟦️.ts";
 import { layerPoint, pixelLayers, maskLayers, pixelGestureRevision, selectionBounds, restoreSelection, type PixelLayer } from "./🟦️.ts";
@@ -31,7 +31,7 @@ type NumericFilter=Exclude<Filter,"invert"|"grayscale"|"clear"|"flipHorizontal"|
 const ranges:Record<NumericFilter,readonly [number,number,number,number]> = {
   brightness:[-1,1,0.01,0],contrast:[-1,1,0.01,0],saturation:[-1,1,0.01,0],gamma:[0.01,10,0.01,1],threshold:[0,255,1,128],posterize:[2,256,1,4],blur:[0,16,1,2],sharpen:[0,5,0.1,1]
 };
-const control = "rounded border border-border bg-background px-2 py-1 text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-40";
+const cell = "bg-background px-2 py-1 text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-40";
 const toolList:Tool[] = ["layers","hand","brush","eraser","rectangle","ellipse","lasso","wand","bucket","eyedropper"];
 /** 🌊️ How many new samples a stroke gathers before it streams them as one `paintStroke{phase:"stream"}` tick — the wgpu
  * host's `RASTER_STROKE_STREAM_BATCH` (`🗺️surface/🎨️paint/✍️gesture`). */
@@ -70,6 +70,7 @@ export function PixelEditingOverlay({documentJson,assetsJson,assetExtentsJson,se
   const text=locale && labels[locale];
   const setTarget=(value:"pixels"|"mask")=>dispatch("setPaintTarget",{value});
   const setMaskValue=(value:number)=>dispatch("setMaskValue",{value});
+  const toolRows=useMemo(()=>{const visible=toolList.filter(value=>target==="pixels"||!["bucket","wand","eyedropper"].includes(value));return Array.from({length:Math.ceil(visible.length/3)},(_,row)=>visible.slice(row*3,row*3+3));},[target]);
   const layers=useMemo(()=>{try{return (target==="mask"?maskLayers:pixelLayers)(documentJson,assetExtentsJson);}catch{return [];}},[documentJson,assetExtentsJson,target]);
   const [tool,setTool]=useState<Tool>("layers");
   const color=brushColor,hardness=brushHardness;
@@ -398,53 +399,53 @@ export function PixelEditingOverlay({documentJson,assetsJson,assetExtentsJson,se
         if(target==="pixels"&&(event.key==="Delete"||event.key==="Backspace")){event.preventDefault();event.stopPropagation();filterImage("clear");}
       }}/>
     <p role="status" aria-live="polite" className="sr-only">{announcement}</p>
-    <section aria-label={text.painting} className="absolute left-2 top-2 z-40 max-h-[calc(100%-1rem)] max-w-[calc(100%-1rem)] overflow-auto rounded border border-border bg-background/95 p-2 text-foreground shadow-lg" style={{width:collapsed?"auto":"18rem"}}>
-      <button type="button" className={control+" w-full text-left"} aria-expanded={!collapsed} onClick={()=>setCollapsed(!collapsed)}>{text.painting} {collapsed?"+":"−"}</button>
-      {!collapsed && <div className="mt-2 flex flex-col gap-2">
-        <label className="text-xs">{text.target}<select className={control+" w-full"} value={target} onChange={event=>{cancel();setTarget(event.target.value as "pixels"|"mask");if(["bucket","wand","eyedropper"].includes(tool))setTool("brush");}}><option value="pixels">{text.pixelTarget}</option><option value="mask">{text.maskTarget}</option></select></label>
-        <label className="text-xs">{text.layer}<select className={control+" w-full"} value={active?.id??""} onChange={event=>{dispatch("interactionSelect",{domainId:"layers",targets:JSON.stringify([{granularity:"layer",id:event.target.value}]),merge:"replace",method:"pick"});}}>
+    <SharedBorderRow as="section" orientation="vertical" aria-label={text.painting} className="absolute left-0 top-0 z-40 max-h-full max-w-full bg-background/95 text-xs text-foreground shadow-lg" style={{width:collapsed?"auto":"18rem"}}>
+      <button type="button" data-shared-border-cell="" className={cell+" text-left"} aria-expanded={!collapsed} onClick={()=>setCollapsed(!collapsed)}>{text.painting} {collapsed?"+":"−"}</button>
+      {!collapsed && <SharedBorderRow orientation="vertical" className="min-h-0 flex-1 overflow-auto [&>*]:shrink-0">
+        <SharedBorderRowField label={<>{text.target}</>}><select value={target} onChange={event=>{cancel();setTarget(event.target.value as "pixels"|"mask");if(["bucket","wand","eyedropper"].includes(tool))setTool("brush");}}><option value="pixels">{text.pixelTarget}</option><option value="mask">{text.maskTarget}</option></select></SharedBorderRowField>
+        <SharedBorderRowField label={<>{text.layer}</>}><select value={active?.id??""} onChange={event=>{dispatch("interactionSelect",{domainId:"layers",targets:JSON.stringify([{granularity:"layer",id:event.target.value}]),merge:"replace",method:"pick"});}}>
           <option value="" disabled>{target==="mask"?text.selectMask:text.selectLayer}</option>{layers.map(layer=><option key={layer.id} value={layer.id} disabled={!layer.visible}>{layer.name}{layer.visible?"":" · "+text.hidden}{layer.locked?" · "+text.locked:""}</option>)}
-        </select></label>
-        {active?.locked&&<p role="status" className="text-xs">{text.lockedHint}</p>}
-        <div role="toolbar" aria-label={text.paintTools} className="grid grid-cols-3 gap-1">{toolList.filter(value=>target==="pixels"||!["bucket","wand","eyedropper"].includes(value)).map(value=><button type="button" key={value} className={control} aria-pressed={tool===value} onClick={()=>{cancel();setTool(value);}}>{text[value]}</button>)}</div>
-        <div className="flex gap-2">{target==="pixels"?<label className="text-xs">{text.color}<input aria-label={text.color} type="color" value={color} onChange={e=>setColor(e.target.value)} /></label>:<label className="text-xs">{text.maskValue}<input className={control+" w-20"} type="number" min={0} max={255} step={1} value={maskValue} onChange={e=>{if(e.target.validity.valid&&e.target.value)setMaskValue(Number(e.target.value));}}/></label>}
-          <label className="text-xs">{text.size}<input className={control+" w-20"} type="number" min={1} max={2048} step={1} value={brushSize} onChange={e=>{if(e.target.validity.valid && e.target.value)dispatch("setBrushSize",{value:Number(e.target.value)});}} /></label>
-        </div>
-        <label className="text-xs">{text.opacity} {Math.round(brushOpacity*100)}%<input className="w-full" type="range" min={0} max={1} step={0.01} value={brushOpacity} onChange={e=>dispatch("setBrushOpacity",{value:Number(e.target.value)})}/></label>
-        <label className="text-xs">{text.hardness}<input className="w-full" type="range" min={0} max={1} step={0.01} value={hardness} onChange={e=>setHardness(Number(e.target.value))}/></label>
-        {["wand","bucket"].includes(tool)&&<label className="text-xs">{text.tolerance}<input className={control+" w-full"} type="number" min={0} max={255} value={fillTolerance} onChange={e=>{if(e.target.validity.valid&&e.target.value)setTolerance(Number(e.target.value));}}/></label>}
-        <label className="text-xs">{text.selection}<select className={control+" w-full"} value={merge} onChange={e=>setMerge(e.target.value as SelectionMerge)}>{(["replace","add","subtract","intersect"] as const).map(value=><option key={value} value={value}>{text[value]}</option>)}</select></label>
-        <div className="flex flex-wrap gap-1">
-          <button className={control} disabled={!ready} onClick={()=>changeSelection("all")}>{text.all}</button>
-          <button className={control} disabled={(!mask&&!source)||pending} onClick={clearSelection}>{text.none}</button>
-          {target==="pixels"&&<button className={control} disabled={!editable||!mask} onClick={createMask}>{text.maskFromSelection}</button>}
-          <button className={control} disabled={!ready} onClick={()=>changeSelection("invert")}>{text.invertSelection}</button>
-        </div>
-        {target==="mask"&&<button className={control} disabled={!editable} onClick={fillSelection}>{text.fillMask}</button>}
-        {target==="pixels"&&<details><summary className="cursor-pointer text-xs">{text.more}</summary><div className="mt-2 flex flex-col gap-2">
-          <label className="text-xs">{text.adjustment}<select className={control+" w-full"} value={filter} onChange={e=>setFilter(e.target.value as Filter)}>
+        </select></SharedBorderRowField>
+        {active?.locked&&<SharedBorderRowCell role="status">{text.lockedHint}</SharedBorderRowCell>}
+        <SharedBorderRow role="toolbar" aria-label={text.paintTools} orientation="vertical">{toolRows.map((row,index)=><SharedBorderRow key={index}>{row.map(value=><button type="button" key={value} data-shared-border-cell="" className={cell+" flex-1"} aria-pressed={tool===value} onClick={()=>{cancel();setTool(value);}}>{text[value]}</button>)}</SharedBorderRow>)}</SharedBorderRow>
+        <SharedBorderRow>{target==="pixels"?<SharedBorderRowField label={text.color}><input aria-label={text.color} type="color" value={color} onChange={e=>setColor(e.target.value)} /></SharedBorderRowField>:<SharedBorderRowField label={text.maskValue}><input type="number" min={0} max={255} step={1} value={maskValue} onChange={e=>{if(e.target.validity.valid&&e.target.value)setMaskValue(Number(e.target.value));}}/></SharedBorderRowField>}
+          <SharedBorderRowField label={text.size}><input type="number" min={1} max={2048} step={1} value={brushSize} onChange={e=>{if(e.target.validity.valid && e.target.value)dispatch("setBrushSize",{value:Number(e.target.value)});}} /></SharedBorderRowField>
+        </SharedBorderRow>
+        <SharedBorderRowField label={<>{text.opacity} {Math.round(brushOpacity*100)}%</>}><input type="range" min={0} max={1} step={0.01} value={brushOpacity} onChange={e=>dispatch("setBrushOpacity",{value:Number(e.target.value)})}/></SharedBorderRowField>
+        <SharedBorderRowField label={<>{text.hardness}</>}><input type="range" min={0} max={1} step={0.01} value={hardness} onChange={e=>setHardness(Number(e.target.value))}/></SharedBorderRowField>
+        {["wand","bucket"].includes(tool)&&<SharedBorderRowField label={<>{text.tolerance}</>}><input type="number" min={0} max={255} value={fillTolerance} onChange={e=>{if(e.target.validity.valid&&e.target.value)setTolerance(Number(e.target.value));}}/></SharedBorderRowField>}
+        <SharedBorderRowField label={<>{text.selection}</>}><select value={merge} onChange={e=>setMerge(e.target.value as SelectionMerge)}>{(["replace","add","subtract","intersect"] as const).map(value=><option key={value} value={value}>{text[value]}</option>)}</select></SharedBorderRowField>
+        <SharedBorderRow>
+          <button data-shared-border-cell="" className={cell+" flex-1"} disabled={!ready} onClick={()=>changeSelection("all")}>{text.all}</button>
+          <button data-shared-border-cell="" className={cell+" flex-1"} disabled={(!mask&&!source)||pending} onClick={clearSelection}>{text.none}</button>
+          {target==="pixels"&&<button data-shared-border-cell="" className={cell+" flex-1"} disabled={!editable||!mask} onClick={createMask}>{text.maskFromSelection}</button>}
+          <button data-shared-border-cell="" className={cell+" flex-1"} disabled={!ready} onClick={()=>changeSelection("invert")}>{text.invertSelection}</button>
+        </SharedBorderRow>
+        {target==="mask"&&<button data-shared-border-cell="" className={cell} disabled={!editable} onClick={fillSelection}>{text.fillMask}</button>}
+        {target==="pixels"&&<details data-shared-border-cells="" data-shared-border-group="" data-shared-border-cell="" data-orientation="vertical"><summary data-shared-border-cell="" className={cell+" cursor-pointer"}>{text.more}</summary>
+          <SharedBorderRowField label={<>{text.adjustment}</>}><select value={filter} onChange={e=>setFilter(e.target.value as Filter)}>
             {(["invert","grayscale",...Object.keys(ranges),"clear","flipHorizontal","flipVertical"] as Filter[]).map(value=><option key={value} value={value}>{text[value]}</option>)}
-          </select></label>
-          {filter in ranges&&<label className="text-xs">{text.value}<input className={control+" w-full"} type="number" min={ranges[filter as keyof typeof ranges][0]} max={ranges[filter as keyof typeof ranges][1]} step={ranges[filter as keyof typeof ranges][2]} value={amount} onChange={e=>{if(e.target.validity.valid&&e.target.value)setAmount(Number(e.target.value));}}/></label>}
-          <button className={control} disabled={!editable} onClick={()=>filterImage(filter,filter in ranges?amount:0)}>{text.apply}</button>
-          <div className="grid grid-cols-2 gap-1">{(["flipHorizontal","flipVertical","rotateClockwise","rotateCounterclockwise"] as const).map(kind=><button key={kind} className={control} disabled={!editable} onClick={()=>kind==="flipHorizontal"||kind==="flipVertical"?filterImage(kind):transformImage(kind)}>{text[kind]}</button>)}</div>
-          <div className="grid grid-cols-2 gap-1"><label className="text-xs">{text.width}<input className={control+" w-full"} type="number" min={1} max={16384} value={width} onChange={e=>{if(e.target.validity.valid&&e.target.value)setGrid("width",Number(e.target.value));}}/></label>
-            <label className="text-xs">{text.height}<input className={control+" w-full"} type="number" min={1} max={16384} value={height} onChange={e=>{if(e.target.validity.valid&&e.target.value)setGrid("height",Number(e.target.value));}}/></label></div>
-          <label className="text-xs"><input type="checkbox" checked={editingOptions.imageGrid.bilinear} onChange={e=>setGrid("bilinear",e.target.checked)}/>{text.bilinear}</label>
-          <button className={control} disabled={!editable||width*height>16777216} onClick={()=>transformImage("resize",{width,height})}>{text.resize}</button>
-          <div className="grid grid-cols-2 gap-1">{(["x","y"] as const).map(field=><label key={field} className="text-xs">{field==="x"?text.cropX:text.cropY}<input className={control+" w-full"} type="number" min={0} max={16384} value={editingOptions.imageGrid[field]} onChange={e=>{if(e.target.validity.valid&&e.target.value)setGrid(field,Number(e.target.value));}}/></label>)}</div>
-          <button className={control} disabled={!editable||!active||editingOptions.imageGrid.x+width>active.width||editingOptions.imageGrid.y+height>active.height||width*height>16777216} onClick={cropGrid}>{text.cropLayer}</button>
-          <button className={control} disabled={!editable||!mask} onClick={cropImage}>{text.crop}</button>
-          <button className={control} disabled={!editable} onClick={()=>filterImage("clear")}>{text.clear}</button>
-        </div></details>}
-        <p className="text-xs text-muted-foreground">{text.navigation}</p>
-        <p className="text-xs text-muted-foreground">{text.keyboard}</p>
-        {active&&<output className="text-xs">{active.width} × {active.height} {text.pixels}</output>}
-        {pending&&<p role="status" aria-live="polite">{text.pending}</p>}
-        {!pending&&(progress!==null||restoreProgress!==null)&&<div role="status" className="text-xs">{text.busy}<progress className="w-full" max={1} value={progress??restoreProgress!}/><button className={control} onClick={restoreProgress!==null?clearSelection:cancel}>{text.cancel}</button></div>}
-        {message&&<p role="status" className="text-xs">{message}</p>}
-        {error&&<p role="alert" className="text-xs text-destructive">{text.error}: {error}</p>}
-      </div>}
-    </section>
+          </select></SharedBorderRowField>
+          {filter in ranges&&<SharedBorderRowField label={<>{text.value}</>}><input type="number" min={ranges[filter as keyof typeof ranges][0]} max={ranges[filter as keyof typeof ranges][1]} step={ranges[filter as keyof typeof ranges][2]} value={amount} onChange={e=>{if(e.target.validity.valid&&e.target.value)setAmount(Number(e.target.value));}}/></SharedBorderRowField>}
+          <button data-shared-border-cell="" className={cell} disabled={!editable} onClick={()=>filterImage(filter,filter in ranges?amount:0)}>{text.apply}</button>
+          <SharedBorderRow orientation="vertical">{([["flipHorizontal","flipVertical"],["rotateClockwise","rotateCounterclockwise"]] as const).map((kinds,index)=><SharedBorderRow key={index}>{kinds.map(kind=><button key={kind} data-shared-border-cell="" className={cell+" flex-1"} disabled={!editable} onClick={()=>kind==="flipHorizontal"||kind==="flipVertical"?filterImage(kind):transformImage(kind)}>{text[kind]}</button>)}</SharedBorderRow>)}</SharedBorderRow>
+          <SharedBorderRow><SharedBorderRowField label={text.width}><input type="number" min={1} max={16384} value={width} onChange={e=>{if(e.target.validity.valid&&e.target.value)setGrid("width",Number(e.target.value));}}/></SharedBorderRowField>
+            <SharedBorderRowField label={text.height}><input type="number" min={1} max={16384} value={height} onChange={e=>{if(e.target.validity.valid&&e.target.value)setGrid("height",Number(e.target.value));}}/></SharedBorderRowField></SharedBorderRow>
+          <SharedBorderRowField><input type="checkbox" checked={editingOptions.imageGrid.bilinear} onChange={e=>setGrid("bilinear",e.target.checked)}/>{text.bilinear}</SharedBorderRowField>
+          <button data-shared-border-cell="" className={cell} disabled={!editable||width*height>16777216} onClick={()=>transformImage("resize",{width,height})}>{text.resize}</button>
+          <SharedBorderRow>{(["x","y"] as const).map(field=><SharedBorderRowField key={field} label={field==="x"?text.cropX:text.cropY}><input type="number" min={0} max={16384} value={editingOptions.imageGrid[field]} onChange={e=>{if(e.target.validity.valid&&e.target.value)setGrid(field,Number(e.target.value));}}/></SharedBorderRowField>)}</SharedBorderRow>
+          <button data-shared-border-cell="" className={cell} disabled={!editable||!active||editingOptions.imageGrid.x+width>active.width||editingOptions.imageGrid.y+height>active.height||width*height>16777216} onClick={cropGrid}>{text.cropLayer}</button>
+          <button data-shared-border-cell="" className={cell} disabled={!editable||!mask} onClick={cropImage}>{text.crop}</button>
+          <button data-shared-border-cell="" className={cell} disabled={!editable} onClick={()=>filterImage("clear")}>{text.clear}</button>
+        </details>}
+        <SharedBorderRowCell className="text-muted-foreground">{text.navigation}</SharedBorderRowCell>
+        <SharedBorderRowCell className="text-muted-foreground">{text.keyboard}</SharedBorderRowCell>
+        {active&&<SharedBorderRowCell><output>{active.width} × {active.height} {text.pixels}</output></SharedBorderRowCell>}
+        {pending&&<SharedBorderRowCell role="status" aria-live="polite">{text.pending}</SharedBorderRowCell>}
+        {!pending&&(progress!==null||restoreProgress!==null)&&<SharedBorderRow orientation="vertical" role="status"><SharedBorderRowCell className="flex-col items-stretch">{text.busy}<progress className="w-full" max={1} value={progress??restoreProgress!}/></SharedBorderRowCell><button data-shared-border-cell="" className={cell} onClick={restoreProgress!==null?clearSelection:cancel}>{text.cancel}</button></SharedBorderRow>}
+        {message&&<SharedBorderRowCell role="status">{message}</SharedBorderRowCell>}
+        {error&&<SharedBorderRowCell role="alert" tone="destructive" className="text-destructive">{text.error}: {error}</SharedBorderRowCell>}
+      </SharedBorderRow>}
+    </SharedBorderRow>
   </>;
 }

@@ -1,28 +1,44 @@
-import {homedir} from "node:os";
+import {homedir,tmpdir} from "node:os";
 import {resolveHostCapacityLanguageV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
 import {volumeMountOfV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🆓️free-space/💽️disk-full/🟦️.ts";
 import {diskCollectingLineV1,refuseLowSpaceV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/💽️disk/🟦️.ts";
 import {casHomeOfV1} from "../../🗄️cas/⌨️command/🟦️.ts";
 import {createCasGuardV1,type CasGuardV1} from "../../🗄️cas/🚦️guard/🟦️.ts";
-import {decideCasEnforcementV1,measureCasPartitionV1,type CasPartitionV1} from "../../🗄️cas/🌡️partition/🟦️.ts";
+import {casPartitionPolicyForV1,decideCasEnforcementV1,measureCasPartitionV1,type CasPartitionV1} from "../../🗄️cas/🌡️partition/🟦️.ts";
 import {casRootV1} from "../../🗄️cas/🗃️store/🟦️.ts";
 import {CAS_POLICY_V1} from "../../🗄️cas/🧬️schema/🟦️.ts";
+import {DISK_RECOVERY_POLICY_V1,judgeDiskV1,recoverDiskV1,refuseDiskRecoveryV1,type DiskWriterV1} from "../🧹️disk-recovery/🟦️.ts";
+import {realDiskWritersV1} from "../🧹️disk-recovery/🔌️real/🟦️.ts";
 
 /** 🔌️ What the disk admission touches, replaceable by tests: the guard of the cache store, the workspace whose partition is checked too, the measurement and the mount of a path, and the line writer. */
-export type BuildDiskPortsV1=Readonly<{guard?:CasGuardV1;workspace?:string;partition?:(path:string)=>CasPartitionV1|undefined;mount?:(path:string)=>string;write?:(line:string)=>void;signal?:AbortSignal;expectedBytes?:number}>;
+export type BuildDiskPortsV1=Readonly<{guard?:CasGuardV1;workspace?:string;partition?:(path:string)=>CasPartitionV1|undefined;mount?:(path:string)=>string;write?:(line:string)=>void;signal?:AbortSignal;expectedBytes?:number;writers?:readonly DiskWriterV1[]}>;
 
 /** 💽️ Admits a heavy command to the cache partition before it starts writing. The partition of the host cache store is judged like a cache write of no bytes: at its high used share a collection of the least recently accessed objects starts in the background and the command goes on; at its critical share the command first waits for that collection (with a progress line that names the partition and its share) and is refused with the typed `disk.low-space` refusal when the share is still critical, which names the partition, its free bytes and the gc command. The partition of the workspace is held to the same critical share when it is another one. An environment that is no real user session (no home, no explicit store root) leaves the host alone. @see ../../🗄️cas/🌡️partition/🟦️.ts */
 export async function admitBuildDiskV1(environment:Readonly<Record<string,string|undefined>>,ports:BuildDiskPortsV1={}):Promise<void>{
  const home=casHomeOfV1(environment);
  if(home===undefined&&!environment.SEMIO_CAS_ROOT)return;
  const root=casRootV1(environment,process.platform,home??homedir()),language=resolveHostCapacityLanguageV1(environment),write=ports.write??(line=>process.stderr.write(line+"\n")),measure=ports.partition??measureCasPartitionV1,mount=ports.mount??volumeMountOfV1;
- const guard=ports.guard??createCasGuardV1({root,home:home??homedir(),partition:measure,report:facts=>write(diskCollectingLineV1({...facts,limitFraction:CAS_POLICY_V1.partition.criticalUsedFraction},language))});
+ const guard=ports.guard??createCasGuardV1({root,home:home??homedir(),partition:measure,report:facts=>write(diskCollectingLineV1({...facts,limitFraction:casPartitionPolicyForV1(CAS_POLICY_V1,measure(root)).partition.criticalUsedFraction},language))});
  const expected=Math.max(0,Math.floor(ports.expectedBytes??0));
+ if(environment[DISK_RECOVERY_POLICY_V1.environmentChild]!=="1")await recoverBuildDiskV1({environment,root,home:home??homedir(),workspace:ports.workspace??process.cwd(),need:expected,measure,language,write,signal:ports.signal,writers:ports.writers});
  await guard.admit(expected,ports.signal);
  const workspace=ports.workspace??process.cwd();
  if(mount(workspace)===mount(root))return;
  const partition=measure(workspace);
- if(partition&&decideCasEnforcementV1({policy:CAS_POLICY_V1,storeBytes:0,incomingBytes:expected,partition,collected:true}).action==="refuse")throw refuseLowSpaceV1({partition:partition.partition,freeBytes:partition.freeBytes,totalBytes:partition.totalBytes,limitFraction:CAS_POLICY_V1.partition.criticalUsedFraction});
+ if(partition){const policy=casPartitionPolicyForV1(CAS_POLICY_V1,partition);if(decideCasEnforcementV1({policy,storeBytes:0,incomingBytes:expected,partition,collected:true}).action==="refuse")throw refuseLowSpaceV1({partition:partition.partition,freeBytes:partition.freeBytes,totalBytes:partition.totalBytes,limitFraction:policy.partition.criticalUsedFraction});}
+}
+
+const recoveries=new Map<string,Promise<unknown>>();
+/** 🧹️ Frees the machine before the gate judges it: a volume that can derive its disk budget and has less than the command's need plus its reserve free runs the registered collectors in priority order (derivable artefacts first, then the least recently used cache objects). Below the cushion the command waits for them and is refused with the largest remaining consumers when they free too little; between the cushion and the reserve they run in the background and the command goes on. One recovery per store root at a time. @see ../🧹️disk-recovery/🟦️.ts */
+async function recoverBuildDiskV1(input:Readonly<{environment:Readonly<Record<string,string|undefined>>;root:string;home:string;workspace:string;need:number;measure:(path:string)=>CasPartitionV1|undefined;language:"en"|"de";write:(line:string)=>void;signal?:AbortSignal;writers?:readonly DiskWriterV1[]}>):Promise<void>{
+ const facts=()=>input.measure(input.root),judged=judgeDiskV1(facts(),input.need);
+ if(judged.action==="fixed-shares"||judged.action==="allow")return;
+ const writers=input.writers??realDiskWritersV1({workspace:input.workspace,home:input.home,tmp:input.environment.TMPDIR??tmpdir(),uid:process.getuid?.()??0,environment:input.environment});
+ const running=recoveries.get(input.root)??recoverDiskV1({facts,needBytes:input.need,writers,language:input.language,report:input.write,signal:input.signal}).finally(()=>{recoveries.delete(input.root);});
+ recoveries.set(input.root,running);
+ if(judged.action==="collect-background"){void running.catch(()=>undefined);return;}
+ const outcome=await running as Awaited<ReturnType<typeof recoverDiskV1>>,last=facts();
+ if(outcome.verdict==="refuse"&&last)throw refuseDiskRecoveryV1(outcome,last);
 }
 
 const EXPECTED_GROWTH_BYTES_V1:Readonly<Record<string,number>>=Object.freeze({cargo:4*1024**3});

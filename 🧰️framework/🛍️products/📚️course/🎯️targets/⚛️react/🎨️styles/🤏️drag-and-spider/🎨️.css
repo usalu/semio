@@ -26,8 +26,6 @@
 }
 
 .course-drop-active {
-  outline: var(--stroke-default) dashed var(--active-base);
-  outline-offset: 2px;
   background: color-mix(in srgb, var(--active-base) 14%, transparent);
 }
 

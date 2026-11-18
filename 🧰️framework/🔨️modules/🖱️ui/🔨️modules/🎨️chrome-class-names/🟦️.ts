@@ -1,7 +1,7 @@
 /** 🎨 Owns the chrome class-name constants that panels, tab bars, windows and drop zones compose. */
 import { cn } from "../🏷️class-name-composition/🟦️.ts";
 import { hoverExcludingHandleTextEmphasizedClass, hoverExcludingHandleBgFillClass, interactiveActiveFillClass } from "../🖱️interaction-presentation/🟦️.ts";
-import { borderNormalBottomClass, borderNormalClass } from "../📏️border-presentation/🟦️.ts";
+import { borderNormalClass } from "../📏️border-presentation/🟦️.ts";
 import { surfaceClass } from "../🌈️surface-presentation/🟦️.ts";
 import { menuItemClassName } from "../../🧱️elements/📋️MenuItem/🟦️.tsx";
 
@@ -38,20 +38,17 @@ export const GLASS_OVERLAY_BOX_CLASS = cn("text-foreground pointer-events-auto f
 /** 🔝️ Normal top edge utility for in-chrome dividers (not shell footer — footer uses a CSS `::before` stroke). */
 export const borderNormalTopClass = `border-t ${borderNormalClass}`;
 
-/** 🔲️ Parent stroke on top of fill and content (transparent center; ghost-dimmed with the open panel/pane). Border color is CSS-only so parent `:hover` can emphasize it like the window silhouette. */
-export const shellChromeFrameLayerClass = "pointer-events-none absolute inset-0 z-30 box-border bg-transparent";
-
 /** 🎬️ Action row inside {@link floatingMenuSurfaceClass}. */
 export const floatingMenuItemClass = menuItemClassName;
 
-/** 📜️ Panel tab strip scroll row — `ui-scrollbar-hidden` preserves fixed control height when overflowing tabs scroll horizontally. */
-const panelTabBarScrollClass = "ui-scrollbar-hidden relative z-40 flex min-w-0 items-stretch shrink-0 overflow-x-auto overscroll-x-contain scroll-px-single";
+/** 📜️ Panel tab strip scroll row inside {@link panelTabBarClass} — `ui-scrollbar-hidden` preserves fixed control height when overflowing tabs scroll horizontally; it paints no edge, so scrolling never moves a seam. */
+export const panelTabBarScrollRowClass = "ui-scrollbar-hidden relative z-40 flex min-w-0 flex-auto items-stretch overflow-x-auto overscroll-x-contain scroll-px-single";
 
-/** 🍫️ Panel tab strip base — `w-full` spans chrome/mobile dividers across the row; floating panel caps omit it so the U-gap opens after the last tab. */
-const panelTabBarBaseClass = cn(panelTabBarScrollClass, "w-full");
+/** 🪟️ Non-scrolling host of a panel tab row — the shared-border frame whose single content-facing edge is the one seam between tab strip and panel body, so the compositor overlay never rides the scroller. */
+const panelTabFrameClass = "relative flex min-w-0 shrink-0 items-stretch";
 
-/** 🧱️ Panel tab strip with its divider on the content-facing side. */
-export const panelTabBarClass = cn(panelTabBarBaseClass, borderNormalBottomClass);
+/** 🧱️ Panel tab strip frame spanning its host (`w-full` spans chrome/mobile dividers across the row; floating panel caps use {@link panelAnchorTabBarClass} so the U-gap opens after the last tab); its content-facing divider is a compositor edge declared by {@link panelTabBarEdge}, not a native border. */
+export const panelTabBarClass = cn(panelTabFrameClass, "w-full");
 
 /** 🔘️ Panel tab icon slot — defers dimensions to the tab icon (12px). */
 
@@ -72,9 +69,14 @@ export const panelTabButtonClass = cn(
   hoverExcludingHandleTextEmphasizedClass,
 );
 
-/** ⚓️ Floating panel tab strip inside {@link WindowChrome} — collapsed tabs defer every outer edge to the silhouette; expanded tabs restore the normal content-facing edge that separates their toggles from the panel body. */
-export function panelAnchorTabBarClass(direction: "up" | "down", expanded = false): string {
-  return cn(panelTabBarScrollClass, "h-[var(--panel-header-height)]", expanded && (direction === "up" ? borderNormalTopClass : borderNormalBottomClass));
+/** ⚓️ Floating panel tab strip frame inside {@link WindowChrome} — sizes the strip; the edge toward the panel body is declared separately by {@link panelTabBarEdge}. */
+export const panelAnchorTabBarClass = cn(panelTabFrameClass, "h-[var(--panel-header-height)]");
+
+/** 🧭️ The one physical edge a tab strip shares with the panel body: collapsed strips defer every edge to the hosting chrome silhouette, expanded ones own only the content-facing side. */
+export function panelTabBarEdge(variant: "panel" | "chrome" | "mobile", direction: "up" | "down", expanded: boolean): "top" | "bottom" | undefined {
+  if (variant === "mobile") return "bottom";
+  if (!expanded) return undefined;
+  return direction === "up" ? "top" : "bottom";
 }
 
 /** 📌️ Panel tab button padding. */
@@ -121,10 +123,10 @@ export const modeDockActiveTabFillClass = interactiveActiveFillClass;
 export const modeDockActiveTabClass = cn("relative z-20 box-border min-h-medium shrink-0 border-0", modeDockActiveTabFillClass);
 
 /** 📐️ Merged top-left Actions body beside the engagement chrome toggle: the active engagement's status/control (when present) stacked above the categorized ad-hoc actions tree; scrolls once content exceeds the window body. */
-export const windowEngagementBodyClass = "flex min-h-medium min-w-0 max-h-full flex-auto flex-col gap-half overflow-y-auto px-single";
+export const windowEngagementBodyClass = "ui-scrollbar-hidden flex min-h-medium min-w-0 max-h-full flex-auto flex-col overflow-y-auto";
 
 /** 🛠️ Utility row beside the utility bar chrome toggle — a single utility keeps the chrome's height, but the active utility's options tree (stacked above it) can grow taller; its inline `maxHeight` (see {@link useWindowUtilityBarMaxHeightPx}) caps it just below the top-anchored chrome and this scrolls the overflow instead of painting past that line. */
-export const utilityBarBodyClass = "flex min-h-medium min-w-0 flex-auto items-center gap-single overflow-x-auto overflow-y-auto px-single";
+export const utilityBarBodyClass = "ui-scrollbar-hidden flex min-h-medium min-w-0 flex-auto items-center gap-single overflow-x-auto overflow-y-auto px-single";
 
 /** 🌲️ Measure tree body: grows with content, scrolls once the stack hits the window bottom. */
-export const windowMeasuresBodyClass = "flex min-h-0 min-w-0 flex-auto flex-col overflow-y-auto overscroll-contain p-tiny";
+export const windowMeasuresBodyClass = "ui-scrollbar-hidden flex min-h-0 min-w-0 flex-auto flex-col overflow-y-auto overscroll-contain p-tiny";

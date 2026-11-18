@@ -286,8 +286,12 @@ test("a resolution or an owner row names what can move it, so a dirty set elsewh
  const meta=(row:{kind:string;path:string;fact?:unknown})=>rowPathsV1(row as never,relative,marker),touched=(row:{kind:string;path:string;fact?:unknown},paths:string[])=>rowTouchedV1(meta(row),dirtySummaryV1({paths}));
  const near={kind:"resolve",path:JSON.stringify(["/w/a/x.ts","./y"]),fact:"/w/a/y.ts"},bare={kind:"resolve",path:JSON.stringify(["/w/a/x.ts","left-pad"]),fact:"/w/node_modules/left-pad/index.js"},owner={kind:"registry",path:JSON.stringify(["/w","p"]),fact:"null"};
  expect(touched(near,["b/z.ts"])).toBe(false);expect(touched(near,["a/new.ts"]),"a new entry of the probed directory").toBe(true);expect(touched(near,["a/y.ts"]),"the resolved file").toBe(true);
- expect(touched(bare,["b/z.ts"])).toBe(false);expect(touched(bare,["node_modules/left-pad/package.json"])).toBe(true);expect(touched(bare,["package.json"]),"a manifest").toBe(true);expect(touched(bare,["a/other.ts"]),"an entry of an ancestor").toBe(true);
- expect(touched(owner,["b/z.ts"])).toBe(false);expect(touched(owner,["p/📋️project.json"])).toBe(true);
+ expect(touched(bare,["b/z.ts"])).toBe(false);expect(touched(bare,["node_modules/left-pad/index.js"]),"the resolved file").toBe(true);expect(touched(bare,["package.json"]),"a manifest is not a path the resolution is known to read: the row is asked again instead").toBe(false);
+ expect(meta(bare).outside,"a bare resolution is asked again every round").toBe(true);expect(meta(near).outside).toBe(false);
+ expect(touched(owner,["b/z.ts"])).toBe(false);expect(touched(owner,["📋️build-owners.json"]),"the registry file").toBe(true);expect(touched(owner,["p/📋️project.json"])).toBe(false);
+ expect(rowTouchedV1(meta(near),dirtySummaryV1({paths:["a/y.ts"],directories:[]})),"a name the row probed").toBe(true);
+ expect(rowTouchedV1(meta({kind:"file",path:"/w/m/n/o.ts",fact:"x"}),dirtySummaryV1({paths:["m"],directories:["m"]})),"anything below a moved directory").toBe(true);
+ expect(rowTouchedV1(meta({kind:"file",path:"/w/m/n/o.ts",fact:"x"}),dirtySummaryV1({paths:["m"]})),"a changed listing of the directory alone does not move a file below it").toBe(false);
  expect(meta({kind:"resolve",path:JSON.stringify(["/elsewhere/x.ts","./y"]),fact:"!MODULE_NOT_FOUND"}).volatile,"outside the workspace nothing is known").toBe(true);
  expect(rowTouchedV1(meta({kind:"stamp",path:"s",fact:"x"}),dirtySummaryV1({paths:[]})),"a row nothing is known about is always checked").toBe(true);
 });

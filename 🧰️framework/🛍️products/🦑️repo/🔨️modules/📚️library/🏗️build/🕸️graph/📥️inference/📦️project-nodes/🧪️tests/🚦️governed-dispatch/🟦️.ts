@@ -26,7 +26,7 @@ test("every project inference starts through the memory governor, bounded by the
 });
 
 test("the running projects are named in the inference phase while they run, removed when they end and the tick stops with the loops",()=>{
- const all=calls(),named=all.filter(call=>call.callee==="phases?.running"&&call.text.includes('"inference"'));
+ const all=calls(),named=all.filter(call=>call.callee==="phases?.running"&&call.text.startsWith('phases?.running("inference",list'));
  expect(named.length).toBe(1);expect(named[0]!.text).toContain("list");expect(source).toContain("[...active].sort(");
  const inferences=all.filter(call=>call.callee==="inferProject");
  for(const inference of inferences)expect(inference.ancestors.some(node=>ts.isTryStatement(node)&&node.finallyBlock!==undefined&&node.finallyBlock.getText(tree).includes("active.delete(job.name)")),inference.text).toBe(true);
@@ -52,8 +52,8 @@ test("every governed owner names its kind, the learned peaks persist in the infe
 });
 
 test("the owner stage reports every running owner with kind and observed rows and the admission decision in the progress detail, and writes nothing to the stderr of the job",()=>{
- const all=calls(),running=all.filter(call=>call.callee==="phases?.running"&&call.text.includes('"inference"'));
- expect(running.length).toBe(1);expect(running[0]!.text).toContain("list,decision");for(const word of["row.kind","observedInferenceRowsV1(row.cachePath)","options?.onOwnerRunning?.(list,decision)"])expect(source).toContain(word);
+ const all=calls(),running=all.filter(call=>call.callee==="phases?.running"&&call.text.startsWith('phases?.running("inference",list'));
+ expect(running.length,"the warm wave names its own pseudo owner beside this call, it never publishes the running list").toBe(1);expect(running[0]!.text).toContain("list,decision");for(const word of["row.kind","observedInferenceRowsV1(row.cachePath)","options?.onOwnerRunning?.(list,decision)"])expect(source).toContain(word);
  const creation=all.find(call=>call.callee==="createGraphParentMemoryGovernorV1")!;
  expect(creation.text).toContain("decide:event=>{decision=event;}");expect(running[0]!.text).not.toContain("stderr");expect(creation.text).toContain("report:line=>process.stderr.write(line+\"\\n\")");
  expect(all.some(call=>call.callee==="forgetObservedInferenceRowsV1")).toBe(true);

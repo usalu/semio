@@ -55,7 +55,7 @@ export type { PetDeed } from "./🔨️modules/🐾️pets/🎪️stage/🟦️.
 export { DRAG_THRESHOLD_PX, dropZoneAt, startPointerDrag } from "./🔨️modules/🤏️drag/🟦️.ts";
 export { DROP_ZONE_CLASS, DragGrip, GuessField, HINT_SYMBOL, HintNote, ICON_BUTTON_CLASS, LockedNote, SELECT_ANNOUNCEMENT_DELAY_MS, SELECT_CLASS, compareText, describedBy, elementId, exampleGuess, hintName, hintTerm, useFocusAfterRender, useHintAnnouncement } from "./🔨️modules/🧩️task/🟦️.tsx";
 export type { TaskViewProps } from "./🔨️modules/🧩️task/🟦️.tsx";
-export { BodyButton, CardAction, CardIcon, Dialog, Facts, Glyph, ICON_HOSTS, ICON_LOOP_MS, IconLabel, LiveRegion, Mark, Missing, ProblemNote, CourseCard, Records, Segments, TABLE, TASK_KIND_ICONS, TaskGlyph, playTappedIcons, textPresentation, useAnnouncement } from "./🔨️modules/🪟️chrome/🟦️.tsx";
+export { BodyButton, CELL, CardAction, CardIcon, CardLink, CardSection, Dialog, GROUP, Facts, Glyph, ICON_HOSTS, ICON_LOOP_MS, IconLabel, LiveRegion, Mark, Missing, ProblemNote, CourseCard, Records, RowLink, RowList, Segments, TABLE, TASK_KIND_ICONS, TaskGlyph, playTappedIcons, textPresentation, useAnnouncement } from "./🔨️modules/🪟️chrome/🟦️.tsx";
 export type { Announcement, Problem, Segment } from "./🔨️modules/🪟️chrome/🟦️.tsx";
 export { ClassificationTaskView, classificationHintText } from "./🔨️modules/🗂️classification/🟦️.tsx";
 export { SortingTaskView, ordered, reordered } from "./🔨️modules/↕️sorting/🟦️.tsx";
@@ -63,11 +63,14 @@ export { MatchingTaskView, assignCard } from "./🔨️modules/🃏️matching/�
 export { COURSE_LANGUAGE_ANCHOR, CourseIntroduction, courseIntroduction } from "./🔨️modules/👋️introduction/🟦️.tsx";
 export { LearnerCard, LearnerPage, SwitchIdentity } from "./🔨️modules/📇️profile/🟦️.tsx";
 export { QuizCardView, QuizPage } from "./🔨️modules/📖️quiz-page/🟦️.tsx";
+export { AssignmentCardView, AssignmentPage, assignmentUrl } from "./🔨️modules/📝️assignments/🟦️.tsx";
+export { ClipCardView, ClipPage, ClipPostersProvider, clipUrl } from "./🔨️modules/🎬️clips/🟦️.tsx";
+export type { ClipPosters } from "./🔨️modules/🎬️clips/🟦️.tsx";
 export { CHALLENGE_HINTS, CHALLENGE_LABELS, ChallengeChooser, challengeScored } from "./🔨️modules/⛰️challenge/🟦️.tsx";
 export type { Act } from "./🔨️modules/📖️quiz-page/🟦️.tsx";
 export { IdentityScreen, failureProblem, handleFault, handleFaultMessage, learnerName, noticeProblem, thrownProblem } from "./🔨️modules/🪪️identity/🟦️.tsx";
 export type { HandleFault } from "./🔨️modules/🪪️identity/🟦️.tsx";
-export { HOME_CHROME_HEIGHT_PX, HOME_GRID_ROW_HEIGHT_PX, HOME_GRID_TRACKS, HomeScreen, addressPages, homeCells, homeGridMinHeight, homeLayout, homeLayoutQueries, homePages, homeTrackTemplate, isHomeGrid, openedChild, pageLabel, pagesWithin, parentPage, previewCamera } from "./🔨️modules/🏠️home/🟦️.tsx";
+export { HOME_CHROME_HEIGHT_PX, HOME_CLIP_ROW_HEIGHT_PX, HOME_GRID_ROW_HEIGHT_PX, HOME_GRID_TRACKS, HomeScreen, addressPages, containerKey, homeCells, homeGridMinHeight, homeLayout, homeLayoutQueries, homePages, homeTrackTemplate, isHomeGrid, openedChild, pageLabel, pagesWithin, parentPage, previewCamera } from "./🔨️modules/🏠️home/🟦️.tsx";
 export type { HomeGrid, HomeLayout, PreviewCamera } from "./🔨️modules/🏠️home/🟦️.tsx";
 
 

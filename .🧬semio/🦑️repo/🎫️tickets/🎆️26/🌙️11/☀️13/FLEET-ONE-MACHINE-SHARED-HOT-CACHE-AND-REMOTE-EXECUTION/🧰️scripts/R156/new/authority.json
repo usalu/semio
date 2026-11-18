@@ -1,0 +1,121 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "membership",
+    "graph",
+    "module",
+    "observations"
+  ],
+  "properties": {
+    "version": {
+      "const": 3
+    },
+    "module": {"type":"object","required":["implementation","publication"],"properties":{"implementation":{"type":"string","pattern":"^[a-f0-9]{64}$"},"publication":{"type":"string","pattern":"^[a-f0-9]{64}$"}},"additionalProperties":false},
+    "membership": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "graph": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "seal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "mode",
+        "rounds",
+        "sealedWithLaterChanges",
+        "laterChangedOwners",
+        "membershipMoved",
+        "admissionMoved",
+        "owners"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "mode": {
+          "enum": [
+            "quiet",
+            "repaired",
+            "sealed-with-later-changes"
+          ]
+        },
+        "rounds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sealedWithLaterChanges": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "laterChangedOwners": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "membershipMoved": {
+          "type": "boolean"
+        },
+        "admissionMoved": {
+          "type": "boolean"
+        },
+        "owners": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      }
+    },
+    "observations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "path",
+          "fact"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "file",
+              "exists",
+              "stat",
+              "lstat",
+              "readdir",
+              "realpath",
+              "realpathNative",
+              "resolve",
+              "readdirNames",
+              "fileExists",
+              "directoryExists",
+              "directories",
+              "typescriptText",
+              "typescriptRealpath",
+              "analysis",
+              "field"
+            ]
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "fact": {}
+        }
+      }
+    }
+  }
+}

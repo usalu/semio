@@ -1,0 +1,95 @@
+{
+ "options": {
+  "machines": 1,
+  "memoryMegabytes": 16384,
+  "cores": 8,
+  "slice": [
+   "repo-mcp"
+  ],
+  "target": "build",
+  "timeoutSeconds": 900,
+  "language": "en",
+  "frozenDirectory": "/tmp/slw-r155probe/r",
+  "out": "/private/tmp/claude-501/-Users-ueli-Documents-semio/9f6d3d77-cfd2-486b-942c-2101ee51a1fb/scratchpad/R159/run4",
+  "preload": "/private/tmp/claude-501/-Users-ueli-Documents-semio/9f6d3d77-cfd2-486b-942c-2101ee51a1fb/scratchpad/R159/pre2.ts"
+ },
+ "verdict": {
+  "outcome": "wall",
+  "pass": false,
+  "readyAtSeconds": {},
+  "walls": [
+   {
+    "machine": "slice-lab-34ec-m1",
+    "stage": "workspace",
+    "phase": null,
+    "code": "stage-failed",
+    "exit": 1,
+    "text": "The graph service could not answer (lost the service was killed without an exit record (its cgroup is gone) [log: [script] build:implementation-source · Reading the sources of the build implementation | Internal error: Original offline Rustup bootstrap absent | repository:command failed with exit co",
+    "process": "workspace: repo (exit 1)",
+    "tail": [
+     "[script] {\"owner\":\"repository:build\",\"command\":\"repo\",\"stage\":\"loading\"}",
+     "[script] {\"owner\":\"repository:build\",\"command\":\"repo\",\"stage\":\"running\"}",
+     "Starting the repo graph service for this host.",
+     "Waiting for the repo graph service (21 ms).",
+     "Waiting for the repo graph service (2077 ms).",
+     "[repo] still working after 5 s; last phase started: door.script",
+     "Waiting for the repo graph service (4125 ms).",
+     "Waiting for the repo graph service (6174 ms).",
+     "Waiting for the repo graph service (8216 ms).",
+     "[repo] still working after 10 s; last phase started: door.script",
+     "Waiting for the repo graph service (10218 ms).",
+     "Waiting for the repo graph service (12235 ms).",
+     "Waiting for the repo graph service (14276 ms).",
+     "Waiting for the repo graph service (16278 ms).",
+     "Waiting for the repo graph service (18313 ms).",
+     "[repo] still working after 20 s; last phase started: door.script",
+     "Waiting for the repo graph service (20360 ms).",
+     "The graph service could not answer (lost the service was killed without an exit record (its cgroup is gone) [log: [script] build:implementation-source · Reading the sources of the build implementation | Internal error: Original offline Rustup bootstrap absent | repository:command failed with exit co"
+    ]
+   }
+  ],
+  "phaseSeconds": {},
+  "stageSeconds": {
+   "native": 1,
+   "repo-mcp": 0,
+   "dependencies": 0,
+   "tools": 0,
+   "workspace": 22
+  },
+  "peakFootprintMegabytes": {
+   "slice-lab-34ec-m1": 940
+  },
+  "limitMegabytes": 6553,
+  "withinLimit": true,
+  "duplicateOwners": 0,
+  "liveFiles": [],
+  "lowered": 0,
+  "leftoverProcesses": 0,
+  "leftoverImages": 0,
+  "admitted": null,
+  "elapsedSeconds": 31.9,
+  "load": 38.75,
+  "activitySeconds": {
+   "-": 4,
+   "build:source-admission": 6,
+   "build:implementation-source": 14
+  },
+  "loopLagMaxMs": null,
+  "lagWithin": true,
+  "busyShare": 40,
+  "published": [],
+  "readySeconds": {},
+  "ownersSeen": {},
+  "detached": 2,
+  "churn": {
+   "count": 0,
+   "sample": []
+  },
+  "frozen": {
+   "files": 167696,
+   "megabytes": 1839,
+   "seconds": 339,
+   "drift": 0
+  }
+ }
+}

@@ -1,1 +1,2 @@
 export function ensureResidentWatcherV1(root?:string,options?:{signal?:AbortSignal;workRoot?:string;writable?:()=>boolean|Promise<boolean>;progress?:(phase:"compile"|"ready")=>void;environment?:Readonly<Record<string,string|undefined>>}):Promise<string>;
+export function findInstalledResidentWatcherV1(root?:string,options?:{environment?:Readonly<Record<string,string|undefined>>}):Promise<string|undefined>;

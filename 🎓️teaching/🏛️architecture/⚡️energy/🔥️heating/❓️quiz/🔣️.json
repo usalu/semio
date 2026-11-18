@@ -1305,9 +1305,13 @@
           }
         }
       ],
-      "draw": 10,
+      "draw": 6,
       "pool": {
         "seconds": 300,
+        "distribution": {
+          "kind": "zipf",
+          "exponent": 1.5
+        },
         "slots": [
           [
             "roof-passive-house",
@@ -2438,9 +2442,13 @@
           }
         }
       ],
-      "draw": 8,
+      "draw": 5,
       "pool": {
         "seconds": 300,
+        "distribution": {
+          "kind": "zipf",
+          "exponent": 1.5
+        },
         "slots": [
           [
             "passive-house",
@@ -2506,4 +2514,3 @@
     }
   ]
 }
-                                                                                                                                          

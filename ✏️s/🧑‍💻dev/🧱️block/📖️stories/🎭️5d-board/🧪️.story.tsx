@@ -18,6 +18,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
+import { Button, SharedBorderRow } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useCallback, useMemo, useState, type ReactElement } from "react";
 
@@ -58,28 +59,28 @@ function Block5dBoardStoryHost({ initialExampleId, interactive }: { readonly ini
 
   return (
     <div style={{ display: "flex", height: "100%", width: "100%", flexDirection: "column" }}>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 4, padding: 4 }}>
+      <SharedBorderRow wrap>
         {BLOCK5D_STORY_EXAMPLE_IDS.map((exampleId) => (
-          <button key={exampleId} type="button" data-testid={`block5d-example-${exampleId}`} onClick={() => dispatch("setActiveExample", { exampleId })} disabled={exampleId === state.exampleId}>
+          <Button variant="outline" icon="arrow-right" key={exampleId} type="button" data-testid={`block5d-example-${exampleId}`} onClick={() => dispatch("setActiveExample", { exampleId })} disabled={exampleId === state.exampleId}>
             {exampleId}
-          </button>
+          </Button>
         ))}
-        <button type="button" data-testid="block5d-add-grip-kind" onClick={() => dispatch("addGripKind", { label: "Story Kind", color: "hsl(0 52% 48%)" })}>
+        <Button variant="outline" icon="arrow-right" type="button" data-testid="block5d-add-grip-kind" onClick={() => dispatch("addGripKind", { label: "Story Kind", color: "hsl(0 52% 48%)" })}>
           Add grip kind
-        </button>
-        <button type="button" data-testid="block5d-remove-grip-kind" onClick={() => dispatch("removeGripKind", {})}>
+        </Button>
+        <Button variant="outline" icon="arrow-right" type="button" data-testid="block5d-remove-grip-kind" onClick={() => dispatch("removeGripKind", {})}>
           Remove grip kind
-        </button>
-        <button type="button" data-testid="block5d-add-grip" onClick={() => dispatch("addGrip", {})}>
+        </Button>
+        <Button variant="outline" icon="arrow-right" type="button" data-testid="block5d-add-grip" onClick={() => dispatch("addGrip", {})}>
           Add grip
-        </button>
-        <button type="button" data-testid="block5d-remove-grip" onClick={() => dispatch("removeGrip", {})}>
+        </Button>
+        <Button variant="outline" icon="arrow-right" type="button" data-testid="block5d-remove-grip" onClick={() => dispatch("removeGrip", {})}>
           Remove grip
-        </button>
-        <button type="button" data-testid="block5d-patch-part-kind" onClick={() => dispatch("patchPartKind", { field: "label", value: `${state.snapshot.partKind.label} ✳️` })}>
+        </Button>
+        <Button variant="outline" icon="arrow-right" type="button" data-testid="block5d-patch-part-kind" onClick={() => dispatch("patchPartKind", { field: "label", value: `${state.snapshot.partKind.label} ✳️` })}>
           Patch part kind
-        </button>
-      </div>
+        </Button>
+      </SharedBorderRow>
       <div style={{ display: "flex", flex: "1 1 auto", minHeight: 0 }}>
         <div style={{ position: "relative", flex: "1 1 auto", minWidth: 0 }}>
           <Board2dHost node={node} onAction={onAction} />

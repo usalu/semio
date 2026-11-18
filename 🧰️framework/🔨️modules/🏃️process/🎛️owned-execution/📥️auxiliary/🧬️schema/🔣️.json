@@ -11,7 +11,7 @@
     },
     "text": {
       "type": "string",
-      "maxLength": 33554432
+      "maxLength": 100663296
     }
   },
   "definitions": {
@@ -19,7 +19,7 @@
       "const": {
         "version": 1,
         "descriptor": 3,
-        "maximumBytes": 33554432,
+        "maximumBytes": 100663296,
         "encoding": "utf8",
         "stdin": "preserved",
         "terminal": "await-publication-and-child-close"
@@ -47,7 +47,7 @@
         "count": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 25165825
+          "maximum": 100663297
         },
         "accepted": {
           "type": "boolean"

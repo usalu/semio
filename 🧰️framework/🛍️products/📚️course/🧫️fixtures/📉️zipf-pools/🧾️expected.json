@@ -1,0 +1,102 @@
+[
+  {
+    "seed": 0,
+    "items": [
+      "band-0-a",
+      "band-1-a",
+      "band-2-b",
+      "band-4-b",
+      "band-6-b"
+    ]
+  },
+  {
+    "seed": 1,
+    "items": [
+      "band-0-b",
+      "band-1-b",
+      "band-2-a",
+      "band-4-a",
+      "band-5-b"
+    ]
+  },
+  {
+    "seed": 5489,
+    "items": [
+      "band-0-b",
+      "band-1-b",
+      "band-10-a",
+      "band-2-a",
+      "band-3-a"
+    ]
+  },
+  {
+    "seed": 65535,
+    "items": [
+      "band-0-b",
+      "band-1-b",
+      "band-2-a",
+      "band-3-a",
+      "band-6-a"
+    ]
+  },
+  {
+    "seed": 8060928,
+    "items": [
+      "band-0-b",
+      "band-1-b",
+      "band-2-b",
+      "band-5-a",
+      "band-6-b"
+    ]
+  },
+  {
+    "seed": 8060929,
+    "items": [
+      "band-0-a",
+      "band-1-a",
+      "band-2-a",
+      "band-4-b",
+      "band-9-b"
+    ]
+  },
+  {
+    "seed": 4294967295,
+    "items": [
+      "band-0-b",
+      "band-1-b",
+      "band-2-b",
+      "band-3-b",
+      "band-8-b"
+    ]
+  },
+  {
+    "seed": 2654435761,
+    "items": [
+      "band-0-a",
+      "band-1-b",
+      "band-2-b",
+      "band-7-b",
+      "band-8-a"
+    ]
+  },
+  {
+    "seed": 305419896,
+    "items": [
+      "band-0-a",
+      "band-2-b",
+      "band-3-b",
+      "band-5-b",
+      "band-8-a"
+    ]
+  },
+  {
+    "seed": 3735928559,
+    "items": [
+      "band-0-a",
+      "band-1-a",
+      "band-2-a",
+      "band-3-b",
+      "band-4-a"
+    ]
+  }
+]

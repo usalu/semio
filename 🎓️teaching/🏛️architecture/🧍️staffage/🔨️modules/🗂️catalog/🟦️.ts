@@ -8,13 +8,14 @@
  * @see ../../🧬️schema/🔣️.json — the normative structural contract
  * @see ../🧮️evaluation/🟦️.ts — `evaluate`, used for the extent and plant checks
  */
-import { CATEGORIES, PARAMETER_SOURCES, SCALE_DENOMINATORS, UNAVAILABLE_CAUSES, PLANAR_VIEWPOINTS, operatingKeyOf } from "../../🧬️schema/🟦️.ts";
+import { CATEGORIES, PARAMETER_SOURCES, POWER_BASES, SCALE_DENOMINATORS, UNAVAILABLE_CAUSES, PLANAR_VIEWPOINTS, operatingKeyOf } from "../../🧬️schema/🟦️.ts";
 import type { Asset, AuthoredRepresentation, BoneOffset, Environment, EnvironmentPreset, Manifest, PrintProfile, Shape, Slug, SymbolRepresentation, Text, PlanarViewpoint } from "../../🧬️schema/🟦️.ts";
 import type { EvaluatedState } from "../🔗️contracts/🟦️.ts";
 import { VIEWPOINT_CAPTIONS } from "../🎨️depiction/✂️section/🟦️.ts";
 import { sampleClip, samplePose } from "../🎞️animation/🟦️.ts";
 import { evaluate, flattenGeometry } from "../🧮️evaluation/🟦️.ts";
 import { exportIssues, volumeIssues } from "./🧊️volume/🟦️.ts";
+import { POWER_TOLERANCE_W, totalPowerW } from "../🌡️thermal/⚡️power/🟦️.ts";
 import { analyticRules } from "./🧊️volumes/🧱️rules/🟦️.ts";
 import { compareRepresentations } from "../🖨️representation/🪞️copies/🟦️.ts";
 import { DEFAULT_PRINT_PROFILE, measureSuitability, measureSymbolSuitability } from "../🖨️representation/🟦️.ts";
@@ -130,6 +131,32 @@ function mergeSpans(spans: readonly { readonly fromS: number; readonly toS: numb
     else merged.push({ from: span.fromS, to: span.toS });
   }
   return merged;
+}
+
+const SHAPE_REQUIRED = ["kind", "id", "bone", "role", "z", "filled", "tone"];
+
+const SHAPE_OPTIONAL = ["region", "regions", "material", "hatch", "penMm", "solid"];
+
+const SHAPE_KIND_FIELDS: Readonly<Record<Shape["kind"], { readonly required: readonly string[]; readonly optional: readonly string[] }>> = {
+  capsule: { required: ["x0", "y0", "x1", "y1", "r0", "r1"], optional: ["followTip"] },
+  ellipse: { required: ["cx", "cy", "rx", "ry"], optional: ["rotationDeg"] },
+  rect: { required: ["x", "y", "w", "h"], optional: ["r", "followTip"] },
+  poly: { required: ["points", "closed"], optional: ["followTip"] },
+  path: { required: ["d"], optional: [] },
+  member: { required: ["from", "to", "section"], optional: [] },
+};
+
+/** 🛃️ The members of one shape: exactly those the schema defines for its kind (`followTip` exists for capsule, rect and poly only, `closed` for poly only), none missing, none unknown, none `null`. */
+function shapeFieldIssues(shape: Shape, path: string, add: (path: string, code: string, en: string, de: string) => void): void {
+  const entry = shape as unknown as Readonly<Record<string, unknown>>;
+  const kind = SHAPE_KIND_FIELDS[shape.kind];
+  if (kind === undefined) return add(path, "shape-field", `Shape "${shape.id}" has the kind ${JSON.stringify(shape.kind)}, which is none of capsule, ellipse, rect, poly, path and member.`, `Form "${shape.id}" hat die Art ${JSON.stringify(shape.kind)}, die keine von capsule, ellipse, rect, poly, path und member ist.`);
+  const allowed = new Set([...SHAPE_REQUIRED, ...SHAPE_OPTIONAL, ...kind.required, ...kind.optional]);
+  for (const key of Object.keys(entry)) {
+    if (!allowed.has(key)) add(`${path}.${key}`, "shape-field", `Shape "${shape.id}" of kind ${shape.kind} has the member "${key}", which it does not define.`, `Form "${shape.id}" der Art ${shape.kind} hat das Mitglied "${key}", das sie nicht kennt.`);
+    else if (entry[key] === null) add(`${path}.${key}`, "shape-field", `Shape "${shape.id}" has the member "${key}" set to null; leave it out.`, `Form "${shape.id}" hat das Mitglied "${key}" auf null gesetzt; es ist wegzulassen.`);
+  }
+  for (const key of [...SHAPE_REQUIRED, ...kind.required]) if (entry[key] === undefined) add(`${path}.${key}`, "shape-field", `Shape "${shape.id}" of kind ${shape.kind} lacks the member "${key}", which it requires.`, `Form "${shape.id}" der Art ${shape.kind} fehlt das Mitglied "${key}", das sie verlangt.`);
 }
 
 /** ✅️ Every semantic problem of an asset; an empty list means the asset is valid. `context.assets` lets `asset` alternatives of unavailable representations resolve. */
@@ -289,6 +316,7 @@ export function validateAsset(source: Asset, context: AssetContext = {}): readon
     list.forEach((shape, index) => {
       const sp = `${path}[${index}]`;
       need(`${sp}.bone`, shape.bone, bones, "Bone");
+      shapeFieldIssues(shape, sp, add);
       const followTip = "followTip" in shape && shape.followTip !== undefined;
       if (followTip && !path.endsWith(".geometry.front") && !(path.endsWith(".geometry.plan"))) add(sp, "follow-tip-viewpoint", `Shape "${shape.id}" sets followTip, which exists for front and plan shapes only.`, `Form "${shape.id}" setzt followTip, das nur für Vorderansichts- und Draufsichtformen vorkommt.`);
       if (followTip && path.endsWith(".geometry.front") && shape.kind === "capsule") add(sp, "follow-tip-viewpoint", `Shape "${shape.id}" is a capsule with followTip in the front view; use a rect or poly there.`, `Form "${shape.id}" ist eine Kapsel mit followTip in der Vorderansicht; dort ein Rechteck oder Polygon verwenden.`);
@@ -441,6 +469,7 @@ export function validateAsset(source: Asset, context: AssetContext = {}): readon
     const { minDenominator, maxDenominator } = rep.validRange;
     if (!(minDenominator <= denominator && denominator <= maxDenominator)) add(`${path}.validRange`, "valid-range", `The valid range ${minDenominator}…${maxDenominator} must contain the own denominator ${denominator}.`, `Der Gültigkeitsbereich ${minDenominator}…${maxDenominator} muss den eigenen Nenner ${denominator} enthalten.`);
     checkPens(path, rep.pens);
+    if (rep.sections !== undefined && Object.keys(rep.sections).length === 0) add(`${path}.sections`, "section-empty", "The sections of a representation name at least one view; leave the member out for no section.", "Die Schnitte einer Darstellung nennen mindestens eine Ansicht; ohne Schnitt das Mitglied weglassen.");
     for (const hatch of rep.hatches) if (!(hatch.spacingMm >= PAPER_MIN_MM && hatch.spacingMm <= PAPER_MAX_SPACING_MM && hatch.penMm >= PAPER_MIN_MM && hatch.penMm <= PAPER_MAX_PEN_MM)) add(`${path}.hatches`, "pen-units", `Hatch "${hatch.id}" must be in paper millimetres (spacing ${PAPER_MIN_MM}…${PAPER_MAX_SPACING_MM}, pen ${PAPER_MIN_MM}…${PAPER_MAX_PEN_MM}).`, `Schraffur "${hatch.id}" muss in Papiermillimetern angegeben sein (Abstand ${PAPER_MIN_MM}…${PAPER_MAX_SPACING_MM}, Stift ${PAPER_MIN_MM}…${PAPER_MAX_PEN_MM}).`);
     for (const key of DECISION_KEYS) if (rep.decisions[key] === undefined) add(`${path}.decisions.${key}`, "decision-missing", `The decision "${key}" is missing.`, `Die Entscheidung "${key}" fehlt.`);
     const hatchIds = new Set(rep.hatches.map((hatch) => hatch.id));
@@ -710,6 +739,12 @@ export function validateAsset(source: Asset, context: AssetContext = {}): readon
   for (const region of asset.thermal.regions)
     if (region.areaBasis !== "exchange" && (region.model === "leaf" || (["foliage", "fur", "feather", "hair"] as readonly string[]).includes(region.kind)))
       add(`thermal.regions.${region.id}.areaBasis`, "thermal-area-basis", `Region "${region.id}" (model ${region.model}, kind ${region.kind}) has an exchange area, not an envelope: declare areaBasis "exchange".`, `Die Region "${region.id}" (Modell ${region.model}, Art ${region.kind}) hat eine Austauschfläche, keine Hüllfläche: areaBasis "exchange" angeben.`);
+  for (const region of asset.thermal.regions) {
+    const path = `thermal.regions.${region.id}`;
+    if (region.ratedPowerW === undefined && region.ratedPowerBasis === undefined) continue;
+    if (region.ratedPowerW === undefined || !(Number.isFinite(region.ratedPowerW) && region.ratedPowerW >= 0) || region.ratedPowerBasis === undefined || !(POWER_BASES as readonly string[]).includes(region.ratedPowerBasis) || (region.ratedPowerBasis === "passive") !== (region.ratedPowerW === 0))
+      add(`${path}.ratedPowerW`, "power-rated-invalid", `Region "${region.id}": ratedPowerW (a finite number of at least 0 W) and ratedPowerBasis (${POWER_BASES.join(", ")}) go together, and "passive" means exactly 0 W.`, `Region "${region.id}": ratedPowerW (eine endliche Zahl von mindestens 0 W) und ratedPowerBasis (${POWER_BASES.join(", ")}) gehören zusammen, und "passive" bedeutet genau 0 W.`);
+  }
   out.push(...volumeIssues(asset), ...(asset.volumes === undefined ? [] : analyticRules(asset)), ...exportIssues(asset));
   const { heightM, widthM, depthM, massKg } = asset.dimensions;
   if (!(heightM > 0 && widthM > 0 && depthM > 0 && massKg > 0)) add("dimensions", "dimension-invalid", "Dimensions and mass must be positive.", "Abmessungen und Masse müssen positiv sein.");
@@ -743,6 +778,7 @@ export function validateManifest(manifest: Manifest, assets: readonly Asset[]): 
     if (entry.completion !== asset.completion) mismatch("completion");
     if (SCALE_DENOMINATORS.some((denominator) => entry.representations[`${denominator}`] !== asset.representations[`${denominator}`]?.status)) mismatch("representations");
     for (const field of ["heightM", "widthM"] as const) if (!(Math.abs(entry[field] - asset.dimensions[field]) <= MANIFEST_DIMENSION_TOLERANCE_M)) add(`${path}.${field}`, "manifest-dimension-mismatch", `Entry "${entry.id}" declares ${field} ${entry[field]} m but the asset file says ${asset.dimensions[field]} m; the asset file is the single source of truth (tolerance 1 mm).`, `Eintrag "${entry.id}" nennt ${field} ${entry[field]} m, die Asset-Datei aber ${asset.dimensions[field]} m; die Asset-Datei ist die einzige Quelle der Wahrheit (Toleranz 1 mm).`);
+    if (!(Math.abs(entry.powerW - totalPowerW(asset)) <= POWER_TOLERANCE_W)) add(`${path}.powerW`, "manifest-power-mismatch", `Entry "${entry.id}" declares powerW ${entry.powerW} W but the asset's elements sum to ${totalPowerW(asset).toFixed(1)} W; the asset file is the single source of truth (tolerance ${POWER_TOLERANCE_W} W).`, `Eintrag "${entry.id}" nennt powerW ${entry.powerW} W, die Elemente des Assets ergeben aber ${totalPowerW(asset).toFixed(1)} W; die Asset-Datei ist die einzige Quelle der Wahrheit (Toleranz ${POWER_TOLERANCE_W} W).`);
     if (entry.analytics.includes("thermal") !== asset.thermal.regions.length > 0) mismatch("analytics");
     if (entry.analytics.includes("transport") !== asset.thermal.emitters.length > 0) mismatch("analytics");
     for (const denominator of SCALE_DENOMINATORS) {

@@ -12,7 +12,7 @@
 
 // #region 🔌️Adapters
 import { useMemo, useState, type ReactElement } from "../⚛️react-port/🟦️.ts";
-import { Button, type IconName, type PanelTabBranch, type PanelTabNode, singleTreeLeaf } from "@semio-tech/ui-react";
+import { Button, SharedBorderRow, type IconName, type PanelTabBranch, type PanelTabNode, singleTreeLeaf } from "@semio-tech/ui-react";
 import { type NamedLayout, type WindowLayout } from "@semio-tech/framework";
 import { defaultAppsSettingsTabLabel, shellLabel, shellLabelLocale, shellTabIcon } from "../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import { FRAMEWORK_CHAT_PANEL_ID, FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, FRAMEWORK_SETTINGS_DEFAULT_APPS_TAB_ID, FRAMEWORK_SETTINGS_GENERAL_TAB_ID, FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID, FRAMEWORK_SETTINGS_PANEL_ID, FRAMEWORK_SETTINGS_THEME_TAB_ID, FRAMEWORK_TASK_MANAGER_PANEL_ID } from "./🆔️panel-ids/🟦️.ts";
@@ -174,10 +174,10 @@ export function PluginRecoveryPanel({
     <div className="flex h-full min-h-0 flex-col gap-double p-double" data-plugin-recovery={pluginId}>
       <p className="text-sm font-medium">{shellLabel("ui.plugins.recovery.title")}</p>
       <p className="text-sm text-muted-foreground">{message}</p>
-      <div className="flex flex-wrap gap-single">
+      <SharedBorderRow className="w-fit max-w-full">
         <Button icon="rotate-ccw" text={shellLabel("ui.plugins.recovery.restartApp")} onClick={onRestart} />
         <Button icon="eye-off" text={shellLabel("ui.plugins.recovery.disablePlugin")} onClick={onDisable} />
-      </div>
+      </SharedBorderRow>
     </div>
   );
 }

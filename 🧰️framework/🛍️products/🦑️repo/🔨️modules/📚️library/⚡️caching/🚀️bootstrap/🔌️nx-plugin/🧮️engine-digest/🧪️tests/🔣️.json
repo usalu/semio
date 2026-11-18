@@ -129,7 +129,7 @@
  "spawnOnly": {
   "mustLeave": [
    "🏗️build/📜️script.ts",
-   "🏗️build/🚪️door/📜️script.ts",
+   "🏗️build/🚪️door/🔄️restart/🟦️.ts",
    "🏗️build/🩺️doctor/🟦️.ts"
   ],
   "mustStay": [

@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "environment": "SEMIO_HEAVY_QUESTION_CHILD",
+  "memoryLimitMegabytes": 2560,
+  "pollMilliseconds": 200,
+  "timeoutMilliseconds": 900000,
+  "kinds": ["program", "derive"]
+}

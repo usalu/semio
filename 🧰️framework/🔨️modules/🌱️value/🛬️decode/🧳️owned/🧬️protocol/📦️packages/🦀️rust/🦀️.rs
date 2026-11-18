@@ -130,6 +130,11 @@ impl NativeReceivingBatch{
 
 /// 🪢️ Settles one reply-shaped close action of any owner into a poll while charging its recorded work.
 pub fn native_close_settle(effect:&mut crate::RetainedAllocationEffect<'_>,close:impl for<'r> FnOnce(&mut crate::RetainedAllocationEffect<'_>,OriginalEffectReply<'r,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,OriginalRetirementFailure>,ValueError>)->crate::OriginalRetirementPoll{
+ let mut close=Some(close);native_close_settle_dyn(effect,&mut |effect,reply|close.take().expect("native close settles once")(effect,reply))
+}
+/// 🪢️ Settles one erased close action so the poll bookkeeping is compiled once instead of once per owner.
+#[inline(never)]
+pub fn native_close_settle_dyn(effect:&mut crate::RetainedAllocationEffect<'_>,close:&mut dyn for<'r> FnMut(&mut crate::RetainedAllocationEffect<'_>,OriginalEffectReply<'r,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,OriginalRetirementFailure>,ValueError>)->crate::OriginalRetirementPoll{
  use crate::RetainedWorkPoll::{Complete,Pending};let before=effect.performed_work();let mut slot=None;
  let ran=OriginalEffectReply::borrow(&mut slot).and_then(|reply|close(&mut *effect,reply).map(|_|()));
  let work=effect.performed_work().saturating_sub(before);

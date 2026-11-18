@@ -6,7 +6,7 @@
 }
 
 /* 🏠️ The overview's cards stand on a grid above the glass: the card layer takes its track lists from the level (`--staffage-columns`, `--staffage-rows`) and each card fills its cell,
-   keeping the spacing inside the cell. A card taller than its cell scrolls inside it and never lies over the card below.
+   with no spacing between cells: neighbouring cards share one border run. A card taller than its cell scrolls inside it and never lies over the card below.
    The overlay starts with `pointer-events: none`; this layer takes the pointer back and scrolls vertically when the rows are taller than the window. */
 .staffage-grid {
   display: grid;
@@ -24,7 +24,7 @@
   min-height: 0;
   align-items: stretch;
   justify-content: stretch;
-  padding: var(--spacing-double);
+  padding: 0;
   overflow: hidden;
 }
 
@@ -49,9 +49,21 @@
   block-size: 100%;
 }
 
-/* 👆️ A card the reader swipes to (phones, short windows, large text) is as wide as the screen leaves it, up to a width that keeps its lines readable; it is as tall as its content needs and at least a comfortable preview. */
+/* 👆️ A card the reader swipes to (phones, short windows, large text) fills the room its page leaves it: the whole width between the swipe hints and, at least, the whole height from the navbar to the footer, so its edges are the page's. */
 .staffage-entry {
-  inline-size: min(100%, 40rem);
+  display: flex;
+  inline-size: 100%;
+  min-block-size: 100%;
+}
+
+.staffage-entry > .staffage-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.staffage-entry [data-overview-card] {
+  inline-size: 100%;
+  flex: 1 1 auto;
 }
 
 .staffage-entry [data-slot="staffage-card-content"] {

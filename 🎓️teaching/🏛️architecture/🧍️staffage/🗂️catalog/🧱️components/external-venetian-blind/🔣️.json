@@ -2870,7 +2870,7 @@
             {
               "id": "slat-0",
               "bone": "slat-0",
-              "role": "detail",
+              "role": "texture",
               "z": 3,
               "filled": false,
               "tone": 0.4,
@@ -2893,7 +2893,7 @@
             {
               "id": "slat-1",
               "bone": "slat-1",
-              "role": "detail",
+              "role": "texture",
               "z": 3,
               "filled": false,
               "tone": 0.4,
@@ -2916,7 +2916,7 @@
             {
               "id": "slat-2",
               "bone": "slat-2",
-              "role": "detail",
+              "role": "texture",
               "z": 3,
               "filled": false,
               "tone": 0.4,
@@ -2939,7 +2939,7 @@
             {
               "id": "slat-3",
               "bone": "slat-3",
-              "role": "detail",
+              "role": "texture",
               "z": 3,
               "filled": false,
               "tone": 0.4,
@@ -2962,7 +2962,7 @@
             {
               "id": "slat-4",
               "bone": "slat-4",
-              "role": "detail",
+              "role": "texture",
               "z": 3,
               "filled": false,
               "tone": 0.4,
@@ -2985,7 +2985,7 @@
             {
               "id": "slat-5",
               "bone": "slat-5",
-              "role": "detail",
+              "role": "texture",
               "z": 3,
               "filled": false,
               "tone": 0.4,
@@ -3008,7 +3008,7 @@
             {
               "id": "slat-6",
               "bone": "slat-6",
-              "role": "detail",
+              "role": "texture",
               "z": 3,
               "filled": false,
               "tone": 0.4,
@@ -3031,7 +3031,7 @@
             {
               "id": "slat-7",
               "bone": "slat-7",
-              "role": "detail",
+              "role": "texture",
               "z": 3,
               "filled": false,
               "tone": 0.4,
@@ -3054,7 +3054,7 @@
             {
               "id": "slat-8",
               "bone": "slat-8",
-              "role": "detail",
+              "role": "texture",
               "z": 3,
               "filled": false,
               "tone": 0.4,
@@ -3077,7 +3077,7 @@
             {
               "id": "slat-9",
               "bone": "slat-9",
-              "role": "detail",
+              "role": "texture",
               "z": 3,
               "filled": false,
               "tone": 0.4,
@@ -3100,7 +3100,7 @@
             {
               "id": "slat-10",
               "bone": "slat-10",
-              "role": "detail",
+              "role": "texture",
               "z": 3,
               "filled": false,
               "tone": 0.4,
@@ -3123,7 +3123,7 @@
             {
               "id": "slat-11",
               "bone": "slat-11",
-              "role": "detail",
+              "role": "texture",
               "z": 3,
               "filled": false,
               "tone": 0.4,
@@ -3146,7 +3146,7 @@
             {
               "id": "slat-12",
               "bone": "slat-12",
-              "role": "detail",
+              "role": "texture",
               "z": 3,
               "filled": false,
               "tone": 0.4,
@@ -3169,7 +3169,7 @@
             {
               "id": "slat-13",
               "bone": "slat-13",
-              "role": "detail",
+              "role": "texture",
               "z": 3,
               "filled": false,
               "tone": 0.4,
@@ -3192,7 +3192,7 @@
             {
               "id": "slat-14",
               "bone": "slat-14",
-              "role": "detail",
+              "role": "texture",
               "z": 3,
               "filled": false,
               "tone": 0.4,
@@ -3215,7 +3215,7 @@
             {
               "id": "slat-15",
               "bone": "slat-15",
-              "role": "detail",
+              "role": "texture",
               "z": 3,
               "filled": false,
               "tone": 0.4,
@@ -3238,7 +3238,7 @@
             {
               "id": "slat-16",
               "bone": "slat-16",
-              "role": "detail",
+              "role": "texture",
               "z": 3,
               "filled": false,
               "tone": 0.4,
@@ -10128,7 +10128,7 @@
             "transform": {
               "translation": [0.105, -0.645, 0.585]
             },
-            "slender": true
+            "slender": false
           },
           {
             "id": "guide-right",
@@ -10141,7 +10141,7 @@
             "transform": {
               "translation": [0.105, -0.645, -0.585]
             },
-            "slender": true
+            "slender": false
           },
           {
             "id": "slat-0",
@@ -11119,7 +11119,7 @@
             "transform": {
               "translation": [0.105, -0.645, 0.585]
             },
-            "slender": true
+            "slender": false
           },
           {
             "id": "guide-right",
@@ -11132,7 +11132,7 @@
             "transform": {
               "translation": [0.105, -0.645, -0.585]
             },
-            "slender": true
+            "slender": false
           },
           {
             "id": "slat-0",

@@ -10,6 +10,7 @@ import { playgroundStaticSiteBuildOptions, semioViteBuild } from "../../../../..
 import { semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, type SemioHostHtmlSpec } from "../../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🌐️site-html/🟦️.ts";
 import { semioReferencedAssetsVitePlugin } from "../../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🗃️assets/🟦️.ts";
 import { semioServeCloseVitePlugin, semioServeUpgradeVitePlugin } from "../../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🚦️status-serve/🟦️.ts";
+import { staffageAssetVitePlugin } from "../../../🎯️targets/⚛️react/🌐️vite/🟦️.ts";
 // #endregion 🔌️Adapters
 
 const siteRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -37,12 +38,13 @@ export const STAFFAGE_SITE_HEADERS = [
   "  Cache-Control: no-cache",
 ].join("\n") + "\n";
 
-/** 🛡️ Release Content-Security-Policy: the site's own origin, hashed inline boot code, and blob images for exports. */
+/** 🛡️ Release Content-Security-Policy: the site's own origin, hashed inline boot code, WebAssembly compilation for the DWG encoder (never `eval`), and blob images for exports.
+ * @see ../../../🔨️modules/📤️export/🖊️dwg/🟦️.ts — the encoder that instantiates `staffage_dwg.wasm` */
 export function staffageContentSecurityPolicy(html: string): string {
   const hashes = (tag: string): string[] => [...html.matchAll(new RegExp(`<${tag}(?![^>]*\\ssrc=)[^>]*>([\\s\\S]*?)</${tag}>`, "gu"))].map((block) => `'sha256-${createHash("sha256").update(block[1]!).digest("base64")}'`);
   return [
     "default-src 'self'",
-    `script-src ${["'self'", ...new Set(hashes("script"))].join(" ")}`,
+    `script-src ${["'self'", "'wasm-unsafe-eval'", ...new Set(hashes("script"))].join(" ")}`,
     `style-src ${["'self'", ...new Set(hashes("style"))].join(" ")}`,
     "style-src-attr 'unsafe-inline'",
     "img-src 'self' data: blob:",
@@ -132,6 +134,7 @@ export default defineOwnedBuildConfigFactory(({ mode }) => ({
         return null;
       },
     },
+    staffageAssetVitePlugin(),
     semioServeCloseVitePlugin(),
     semioServeUpgradeVitePlugin(),
     ...semioHostHtmlVitePlugin(repoRoot, staffageHostDocument),

@@ -79,6 +79,7 @@ function ownershipSelection(value) {
   const keys = Object.keys(value);
   if (value.kind === "all" && keys.length === 1 && keys[0] === "kind") return Object.freeze({ kind: "all" });
   if (value.kind === "scope" && keys.length === 2 && keys.includes("kind") && keys.includes("owner") && typeof value.owner === "string" && /^(?:\.|[^./\\:\u0000][^/\\:\u0000]*)$/u.test(value.owner)) return Object.freeze({ kind: "scope", owner: value.owner });
+  if (value.kind === "closure" && keys.length === 2 && keys.includes("kind") && keys.includes("roots") && Array.isArray(value.roots) && value.roots.length <= 256 && value.roots.every(root => typeof root === "string" && /^(?:\.|[^./\\:\u0000][^/\\:\u0000]*)$/u.test(root)) && new Set(value.roots).size === value.roots.length) return Object.freeze({ kind: "closure", roots: Object.freeze([...value.roots].sort()) });
   throw Error("Explicit Bun ownership selection required");
 }
 function* documentPlan(owner, path) {
@@ -151,7 +152,7 @@ function* scopesPlan(owner, selection) {
     if (!declaration.owners.includes("*/package.json") || opaque.has(selection.owner) || collectionRoot(owner.root, path)) throw Error("Current authored Bun installation scope required");
     paths.clear(); paths.add(selection.owner + "/package.json");
   }
-  for (const pattern of selection.kind === "all" ? declaration.owners : []) {
+  for (const pattern of selection.kind === "all" || selection.kind === "closure" ? declaration.owners : []) {
     if (pattern !== "*/package.json") throw Error("Unsupported physical owner recipe: " + pattern);
     const entries = yield { operation: "list", path: owner.root };
     for (const entry of entries) if (!entry.name.startsWith(".") && !outputName(entry.name) && !collectionRoot(owner.root, join(owner.root, entry.name))) {
@@ -168,7 +169,19 @@ function* scopesPlan(owner, selection) {
     for (const pattern of admitted.members) bounded(owner.root, join(directory, sourcePrefix(pattern.replace(/^!/u, ""))));
     scopes.push({ directory, manifest: path, lock: directory === "." ? "bun.lock" : directory + "/bun.lock", declaration: admitted });
   }
-  return scopes;
+  return selection.kind === "closure" ? yield* closurePlan(owner, scopes, selection.roots) : scopes;
+}
+/** 🧬️ Narrows the declared scopes to the root scope, the requested roots and, breadth first, the deepest declaring scope of every member of a reached scope; no scope outside that closure has its members walked. */
+function* closurePlan(owner, scopes, roots) {
+  const byDirectory = new Map(scopes.map(scope => [scope.directory, scope])), depth = directory => directory === "." ? 0 : directory.split("/").length;
+  if (!byDirectory.has(".") || roots.some(root => !byDirectory.has(root))) throw Error("Current authored Bun installation scope required");
+  const ownerOf = path => scopes.reduce((best, scope) => (scope.directory === "." || path === scope.directory || path.startsWith(scope.directory + "/")) && depth(scope.directory) > depth(best) ? scope.directory : best, ".");
+  const reached = new Set([".", ...roots]), queue = [...reached];
+  for (let index = 0; index < queue.length; index++) {
+    const scope = byDirectory.get(queue[index]);
+    for (const path of [scope.directory, ...(yield* packagesPlan(owner, scope))]) { const next = ownerOf(path); if (!reached.has(next)) { reached.add(next); queue.push(next); } }
+  }
+  return scopes.filter(scope => reached.has(scope.directory));
 }
 /** 🗂️ Computes packages only for the already admitted current installation scopes. */
 function* membershipPlan(owner, selection) {
@@ -262,7 +275,7 @@ function nativeOperations(observations, root, budget = physicalBudget()) {
       let before = recent?.path === path ? recent.entry : undefined; recent = undefined;
       if (!before) { const current = observe(path); if (current.kind !== "directory") throw Error("Bun workspace requires a real directory: " + path); before = current.entry; }
       const listedAt = Date.now(), stamp = directoryStamp(before), prior = budget.lists.get(path) ?? 0, cached = listingCache.get(path);
-      let record = cached?.stamp === stamp && cached.root === root ? cached : undefined;
+      let record = cached?.stamp === stamp && cached.root === root ? cached : undefined, latest = before;
       if (!record) {
         const entries = [], directory = fs.opendirSync(path, { bufferSize: limits.directoryReadBatch }); let failed = false;
         try { for (let entry; (entry = directory.readSync()) !== null;) { if (entries.length >= limits.maximumDirectoryEntries || budget.entries - prior + entries.length + 1 > limits.maximumAggregateDirectoryEntries) throw Error("Bun directory observation capacity exceeded: " + path); entries.push({ name: entry.name, kind: kindOf(entry) }); } }
@@ -270,6 +283,7 @@ function nativeOperations(observations, root, budget = physicalBudget()) {
         entries.sort(byName);
         const after = observe(path);
         if (after.kind !== "directory") throw Error("Bun workspace requires a real directory: " + path);
+        latest = after.entry;
         record = { stamp, root, entries, count: entries.length, projected: undefined };
         if (directoryStamp(after.entry) === stamp && settledDirectory(after.entry, listedAt)) { if (listingCache.size >= limits.maximumListingCacheDirectories) listingCache.clear(); listingCache.set(path, record); }
         else listingCache.delete(path);
@@ -277,8 +291,7 @@ function nativeOperations(observations, root, budget = physicalBudget()) {
       budget.entries = budget.entries - prior + (record.count ?? record.entries.length); budget.lists.set(path, record.count ?? record.entries.length);
       if (observations) {
         retain("list", path, record.projected ??= projectListing(root, path, record.entries));
-        const after = fs.lstatSync(path, { bigint: true });
-        if (after.isDirectory() && directoryStamp(after) === stamp) observations.frontier.set(path, { stamp, settled: settledDirectory(after, listedAt) });
+        if (latest.isDirectory() && directoryStamp(latest) === stamp) observations.frontier.set(path, { stamp, settled: settledDirectory(latest, listedAt) });
         else observations.frontier.delete(path);
       }
       return record.entries;
@@ -328,15 +341,6 @@ async function replayCurrentMembershipV1(owner, control, progress) {
     if (!observations?.paths.size || !observations.frontier) return false;
     for (const record of observations.paths.values()) {
       control.signal.throwIfAborted();
-      const facts = read(record.path);
-      if (JSON.stringify(ownershipStateV1(facts)) !== JSON.stringify(record.state)) return ownershipStateMoved(owner, record, facts);
-      if (record.list) {
-        const before = observations.frontier.get(record.path), stamp = facts?.isDirectory() ? directoryStamp(facts) : null;
-        const decision = ownershipFrontierDecisionV1(before?.stamp, stamp, before?.settled && facts && settledDirectory(facts, Date.now()));
-        if (decision === "derive") return ownershipMoved(owner, record.path, "identity", "identity");
-        if (decision === "relist" && (JSON.stringify(projectListing(owner.root, record.path, operations.list(record.path))) !== JSON.stringify(record.list) || directoryStamp(read(record.path)) !== stamp)) return ownershipMoved(owner, record.path, "listing", "roster");
-        proof.set(record.path, { stamp, exact: decision === "relist" });
-      }
       const completedOperations = ++progress.completedOperations;
       if (++visited === observations.paths.size || completedOperations % (control.frontierBatchPaths ?? 1) === 0) try { await control.advance({ operation: "frontier", path: record.path, completedOperations }); } catch (error) { continuationFailed = true; throw error; }
       control.signal.throwIfAborted();
@@ -350,9 +354,10 @@ async function replayCurrentMembershipV1(owner, control, progress) {
       control.signal.throwIfAborted(); const facts = read(record.path);
       if (JSON.stringify(ownershipStateV1(facts)) !== JSON.stringify(record.state)) return ownershipStateMoved(owner, record, facts);
       if (record.list) {
-        const before = proof.get(record.path); if (!facts?.isDirectory() || !before) return ownershipMoved(owner, record.path, "identity", "identity");
-        const stamp = directoryStamp(facts);
-        if ((before.exact || before.stamp !== stamp) && (JSON.stringify(projectListing(owner.root, record.path, operations.list(record.path))) !== JSON.stringify(record.list) || directoryStamp(read(record.path)) !== stamp)) return ownershipMoved(owner, record.path, "listing", "roster");
+        if (!facts?.isDirectory()) return ownershipMoved(owner, record.path, "identity", "identity");
+        const before = observations.frontier.get(record.path), stamp = directoryStamp(facts), decision = ownershipFrontierDecisionV1(before?.stamp, stamp, before?.settled && settledDirectory(facts, Date.now()));
+        if (decision === "derive") return ownershipMoved(owner, record.path, "identity", "identity");
+        if (decision === "relist" && (JSON.stringify(projectListing(owner.root, record.path, operations.list(record.path))) !== JSON.stringify(record.list) || directoryStamp(read(record.path)) !== stamp)) return ownershipMoved(owner, record.path, "listing", "roster");
         proof.set(record.path, { stamp, settled: settledDirectory(facts, Date.now()) });
       }
     }
@@ -510,7 +515,6 @@ async function withCurrentBunWorkspaceOwnershipV1(ownership, root, selection, co
   const validate = async () => {
     guard();
     if (readManifestText(ownershipPath, undefined, limits.maximumPolicyBytes) !== ownershipSource) throw edited("Bun current ownership policy changed during verification");
-    await requireCurrentMembershipV1(owner, control, current);
     await control.advance({ operation: "membership", path: owner.root, completedOperations: ++current.completedOperations }); guard();
     for (const [path, text] of owner.texts) {
       guard(); const target = bounded(root, path);

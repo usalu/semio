@@ -5,7 +5,7 @@ import{join}from"node:path";
 import{privateRepositoryWorkspaceV1}from"../../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
 import{declareLibraryBuildTestEnvelopeV1}from"../../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
 const repository=await privateRepositoryWorkspaceV1("graph");
-declareLibraryBuildTestEnvelopeV1({suite:"build-inference",scratch:"checkout"});
+declareLibraryBuildTestEnvelopeV1({suite:"build-inference-projects",scratch:"checkout"});
 const inference=await import("../../../🟨️.mjs"),{libraryBootstrap}=inference as any;
 await libraryBootstrap;
 const observation=await import("../../../../../👁️observation/🟨️.mjs") as any;
@@ -24,8 +24,8 @@ test("a hit calls neither the preparation nor the inference, a changed key calls
 test("the project loop counts a project once, in the preparation and in the inference, and tells the build",()=>{
  const text=readFileSync(new URL("../../🟨️.mjs",import.meta.url),"utf8");
  expect(text).toContain("const missed=new Set();");
- expect(text).toContain("prepare:farm?()=>{missed.add(name);return away(()=>farm.prepare(");
- expect(text).toContain("()=>{missed.add(name);return inferProjectBodyV1(projectEnvironment,");
+ expect(text).toContain("prepare:farm?()=>{missed.add(name);return stagedPrepareV1(name,away,()=>farm.prepare(");
+ expect(text).toContain('()=>{missed.add(name);if(farm?.exists?.())throw farmJobRefusedV1(name,root,"the owner (the farm gave no record)");return inferProjectBodyV1(projectEnvironment,');
  expect(text).toContain("options?.onInferred?.(missed.size);");
  expect(text).toContain("options?.onPhases?.({setup:Math.round(loopStartedMs-enteredMs),projects:Math.round(performance.now()-loopStartedMs)});");
 });

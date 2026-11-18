@@ -45,14 +45,30 @@
       ],
       "properties": {
         "dev": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 9007199254740991
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{15,38}$"
+            }
+          ]
         },
         "ino": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 9007199254740991
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{15,38}$"
+            }
+          ]
         },
         "mode": {
           "type": "integer",
@@ -78,14 +94,30 @@
       ],
       "properties": {
         "dev": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 9007199254740991
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{15,38}$"
+            }
+          ]
         },
         "ino": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 9007199254740991
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{15,38}$"
+            }
+          ]
         },
         "mode": {
           "type": "integer",

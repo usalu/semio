@@ -8,8 +8,7 @@
     "course-records": ".course-records"
   },
   "tiers": [
-    { "part": "course-steps", "room": "course-card", "from": 40, "below": "a list, each task's title left and its state right", "above": "chips in a row" },
-    { "part": "course-run-head", "room": "course-card", "from": 64, "below": "the progress below the tasks", "above": "the tasks left and the progress right of one line" },
+    { "part": "course-steps", "room": "course-card", "from": 40, "below": "a list, each task's title left and its state right", "above": "cells in one row that share their dividers" },
     { "part": "course-chip", "room": "course-rows", "from": 30, "below": "the select below the label", "above": "the label left and the select right of one line" },
     { "part": "course-classify", "room": "course-task", "from": 84, "below": "the pool above the bins", "above": "the pool beside the bins" },
     { "part": "course-sort", "room": "course-rows", "from": 36, "below": "the label on the first line, the guess and the move buttons on the second", "above": "label, guess and move buttons on one line" },
@@ -17,8 +16,9 @@
     { "part": "course-slot", "room": "course-rows", "from": 30, "below": "the select and the remove button below the label", "above": "the label left, the select and the remove button right of one line" },
     { "part": "course-match", "room": "course-task", "from": 64, "below": "the value cards above the rows", "above": "the value cards in a column beside the rows" },
     { "part": "course-result", "room": "course-card", "from": 84, "below": "a task's figures below its tables", "above": "a task's figures beside its tables" },
-    { "part": "course-settings", "room": "course-card", "from": 28, "below": "the name of a preference above its control", "above": "the names in a column left of the controls" },
-    { "part": "course-kinds", "room": "course-card", "from": 44, "below": "the ways to appear below each other", "above": "the ways to appear side by side" }
+    { "part": "course-tiles", "room": "course-card", "from": 28, "below": "the pets' deeds in two columns", "above": "the pets' deeds in four columns" },
+    { "part": "course-kinds", "room": "course-card", "from": 44, "below": "the ways to appear below each other", "above": "the ways to appear side by side" },
+    { "part": "course-kinds", "room": "course-card", "from": 64, "below": "three ways to appear side by side", "above": "the four challenges side by side" }
   ],
   "fold": { "room": "course-records", "query": 36, "unit": "em", "yardstick": 36 },
   "plot": {

@@ -53,7 +53,7 @@ const graphOf=(resolved:Record<string,{value:unknown[]}>)=>({version:1,dependenc
  [P]:{name:P,root:dirname(corpus.designation),namedInputs:Object.fromEntries(Object.entries(resolved).filter(([name])=>name.includes(":")).map(([name,row])=>[name.startsWith("tool:")?closures.toolGroupNameV1(name.slice(5)):policy.group.prefix+name,row.value])),targets:{}},
 }});
 const srcsOf=(graph:any,root:string,group="commandSources0")=>[...new Set((bazel.bazelTaskInputsV1(graph,{id:"app:"+group,project:"app",definition:{inputs:[group]}}) as unknown[]).filter((item):item is string=>typeof item==="string"))].filter(path=>existsSync(join(root,path))).sort();
-const nativeSrcsOf=(state:Model)=>[...new Set([...state.product.own,...state.product.ports.flatMap(port=>state.groups[port+":native"]!),...state.tools["cargo-command"]!])].sort();
+const nativeSrcsOf=(state:Model)=>[...new Set([...state.product.own,...state.product.ports.flatMap(port=>state.groups[port+":native"]!),...state.tools["cargo-command"]!,...state.tools["native-toolchain"]!])].sort();
 const keyOf=(root:string,srcs:readonly string[])=>{const hash=createHash("sha256");for(const path of srcs)hash.update(path).update("\0").update(readFileSync(join(root,path))).update("\0");return hash.digest("hex");};
 
 test("the shared closure policy and the corpus are closed under their schemas, every authored verdict is the independent model's, the corpus names the policy's tool commands, and group names and references read back",()=>{
@@ -91,7 +91,7 @@ test("a viewed command closure names its providers by reference, the providers p
   }
   for(const holder of corpus.holders)expect(held[holder]!.facts.size,`${label}: ${holder} holds its walks by derived facts`).toBeGreaterThan(0);
   expect(files(held.product!.value),label).toEqual(state.product.own);expect(references(held.product!.value),label).toEqual(state.product.ports.map(port=>referenceOf(port,"scheduling")));
-  expect(fixtureFiles(held.productNative!.value,root),label).toEqual(state.product.own);expect(references(held.productNative!.value),label).toEqual([...state.product.ports.map(port=>referenceOf(port,"native")),toolOf("cargo-command")].sort((a,b)=>JSON.stringify(a)<JSON.stringify(b)?-1:1));
+  expect(fixtureFiles(held.productNative!.value,root),label).toEqual(state.product.own);expect(references(held.productNative!.value),label).toEqual([...state.product.ports.map(port=>referenceOf(port,"native")),toolOf("cargo-command"),toolOf("native-toolchain")].sort((a,b)=>JSON.stringify(a)<JSON.stringify(b)?-1:1));
   expect(files(held.plain!.value),label).toEqual(state.plain.own);expect(references(held.plain!.value),label).toEqual([]);
   for(const[name,group]of Object.entries(state.groups)){expect(files(held[name]!.value),`${label}: ${name}`).toEqual(group);expect(references(held[name]!.value),`${label}: ${name}`).toEqual([]);expect(held[name]!.value.some((item:unknown)=>typeof item==="object"&&item!==null&&"externalDependencies" in item),`${label}: ${name} packages`).toBe(name.endsWith(":scheduling"));}
   for(const[name,group]of Object.entries(state.tools)){expect(files(held["tool:"+name]!.value),`${label}: tool ${name}`).toEqual(group);expect(references(held["tool:"+name]!.value),`${label}: tool ${name}`).toEqual([]);}

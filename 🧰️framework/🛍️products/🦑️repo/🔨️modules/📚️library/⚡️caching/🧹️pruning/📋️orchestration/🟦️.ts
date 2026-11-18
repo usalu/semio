@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {join} from "node:path";
 import {scriptCompilerAdmissionControlV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {buildBudgetMs} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
@@ -41,11 +42,11 @@ export class CachePruneScript extends BundleScript {
     {
       if(args.includes("--stale-incremental-only")){
         const index=args.indexOf("--profile"),profile=args[index+1];if(index<0||!profile||profile.startsWith("-")||args.some((arg,position)=>!["--stale-incremental-only","--dry-run","--profile"].includes(arg)&&position!==index+1))throw Error("Incremental compaction requires exactly one explicit Cargo profile");
-        const result=await compactCargoIncrementalSessionsV1({buildDirectory:cargoDirectories(this.repoRoot).build,leaseDirectory:join(this.repoRoot,".cache","b","l","m","data"),profile,control:scriptCompilerAdmissionControlV1(this.invocation,"cache:incremental-compaction",buildBudgetMs()),dryRun,onUnit:unit=>{}});
+        const result=await compactCargoIncrementalSessionsV1({buildDirectory:cargoDirectories(this.repoRoot).build,leaseDirectory:machinePathV1(this.repoRoot,".cache","b","l","m","data"),profile,control:scriptCompilerAdmissionControlV1(this.invocation,"cache:incremental-compaction",buildBudgetMs()),dryRun,onUnit:unit=>{}});
         return;
       }
       const control=scriptCompilerAdmissionControlV1(this.invocation,"cache:shared-maintenance",buildBudgetMs());
-      await withCargoCacheMaintenanceV1({leaseDirectory:join(this.repoRoot,".cache","b","l","m","data"),buildDirectory:cargoDirectories(this.repoRoot).build,control,wait:true},async()=>{
+      await withCargoCacheMaintenanceV1({leaseDirectory:machinePathV1(this.repoRoot,".cache","b","l","m","data"),buildDirectory:cargoDirectories(this.repoRoot).build,control,wait:true},async()=>{
         const areas = await scanCacheAreas(this.repoRoot, control, (area, unit) => console.log(`[cache-prune] scanned ${area}/${unit.path}`));
         const plan: PrunePlan = planCachePrune(areas, Date.now(), CACHE_POLICY.storage.guardAgeMs);
         let deletedBytes = 0,

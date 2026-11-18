@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """🐍️ Independent oracle of the concurrent-commit rule. It shares no code with `../🟦️.ts`: with the third-party git command line only (`rev-list --parents`, `log`, `fsck --lost-found`, `status --porcelain`) it checks that the history of a worktree is linear (no merge, one root), that it contains every expected message exactly as many times as given, that every dangling commit is a superseded copy of a message in the history, and that the stage is clean.
-usage: 🌿️git.py <worktree> <count> <message>...   prints one JSON line {"head":...,"subjects":[...],"dangling":N} and exits 0 when every check holds, 1 otherwise
+usage: 🌿️git.py <worktree> <count> <message>...   (the message `--no-status` before them skips the status check: a commit made on a member leaves the stage of the archivist, which wins, without that commit's files)   prints one JSON line {"head":...,"subjects":[...],"dangling":N} and exits 0 when every check holds, 1 otherwise
 Python 3.9 compatible (no match statements)."""
 import json,os,subprocess,sys
 
@@ -12,6 +12,8 @@ def git(worktree,*args):
 
 def main():
     worktree,count,expected=sys.argv[1],int(sys.argv[2]),sys.argv[3:]
+    status="--no-status" not in expected
+    expected=[message for message in expected if message!="--no-status"]
     failures=[]
     rows=[line.split() for line in git(worktree,"rev-list","--parents","HEAD").splitlines()]
     if len(rows)!=count: failures.append("history has %d commits, expected %d"%(len(rows),count))
@@ -24,7 +26,7 @@ def main():
     for oid in dangling:
         subject=git(worktree,"log","-1","--format=%s",oid).strip()
         if subject not in subjects: failures.append("dangling commit %s (%s) is not in the history"%(oid,subject))
-    if git(worktree,"status","--porcelain").strip()!="": failures.append("stage or worktree is not clean")
+    if status and git(worktree,"status","--porcelain").strip()!="": failures.append("stage or worktree is not clean")
     print(json.dumps({"head":git(worktree,"rev-parse","HEAD").strip(),"subjects":subjects,"dangling":len(dangling)}))
     for line in failures: print("MISMATCH "+line,file=sys.stderr)
     return 1 if failures else 0

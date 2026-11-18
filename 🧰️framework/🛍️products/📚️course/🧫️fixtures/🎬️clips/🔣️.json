@@ -1,0 +1,119 @@
+{
+  "valid": [
+    {
+      "id": "sample-clip",
+      "topic": "sample-topic",
+      "emoji": "🎬",
+      "title": {
+        "en": "Topic Clip",
+        "de": "Themenclip"
+      },
+      "description": {
+        "en": "Watch the clip for this course topic.",
+        "de": "Sieh dir den Clip zu diesem Kursthema an."
+      },
+      "poster": {
+        "file": "Sample_01_Poster.png"
+      }
+    },
+    {
+      "id": "hosted-clip",
+      "topic": "sample-topic",
+      "emoji": "🎬",
+      "title": {
+        "en": "Hosted Clip",
+        "de": "Gehosteter Clip"
+      },
+      "description": {
+        "en": "A clip that is hosted elsewhere.",
+        "de": "Ein Clip, der anderswo gehostet wird."
+      },
+      "poster": {
+        "file": "sample-poster.png"
+      },
+      "urls": {
+        "en": "https://videos.example.org/watch?v=sample-en",
+        "de": "https://videos.example.org/watch?v=sample-de"
+      }
+    },
+    {
+      "id": "hosted-german-clip",
+      "topic": "sample-topic",
+      "emoji": "🎬",
+      "title": {
+        "en": "German Only Clip",
+        "de": "Nur deutscher Clip"
+      },
+      "description": {
+        "en": "Hosted in one language so far.",
+        "de": "Bisher in einer Sprache gehostet."
+      },
+      "poster": {
+        "file": "Sample_02_Poster.png"
+      },
+      "urls": {
+        "de": "https://videos.example.org/clip/de"
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "case": "missing poster",
+      "remove": "/poster"
+    },
+    {
+      "case": "poster is not a PNG",
+      "replace": "/poster/file",
+      "value": "poster.jpg"
+    },
+    {
+      "case": "poster path traversal",
+      "replace": "/poster/file",
+      "value": "../poster.png"
+    },
+    {
+      "case": "missing translation",
+      "remove": "/title/de"
+    },
+    {
+      "case": "plain HTTP address",
+      "replace": "/urls",
+      "value": { "en": "http://videos.example.org/clip" }
+    },
+    {
+      "case": "relative address",
+      "replace": "/urls",
+      "value": { "en": "/clip.mp4" }
+    },
+    {
+      "case": "script address",
+      "replace": "/urls",
+      "value": { "en": "javascript:alert(1)" }
+    },
+    {
+      "case": "address without host",
+      "replace": "/urls",
+      "value": { "en": "https:///clip" }
+    },
+    {
+      "case": "address with whitespace",
+      "replace": "/urls",
+      "value": { "en": "https://videos.example.org/a clip" }
+    },
+    {
+      "case": "empty addresses",
+      "replace": "/urls",
+      "value": {}
+    },
+    {
+      "case": "unknown language address",
+      "replace": "/urls",
+      "value": { "fr": "https://videos.example.org/clip" }
+    },
+    {
+      "case": "unknown property",
+      "replace": "/answers",
+      "value": []
+    }
+  ]
+}

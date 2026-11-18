@@ -39,8 +39,8 @@ function siteFiles(root: string, skip: ReadonlySet<string> = new Set(), prefix =
 
 /** 🛡️ Every reason the release document `html` is not sealed for `proctorOrigin`: no Content-Security-Policy ahead of
  * the first script, a script policy that admits anything inline or evaluated beyond the document's own boot scripts (each
- * must be listed by its SHA-256), connections admitted anywhere but the proctor (HTTPS and its WebSocket twin), plugins or
- * a `base` allowed, no description, or a default language (the app sets `lang` from the learner's locale). */
+ * must be listed by its SHA-256), frames admitted from anywhere but the site's own origin (the assignment PDFs), connections
+ * admitted anywhere but the proctor (HTTPS and its WebSocket twin), plugins or a `base` allowed, no description, or a default language (the app sets `lang` from the learner's locale). */
 export function siteDocumentProblems(html: string, proctorOrigin: string): string[] {
   const problems: string[] = [];
   const meta = /<meta http-equiv="Content-Security-Policy" content="([^"]*)"/u.exec(html);
@@ -60,6 +60,7 @@ export function siteDocumentProblems(html: string, proctorOrigin: string): strin
     }
     const connections = [proctorOrigin, proctorOrigin.replace(/^http/u, "ws")];
     if ([...sources("connect-src")].sort().join(" ") !== [...connections].sort().join(" ")) problems.push(`connect-src admits ${sources("connect-src").join(" ") || "nothing"}, not exactly ${connections.join(" ")}`);
+    if (sources("frame-src").join(" ") !== "'self'") problems.push(`frame-src admits ${sources("frame-src").join(" ") || "nothing"}, not exactly 'self'`);
     for (const name of ["object-src", "base-uri"]) if (directives.get(name)?.join(" ") !== "'none'") problems.push(`${name} is not 'none'`);
     if (!directives.has("form-action")) problems.push("form-action is not restricted");
   }
@@ -72,7 +73,7 @@ export function siteDocumentProblems(html: string, proctorOrigin: string): strin
  * markers (`404.html` being the same document as `index.html`), `CNAME` naming the site host, a sealed document
  * ({@link siteDocumentProblems}) whose scripts and stylesheets exist, content-hashed file names under `assets/` (they are
  * served as immutable), the proctor origin in the code and no loopback address outside it, no source map and no
- * development leftover, and the size budget ({@link COURSE_SITE_BUDGET}) of the topology the build was baked for: the scripts
+ * development leftover, and a hashed PNG for the poster of every clip, the size budget ({@link COURSE_SITE_BUDGET}) of the topology the build was baked for: the scripts
  * the document runs and the stylesheets it links are charged, the lazy chunks it only hints at low priority
  * (`fetchpriority="low"`) are not. */
 export function siteArtifactProblems(dist: string, proctorOrigin: string): string[] {
@@ -84,6 +85,15 @@ export function siteArtifactProblems(dist: string, proctorOrigin: string): strin
     const path = "assignments/" + document.file;
     if (!files.includes(path)) problems.push(path + " is missing");
     else if (readFileSync(join(dist, path)).subarray(0, 5).toString() !== "%PDF-") problems.push(path + " is not a PDF");
+  }
+  const posters: string[] = [];
+  for (const clip of course.clips) {
+    const stem = clip.poster.file.replace(/\.png$/u, "");
+    const hashed = new RegExp(`^assets/${stem}-[A-Za-z0-9_-]{8}\\.png$`, "u");
+    const path = files.find((file) => hashed.test(file));
+    if (path === undefined) problems.push(`the poster ${clip.poster.file} of the clip ${clip.id} is missing from the hashed assets`);
+    else if (readFileSync(join(dist, path)).subarray(0, 4).toString("latin1") !== "\x89PNG") problems.push(`${path} is not a PNG`);
+    else posters.push(path);
   }
   if (files.includes("CNAME") && text("CNAME").trim() !== COURSE_SITE_HOST) problems.push(`CNAME names ${JSON.stringify(text("CNAME").trim())}, not ${COURSE_SITE_HOST}`);
   if (files.includes("index.html")) {
@@ -107,10 +117,12 @@ export function siteArtifactProblems(dist: string, proctorOrigin: string): strin
   for (const leftover of ["sourceMappingURL=", "/@vite/client", "react-refresh", "[DEBUG]"]) if (code.some((source) => source.includes(leftover))) problems.push(`the site carries the development leftover ${leftover}`);
   const weigh = (paths: readonly string[]): number => paths.reduce((sum, path) => sum + statSync(join(dist, path)).size, 0);
   const documents = files.filter((path) => path.startsWith("assignments/"));
-  const total = weigh(files.filter((path) => !documents.includes(path)));
+  const total = weigh(files.filter((path) => !documents.includes(path) && !posters.includes(path)));
   if (total > COURSE_SITE_BUDGET.totalBytes) problems.push(`the artifact weighs ${total} bytes, over the budget of ${COURSE_SITE_BUDGET.totalBytes}`);
   const published = weigh(documents);
   if (published > COURSE_SITE_BUDGET.assignmentBytes) problems.push(`the assignment documents weigh ${published} bytes, over the budget of ${COURSE_SITE_BUDGET.assignmentBytes}`);
+  const pictured = weigh(posters);
+  if (pictured > COURSE_SITE_BUDGET.posterBytes) problems.push(`the clip posters weigh ${pictured} bytes, over the budget of ${COURSE_SITE_BUDGET.posterBytes}`);
   return problems;
 }
 

@@ -1,0 +1,32 @@
+# R146: the `tools` stage on the non-Mac workers (living report)
+
+Status: LANDED 2026-11-17 20:37:46 to 20:38:54 UTC (entry in the landings.md of the fleet ticket). Services run old code until restarted. Battery: ready main 40/40 staged; owner-pool main/early/heavy/one-budget 45 pass 1 fail, the same load-sensitive 'real processes scale' failure as on the unchanged tree.
+
+## 1. g1-m05 (Windows): `Immutable input physical work capacity exceeded`
+
+- Cap: `maximumWork` 65536 (single batch) or 4194304 (group) of `ProtectedArtifactInputProtocol` in `…/🏗️native-build/💾️storage/🧬️schema/🔣️.json`. Raised in the `check` closures of `stageNativePlatformProtectedArtifactInputsV1` / `…GroupV1` (`…/📤️publication/🌐️platform/🟦️.ts`).
+- What it counts: not files or bytes but every call of the `checkpoint` that the staging passes into `withArtifactRelativeDirectoryV1`. The filesystem layer calls that checkpoint per operation, and the Windows layer calls it many times more than the POSIX layer (two around every native call in `statusCall`, one per guard in `internal()`, re-reading the facts at every guard; counted in the source of `📁️descriptor/🟦️.ts`: 16 checkpoint sites in the Windows layer against 5 in the POSIX layer, plus the per-operation fan-out).
+- Evidence: the m05 log advanced the chunk counter `native-artifact-input-stage:N` once per 3 to 4 s (1841 at 6274 s, 2584 at the failure after 11259 s). 2584 chunk steps times a Windows fan-out of about 25 to 40 checkpoints passes 65536. So the stage was correct and slow, and a fixed step count refused it.
+- Fix: the cap is derived from the work. New `protectedArtifactInputWorkAllowanceV1` (`🧮️read-plan/🟦️.ts`, constants in its schema `WorkAllowance`): (operations of the batch: base, each root with segments, each file with segments and chunks) times 512 checkpoints per operation. Used at all five sites (stage single, stage group, current observation, read single, read group). The structural verification counters (files plus chunks, exact, platform independent) stay.
+- Laws (`🧮️read-plan/🧪️tests`): allowance equals an independent Python model on 4 cases; a Windows-shaped staging (drive-letter root, mixed case, 2584 chunk steps at the declared 40 checkpoints per step) is inside the allowance while the old fixed cap is below its need; source law that no counted closure uses `maximumWork` any more. Red on the old tree (function and source law).
+- NOT verified: a run on Windows. The fan-out 40 is a model read from source, not a measurement; 512 per operation leaves a factor 12 or more.
+
+## 2. Stall rule and progress on all platforms
+
+- The premise did not hold for m05: the tail was not heartbeat only, the counter `native-artifact-input-stage:N` advanced, so the text tracker (`readyStallTrackerV1`) correctly saw progress. The run was stopped by the work cap, not missed by the stall rule.
+- Real gaps closed: (a) `readyNormaliseLineV1` now drops `\r` and spells Windows paths (drive letter, backslashes, doubled JSON backslashes, any case) one way, so a heartbeat that only differs in path spelling is no progress; (b) `progressPatterns` names `native-artifact-input-(stage|read|verification):N` so the soft-cap extension follows the work counter. Law `🌲️process-tree/🧪️tests/🪟️windows-progress` (3 tests, red on the old tree).
+- NOT done: on Windows there is still no CPU-liveness sample (`!windows` guard in `runReadyStageV1`; needs a Windows process-time source) and no rate floor (a counter that moves once in 4 s keeps a stage alive up to the hard cap, 4 x soft cap). Both need a decision and a Windows machine.
+
+## 3. g1-m04 (Linux): `unable to open database file`
+
+- Cause of the inode exhaustion (round-31 notes of the worker): not per-try ready directories but the owner pool: `mkdtemp semio-owner-pool-XXXXXX` per pool and per child (`🔬️inference/🟨️.mjs`, `🏃️runner/🟨️.mjs`) is removed only on `close()`; every killed or restarted pool left it: 100 directories, 420169 inodes, plus 55 in `/tmp`.
+- Fix A (up-front check): `readyDiskShortV1` with `diskRequirements` per stage (declared estimates, not measured: tools 4096 MB / 150000 inodes etc.), a facts provider (`readyFilesystemFactsV1`, `statfs`; Windows reports no inodes so that check is skipped), refusal code `disk-short` (EN and DE, names path, need, free, unit), checked before the lease and the start, retry every minute. A raw `unable to open database file` on a disk that is short now becomes `store-full` with the path (`readyTailWithDiskCauseV1`).
+- Fix B (cleanup): new member `owner-pool/🧹️staging-sweep` (schema, Python oracle, tests): the owner writes `.owner.json` (pid, start time) first and sweeps sibling `semio-owner-pool-*` directories of gone owners at its start (ownerless ones after 120 s; own never). Wired into the runner and the inference. Law: 39 tries never hold more than 2 directories.
+- Laws: `🚦️ready/🧪️tests/🔁️resume` (disk refusal bilingual, Windows facts without inodes pass, unknown passes, loop waits and starts when space is back, raw SQLite error classified), sweep tests (5, one on a real filesystem with a really dead pid).
+- NOT verified: on a real Deck; the declared need values; quota (EDQUOT) is invisible to `statfs`, only the existing text classifier sees it; children spawned by the owner-pool tests load the live (unstaged) code, so the child path is covered by the source law plus the post-landing run.
+
+## 4. g1-m06: silent after exit 75
+
+- Finding: exit 75 does not stop the loop. The code retries after the first back-off every time (deliberate, existing test), and the m06 timeline shows it: after the exit 75 at 06:40 the stage ran again at 06:41 and stalled 12 times until 10:23. At 10:41 CET 11-16 the store shows `attest.json`, `pool.json` and `ready.json` all stopping in the same minute: the whole replica service of the machine ended (sleep, power or daemon), not the readiness loop. The stall-exhaustion rule (R135) landed after that.
+- Hardening: an exception in the loop (state write, digests) used to end `runReady`; the launcher restarts it, but `ready.json` stayed "running". Now `runReadyV1` wraps the loop: refusal `loop-failed` (EN, DE) with state `backoff`, back-off 30 s doubling to 20 min, never gives up; laws: 3 digest failures and 2 state-write failures reach ready; 40 failures in a row still retry; 8 times exit 75 in a row still reach ready.
+- NOT verified: why m06 went silent (nothing in the store says; needs a person at the machine).

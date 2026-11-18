@@ -2370,36 +2370,30 @@
        "material": "paint-steel"
       },
       {
-       "id": "tyre-f-l",
-       "bone": "wheel-f",
-       "role": "body",
-       "z": 4,
-       "filled": true,
-       "tone": 0.12,
-       "kind": "rect",
-       "x": 0.8,
-       "y": 0,
-       "w": 0.6,
-       "h": 1.75,
-       "r": 0.2,
-       "region": "tyres",
-       "material": "rubber"
+        "id": "tyre-f-l",
+        "bone": "wheel-f",
+        "role": "body",
+        "z": 4,
+        "filled": true,
+        "tone": 0.12,
+        "kind": "poly",
+        "points": [[0.85, 1.75], [1.09, 1.75], [1.09, 1.72], [1.11, 1.72], [1.11, 1.75], [1.35, 1.75], [1.36, 1.72], [1.4, 1.615], [1.4, 0.135], [1.36, 0.03], [1.35, 0.0], [1.11, 0.0], [1.11, 0.03], [1.09, 0.03], [1.09, 0.0], [0.85, 0.0], [0.84, 0.03], [0.8, 0.135], [0.8, 1.615], [0.84, 1.72]],
+        "closed": true,
+        "region": "tyres",
+        "material": "rubber"
       },
       {
-       "id": "tyre-f-r",
-       "bone": "wheel-f",
-       "role": "body",
-       "z": 4,
-       "filled": true,
-       "tone": 0.12,
-       "kind": "rect",
-       "x": -1.4,
-       "y": 0,
-       "w": 0.6,
-       "h": 1.75,
-       "r": 0.2,
-       "region": "tyres",
-       "material": "rubber"
+        "id": "tyre-f-r",
+        "bone": "wheel-f",
+        "role": "body",
+        "z": 4,
+        "filled": true,
+        "tone": 0.12,
+        "kind": "poly",
+        "points": [[-1.35, 1.75], [-1.11, 1.75], [-1.11, 1.72], [-1.09, 1.72], [-1.09, 1.75], [-0.85, 1.75], [-0.84, 1.72], [-0.8, 1.615], [-0.8, 0.135], [-0.84, 0.03], [-0.85, 0.0], [-1.09, 0.0], [-1.09, 0.03], [-1.11, 0.03], [-1.11, 0.0], [-1.35, 0.0], [-1.36, 0.03], [-1.4, 0.135], [-1.4, 1.615], [-1.36, 1.72]],
+        "closed": true,
+        "region": "tyres",
+        "material": "rubber"
       },
       {
        "id": "lift-arm-l",
@@ -2504,6 +2498,21 @@
         "z0": -1.2,
         "z1": -0.9
        }
+      },
+      {
+        "id": "lift-pivot",
+        "bone": "front-frame",
+        "role": "body",
+        "z": 2.1,
+        "filled": true,
+        "tone": 0.45,
+        "kind": "rect",
+        "x": -1.25,
+        "y": 1.93,
+        "w": 2.5,
+        "h": 0.14,
+        "region": "front-frame",
+        "material": "paint-steel"
       },
       {
        "id": "lift-cyl-l",
@@ -2998,68 +3007,104 @@
        "material": "paint-steel"
       },
       {
-       "id": "tyre-f-l",
-       "bone": "wheel-f",
-       "role": "body",
-       "z": 1.5,
-       "filled": true,
-       "tone": 0.12,
-       "kind": "rect",
-       "x": 0.825,
-       "y": 0.8,
-       "w": 1.75,
-       "h": 0.6,
-       "r": 0.2,
-       "region": "tyres",
-       "material": "rubber"
+        "id": "tyre-f-l",
+        "bone": "wheel-f",
+        "role": "body",
+        "z": 1.5,
+        "filled": true,
+        "tone": 0.12,
+        "kind": "poly",
+        "points": [[2.575, 0.85], [2.575, 1.09], [2.545, 1.09], [2.545, 1.11], [2.575, 1.11], [2.575, 1.35], [2.545, 1.36], [2.44, 1.4], [0.96, 1.4], [0.855, 1.36], [0.825, 1.35], [0.825, 1.11], [0.855, 1.11], [0.855, 1.09], [0.825, 1.09], [0.825, 0.85], [0.855, 0.84], [0.96, 0.8], [2.44, 0.8], [2.545, 0.84]],
+        "closed": true,
+        "region": "tyres",
+        "material": "rubber"
       },
       {
-       "id": "tyre-f-r",
-       "bone": "wheel-f",
-       "role": "body",
-       "z": 1.5,
-       "filled": true,
-       "tone": 0.12,
-       "kind": "rect",
-       "x": 0.825,
-       "y": -1.4,
-       "w": 1.75,
-       "h": 0.6,
-       "r": 0.2,
-       "region": "tyres",
-       "material": "rubber"
+        "id": "tyre-f-r",
+        "bone": "wheel-f",
+        "role": "body",
+        "z": 1.5,
+        "filled": true,
+        "tone": 0.12,
+        "kind": "poly",
+        "points": [[2.575, -1.35], [2.575, -1.11], [2.545, -1.11], [2.545, -1.09], [2.575, -1.09], [2.575, -0.85], [2.545, -0.84], [2.44, -0.8], [0.96, -0.8], [0.855, -0.84], [0.825, -0.85], [0.825, -1.09], [0.855, -1.09], [0.855, -1.11], [0.825, -1.11], [0.825, -1.35], [0.855, -1.36], [0.96, -1.4], [2.44, -1.4], [2.545, -1.36]],
+        "closed": true,
+        "region": "tyres",
+        "material": "rubber"
       },
       {
-       "id": "tyre-r-l",
-       "bone": "wheel-r",
-       "role": "body",
-       "z": 1.5,
-       "filled": true,
-       "tone": 0.12,
-       "kind": "rect",
-       "x": -2.575,
-       "y": 0.8,
-       "w": 1.75,
-       "h": 0.6,
-       "r": 0.2,
-       "region": "tyres",
-       "material": "rubber"
+        "id": "tyre-r-l",
+        "bone": "wheel-r",
+        "role": "body",
+        "z": 1.5,
+        "filled": true,
+        "tone": 0.12,
+        "kind": "poly",
+        "points": [[-0.825, 0.85], [-0.825, 1.09], [-0.855, 1.09], [-0.855, 1.11], [-0.825, 1.11], [-0.825, 1.35], [-0.855, 1.36], [-0.96, 1.4], [-2.44, 1.4], [-2.545, 1.36], [-2.575, 1.35], [-2.575, 1.11], [-2.545, 1.11], [-2.545, 1.09], [-2.575, 1.09], [-2.575, 0.85], [-2.545, 0.84], [-2.44, 0.8], [-0.96, 0.8], [-0.855, 0.84]],
+        "closed": true,
+        "region": "tyres",
+        "material": "rubber"
       },
       {
-       "id": "tyre-r-r",
-       "bone": "wheel-r",
-       "role": "body",
-       "z": 1.5,
-       "filled": true,
-       "tone": 0.12,
-       "kind": "rect",
-       "x": -2.575,
-       "y": -1.4,
-       "w": 1.75,
-       "h": 0.6,
-       "r": 0.2,
-       "region": "tyres",
-       "material": "rubber"
+        "id": "tyre-r-r",
+        "bone": "wheel-r",
+        "role": "body",
+        "z": 1.5,
+        "filled": true,
+        "tone": 0.12,
+        "kind": "poly",
+        "points": [[-0.825, -1.35], [-0.825, -1.11], [-0.855, -1.11], [-0.855, -1.09], [-0.825, -1.09], [-0.825, -0.85], [-0.855, -0.84], [-0.96, -0.8], [-2.44, -0.8], [-2.545, -0.84], [-2.575, -0.85], [-2.575, -1.09], [-2.545, -1.09], [-2.545, -1.11], [-2.575, -1.11], [-2.575, -1.35], [-2.545, -1.36], [-2.44, -1.4], [-0.96, -1.4], [-0.855, -1.36]],
+        "closed": true,
+        "region": "tyres",
+        "material": "rubber"
+      },
+      {
+        "id": "bolts-f-l",
+        "bone": "wheel-f",
+        "role": "detail",
+        "z": 1.6,
+        "filled": true,
+        "tone": 0.3,
+        "kind": "path",
+        "d": "M 1.955 1.413 L 2.045 1.413 L 2.045 1.433 L 1.955 1.433 Z M 1.805 1.413 L 1.895 1.413 L 1.895 1.433 L 1.805 1.433 Z M 1.505 1.413 L 1.595 1.413 L 1.595 1.433 L 1.505 1.433 Z M 1.355 1.413 L 1.445 1.413 L 1.445 1.433 L 1.355 1.433 Z M 1.56 1.4 L 1.84 1.4 L 1.84 1.413 L 1.56 1.413 Z",
+        "region": "tyres",
+        "material": "rubber"
+      },
+      {
+        "id": "bolts-f-r",
+        "bone": "wheel-f",
+        "role": "detail",
+        "z": 1.6,
+        "filled": true,
+        "tone": 0.3,
+        "kind": "path",
+        "d": "M 1.955 -1.433 L 2.045 -1.433 L 2.045 -1.413 L 1.955 -1.413 Z M 1.805 -1.433 L 1.895 -1.433 L 1.895 -1.413 L 1.805 -1.413 Z M 1.505 -1.433 L 1.595 -1.433 L 1.595 -1.413 L 1.505 -1.413 Z M 1.355 -1.433 L 1.445 -1.433 L 1.445 -1.413 L 1.355 -1.413 Z M 1.56 -1.413 L 1.84 -1.413 L 1.84 -1.4 L 1.56 -1.4 Z",
+        "region": "tyres",
+        "material": "rubber"
+      },
+      {
+        "id": "bolts-r-l",
+        "bone": "wheel-r",
+        "role": "detail",
+        "z": 1.6,
+        "filled": true,
+        "tone": 0.3,
+        "kind": "path",
+        "d": "M -1.445 1.413 L -1.355 1.413 L -1.355 1.433 L -1.445 1.433 Z M -1.595 1.413 L -1.505 1.413 L -1.505 1.433 L -1.595 1.433 Z M -1.895 1.413 L -1.805 1.413 L -1.805 1.433 L -1.895 1.433 Z M -2.045 1.413 L -1.955 1.413 L -1.955 1.433 L -2.045 1.433 Z M -1.84 1.4 L -1.56 1.4 L -1.56 1.413 L -1.84 1.413 Z",
+        "region": "tyres",
+        "material": "rubber"
+      },
+      {
+        "id": "bolts-r-r",
+        "bone": "wheel-r",
+        "role": "detail",
+        "z": 1.6,
+        "filled": true,
+        "tone": 0.3,
+        "kind": "path",
+        "d": "M -1.445 -1.433 L -1.355 -1.433 L -1.355 -1.413 L -1.445 -1.413 Z M -1.595 -1.433 L -1.505 -1.433 L -1.505 -1.413 L -1.595 -1.413 Z M -1.895 -1.433 L -1.805 -1.433 L -1.805 -1.413 L -1.895 -1.413 Z M -2.045 -1.433 L -1.955 -1.433 L -1.955 -1.413 L -2.045 -1.413 Z M -1.84 -1.413 L -1.56 -1.413 L -1.56 -1.4 L -1.84 -1.4 Z",
+        "region": "tyres",
+        "material": "rubber"
       },
       {
        "id": "lift-arm-l",
@@ -3164,6 +3209,21 @@
         "z0": -1.2,
         "z1": -0.9
        }
+      },
+      {
+        "id": "lift-pivot",
+        "bone": "front-frame",
+        "role": "body",
+        "z": 2.1,
+        "filled": true,
+        "tone": 0.45,
+        "kind": "rect",
+        "x": 1.03,
+        "y": -1.25,
+        "w": 0.14,
+        "h": 2.5,
+        "region": "front-frame",
+        "material": "paint-steel"
       },
       {
        "id": "lift-cyl-l",
@@ -3310,40 +3370,122 @@
        }
       },
       {
-       "id": "tilt-cyl",
-       "bone": "tilt-cyl",
-       "role": "body",
-       "z": 3.3,
-       "filled": true,
-       "tone": 0.5,
-       "kind": "poly",
-       "points": [
-        [
-         0,
-         -0.1
+        "id": "tilt-cyl",
+        "bone": "tilt-cyl",
+        "role": "body",
+        "z": 3.3,
+        "filled": true,
+        "tone": 0.5,
+        "kind": "poly",
+        "points": [
+          [
+            2.8408,
+            -0.1
+          ],
+          [
+            2.8543,
+            -0.0966
+          ],
+          [
+            2.8669,
+            -0.0866
+          ],
+          [
+            2.8777,
+            -0.0707
+          ],
+          [
+            2.886,
+            -0.05
+          ],
+          [
+            2.8912,
+            -0.0259
+          ],
+          [
+            2.893,
+            0.0
+          ],
+          [
+            2.8912,
+            0.0259
+          ],
+          [
+            2.886,
+            0.05
+          ],
+          [
+            2.8777,
+            0.0707
+          ],
+          [
+            2.8669,
+            0.0866
+          ],
+          [
+            2.8543,
+            0.0966
+          ],
+          [
+            2.8408,
+            0.1
+          ],
+          [
+            2.0732,
+            0.1
+          ],
+          [
+            2.0597,
+            0.0966
+          ],
+          [
+            2.0471,
+            0.0866
+          ],
+          [
+            2.0363,
+            0.0707
+          ],
+          [
+            2.028,
+            0.05
+          ],
+          [
+            2.0228,
+            0.0259
+          ],
+          [
+            2.021,
+            0.0
+          ],
+          [
+            2.0228,
+            -0.0259
+          ],
+          [
+            2.028,
+            -0.05
+          ],
+          [
+            2.0363,
+            -0.0707
+          ],
+          [
+            2.0471,
+            -0.0866
+          ],
+          [
+            2.0597,
+            -0.0966
+          ],
+          [
+            2.0732,
+            -0.1
+          ]
         ],
-        [
-         0.9,
-         -0.1
-        ],
-        [
-         0.9,
-         0.1
-        ],
-        [
-         0,
-         0.1
-        ]
-       ],
-       "closed": true,
-       "region": "hydraulics",
-       "material": "paint-steel",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.1,
-        "z1": 0.1
-       }
+        "closed": true,
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
        "id": "tilt-rod",
@@ -3656,6 +3798,202 @@
         "z0": -1.475,
         "z1": 1.475
        }
+      },
+      {
+        "id": "bucket-ear-1",
+        "bone": "bucket",
+        "role": "body",
+        "z": 3.4,
+        "filled": true,
+        "tone": 0.1,
+        "kind": "poly",
+        "points": [
+          [
+            -0.52,
+            -0.2
+          ],
+          [
+            0.05,
+            -0.2
+          ],
+          [
+            0.2,
+            -0.05
+          ],
+          [
+            0.2,
+            0.1
+          ],
+          [
+            0.05,
+            0.25
+          ],
+          [
+            -0.52,
+            0.3
+          ]
+        ],
+        "closed": true,
+        "region": "bucket",
+        "material": "wear-steel",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": 1.2,
+          "z1": 1.225
+        }
+      },
+      {
+        "id": "bucket-ear-2",
+        "bone": "bucket",
+        "role": "body",
+        "z": 3.4,
+        "filled": true,
+        "tone": 0.1,
+        "kind": "poly",
+        "points": [
+          [
+            -0.52,
+            -0.2
+          ],
+          [
+            0.05,
+            -0.2
+          ],
+          [
+            0.2,
+            -0.05
+          ],
+          [
+            0.2,
+            0.1
+          ],
+          [
+            0.05,
+            0.25
+          ],
+          [
+            -0.52,
+            0.3
+          ]
+        ],
+        "closed": true,
+        "region": "bucket",
+        "material": "wear-steel",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -1.225,
+          "z1": -1.2
+        }
+      },
+      {
+        "id": "tilt-lug-1",
+        "bone": "bucket",
+        "role": "body",
+        "z": 3.4,
+        "filled": true,
+        "tone": 0.1,
+        "kind": "poly",
+        "points": [
+          [
+            -0.52,
+            0.4
+          ],
+          [
+            -0.36,
+            0.45
+          ],
+          [
+            -0.3,
+            0.6
+          ],
+          [
+            -0.52,
+            0.62
+          ]
+        ],
+        "closed": true,
+        "region": "bucket",
+        "material": "wear-steel",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": 0.05,
+          "z1": 0.07
+        }
+      },
+      {
+        "id": "tilt-lug-2",
+        "bone": "bucket",
+        "role": "body",
+        "z": 3.4,
+        "filled": true,
+        "tone": 0.1,
+        "kind": "poly",
+        "points": [
+          [
+            -0.52,
+            0.4
+          ],
+          [
+            -0.36,
+            0.45
+          ],
+          [
+            -0.3,
+            0.6
+          ],
+          [
+            -0.52,
+            0.62
+          ]
+        ],
+        "closed": true,
+        "region": "bucket",
+        "material": "wear-steel",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.07,
+          "z1": -0.05
+        }
+      },
+      {
+        "id": "tilt-pin",
+        "bone": "bucket",
+        "role": "body",
+        "z": 3.4,
+        "filled": true,
+        "tone": 0.1,
+        "kind": "poly",
+        "points": [
+          [
+            -0.48,
+            0.47
+          ],
+          [
+            -0.42,
+            0.47
+          ],
+          [
+            -0.42,
+            0.53
+          ],
+          [
+            -0.48,
+            0.53
+          ]
+        ],
+        "closed": true,
+        "region": "bucket",
+        "material": "wear-steel",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.1,
+          "z1": 0.1
+        }
       }
      ]
     },
@@ -4712,36 +5050,30 @@
        "material": "glass"
       },
       {
-       "id": "tyre-f-l",
-       "bone": "wheel-f",
-       "role": "body",
-       "z": 4,
-       "filled": true,
-       "tone": 0.12,
-       "kind": "rect",
-       "x": 0.8,
-       "y": 0,
-       "w": 0.6,
-       "h": 1.75,
-       "r": 0.2,
-       "region": "tyres",
-       "material": "rubber"
+        "id": "tyre-f-l",
+        "bone": "wheel-f",
+        "role": "body",
+        "z": 4,
+        "filled": true,
+        "tone": 0.12,
+        "kind": "poly",
+        "points": [[0.85, 1.75], [1.09, 1.75], [1.09, 1.72], [1.11, 1.72], [1.11, 1.75], [1.35, 1.75], [1.36, 1.72], [1.4, 1.615], [1.4, 0.135], [1.36, 0.03], [1.35, 0.0], [1.11, 0.0], [1.11, 0.03], [1.09, 0.03], [1.09, 0.0], [0.85, 0.0], [0.84, 0.03], [0.8, 0.135], [0.8, 1.615], [0.84, 1.72]],
+        "closed": true,
+        "region": "tyres",
+        "material": "rubber"
       },
       {
-       "id": "tyre-f-r",
-       "bone": "wheel-f",
-       "role": "body",
-       "z": 4,
-       "filled": true,
-       "tone": 0.12,
-       "kind": "rect",
-       "x": -1.4,
-       "y": 0,
-       "w": 0.6,
-       "h": 1.75,
-       "r": 0.2,
-       "region": "tyres",
-       "material": "rubber"
+        "id": "tyre-f-r",
+        "bone": "wheel-f",
+        "role": "body",
+        "z": 4,
+        "filled": true,
+        "tone": 0.12,
+        "kind": "poly",
+        "points": [[-1.35, 1.75], [-1.11, 1.75], [-1.11, 1.72], [-1.09, 1.72], [-1.09, 1.75], [-0.85, 1.75], [-0.84, 1.72], [-0.8, 1.615], [-0.8, 0.135], [-0.84, 0.03], [-0.85, 0.0], [-1.09, 0.0], [-1.09, 0.03], [-1.11, 0.03], [-1.11, 0.0], [-1.35, 0.0], [-1.36, 0.03], [-1.4, 0.135], [-1.4, 1.615], [-1.36, 1.72]],
+        "closed": true,
+        "region": "tyres",
+        "material": "rubber"
       },
       {
        "id": "lift-arm-l",
@@ -5340,68 +5672,56 @@
        "material": "paint-steel"
       },
       {
-       "id": "tyre-f-l",
-       "bone": "wheel-f",
-       "role": "body",
-       "z": 1.5,
-       "filled": true,
-       "tone": 0.12,
-       "kind": "rect",
-       "x": 0.825,
-       "y": 0.8,
-       "w": 1.75,
-       "h": 0.6,
-       "r": 0.2,
-       "region": "tyres",
-       "material": "rubber"
+        "id": "tyre-f-l",
+        "bone": "wheel-f",
+        "role": "body",
+        "z": 1.5,
+        "filled": true,
+        "tone": 0.12,
+        "kind": "poly",
+        "points": [[2.575, 0.85], [2.575, 1.09], [2.545, 1.09], [2.545, 1.11], [2.575, 1.11], [2.575, 1.35], [2.545, 1.36], [2.44, 1.4], [0.96, 1.4], [0.855, 1.36], [0.825, 1.35], [0.825, 1.11], [0.855, 1.11], [0.855, 1.09], [0.825, 1.09], [0.825, 0.85], [0.855, 0.84], [0.96, 0.8], [2.44, 0.8], [2.545, 0.84]],
+        "closed": true,
+        "region": "tyres",
+        "material": "rubber"
       },
       {
-       "id": "tyre-f-r",
-       "bone": "wheel-f",
-       "role": "body",
-       "z": 1.5,
-       "filled": true,
-       "tone": 0.12,
-       "kind": "rect",
-       "x": 0.825,
-       "y": -1.4,
-       "w": 1.75,
-       "h": 0.6,
-       "r": 0.2,
-       "region": "tyres",
-       "material": "rubber"
+        "id": "tyre-f-r",
+        "bone": "wheel-f",
+        "role": "body",
+        "z": 1.5,
+        "filled": true,
+        "tone": 0.12,
+        "kind": "poly",
+        "points": [[2.575, -1.35], [2.575, -1.11], [2.545, -1.11], [2.545, -1.09], [2.575, -1.09], [2.575, -0.85], [2.545, -0.84], [2.44, -0.8], [0.96, -0.8], [0.855, -0.84], [0.825, -0.85], [0.825, -1.09], [0.855, -1.09], [0.855, -1.11], [0.825, -1.11], [0.825, -1.35], [0.855, -1.36], [0.96, -1.4], [2.44, -1.4], [2.545, -1.36]],
+        "closed": true,
+        "region": "tyres",
+        "material": "rubber"
       },
       {
-       "id": "tyre-r-l",
-       "bone": "wheel-r",
-       "role": "body",
-       "z": 1.5,
-       "filled": true,
-       "tone": 0.12,
-       "kind": "rect",
-       "x": -2.575,
-       "y": 0.8,
-       "w": 1.75,
-       "h": 0.6,
-       "r": 0.2,
-       "region": "tyres",
-       "material": "rubber"
+        "id": "tyre-r-l",
+        "bone": "wheel-r",
+        "role": "body",
+        "z": 1.5,
+        "filled": true,
+        "tone": 0.12,
+        "kind": "poly",
+        "points": [[-0.825, 0.85], [-0.825, 1.09], [-0.855, 1.09], [-0.855, 1.11], [-0.825, 1.11], [-0.825, 1.35], [-0.855, 1.36], [-0.96, 1.4], [-2.44, 1.4], [-2.545, 1.36], [-2.575, 1.35], [-2.575, 1.11], [-2.545, 1.11], [-2.545, 1.09], [-2.575, 1.09], [-2.575, 0.85], [-2.545, 0.84], [-2.44, 0.8], [-0.96, 0.8], [-0.855, 0.84]],
+        "closed": true,
+        "region": "tyres",
+        "material": "rubber"
       },
       {
-       "id": "tyre-r-r",
-       "bone": "wheel-r",
-       "role": "body",
-       "z": 1.5,
-       "filled": true,
-       "tone": 0.12,
-       "kind": "rect",
-       "x": -2.575,
-       "y": -1.4,
-       "w": 1.75,
-       "h": 0.6,
-       "r": 0.2,
-       "region": "tyres",
-       "material": "rubber"
+        "id": "tyre-r-r",
+        "bone": "wheel-r",
+        "role": "body",
+        "z": 1.5,
+        "filled": true,
+        "tone": 0.12,
+        "kind": "poly",
+        "points": [[-0.825, -1.35], [-0.825, -1.11], [-0.855, -1.11], [-0.855, -1.09], [-0.825, -1.09], [-0.825, -0.85], [-0.855, -0.84], [-0.96, -0.8], [-2.44, -0.8], [-2.545, -0.84], [-2.575, -0.85], [-2.575, -1.09], [-2.545, -1.09], [-2.545, -1.11], [-2.575, -1.11], [-2.575, -1.35], [-2.545, -1.36], [-2.44, -1.4], [-0.96, -1.4], [-0.855, -1.36]],
+        "closed": true,
+        "region": "tyres",
+        "material": "rubber"
       },
       {
        "id": "lift-arm-l",
@@ -7296,6 +7616,42 @@
        }
       },
       {
+        "id": "tilt-rod",
+        "bone": "tilt-rod",
+        "role": "body",
+        "z": 3.35,
+        "filled": true,
+        "tone": 0.8,
+        "kind": "poly",
+        "points": [
+          [
+            0,
+            -0.045
+          ],
+          [
+            0.2689,
+            -0.045
+          ],
+          [
+            0.2689,
+            0.045
+          ],
+          [
+            0,
+            0.045
+          ]
+        ],
+        "closed": true,
+        "region": "hydraulics",
+        "material": "chrome",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.045,
+          "z1": 0.045
+        }
+      },
+      {
        "id": "bucket",
        "bone": "bucket",
        "role": "body",
@@ -8323,6 +8679,78 @@
         "z0": -1.2,
         "z1": -0.9
        }
+      },
+      {
+        "id": "tilt-cyl",
+        "bone": "tilt-cyl",
+        "role": "body",
+        "z": 3.3,
+        "filled": true,
+        "tone": 0.5,
+        "kind": "poly",
+        "points": [
+          [
+            0,
+            -0.1
+          ],
+          [
+            0.9,
+            -0.1
+          ],
+          [
+            0.9,
+            0.1
+          ],
+          [
+            0,
+            0.1
+          ]
+        ],
+        "closed": true,
+        "region": "hydraulics",
+        "material": "paint-steel",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.1,
+          "z1": 0.1
+        }
+      },
+      {
+        "id": "tilt-rod",
+        "bone": "tilt-rod",
+        "role": "body",
+        "z": 3.35,
+        "filled": true,
+        "tone": 0.8,
+        "kind": "poly",
+        "points": [
+          [
+            0,
+            -0.045
+          ],
+          [
+            0.2689,
+            -0.045
+          ],
+          [
+            0.2689,
+            0.045
+          ],
+          [
+            0,
+            0.045
+          ]
+        ],
+        "closed": true,
+        "region": "hydraulics",
+        "material": "chrome",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.045,
+          "z1": 0.045
+        }
       },
       {
        "id": "bucket",
@@ -10464,6 +10892,8 @@
       "key": "engine-load",
       "heatW": 3000
      },
+     "ratedPowerW": 150000,
+     "ratedPowerBasis": "rated-output",
      "source": "authored-estimate",
      "reference": "heywood-2018"
     },
@@ -10825,7 +11255,7 @@
   "structure": {
    "gravityMS2": 9.8066,
    "dynamics": "quasi-static",
-   "supports": [],
+   "supports": ["contact-f-l", "contact-f-r", "contact-r-l", "contact-r-r"],
    "assumptions": [
     {
      "en": "Two tyre patch groups share the load as unilateral supports; the bucket content (rated 6 t) is a point load at the bucket content centre; the lift and tilt motion is quasi-static. The tipping line about the front axle appears when the arm is raised.",
@@ -10846,7 +11276,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.5,
-          "region": "engine-bay",
           "profile": [[-0.9, 0.62], [-0.9, 2.2], [-1.1, 2.4], [-3.0, 2.4], [-2.6, 1.9], [-2.6, 0.62]],
           "plane": "xy",
           "from": -0.992,
@@ -10862,7 +11291,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.5,
-          "region": "engine-bay",
           "profile": [[-0.9, 0.62], [-0.9, 2.2], [-1.1, 2.4], [-3.0, 2.4], [-2.6, 1.9], [-2.6, 0.62]],
           "plane": "xy",
           "from": 0.992,
@@ -10879,7 +11307,6 @@
           "material": "paint-steel",
           "role": "detail",
           "tone": 0.3,
-          "region": "engine-bay",
           "p0": [-2.3, 2.1, 1.006],
           "p1": [-1.2, 2.1, 1.006],
           "r0": 0.006,
@@ -10897,7 +11324,6 @@
           "material": "paint-steel",
           "role": "detail",
           "tone": 0.3,
-          "region": "engine-bay",
           "p0": [-2.3, 1.85, 1.006],
           "p1": [-1.2, 1.85, 1.006],
           "r0": 0.006,
@@ -10915,7 +11341,6 @@
           "material": "cast-iron",
           "role": "body",
           "tone": 0.35,
-          "region": "counterweight",
           "profile": [[-2.6, 0.62], [-2.6, 1.9], [-3.0, 2.4], [-3.35, 2.3], [-3.5, 2.05], [-3.5, 1.8], [-3.2, 1.8], [-3.2, 1.0], [-3.5, 1.0], [-3.5, 0.62]],
           "plane": "xy",
           "from": -0.5,
@@ -10928,7 +11353,6 @@
           "material": "cast-iron",
           "role": "body",
           "tone": 0.35,
-          "region": "counterweight",
           "profile": [[-2.6, 0.62], [-2.6, 1.9], [-3.0, 2.4], [-3.35, 2.3], [-3.5, 2.05], [-3.5, 0.62]],
           "plane": "xy",
           "from": 0.499,
@@ -10945,7 +11369,6 @@
           "material": "cast-iron",
           "role": "detail",
           "tone": 0.2,
-          "region": "counterweight",
           "size": [0.06, 0.024, 1.002],
           "transform": {
             "translation": [-3.43, 1.1, 0.0]
@@ -10958,7 +11381,6 @@
           "material": "cast-iron",
           "role": "detail",
           "tone": 0.2,
-          "region": "counterweight",
           "size": [0.06, 0.024, 1.002],
           "transform": {
             "translation": [-3.43, 1.26, 0.0]
@@ -10971,7 +11393,6 @@
           "material": "cast-iron",
           "role": "detail",
           "tone": 0.2,
-          "region": "counterweight",
           "size": [0.06, 0.024, 1.002],
           "transform": {
             "translation": [-3.43, 1.42, 0.0]
@@ -10984,7 +11405,6 @@
           "material": "cast-iron",
           "role": "detail",
           "tone": 0.2,
-          "region": "counterweight",
           "size": [0.06, 0.024, 1.002],
           "transform": {
             "translation": [-3.43, 1.58, 0.0]
@@ -10997,7 +11417,6 @@
           "material": "cast-iron",
           "role": "detail",
           "tone": 0.2,
-          "region": "counterweight",
           "size": [0.06, 0.024, 1.002],
           "transform": {
             "translation": [-3.43, 1.74, 0.0]
@@ -11118,7 +11537,6 @@
           "material": "exhaust-steel",
           "role": "body",
           "tone": 0.25,
-          "region": "exhaust-stack",
           "profile": [[2.3, 0.09], [3.15, 0.09], [3.15, 0.0885], [2.3, 0.0885], [2.3, 0.09]],
           "axis": [0, 1, 0],
           "origin": [-1.23, 0, -0.9]
@@ -11221,7 +11639,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.45,
-          "region": "front-frame",
           "profile": [[-0.9, 0.62], [2.35, 0.62], [2.35, 1.2], [-0.9, 1.2]],
           "plane": "xy",
           "from": -0.889,
@@ -11237,7 +11654,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.45,
-          "region": "front-frame",
           "profile": [[-0.9, 0.62], [2.35, 0.62], [2.35, 1.2], [-0.9, 1.2]],
           "plane": "xy",
           "from": 0.888,
@@ -11250,7 +11666,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.45,
-          "region": "front-frame",
           "profile": [[-0.9, 0.62], [2.35, 0.62], [2.35, 1.2], [-0.9, 1.2]],
           "plane": "xy",
           "from": -0.9,
@@ -11263,7 +11678,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.45,
-          "region": "front-frame",
           "profile": [[-0.9, 0.62], [2.35, 0.62], [2.35, 1.2], [1.5, 1.45], [1.5, 2.2], [1.0, 2.2], [1.0, 1.45], [-0.9, 1.45]],
           "plane": "xy",
           "from": 0.631,
@@ -11283,7 +11697,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.45,
-          "region": "front-frame",
           "profile": [[-0.9, 0.62], [2.35, 0.62], [2.35, 1.2], [1.5, 1.45], [1.5, 2.2], [1.0, 2.2], [1.0, 1.45], [-0.9, 1.45]],
           "plane": "xy",
           "from": 0.868,
@@ -11300,7 +11713,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.45,
-          "region": "front-frame",
           "profile": [[-0.9, 0.62], [2.35, 0.62], [2.35, 1.2], [1.5, 1.45], [1.5, 2.2], [1.0, 2.2], [1.0, 1.45], [-0.9, 1.45]],
           "plane": "xy",
           "from": 0.62,
@@ -11339,7 +11751,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.3,
-          "region": "front-frame",
           "profile": [[0, 0.07], [2.5, 0.07]],
           "axis": [0, 0, 1],
           "origin": [1.1, 2.0, -1.25]
@@ -11351,7 +11762,6 @@
           "material": "paint-steel",
           "role": "detail",
           "tone": 0.15,
-          "region": "front-frame",
           "size": [0.4, 0.2, 0.2],
           "transform": {
             "translation": [-0.7, 1.0, -0.9]
@@ -11380,7 +11790,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.55,
-          "region": "cab",
           "profile": [[1.0, 1.45], [0.98, 2.2], [0.82, 3.32], [0.7, 3.4], [-0.8, 3.4], [-0.9, 3.28], [-0.9, 1.45]],
           "plane": "xy",
           "from": -0.792,
@@ -11396,7 +11805,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.55,
-          "region": "cab",
           "profile": [[1.0, 1.45], [0.98, 2.2], [0.82, 3.32], [0.7, 3.4], [-0.8, 3.4], [-0.9, 3.28], [-0.9, 1.45]],
           "plane": "xy",
           "from": 0.792,
@@ -11417,7 +11825,6 @@
           "material": "glass",
           "role": "glazing",
           "tone": 0.8,
-          "region": "cab-glazing",
           "profile": [[-0.6, 2.1], [0.0, 2.1], [0.0, 3.2], [-0.6, 3.2]],
           "plane": "xy",
           "from": 0.794,
@@ -11434,7 +11841,6 @@
           "material": "glass",
           "role": "glazing",
           "tone": 0.8,
-          "region": "cab-glazing",
           "profile": [[0.2, 2.1], [0.78, 2.1], [0.66, 3.2], [0.2, 3.2]],
           "plane": "xy",
           "from": 0.794,
@@ -11451,7 +11857,6 @@
           "material": "glass",
           "role": "glazing",
           "tone": 0.8,
-          "region": "cab-glazing",
           "profile": [[0.82, 3.32], [0.98, 2.2], [0.98594, 2.20085], [0.82594, 3.32085]],
           "plane": "xy",
           "from": -0.65,
@@ -11464,7 +11869,6 @@
           "material": "paint-steel",
           "role": "detail",
           "tone": 0.2,
-          "region": "cab",
           "profile": [[0.95, 3.0], [1.1, 3.0], [1.1, 3.25], [0.85, 3.25]],
           "plane": "xy",
           "from": -0.95,
@@ -11477,7 +11881,6 @@
           "material": "paint-steel",
           "role": "detail",
           "tone": 0.2,
-          "region": "cab",
           "size": [0.4, 0.05, 0.03],
           "transform": {
             "translation": [0.0, 2.025, 0.815]
@@ -11494,7 +11897,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.4,
-          "region": "lift-arm",
           "profile": [[-0.25, -0.32], [1, -0.28], [2, -0.22], [2.85, -0.25], [2.85, 0.25], [2, 0.38], [1, 0.48], [-0.25, 0.32]],
           "plane": "xy",
           "from": 0.919,
@@ -11514,7 +11916,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.4,
-          "region": "lift-arm",
           "profile": [[-0.25, -0.32], [1, -0.28], [2, -0.22], [2.85, -0.25], [2.85, 0.25], [2, 0.38], [1, 0.48], [-0.25, 0.32]],
           "plane": "xy",
           "from": 1.18,
@@ -11531,7 +11932,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.4,
-          "region": "lift-arm",
           "profile": [[-0.25, -0.32], [1, -0.28], [2, -0.22], [2.85, -0.25], [2.85, 0.25], [2, 0.38], [1, 0.48], [-0.25, 0.32]],
           "plane": "xy",
           "from": 0.9,
@@ -11548,7 +11948,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.35,
-          "region": "lift-arm",
           "profile": [[0, 0.14], [1.8, 0.14]],
           "axis": [0, 0, 1],
           "origin": [1.0, 0.0, -0.9]
@@ -11560,7 +11959,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.3,
-          "region": "lift-arm",
           "profile": [[0, 0.06], [2.55, 0.06]],
           "axis": [0, 0, 1],
           "origin": [2.7, 0.0, -1.275]
@@ -11572,7 +11970,6 @@
           "material": "chrome",
           "role": "detail",
           "tone": 0.6,
-          "region": "hydraulics",
           "profile": [[0, 0.12], [1.1, 0.12]],
           "axis": [1, 0, 0],
           "origin": [0.0, 0, 0.6],
@@ -11588,7 +11985,6 @@
           "material": "chrome",
           "role": "detail",
           "tone": 0.7,
-          "region": "hydraulics",
           "profile": [[0, 0.05], [0.4564, 0.05]],
           "axis": [1, 0, 0],
           "origin": [0.0, 0, 0.6],
@@ -11604,7 +12000,6 @@
           "material": "chrome",
           "role": "detail",
           "tone": 0.6,
-          "region": "hydraulics",
           "profile": [[0, 0.1], [0.9, 0.1]],
           "axis": [1, 0, 0],
           "origin": [0.0, 0, 0]
@@ -11616,7 +12011,6 @@
           "material": "chrome",
           "role": "detail",
           "tone": 0.7,
-          "region": "hydraulics",
           "profile": [[0, 0.045], [0.2679, 0.045]],
           "axis": [1, 0, 0],
           "origin": [5e-05, 0, 0]
@@ -11628,7 +12022,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.3,
-          "region": "bucket",
           "profile": [[-0.45, -0.6], [1.5, -0.8], [1.62, -0.62], [1.05, 0.05], [0.15, 0.6], [-0.35, 0.55], [-0.55, 0]],
           "plane": "xy",
           "from": 1.45,
@@ -11645,7 +12038,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.3,
-          "region": "bucket",
           "profile": [
             [1.50255, -0.77513],
             [-0.42848, -0.57708],
@@ -11669,7 +12061,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.3,
-          "region": "bucket",
           "profile": [[1.35558, -0.70031], [-0.38536, -0.5047], [-0.44892, -0.0053], [-0.27275, 0.50364], [-0.32, 0.52], [-0.5, 0.0], [-0.43, -0.55], [1.35, -0.75]],
           "plane": "xy",
           "from": 0.285,
@@ -11686,7 +12077,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.3,
-          "region": "bucket",
           "profile": [[1.35558, -0.70031], [-0.38536, -0.5047], [-0.44892, -0.0053], [-0.27275, 0.50364], [-0.32, 0.52], [-0.5, 0.0], [-0.43, -0.55], [1.35, -0.75]],
           "plane": "xy",
           "from": 0.875,
@@ -11703,7 +12093,6 @@
           "material": "wear-steel",
           "role": "body",
           "tone": 0.3,
-          "region": "bucket",
           "profile": [[1.5, -0.8], [1.62, -0.62], [1.3, -0.77]],
           "plane": "xy",
           "from": -1.475,
@@ -11716,7 +12105,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.3,
-          "region": "bucket",
           "profile": [[-0.52, -0.2], [0.05, -0.2], [0.2, -0.05], [0.2, 0.1], [0.05, 0.25], [-0.52, 0.3]],
           "plane": "xy",
           "from": 1.2,
@@ -11733,7 +12121,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.35,
-          "region": "bucket",
           "profile": [[-0.52, 0.4], [-0.36, 0.45], [-0.3, 0.6], [-0.52, 0.62]],
           "plane": "xy",
           "from": 0.05,
@@ -11750,7 +12137,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.3,
-          "region": "bucket",
           "profile": [[0, 0.03], [0.2, 0.03]],
           "axis": [0, 0, 1],
           "origin": [-0.45, 0.5, -0.1]
@@ -11762,7 +12148,6 @@
           "material": "rubber",
           "role": "body",
           "tone": 0.12,
-          "region": "tyres",
           "profile": [[-0.3, 0.0], [-0.3, 0.74], [-0.26, 0.845], [0.26, 0.845], [0.3, 0.74], [0.3, 0.0]],
           "axis": [0, 0, 1],
           "origin": [0, 0, 1.1],
@@ -11778,7 +12163,6 @@
           "material": "cast-iron",
           "role": "detail",
           "tone": 0.6,
-          "region": "tyres",
           "profile": [[-0.11, 0.0], [-0.11, 0.5], [0.303, 0.5], [0.303, 0.0]],
           "axis": [0, 0, 1],
           "origin": [0, 0, 1.1],
@@ -11794,13 +12178,12 @@
           "material": "cast-iron",
           "role": "detail",
           "tone": 0.3,
-          "region": "tyres",
-          "profile": [[0.0, 0.0], [0.0, 0.14], [0.01, 0.14], [0.01, 0.0]],
+          "profile": [[0.0, 0.0], [0.0, 0.14], [0.013, 0.14], [0.013, 0.0]],
           "axis": [0, 0, 1],
-          "origin": [0, 0, 1.403],
+          "origin": [0, 0, 1.4],
           "repeat": {
             "count": 2,
-            "translation": [0, 0, -2.806]
+            "translation": [0, 0, -2.813]
           }
         },
         {
@@ -11810,7 +12193,6 @@
           "material": "rubber",
           "role": "detail",
           "tone": 0.05,
-          "region": "tyres",
           "profile": [[0.8, -0.07], [0.875, -0.07], [0.875, 0.07], [0.8, 0.07]],
           "plane": "xy",
           "from": 1.11,
@@ -11829,7 +12211,6 @@
           "material": "rubber",
           "role": "detail",
           "tone": 0.05,
-          "region": "tyres",
           "profile": [[0.80229, 0.03502], [0.87665, 0.04481], [0.85838, 0.18361], [0.78402, 0.17382]],
           "plane": "xy",
           "from": 0.85,
@@ -11848,7 +12229,6 @@
           "material": "cast-iron",
           "role": "detail",
           "tone": 0.0,
-          "region": "tyres",
           "profile": [[0.0, 0.0], [0.0, 0.045], [0.02, 0.045], [0.02, 0.0]],
           "axis": [0, 0, 1],
           "origin": [0.3, 0, 1.413],
@@ -11866,7 +12246,6 @@
           "material": "rubber",
           "role": "detail",
           "tone": 0.05,
-          "region": "tyres",
           "profile": [[0.8, -0.07], [0.875, -0.07], [0.875, 0.07], [0.8, 0.07]],
           "plane": "xy",
           "from": -1.09,
@@ -11885,7 +12264,6 @@
           "material": "rubber",
           "role": "detail",
           "tone": 0.05,
-          "region": "tyres",
           "profile": [[0.80229, 0.03502], [0.87665, 0.04481], [0.85838, 0.18361], [0.78402, 0.17382]],
           "plane": "xy",
           "from": -1.35,
@@ -11904,7 +12282,6 @@
           "material": "cast-iron",
           "role": "detail",
           "tone": 0.0,
-          "region": "tyres",
           "profile": [[0.0, 0.0], [0.0, 0.045], [0.02, 0.045], [0.02, 0.0]],
           "axis": [0, 0, 1],
           "origin": [0.3, 0, -1.433],
@@ -11922,7 +12299,6 @@
           "material": "rubber",
           "role": "body",
           "tone": 0.12,
-          "region": "tyres",
           "profile": [[-0.3, 0.0], [-0.3, 0.74], [-0.26, 0.845], [0.26, 0.845], [0.3, 0.74], [0.3, 0.0]],
           "axis": [0, 0, 1],
           "origin": [0, 0, 1.1],
@@ -11938,7 +12314,6 @@
           "material": "cast-iron",
           "role": "detail",
           "tone": 0.6,
-          "region": "tyres",
           "profile": [[-0.11, 0.0], [-0.11, 0.5], [0.303, 0.5], [0.303, 0.0]],
           "axis": [0, 0, 1],
           "origin": [0, 0, 1.1],
@@ -11954,13 +12329,12 @@
           "material": "cast-iron",
           "role": "detail",
           "tone": 0.3,
-          "region": "tyres",
-          "profile": [[0.0, 0.0], [0.0, 0.14], [0.01, 0.14], [0.01, 0.0]],
+          "profile": [[0.0, 0.0], [0.0, 0.14], [0.013, 0.14], [0.013, 0.0]],
           "axis": [0, 0, 1],
-          "origin": [0, 0, 1.403],
+          "origin": [0, 0, 1.4],
           "repeat": {
             "count": 2,
-            "translation": [0, 0, -2.806]
+            "translation": [0, 0, -2.813]
           }
         },
         {
@@ -11970,7 +12344,6 @@
           "material": "rubber",
           "role": "detail",
           "tone": 0.05,
-          "region": "tyres",
           "profile": [[0.8, -0.07], [0.875, -0.07], [0.875, 0.07], [0.8, 0.07]],
           "plane": "xy",
           "from": 1.11,
@@ -11989,7 +12362,6 @@
           "material": "rubber",
           "role": "detail",
           "tone": 0.05,
-          "region": "tyres",
           "profile": [[0.80229, 0.03502], [0.87665, 0.04481], [0.85838, 0.18361], [0.78402, 0.17382]],
           "plane": "xy",
           "from": 0.85,
@@ -12008,7 +12380,6 @@
           "material": "cast-iron",
           "role": "detail",
           "tone": 0.0,
-          "region": "tyres",
           "profile": [[0.0, 0.0], [0.0, 0.045], [0.02, 0.045], [0.02, 0.0]],
           "axis": [0, 0, 1],
           "origin": [0.3, 0, 1.413],
@@ -12026,7 +12397,6 @@
           "material": "rubber",
           "role": "detail",
           "tone": 0.05,
-          "region": "tyres",
           "profile": [[0.8, -0.07], [0.875, -0.07], [0.875, 0.07], [0.8, 0.07]],
           "plane": "xy",
           "from": -1.09,
@@ -12045,7 +12415,6 @@
           "material": "rubber",
           "role": "detail",
           "tone": 0.05,
-          "region": "tyres",
           "profile": [[0.80229, 0.03502], [0.87665, 0.04481], [0.85838, 0.18361], [0.78402, 0.17382]],
           "plane": "xy",
           "from": -1.35,
@@ -12064,7 +12433,6 @@
           "material": "cast-iron",
           "role": "detail",
           "tone": 0.0,
-          "region": "tyres",
           "profile": [[0.0, 0.0], [0.0, 0.045], [0.02, 0.045], [0.02, 0.0]],
           "axis": [0, 0, 1],
           "origin": [0.3, 0, -1.433],
@@ -12781,7 +13149,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.5,
-          "region": "engine-bay",
           "profile": [[-0.9, 0.62], [-0.9, 2.2], [-1.1, 2.4], [-3.0, 2.4], [-2.6, 1.9], [-2.6, 0.62]],
           "plane": "xy",
           "from": -0.985,
@@ -12797,7 +13164,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.5,
-          "region": "engine-bay",
           "profile": [[-0.9, 0.62], [-0.9, 2.2], [-1.1, 2.4], [-3.0, 2.4], [-2.6, 1.9], [-2.6, 0.62]],
           "plane": "xy",
           "from": 0.985,
@@ -12814,7 +13180,6 @@
           "material": "cast-iron",
           "role": "body",
           "tone": 0.35,
-          "region": "counterweight",
           "profile": [[-2.6, 0.62], [-2.6, 1.9], [-3.0, 2.4], [-3.35, 2.3], [-3.5, 2.05], [-3.5, 1.8], [-3.2, 1.8], [-3.2, 1.0], [-3.5, 1.0], [-3.5, 0.62]],
           "plane": "xy",
           "from": -0.5,
@@ -12827,7 +13192,6 @@
           "material": "cast-iron",
           "role": "body",
           "tone": 0.35,
-          "region": "counterweight",
           "profile": [[-2.6, 0.62], [-2.6, 1.9], [-3.0, 2.4], [-3.35, 2.3], [-3.5, 2.05], [-3.5, 0.62]],
           "plane": "xy",
           "from": 0.499,
@@ -12941,7 +13305,6 @@
           "material": "exhaust-steel",
           "role": "body",
           "tone": 0.25,
-          "region": "exhaust-stack",
           "profile": [[2.3, 0.09], [3.15, 0.09], [3.15, 0.0885], [2.3, 0.0885], [2.3, 0.09]],
           "axis": [0, 1, 0],
           "origin": [-1.23, 0, -0.9]
@@ -13044,7 +13407,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.45,
-          "region": "front-frame",
           "profile": [[-0.9, 0.62], [2.35, 0.62], [2.35, 1.2], [-0.9, 1.2]],
           "plane": "xy",
           "from": -0.886,
@@ -13060,7 +13422,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.45,
-          "region": "front-frame",
           "profile": [[-0.9, 0.62], [2.35, 0.62], [2.35, 1.2], [-0.9, 1.2]],
           "plane": "xy",
           "from": 0.885,
@@ -13073,7 +13434,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.45,
-          "region": "front-frame",
           "profile": [[-0.9, 0.62], [2.35, 0.62], [2.35, 1.2], [-0.9, 1.2]],
           "plane": "xy",
           "from": -0.9,
@@ -13086,7 +13446,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.45,
-          "region": "front-frame",
           "profile": [[-0.9, 0.62], [2.35, 0.62], [2.35, 1.2], [1.5, 1.45], [1.5, 2.2], [1.0, 2.2], [1.0, 1.45], [-0.9, 1.45]],
           "plane": "xy",
           "from": 0.634,
@@ -13106,7 +13465,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.45,
-          "region": "front-frame",
           "profile": [[-0.9, 0.62], [2.35, 0.62], [2.35, 1.2], [1.5, 1.45], [1.5, 2.2], [1.0, 2.2], [1.0, 1.45], [-0.9, 1.45]],
           "plane": "xy",
           "from": 0.865,
@@ -13123,7 +13481,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.45,
-          "region": "front-frame",
           "profile": [[-0.9, 0.62], [2.35, 0.62], [2.35, 1.2], [1.5, 1.45], [1.5, 2.2], [1.0, 2.2], [1.0, 1.45], [-0.9, 1.45]],
           "plane": "xy",
           "from": 0.62,
@@ -13140,7 +13497,6 @@
           "material": "paint-steel",
           "role": "detail",
           "tone": 0.15,
-          "region": "front-frame",
           "size": [0.4, 0.2, 0.2],
           "transform": {
             "translation": [-0.7, 1.0, -0.9]
@@ -13169,7 +13525,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.55,
-          "region": "cab",
           "profile": [[1.0, 1.45], [0.98, 2.2], [0.82, 3.32], [0.7, 3.4], [-0.8, 3.4], [-0.9, 3.28], [-0.9, 1.45]],
           "plane": "xy",
           "from": -0.785,
@@ -13185,7 +13540,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.55,
-          "region": "cab",
           "profile": [[1.0, 1.45], [0.98, 2.2], [0.82, 3.32], [0.7, 3.4], [-0.8, 3.4], [-0.9, 3.28], [-0.9, 1.45]],
           "plane": "xy",
           "from": 0.785,
@@ -13206,7 +13560,6 @@
           "material": "glass",
           "role": "glazing",
           "tone": 0.8,
-          "region": "cab-glazing",
           "profile": [[-0.6, 2.1], [0.0, 2.1], [0.0, 3.2], [-0.6, 3.2]],
           "plane": "xy",
           "from": 0.794,
@@ -13223,7 +13576,6 @@
           "material": "glass",
           "role": "glazing",
           "tone": 0.8,
-          "region": "cab-glazing",
           "profile": [[0.2, 2.1], [0.78, 2.1], [0.66, 3.2], [0.2, 3.2]],
           "plane": "xy",
           "from": 0.794,
@@ -13240,7 +13592,6 @@
           "material": "glass",
           "role": "glazing",
           "tone": 0.8,
-          "region": "cab-glazing",
           "profile": [[0.82, 3.32], [0.98, 2.2], [0.98594, 2.20085], [0.82594, 3.32085]],
           "plane": "xy",
           "from": -0.65,
@@ -13253,7 +13604,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.4,
-          "region": "lift-arm",
           "profile": [[-0.25, -0.32], [1, -0.28], [2, -0.22], [2.85, -0.25], [2.85, 0.25], [2, 0.38], [1, 0.48], [-0.25, 0.32]],
           "plane": "xy",
           "from": 0.919,
@@ -13273,7 +13623,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.4,
-          "region": "lift-arm",
           "profile": [[-0.25, -0.32], [1, -0.28], [2, -0.22], [2.85, -0.25], [2.85, 0.25], [2, 0.38], [1, 0.48], [-0.25, 0.32]],
           "plane": "xy",
           "from": 1.18,
@@ -13290,7 +13639,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.4,
-          "region": "lift-arm",
           "profile": [[-0.25, -0.32], [1, -0.28], [2, -0.22], [2.85, -0.25], [2.85, 0.25], [2, 0.38], [1, 0.48], [-0.25, 0.32]],
           "plane": "xy",
           "from": 0.9,
@@ -13307,7 +13655,6 @@
           "material": "chrome",
           "role": "detail",
           "tone": 0.6,
-          "region": "hydraulics",
           "profile": [[0, 0.12], [1.1, 0.12]],
           "axis": [1, 0, 0],
           "origin": [0.0, 0, 0.6],
@@ -13323,7 +13670,6 @@
           "material": "chrome",
           "role": "detail",
           "tone": 0.7,
-          "region": "hydraulics",
           "profile": [[0, 0.05], [0.4564, 0.05]],
           "axis": [1, 0, 0],
           "origin": [0.0, 0, 0.6],
@@ -13339,7 +13685,6 @@
           "material": "chrome",
           "role": "detail",
           "tone": 0.6,
-          "region": "hydraulics",
           "profile": [[0, 0.1], [0.9, 0.1]],
           "axis": [1, 0, 0],
           "origin": [0.0, 0, 0]
@@ -13351,7 +13696,6 @@
           "material": "chrome",
           "role": "detail",
           "tone": 0.7,
-          "region": "hydraulics",
           "profile": [[0, 0.045], [0.2679, 0.045]],
           "axis": [1, 0, 0],
           "origin": [5e-05, 0, 0]
@@ -13363,7 +13707,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.3,
-          "region": "bucket",
           "profile": [[-0.45, -0.6], [1.5, -0.8], [1.62, -0.62], [1.05, 0.05], [0.15, 0.6], [-0.35, 0.55], [-0.55, 0]],
           "plane": "xy",
           "from": 1.45,
@@ -13380,7 +13723,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.3,
-          "region": "bucket",
           "profile": [
             [1.50255, -0.77513],
             [-0.42848, -0.57708],
@@ -13404,7 +13746,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.3,
-          "region": "bucket",
           "profile": [[1.35558, -0.70031], [-0.38536, -0.5047], [-0.44892, -0.0053], [-0.27275, 0.50364], [-0.32, 0.52], [-0.5, 0.0], [-0.43, -0.55], [1.35, -0.75]],
           "plane": "xy",
           "from": 0.728,
@@ -13421,7 +13762,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.3,
-          "region": "bucket",
           "profile": [[1.35558, -0.70031], [-0.38536, -0.5047], [-0.44892, -0.0053], [-0.27275, 0.50364], [-0.32, 0.52], [-0.5, 0.0], [-0.43, -0.55], [1.35, -0.75]],
           "plane": "xy",
           "from": -0.01,
@@ -13434,7 +13774,6 @@
           "material": "wear-steel",
           "role": "body",
           "tone": 0.3,
-          "region": "bucket",
           "profile": [[1.5, -0.8], [1.62, -0.62], [1.3, -0.77]],
           "plane": "xy",
           "from": -1.475,
@@ -13447,7 +13786,6 @@
           "material": "rubber",
           "role": "body",
           "tone": 0.12,
-          "region": "tyres",
           "profile": [[-0.3, 0.0], [-0.3, 0.74], [-0.26, 0.875], [0.26, 0.875], [0.3, 0.74], [0.3, 0.0]],
           "axis": [0, 0, 1],
           "origin": [0, 0, 1.1],
@@ -13463,7 +13801,6 @@
           "material": "cast-iron",
           "role": "detail",
           "tone": 0.6,
-          "region": "tyres",
           "profile": [[-0.11, 0.0], [-0.11, 0.5], [0.303, 0.5], [0.303, 0.0]],
           "axis": [0, 0, 1],
           "origin": [0, 0, 1.1],
@@ -13479,7 +13816,6 @@
           "material": "cast-iron",
           "role": "detail",
           "tone": 0.3,
-          "region": "tyres",
           "profile": [[0.0, 0.0], [0.0, 0.14], [0.016, 0.14], [0.016, 0.0]],
           "axis": [0, 0, 1],
           "origin": [0, 0, 1.403],
@@ -13495,7 +13831,6 @@
           "material": "rubber",
           "role": "body",
           "tone": 0.12,
-          "region": "tyres",
           "profile": [[-0.3, 0.0], [-0.3, 0.74], [-0.26, 0.875], [0.26, 0.875], [0.3, 0.74], [0.3, 0.0]],
           "axis": [0, 0, 1],
           "origin": [0, 0, 1.1],
@@ -13511,7 +13846,6 @@
           "material": "cast-iron",
           "role": "detail",
           "tone": 0.6,
-          "region": "tyres",
           "profile": [[-0.11, 0.0], [-0.11, 0.5], [0.303, 0.5], [0.303, 0.0]],
           "axis": [0, 0, 1],
           "origin": [0, 0, 1.1],
@@ -13527,7 +13861,6 @@
           "material": "cast-iron",
           "role": "detail",
           "tone": 0.3,
-          "region": "tyres",
           "profile": [[0.0, 0.0], [0.0, 0.14], [0.016, 0.14], [0.016, 0.0]],
           "axis": [0, 0, 1],
           "origin": [0, 0, 1.403],
@@ -14098,7 +14431,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.5,
-          "region": "engine-bay",
           "profile": [[-0.9, 0.62], [-0.9, 2.2], [-1.1, 2.4], [-3.0, 2.4], [-2.6, 1.9], [-2.6, 0.62]],
           "plane": "xy",
           "from": -0.97,
@@ -14114,7 +14446,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.5,
-          "region": "engine-bay",
           "profile": [[-0.9, 0.62], [-0.9, 2.2], [-1.1, 2.4], [-3.0, 2.4], [-2.6, 1.9], [-2.6, 0.62]],
           "plane": "xy",
           "from": 0.97,
@@ -14131,7 +14462,6 @@
           "material": "cast-iron",
           "role": "body",
           "tone": 0.35,
-          "region": "counterweight",
           "profile": [[-2.6, 0.62], [-2.6, 1.9], [-3.0, 2.4], [-3.35, 2.3], [-3.5, 2.05], [-3.5, 0.62]],
           "plane": "xy",
           "from": -1.1,
@@ -14167,7 +14497,6 @@
           "material": "exhaust-steel",
           "role": "body",
           "tone": 0.25,
-          "region": "exhaust-stack",
           "profile": [[2.3, 0.09], [3.15, 0.09], [3.15, 0.0885], [2.3, 0.0885], [2.3, 0.09]],
           "axis": [0, 1, 0],
           "origin": [-1.23, 0, -0.9]
@@ -14179,7 +14508,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.45,
-          "region": "front-frame",
           "profile": [[-0.9, 0.62], [2.35, 0.62], [2.35, 1.2], [-0.9, 1.2]],
           "plane": "xy",
           "from": -0.871,
@@ -14195,7 +14523,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.45,
-          "region": "front-frame",
           "profile": [[-0.9, 0.62], [2.35, 0.62], [2.35, 1.2], [-0.9, 1.2]],
           "plane": "xy",
           "from": 0.87,
@@ -14208,7 +14535,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.45,
-          "region": "front-frame",
           "profile": [[-0.9, 0.62], [2.35, 0.62], [2.35, 1.2], [-0.9, 1.2]],
           "plane": "xy",
           "from": -0.9,
@@ -14221,7 +14547,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.45,
-          "region": "front-frame",
           "profile": [[-0.9, 0.62], [2.35, 0.62], [2.35, 1.2], [1.5, 1.45], [1.5, 2.2], [1.0, 2.2], [1.0, 1.45], [-0.9, 1.45]],
           "plane": "xy",
           "from": 0.649,
@@ -14241,7 +14566,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.45,
-          "region": "front-frame",
           "profile": [[-0.9, 0.62], [2.35, 0.62], [2.35, 1.2], [1.5, 1.45], [1.5, 2.2], [1.0, 2.2], [1.0, 1.45], [-0.9, 1.45]],
           "plane": "xy",
           "from": 0.85,
@@ -14258,7 +14582,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.45,
-          "region": "front-frame",
           "profile": [[-0.9, 0.62], [2.35, 0.62], [2.35, 1.2], [1.5, 1.45], [1.5, 2.2], [1.0, 2.2], [1.0, 1.45], [-0.9, 1.45]],
           "plane": "xy",
           "from": 0.62,
@@ -14275,7 +14598,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.55,
-          "region": "cab",
           "profile": [[1.0, 1.45], [0.98, 2.2], [0.82, 3.32], [0.7, 3.4], [-0.8, 3.4], [-0.9, 3.28], [-0.9, 1.45]],
           "plane": "xy",
           "from": -0.77,
@@ -14291,7 +14613,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.55,
-          "region": "cab",
           "profile": [[1.0, 1.45], [0.98, 2.2], [0.82, 3.32], [0.7, 3.4], [-0.8, 3.4], [-0.9, 3.28], [-0.9, 1.45]],
           "plane": "xy",
           "from": 0.77,
@@ -14312,7 +14633,6 @@
           "material": "glass",
           "role": "glazing",
           "tone": 0.8,
-          "region": "cab-glazing",
           "profile": [[-0.6, 2.1], [0.0, 2.1], [0.0, 3.2], [-0.6, 3.2]],
           "plane": "xy",
           "from": 0.794,
@@ -14329,7 +14649,6 @@
           "material": "glass",
           "role": "glazing",
           "tone": 0.8,
-          "region": "cab-glazing",
           "profile": [[0.2, 2.1], [0.78, 2.1], [0.66, 3.2], [0.2, 3.2]],
           "plane": "xy",
           "from": 0.794,
@@ -14346,7 +14665,6 @@
           "material": "glass",
           "role": "glazing",
           "tone": 0.8,
-          "region": "cab-glazing",
           "profile": [[0.82, 3.32], [0.98, 2.2], [0.98594, 2.20085], [0.82594, 3.32085]],
           "plane": "xy",
           "from": -0.65,
@@ -14359,7 +14677,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.4,
-          "region": "lift-arm",
           "profile": [[-0.25, -0.32], [1, -0.28], [2, -0.22], [2.85, -0.25], [2.85, 0.25], [2, 0.38], [1, 0.48], [-0.25, 0.32]],
           "plane": "xy",
           "from": 0.929,
@@ -14379,7 +14696,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.4,
-          "region": "lift-arm",
           "profile": [[-0.25, -0.32], [1, -0.28], [2, -0.22], [2.85, -0.25], [2.85, 0.25], [2, 0.38], [1, 0.48], [-0.25, 0.32]],
           "plane": "xy",
           "from": 1.17,
@@ -14396,7 +14712,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.4,
-          "region": "lift-arm",
           "profile": [[-0.25, -0.32], [1, -0.28], [2, -0.22], [2.85, -0.25], [2.85, 0.25], [2, 0.38], [1, 0.48], [-0.25, 0.32]],
           "plane": "xy",
           "from": 0.9,
@@ -14413,7 +14728,6 @@
           "material": "chrome",
           "role": "detail",
           "tone": 0.6,
-          "region": "hydraulics",
           "profile": [[0, 0.12], [1.1, 0.12]],
           "axis": [1, 0, 0],
           "origin": [0.0, 0, 0.6],
@@ -14429,7 +14743,6 @@
           "material": "chrome",
           "role": "detail",
           "tone": 0.7,
-          "region": "hydraulics",
           "profile": [[0, 0.05], [0.4564, 0.05]],
           "axis": [1, 0, 0],
           "origin": [0.0, 0, 0.6],
@@ -14445,7 +14758,6 @@
           "material": "chrome",
           "role": "detail",
           "tone": 0.6,
-          "region": "hydraulics",
           "profile": [[0, 0.1], [0.9, 0.1]],
           "axis": [1, 0, 0],
           "origin": [0.0, 0, 0]
@@ -14457,7 +14769,6 @@
           "material": "chrome",
           "role": "detail",
           "tone": 0.7,
-          "region": "hydraulics",
           "profile": [[0, 0.045], [0.2679, 0.045]],
           "axis": [1, 0, 0],
           "origin": [5e-05, 0, 0]
@@ -14469,7 +14780,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.3,
-          "region": "bucket",
           "profile": [[-0.45, -0.6], [1.5, -0.8], [1.62, -0.62], [1.05, 0.05], [0.15, 0.6], [-0.35, 0.55], [-0.55, 0]],
           "plane": "xy",
           "from": 1.445,
@@ -14486,7 +14796,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.3,
-          "region": "bucket",
           "profile": [
             [1.50306, -0.77016],
             [-0.42417, -0.57249],
@@ -14510,7 +14819,6 @@
           "material": "wear-steel",
           "role": "body",
           "tone": 0.3,
-          "region": "bucket",
           "profile": [[1.5, -0.8], [1.62, -0.62], [1.3, -0.77]],
           "plane": "xy",
           "from": -1.475,
@@ -14523,7 +14831,6 @@
           "material": "rubber",
           "role": "body",
           "tone": 0.12,
-          "region": "tyres",
           "profile": [[-0.3, 0.0], [-0.3, 0.74], [-0.26, 0.875], [0.26, 0.875], [0.3, 0.74], [0.3, 0.0]],
           "axis": [0, 0, 1],
           "origin": [0, 0, 1.1],
@@ -14539,7 +14846,6 @@
           "material": "cast-iron",
           "role": "detail",
           "tone": 0.6,
-          "region": "tyres",
           "profile": [[-0.11, 0.0], [-0.11, 0.5], [0.303, 0.5], [0.303, 0.0]],
           "axis": [0, 0, 1],
           "origin": [0, 0, 1.1],
@@ -14555,7 +14861,6 @@
           "material": "rubber",
           "role": "body",
           "tone": 0.12,
-          "region": "tyres",
           "profile": [[-0.3, 0.0], [-0.3, 0.74], [-0.26, 0.875], [0.26, 0.875], [0.3, 0.74], [0.3, 0.0]],
           "axis": [0, 0, 1],
           "origin": [0, 0, 1.1],
@@ -14571,7 +14876,6 @@
           "material": "cast-iron",
           "role": "detail",
           "tone": 0.6,
-          "region": "tyres",
           "profile": [[-0.11, 0.0], [-0.11, 0.5], [0.303, 0.5], [0.303, 0.0]],
           "axis": [0, 0, 1],
           "origin": [0, 0, 1.1],
@@ -15100,7 +15404,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.5,
-          "region": "engine-bay",
           "profile": [[-0.9, 0.62], [-0.9, 2.2], [-1.1, 2.4], [-3.0, 2.4], [-2.6, 1.9], [-2.6, 0.62]],
           "plane": "xy",
           "from": -0.925,
@@ -15116,7 +15419,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.5,
-          "region": "engine-bay",
           "profile": [[-0.9, 0.62], [-0.9, 2.2], [-1.1, 2.4], [-3.0, 2.4], [-2.6, 1.9], [-2.6, 0.62]],
           "plane": "xy",
           "from": 0.925,
@@ -15133,7 +15435,6 @@
           "material": "cast-iron",
           "role": "body",
           "tone": 0.35,
-          "region": "counterweight",
           "profile": [[-2.6, 0.62], [-2.6, 1.9], [-3.0, 2.4], [-3.35, 2.3], [-3.5, 2.05], [-3.5, 0.62]],
           "plane": "xy",
           "from": -1.1,
@@ -15169,7 +15470,6 @@
           "material": "exhaust-steel",
           "role": "body",
           "tone": 0.25,
-          "region": "exhaust-stack",
           "profile": [[2.3, 0.09], [3.15, 0.09], [3.15, 0.0885], [2.3, 0.0885], [2.3, 0.09]],
           "axis": [0, 1, 0],
           "origin": [-1.23, 0, -0.9]
@@ -15181,7 +15481,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.45,
-          "region": "front-frame",
           "profile": [[-0.9, 0.62], [2.35, 0.62], [2.35, 1.2], [-0.9, 1.2]],
           "plane": "xy",
           "from": -0.826,
@@ -15197,7 +15496,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.45,
-          "region": "front-frame",
           "profile": [[-0.9, 0.62], [2.35, 0.62], [2.35, 1.2], [-0.9, 1.2]],
           "plane": "xy",
           "from": 0.825,
@@ -15210,7 +15508,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.45,
-          "region": "front-frame",
           "profile": [[-0.9, 0.62], [2.35, 0.62], [2.35, 1.2], [-0.9, 1.2]],
           "plane": "xy",
           "from": -0.9,
@@ -15223,7 +15520,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.45,
-          "region": "front-frame",
           "profile": [[-0.9, 0.62], [2.35, 0.62], [2.35, 1.2], [1.5, 1.45], [1.5, 2.2], [1.0, 2.2], [1.0, 1.45], [-0.9, 1.45]],
           "plane": "xy",
           "from": 0.694,
@@ -15243,7 +15539,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.45,
-          "region": "front-frame",
           "profile": [[-0.9, 0.62], [2.35, 0.62], [2.35, 1.2], [1.5, 1.45], [1.5, 2.2], [1.0, 2.2], [1.0, 1.45], [-0.9, 1.45]],
           "plane": "xy",
           "from": 0.805,
@@ -15260,7 +15555,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.45,
-          "region": "front-frame",
           "profile": [[-0.9, 0.62], [2.35, 0.62], [2.35, 1.2], [1.5, 1.45], [1.5, 2.2], [1.0, 2.2], [1.0, 1.45], [-0.9, 1.45]],
           "plane": "xy",
           "from": 0.62,
@@ -15277,7 +15571,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.55,
-          "region": "cab",
           "profile": [[1.0, 1.45], [0.98, 2.2], [0.82, 3.32], [0.7, 3.4], [-0.8, 3.4], [-0.9, 3.28], [-0.9, 1.45]],
           "plane": "xy",
           "from": -0.725,
@@ -15293,7 +15586,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.55,
-          "region": "cab",
           "profile": [[1.0, 1.45], [0.98, 2.2], [0.82, 3.32], [0.7, 3.4], [-0.8, 3.4], [-0.9, 3.28], [-0.9, 1.45]],
           "plane": "xy",
           "from": 0.725,
@@ -15313,7 +15605,6 @@
           "material": "glass",
           "role": "glazing",
           "tone": 0.8,
-          "region": "cab-glazing",
           "profile": [[-0.6, 2.1], [0.78, 2.1], [0.66, 3.2], [-0.6, 3.2]],
           "plane": "xy",
           "from": 0.794,
@@ -15330,7 +15621,6 @@
           "material": "glass",
           "role": "glazing",
           "tone": 0.8,
-          "region": "cab-glazing",
           "profile": [[0.82, 3.32], [0.98, 2.2], [0.98594, 2.20085], [0.82594, 3.32085]],
           "plane": "xy",
           "from": -0.65,
@@ -15343,7 +15633,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.4,
-          "region": "lift-arm",
           "profile": [[-0.25, -0.32], [1, -0.28], [2, -0.22], [2.85, -0.25], [2.85, 0.25], [2, 0.38], [1, 0.48], [-0.25, 0.32]],
           "plane": "xy",
           "from": 0.974,
@@ -15363,7 +15652,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.4,
-          "region": "lift-arm",
           "profile": [[-0.25, -0.32], [1, -0.28], [2, -0.22], [2.85, -0.25], [2.85, 0.25], [2, 0.38], [1, 0.48], [-0.25, 0.32]],
           "plane": "xy",
           "from": 1.125,
@@ -15380,7 +15668,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.4,
-          "region": "lift-arm",
           "profile": [[-0.25, -0.32], [1, -0.28], [2, -0.22], [2.85, -0.25], [2.85, 0.25], [2, 0.38], [1, 0.48], [-0.25, 0.32]],
           "plane": "xy",
           "from": 0.9,
@@ -15397,7 +15684,6 @@
           "material": "chrome",
           "role": "detail",
           "tone": 0.6,
-          "region": "hydraulics",
           "profile": [[0, 0.12], [1.1, 0.12]],
           "axis": [1, 0, 0],
           "origin": [0.0, 0, 0.6],
@@ -15413,7 +15699,6 @@
           "material": "chrome",
           "role": "detail",
           "tone": 0.7,
-          "region": "hydraulics",
           "profile": [[0, 0.05], [0.4564, 0.05]],
           "axis": [1, 0, 0],
           "origin": [0.0, 0, 0.6],
@@ -15429,7 +15714,6 @@
           "material": "chrome",
           "role": "detail",
           "tone": 0.6,
-          "region": "hydraulics",
           "profile": [[0, 0.1], [0.9, 0.1]],
           "axis": [1, 0, 0],
           "origin": [0.0, 0, 0]
@@ -15441,7 +15725,6 @@
           "material": "chrome",
           "role": "detail",
           "tone": 0.7,
-          "region": "hydraulics",
           "profile": [[0, 0.045], [0.2679, 0.045]],
           "axis": [1, 0, 0],
           "origin": [5e-05, 0, 0]
@@ -15453,7 +15736,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.3,
-          "region": "bucket",
           "profile": [[-0.45, -0.6], [1.5, -0.8], [1.62, -0.62], [1.05, 0.05], [0.15, 0.6], [-0.35, 0.55], [-0.55, 0]],
           "plane": "xy",
           "from": 1.4,
@@ -15470,7 +15752,6 @@
           "material": "paint-steel",
           "role": "body",
           "tone": 0.3,
-          "region": "bucket",
           "profile": [
             [1.50765, -0.72539],
             [-0.38543, -0.53123],
@@ -15494,7 +15775,6 @@
           "material": "wear-steel",
           "role": "body",
           "tone": 0.3,
-          "region": "bucket",
           "profile": [[1.5, -0.8], [1.62, -0.62], [1.3, -0.77]],
           "plane": "xy",
           "from": -1.475,
@@ -15507,7 +15787,6 @@
           "material": "rubber",
           "role": "body",
           "tone": 0.12,
-          "region": "tyres",
           "profile": [[-0.3, 0.0], [-0.3, 0.74], [-0.26, 0.875], [0.26, 0.875], [0.3, 0.74], [0.3, 0.0]],
           "axis": [0, 0, 1],
           "origin": [0, 0, 1.1],
@@ -15523,7 +15802,6 @@
           "material": "rubber",
           "role": "body",
           "tone": 0.12,
-          "region": "tyres",
           "profile": [[-0.3, 0.0], [-0.3, 0.74], [-0.26, 0.875], [0.26, 0.875], [0.3, 0.74], [0.3, 0.0]],
           "axis": [0, 0, 1],
           "origin": [0, 0, 1.1],

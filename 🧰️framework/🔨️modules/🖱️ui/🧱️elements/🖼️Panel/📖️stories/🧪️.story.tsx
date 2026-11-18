@@ -46,7 +46,7 @@ export const PanelTopLeft: Story = {
     const [size, setSize] = useState(300);
     const [visible, setVisible] = useState(true);
     return (
-      <div className="relative h-[25rem] w-[37.5rem] border ui-surface" data-level="base">
+      <div className="relative h-[25rem] w-[37.5rem] ui-surface" data-level="base">
         <Panel
           anchor="top-left"
           visible={visible}
@@ -66,7 +66,7 @@ export const PanelTopRight: Story = {
     const [size, setSize] = useState(300);
     const [visible, setVisible] = useState(true);
     return (
-      <div className="relative h-[25rem] w-[37.5rem] border ui-surface" data-level="base">
+      <div className="relative h-[25rem] w-[37.5rem] ui-surface" data-level="base">
         <Panel
           anchor="top-right"
           visible={visible}
@@ -86,7 +86,7 @@ export const PanelBottomRight: Story = {
     const [size, setSize] = useState(300);
     const [visible, setVisible] = useState(true);
     return (
-      <div className="relative h-[25rem] w-[37.5rem] border ui-surface" data-level="base">
+      <div className="relative h-[25rem] w-[37.5rem] ui-surface" data-level="base">
         <Panel anchor="bottom-right" visible={visible} onVisibleChange={setVisible} size={size} onSizeChange={setSize} tabs={[leafTab("actions", Layers, "Actions", 0, "Actions"), leafTab("history", Info, "History", 1, "History")]} />
       </div>
     );
@@ -98,7 +98,7 @@ export const PanelFolded: Story = {
   render: () => {
     const [visible, setVisible] = useState(false);
     return (
-      <div className="relative h-[25rem] w-[37.5rem] border ui-surface" data-level="base">
+      <div className="relative h-[25rem] w-[37.5rem] ui-surface" data-level="base">
         <Panel anchor="top-left" visible={visible} onVisibleChange={setVisible} tabs={[leafTab("types", Layers, "Types", 0, "Types panel content")]} />
       </div>
     );
@@ -112,7 +112,7 @@ export const PanelNestedTabs: Story = {
     const [visible, setVisible] = useState(true);
     const [activeTabPath, setActiveTabPath] = useState<readonly string[]>([]);
     return (
-      <div className="relative h-[25rem] w-[37.5rem] border ui-surface" data-level="base">
+      <div className="relative h-[25rem] w-[37.5rem] ui-surface" data-level="base">
         <Panel
           anchor="top-left"
           visible={visible}
@@ -153,7 +153,7 @@ export const PanelTopMiddle: Story = {
     const [size, setSize] = useState(360);
     const [visible, setVisible] = useState(true);
     return (
-      <div className="relative h-[25rem] w-[37.5rem] border ui-surface" data-level="base">
+      <div className="relative h-[25rem] w-[37.5rem] ui-surface" data-level="base">
         <Panel
           anchor="top-middle"
           visible={visible}
@@ -173,7 +173,7 @@ export const PanelBottomMiddle: Story = {
     const [size, setSize] = useState(360);
     const [visible, setVisible] = useState(true);
     return (
-      <div className="relative h-[25rem] w-[37.5rem] border ui-surface" data-level="base">
+      <div className="relative h-[25rem] w-[37.5rem] ui-surface" data-level="base">
         <Panel anchor="bottom-middle" visible={visible} onVisibleChange={setVisible} size={size} onSizeChange={setSize} tabs={[leafTab("status", Layers, "Status", 0, "Status content")]} />
       </div>
     );
@@ -198,22 +198,22 @@ function ChromeHostedPanelDemo({ anchor }: { readonly anchor: "top-left" | "top-
   const selection = { tabs, visible, onVisibleChange: setVisible, activeTabPath, onActiveTabPathChange: setActiveTabPath };
   const chromeBar = <PanelChromeTabBar anchor={anchor} {...selection} />;
   return (
-    <div className="relative flex h-[26.25rem] w-[45rem] flex-col border ui-surface" data-level="window">
+    <div className="relative flex h-[26.25rem] w-[45rem] flex-col ui-surface" data-level="window">
       {(anchor === "top-left" || anchor === "top-middle" || anchor === "top-right") && (
-        <div className="flex h-large shrink-0 items-center gap-single border-b ui-surface p-single">
-          {anchor === "top-left" ? chromeBar : <span className="text-xs text-muted-foreground">Navbar</span>}
-          {anchor === "top-middle" ? <div className="mx-auto">{chromeBar}</div> : null}
-          {anchor === "top-right" ? <div className="ms-auto">{chromeBar}</div> : null}
+        <div data-slot="navbar" className="flex h-[var(--navbar-band-height)] shrink-0 items-stretch border-b ui-surface">
+          {anchor === "top-left" ? chromeBar : <span className="flex items-center px-single text-xs text-muted-foreground">Navbar</span>}
+          {anchor === "top-middle" ? <div className="mx-auto flex items-stretch">{chromeBar}</div> : null}
+          {anchor === "top-right" ? <div className="ms-auto flex items-stretch">{chromeBar}</div> : null}
         </div>
       )}
       <div className="relative min-h-0 flex-1 ui-surface" data-level="base">
         <Panel anchor={anchor} tabBarHost="chrome" size={size} onSizeChange={setSize} {...selection} />
       </div>
       {(anchor === "bottom-left" || anchor === "bottom-middle" || anchor === "bottom-right") && (
-        <div className="flex h-large shrink-0 items-center gap-single border-t ui-surface p-single">
+        <div data-slot="footer" className="flex h-[var(--footer-band-height)] shrink-0 items-stretch border-t ui-surface">
           {anchor === "bottom-left" ? chromeBar : null}
-          {anchor === "bottom-middle" ? <div className="mx-auto">{chromeBar}</div> : null}
-          {anchor === "bottom-right" ? <div className="ms-auto">{chromeBar}</div> : null}
+          {anchor === "bottom-middle" ? <div className="mx-auto flex items-stretch">{chromeBar}</div> : null}
+          {anchor === "bottom-right" ? <div className="ms-auto flex items-stretch">{chromeBar}</div> : null}
         </div>
       )}
     </div>

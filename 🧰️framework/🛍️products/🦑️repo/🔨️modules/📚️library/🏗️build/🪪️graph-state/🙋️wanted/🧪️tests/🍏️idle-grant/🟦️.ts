@@ -23,7 +23,7 @@ const rows:Row[]=[
 ];
 const read=(row:Row)=>row.platform==="darwin"?createHostAvailableBytesV1({platform:"darwin",run:()=>row.reading,total:()=>row.total*MiB,environment:{}})():createHostAvailableBytesV1({platform:"linux",read:()=>row.reading,total:()=>row.total*MiB,environment:{}})();
 const oracle=(total:number)=>{
- const run=spawnSync(python!,["-I","-c","import json,sys\nr=json.load(sys.stdin)\nhalf=r['total']//2\nadmitted=max(0,min(half,r['total']-2048))\nwave=min(48,max(0,int((admitted-2200)//((7200-2200)/48))))\nwave=0 if wave<8 else wave\ngrantMemory=min(half,9399) if wave>0 else admitted\nmanaged=int(max(0,int(grantMemory-3800))/2/1.25)\nprint(json.dumps({'admitted':admitted,'wave':wave,'projects':wave*4,'grant':managed*2}))"],{input:JSON.stringify({total}),encoding:"utf8"});
+ const run=spawnSync(python!,["-I","-c","import json,sys\nr=json.load(sys.stdin)\nhalf=r['total']//2\nadmitted=max(0,min(half,r['total']-2048))\nwave=min(48,max(0,int((admitted-2200)//((7200-2200)/48))))\nwave=0 if wave<8 else wave\ngrantMemory=min(half,9399) if wave>0 else admitted\nmanaged=int(max(0,int(grantMemory-max(2200,min(3072,grantMemory*2*3750//10000))))/2/1.25)\nprint(json.dumps({'admitted':admitted,'wave':wave,'projects':wave*4,'grant':managed*2}))"],{input:JSON.stringify({total}),encoding:"utf8"});
  expect(run.status,run.stderr).toBe(0);return JSON.parse(run.stdout) as {admitted:number;wave:number;projects:number;grant:number};
 };
 const decide=(row:Row)=>{
@@ -37,10 +37,10 @@ for(const row of rows)test("the reading of "+row.name+" is the kernel's availabl
  expect({admitted:got.admitted,wave:got.fit.waveProjects,projects:got.fit.projects,grant:got.shown}).toEqual(expected);
 });
 
-test("law: a 16 GB worker gives 3000 to 3600 MB per project and infers 48 projects per wave, 192 in all, on macOS and on Linux, idle or starved: the free memory of the moment decides nothing",()=>{
+test("law: a 16 GB worker gives 3800 to 4200 MB per project and infers 48 projects per wave, 192 in all, on macOS and on Linux, idle or starved: the free memory of the moment decides nothing",()=>{
  for(const row of rows){
   const got=decide(row);
-  expect(got.shown,row.name).toBeGreaterThanOrEqual(3000);expect(got.shown,row.name).toBeLessThanOrEqual(3600);
+  expect(got.shown,row.name).toBeGreaterThanOrEqual(3800);expect(got.shown,row.name).toBeLessThanOrEqual(4200);
   expect(got.fit,row.name).toEqual({waveProjects:48,projects:192});
  }
 });

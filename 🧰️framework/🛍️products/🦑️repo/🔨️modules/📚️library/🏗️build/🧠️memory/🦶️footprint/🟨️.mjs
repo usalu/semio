@@ -4,8 +4,9 @@ import{createRequire}from"node:module";
 import{join}from"node:path";
 import{noticeLanguagesV1}from"../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import{runtimeCollectGarbageV1}from"../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
-import{parseFootprintV1,parseSmapsRollupV1,readHostTextV1,runHostCommandV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts";
+import{observeTreeMegabytesV1,parseFootprintV1,parseSmapsRollupV1,readHostTextV1,runHostCommandV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
+import memorySchema from"../🧬️schema/🔣️.json"with{type:"json"};
 import{readLiveHostCapacityReservationV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
 import{BUILD_HOST_CAPACITY_POLICY_V1}from"../../🌡️host-capacity/🎛️control/🟦️.ts";
 import{profileCurrentPhaseV1}from"../../⏱️profile/🟨️.mjs";
@@ -50,8 +51,14 @@ export async function readProcessFootprintBytesV1(pid,{platform=osPlatform(),run
  }catch{return undefined;}
 }
 
+/** 🪫️ The bytes the runtime of THIS process holds (heap in use plus external memory). */
+export const managedBytesV1=()=>{const row=process.memoryUsage();return row.heapUsed+row.external;};
+
+/** 🧱️ A footprint reading of THIS process never stands below what its own runtime holds: a host that compresses the pages of a busy worker read 623 MB for a worker that held 4447 MB, and a gate that trusted that reading admitted every owner and never released what they left behind until the plan guard stopped the plan. A reading that failed (undefined) stays a failure. */
+export function footprintAtLeastManagedV1(bytes,managed=managedBytesV1){return Number.isFinite(bytes)?Math.max(bytes,managed()):bytes;}
+
 /** 🪞️ A cached reading of the footprint of this process: `bytes()` answers at once with the last reading (the resident set until the first one arrives) and starts one background reading when the last is older than `ttlMilliseconds` (one reading at a time, a failed one is ignored); `refresh()` waits for a fresh reading. */
-export function createFootprintMeterV1({pid=process.pid,read=()=>readProcessFootprintBytesV1(pid),rss=()=>process.memoryUsage().rss,now=()=>Date.now(),ttlMilliseconds=P.ttlMilliseconds}={}){
+export function createFootprintMeterV1({pid=process.pid,read=async()=>{const bytes=await readProcessFootprintBytesV1(pid);return pid===process.pid?footprintAtLeastManagedV1(bytes):bytes;},rss=()=>process.memoryUsage().rss,now=()=>Date.now(),ttlMilliseconds=P.ttlMilliseconds}={}){
  let last=0,at=-Infinity,flight,peak=0,measured=false;
  const begin=()=>flight??=(async()=>{try{const bytes=await read();if(Number.isFinite(bytes)&&bytes>=0){last=bytes;measured=true;at=now();peak=Math.max(peak,bytes);}}catch{}finally{flight=undefined;}return last;})(),refresh=async()=>{if(flight!==undefined)await flight;return begin();};
  return Object.freeze({
@@ -71,16 +78,19 @@ export async function heapCensusV1({stats=async()=>(await import("bun:jsc")).hea
  }catch{return undefined;}
 }
 
-/** 🔭️ Samples the process while it grows: every `sampleMilliseconds` it looks at the resident set and the cached footprint (cheap) and, when either moved by `sampleGrowthBytes` since the last row, when `sampleQuietMilliseconds` passed or when the main thread was blocked for `sampleLagMilliseconds`, it counts the runtime heap (`bun:jsc` `heapStats`) and emits ONE row: the step it is in, footprint, resident set, managed heap, external memory, array buffers, objects, the loop lag and the `sampleTypes` most numerous object types, so a growth is attributed to objects, strings, buffers or memory outside the heap.
+/** 🔭️ Samples the process while it grows: every `sampleMilliseconds` it looks at the resident set and the cached footprint (cheap) and, when either moved by `sampleGrowthBytes` since the last row, when `sampleQuietMilliseconds` passed or when the main thread was blocked for `sampleLagMilliseconds`, it counts the runtime heap (`bun:jsc` `heapStats`) and emits ONE row: the step it is in, footprint, resident set, managed heap, external memory, array buffers, objects, the loop lag and the `sampleTypes` most numerous object types, so a growth is attributed to objects, strings, buffers or memory outside the heap. Counting walks the whole heap (seconds on a heap of ten million objects whose pages are partly swapped out) and a starved loop asks again every pulse, so the counting itself is bounded: after a count that took C milliseconds the next waits C * (100 - censusDutyPercent) / censusDutyPercent milliseconds, a starved row in between carries the last counts, and a regular row waits.
  * @param {{meter:{bytes:()=>number};stats?:()=>Promise<any>|any;usage?:()=>{rss:number;arrayBuffers?:number};now?:()=>number;phase?:()=>string|undefined;emit:(fields:Record<string,string|number>)=>void;policy?:typeof FOOTPRINT_POLICY_V1}} options */
 export function createHeapSamplerV1({meter,stats=async()=>(await import("bun:jsc")).heapStats(),statsSync=()=>createRequire(import.meta.url)("bun:jsc").heapStats(),stack=()=>String(new Error().stack).split("\n").slice(3,3+P.pulseFrames).map(line=>{const row=/^\s*(?:at )?(.*?)\s*\((?:.*?)([^/]*):(\d+):\d+\)$/u.exec(line);return row===null?line.trim().slice(-80):(row[1]||"?")+"@"+row[2]+":"+row[3];}).join(" < "),starved=fields=>fields,usage=()=>process.memoryUsage(),now=()=>Date.now(),phase=()=>"-",emit,policy=P}){
- let last=now(),wrote=-Infinity,rssAt=0,footprintAt=0,flight=false;
+ let last=now(),wrote=-Infinity,rssAt=0,footprintAt=0,flight=false,quietUntil=-Infinity,known={heap:0,extra:0,objects:0,types:"-"};
+ const counted=row=>{known={heap:megabytes(row.heapSize??0),extra:megabytes(row.extraMemorySize??0),objects:row.objectCount??0,types:Object.entries(row.objectTypeCounts??{}).sort((a,b)=>b[1]-a[1]).slice(0,policy.sampleTypes).map(([name,count])=>name+" "+count).join(", ")||"-"};return known;};
+ const walked=began=>{const took=Math.max(0,now()-began);quietUntil=now()+took*(100-policy.censusDutyPercent)/policy.censusDutyPercent;};
  return Object.freeze({starved(at){
   if(flight||at-last<policy.pulseStarvedMilliseconds)return;
   flight=true;
   try{
-   const memory=usage(),row=statsSync(),types=Object.entries(row.objectTypeCounts??{}).sort((a,b)=>b[1]-a[1]).slice(0,policy.sampleTypes).map(([name,count])=>name+" "+count).join(", ")||"-";
-   emit({phase:phase()??"-",blocked:at-last,rss:megabytes(memory.rss),heap:megabytes(row.heapSize??0),extra:megabytes(row.extraMemorySize??0),objects:row.objectCount??0,stack:stack(),types},"starved");
+   const memory=usage();
+   if(now()>=quietUntil){const began=now();try{counted(statsSync());}finally{walked(began);}}
+   emit({phase:phase()??"-",blocked:at-last,rss:megabytes(memory.rss),heap:known.heap,extra:known.extra,objects:known.objects,stack:stack(),types:known.types},"starved");
   }catch{}finally{flight=false;}
  },async tick(){
   const at=now(),lag=Math.max(0,at-last-policy.sampleMilliseconds);last=at;
@@ -88,10 +98,12 @@ export function createHeapSamplerV1({meter,stats=async()=>(await import("bun:jsc
   try{
    const memory=usage(),footprint=meter.bytes(),moved=Math.max(Math.abs(memory.rss-rssAt),Math.abs(footprint-footprintAt));
    if(moved<policy.sampleGrowthBytes&&at-wrote<policy.sampleQuietMilliseconds&&lag<policy.sampleLagMilliseconds)return;
+   if(now()<quietUntil)return;
    flight=true;
-   const row=await stats(),types=Object.entries(row.objectTypeCounts??{}).sort((a,b)=>b[1]-a[1]).slice(0,policy.sampleTypes).map(([name,count])=>name+" "+count).join(", ")||"-";
+   const began=now();let counts;
+   try{counts=counted(await stats());}finally{walked(began);}
    wrote=at;rssAt=memory.rss;footprintAt=footprint;
-   emit({phase:phase()??"-",footprint:megabytes(footprint),moved:megabytes(moved),rss:megabytes(memory.rss),heap:megabytes(row.heapSize??0),extra:megabytes(row.extraMemorySize??0),buffers:megabytes(memory.arrayBuffers??0),objects:row.objectCount??0,lag,types});
+   emit({phase:phase()??"-",footprint:megabytes(footprint),moved:megabytes(moved),rss:megabytes(memory.rss),heap:counts.heap,extra:counts.extra,buffers:megabytes(memory.arrayBuffers??0),objects:counts.objects,lag,types:counts.types});
   }catch{}finally{flight=false;}
  }});
 }
@@ -189,12 +201,49 @@ export function noteSlowV1(label,startedAt,thresholdMilliseconds=2000,trace=(slo
  return milliseconds;
 }
 
-let installed,step,pulser,pulses=0,pulsedAt=0,releasedAt=0,releaseCalls=0;
-/** 🧹️ Returns the memory a long synchronous stretch of garbage left behind: when the managed memory (heap in use plus external) grew by `releaseGrowthBytes` since the last release, it collects, shrinks and collects again; a call that finds no such growth costs one counter step in `every - 1` of `every` calls. Compiling a TypeScript program leaves about 1 GB of unreleased garbage in the runtime (measured: 5 programs of 4468 files, footprint 1.7 GB to 4.9 GB; with a release between the programs 1.3 to 2.0 GB), so the declared closure calls it between its programs and the inference at its yield points. @returns {boolean} whether it released */
-export function releaseIfGrownV1({usage=()=>{const row=process.memoryUsage();return row.heapUsed+row.external;},release=releaseRuntimeMemoryV1,threshold=P.releaseGrowthBytes,every=1}={}){
+/** ⏲️ Writes one line to the trace of this process (the settlement stages and the owner steps report themselves here; a trace that cannot be written costs nothing). */
+export function noteTraceV1(line,trace=(slowTrace??=createFootprintTraceV1())){trace(line);}
+
+/** ⏲️ The milliseconds of named stages summed over many calls: `time` runs and measures one piece of work, `add` takes a measurement made elsewhere, `text` is `name=Nms/calls` for every stage in the order it first ran. */
+export function createStageClockV1({now=Date.now}={}){
+ const sums=new Map(),calls=new Map();
+ const add=(name,milliseconds)=>{sums.set(name,(sums.get(name)??0)+milliseconds);calls.set(name,(calls.get(name)??0)+1);};
+ return Object.freeze({add,async time(name,work){const began=now();try{return await work();}finally{add(name,now()-began);}},totals:()=>Object.fromEntries(sums),text:()=>[...sums].map(([name,milliseconds])=>name+"="+Math.round(milliseconds)+"ms/"+calls.get(name)).join(" ")});
+}
+
+/** ⏲️ Where the wall time of an owner goes: `begin` opens an owner, `add` charges a named step to it, `finish` closes it and writes `owner <name> wall=Nms step=Nms ...` when it took `slowMilliseconds`, and every `rollupOwners` owners one `owners n=... wall.avg=... running.avg=... step=avg...` line with the average milliseconds of every step per owner and how many owners ran at once (`running` is what the caller counts at that moment). The steps are the ones the caller names; the part of the wall time no step covers is `other`. */
+export function createOwnerClockV1({now=Date.now,trace=(line=>noteTraceV1(line)),slowMilliseconds=3000,rollupOwners=50}={}){
+ const open=new Map();let window=[];
+ const render=(row,count)=>[...row].map(([name,milliseconds])=>name+"="+Math.round(milliseconds/count)+"ms").join(" ");
+ return Object.freeze({
+  begin(name){open.set(name,{began:now(),steps:new Map()});},
+  add(name,step,milliseconds){const row=open.get(name);if(row!==undefined)row.steps.set(step,(row.steps.get(step)??0)+milliseconds);},
+  get(name,step){return open.get(name)?.steps.get(step)??0;},
+  finish(name,{running=0}={}){
+   const row=open.get(name);if(row===undefined)return;open.delete(name);
+   const wall=now()-row.began,covered=[...row.steps.values()].reduce((sum,value)=>sum+value,0);row.steps.set("other",Math.max(0,wall-covered));
+   if(wall>=slowMilliseconds)trace("owner "+name+" wall="+Math.round(wall)+"ms "+render(row.steps,1));
+   window.push({wall,running,steps:row.steps});
+   if(window.length>=rollupOwners){
+    const sums=new Map();for(const item of window)for(const[step,milliseconds]of item.steps)sums.set(step,(sums.get(step)??0)+milliseconds);
+    const count=window.length,walls=window.map(item=>item.wall).sort((a,b)=>a-b);
+    trace("owners n="+count+" wall.avg="+Math.round(walls.reduce((sum,value)=>sum+value,0)/count)+"ms wall.p90="+Math.round(walls[Math.floor(count*0.9)])+"ms wall.max="+Math.round(walls[count-1])+"ms running.avg="+(window.reduce((sum,item)=>sum+item.running,0)/count).toFixed(1)+" running.max="+Math.max(...window.map(item=>item.running))+" "+render(sums,count));
+    window=[];
+   }
+  },
+ });
+}
+
+let installed,step,pulser,pulses=0,pulsedAt=0,releaseCalls=0;
+const releaseStateV1={quietUntil:-Infinity,releasedAt:0};
+const footprintDecisionV1=()=>{const grant=installed?.grantBytes();return grant>0?decideFootprintV1({footprintBytes:installed.footprintBytes(),grantBytes:grant}):undefined;};
+/** 🧹️ Returns the memory a long synchronous stretch of garbage left behind: when the managed memory (heap in use plus external) grew by `releaseGrowthBytes` since the last release, it collects, shrinks and collects again; a call that finds no such growth costs one counter step in `every - 1` of `every` calls. Compiling a TypeScript program leaves about 1 GB of unreleased garbage in the runtime (measured: 5 programs of 4468 files, footprint 1.7 GB to 4.9 GB; with a release between the programs 1.3 to 2.0 GB), so the declared closure calls it between its programs and the inference at its yield points. A release is a walk of the whole heap, and the walk of a heap whose pages are partly swapped out takes tens of seconds, so it is bounded twice: it does not run while the process holds less than `softPercent` of its grant (the gate settles from there), and after a release that took C milliseconds the next waits C * (100 - releaseDutyPercent) / releaseDutyPercent milliseconds (the share of the wall time that forced collections may take). @returns {boolean} whether it released */
+export function releaseIfGrownV1({usage=()=>{const row=process.memoryUsage();return row.heapUsed+row.external;},release=releaseRuntimeMemoryV1,threshold=P.releaseGrowthBytes,every=1,now=()=>Date.now(),decision=footprintDecisionV1,state=releaseStateV1}={}){
  if(every>1&&(++releaseCalls%every)!==0)return false;
- if(usage()-releasedAt<threshold)return false;
- release();releasedAt=usage();return true;
+ if(usage()-state.releasedAt<threshold)return false;
+ if(now()<state.quietUntil||decision()==="run")return false;
+ const began=now();release();const ended=now();state.releasedAt=usage();
+ state.quietUntil=ended+Math.max(0,ended-began)*(100-P.releaseDutyPercent)/P.releaseDutyPercent;return true;
 }
 
 /** 💓️ Called from the hot paths of the inference (one call per row, per interned value, per yield): every 256th call looks at the clock and, at most every `pulseMilliseconds`, lets the sampler speak when the event loop has been starved for `pulseStarvedMilliseconds` (a main thread that never returns to the loop cannot run a timer, so the growth would stay invisible exactly while it happens). */
@@ -236,6 +285,25 @@ export function useEnvironmentGateV1(environment=process.env,{read=()=>readLiveH
  let at=-Infinity,reserved=0;
  const source=()=>{if(now()-at>=P.grantTtlMilliseconds){at=now();try{const value=read();if(value>0)reserved=value;}catch{}}return reserved>0?{handle:{reservedMegabytes:reserved}}:undefined;};
  return source()===undefined?undefined:bind(source);
+}
+
+/** 🌳️ Reads the footprint in bytes of the whole process tree under `pid` (the process and every worker it started), the measure the slice pool and the capacity gate judge a plan by; undefined when the tree cannot be read. */
+export async function readTreeFootprintBytesV1(pid,{observe=observeTreeMegabytesV1}={}){
+ try{const value=await observe(pid);return Number.isFinite(value)&&value>=0?value*MEGABYTE:undefined;}catch{return undefined;}
+}
+
+/** 🧱️ The ceiling in bytes a slice worker was told to keep its process tree under (`planCeilingEnvironment` of the memory policy, set by the slice pool from the declared plan limit), undefined when none was named. */
+export function planCeilingBytesV1(environment=process.env,policy=memorySchema.definitions.Policy.const){
+ const named=Number(environment[policy.planCeilingEnvironment]);
+ return Number.isFinite(named)&&named>0?Math.floor(named)*MEGABYTE:undefined;
+}
+
+/** 🏔️ Installs the gate of a slice worker: it holds no capacity grant of its own (the service books the plan), so without this gate nothing in the worker knew its footprint and `releaseOwnerStateV1` never shrank, the governor never held and only the slice pool, reacting to a sample taken after the growth, bounded the plan. The grant of the gate is the declared plan ceiling and the footprint it compares is the whole tree of the worker, so the owner state is released from `softPercent`, shrunk and spilled to the store from `hardPercent` and no further owner is admitted while the tree stands there, long before the pool would have to refuse. Does nothing when a gate is installed already or the pool named no ceiling; answers the gate. */
+export function useSliceCeilingGateV1(environment=process.env,{bind=bindProcessGateV1,pid=process.pid,read=readTreeFootprintBytesV1}={}){
+ if(installed!==undefined)return installed;
+ const bytes=planCeilingBytesV1(environment);
+ if(bytes===undefined)return undefined;
+ return bind(()=>({limit:{memoryMegabytes:bytes/MEGABYTE}}),{create:options=>createFootprintGateV1({...options,meter:createFootprintMeterV1({read:async()=>{const tree=await read(pid);return pid===process.pid?footprintAtLeastManagedV1(tree):tree;}})})});
 }
 
 /** 🌊️ Settles the memory of a process after a published wave and logs ONE line per language with the footprint before and after: `release` drops what the published wave already persisted (the store is the source of truth), then the runtime collects and shrinks. Answers the numbers in megabytes; nothing here can fail a read. */

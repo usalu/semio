@@ -1,5 +1,6 @@
 import{afterAll,expect,test}from"bun:test";
 import{closeSync,fstatSync,lstatSync,mkdirSync,mkdtempSync,openSync,readFileSync,readSync,readdirSync,realpathSync,rmSync,utimesSync,writeFileSync,writeSync}from"node:fs";
+import{createHash}from"node:crypto";
 import{tmpdir}from"node:os";
 import{dirname,join,relative}from"node:path";
 import{runToolSyncV1}from"../../../../../../../../../../../../../../🔨️modules/🏃️process/🧰️tools/🟦️.ts";
@@ -84,7 +85,7 @@ function agedImage(group:string,rows:readonly{name:string;bytes:number;ageMs:num
 }
 const record=(index:number)=>"np/"+hex(index,24)+".json",pack=(index:number,which:string)=>record(index)+".records/m"+index+"-"+index+"-"+hex(index+3,16)+"."+which;
 
-test("the own group retires its least recently written units, header before packs, keeps shared observation blocks and protected units, and compacts its index",async()=>{
+test("the own group sheds the accelerator packs of its least recently written units first, keeps every record while that is enough, keeps shared observation blocks and protected units, and compacts its index",async()=>{
  const now=Date.now(),group="selections/"+"9".repeat(64),rows=[
   {name:record(1),bytes:100,ageMs:30*HOUR},{name:pack(1,"pack"),bytes:4000,ageMs:30*HOUR},{name:pack(1,"idx"),bytes:200,ageMs:30*HOUR},
   {name:record(2),bytes:100,ageMs:20*HOUR},{name:pack(2,"pack"),bytes:3000,ageMs:25*HOUR},
@@ -92,28 +93,42 @@ test("the own group retires its least recently written units, header before pack
   {name:leaf(4,1),bytes:700,ageMs:40*HOUR},{name:leaf(5,3),bytes:300,ageMs:10*HOUR}],root=agedImage(group,rows,now);
  const total=rows.reduce((sum,row)=>sum+row.bytes,0),before=files(root);
  const plan=await scan.retireBuildGraphOptionalEntriesLruV1(root,group,control(),{targetBytes:6600,otherBytes:500,dryRun:true,now});
- expect(plan).toMatchObject({usedBytes:total+500,retiredEntries:2,retiredFiles:0,protected:0,remainingBytes:6600});expect(files(root)).toEqual(before);
+ expect(plan).toMatchObject({usedBytes:total+500,shedUnits:3,shedBytes:7500,retiredEntries:0,retiredFiles:0,protected:0,remainingBytes:6500});expect(files(root)).toEqual(before);
  const report=await scan.retireBuildGraphOptionalEntriesLruV1(root,group,control(),{targetBytes:6600,otherBytes:500,now});
- expect(report).toMatchObject({retiredEntries:2,retiredFiles:5,retiredBytes:7400,protected:0,cancelled:false});
+ expect(report).toMatchObject({shedUnits:3,shedBytes:7500,retiredEntries:0,retiredFiles:4,retiredBytes:0,protected:0,cancelled:false});
  const left=files(root).map(name=>name.slice(("inference/"+group+"/").length));
- for(const gone of[record(1),pack(1,"pack"),pack(1,"idx"),record(2),pack(2,"pack")])expect(left.includes(gone)).toBe(false);
- for(const kept of[record(3),pack(3,"pack"),leaf(4,1),leaf(5,3)])expect(left.includes(kept)).toBe(true);
- const index=parseMemberIndexV1(readFileSync(join(root,"inference",...group.split("/"),"members.jsonl"),"utf8"),group);expect(index.valid).toBe(true);expect(index.rows.size).toBe(4);
- const within=await scan.retireBuildGraphOptionalEntriesLruV1(root,group,control(),{targetBytes:1000000,now});expect(within).toMatchObject({retiredEntries:0,retiredFiles:0});
+ for(const gone of[pack(1,"pack"),pack(1,"idx"),pack(2,"pack"),leaf(5,3)])expect(left.includes(gone)).toBe(false);
+ for(const kept of[record(1),record(2),record(3),pack(3,"pack"),leaf(4,1)])expect(left.includes(kept)).toBe(true);
+ const index=parseMemberIndexV1(readFileSync(join(root,"inference",...group.split("/"),"members.jsonl"),"utf8"),group);expect(index.valid).toBe(true);expect(index.rows.size).toBe(5);
+ const within=await scan.retireBuildGraphOptionalEntriesLruV1(root,group,control(),{targetBytes:1000000,now});expect(within).toMatchObject({shedUnits:0,retiredEntries:0,retiredFiles:0});
  let calls=0;const cut=await scan.retireBuildGraphOptionalEntriesLruV1(root,group,control(()=>calls++>0),{targetBytes:0,now});expect(cut.cancelled).toBe(true);
  await expect(scan.retireBuildGraphOptionalEntriesLruV1(root,group,control(),{targetBytes:-1})).rejects.toThrow("exact-optional-graph-target-bytes-required");
 });
 
-test("the retired units and the remaining bytes of one group equal the independent Python model on 120 seeded groups",async()=>{
+test("a finished owner record outlives the packs of every owner: a cache that cannot hold the packs keeps all headers, and only a cache that cannot hold the headers retires the oldest of them",async()=>{
+ const now=Date.now(),group="selections/"+"8".repeat(64),count=40,unique=(index:number,which?:string)=>"np/"+createHash("sha256").update("owner"+index).digest("hex").slice(0,24)+".json"+(which?".records/m"+index+"-"+index+"-"+createHash("sha256").update("pack"+index).digest("hex").slice(0,16)+"."+which:""),rows=Array.from({length:count},(_,index)=>[{name:unique(index+1),bytes:7000,ageMs:(100-index)*HOUR},{name:unique(index+1,"pack"),bytes:300000,ageMs:(100-index)*HOUR},{name:unique(index+1,"idx"),bytes:20000,ageMs:(100-index)*HOUR}]).flat(),root=agedImage(group,rows,now);
+ const headers=count*7000,packs=count*320000,target=headers+1000000;
+ const report=await scan.retireBuildGraphOptionalEntriesLruV1(root,group,control(),{targetBytes:target,now});
+ expect(report.retiredEntries).toBe(0);expect(report.remainingBytes).toBeLessThanOrEqual(target);expect(report.shedBytes).toBe(headers+packs-report.remainingBytes);
+ const left=new Set(files(root).map(name=>name.slice(("inference/"+group+"/").length)));
+ for(let index=1;index<=count;index++)expect(left.has(unique(index)),"record "+index).toBe(true);
+ expect(left.has(unique(1,"pack"))).toBe(false);expect(left.has(unique(count,"pack"))).toBe(true);
+ const tight=await scan.retireBuildGraphOptionalEntriesLruV1(root,group,control(),{targetBytes:headers-3*7000-1,now});
+ expect(tight.retiredEntries).toBe(4);expect(tight.remainingBytes).toBeLessThanOrEqual(headers-3*7000-1);
+ const last=new Set(files(root).map(name=>name.slice(("inference/"+group+"/").length)));
+ for(let index=1;index<=4;index++)expect(last.has(unique(index)),"oldest record "+index).toBe(false);for(let index=5;index<=count;index++)expect(last.has(unique(index)),"record "+index).toBe(true);
+});
+
+test("the shed units, the retired units and the remaining bytes of one group equal the independent Python model on 120 seeded groups",async()=>{
  const now=Math.floor(Date.now()/1000)*1000,cases:unknown[]=[],actual:unknown[]=[];let seed=29;const random=(n:number)=>{seed=(seed*1103515245+12345)%2147483648;return seed%n;};
  for(let index=0;index<120;index++){
   const group="selections/"+hex(index+500,64),names=new Set<string>(),rows:{name:string;bytes:number;ageMs:number}[]=[];
   for(let u=0;u<1+random(7);u++){const kind=random(4),base=index*32+u,age=random(3)?(1+random(40))*HOUR:random(4)*60000,members=kind===0?[record(base),pack(base,"pack"),pack(base,"idx")]:kind===1?[leaf(base,1)]:kind===2?[leaf(base,2),leaf(base,3)]:[record(base)];
    for(const name of members){if(names.has(name))continue;names.add(name);rows.push({name,bytes:1+random(900),ageMs:age+random(3)*1000});}}
   const targetBytes=random(4000),otherBytes=random(1500),root=agedImage(group,rows,now),report=await scan.retireBuildGraphOptionalEntriesLruV1(root,group,control(),{targetBytes,otherBytes,now});
-  const left=new Set(files(root).map(name=>name.slice(("inference/"+group+"/").length))),unit=(name:string)=>scan.optionalEntryOfV1(name),retired=[...new Set(rows.filter(row=>unit(row.name)!==undefined&&!left.has(row.name)).map(row=>unit(row.name)!))].sort();
+  const left=new Set(files(root).map(name=>name.slice(("inference/"+group+"/").length))),unit=(name:string)=>scan.optionalEntryOfV1(name),lost=rows.filter(row=>unit(row.name)!==undefined&&!left.has(row.name)),keys=(list:readonly{name:string}[])=>[...new Set(list.map(row=>unit(row.name)!))].sort(),shed=keys(lost.filter(row=>scan.optionalAcceleratorV1(row.name))),retired=keys(lost.filter(row=>!scan.optionalAcceleratorV1(row.name)));
   cases.push({targetBytes,otherBytes,now,protectedMs:600000,leaves:rows.map(row=>({name:row.name,bytes:row.bytes,newest:now-row.ageMs}))});
-  actual.push({retired,remainingBytes:report.remainingBytes});rmSync(root,{recursive:true,force:true});
+  actual.push({shed,retired,remainingBytes:report.remainingBytes});rmSync(root,{recursive:true,force:true});
  }
  const file=join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"lru-entries-"+process.pid+".json");writeFileSync(file,JSON.stringify({cases}));
  try{const run=runToolSyncV1("python",["-I",oracle,file,"entries"],{encoding:"utf8",maxBuffer:1<<26});expect(run.status,run.stderr).toBe(0);expect(actual).toEqual(JSON.parse(run.stdout));}finally{rmSync(file,{force:true});}

@@ -1,0 +1,29 @@
+{
+  "round": 30,
+  "try": 2,
+  "start": "2026-11-15T19:42:29+00:00",
+  "end": "2026-11-15T20:05:21+00:00",
+  "wall_seconds": 1372.4837332920001,
+  "wrapper_rc": 0,
+  "native_rc": 7,
+  "native_rc_from_log": true,
+  "marker": false,
+  "ready": false,
+  "stop_reason": "resident-above-8GiB",
+  "peak_run_rss_mib": 1197.59375,
+  "peak_slice_rss_mib": 8448.109375,
+  "peak_system_rss_mib": 7656.390625,
+  "peak_at": {
+    "at": "2026-11-15T20:05:21+00:00",
+    "progress": "[script] graph:slice-worker · Verifying input closures: 717 of 1435 closures",
+    "run_mib": 49.234375,
+    "slice_mib": 8448.109375
+  },
+  "closure_entries_before": 35074,
+  "closure_entries_after": 35074,
+  "dependency_wait_line": null,
+  "service_logs": [
+    "/var/folders/n2/f4tcy7ks04sb8njd18x7l1lh0000gn/T/semio-repo/501/host-b79757bed7da.log",
+    "/var/folders/n2/f4tcy7ks04sb8njd18x7l1lh0000gn/T/semio-repo/501/host-f13cda8149a9.log"
+  ]
+}

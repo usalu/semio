@@ -55,7 +55,7 @@ def main():
             roster, ports = walk(tool["entries"])
             rows = [(None, roster, ports)] + transitive(ports)
             facts["tool:" + name] = [[view(r, "native"), m] for _, r, m in rows]
-            tools[name] = sorted({f for _, r, _ in rows for f in view(r, "native")} | set(tool["resources"]) | ({corpus["designation"], corpus["schemaCopy"]} if ports else set()))
+            tools[name] = sorted({f for _, r, _ in rows for f in view(r, "native")} | {r for r in tool["resources"] if not r.startswith("..")} | ({corpus["designation"], corpus["schemaCopy"]} if ports else set()))
         return {"product": {"own": view(product, "scheduling"), "ports": product_ports, "native": view(product, "native")}, "plain": {"own": view(plain, "scheduling"), "ports": plain_ports}, "groups": {k: g["files"] for k, g in groups.items()}, "tools": tools, "whole": sorted(whole), "srcs": srcs}, facts
     states, verdicts = [], []
     current, facts = state(); states.append(current)

@@ -85,7 +85,7 @@ export function encodeProtobufV1(name:string,value:ProtobufMessageV1):Uint8Array
 }
 
 class Reader{
- position=0;constructor(readonly bytes:Uint8Array,readonly end:number){}
+ position=0;readonly bytes:Uint8Array; readonly end:number; constructor(bytes:Uint8Array,end:number){this.bytes=bytes;this.end=end;}
  get done():boolean{return this.position>=this.end;}
  varint():number{
   let result=0,scale=1,count=0,big:bigint|undefined;

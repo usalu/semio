@@ -407,9 +407,9 @@
               "region": "back-beech",
               "material": "beech-timber",
               "x": 0.195,
-              "y": -0.0435,
+              "y": -0.031,
               "w": 0.19,
-              "h": 0.075
+              "h": 0.05
             },
             {
               "id": "stretcher",
@@ -462,7 +462,7 @@
               "kind": "poly",
               "points": [
                 [
-                  0.2395,
+                  0.25,
                   0
                 ],
                 [
@@ -508,7 +508,7 @@
               "kind": "poly",
               "points": [
                 [
-                  -0.2395,
+                  -0.25,
                   0
                 ],
                 [
@@ -641,7 +641,7 @@
               "points": [
                 [
                   0.42,
-                  0.236
+                  0.245
                 ],
                 [
                   0.404,
@@ -687,7 +687,7 @@
               "points": [
                 [
                   0.42,
-                  -0.236
+                  -0.245
                 ],
                 [
                   0.404,
@@ -987,7 +987,7 @@
               "kind": "poly",
               "points": [
                 [
-                  0.2395,
+                  0.25,
                   0
                 ],
                 [
@@ -1056,7 +1056,7 @@
               "kind": "poly",
               "points": [
                 [
-                  -0.2395,
+                  -0.25,
                   0
                 ],
                 [
@@ -1190,7 +1190,7 @@
               "points": [
                 [
                   0.42,
-                  0.237
+                  0.245
                 ],
                 [
                   0.404,
@@ -1258,7 +1258,7 @@
               "points": [
                 [
                   0.42,
-                  -0.237
+                  -0.245
                 ],
                 [
                   0.404,
@@ -1375,10 +1375,25 @@
               "tone": 0.6,
               "kind": "rect",
               "x": 0.0,
-              "y": -0.062,
+              "y": -0.028,
               "w": 0.428,
-              "h": 0.062,
+              "h": 0.028,
               "r": 0.012,
+              "region": "seat-beech",
+              "material": "beech-timber"
+            },
+            {
+              "id": "seat-apron",
+              "bone": "seat",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": 0.06,
+              "y": -0.062,
+              "w": 0.36,
+              "h": 0.034,
               "region": "seat-beech",
               "material": "beech-timber"
             },
@@ -1539,10 +1554,25 @@
               "material": "beech-timber",
               "kind": "rect",
               "x": -0.21,
-              "y": 0.398,
+              "y": 0.432,
               "w": 0.42,
-              "h": 0.062,
+              "h": 0.028,
               "r": 0.012
+            },
+            {
+              "id": "seat-apron",
+              "bone": "seat",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.45,
+              "region": "seat-beech",
+              "material": "beech-timber",
+              "kind": "rect",
+              "x": -0.19,
+              "y": 0.398,
+              "w": 0.38,
+              "h": 0.034
             },
             {
               "id": "seat-edge",
@@ -1578,7 +1608,7 @@
               "kind": "poly",
               "points": [
                 [
-                  0.2395,
+                  0.25,
                   0
                 ],
                 [
@@ -1647,7 +1677,7 @@
               "kind": "poly",
               "points": [
                 [
-                  -0.2395,
+                  -0.25,
                   0
                 ],
                 [
@@ -1875,7 +1905,7 @@
               "points": [
                 [
                   0.42,
-                  0.238
+                  0.245
                 ],
                 [
                   0.404,
@@ -1943,7 +1973,7 @@
               "points": [
                 [
                   0.42,
-                  -0.238
+                  -0.245
                 ],
                 [
                   0.404,
@@ -2505,6 +2535,21 @@
               "followTip": true
             },
             {
+              "id": "leg-rear-knuckle-0",
+              "bone": "leg-rear",
+              "role": "detail",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.25,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "ellipse",
+              "cx": 0.18,
+              "cy": 0.42,
+              "rx": 0.0125,
+              "ry": 0.014
+            },
+            {
               "id": "leg-front-tube-0",
               "bone": "leg-front",
               "role": "body",
@@ -2535,6 +2580,21 @@
               "closed": true,
               "penMm": 0.3,
               "followTip": true
+            },
+            {
+              "id": "leg-front-knuckle-0",
+              "bone": "leg-front",
+              "role": "detail",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.25,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "ellipse",
+              "cx": 0.19,
+              "cy": 0.42,
+              "rx": 0.0125,
+              "ry": 0.014
             },
             {
               "id": "leg-foot-front-0",
@@ -2654,6 +2714,21 @@
               "followTip": true
             },
             {
+              "id": "leg-rear-knuckle-1",
+              "bone": "leg-rear",
+              "role": "detail",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.25,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "ellipse",
+              "cx": -0.18,
+              "cy": 0.42,
+              "rx": 0.0125,
+              "ry": 0.014
+            },
+            {
               "id": "leg-front-tube-1",
               "bone": "leg-front",
               "role": "body",
@@ -2684,6 +2759,21 @@
               "closed": true,
               "penMm": 0.3,
               "followTip": true
+            },
+            {
+              "id": "leg-front-knuckle-1",
+              "bone": "leg-front",
+              "role": "detail",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.25,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "ellipse",
+              "cx": -0.19,
+              "cy": 0.42,
+              "rx": 0.0125,
+              "ry": 0.014
             },
             {
               "id": "leg-foot-front-1",
@@ -3065,9 +3155,9 @@
               "material": "steel-tube",
               "kind": "capsule",
               "x0": 0.054,
-              "y0": 0.225,
+              "y0": 0.2157,
               "x1": 0.416,
-              "y1": 0.225,
+              "y1": 0.2254,
               "r0": 0.007,
               "r1": 0.007,
               "penMm": 0.25
@@ -3188,9 +3278,9 @@
               "material": "steel-tube",
               "kind": "capsule",
               "x0": 0.054,
-              "y0": -0.225,
+              "y0": -0.2157,
               "x1": 0.416,
-              "y1": -0.225,
+              "y1": -0.2254,
               "r0": 0.007,
               "r1": 0.007,
               "penMm": 0.25

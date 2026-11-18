@@ -560,3 +560,30 @@ test("running owners and the admission decision pass through the generation prog
  const withRunning=events.find(event=>event.running!==undefined);
  expect(withRunning).toEqual({phase:"owners",done:0,total:4,running:[{name:"@semio-tech/framework-rs",seconds:12,kind:"language:cargo",rows:34}],decision:{key:"learning",used:256,budget:1386,kind:"language:cargo"}});
 });
+
+test("a phase report that falls behind an interleaved one is dropped and never ends the load",async()=>{
+ const{createGenerationProgressV1}=await import("../🟨️.mjs"),{createGraphPhaseClockV1}=await import("../../../⏱️phases/🟨️.mjs");
+ const published:string[]=[],progress=createGenerationProgressV1(createGraphPhaseClockV1({publish:resource=>{published.push(resource);},minimumMilliseconds:0}) as never);
+ await progress({phase:"decisions",done:5,total:10});
+ await progress({phase:"decisions",done:3,total:12});
+ await progress({phase:"decisions",done:12,total:12});
+ await progress({phase:"decisions",done:2,total:4});
+ await progress({phase:"decisions",done:4,total:4});
+ expect(published.some(resource=>resource.includes("decisions"))).toBe(true);
+});
+
+test("no ordering, shape or failure of progress reports can reject a report and end the load",async()=>{
+ const{createGenerationProgressV1}=await import("../🟨️.mjs"),{createGraphPhaseClockV1}=await import("../../../⏱️phases/🟨️.mjs");
+ const names=["decisions","owners","take","Bad Phase",""],values=[0,1,2,3,5,12,-1,2.5,Number.NaN,Number.POSITIVE_INFINITY,Number.MAX_SAFE_INTEGER+2];
+ let seed=20261116;const next=()=>{seed=(seed*1664525+1013904223)%4294967296;return seed/4294967296;};
+ const pick=<T,>(list:T[])=>list[Math.floor(next()*list.length)];
+ for(let round=0;round<300;round++){
+  const failing=round%7===0,progress=createGenerationProgressV1(createGraphPhaseClockV1({publish:()=>{if(failing&&next()<0.3)throw Error("publish failed");},minimumMilliseconds:0}) as never);
+  for(let step=0;step<40;step++)await progress({phase:pick(names),done:pick(values),total:pick(values)} as never);
+ }
+ const progress=createGenerationProgressV1(createGraphPhaseClockV1({minimumMilliseconds:0}) as never);
+ await progress({phase:"decisions",done:Number.NaN,total:4} as never);
+ await progress({phase:"decisions",done:-1,total:4});
+ await progress({phase:"decisions",done:1,total:4});
+ await progress({phase:"decisions",done:4,total:4});
+});

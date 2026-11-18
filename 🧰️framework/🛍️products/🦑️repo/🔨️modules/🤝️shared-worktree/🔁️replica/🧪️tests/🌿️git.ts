@@ -1,5 +1,5 @@
 import {afterAll,expect,test} from "bun:test";
-import {chmodSync,existsSync,mkdirSync,mkdtempSync,readFileSync,renameSync,rmSync,statSync,symlinkSync,utimesSync,writeFileSync} from "node:fs";
+import {chmodSync,existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,renameSync,rmSync,statSync,symlinkSync,utimesSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
@@ -71,7 +71,7 @@ posixTest("the group server publishes the base once, workers join onto it and ha
  }finally{for(const who of machines)await shut(who);}
 },120_000);
 
-posixTest("a stage replicates, an unstage replicates, concurrent stages converge, the later hlc wins on one path, a commit replicates without a realm event, a status publishes nothing, and nothing private leaves the machine",async()=>{
+posixTest("a stage of the archivist replicates, an unstage replicates, a stage a person makes on a member is replaced by the archivist's stage and kept once under lost, the archivist's stage wins on a path both staged, a commit replicates without a realm event, a status publishes nothing, and nothing private leaves the machine",async()=>{
  const {store,machines}=await fleet(["g1-server","g1-m01","g1-m02"]),[a,b,c]=machines as [Machine,Machine,Machine],original=tree(a);
  try{
   write(a,"new.txt","n\n");cli(a,["add","new.txt"]);
@@ -82,15 +82,16 @@ posixTest("a stage replicates, an unstage replicates, concurrent stages converge
   expect(staged(b)).toEqual([]);expect(staged(c)).toEqual([]);
 
   write(a,"x.txt","x\n");write(b,"y.txt","y\n");cli(a,["add","x.txt"]);cli(b,["add","y.txt"]);
-  await converge(machines,()=>same(machines,tree)&&staged(c).length===2);
-  expect(staged(a)).toEqual(["x.txt","y.txt"]);expect(staged(c)).toEqual(["x.txt","y.txt"]);
+  await converge(machines,()=>same(machines,tree)&&staged(c).length===1&&staged(b).length===1);
+  for(const who of machines)expect(staged(who)).toEqual(["x.txt"]);
+  expect(existsSync(at(b,"y.txt"))).toBe(true);
+  expect(readdirSync(at(b,".cache/f/lost")).filter(name=>name.startsWith("index-"))).toHaveLength(1);
+  expect(b.events.filter(event=>event.event==="overwritten"&&event.reason==="local-stage-replaced")).toHaveLength(1);
 
   const blobA=cli(a,["hash-object","-w","--stdin"],"from a\n").trim(),blobB=cli(b,["hash-object","-w","--stdin"],"from b\n").trim();
-  cli(a,["update-index","--add","--cacheinfo",`100644,${blobA},s.txt`]);await publishOnceV1(a.replica!);
-  await Bun.sleep(5);
-  cli(b,["update-index","--add","--cacheinfo",`100644,${blobB},s.txt`]);await publishOnceV1(b.replica!);
-  await converge(machines,()=>same(machines,tree)&&cli(c,["ls-files","-s","s.txt"]).includes(blobB));
-  for(const who of machines)expect(cli(who,["ls-files","-s","s.txt"])).toContain(blobB);
+  cli(a,["update-index","--add","--cacheinfo",`100644,${blobA},s.txt`]);cli(b,["update-index","--add","--cacheinfo",`100644,${blobB},s.txt`]);
+  await converge(machines,()=>same(machines,tree)&&cli(c,["ls-files","-s","s.txt"]).includes(blobA));
+  for(const who of machines)expect(cli(who,["ls-files","-s","s.txt"])).toContain(blobA);
 
   const before=(await journalPaths(store)).filter(path=>path.startsWith(INDEX_PREFIX_V1)).length;
   cli(a,["commit","-q","-m","second"]);
@@ -109,8 +110,8 @@ posixTest("a stage replicates, an unstage replicates, concurrent stages converge
 
   for(const path of await journalPaths(store))if(path.startsWith(".git/"))expect(gitSharedV1(path),path).toBe(true);
   for(const who of machines)expect(who.events.filter(event=>event.event==="error")).toEqual([]);
-  cli(b,["update-index","--force-remove","a.txt"]);
-  const drift=(await verifyV1(b.options)).drift.filter(item=>item.path===".git/index");
+  cli(a,["update-index","--force-remove","a.txt"]);
+  const drift=(await verifyV1(a.options)).drift.filter(item=>item.path===".git/index");
   expect(drift).toHaveLength(1);
  }finally{for(const who of machines)await shut(who);}
 },120_000);
@@ -150,11 +151,11 @@ posixTest("a repair re-creates the shared git files a machine holds as applied b
  }finally{for(const who of machines)await shut(who);}
 });
 
-posixTest("a base is published only for the first stage and for an explicit rebase: a stage of more than 5000 paths becomes entries and voids nothing a machine staged earlier, and a restarted replica keeps following",async()=>{
+posixTest("a base is published only for the first stage, for an explicit rebase and for a tree the entries cannot carry: a stage of more than 5000 paths becomes entries, and a restarted replica keeps following",async()=>{
  const {store,machines}=await fleet(["g1-server","g1-m01","g1-m02"]),[a,b,c]=machines as [Machine,Machine,Machine];
  try{
-  write(b,"early1.txt","1\n");write(b,"early2.txt","2\n");write(b,"early3.txt","3\n");cli(b,["add","early1.txt","early2.txt","early3.txt"]);
-  await publishOnceV1(b.replica!);
+  write(a,"early1.txt","1\n");write(a,"early2.txt","2\n");write(a,"early3.txt","3\n");cli(a,["add","early1.txt","early2.txt","early3.txt"]);
+  await publishOnceV1(a.replica!);
   const blob=cli(a,["hash-object","-w","--stdin"],"bulk\n").trim();
   cli(a,["update-index","--index-info"],Array.from({length:5001},(_,index)=>`100644 ${blob}\tbulk/f${index}.txt\n`).join(""));
   await publishOnceV1(a.replica!);
@@ -172,61 +173,70 @@ posixTest("a base is published only for the first stage and for an explicit reba
  }finally{for(const who of machines)await shut(who);}
 },180_000);
 
-posixTest("a lost local record does not matter: a stage made while the replica was stopped is published after the restart, a deleted .git/index is restored from the registers, and no delete is published for it",async()=>{
+posixTest("a lost local record does not matter: a stage the archivist made while its replica was stopped is published after the restart, a deleted .git/index of a member is restored from the registers, and no delete is published for it",async()=>{
  const {store,machines}=await fleet(["g1-server","g1-m01","g1-m02"]),[a,b,c]=machines as [Machine,Machine,Machine];
  try{
   await converge(machines,()=>same(machines,tree));
-  await shut(b);
-  write(b,"offline.txt","o\n");cli(b,["add","offline.txt"]);
-  rmSync(at(b,".cache/f/git-index.json"),{force:true});
-  await open(b);
+  await shut(a);
+  write(a,"offline.txt","o\n");cli(a,["add","offline.txt"]);
+  rmSync(at(a,".cache/f/git-index.json"),{force:true});
+  await open(a);
   await converge(machines,()=>same(machines,tree)&&staged(c).includes("offline.txt"));
-  expect(staged(a)).toEqual(["offline.txt"]);
+  expect(staged(b)).toEqual(["offline.txt"]);
   const before=(await journalPaths(store)).filter(indexRealmV1).length;
   rmSync(at(b,".git/index"));
   await publishOnceV1(b.replica!);
   await converge(machines,()=>same(machines,tree));
   expect(staged(b)).toEqual(["offline.txt"]);
   expect((await journalPaths(store)).filter(indexRealmV1)).toHaveLength(before);
-  expect(b.events.some(event=>event.event==="repaired"&&event.stage==="git"&&event.reason==="index-missing")).toBe(true);
+  expect(b.events.some(event=>event.event==="applied"&&event.stage==="git"&&event.reason==="index-rebuilt")).toBe(true);
   for(const who of machines)expect(who.events.filter(event=>event.event==="error")).toEqual([]);
  }finally{for(const who of machines)await shut(who);}
 },120_000);
 
-posixTest("a rebase lists the registers of other machines it voids in an event and a file under lost, and every machine adopts the new base",async()=>{
+posixTest("a rebase lists the registers it voids in an event and a file under lost, and every machine adopts the new base",async()=>{
  const {machines}=await fleet(["g1-server","g1-m01","g1-m02"]),[server,worker] = machines as [Machine,Machine,Machine];
  try{
-  write(worker,"y.txt","y\n");cli(worker,["add","y.txt"]);
-  await converge(machines,()=>same(machines,tree)&&staged(server).includes("y.txt"));
-  const blob=cli(worker,["rev-parse",":y.txt"]).trim();
+  write(server,"y.txt","y\n");cli(server,["add","y.txt"]);
+  await converge(machines,()=>same(machines,tree)&&staged(worker).includes("y.txt"));
+  const blob=cli(server,["rev-parse",":y.txt"]).trim();
   cli(server,["reset","-q","--","y.txt"]);
   await requestRebaseV1(server.options.worktree);
   await publishOnceV1(server.replica!);
   const event=server.events.find(item=>item.event==="published"&&item.reason==="rebase");
   expect(event).toMatchObject({stage:"git",path:INDEX_BASE_V1,count:1});
-  expect(readFileSync(join(server.options.worktree,".cache","f",String(event!.lost)),"utf8")).toBe(`y.txt\tg1-m01\t100644 ${blob}\n`);
+  expect(readFileSync(join(server.options.worktree,".cache","f",String(event!.lost)),"utf8")).toBe(`y.txt\tg1-server\t100644 ${blob}\n`);
   await converge(machines,()=>same(machines,tree)&&staged(worker).length===0);
   for(const who of machines)expect(staged(who)).toEqual([]);
+  await requestRebaseV1(worker.options.worktree);
+  await publishOnceV1(worker.replica!);
+  expect(await rebaseRequestedV1(worker.options.worktree)).toBe(false);
+  expect(worker.events.some(item=>item.event==="skipped"&&item.reason==="archivist-only")).toBe(true);
  }finally{for(const who of machines)await shut(who);}
 },120_000);
 
-posixTest("unmerged stage entries make status name the reason, nothing is published or reset meanwhile, and sharing resumes once they are resolved",async()=>{
+posixTest("unmerged entries on a member are replaced by the stage of the archivist; unmerged entries of the archivist are named by status, never published or reset meanwhile, and sharing resumes once they are resolved",async()=>{
  const {machines}=await fleet(["g1-server","g1-m01"]),[a,b]=machines as [Machine,Machine];
  try{
   await converge(machines,()=>same(machines,tree));
   const blob=cli(b,["hash-object","-w","--stdin"],"u\n").trim(),before=tree(a);
   cli(b,["update-index","--index-info"],`100644 ${blob} 1\tu.txt\n100644 ${blob} 2\tu.txt\n100644 ${blob} 3\tu.txt\n`);
   await publishOnceV1(b.replica!);
-  expect((await statusV1(b.options)).git).toMatchObject({shared:false,reason:"unmerged"});
-  expect(b.events.filter(event=>event.event==="blocked"&&event.reason==="unmerged")).toHaveLength(1);
-  await publishOnceV1(b.replica!);
-  expect(b.events.filter(event=>event.event==="blocked"&&event.reason==="unmerged")).toHaveLength(1);
-  expect(cli(b,["ls-files","-u"])).not.toBe("");
-  expect(tree(a)).toBe(before);
-  cli(b,["update-index","--add","--cacheinfo",`100644,${blob},u.txt`]);
-  await converge(machines,()=>same(machines,tree));
+  expect(cli(b,["ls-files","-u"])).toBe("");
+  expect(tree(b)).toBe(before);
   expect((await statusV1(b.options)).git).toMatchObject({shared:true,reason:"shared"});
-  expect(staged(a)).toEqual(["u.txt"]);
+  cli(a,["update-index","--index-info"],`100644 ${blob} 1\tu.txt\n100644 ${blob} 2\tu.txt\n100644 ${blob} 3\tu.txt\n`);
+  await publishOnceV1(a.replica!);
+  expect((await statusV1(a.options)).git).toMatchObject({shared:false,reason:"unmerged"});
+  expect(a.events.filter(event=>event.event==="blocked"&&event.reason==="unmerged")).toHaveLength(1);
+  await publishOnceV1(a.replica!);
+  expect(a.events.filter(event=>event.event==="blocked"&&event.reason==="unmerged")).toHaveLength(1);
+  expect(cli(a,["ls-files","-u"])).not.toBe("");
+  expect(tree(b)).toBe(before);
+  cli(a,["update-index","--add","--cacheinfo",`100644,${blob},u.txt`]);
+  await converge(machines,()=>same(machines,tree));
+  expect((await statusV1(a.options)).git).toMatchObject({shared:true,reason:"shared"});
+  expect(staged(b)).toEqual(["u.txt"]);
  }finally{for(const who of machines)await shut(who);}
 },120_000);
 
@@ -274,7 +284,7 @@ posixTest("an entry whose object has not arrived stays queued without an error a
  const {store,machines}=await fleet(["g1-server","g1-m01"]),[, b] = machines as [Machine,Machine];
  try{
   const blob=Bun.spawnSync(["git","hash-object","--stdin"],{cwd:b.options.worktree,env:environment,stdin:Buffer.from("late\n"),stdout:"pipe"}).stdout.toString().trim();
-  await appendEventsV1(store,"g1-m09",[{version:1,hlc:formatHlcV1({ms:Date.now()+50,counter:0},"g1-m09"),operation:"link",path:`${INDEX_PREFIX_V1}late.txt`,target:`100644 ${blob}`,base:null}]);
+  await appendEventsV1(store,"g1-server",[{version:1,hlc:formatHlcV1({ms:Date.now()+50,counter:0},"g1-server"),operation:"link",path:`${INDEX_PREFIX_V1}late.txt`,target:`100644 ${blob}`,base:null}]);
   await followOnceV1(b.replica!);
   expect(b.replica!.queue.size).toBe(1);
   expect(cli(b,["ls-files","-s","late.txt"])).toBe("");
@@ -294,16 +304,16 @@ const linearised=(machines:readonly Machine[]):ReplicaEventV1[]=>machines.flatMa
 const clean=(who:Machine):boolean=>cli(who,["status","--porcelain"])==="";
 function commit(who:Machine,file:string,message:string,extra:Record<string,string>={}):void{write(who,file,`${message}\n`);cli(who,["add",file]);cli(who,["commit","-q","-m",message],undefined,extra);}
 function check(who:Machine,count:number,messages:readonly string[]):void{
- const ran=python===null?undefined:Bun.spawnSync([python,"-I",oracle,who.options.worktree,String(count),...messages],{stdout:"pipe",stderr:"pipe"});
+ const ran=python===null?undefined:Bun.spawnSync([python,"-I",oracle,who.options.worktree,String(count),"--no-status",...messages],{stdout:"pipe",stderr:"pipe"});
  if(ran!==undefined)expect(ran.exitCode,ran.stderr.toString()).toBe(0);
  const rows=cli(who,["rev-list","--parents","HEAD"]).split("\n").filter(Boolean).map(row=>row.split(" "));
  expect(rows).toHaveLength(count);
  expect(rows.every(row=>row.length<=2)).toBe(true);
  for(const message of messages)expect(subjects(who).filter(subject=>subject===message)).toHaveLength(1);
 }
-const settled=(machines:readonly Machine[],count:number)=>()=>same(machines,head)&&same(machines,tree)&&machines.every(who=>subjects(who).length===count&&clean(who));
+const settled=(machines:readonly Machine[],count:number)=>()=>same(machines,head)&&same(machines,tree)&&machines.every(who=>subjects(who).length===count);
 
-posixTest("two concurrent commits from one parent end as one linear history with both messages, no lost change, a clean stage and one linearised event",async()=>{
+posixTest("two concurrent commits from one parent end as one linear history with both messages, no lost change, the stage of the archivist everywhere and one linearised event",async()=>{
  const {machines}=await fleet(["g1-server","g1-m01","g1-m02"]),[a,b,c]=machines as [Machine,Machine,Machine];
  try{
   commit(a,"a1.txt","from a");commit(b,"b1.txt","from b");
@@ -374,43 +384,44 @@ posixTest("a commit on one machine while another is merely behind is a plain fas
  }finally{for(const who of machines)await shut(who);}
 },120_000);
 
-posixTest("three real worktrees attest the same view, a local-only refused symlink makes the verdict name view.digest and fleet --diff list it, and removing it restores agreement",async()=>{
- const {store,machines}=await fleet(["g1-server","g1-m01","g1-m02"]),controller=new AbortController();
- for(const who of machines)await shut(who);
- const options=(who:Machine):ReplicaOptionsV1=>({...who.options,attestMilliseconds:100,viewMilliseconds:300,viewDebounceMilliseconds:50}),runs=machines.map(who=>runV1(options(who),controller.signal,event=>who.events.push(event)));
- const until=async(condition:()=>Promise<boolean>):Promise<void>=>{const end=Date.now()+60_000;while(!await condition()){if(Date.now()>end)throw Error("Timed out");await Bun.sleep(50);}};
- const diff=async(who:Machine)=>{
-  const notices:string[]=[];
-  const result=await runReplicaCommandV1(["fleet","--diff","--worktree",who.options.worktree,"--store",store,"--lang","en"],{root:who.options.worktree,environment:{},signal:new AbortController().signal,write:()=>{},notice:line=>notices.push(line)});
-  return {exitCode:result.exitCode,text:notices.join("\n")};
- };
- try{
-  await until(async()=>{const report=await fleetReportV1(store);return report.ok&&report.rows.length===3&&report.rows.every(row=>row.view!==null);});
-  const [server,worker,other]=machines as [Machine,Machine,Machine];
-  const clean=(await fleetReportV1(store)).rows[0]!.view!;
-  expect(clean).toMatchObject({staged:0,modified:0,deleted:0,untracked:0});
-  expect((await diff(server)).exitCode).toBe(0);
-  symlinkSync("/etc/hosts",at(worker,"local-link"));
-  await until(async()=>(await fleetReportV1(store)).differing.length>0);
-  const report=await fleetReportV1(store);
-  expect(report.ok).toBe(false);
-  expect(report.differing.map(item=>[item.originId,item.field])).toEqual([["g1-m01","view.digest"]]);
-  expect(report.rows.find(row=>row.originId==="g1-m01")!.view).toMatchObject({untracked:1});
-  const there=await diff(other);
-  expect(there.exitCode).toBe(1);
-  expect(there.text).toContain("g1-m01 differs from this machine: 1 lines only there, 0 lines only here");
-  expect(there.text).toContain("only on g1-m01: ?? local-link");
-  expect(there.text).not.toContain("g1-server differs");
-  const here=await diff(worker);
-  expect(here.exitCode).toBe(1);
-  expect(here.text).toContain("only on g1-m01 (here): ?? local-link");
-  expect(await readViewLinesV1(store,"g1-m01")).toEqual(["?? local-link"]);
-  rmSync(at(worker,"local-link"));
-  await until(async()=>(await fleetReportV1(store)).ok);
-  expect((await diff(server)).exitCode).toBe(0);
-  expect(await readViewLinesV1(store,"g1-m01")).toEqual([]);
- }finally{controller.abort();await Promise.all(runs);}
-},120_000);
+posixTest("three real worktrees attest the same view, a local-only refused symlink and a path that is too long stay out of the verdict and appear in the refused-path record of their machine, and a carried untracked file is in every view",async()=>{
+  const {store,machines}=await fleet(["g1-server","g1-m01","g1-m02"]),controller=new AbortController();
+  for(const who of machines)await shut(who);
+  const options=(who:Machine):ReplicaOptionsV1=>({...who.options,attestMilliseconds:100,viewMilliseconds:300,viewDebounceMilliseconds:50}),runs=machines.map(who=>runV1(options(who),controller.signal,event=>who.events.push(event)));
+  const until=async(condition:()=>Promise<boolean>):Promise<void>=>{const end=Date.now()+60_000;while(!await condition()){if(Date.now()>end)throw Error("Timed out");await Bun.sleep(50);}};
+  const diff=async(who:Machine)=>{
+   const notices:string[]=[];
+   const result=await runReplicaCommandV1(["fleet","--diff","--worktree",who.options.worktree,"--store",store,"--lang","en"],{root:who.options.worktree,environment:{},signal:new AbortController().signal,write:()=>{},notice:line=>notices.push(line)});
+   return {exitCode:result.exitCode,text:notices.join("\n")};
+  };
+  try{
+   await until(async()=>{const report=await fleetReportV1(store);return report.ok&&report.rows.length===3&&report.rows.every(row=>row.view!==null);});
+   const [server,worker,other]=machines as [Machine,Machine,Machine];
+   const clean=(await fleetReportV1(store)).rows[0]!.view!;
+   expect(clean).toMatchObject({staged:0,modified:0,deleted:0,untracked:0});
+   expect((await diff(server)).exitCode).toBe(0);
+   const deep=Array.from({length:9},(_,index)=>String(index).repeat(30)).join("/");
+   symlinkSync("/etc/hosts",at(worker,"local-link"));mkdirSync(at(worker,deep),{recursive:true});writeFileSync(at(worker,`${deep}/leaf.txt`),"l\n");
+   await until(async()=>(await statusV1(worker.options)).refusedPaths.recent.some(item=>item.path==="local-link"));
+   const recorded=(await statusV1(worker.options)).refusedPaths.recent;
+   expect(recorded.find(item=>item.path==="local-link")).toMatchObject({reason:"unsafe-link"});
+   expect(recorded.some(item=>item.reason==="too-long"&&`${deep}/leaf.txt`.startsWith(item.path))).toBe(true);
+   expect((await statusV1(server.options)).refusedPaths.recent).toEqual([]);
+   write(worker,"shared-note.txt","carried\n");
+   const alike=async(untracked:number):Promise<boolean>=>{const report=await fleetReportV1(store);return report.rows.every(row=>row.view!==null&&row.view.untracked===untracked)&&new Set(report.rows.map(row=>row.view!.digest)).size===1;};
+   await until(()=>alike(1));
+   const report=await fleetReportV1(store);
+   expect(report.differing).toEqual([]);
+   expect(report.rows.map(row=>row.verdict)).not.toContain("diverged");
+   expect((await diff(other)).exitCode).toBe(0);
+   expect((await diff(worker)).exitCode).toBe(0);
+   expect(await readViewLinesV1(store,"g1-m01")).toEqual(["?? shared-note.txt"]);
+   expect(await readViewLinesV1(store,"g1-m02")).toEqual(["?? shared-note.txt"]);
+   rmSync(at(worker,"local-link"));rmSync(at(worker,"shared-note.txt"));
+   await until(()=>alike(0));
+   expect(await readViewLinesV1(store,"g1-m01")).toEqual([]);
+  }finally{controller.abort();await Promise.all(runs);}
+ },120_000);
 
 posixTest("untracked files created and deleted on one machine reach every attested view within seconds, without a complete status pass and without a diverged verdict in between",async()=>{
  const {store,machines}=await fleet(["g1-server","g1-m01","g1-m02"]),controller=new AbortController();
@@ -497,7 +508,7 @@ posixTest("new branches, tags and a detached HEAD replicate as plain last writer
 const executableOn=(who:Machine,path:string):boolean=>(statSync(at(who,path)).mode&0o111)!==0;
 const manifestExecutable=(who:Machine,path:string):boolean|undefined=>{const entry=who.replica!.files.get(path);return entry?.operation==="put"?entry.executable:undefined;};
 
-posixTest("a file made on a machine that cannot hold the executable bit, made executable on a POSIX machine and edited on the first one stays executable everywhere, a new file takes the staged mode, and every status is clean",async()=>{
+posixTest("a file made on a machine that cannot hold the executable bit, made executable on a POSIX machine and edited on the first one stays executable everywhere, a new file takes the mode the archivist staged for it, and every status is clean",async()=>{
  const store=temp("store"),server=machine("g1-server",store),worker=machine("g1-m01",store),windows={...machine("g1-m02",store)};
  write(server,".gitignore",fixture.gitignore);write(server,"a.txt","alpha\n");cli(server,["init","-q","-b","main"]);cli(server,["add","-A"]);cli(server,["commit","-q","-m","initial"]);
  await seedV1(server.options);await joinV1(worker.options);await joinV1(windows.options);
@@ -519,17 +530,24 @@ posixTest("a file made on a machine that cannot hold the executable bit, made ex
   expect(cli(worker,["ls-files","--stage","tool.sh"])).toContain("100755");
   expect(executableOn(windows,"tool.sh")).toBe(false);
   await clean();
-  write(windows,"tool.sh","#!/bin/sh\necho two\n");cli(windows,["add","tool.sh"]);
-  await converge(machines,()=>readFileSync(at(server,"tool.sh"),"utf8").includes("two")&&readFileSync(at(worker,"tool.sh"),"utf8").includes("two")&&same(machines,tree));
+  write(windows,"tool.sh","#!/bin/sh\necho two\n");
+  await converge(machines,()=>readFileSync(at(server,"tool.sh"),"utf8").includes("two")&&readFileSync(at(worker,"tool.sh"),"utf8").includes("two"));
+  cli(server,["add","tool.sh"]);
+  await converge(machines,()=>same(machines,tree));
   expect([executableOn(server,"tool.sh"),executableOn(worker,"tool.sh"),manifestExecutable(server,"tool.sh"),manifestExecutable(worker,"tool.sh"),manifestExecutable(windows,"tool.sh")]).toEqual([true,true,true,true,true]);
   expect(cli(windows,["ls-files","--stage","tool.sh"])).toContain("100755");
   await clean();
-  write(windows,"new.sh","#!/bin/sh\n");cli(windows,["add","--chmod=+x","new.sh"]);
+  const script=cli(server,["hash-object","-w","--stdin"],"#!/bin/sh\n").trim();
+  cli(server,["update-index","--add","--cacheinfo",`100755,${script},new.sh`]);
+  await converge(machines,()=>same(machines,tree));
+  write(windows,"new.sh","#!/bin/sh\n");
   await converge(machines,()=>existsSync(at(server,"new.sh"))&&existsSync(at(worker,"new.sh"))&&same(machines,tree));
   expect([executableOn(server,"new.sh"),executableOn(worker,"new.sh"),manifestExecutable(windows,"new.sh")]).toEqual([true,true,true]);
   await clean();
-  chmodSync(at(worker,"tool.sh"),0o644);cli(worker,["add","tool.sh"]);
-  await converge(machines,()=>!executableOn(server,"tool.sh")&&manifestExecutable(windows,"tool.sh")===false&&same(machines,tree));
+  chmodSync(at(worker,"tool.sh"),0o644);
+  await converge(machines,()=>!executableOn(server,"tool.sh")&&manifestExecutable(windows,"tool.sh")===false);
+  cli(server,["add","tool.sh"]);
+  await converge(machines,()=>same(machines,tree));
   await clean();
  }finally{for(const who of machines)await shut(who);}
 },120_000);
@@ -555,5 +573,139 @@ posixTest("an executable file rewritten on a POSIX machine by an editor that cre
   recreate(worker,"run.sh","#!/bin/sh\necho four\n",0o755);
   await converge(machines,()=>readFileSync(at(server,"run.sh"),"utf8").includes("four")&&executableOn(server,"run.sh"));
   expect(manifestExecutable(server,"run.sh")).toBe(true);
+ }finally{for(const who of machines)await shut(who);}
+},120_000);
+
+
+const lostFiles=(who:Machine):string[]=>{
+ const found:string[]=[],root=at(who,".cache/f/lost");
+ const walk=(directory:string,prefix:string):void=>{for(const name of existsSync(directory)?readdirSync(directory):[]){const full=join(directory,name);if(statSync(full).isDirectory())walk(full,`${prefix}${name}/`);else found.push(`${prefix}${name}`);}};
+ walk(root,"");
+ return found;
+};
+const contents=(who:Machine,paths:readonly string[]):string=>JSON.stringify(paths.map(path=>[path,existsSync(at(who,path))?readFileSync(at(who,path),"utf8"):null]));
+const long=`${"d".repeat(100)}/${"e".repeat(100)}/${"f".repeat(60)}/leaf.txt`;
+
+posixTest("after the archivist's commit every machine has the same HEAD, objects, index tree and listing of tracked files, also for a staged path that cannot be carried, and the views agree",async()=>{
+ const {machines}=await fleet(["g1-server","g1-m01","g1-m02"]),[a,b,c]=machines as [Machine,Machine,Machine];
+ try{
+  write(a,"one.txt","1\n");write(a,"dir/two.txt","2\n");write(a,long,"far\n");
+  cli(a,["add","-A"]);cli(a,["commit","-q","-m","archivist commit"]);
+  write(a,"three.txt","3\n");cli(a,["add","three.txt"]);
+  await converge(machines,()=>same(machines,head)&&same(machines,tree)&&existsSync(at(c,"three.txt"))&&tree(c)===tree(a));
+  const names=(who:Machine)=>cli(who,["ls-files","-s"]);
+  for(const who of machines){
+   expect(head(who)).toBe(head(a));
+   expect(tree(who)).toBe(tree(a));
+   expect(names(who)).toBe(names(a));
+   expect(cli(who,["cat-file","-t",head(a)]).trim()).toBe("commit");
+   expect(cli(who,["rev-list","--objects","-n","1","HEAD"]).length).toBeGreaterThan(0);
+   expect((await gitStateV1(who.options.worktree)).indexTree).toBe(tree(a));
+   expect(staged(who)).toEqual(["three.txt"]);
+  }
+  expect(existsSync(at(b,long))).toBe(false);
+  const views=await Promise.all(machines.map(who=>gitViewV1(who.options.worktree)));
+  for(const view of views)expect(view!.digest).toBe(views[0]!.digest);
+  for(const who of machines)expect(who.events.filter(event=>event.event==="error")).toEqual([]);
+ }finally{for(const who of machines)await shut(who);}
+},120_000);
+
+posixTest("a member whose index is corrupt, then absent, ends with the index tree of the archivist, keeps the old file once under lost and does not touch a worktree file",async()=>{
+ const {machines}=await fleet(["g1-server","g1-m01","g1-m02"]),[a,b]=machines as [Machine,Machine,Machine];
+ try{
+  write(a,"s.txt","s\n");cli(a,["add","s.txt"]);
+  await converge(machines,()=>same(machines,tree)&&staged(b).length===1);
+  const worktree=readFileSync(at(b,"a.txt"),"utf8");
+  writeFileSync(at(b,".git/index"),"corrupt\n");
+  await converge(machines,()=>tree(b)===tree(a)&&staged(b).length===1);
+  expect(readdirSync(at(b,".cache/f/lost")).filter(name=>name.startsWith("index-"))).toHaveLength(1);
+  rmSync(at(b,".git/index"));
+  await converge(machines,()=>existsSync(at(b,".git/index"))&&tree(b)===tree(a));
+  expect(readFileSync(at(b,"a.txt"),"utf8")).toBe(worktree);
+  expect(existsSync(at(b,".git/index.lock"))).toBe(false);
+  expect(b.events.filter(event=>event.event==="error")).toEqual([]);
+ }finally{for(const who of machines)await shut(who);}
+},120_000);
+
+posixTest("a commit on the archivist while a member edits the same file ends on the same bytes, head and index tree everywhere, the later edit winning and the commit holding the other",async()=>{
+ const {machines}=await fleet(["g1-server","g1-m01","g1-m02"]),[a,b,c]=machines as [Machine,Machine,Machine];
+ try{
+  await converge(machines,()=>same(machines,tree));
+  write(a,"a.txt","archivist edit\n");cli(a,["add","a.txt"]);
+  await publishOnceV1(a.replica!);
+  await Bun.sleep(30);
+  write(b,"a.txt","member edit\n");
+  cli(a,["commit","-q","-m","commit during edit"]);
+  await converge(machines,()=>same(machines,head)&&same(machines,tree)&&same(machines,who=>contents(who,["a.txt"])),600);
+  await converge(machines,()=>true);await converge(machines,()=>true);
+  for(const who of machines){expect(readFileSync(at(who,"a.txt"),"utf8")).toBe("member edit\n");expect(cli(who,["log","-1","--format=%s"]).trim()).toBe("commit during edit");}
+  const views=await Promise.all(machines.map(who=>gitViewV1(who.options.worktree)));
+  for(const view of views)expect(view!.digest).toBe(views[0]!.digest);
+  expect(views[0]!.lines).toContain(" M a.txt");
+  for(const who of machines)expect(who.events.filter(event=>event.event==="error")).toEqual([]);
+ }finally{for(const who of machines)await shut(who);}
+},120_000);
+
+posixTest("a delete against an edit and a rename against an edit end on the same files and bytes on every machine, whichever hlc is later, and nothing gets conflict markers",async()=>{
+ const {machines}=await fleet(["g1-server","g1-m01","g1-m02"]),[a,b,c]=machines as [Machine,Machine,Machine];
+ try{
+  write(a,"del-late.txt","d1\n");write(a,"del-early.txt","d2\n");write(a,"ren.txt","r\n");
+  await converge(machines,()=>existsSync(at(c,"del-late.txt"))&&existsSync(at(c,"del-early.txt"))&&existsSync(at(c,"ren.txt")));
+  write(b,"del-late.txt","edited first\n");await publishOnceV1(b.replica!);await Bun.sleep(30);
+  rmSync(at(a,"del-late.txt"));await publishOnceV1(a.replica!);await Bun.sleep(30);
+  rmSync(at(a,"del-early.txt"));await publishOnceV1(a.replica!);await Bun.sleep(30);
+  write(b,"del-early.txt","edited later\n");await publishOnceV1(b.replica!);await Bun.sleep(30);
+  renameSync(at(a,"ren.txt"),at(a,"renamed.txt"));await publishOnceV1(a.replica!);await Bun.sleep(30);
+  write(c,"ren.txt","edited after rename\n");await publishOnceV1(c.replica!);
+  const paths=["del-late.txt","del-early.txt","ren.txt","renamed.txt"];
+  await converge(machines,()=>same(machines,who=>contents(who,paths))&&existsSync(at(a,"renamed.txt")),600);
+  await converge(machines,()=>true);await converge(machines,()=>true);
+  expect(same(machines,who=>contents(who,paths))).toBe(true);
+  expect(JSON.parse(contents(a,paths))).toEqual([["del-late.txt",null],["del-early.txt","edited later\n"],["ren.txt","edited after rename\n"],["renamed.txt","r\n"]]);
+  for(const who of machines)for(const path of paths)if(existsSync(at(who,path)))expect(readFileSync(at(who,path),"utf8")).not.toMatch(/^(<<<<<<<|=======|>>>>>>>)/mu);
+  for(const who of machines)expect(who.events.filter(event=>event.event==="error")).toEqual([]);
+ }finally{for(const who of machines)await shut(who);}
+},120_000);
+
+posixTest("two machines that create names which differ only in Unicode normalisation or case end on one name with one content on every machine: the carried composed name and the newer case win, the other bytes are kept under lost",async()=>{
+ const {machines}=await fleet(["g1-server","g1-m01","g1-m02"]),[a,b,c]=machines as [Machine,Machine,Machine];
+ const nfc="caf\u00e9.txt",nfd="cafe\u0301.txt";
+ try{
+  write(a,nfc,"composed\n");await publishOnceV1(a.replica!);await Bun.sleep(30);
+  write(b,nfd,"decomposed\n");await publishOnceV1(b.replica!);await Bun.sleep(30);
+  write(c,"Case.txt","upper\n");await publishOnceV1(c.replica!);await Bun.sleep(30);
+  write(a,"case.txt","lower\n");await publishOnceV1(a.replica!);
+  const entries=(who:Machine):string[]=>readdirSync(who.options.worktree).filter(name=>/^(caf|case)/iu.test(name)).sort();
+  const bytes=(who:Machine):string=>JSON.stringify(entries(who).map(name=>[name.normalize("NFC"),readFileSync(join(who.options.worktree,name),"utf8")]));
+  await converge(machines,()=>same(machines,bytes)&&entries(a).length===2&&entries(b).length===2&&entries(c).length===2,800);
+  await converge(machines,()=>true);await converge(machines,()=>true);
+  expect(same(machines,bytes)).toBe(true);
+  expect(JSON.parse(bytes(a))).toEqual([["café.txt","composed\n"],["case.txt","lower\n"]]);
+  expect(lostFiles(b).some(name=>name.endsWith(nfc)||name.endsWith(nfd))).toBe(true);
+  expect(machines.flatMap(who=>lostFiles(who).map(name=>readFileSync(at(who,`.cache/f/lost/${name}`),"utf8")))).toEqual(expect.arrayContaining(["decomposed\n","upper\n"]));
+  for(const who of machines)expect(who.events.filter(event=>event.event==="error")).toEqual([]);
+ }finally{for(const who of machines)await shut(who);}
+},120_000);
+
+
+posixTest("two machines editing the same file before either published end on identical bytes everywhere, and a commit of the archivist is adopted by the members without touching any file content or inode",async()=>{
+ const {machines}=await fleet(["g1-server","g1-m01","g1-m02"]),[a,b,c]=machines as [Machine,Machine,Machine];
+ try{
+  write(a,"keep/one.txt","one\n");write(a,"keep/two.txt","two\n");
+  await converge(machines,()=>existsSync(at(c,"keep/two.txt"))&&same(machines,tree));
+  write(a,"race.txt","from the archivist\n");write(b,"race.txt","from the member\n");
+  await converge(machines,()=>same(machines,who=>contents(who,["race.txt"])),600);
+  await converge(machines,()=>true);await converge(machines,()=>true);
+  const winner=readFileSync(at(a,"race.txt"),"utf8");
+  expect(["from the archivist\n","from the member\n"]).toContain(winner);
+  for(const who of machines)expect(readFileSync(at(who,"race.txt"),"utf8")).toBe(winner);
+  const files=["a.txt","b.txt","dir/c.txt","keep/one.txt","keep/two.txt","race.txt"],stamp=(who:Machine)=>JSON.stringify(files.map(path=>{const info=statSync(at(who,path));return [path,readFileSync(at(who,path),"utf8"),info.ino,info.mtimeMs];}));
+  const before=[b,c].map(stamp);
+  cli(a,["add","-A"]);cli(a,["commit","-q","-m","archivist commit"]);
+  await converge(machines,()=>same(machines,head)&&same(machines,tree)&&staged(b).length===0);
+  await converge(machines,()=>true);
+  expect([b,c].map(stamp)).toEqual(before);
+  for(const who of machines){expect(head(who)).toBe(head(a));expect(tree(who)).toBe(tree(a));expect(who.events.filter(event=>event.event==="error")).toEqual([]);}
+  expect(same(machines,who=>contents(who,files))).toBe(true);
  }finally{for(const who of machines)await shut(who);}
 },120_000);

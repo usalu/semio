@@ -53,7 +53,7 @@
       "name": "recorded facts are verified only after the structural source parsers are registered",
       "function": "generationHostV1",
       "before": "await analysesPrepared();",
-      "after": "observationV1.observationsHold(plain,64"
+      "after": "observationV1.observationsHold(parsed,64"
     }
   ],
   "present": [

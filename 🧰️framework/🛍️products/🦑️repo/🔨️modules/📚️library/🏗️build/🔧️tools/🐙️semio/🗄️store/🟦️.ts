@@ -34,7 +34,7 @@ export type SemioStorePortsV1=Readonly<{touch?:(path:string)=>Promise<void>;timi
 export class SemioStoreV1{
  private readonly touchLock:(path:string)=>Promise<void>;
  private readonly timing:SemioStoreTimingV1;
- constructor(readonly directory:string,ports:SemioStorePortsV1={}){
+ readonly directory:string; constructor(directory:string,ports:SemioStorePortsV1={}){this.directory=directory;
   this.touchLock=ports.touch??(async path=>{const now=new Date();await utimes(path,now,now);});
   this.timing={lockStaleMilliseconds:policy.lockStaleMilliseconds,lockHeartbeatMilliseconds:policy.lockHeartbeatMilliseconds,lockPollMilliseconds:policy.lockPollMilliseconds,...ports.timing};
  }

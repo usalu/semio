@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:graph:inference:project-nodes:owner-pool:staging-sweep:v1",
+  "title": "Staging directories of the owner pool that outlive their process are removed by the next one / Staging-Verzeichnisse des Eigentümer-Pools, die ihren Prozess überleben, räumt der nächste weg",
+  "description": "EN: A pool process and each of its children stage in a private directory `semio-owner-pool-XXXXXX` of the temporary directory (and of the fallback directory when the temporary one refuses a probe file). The directory was removed only when the owner closed it, so every pool that was killed, recycled by the memory limit or restarted after an error left its directory behind: 100 directories with 420169 inodes in one night on a Linux worker (39 tries of the readiness stage, a pool restarting 15 s after each stop) until the disk had no inode left and every database open failed. Now the owner writes `.owner.json` (its pid and start time) into the directory as the first act, and every owner removes, at its start, each sibling directory whose owner process is gone (a pid with another start time is another process); a sibling without an owner file is removed once it is older than `graceMilliseconds` (a directory still being born is not touched), and the directory of the caller is never removed. A try therefore cleans up its predecessor instead of adding to it. DE: Ein Pool-Prozess und jedes seiner Kinder arbeiten in einem privaten Verzeichnis `semio-owner-pool-XXXXXX` des temporären Verzeichnisses (und des Ersatzverzeichnisses, wenn das temporäre eine Probedatei verweigert). Das Verzeichnis wurde nur entfernt, wenn der Eigentümer es schloss, also hinterließ jeder beendete, wegen der Speichergrenze ersetzte oder nach einem Fehler neu gestartete Pool sein Verzeichnis: in einer Nacht 100 Verzeichnisse mit 420169 Inodes auf einem Linux-Arbeiter (39 Versuche der Bereitschaftsstufe, ein Pool, der 15 s nach jedem Stopp neu startet), bis keine Inode mehr frei war und jedes Öffnen einer Datenbank scheiterte. Jetzt schreibt der Eigentümer als Erstes `.owner.json` (Prozesskennung und Startzeit) in das Verzeichnis, und jeder Eigentümer entfernt beim Start jedes Nachbarverzeichnis, dessen Eigentümerprozess nicht mehr existiert (eine Kennung mit anderer Startzeit ist ein anderer Prozess); ein Nachbar ohne Eigentümerdatei wird erst entfernt, wenn er älter als `graceMilliseconds` ist (ein gerade entstehendes Verzeichnis bleibt unberührt), und das Verzeichnis des Aufrufers wird nie entfernt. Ein Versuch räumt also seinen Vorgänger auf, statt zu ihm hinzuzufügen.",
+  "definitions": {
+    "Policy": {"const": {"version": 1, "prefix": "semio-owner-pool-", "ownerFile": ".owner.json", "graceMilliseconds": 120000}},
+    "Owner": {"type": "object", "additionalProperties": false, "required": ["version", "pid"], "properties": {"version": {"const": 1}, "pid": {"type": "integer", "minimum": 1}, "startTime": {"type": "string"}}},
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "own", "directories", "removed"],
+      "properties": {
+        "name": {"type": "string"},
+        "own": {"type": "string"},
+        "directories": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["name"], "properties": {"name": {"type": "string"}, "owner": {"type": "object", "properties": {"pid": {"type": "integer"}, "startTime": {"type": "string"}}}, "alive": {"type": "boolean"}, "ageMilliseconds": {"type": "integer"}}}},
+        "removed": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}

@@ -79,6 +79,16 @@ export function isLeaseMediumV1(policy:LeaseOrderPolicyV1,held:HeldLeaseV1,reque
 const edgeAllowed=(policy:LeaseOrderPolicyV1,from:string,to:string,held:HeldLeaseV1,request:Request):boolean=>policy.allowed.some(edge=>{if(edge.from!==from||edge.to!==to)return false;const binding=edge.binding;if(!binding)return true;if(binding.kind==="held-prefix")return held.resource.startsWith(binding.fromPrefix);return held.directory===request.directory&&held.resource.startsWith(binding.fromPrefix)&&request.resource.startsWith(binding.toPrefix)&&held.resource.length>binding.fromPrefix.length&&held.resource.slice(binding.fromPrefix.length)===request.resource.slice(binding.toPrefix.length);});
 
 type Request=Readonly<{directory:string;resource:string;mode:LeaseModeV1;nonblocking:boolean;bounded?:boolean}>;
+type Blocker=Readonly<{pid:number;heldSeconds:number;command?:string;self?:true}>;
+let waitScale:()=>number=()=>1;
+/** 🐢️ Registers the machine speed factor the ground wait bound is scaled by; the layer that knows the machine (the build library) supplies it, so this module stays free of it. A factor below 1 or not finite counts as 1. */
+export function registerLeaseWaitScaleV1(scale:()=>number):void{waitScale=scale;}
+/** 🧮️ The wait bound of a ground class in milliseconds: the declared base times the machine speed factor (1 where none is registered), at most 16. */
+export function groundWaitBoundV1(policy:LeaseOrderPolicyV1):Readonly<{boundMilliseconds:number;factor:number}>|undefined{
+ if(!policy.groundWait)return undefined;
+ let factor=1;try{const value=Number(waitScale());if(Number.isFinite(value)&&value>1)factor=Math.min(16,value);}catch{}
+ return Object.freeze({boundMilliseconds:Math.ceil(policy.groundWait.boundMilliseconds*factor),factor});
+}
 const violation=(kind:LeaseViolationV1["kind"],policy:LeaseOrderPolicyV1,held:HeldLeaseV1,request:Request,extra:Partial<LeaseViolationV1>={}):LeaseViolationV1=>{
  const heldClass=classifyLeaseResourceV1(policy,held.resource),requestedClass=classifyLeaseResourceV1(policy,request.resource);
  return Object.freeze({version:1,kind,held:held.resource,heldMode:held.mode,heldRank:heldClass.rank,heldClass:heldClass.id,requested:request.resource,requestedMode:request.mode,requestedRank:requestedClass.rank,requestedClass:requestedClass.id,atMs:Date.now(),pid:process.pid,...extra});
@@ -116,12 +126,23 @@ export function checkLeaseOrderV1(policy:LeaseOrderPolicyV1,held:readonly HeldLe
 }
 
 /** ⏳️ Decides whether a request that has already waited `waitedMilliseconds` must be refused because its task holds an exclusive lease others may need: the oldest such hold is named. Declared edges, requests that cannot wait, holds of an inert class (nobody waits for them) and waits for an inert class (bounded by non-waiting probes) are exempt. */
-export function checkHoldAndWaitV1(policy:LeaseOrderPolicyV1,held:readonly HeldLeaseV1[],request:Request,waitedMilliseconds:number,blocker?:Readonly<{pid:number;heldSeconds:number}>):LeaseViolationV1|undefined{
+export function checkHoldAndWaitV1(policy:LeaseOrderPolicyV1,held:readonly HeldLeaseV1[],request:Request,waitedMilliseconds:number,blocker?:Blocker):LeaseViolationV1|undefined{
  if(request.nonblocking||policy.rules.holdAndWait==="off"||waitedMilliseconds<policy.holdAndWait.graceMilliseconds)return undefined;
  const wanted=classifyLeaseResourceV1(policy,request.resource);
- if(wanted.inert===true)return undefined;
+ if(wanted.inert===true||wanted.ground!==undefined)return undefined;
  const hold=held.filter(row=>row.mode==="exclusive"&&!(row.directory===request.directory&&row.resource===request.resource)&&classifyLeaseResourceV1(policy,row.resource).inert!==true&&!edgeAllowed(policy,classifyLeaseResourceV1(policy,row.resource).id,wanted.id,row,request)).sort((left,right)=>left.atMs-right.atMs)[0];
- return hold?violation("hold-and-wait",policy,hold,request,{waitedMilliseconds,...blocker?{blockerPid:blocker.pid,blockerHeldSeconds:blocker.heldSeconds}:{}}):undefined;
+ return hold?violation("hold-and-wait",policy,hold,request,{waitedMilliseconds,...blockerFields(blocker)}):undefined;
+}
+
+const blockerFields=(blocker?:Blocker):Partial<LeaseViolationV1>=>blocker?{blockerPid:blocker.pid,blockerHeldSeconds:blocker.heldSeconds,...blocker.command?{blockerCommand:blocker.command}:{},...blocker.self?{blockerSelf:true}:{}}:{};
+
+/** 🕰️ Decides whether a request for a ground class (the mapping of a native image) that has already waited `waitedMilliseconds` has outlived the declared bound scaled by the machine speed factor: the wait is legal by order and holds nothing against anybody, so it is never a hold-and-wait, but it ends in a typed refusal that names the holder (process, command, age) instead of waiting for ever. Requests that cannot wait are exempt; the oldest hold of this task is named in `held`, or the request itself when it holds nothing. */
+export function checkGroundWaitV1(policy:LeaseOrderPolicyV1,held:readonly HeldLeaseV1[],request:Request,waitedMilliseconds:number,blocker?:Blocker):LeaseViolationV1|undefined{
+ if(request.nonblocking||policy.rules.holdAndWait==="off")return undefined;
+ const wanted=classifyLeaseResourceV1(policy,request.resource),bound=wanted.ground===undefined?undefined:groundWaitBoundV1(policy);
+ if(!bound||waitedMilliseconds<bound.boundMilliseconds)return undefined;
+ const hold=held.filter(row=>!(row.directory===request.directory&&row.resource===request.resource)).sort((left,right)=>left.atMs-right.atMs)[0]??{directory:request.directory,resource:request.resource,mode:request.mode,atMs:Date.now(),task:0};
+ return violation("hold-and-wait",policy,hold,request,{waitedMilliseconds,boundMilliseconds:bound.boundMilliseconds,speedFactor:bound.factor,...blockerFields(blocker)});
 }
 
 /** ⛓️ The participants a node waits for: every holder whose mode conflicts and, in a queue, every earlier conflicting waiter. */
@@ -161,11 +182,17 @@ export function findLeaseCycleV1(nodes:readonly LeaseNodeV1[],from:string):Lease
 }
 
 const fill=(template:string,values:Readonly<Record<string,string|number>>):string=>template.replace(/\{([A-Za-z]+)\}/gu,(match,key:string)=>key in values?String(values[key]):match);
+const blockerText=(language:"en"|"de",row:LeaseViolationV1):string=>{
+ const catalogue=schema.definitions.Messages.const;
+ if(row.blockerPid===undefined)return row.boundMilliseconds===undefined?"":catalogue.blockerUnknown[language];
+ const age=row.blockerHeldSeconds??0;
+ return row.blockerSelf===true?fill(catalogue.blockerSelf[language],{heldSeconds:age}):row.blockerCommand?fill(catalogue.blockerCommand[language],{pid:row.blockerPid,command:row.blockerCommand,heldSeconds:age}):fill(catalogue.blocker[language],{pid:row.blockerPid,heldSeconds:age});
+};
 /** ✂️ Shortens a long resource name from the left so a diagnostic stays readable. */
 export function shortLeaseResourceV1(resource:string):string{const limit=protocol.maximumReportedResourceCharacters;return resource.length>limit?"…"+resource.slice(-(limit-1)):resource;}
 /** 🖨️ Renders a violation as a diagnostic in the chosen language. */
 export function formatLeaseViolationV1(language:"en"|"de",row:LeaseViolationV1):string{
- const catalogue=schema.definitions.Messages.const,messages={outOfOrder:catalogue.outOfOrder[language],holdAndWait:catalogue.holdAndWait[language],selfDeadlock:catalogue.selfDeadlock[language],cycle:catalogue.cycle[language],blocker:catalogue.blocker[language]},mode=(value:string):string=>value==="shared"?catalogue.modeShared[language]:value==="exclusive"?catalogue.modeExclusive[language]:value,values={held:shortLeaseResourceV1(row.held),heldClass:row.heldClass,heldRank:row.heldRank,heldMode:mode(row.heldMode),requested:shortLeaseResourceV1(row.requested),requestedClass:row.requestedClass,requestedRank:row.requestedRank,requestedMode:mode(row.requestedMode),seconds:Math.floor((row.waitedMilliseconds??0)/1000),cycle:(row.cycle??[]).join(" → "),blocker:row.blockerPid===undefined?"":fill(messages.blocker,{pid:row.blockerPid,heldSeconds:row.blockerHeldSeconds??0})};
+ const catalogue=schema.definitions.Messages.const,messages={outOfOrder:catalogue.outOfOrder[language],holdAndWait:row.boundMilliseconds===undefined?catalogue.holdAndWait[language]:catalogue.waitBound[language],selfDeadlock:catalogue.selfDeadlock[language],cycle:catalogue.cycle[language]},mode=(value:string):string=>value==="shared"?catalogue.modeShared[language]:value==="exclusive"?catalogue.modeExclusive[language]:value,values={held:shortLeaseResourceV1(row.held),heldClass:row.heldClass,heldRank:row.heldRank,heldMode:mode(row.heldMode),requested:shortLeaseResourceV1(row.requested),requestedClass:row.requestedClass,requestedRank:row.requestedRank,requestedMode:mode(row.requestedMode),seconds:Math.floor((row.waitedMilliseconds??0)/1000),cycle:(row.cycle??[]).join(" → "),blocker:blockerText(language,row),bound:Math.floor((row.boundMilliseconds??0)/1000),base:Math.round((row.boundMilliseconds??0)/(row.speedFactor??1)/1000),factor:row.speedFactor??1,holds:row.held===row.requested?catalogue.holdsNothing[language]:shortLeaseResourceV1(row.held)};
  return fill(row.kind==="out-of-order"?messages.outOfOrder:row.kind==="hold-and-wait"?messages.holdAndWait:row.kind==="self-deadlock"?messages.selfDeadlock:messages.cycle,values);
 }
 
@@ -249,8 +276,8 @@ export function beginLeaseOrderV1(request:Request&Readonly<{task:number;ancestor
     react(policy,policy.rules.cycle,violation("cycle",policy,held[0]??{directory:request.directory,resource:request.resource,mode:request.mode,atMs:now,task:request.task},request,{waitedMilliseconds,cycle:names}),request.directory);
    }
   }
-  const blocker=waitedMilliseconds>=policy.holdAndWait.graceMilliseconds?leaseRegistryV1.holderOf(request.directory,request.resource,request.mode):undefined;
-  const refusal=checkHoldAndWaitV1(policy,current,request,waitedMilliseconds,blocker);
+  const blocker=waitedMilliseconds>=Math.min(policy.holdAndWait.graceMilliseconds,groundWaitBoundV1(policy)?.boundMilliseconds??Infinity)?leaseRegistryV1.holderOf(request.directory,request.resource,request.mode,request.task):undefined;
+  const refusal=checkHoldAndWaitV1(policy,current,request,waitedMilliseconds,blocker)??checkGroundWaitV1(policy,current,request,waitedMilliseconds,blocker);
   if(refusal)react(policy,policy.rules.holdAndWait,refusal,request.directory);
   const strict=checkStrictWaitV1(policy,current,request,waitedMilliseconds);
   if(strict)react(policy,policy.rules.strictWait??"off",strict,request.directory);

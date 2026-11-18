@@ -26,7 +26,7 @@ import { useEffect, useId, useState, type ReactElement, type ReactNode } from "r
 import { reach, type Answer, type CrowdView, type Icon, type Id, type MatchingTaskResult, type Quantity, type SheetClassificationTask, type SheetMatchingTask, type SheetSortingTask, type SheetTask, type Slug, type SortingTaskResult, type TaskResult, type Text, type Challenge, type ClassificationTaskResult } from "@semio-tech/course";
 import { TASK_KIND_LABELS, localized, type CourseLocale, type CourseText } from "../🌐️i18n/🟦️.ts";
 import { ceilSignificant, floorSignificant, formatFactor, formatQuantity, formatScore } from "../📏️quantity/🟦️.ts";
-import { BodyButton, CardAction, CardIcon, Glyph, IconLabel, Mark, ProblemNote, CourseCard, Records, TABLE, TaskGlyph, cn, type Problem } from "../🪟️chrome/🟦️.tsx";
+import { BodyButton, CELL, CardAction, CardIcon, CardSection, GROUP, Glyph, IconLabel, Mark, ProblemNote, CourseCard, Records, RowList, TABLE, TaskGlyph, cn, type Problem } from "../🪟️chrome/🟦️.tsx";
 import { failureProblem, thrownProblem } from "../🪪️identity/🟦️.tsx";
 import { HOME_PAGES, runAwards, type CourseState } from "../🧭️session/🧮️state/🟦️.ts";
 import { type CourseSession } from "../🧭️session/🟦️.ts";
@@ -36,7 +36,7 @@ import { challengeScored } from "../⛰️challenge/🟦️.tsx";
 import { PetTopic, petProp, usePetTopic } from "../🐾️pets/🟦️.tsx";
 
 const EDGE = "border-b border-normal px-single py-single text-left align-top";
-const HEAD = "course-nowrap border-b-2 border-normal px-single py-single text-left align-top font-semibold";
+const HEAD = "course-nowrap border-b border-normal px-single py-single text-left align-top font-semibold";
 const NUMBER = `${EDGE} course-nowrap tabular-nums`;
 const ANSWER = `${EDGE} course-nowrap`;
 
@@ -92,7 +92,7 @@ export function tolerance(values: readonly number[], quantity: Pick<Quantity, "u
 function ToleranceNote(props: { readonly id: string; readonly within: string | undefined; readonly text: CourseText }): ReactElement | null {
   if (props.within === undefined) return null;
   return (
-    <p id={props.id} className="m-0 text-xs" data-tolerance="">
+    <p id={props.id} {...CELL} className="m-0 p-double text-xs" data-tolerance="">
       {props.text("course.results.tolerance", { within: props.within })}
     </p>
   );
@@ -207,16 +207,16 @@ function SortingResult(props: { readonly name: string; readonly task: SheetSorti
           </tr>
         ))}
       </ResultTable>
-      <h3 className="m-0 text-sm font-semibold">{text("course.results.trueOrder")}</h3>
-      <ol className="m-0 flex flex-col gap-single ps-double text-sm">
+      <h3 {...CELL} className="m-0 p-double text-sm font-semibold">{text("course.results.trueOrder")}</h3>
+      <RowList as="ol" className="text-sm">
         {[...result.items]
           .sort((left, right) => left.rank - right.rank)
           .map((item) => (
-            <li key={item.item} data-icon-host="" data-pet-prop={petProp(topic, item.item)}>
+            <li key={item.item} data-icon-host="" {...CELL} className="p-double" data-pet-prop={petProp(topic, item.item)}>
               <Labelled items={task.items} id={item.item} locale={locale} /> — {value(item.value)}
             </li>
           ))}
-      </ol>
+      </RowList>
     </>
   );
 }
@@ -234,8 +234,8 @@ function MatchingResult(props: { readonly name: string; readonly task: SheetMatc
         const within = guessed && sheet !== undefined ? tolerance(dimension.items.map((item) => item.correct), sheet.quantity, locale) : undefined;
         const note = `${props.name}-${dimension.dimension}-tolerance`;
         return (
-          <section key={dimension.dimension} className="flex flex-col gap-single">
-            <h3 data-icon-host="" id={`${props.name}-${dimension.dimension}`} className="m-0 text-sm font-semibold">
+          <section key={dimension.dimension} {...GROUP} {...CELL} className="flex flex-col">
+            <h3 data-icon-host="" id={`${props.name}-${dimension.dimension}`} {...CELL} className="m-0 p-double text-sm font-semibold">
               <IconLabel icon={sheet?.icon}>{text("course.results.dimension", { quantity, score: formatScore(dimension.score, locale) })}</IconLabel>
             </h3>
             <ToleranceNote id={note} within={within} text={text} />
@@ -287,8 +287,8 @@ export function TaskResultView(props: { readonly name: string; readonly title: s
   const { task, result, answer, crowd, text, locale } = props;
   if (task.kind !== result.kind) return null;
   return (
-    <div className="course-result" data-crowd={crowd === undefined ? undefined : ""}>
-      <div className="flex flex-col gap-double">
+    <div {...GROUP} {...CELL} className="course-result" data-crowd={crowd === undefined ? undefined : ""}>
+      <div {...GROUP} {...CELL} className="flex min-w-0 flex-col">
         <ResultTables name={props.name} task={task} result={result} text={text} locale={locale} />
       </div>
       {crowd === undefined ? null : <TaskFigures task={task} title={props.title} crowd={crowd ?? undefined} answer={answer} result={result} text={text} locale={locale} />}
@@ -378,6 +378,7 @@ export function ResultsScreen(props: { readonly session: CourseSession; readonly
   return (
     <div className="course-results flex flex-col gap-double">
       <CourseCard
+        flush
         id={`${scope}-title`}
         card="results"
         anchor={PRESENCE_ANCHORS.results}
@@ -393,49 +394,55 @@ export function ResultsScreen(props: { readonly session: CourseSession; readonly
         }
         footerRight={offersDirectRetry(result.score) ? <RetryAction session={session} state={state} quiz={view.quiz} challenge={result.challenge} pending={pending} setPending={setPending} setProblem={setProblem} text={text} /> : home}
       >
-        <div className="course-summary">
-          {problem === undefined ? null : <ProblemNote problem={problem} text={text} />}
-          {pending === undefined ? null : (
-            <div role="status" className="flex flex-wrap items-center gap-double text-sm">
-              <progress aria-label={text("course.home.starting")} className="course-progress" />
-              <span>{text("course.home.starting")}</span>
-              <BodyButton onClick={() => pending.abort()}>{text("course.run.cancel")}</BodyButton>
-            </div>
-          )}
+        {problem === undefined ? null : <ProblemNote cell problem={problem} text={text} />}
+        {pending === undefined ? null : (
+          <>
+            <CardSection className="flex-row flex-wrap items-center">
+              <div role="status" className="flex flex-wrap items-center gap-double text-sm">
+                <progress aria-label={text("course.home.starting")} className="course-progress" />
+                <span>{text("course.home.starting")}</span>
+              </div>
+            </CardSection>
+            <BodyButton row onClick={() => pending.abort()}>{text("course.run.cancel")}</BodyButton>
+          </>
+        )}
+        <CardSection className="course-summary flex-row">
           <div className="flex min-w-0 flex-col gap-double">
             <p className="m-0 text-lg font-semibold tabular-nums">{text("course.results.score", { score: formatScore(result.score, locale) })}</p>
             <p className="m-0 text-sm font-semibold tabular-nums">{challengeScored(result.challenge, result.points, text, locale)}</p>
             {shown ? <ScoreFigure name={text("course.crowd.scoresFigure", { subject: quiz })} bins={crowd?.scores} own={result.score} text={text} locale={locale} /> : null}
           </div>
-          {badges.length === 0 ? null : (
-            <section aria-labelledby={`${scope}-badges`} className="flex min-w-0 flex-col gap-single">
-              <h2 id={`${scope}-badges`} className="m-0 text-sm font-semibold">
-                {text("course.results.newBadges")}
-              </h2>
-              <ul role="list" className="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-single p-0">
-                {badges.map((badge) => (
-                  <li key={badge.id} data-earned="" className="flex gap-double border border-normal p-double">
-                    <Glyph emoji={badge.emoji} className="text-2xl leading-none" />
-                    <div className="flex min-w-0 flex-col gap-single">
-                      <h3 className="m-0 text-sm font-semibold">{localized(badge.label, locale)}</h3>
-                      <p className="m-0 text-xs">{localized(badge.description, locale)}</p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-        </div>
+        </CardSection>
+        {badges.length === 0 ? null : (
+          <section aria-labelledby={`${scope}-badges`} {...CELL} className="flex min-w-0 flex-col">
+            <h2 id={`${scope}-badges`} className="m-0 p-double text-sm font-semibold">
+              {text("course.results.newBadges")}
+            </h2>
+            <RowList>
+              {badges.map((badge) => (
+                <li key={badge.id} data-earned="" {...CELL} className="flex gap-double p-double">
+                  <Glyph emoji={badge.emoji} className="text-2xl leading-none" />
+                  <div className="flex min-w-0 flex-col gap-single">
+                    <h3 className="m-0 text-sm font-semibold">{localized(badge.label, locale)}</h3>
+                    <p className="m-0 text-xs">{localized(badge.description, locale)}</p>
+                  </div>
+                </li>
+              ))}
+            </RowList>
+          </section>
+        )}
       </CourseCard>
       {result.tasks.map((taskResult, index) => {
         const task = view.sheet.tasks.find((candidate) => candidate.id === taskResult.task);
         if (task === undefined) return null;
         return (
           <AccessGate key={taskResult.task} course={state.course} page={view.quiz} task={taskResult.task} at={at} locale={locale} text={text}>
-          <CourseCard id={`${scope}-${taskResult.task}`} card="task-result" anchor={PRESENCE_ANCHORS.result(taskResult.task)} icon={<TaskGlyph task={task} />} title={`${index + 1}. ${localized(task.title, locale)}`}>
-            <p className="m-0 text-xs text-muted-foreground">
-              {text(TASK_KIND_LABELS[task.kind])} · {text("course.results.taskScore", { score: formatScore(taskResult.score, locale) })}
-            </p>
+          <CourseCard flush id={`${scope}-${taskResult.task}`} card="task-result" anchor={PRESENCE_ANCHORS.result(taskResult.task)} icon={<TaskGlyph task={task} />} title={`${index + 1}. ${localized(task.title, locale)}`}>
+            <CardSection>
+              <p className="m-0 text-xs text-muted-foreground">
+                {text(TASK_KIND_LABELS[task.kind])} · {text("course.results.taskScore", { score: formatScore(taskResult.score, locale) })}
+              </p>
+            </CardSection>
             <PetTopic topic={petProp(view.quiz, taskResult.task)}>
               <TaskResultView name={`${scope}-${taskResult.task}`} title={localized(task.title, locale)} task={task} result={taskResult} answer={view.answers[taskResult.task]} crowd={shown ? (crowd ?? null) : undefined} text={text} locale={locale} />
             </PetTopic>

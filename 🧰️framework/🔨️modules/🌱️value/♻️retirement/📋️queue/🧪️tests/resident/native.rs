@@ -2,7 +2,7 @@
 use semio_framework_value_retirement_queue::*;
 #[path="../bank.rs"]
 mod queue_bank;
-use queue_bank::{bank,grant,poll,quoted,sync};
+use queue_bank::{bank,drive_poll,grant,poll,quoted,sync};
 use semio_framework_value_testing_allocator::{observe_retirement_allocations as observe,refuse_one_allocation_on_this_thread as refuse};
 #[test]
 fn resident_queue_admission_prices_both_actions_and_preserves_null_input(){
@@ -10,5 +10,5 @@ fn resident_queue_admission_prices_both_actions_and_preserves_null_input(){
  let mut original=Some(41u64);let d=queue.admit_owned_demand(original.as_ref().unwrap()).unwrap();for row in law["refusals"].as_array().unwrap(){let mut g=grant(d);if !row["copyAllowed"].as_bool().unwrap(){g.maximum_copy_bytes=0}let((turn,actual),heap)=observe(||sync(&mut bank,g,row["work"].as_u64().unwrap(),|effect|queue.admit_owned(&mut original,effect)));assert!(turn.result.unwrap().is_none());assert_eq!(turn.work,0);assert_eq!(actual,None);assert_eq!(heap,(0,0));assert_eq!(original,Some(41));assert_eq!(queue.len(),0)}
  let(((turn,actual),attempts),heap)=observe(||refuse(||sync(&mut bank,grant(d),2,|effect|queue.admit_owned(&mut original,effect))));assert_eq!(attempts,1);assert_eq!(turn.work,u128::from(law["nullWork"].as_u64().unwrap()));assert_eq!(turn.result.unwrap_err().kind,ValueRefusalKind::AllocationFailed);assert_eq!(actual,Some(0));assert_eq!(heap,(0,0));assert_eq!(original,Some(41));assert_eq!(queue.len(),0);
  let g=grant(d);let((turn,actual),heap)=observe(||sync(&mut bank,g,2,|effect|queue.admit_owned(&mut original,effect)));let p=turn.result.unwrap().unwrap();assert_eq!(turn.work,u128::from(law["admissionWork"].as_u64().unwrap()));assert_eq!(heap,(d.capacity_bytes,0));assert_eq!(actual,Some(d.capacity_bytes));assert_eq!(p.copied_bytes,d.copy_bytes);assert_eq!(p.retained_capacity_bytes,d.capacity_bytes);assert!(original.is_none());assert_eq!(queue.len(),1);bank.post(p,g,heap);born+=heap.0;
- let mut released=0;for _ in 0..128{if queue.terminal_is_empty(){break}let g=quoted(4096,|body|queue.next_demand(body).unwrap());let units=queue.next_computational_work(g.maximum_copy_bytes).unwrap();let((turn,_),heap)=observe(||poll(&mut bank,g,units,|effect|queue.step(effect)));let spent=turn.work;let p=turn.result.unwrap().progress();assert!(p.fits(g));assert!(spent<=u128::from(units));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));bank.post(p,g,heap);released+=p.released_bytes;born+=p.retained_capacity_bytes;}assert!(queue.terminal_is_empty());assert_eq!(released,born);
+ let mut released=0;for _ in 0..128{if queue.terminal_is_empty(){break}let g=quoted(4096,|body|queue.next_demand(body).unwrap());let units=queue.next_computational_work(g.maximum_copy_bytes).unwrap();let((turn,_),heap)=observe(||drive_poll(&mut bank,g,units,|effect|queue.step(g.maximum_copy_bytes,effect)));let spent=turn.work;let p=turn.result.unwrap().progress();assert!(p.fits(g));assert!(spent<=u128::from(units));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));bank.post(p,g,heap);released+=p.released_bytes;born+=p.retained_capacity_bytes;}assert!(queue.terminal_is_empty());assert_eq!(released,born);
 }

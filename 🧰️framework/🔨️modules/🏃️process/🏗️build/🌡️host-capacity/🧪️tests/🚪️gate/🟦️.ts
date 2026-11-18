@@ -180,7 +180,7 @@ test("Leaked disk images and an exhausted file table hold a request back, say wh
  for(const [over,sentence] of [[{attachedImages:40},"too many disk images are attached"],[{openFiles:240000},"the machine has too many open files"]] as const){
   lines.length=0;
   const started=Date.now();
-  await withHostCapacityV1(options(directory,{sample:sampler(()=>over),write:line=>lines.push(line)}),async handle=>expect(handle.jobs).toBe(1));
+  await withHostCapacityV1(options(directory,{sample:sampler(()=>over),sweepImages:async()=>({total:0,ours:0,leaked:0,foreign:0,detached:0}),write:line=>lines.push(line)}),async handle=>expect(handle.jobs).toBe(1));
   expect(Date.now()-started).toBeGreaterThanOrEqual(140);
   expect(lines.some(line=>line.includes(`waiting`)&&line.includes(sentence)),sentence).toBe(true);
   expect(lines.at(-1),sentence).toContain(`although ${sentence}`);
@@ -189,7 +189,7 @@ test("Leaked disk images and an exhausted file table hold a request back, say wh
  const first=withHostCapacityV1(options(directory,{request:request({fixedMegabytes:100})}),async()=>hold);
  await sleep(60);
  const controller=new AbortController();setTimeout(()=>controller.abort(Error("gave up")),300);
- await expect(withHostCapacityV1(options(directory,{control:control(controller.signal).value,sample:sampler(()=>({attachedImages:40})),request:request({fixedMegabytes:100})}),async()=>"never")).rejects.toThrow("gave up");
+ await expect(withHostCapacityV1(options(directory,{control:control(controller.signal).value,sample:sampler(()=>({attachedImages:40})),sweepImages:async()=>({total:0,ours:0,leaked:0,foreign:0,detached:0}),request:request({fixedMegabytes:100})}),async()=>"never")).rejects.toThrow("gave up");
  release();await first;
 },30000);
 

@@ -189,6 +189,7 @@
         "test-build-graph-owners",
         "test-build-graph-protocol",
         "test-build-graph-rust",
+        "test-build-graph-state",
         "test-build-graph-test-owners",
         "test-build-host-capacity",
         "test-build-incremental",
@@ -219,9 +220,11 @@
         "test-build-route-table",
         "test-build-scheduler",
         "test-build-sealed",
+        "test-build-slots",
         "test-build-source-closure",
         "test-build-storybook",
         "test-build-targets-selection",
+        "test-build-task-model",
         "test-build-tool-setup",
         "test-build-workers",
         "test-build-workspace-graph-laws",
@@ -5424,6 +5427,87 @@
             "resources": [
               "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🔌️providers/🧬️schema/🔣️.json"
             ]
+          }
+        }
+      }
+    },
+    "test-build-task-model": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗂️suites",
+        "command": "repo ./📜️script.ts test build-task-model",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
+        }
+      }
+    },
+    "test-build-slots": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗂️suites",
+        "command": "repo ./📜️script.ts test build-slots",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
+        }
+      }
+    },
+    "test-build-graph-state": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗂️suites",
+        "command": "repo ./📜️script.ts test build-graph-state",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
           }
         }
       }

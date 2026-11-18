@@ -535,14 +535,36 @@
               "z": 3.4,
               "filled": true,
               "tone": 0.55,
-              "kind": "rect",
-              "x": -0.0656,
-              "y": -0.27,
-              "w": 0.0226,
-              "h": 0.54,
-              "r": 0.004,
+              "kind": "poly",
               "region": "housing",
-              "material": "housing-plastic"
+              "material": "housing-plastic",
+              "points": [
+                [
+                  -0.043,
+                  -0.268
+                ],
+                [
+                  -0.043,
+                  0.268
+                ],
+                [
+                  -0.0605,
+                  0.256
+                ],
+                [
+                  -0.0656,
+                  0.23
+                ],
+                [
+                  -0.0656,
+                  -0.23
+                ],
+                [
+                  -0.0605,
+                  -0.256
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "panel-edge",
@@ -945,7 +967,7 @@
               "x": -0.17,
               "y": -0.04,
               "w": 0.323,
-              "h": 0.0105,
+              "h": 0.0152,
               "r": 0.0015,
               "region": "panel-front",
               "material": "bezel-plastic"
@@ -1809,6 +1831,8 @@
             "key": "power",
             "heatW": 16
           },
+          "ratedPowerW": 25,
+          "ratedPowerBasis": "electrical-input",
           "source": "authored-estimate",
           "reference": "wilkins-hosni-2011"
         },
@@ -2017,42 +2041,42 @@
                 "at": [-0.0075, -0.0305, 0],
                 "rx": 0.265,
                 "ry": 0.1175,
-                "exponent": 4,
+                "exponent": 10,
                 "rotation": [0.5, 0.5, 0.5, -0.5]
               },
               {
                 "at": [-0.0075, -0.0245, 0],
                 "rx": 0.261,
                 "ry": 0.11646,
-                "exponent": 4,
+                "exponent": 10,
                 "rotation": [0.5, 0.5, 0.5, -0.5]
               },
               {
                 "at": [-0.0075, -0.0185, 0],
                 "rx": 0.253,
                 "ry": 0.11309,
-                "exponent": 4,
+                "exponent": 10,
                 "rotation": [0.5, 0.5, 0.5, -0.5]
               },
               {
                 "at": [-0.0075, -0.0125, 0],
                 "rx": 0.242,
                 "ry": 0.1066,
-                "exponent": 4,
+                "exponent": 10,
                 "rotation": [0.5, 0.5, 0.5, -0.5]
               },
               {
                 "at": [-0.0075, -0.0075, 0],
                 "rx": 0.23,
                 "ry": 0.09695,
-                "exponent": 4,
+                "exponent": 10,
                 "rotation": [0.5, 0.5, 0.5, -0.5]
               },
               {
                 "at": [-0.0075, -0.004, 0],
                 "rx": 0.222,
                 "ry": 0.0775,
-                "exponent": 4,
+                "exponent": 10,
                 "rotation": [0.5, 0.5, 0.5, -0.5]
               }
             ],
@@ -2639,28 +2663,28 @@
                 "at": [-0.0085, -0.04, 0],
                 "rx": 0.27,
                 "ry": 0.1615,
-                "exponent": 4,
+                "exponent": 10,
                 "rotation": [0.5, 0.5, 0.5, -0.5]
               },
               {
                 "at": [-0.0085, -0.0278, 0],
                 "rx": 0.27,
                 "ry": 0.1615,
-                "exponent": 4,
+                "exponent": 10,
                 "rotation": [0.5, 0.5, 0.5, -0.5]
               },
               {
                 "at": [-0.0075, -0.0272, 0],
                 "rx": 0.24,
                 "ry": 0.1175,
-                "exponent": 4,
+                "exponent": 10,
                 "rotation": [0.5, 0.5, 0.5, -0.5]
               },
               {
                 "at": [-0.0075, -0.004, 0],
                 "rx": 0.22,
                 "ry": 0.1175,
-                "exponent": 4,
+                "exponent": 10,
                 "rotation": [0.5, 0.5, 0.5, -0.5]
               }
             ],

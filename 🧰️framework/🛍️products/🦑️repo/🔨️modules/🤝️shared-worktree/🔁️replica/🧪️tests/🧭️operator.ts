@@ -47,3 +47,23 @@ test("the relay tells the operator once per outage which peer store is missing a
   expect(back,language).toHaveLength(1);
  }
 });
+
+test("fleet shows the readiness table from the ready.json of every worker, with the stored reason in the language asked, names workers without a status, leaves out the group server and does not change the exit code",async()=>{
+ const store=temp("ready-store"),server=machine(store,"g1-server"),origins=join(store,"v1","origins");
+ const doc={version:1,origin:"g1-m02",host:"h",platform:"linux",pid:1,state:"backoff",digest:"ab".repeat(32),ready:false,stage:"tools",stageIndex:2,stageCount:5,attempts:3,exit:7,refusal:{code:"stage-failed",en:"Stage tools failed with exit status 7; retrying with back-off.",de:"Stufe tools schlug mit Exit-Status 7 fehl; neuer Versuch mit Wartezeit."},peakMegabytes:2048,tail:[],nextAttemptMs:null,readyMs:null,startedMs:1,updatedMs:Date.now()};
+ for(const origin of["g1-m02","g1-m03","g1-m04"])mkdirSync(join(origins,origin),{recursive:true});
+ writeFileSync(join(origins,"g1-m02","ready.json"),JSON.stringify(doc));
+ writeFileSync(join(origins,"g1-m04","ready.json"),JSON.stringify({...doc,origin:"g1-m04",state:"ready",ready:true,stage:null,stageIndex:0,attempts:0,exit:null,refusal:null,peakMegabytes:null}));
+ writeFileSync(join(origins,"g1-m03","ready.json"),"{broken");
+ const english=await run("fleet",store,server,"en"),german=await run("fleet",store,server,"de");
+ const row=(lines:string[],origin:string)=>lines.filter(line=>line.startsWith(`  ${origin} `)&&(line.includes("no-status")||line.includes("backoff")||line.includes("ready ")||line.includes("kein-Status")));
+ expect(english.lines.some(line=>line.startsWith("Readiness of the workers"))).toBe(true);
+ expect(german.lines.some(line=>line.startsWith("Bereitschaft der Worker"))).toBe(true);
+ expect(row(english.lines,"g1-m02")[0]).toMatch(/^ {2}g1-m02 backoff no 2\/5:tools 3 7 2048 \d+s abababab Stage tools failed with exit status 7/u);
+ expect(row(german.lines,"g1-m02")[0]).toMatch(/^ {2}g1-m02 backoff nein 2\/5:tools 3 7 2048 \d+s abababab Stufe tools schlug mit Exit-Status 7 fehl/u);
+ expect(row(english.lines,"g1-m03")[0]).toContain("no-status");expect(row(german.lines,"g1-m03")[0]).toContain("kein-Status");
+ expect(english.lines.some(line=>line.startsWith("  g1-m04 ready yes"))).toBe(true);
+ expect(english.lines.some(line=>line.startsWith("  g1-server "))).toBe(false);
+ expect(english.lines.find(line=>line.startsWith("Ready: "))).toBe("Ready: 1 of 3 workers, 1 without a readiness status.");
+ expect(german.lines.find(line=>line.startsWith("Bereit: "))).toBe("Bereit: 1 von 3 Workern, 1 ohne Bereitschaftsstatus.");
+});

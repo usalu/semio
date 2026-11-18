@@ -158,7 +158,7 @@ pub fn paint_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, theme
     let abs_x = origin_x + layout.x;
     let abs_y = origin_y + layout.y;
     match &node.spec.0 {
-        UiNode::Stack(_) | UiNode::Field(_) | UiNode::Section(_) | UiNode::Group(_) => paint_stack(tree, id, abs_x, abs_y, theme, atlas, icons, has_scene_host, draw),
+        UiNode::Stack(_) | UiNode::Field(_) | UiNode::Section(_) | UiNode::Group(_) | UiNode::CardStack(_) | UiNode::OverviewCard(_) => paint_stack(tree, id, abs_x, abs_y, theme, atlas, icons, has_scene_host, draw),
         UiNode::Select(select) => paint_select(select, Rect::new(abs_x, abs_y, layout.width, layout.height), node.flags, node.state.open, Some((tree, id)), theme, atlas, icons, draw),
         UiNode::KeyValue(key_value) => paint_key_value(key_value, Rect::new(abs_x, abs_y, layout.width, layout.height), theme, atlas, draw),
         UiNode::IconSelect(select) => paint_icon_select(select, Rect::new(abs_x, abs_y, layout.width, layout.height), node.flags, theme, atlas, icons, draw),
@@ -211,6 +211,7 @@ pub fn paint_node_self(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, 
         UiNode::Group(group) => {
             paint_group(group, bounds, theme, atlas, icons, draw);
         }
+        UiNode::CardStack(_) | UiNode::OverviewCard(_) => {}
         UiNode::Tree(_) => {}
         UiNode::Image(image) => {
             if !has_scene_host {

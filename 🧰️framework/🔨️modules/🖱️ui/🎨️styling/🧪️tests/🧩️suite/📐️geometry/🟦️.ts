@@ -96,10 +96,17 @@ describe("shared theme geometry", () => {
     expect(JSON.stringify(base)).toBe(before);
   });
 
+  it("snaps the shell band heights once in CSS and never again per consumer", () => {
+    const css = readFileSync(resolve(import.meta.dir, "../../../🖌️ui/🎨️.css"), "utf8");
+    expect(css).toMatch(/:root,\s*\[data-ui-theme\] \{\s*--navbar-band-height: round\(nearest, var\(--navbar-height\), var\(--device-pixel\)\);\s*--footer-band-height: round\(nearest, var\(--footer-height\), var\(--device-pixel\)\);/);
+    expect(css.match(/round\(nearest, var\(--(?:navbar|footer)-height\)/g)).toHaveLength(2);
+    for (const file of ["🔨️modules/⚓️panel-anchor/🟦️.ts", "🧱️elements/🔝️Navbar/🟦️.tsx", "🧱️elements/🔚️Footer/🟦️.tsx"]) expect(readFileSync(resolve(import.meta.dir, "../../../../", file), "utf8")).not.toMatch(/round\(nearest,\s*var\(--(?:navbar|footer)-height/);
+  });
+
   it("uses projected chrome metrics in React shell placement", () => {
     const root = resolve(import.meta.dir, "../../../../🧱️elements");
-    expect(readFileSync(resolve(root, "🔝️Navbar/🟦️.tsx"), "utf8")).toContain("h-[var(--navbar-height)]");
-    expect(readFileSync(resolve(root, "🔚️Footer/🟦️.tsx"), "utf8")).toContain("h-[var(--footer-height)]");
+    expect(readFileSync(resolve(root, "🔝️Navbar/🟦️.tsx"), "utf8")).toContain("h-[var(--navbar-band-height)]");
+    expect(readFileSync(resolve(root, "🔚️Footer/🟦️.tsx"), "utf8")).toContain("h-[var(--footer-band-height)]");
     expect(readFileSync(resolve(root, "🎨️Canvas/🟦️.tsx"), "utf8")).toContain('MODE_CANVAS_INSET_CLASS = "p-[var(--panel-inset)]"');
   });
 });

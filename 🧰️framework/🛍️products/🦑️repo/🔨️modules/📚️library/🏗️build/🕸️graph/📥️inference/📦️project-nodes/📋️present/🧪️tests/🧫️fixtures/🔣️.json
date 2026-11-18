@@ -1,0 +1,32 @@
+{
+  "keys": [
+    {
+      "root": "repo",
+      "key": "071ca2227754705837aa3ef9"
+    },
+    {
+      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build",
+      "key": "58bf1d934e38c319b53adbf4"
+    }
+  ],
+  "texts": [
+    {
+      "language": "en",
+      "present": 3,
+      "total": 5,
+      "line": "owner records present: 3 of 5, 2 to infer or fetch"
+    },
+    {
+      "language": "de",
+      "present": 3,
+      "total": 5,
+      "line": "Projekteinträge vorhanden: 3 von 5, 2 abzuleiten oder zu holen"
+    },
+    {
+      "language": "xx",
+      "present": 0,
+      "total": 0,
+      "line": "owner records present: 0 of 0, 0 to infer or fetch"
+    }
+  ]
+}

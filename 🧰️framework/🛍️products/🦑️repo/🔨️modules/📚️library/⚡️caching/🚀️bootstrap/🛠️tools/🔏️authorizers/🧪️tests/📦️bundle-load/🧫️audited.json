@@ -1,0 +1,39 @@
+{
+ "reads": [
+  {
+   "module": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📥️inference/🟨️.mjs",
+   "reader": "readFileSync",
+   "reason": "Reads its own module file by the module URL: the bundle serves the module's own captured bytes, nothing else is named."
+  },
+  {
+   "module": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+   "reader": "readFile",
+   "reason": "Inside the bootstrap command function, which the compiler program never calls while loading or compiling; the path is a literal sibling of that script."
+  },
+  {
+   "module": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧊️memo/🟦️.ts",
+   "reader": "readFileSync",
+   "reason": "The names come from a constant array of relative path literals in the same module, which the compiler serves from the captured images."
+  },
+  {
+   "module": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📍️coordinates/🟨️.mjs",
+   "reader": "readFileSync",
+   "reason": "Module initialisation of the inference components, reached only lazily through the resident host and never while the compiler program loads (this law's third test runs the load)."
+  },
+  {
+   "module": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🌐️remote-exchange/🧳️portable/🟦️.ts",
+   "reader": "readFileSync",
+   "reason": "The files come from a constant array of relative path literals in the same module (served from the captured images) and a failed read answers undefined."
+  },
+  {
+   "module": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🛰️plan/🟦️.ts",
+   "reader": "readFileSync",
+   "reason": "A failed read hashes the word absent; the compiler program never plans an invocation."
+  },
+  {
+   "module": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+   "reader": "readFileSync",
+   "reason": "The path is a constant relative literal bound to a name in the same module, which the compiler serves from the captured images."
+  }
+ ]
+}

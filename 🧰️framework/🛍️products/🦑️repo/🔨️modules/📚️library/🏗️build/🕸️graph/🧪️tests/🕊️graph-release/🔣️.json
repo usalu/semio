@@ -4,7 +4,7 @@
   "runBazelTasksInStorageV1": {
    "file": "🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
    "start": "async function runBazelTasksInStorageV1(",
-   "end": "/** 🏃️ Executes only the checksum-bound captured backend"
+   "end": "/** ✅️ Executes only the checksum-bound captured backend"
   },
   "runBazelTasksV1": {
    "file": "🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
@@ -22,9 +22,9 @@
    "end": "\n }"
   },
   "runtimeRun": {
-   "file": "🏗️build/⌨️command/⚙️runtime/🟦️.ts",
+   "file": "🏗️build/⌨️command/🏃️task/🤝️shared/🟦️.ts",
    "start": "const baseline=await profilePhaseV1(\"graph.load\"",
-   "end": "/** ⚙️ Executes the existing graph"
+   "end": "/** 📦️ Admits the selected task dependency environment"
   },
   "loadGenerationGraphV1": {
    "file": "🏗️build/🕸️graph/🕰️generations/🔌️load/🟨️.mjs",
@@ -71,7 +71,7 @@
    "name": "the generation builder custody ends before the graph is returned",
    "function": "loadGenerationGraphV1",
    "before": "await host.withBuilder(",
-   "after": ".graph;"
+   "after": "return{graph:built.graph,stats:built.stats};"
   },
   {
    "name": "the captured selection copy is released before the backend body runs",

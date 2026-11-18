@@ -40,3 +40,11 @@ As soon as the go is given and the owner is at the keyboard. Expected outage of 
 ## Answer Expected
 
 One line: `go` (with the earliest time), or what has to finish first.
+
+**switching at 2026-11-15T14:10:56Z** (the owner started the switch script; agents on this Mac stop using `/Users/Shared/semio` now)
+
+**switch aborted at 2026-11-15T14:11:30Z, not switched**: the tree is still at `/Users/Shared/semio`, the old services were restarted (a supervisor with the tree as working directory was missed by the stop step; fixed, the owner runs it again)
+
+**switching at 2026-11-15T14:50:13Z** (the owner started the switch script; agents on this Mac stop using `/Users/Shared/semio` now)
+
+**renamed at 2026-11-15T14:50:31Z, services not up yet**: the tree is at `/Users/ueli/Documents/semio`, `/Users/Shared/semio` no longer exists; the provision step failed on a stale copy of the topology and is being rerun by the owner. The line "switched at" follows after verification.

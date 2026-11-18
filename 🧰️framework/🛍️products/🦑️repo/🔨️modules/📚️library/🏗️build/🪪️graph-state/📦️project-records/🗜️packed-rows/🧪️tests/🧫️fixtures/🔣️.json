@@ -1,0 +1,533 @@
+{
+ "description": "Language-agnostic cases of the packed row form: the lists and extras to pack, and the packed form every implementation must write for them and read back.",
+ "cases": [
+  {
+   "name": "empty",
+   "lists": [],
+   "extras": [],
+   "packed": {
+    "table": [],
+    "pool": [],
+    "lists": [],
+    "extras": []
+   }
+  },
+  {
+   "name": "empty-lists",
+   "lists": [
+    [],
+    []
+   ],
+   "extras": [
+    null
+   ],
+   "packed": {
+    "table": [],
+    "pool": [],
+    "lists": [
+     [],
+     []
+    ],
+    "extras": [
+     null
+    ]
+   }
+  },
+  {
+   "name": "runs-and-repeats",
+   "lists": [
+    [
+     {
+      "kind": "lstat",
+      "path": "⟦semio-root⟧",
+      "fact": "directory"
+     },
+     {
+      "kind": "lstat",
+      "path": "⟦semio-root⟧/🧰️framework",
+      "fact": "directory"
+     },
+     {
+      "kind": "file",
+      "path": "⟦semio-root⟧/🧰️framework/a.ts",
+      "fact": {
+       "sha256": "abababababababababababababababababababababababababababababababab",
+       "size": 12,
+       "mtimeMs": 0,
+       "ctimeMs": 0,
+       "ino": 0
+      }
+     }
+    ],
+    [
+     {
+      "kind": "lstat",
+      "path": "⟦semio-root⟧",
+      "fact": "directory"
+     },
+     {
+      "kind": "lstat",
+      "path": "⟦semio-root⟧/🧰️framework",
+      "fact": "directory"
+     }
+    ],
+    [
+     {
+      "kind": "file",
+      "path": "⟦semio-root⟧/🧰️framework/a.ts",
+      "fact": {
+       "sha256": "abababababababababababababababababababababababababababababababab",
+       "size": 12,
+       "mtimeMs": 0,
+       "ctimeMs": 0,
+       "ino": 0
+      }
+     },
+     {
+      "kind": "lstat",
+      "path": "⟦semio-root⟧",
+      "fact": "directory"
+     }
+    ]
+   ],
+   "extras": [],
+   "packed": {
+    "table": [
+     [
+      "lstat",
+      0,
+      "⟦semio-root⟧",
+      "directory"
+     ],
+     [
+      "lstat",
+      12,
+      "/🧰️framework",
+      "directory"
+     ],
+     [
+      "file",
+      25,
+      "/a.ts",
+      {
+       "sha256": "abababababababababababababababababababababababababababababababab",
+       "size": 12,
+       "mtimeMs": 0,
+       "ctimeMs": 0,
+       "ino": 0
+      }
+     ]
+    ],
+    "pool": [],
+    "lists": [
+     [
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0
+     ],
+     [
+      2,
+      -3
+     ]
+    ],
+    "extras": []
+   }
+  },
+  {
+   "name": "fact-variants",
+   "lists": [
+    [
+     {
+      "kind": "exists",
+      "path": "/a/b",
+      "fact": true
+     },
+     {
+      "kind": "exists",
+      "path": "/a/c",
+      "fact": false
+     },
+     {
+      "kind": "field",
+      "path": "/a/c",
+      "fact": null
+     },
+     {
+      "kind": "stat",
+      "path": "/a/d"
+     },
+     {
+      "kind": "resolve",
+      "path": "/a/e",
+      "fact": {
+       "x": [
+        1,
+        2,
+        {
+         "y": "z"
+        }
+       ],
+       "w": "v"
+      }
+     },
+     {
+      "kind": "lstat",
+      "path": "/a/e",
+      "fact": 0
+     }
+    ]
+   ],
+   "extras": [],
+   "packed": {
+    "table": [
+     [
+      "exists",
+      0,
+      "/a/b",
+      true
+     ],
+     [
+      "exists",
+      3,
+      "c",
+      false
+     ],
+     [
+      "field",
+      4,
+      "",
+      null
+     ],
+     [
+      "stat",
+      3,
+      "d"
+     ],
+     [
+      "resolve",
+      3,
+      "e",
+      {
+       "x": [
+        1,
+        2,
+        {
+         "y": "z"
+        }
+       ],
+       "w": "v"
+      }
+     ],
+     [
+      "lstat",
+      4,
+      "",
+      0
+     ]
+    ],
+    "pool": [],
+    "lists": [
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    ],
+    "extras": []
+   }
+  },
+  {
+   "name": "surrogate-prefix",
+   "lists": [
+    [
+     {
+      "kind": "lstat",
+      "path": "/🧰x",
+      "fact": "file"
+     },
+     {
+      "kind": "lstat",
+      "path": "/🧬x",
+      "fact": "file"
+     },
+     {
+      "kind": "lstat",
+      "path": "/🧬y",
+      "fact": "file"
+     },
+     {
+      "kind": "lstat",
+      "path": "ä/é",
+      "fact": "file"
+     },
+     {
+      "kind": "lstat",
+      "path": "ä/ê",
+      "fact": "file"
+     }
+    ]
+   ],
+   "extras": [],
+   "packed": {
+    "table": [
+     [
+      "lstat",
+      0,
+      "/🧰x",
+      "file"
+     ],
+     [
+      "lstat",
+      1,
+      "🧬x",
+      "file"
+     ],
+     [
+      "lstat",
+      3,
+      "y",
+      "file"
+     ],
+     [
+      "lstat",
+      0,
+      "ä/é",
+      "file"
+     ],
+     [
+      "lstat",
+      2,
+      "ê",
+      "file"
+     ]
+    ],
+    "pool": [],
+    "lists": [
+     [
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    ],
+    "extras": []
+   }
+  },
+  {
+   "name": "pooled-strings",
+   "lists": [
+    [
+     {
+      "kind": "derived",
+      "path": "{\"walk\":1}",
+      "fact": {
+       "views": {
+        "a": "⟦semio-root⟧/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️.ts",
+        "b": "⟦semio-root⟧/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️.ts"
+       },
+       "short": "abc"
+      }
+     },
+     {
+      "kind": "analysis",
+      "path": "/x",
+      "fact": {
+       "source": "⟦semio-root⟧/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️.ts",
+       "nested": [
+        "⟦semio-root⟧/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️.ts",
+        "different string of more than forty eight characters long, one"
+       ]
+      }
+     }
+    ]
+   ],
+   "extras": [
+    [
+     "file list",
+     "⟦semio-root⟧/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️.ts",
+     "⟦semio-root⟧/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️.ts"
+    ],
+    {
+     "sidecar": "⟦semio-root⟧/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️.ts"
+    }
+   ],
+   "packed": {
+    "table": [
+     [
+      "derived",
+      0,
+      "{\"walk\":1}",
+      {
+       "views": {
+        "a": {
+         "$": 0
+        },
+        "b": {
+         "$": 0
+        }
+       },
+       "short": "abc"
+      }
+     ],
+     [
+      "analysis",
+      0,
+      "/x",
+      {
+       "source": {
+        "$": 0
+       },
+       "nested": [
+        {
+         "$": 0
+        },
+        "different string of more than forty eight characters long, one"
+       ]
+      }
+     ]
+    ],
+    "pool": [
+     "⟦semio-root⟧/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️.ts"
+    ],
+    "lists": [
+     [
+      0,
+      0
+     ]
+    ],
+    "extras": [
+     [
+      "file list",
+      {
+       "$": 0
+      },
+      {
+       "$": 0
+      }
+     ],
+     {
+      "sidecar": {
+       "$": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "dollar-key-disables-pool",
+   "lists": [
+    [
+     {
+      "kind": "analysis",
+      "path": "/y",
+      "fact": {
+       "$": 3,
+       "keep": "⟦semio-root⟧/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️.ts",
+       "again": "⟦semio-root⟧/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️.ts"
+      }
+     }
+    ]
+   ],
+   "extras": [
+    "⟦semio-root⟧/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️.ts",
+    "⟦semio-root⟧/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️.ts"
+   ],
+   "packed": {
+    "table": [
+     [
+      "analysis",
+      0,
+      "/y",
+      {
+       "$": 3,
+       "keep": "⟦semio-root⟧/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️.ts",
+       "again": "⟦semio-root⟧/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️.ts"
+      }
+     ]
+    ],
+    "pool": [],
+    "lists": [
+     [
+      0
+     ]
+    ],
+    "extras": [
+     "⟦semio-root⟧/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️.ts",
+     "⟦semio-root⟧/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️.ts"
+    ]
+   }
+  },
+  {
+   "name": "same-row-different-fact",
+   "lists": [
+    [
+     {
+      "kind": "exists",
+      "path": "/p",
+      "fact": true
+     },
+     {
+      "kind": "exists",
+      "path": "/p",
+      "fact": false
+     },
+     {
+      "kind": "exists",
+      "path": "/p"
+     },
+     {
+      "kind": "exists",
+      "path": "/p",
+      "fact": null
+     }
+    ]
+   ],
+   "extras": [],
+   "packed": {
+    "table": [
+     [
+      "exists",
+      0,
+      "/p",
+      true
+     ],
+     [
+      "exists",
+      2,
+      "",
+      false
+     ],
+     [
+      "exists",
+      2,
+      ""
+     ],
+     [
+      "exists",
+      2,
+      "",
+      null
+     ]
+    ],
+    "pool": [],
+    "lists": [
+     [
+      0,
+      0,
+      0,
+      0
+     ]
+    ],
+    "extras": []
+   }
+  }
+ ]
+}

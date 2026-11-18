@@ -122,7 +122,7 @@ pub(super) fn retained_text_node_step_weighted(value: &str, bounds: Rect, size: 
 }
 
 pub fn chrome_band_rect(bounds: Rect, band: semio_ui_wgpu_layout::flex::ChromeBand) -> Rect {
-    Rect::new(bounds.x, bounds.y + band.y, bounds.w, band.height)
+    Rect::new(bounds.x + band.inline, bounds.y + band.y, (bounds.w - band.inline * 2.0).max(0.0), band.height)
 }
 
 pub fn section_paint_metrics(tree: &UiTree, id: NodeId, section: &UiSectionNode, bounds: Rect, atlas: &mut FontAtlas) -> semio_ui_wgpu_layout::flex::SectionFieldChromeMetrics {
@@ -137,10 +137,10 @@ pub fn field_paint_metrics(tree: &UiTree, id: NodeId, field: &UiFieldNode, bound
     let control = tree.node(id).and_then(|node| node.first_child).and_then(|child| tree.accepted_layout(child));
     let description_height = field.description.as_ref().map(|description| {
         control
-            .map(|control| (control.y - semio_ui_wgpu_layout::flex::FIELD_LABEL_LINE_HEIGHT - theme.gap_standard * 2.0).max(semio_ui_text::line_height(semio_ui_wgpu_layout::flex::FIELD_DETAIL_FONT_SIZE)))
-            .unwrap_or_else(|| atlas.measure_text_wrapped(description, bounds.w.max(1.0), semio_ui_wgpu_layout::flex::FIELD_DETAIL_FONT_SIZE).1)
+            .map(|control| semio_ui_wgpu_layout::flex::field_description_height(control.y).max(semio_ui_text::line_height(semio_ui_wgpu_layout::flex::FIELD_DETAIL_FONT_SIZE)))
+            .unwrap_or_else(|| atlas.measure_text_wrapped(description, (bounds.w - theme.gap_standard * 2.0).max(1.0), semio_ui_wgpu_layout::flex::FIELD_DETAIL_FONT_SIZE).1)
     });
-    let error_height = field.error.as_ref().map(|error| atlas.measure_text_wrapped(error, bounds.w.max(1.0), semio_ui_wgpu_layout::flex::FIELD_DETAIL_FONT_SIZE).1);
+    let error_height = field.error.as_ref().map(|error| atlas.measure_text_wrapped(error, (bounds.w - theme.gap_standard * 2.0).max(1.0), semio_ui_wgpu_layout::flex::FIELD_DETAIL_FONT_SIZE).1);
     semio_ui_wgpu_layout::flex::field_chrome_metrics(description_height, control.map_or(0.0, |control| control.height), error_height, theme.gap_standard)
 }
 

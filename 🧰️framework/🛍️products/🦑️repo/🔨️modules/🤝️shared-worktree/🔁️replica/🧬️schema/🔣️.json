@@ -221,7 +221,7 @@
       "description": "The report of `status`: lag per origin, queue sizes and the number of preserved overwritten files.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["version", "originId", "groupId", "storeRoot", "reachable", "daemon", "sync", "files", "queue", "lost", "refused", "git", "origins", "retired", "latency", "health", "store"],
+      "required": ["version", "originId", "groupId", "storeRoot", "reachable", "daemon", "sync", "files", "queue", "lost", "refused", "refusedPaths", "git", "origins", "retired", "latency", "health", "store"],
       "properties": {
         "version": { "const": 1 },
         "access": { "$ref": "#/definitions/AccessRecord" },
@@ -267,6 +267,30 @@
         "refused": {
           "oneOf": [{ "$ref": "#/definitions/Count" }, { "type": "null" }],
           "description": "Paths the path policy refuses to share (too long, not NFC, illegal characters, case collisions, unsafe links); counted by `status --deep`, which scans the tree, otherwise null."
+        },
+        "refusedPaths": {
+          "description": "The record of refused paths the daemon keeps in `.cache/f/refused-paths.json`: the 200 newest distinct paths with reason and time, newest last, and the count of first refusals; empty while there is no record. Unlike `refused` it needs no scan.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["version", "total", "recent"],
+          "properties": {
+            "version": { "const": 1 },
+            "total": { "$ref": "#/definitions/Count" },
+            "recent": {
+              "type": "array",
+              "maxItems": 200,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["path", "reason", "wallMs"],
+                "properties": {
+                  "path": { "type": "string", "minLength": 1, "maxLength": 4096 },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 200 },
+                  "wallMs": { "$ref": "#/definitions/Count" }
+                }
+              }
+            }
+          }
         },
         "origins": { "type": "array", "items": { "$ref": "#/definitions/OriginLag" } },
         "latency": {

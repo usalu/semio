@@ -13,11 +13,12 @@ import fixtureSchema from "./🧬️schema/🔣️.json";
 import schema from "../🏊️pool/🧬️schema/🔣️.json";
 import {awaitGrowingV1,recycleReasonV1,choosePoolV1,grantedPoolV1,ownGrantPoolV1,GRAPH_FARM_MESSAGES_V1,GRAPH_FARM_POLICY_V1,createFarmV1,graphFarmRuntimeEnvironmentV1,planGraphFarmV1,renderGraphFarmMessagesV1,selectGraphFarmLanguagesV1} from "../🏊️pool/🟨️.mjs";
 import {EventEmitter} from "node:events";
-import {closeProjectFarmsV1,openProjectFarmV1} from "../🟨️.mjs";
+import {closeProjectFarmsV1,openProjectFarmV1 as openFarmV1} from "../🟨️.mjs";
 import {inferenceRecordIdentityV1} from "../../../../../👁️observation/🟨️.mjs";
 import {graphFarmIdentityV1} from "../🪆️captured/🟨️.mjs";
 import {adoptStagedGraphLeavesV1} from "../../../../../📥️inputs/🟨️.mjs";
 import {withBuildGraphStagingV1} from "../../../../../📥️inputs/💾️storage/🟨️.mjs";
+const openProjectFarmV1=(options:Parameters<typeof openFarmV1>[0])=>openFarmV1({adopt:(()=>({published:1,present:0,declined:false})) as never,...options});
 
 const here=dirname(fileURLToPath(import.meta.url)),python=testPythonV1(),oracle=join(here,"🐍️.py"),fixturePath=join(here,"🔣️.json"),schemaPath=join(here,"..","🏊️pool","🧬️schema","🔣️.json");
 const ask=(command:string)=>JSON.parse(Bun.spawnSync([python!,"-I",oracle,fixturePath,schemaPath,command]).stdout.toString());
@@ -256,7 +257,7 @@ test("the farm starts the worker its own capacity grant pays for, accepts a host
  mkdirSync(join(capacity,"grants"),{recursive:true});
  writeFileSync(join(capacity,"grants",id+".json"),JSON.stringify({id,operation:"run",jobs:1,cpu:1,reservedMegabytes:7168,admittedAtMs:Date.now(),observedMegabytes:null,pid:process.pid,bootAtMs:Math.round((Date.now()-uptime()*1000)/1000)*1000}));
 
- const farm=open({LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_DIRECTORY:capacity,SEMIO_HOST_CAPACITY_PLAN:plan});
+ const farm=open({LANG:"en_US.UTF-8",SEMIO_SLICE_LEAN:"off",SEMIO_HOST_CAPACITY_DIRECTORY:capacity,SEMIO_HOST_CAPACITY_PLAN:plan});
  const job=(name:string)=>({name,root:name,json:{},native:false,pipeline:false,nativeRoot:name,selectedInputs:[],head:[],cacheKey:"0".repeat(24)});
 
  for(let index=0;index<23;index++)expect(await farm.prepare(job("miss"+index))).toBe(false);
@@ -293,11 +294,11 @@ test("a cold generation starts the owned worker before a quarter of the projects
  mkdirSync(join(capacity,"grants"),{recursive:true});
  writeFileSync(join(capacity,"grants",id+".json"),JSON.stringify({id,operation:"run",jobs:1,cpu:1,reservedMegabytes:7168,admittedAtMs:Date.now(),observedMegabytes:null,pid:process.pid,bootAtMs:Math.round((Date.now()-uptime()*1000)/1000)*1000}));
  let grant!:(value:{jobs:number;megabytes:number}|undefined)=>void;
- const farm=openProjectFarmV1({workspaceRoot:root,context:{registry:null},contracts:{},launch:null,projects:566,commandInputs:null,projectsByRoot:new Map(),componentRoots:[],environment:{LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_DIRECTORY:capacity,SEMIO_HOST_CAPACITY_PLAN:plan},processed:()=>400,cores:10,write:line=>lines.push(line),engage:true,spawnProcess:(()=>{const child=new ScriptedChild("cold",log);children.push(child);return child;}) as never,request:(()=>({granted:new Promise<{jobs:number;megabytes:number}|undefined>(done=>{grant=done;}),release:()=>undefined})) as never})!;
+ const farm=openProjectFarmV1({workspaceRoot:root,context:{registry:null},contracts:{},launch:null,projects:566,commandInputs:null,projectsByRoot:new Map(),componentRoots:[],environment:{LANG:"en_US.UTF-8",SEMIO_SLICE_LEAN:"off",SEMIO_HOST_CAPACITY_DIRECTORY:capacity,SEMIO_HOST_CAPACITY_PLAN:plan},processed:()=>400,cores:10,write:line=>lines.push(line),engage:true,spawnProcess:(()=>{const child=new ScriptedChild("cold",log);children.push(child);return child;}) as never,request:(()=>({granted:new Promise<{jobs:number;megabytes:number}|undefined>(done=>{grant=done;}),release:()=>undefined})) as never})!;
  expect(children.length).toBe(1);
  expect(lines.some(line=>line.includes("inside the capacity grant of this process"))).toBe(true);
  const job={name:"p",root:"p",json:{},native:false,pipeline:false,nativeRoot:"p",selectedInputs:[],head:[],cacheKey:"0".repeat(24)};
- expect(await farm.prepare(job)).toBe(false);
+ expect(await farm.prepare(job),"the owner waited for the worker and was adopted from it, never inferred by the parent").toBe(true);
  await new Promise<number>(done=>farm.onReady(done));
  await farm.prepare(job);
  expect(log,"the first project waited for the worker the grant pays for and ran on it").toEqual(["cold:run","cold:run"]);
@@ -308,7 +309,7 @@ test("a cold generation starts the owned worker before a quarter of the projects
 test("a farm without a capacity grant of its own and a host that grants nothing infers in the parent, and a host grant of zero jobs starts no pool",async()=>{
  const root=scratch(),children:ScriptedChild[]=[],lines:string[]=[];
  let grant!:(value:{jobs:number;megabytes:number}|undefined)=>void;
- const farm=openProjectFarmV1({workspaceRoot:root,context:{registry:null},contracts:{},launch:null,projects:566,commandInputs:null,projectsByRoot:new Map(),componentRoots:[],environment:{LANG:"en_US.UTF-8"},processed:()=>24,cores:10,write:line=>lines.push(line),
+ const farm=openProjectFarmV1({workspaceRoot:root,context:{registry:null},contracts:{},launch:null,projects:566,commandInputs:null,projectsByRoot:new Map(),componentRoots:[],environment:{LANG:"en_US.UTF-8",SEMIO_SLICE_LEAN:"off"},processed:()=>24,cores:10,write:line=>lines.push(line),
   spawnProcess:(()=>{const child=new ScriptedChild("x",[]);children.push(child);return child;}) as never,
   request:(() => ({granted:new Promise<{jobs:number;megabytes:number}|undefined>(done=>{grant=done;}),release:()=>undefined})) as never})!;
  const job={name:"p",root:"p",json:{},native:false,pipeline:false,nativeRoot:"p",selectedInputs:[],head:[],cacheKey:"0".repeat(24)};
@@ -337,8 +338,8 @@ test("a farm leaves no abort listener on the long-lived signal of its invocation
 });
 
 test("a worker without a measured baseline is still recycled by the memory ratio, as the independent model decides",()=>{
- const ratio=GRAPH_FARM_POLICY_V1.recycleMemoryRatio,megabytes=2048,rows=[1,Math.floor(megabytes*ratio),Math.floor(megabytes*ratio)+1,megabytes,megabytes+1].flatMap(rssMegabytes=>[undefined,Number.NaN,"x"].map(baselineMegabytes=>({rssMegabytes,jobs:1,megabytes,baselineMegabytes}))),
- expected=rows.map(row=>row.rssMegabytes>megabytes||row.rssMegabytes>megabytes*ratio?"memory":null);
+ const ratio=GRAPH_FARM_POLICY_V1.recycleMemoryRatio,megabytes=2048,rows=[1,Math.floor(megabytes*ratio),Math.floor(megabytes*ratio)+1,megabytes,megabytes+1].flatMap(heldMegabytes=>[undefined,Number.NaN,"x"].map(baselineMegabytes=>({heldMegabytes,jobs:1,megabytes,baselineMegabytes}))),
+ expected=rows.map(row=>row.heldMegabytes>megabytes||row.heldMegabytes>megabytes*ratio?"memory":null);
  rows.forEach((row,index)=>expect(recycleReasonV1(row as never)??null,JSON.stringify(row)).toBe(expected[index]));
  expect(expected.filter(value=>value==="memory").length).toBeGreaterThan(3);
 });
@@ -350,7 +351,7 @@ const grantFile=(root:string,id:string)=>{
  const capacity=join(root,"capacity"),plan=JSON.stringify({version:1,id,jobs:1,cpu:1,memoryMegabytes:2048,fixedMegabytes:1536,floorMegabytes:1981});
  mkdirSync(join(capacity,"grants"),{recursive:true});
  writeFileSync(join(capacity,"grants",id+".json"),JSON.stringify({id,operation:"run",jobs:1,cpu:1,reservedMegabytes:7168,admittedAtMs:Date.now(),observedMegabytes:null,pid:process.pid,bootAtMs:Math.round((Date.now()-uptime()*1000)/1000)*1000}));
- return {LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_DIRECTORY:capacity,SEMIO_HOST_CAPACITY_PLAN:plan};
+ return {LANG:"en_US.UTF-8",SEMIO_SLICE_LEAN:"off",SEMIO_HOST_CAPACITY_DIRECTORY:capacity,SEMIO_HOST_CAPACITY_PLAN:plan};
 };
 const pendingRequest=(released:string[]=[])=>(()=>{let cancel!:(value:undefined)=>void;return{granted:new Promise<undefined>(done=>{cancel=done;}),release:()=>{released.push("host");cancel(undefined);}};}) as never;
 const holdJob=(name:string)=>({name,root:name,json:{},native:false,pipeline:false,nativeRoot:name,selectedInputs:[],head:[],cacheKey:"0".repeat(24)});
@@ -365,25 +366,26 @@ test("while the workers start, the parent infers no project: every project waits
  const held=Array.from({length:8},(_,index)=>{let settled=false;const promise=farm.prepare(holdJob("held"+index)).then(value=>{settled=true;return value;});return{promise,settled:()=>settled};});
  await Bun.sleep(300);
  expect(held.every(row=>!row.settled()),"eight projects wait for the pool, none is inferred by the parent").toBe(true);
- expect(lines.filter(line=>line.includes("holds them for the workers for at most 190 s")).length).toBe(1);
+ expect(lines.filter(line=>line.includes("holds them for the workers; a project that waits longer than 190 s says why")).length).toBe(1);
  const ready=new Promise<number>(done=>farm.onReady(done));open();await ready;
- expect(await Promise.all(held.map(row=>row.promise))).toEqual(Array(8).fill(false));
+ expect(await Promise.all(held.map(row=>row.promise))).toEqual(Array(8).fill(true));
  expect(log.filter(entry=>entry==="held:run").length,"the pool took all of them").toBe(8);
  await farm.close();
 },60000);
 
-test("a pool that never comes releases the held projects after one wait of the declared length, and later projects do not wait again; the host's answer is waited for the shorter declared time",async()=>{
+test("a pool that never starts keeps the projects in the queue with the reason shown for as long as the farm exists (no hold time ends it); the host's answer is waited for as long as it takes, never for the grant wait only: an owner a worker could run does not fall back to the parent",async()=>{
  const policy={...GRAPH_FARM_POLICY_V1,holdMilliseconds:300,grantWaitMilliseconds:200},root=scratch(),lines:string[]=[];
  const farm=openProjectFarmV1({...session(root),policy,environment:grantFile(root,"farm_hold_00002"),processed:()=>400,write:line=>lines.push(line),engage:true,
   spawnProcess:(()=>new SilentChild("never",[])) as never,request:pendingRequest()})!;
- const started=Date.now();
- expect(await farm.prepare(holdJob("c"))).toBe(false);
- expect(Date.now()-started).toBeGreaterThanOrEqual(policy.holdMilliseconds-50);
- const again=Date.now();expect(await farm.prepare(holdJob("d"))).toBe(false);expect(Date.now()-again,"after one wait nothing waits again").toBeLessThan(150);
- await farm.close();
- const bare=scratch(),quiet=openProjectFarmV1({...session(bare),policy,environment:{LANG:"en_US.UTF-8"},processed:()=>400,write:()=>undefined,engage:true,spawnProcess:(()=>{throw new Error("no worker may start");}) as never,request:pendingRequest()})!;
+ let answer:boolean|undefined;const queued=farm.prepare(holdJob("c")).then(value=>{answer=value;});
+ await Bun.sleep(policy.holdMilliseconds*3);
+ expect(answer,"three hold times later the owner is still queued").toBeUndefined();
+ expect(farm.exists()).toBe(true);expect(lines.some(line=>line.includes("waits in the queue")&&line.includes("Warteschlange"))).toBe(true);
+ await farm.close();await closeProjectFarmsV1();await queued;
+ expect(answer,"the farm is gone: the owner is released").toBe(false);
+ const bare=scratch(),quiet=openProjectFarmV1({...session(bare),policy,environment:{LANG:"en_US.UTF-8",SEMIO_SLICE_LEAN:"off"},processed:()=>400,write:()=>undefined,engage:true,spawnProcess:(()=>{throw new Error("no worker may start");}) as never,request:(()=>{let cancel!:(value:undefined)=>void;setTimeout(()=>cancel(undefined),policy.holdMilliseconds*3);return{granted:new Promise<undefined>(done=>{cancel=done;}),release:()=>cancel(undefined)};}) as never})!;
  const waited=Date.now();expect(await quiet.prepare(holdJob("e"))).toBe(false);
- expect(Date.now()-waited).toBeGreaterThanOrEqual(policy.grantWaitMilliseconds-50);expect(Date.now()-waited).toBeLessThan(policy.holdMilliseconds+500);
+ expect(Date.now()-waited,"the pending grant is waited for beyond the grant wait and the hold time").toBeGreaterThanOrEqual(policy.holdMilliseconds*3-50);
  await quiet.close();
 },30000);
 

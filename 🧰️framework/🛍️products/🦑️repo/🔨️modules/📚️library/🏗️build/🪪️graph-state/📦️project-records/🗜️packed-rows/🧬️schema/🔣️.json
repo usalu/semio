@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:graph-state:project-records:packed-rows:v2",
+  "title": "Observation rows of a project record or a closure entry, stored once and referenced by number",
+  "description": "A project record and the closure entries it names carry thousands of observation rows, and a closure entry carries the same rows again in thousands of layers (a layer repeats the directory chain of the root, the `package.json` probes of every directory, the facts of the files it shares with its neighbours). The packed form stores every distinct row once in `table` (in the order it is first met), writes every list of rows (the authority rows, the observations, the rows of an entry, each of its layers) as the numbers of its rows, and shortens what is left: the path of a table row shares a prefix with the path of the table row before it, and a string of `minimumPoolLength` characters or more that occurs more than once in the facts or in the extra values is stored once in `pool` and replaced by `{\"$\": index}`. The form is a pure function of the lists it holds: two machines that hold the same lists write the same bytes. Prefixes are counted in UTF-16 code units and never end inside a surrogate pair.",
+  "definitions": {
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "minimumPoolLength", "poolKey"],
+      "properties": {
+        "version": { "const": 2 },
+        "minimumPoolLength": { "const": 48 },
+        "poolKey": { "const": "$" }
+      },
+      "const": { "version": 2, "minimumPoolLength": 48, "poolKey": "$" }
+    },
+    "TableRow": {
+      "description": "`[kind, prefix, suffix]` or `[kind, prefix, suffix, fact]`: the path is the first `prefix` code units of the path of the row before it in the table followed by `suffix`; a row with no `fact` member has no fact (a fact that is `null` is written out).",
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 4,
+      "items": [{ "type": "string" }, { "type": "integer", "minimum": 0 }, { "type": "string" }, {}]
+    },
+    "PackedRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["table", "pool", "lists", "extras"],
+      "properties": {
+        "table": { "type": "array", "items": { "$ref": "#/definitions/TableRow" } },
+        "pool": { "type": "array", "items": { "type": "string" } },
+        "lists": { "description": "Each list holds the table numbers of its rows, in order, as the difference to the number before it minus one (the first against -1): a run of rows that were met one after the other is a run of zeros.", "type": "array", "items": { "type": "array", "items": { "type": "integer" } } },
+        "extras": { "description": "Values stored beside the rows (the file list and the sidecar of a closure entry) whose long repeated strings share the pool.", "type": "array" }
+      }
+    },
+    "PackedRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "digest", "image", "rows"],
+      "properties": {
+        "version": { "const": 2 },
+        "digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "image": { "type": "string" },
+        "rows": { "$ref": "#/definitions/PackedRows", "description": "Two lists: the authority rows and the observations." }
+      }
+    },
+    "PackedClosure": {
+      "type": "object",
+      "required": ["version", "recipe", "rest", "rows"],
+      "properties": {
+        "version": { "const": 2 },
+        "recipe": { "type": "object" },
+        "rest": { "description": "The other members of the entry that are neither rows, layers, value nor sidecar (`version` of the bundle among them).", "type": "object" },
+        "rows": { "$ref": "#/definitions/PackedRows", "description": "List 0 holds the rows of the entry, list n + 1 its layer n; extras 0 and 1 are the value and the sidecar." }
+      }
+    }
+  }
+}

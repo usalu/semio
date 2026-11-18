@@ -9,7 +9,9 @@ import schema from "../🧬️schema/🔣️.json";
 import fixture from "./🧫️fixtures/🔣️.json";
 import preparationSchema from "../📥️preparation/🧬️schema/🔣️.json";
 import {targetExecutionPreparationControlV1} from "./📥️preparation/🟦️.ts";
-const root=process.env.NX_WORKSPACE_ROOT??process.cwd();
+import{existsSync as existsRootV1}from"node:fs";import{dirname as dirnameRootV1,join as joinRootV1}from"node:path";
+const repositoryRootV1=(()=>{let directory=import.meta.dir;while(!existsRootV1(joinRootV1(directory,"MODULE.bazel"))&&dirnameRootV1(directory)!==directory)directory=dirnameRootV1(directory);return directory;})();
+const root=process.env.NX_WORKSPACE_ROOT??repositoryRootV1;
 test("bounded inventory preparation preserves original time, cancellation and awaited progress",async()=>{
  const controller=new AbortController(),events:any[]=[],validate=new Ajv({strict:true}).compile(preparationSchema);let time=0,yields=0;
  const invocation={policy:{version:1 as const,owner:"original-inventory-caller",maximumElapsedMilliseconds:0},capabilities:{},control:{signal:controller.signal,remainingMilliseconds:()=>null,publish:async(event:any)=>{events.push(event);},yieldContinuation:async()=>{yields++;}}};

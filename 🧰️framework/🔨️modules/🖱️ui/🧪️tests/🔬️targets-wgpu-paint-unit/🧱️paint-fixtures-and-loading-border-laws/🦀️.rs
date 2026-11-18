@@ -46,6 +46,10 @@ fn setup(ui: &UiNode) -> (UiTree, NodeId, Theme, FontAtlas) {
     (tree, root, theme, atlas)
 }
 
+fn settle_borders(draw: &mut DrawList) {
+    while !draw.finalize_shared_borders_step().expect("shared border finalization") {}
+}
+
 fn paint_retained_node_for_test(tree: &UiTree, node: NodeId, theme: &Theme, atlas: &mut FontAtlas) -> DrawList {
     let layout = tree.accepted_layout(node).expect("retained node layout");
     let absolute = tree.absolute_rect(node).expect("retained node bounds");
@@ -111,6 +115,7 @@ fn painting_a_loading_button_emits_a_loading_border_instance() {
 
     paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
 
+    settle_borders(&mut draw);
     let has_loading_border = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).any(|instance| (instance.params[2] - KIND_LOADING_BORDER).abs() < 0.01);
     assert!(has_loading_border, "loading button should emit a KIND_LOADING_BORDER instance");
 }
@@ -122,6 +127,7 @@ fn painting_a_waiting_button_emits_a_waiting_border_instance() {
 
     paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
 
+    settle_borders(&mut draw);
     let has_waiting_border = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).any(|instance| (instance.params[2] - KIND_WAITING_BORDER).abs() < 0.01);
     assert!(has_waiting_border, "waiting button should emit a KIND_WAITING_BORDER instance");
 }
@@ -159,6 +165,7 @@ fn painting_a_loading_section_emits_a_loading_border_instance() {
 
     paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
 
+    settle_borders(&mut draw);
     let has_loading_border = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).any(|instance| (instance.params[2] - KIND_LOADING_BORDER).abs() < 0.01);
     assert!(has_loading_border, "a loading section should emit a KIND_LOADING_BORDER instance");
 }
@@ -174,6 +181,7 @@ fn painting_a_waiting_section_emits_a_waiting_border_instance() {
 
     paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
 
+    settle_borders(&mut draw);
     let has_waiting_border = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).any(|instance| (instance.params[2] - KIND_WAITING_BORDER).abs() < 0.01);
     assert!(has_waiting_border, "a waiting section should emit a KIND_WAITING_BORDER instance");
 }
@@ -200,6 +208,7 @@ fn painting_a_loading_stack_emits_a_loading_border_instance() {
 
     paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
 
+    settle_borders(&mut draw);
     let has_loading_border = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).any(|instance| (instance.params[2] - KIND_LOADING_BORDER).abs() < 0.01);
     assert!(has_loading_border, "a loading stack should emit a KIND_LOADING_BORDER instance");
 }
@@ -226,6 +235,7 @@ fn painting_a_waiting_stack_emits_a_waiting_border_instance() {
 
     paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
 
+    settle_borders(&mut draw);
     let has_waiting_border = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).any(|instance| (instance.params[2] - KIND_WAITING_BORDER).abs() < 0.01);
     assert!(has_waiting_border, "a waiting stack should emit a KIND_WAITING_BORDER instance");
 }
@@ -259,6 +269,7 @@ fn painting_a_loading_tree_emits_a_loading_border_instance() {
 
     paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
 
+    settle_borders(&mut draw);
     let has_loading_border = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).any(|instance| (instance.params[2] - KIND_LOADING_BORDER).abs() < 0.01);
     assert!(has_loading_border, "a loading tree should emit a KIND_LOADING_BORDER instance");
 }
@@ -270,6 +281,7 @@ fn painting_a_waiting_tree_emits_a_waiting_border_instance() {
 
     paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
 
+    settle_borders(&mut draw);
     let has_waiting_border = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).any(|instance| (instance.params[2] - KIND_WAITING_BORDER).abs() < 0.01);
     assert!(has_waiting_border, "a waiting tree should emit a KIND_WAITING_BORDER instance");
 }

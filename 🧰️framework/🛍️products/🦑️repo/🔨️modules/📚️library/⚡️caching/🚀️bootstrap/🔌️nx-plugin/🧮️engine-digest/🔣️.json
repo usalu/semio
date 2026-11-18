@@ -8,6 +8,22 @@
     "en": "The cache garbage collector starts the repo build script as a detached maintenance child. That child collects retired cache bytes and never runs an Nx task, so the script and everything only it reaches cannot change the bytes of a task.",
     "de": "Der Cache-Sammler startet das Repo-Build-Skript als losgelösten Wartungs-Kindprozess. Dieses Kind sammelt stillgelegte Cache-Bytes ein und führt nie eine Nx-Task aus, daher können das Skript und alles, was nur es erreicht, die Bytes einer Task nicht ändern."
    }
+  },
+  {
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🚦️trampoline/🟦️.ts",
+   "reference": "../🚪️entry/🟦️.ts",
+   "contract": {
+    "en": "The sealed trampoline only computes the path of the sealed entry and starts the promoted snapshot of it as a child process; it never imports the entry, and the entry is the repo command line, which never runs an Nx task, so the entry and everything only it reaches cannot change the bytes of a task.",
+    "de": "Das versiegelte Sprungbrett berechnet nur den Pfad des versiegelten Einstiegs und startet dessen beförderten Schnappschuss als Kindprozess; es importiert den Einstieg nie, und der Einstieg ist die Repo-Befehlszeile, die nie eine Nx-Task ausführt, daher können der Einstieg und alles, was nur er erreicht, die Bytes einer Task nicht ändern."
+   }
+  },
+  {
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🔄️reload/🟦️.ts",
+   "reference": "../../🏛️sealed/🚪️entry/🟦️.ts",
+   "contract": {
+    "en": "The reload of an invocation only computes the path of the sealed entry to find the sealed store that holds its snapshot and reads its pointer; it never imports the entry, and the entry never runs an Nx task, so the entry and everything only it reaches cannot change the bytes of a task.",
+    "de": "Das Neuladen eines Aufrufs berechnet nur den Pfad des versiegelten Einstiegs, um den versiegelten Speicher mit seinem Schnappschuss zu finden und dessen Zeiger zu lesen; es importiert den Einstieg nie, und der Einstieg führt nie eine Nx-Task aus, daher können der Einstieg und alles, was nur er erreicht, die Bytes einer Task nicht ändern."
+   }
   }
  ],
  "domains": [

@@ -233,7 +233,7 @@ test("the kit follows the digest that the group server attests, also when the co
 });
 
 function overlayRun(options:Readonly<{worktree:string;archive:string;joined?:boolean;server?:boolean;first?:boolean;plan?:boolean}>):Readonly<{out:string;code:number}>{
- const region=shellText.slice(shellText.indexOf("# #region 🧬️Overlay"),shellText.indexOf("# #endregion 🧬️Overlay"));
+ const slice=(name:string):string=>shellText.slice(shellText.indexOf(`# #region ${name}`),shellText.indexOf(`# #endregion ${name}`)),region=`${slice("🔎️Json")}\n${slice("🧬️Overlay")}`;
  const script=`set -euo pipefail\nsay(){ printf 'SAY %s\\n' "$*"; }\nfail(){ printf 'FAIL %s\\n' "$*"; exit 3; }\nrun_as(){ "$@"; }\ninstall_nfs_client(){ :; }\nsha256_of(){ if command -v sha256sum >/dev/null 2>&1; then sha256sum "$1" | cut -d' ' -f1; else shasum -a 256 "$1" | cut -d' ' -f1; fi; }\nJOINED=${options.joined?1:0}; SERVER=${options.server?1:0}; FIRST_MACHINE=${options.first?1:0}; PLAN=${options.plan?1:0}; GROUP_ID=g1; CLEANUP_MOUNT=""; PLATFORM=macos; SERVER_PLATFORM=macos; NFS_SOURCE=none\nARCHIVE=$ARCHIVE_DIRECTORY\nWORKTREE=$TREE\n${region}\noverlay_code\n`;
  const run=Bun.spawnSync([bash,"-c",script],{env:{...process.env,ARCHIVE_DIRECTORY:options.archive,TREE:options.worktree},stdout:"pipe",stderr:"pipe"});
  return {out:run.stdout.toString()+run.stderr.toString(),code:run.exitCode};
@@ -298,7 +298,7 @@ test("an old seal without the execute bit field is not intact and leaves the che
  writeFileSync(file,JSON.stringify(seal));
  const tree=temp("bitless"),run=overlayRun({worktree:tree,archive:fleet.archive});
  expect(run.code).toBe(0);expect(run.out).toContain("not intact");expect(readdirSync(tree)).toEqual([]);
- expect(shellText).toContain('"executable":(true|false)');
+ expect(shellText).toContain('json_seal_files');expect(shellText).toContain('execute[n] == "true"');
  expect(powershellText).toContain("$file.executable");expect(powershellText).toContain("Set-OverlayBit");
 });
 

@@ -152,7 +152,6 @@ try:
             pressure_streak=pressure_streak+1 if pressure=="4" else 0
             print("try=%s elapsed=%.0fs run_peak=%.0fMiB slice_peak=%.0fMiB pressure=%s"%(attempt,tick-started,run_peak,slice_peak,pressure or "not measured"),flush=True)
         if max(run_peak,slice_peak)>8192:stop_reason="resident-above-8GiB"
-        elif pressure_streak>=2:stop_reason="memory-pressure-level-4-two-samples"
         elif wait_since is not None and tick-wait_since>=300:stop_reason="dependency-store-wait-5-minutes"
         elif tick-last_progress>=900:stop_reason="no-new-progress-15-minutes"
         if stop_reason:

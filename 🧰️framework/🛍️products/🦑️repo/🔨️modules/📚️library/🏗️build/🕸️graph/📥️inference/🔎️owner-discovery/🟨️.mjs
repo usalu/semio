@@ -1,4 +1,5 @@
 import {ROSTER_RULES_V1} from "../../🧭️roster/🟨️.mjs";
+import {assertNotReadParentV1} from "../../../👁️observation/🚧️read-parent/🟨️.mjs";
 import {wasmCompileOutputIndexV1,wasmCompileOutputV1} from "./🕸️wasm-outputs/🟦️.ts";
 import {typeScriptPackageOutputProducerV1} from "./../../../../⚡️caching/📦️artifacts/🟦️typescript/🔗️binding/🏭️producer/🟦️.ts";
 /** 🔎️ Discovers canonical owners, their native manifests and the selected executable Source closures. */
@@ -13,7 +14,7 @@ import { importObservedModuleV1, observedSourceAnalysisV1, observedRequireResolv
 import { pathToFileURL } from "node:url";
 import * as loadedProjectInputs from "../../../../🏗️build/📥️inputs/🟨️.mjs";
 import ownerAdmissionSchema from "../../../🧬️schema/🚪️admission.json" with { type: "json" };
-import { buildRelativeImportProjectV1, buildInputSourceRoleV1, buildSourceDemandV1, buildNativeSourceObservationV1 } from "../../🚪️admission/🟦️.ts";
+import { registryOwnerIndexesV1, buildInputSourceRoleV1, buildSourceDemandV1, buildNativeSourceObservationV1 } from "../../🚪️admission/🟦️.ts";
 import {refuseBuildV1} from "../../../📖️texts/🟦️.ts";
 import {isOpaqueSourcePathV1} from "../../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
 const { existsSync, lstatSync, readFileSync, readdirSync } = observedFs;
@@ -119,7 +120,7 @@ export async function workspaceCatalogBuildContributionsV1(workspaceRoot) {
 
 /** 🧩️ Invalidates project assembly only when its actual native owners or component pipeline change. */
 export function projectAssemblyAuthorityV1(workspaceRoot,nativeRoot,projectsByRoot,componentRoots,nativeCache=new Map(),nativeClosures=new Map()){
- let nativeOwners;
+ assertNotReadParentV1("observe",nativeRoot??"release pipeline");let nativeOwners;
  if(nativeRoot!==undefined){try{nativeOwners=nativeDependencyRoots(nativeRoot,workspaceRoot,true,nativeCache,nativeClosures).map(owner=>[owner,projectsByRoot.get(owner)??null]);}catch(error){if(error.code!=="NATIVE_INPUT_ADMISSION")throw error;nativeOwners=[error.manifest,error.message];}}
  return createHash("sha256").update(JSON.stringify([nativeOwners??null,componentRoots??null])).digest("hex");
 }
@@ -175,10 +176,10 @@ export async function discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,
   if(json.name==="@semio-tech/framework-os-dev")json.targets={...json.targets,...await playgroundPreparationTargets(catalogFiles,workspaceRoot,owner.root,contracts,catalogContributions,context)};
   const catalog=collectPlaygroundCatalog(catalogFiles,workspaceRoot,catalogContributions);json.targets={...json.targets,...playgroundSiteTargetsForAdmissionV1(owner.root,catalog,workspaceRoot,registry,targets),...authoredTargets};
  }
- const selected=Object.fromEntries(targets.map(name=>{if(!json.targets?.[name])throw Error("Unknown admitted build target: "+owner.name+":"+name);const target=targetWithDefaults(json.targets[name],owner.root,existsSync(join(workspaceRoot,owner.root,SCRIPT_BASENAME))),modes=loaded.targetBuildModes(name,target),configuration=(context.selection?.kind==="tasks"?context.selection.tasks.find(task=>task.project===owner.name&&task.target===name)?.configuration:undefined)??modes.defaultConfiguration,overrides=modes.configurations?.[configuration];if(!overrides)throw Error("Unknown selected build configuration: "+configuration);if(Object.keys(overrides).some(key=>["dependsOn","inputs","outputs","configurations","executor","metadata"].includes(key)))throw Error("Build configuration cannot change task identity");buildInputSourceRoleV1(true,false,[target.metadata?.semio?.sourceInputObservation]);return [name,target];})),files=new Set([owner.manifest]),dependencies=new Set(),dependencyInputs=new Map(),caretInputs=new Set(),inputRole=buildInputSourceRoleV1(targets.length>0,false,Object.values(selected).map(target=>target.metadata?.semio?.sourceInputObservation));
- const byPackage=new Map(registry.owners.flatMap(owner=>owner.packages.map(name=>[name,owner.name]))),byRoot=new Map(registry.owners.flatMap(owner=>[owner.root,...owner.nativeRoots??[]].map(root=>[root,owner.name]))),owners=registry.owners.flatMap(owner=>[owner.root,...owner.nativeRoots??[]].map(root=>({name:owner.name,root}))).sort((a,b)=>b.root.length-a.root.length);
- const addFile=path=>files.add(path),addDependency=path=>{const name=buildRelativeImportProjectV1(owners,path);if(name&&name!==json.name)dependencies.add(name);},addInput=(project,input)=>{if(!registry.owners.some(owner=>owner.name===project)||typeof input!=="string"||!input)throw Error("Canonical named input owner required");const selected=dependencyInputs.get(project)??new Set();selected.add(input);dependencyInputs.set(project,selected);};
- for(const provider of providers)addFile(provider.sourcePath);for(const file of catalogFiles){readPhysicalSource(join(workspaceRoot,file));addFile(file);}for(const contribution of catalogContributions){for(const input of contribution.inputs)addFile(input);addFile(contribution.projectRoot+"/"+PROJECT_BASENAME);if(contribution.project!==json.name)dependencies.add(contribution.project);}
+ const selected=Object.fromEntries(targets.map(name=>{if(!json.targets?.[name])throw Error("Unknown admitted build target: "+owner.name+":"+name);const target=targetWithDefaults(json.targets[name],owner.root,existsSync(join(workspaceRoot,owner.root,SCRIPT_BASENAME))),modes=loaded.targetBuildModes(name,target),configuration=(context.selection?.kind==="tasks"?context.selection.tasks.find(task=>task.project===owner.name&&task.target===name)?.configuration:undefined)??modes.defaultConfiguration,overrides=modes.configurations?.[configuration];if(!overrides)throw Error("Unknown selected build configuration: "+configuration);if(Object.keys(overrides).some(key=>["dependsOn","inputs","outputs","configurations","executor","metadata"].includes(key)))throw Error("Build configuration cannot change task identity");buildInputSourceRoleV1(true,false,[target.metadata?.semio?.sourceInputObservation]);return [name,target];})),files=new Set([owner.manifest]),observedFiles=new Set(),catalogProducers=new Set(),dependencies=new Set(),dependencyInputs=new Map(),caretInputs=new Set(),inputRole=buildInputSourceRoleV1(targets.length>0,false,Object.values(selected).map(target=>target.metadata?.semio?.sourceInputObservation));
+ const {byPackage,byRoot,relativeProject}=registryOwnerIndexesV1(registry);
+ const addFile=path=>files.add(path),addDependency=path=>{const name=relativeProject(path);if(name&&name!==json.name)dependencies.add(name);},addInput=(project,input)=>{if(!registry.owners.some(owner=>owner.name===project)||typeof input!=="string"||!input)throw Error("Canonical named input owner required");const selected=dependencyInputs.get(project)??new Set();selected.add(input);dependencyInputs.set(project,selected);};
+ for(const provider of providers)addFile(provider.sourcePath);for(const file of catalogFiles){readPhysicalSource(join(workspaceRoot,file));observedFiles.add(file);}for(const contribution of catalogContributions){for(const input of contribution.inputs)addFile(input);addFile(contribution.projectRoot+"/"+PROJECT_BASENAME);if(contribution.project!==json.name)catalogProducers.add(contribution.project);}
  await stage("command-sources");
  const commandModules=new Map(),commandResources=new Map();
  for(const [name,target] of Object.entries(selected)){
@@ -204,12 +205,12 @@ export async function discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,
    else if(typeof value.dependentTasksOutputFiles==="string"&&keys.every(key=>["dependentTasksOutputFiles","transitive"].includes(key))&&(value.transitive===undefined||typeof value.transitive==="boolean"))continue;
    else throw Error("Unsupported selected source input object");
    continue;
-  }if(value.startsWith("^")){caretInputs.add(value.slice(1));continue;}if(Object.hasOwn(named,value)){const contract=json.metadata?.sourceInputs?.[value];if(contract){const entries=declaredCompileEntries.get(target)??new Set();for(const entry of loaded.readSourceInputContract(join(workspaceRoot,contract)).entries)entries.add(join(workspaceRoot,entry));declaredCompileEntries.set(target,entries);}if(active.has(value))throw Error("Selected named input cycle: "+value);active.add(value);expand(named[value],patterns,target);active.delete(value);}else if(value.includes("{workspaceRoot}")||value.includes("{projectRoot}"))patterns.push(value.replaceAll("{workspaceRoot}/","").replaceAll("{projectRoot}",owner.root));else throw Error("Unknown selected named source input: "+value);}};
+  }if(value.startsWith("^")){caretInputs.add(value.slice(1));continue;}if(Object.hasOwn(named,value)){const contract=json.metadata?.sourceInputs?.[value];if(contract){const entries=declaredCompileEntries.get(target)??new Set();for(const entry of loaded.readSourceInputContract(join(workspaceRoot,contract)).entries)entries.add(join(workspaceRoot,entry));declaredCompileEntries.set(target,entries);}if(active.has(value))throw Error("Selected named input cycle: "+value);active.add(value);expand(named[value],patterns,target);active.delete(value);}else if(value.includes("{workspaceRoot}")||value.includes("{projectRoot}"))patterns.push(value.replaceAll("{workspaceRoot}/","").replaceAll("{projectRoot}",owner.root));else throw refuseBuildV1("invalid","graph.unknown-source-input",{owner:owner.name,input:value});}};
   for(const name of targets){json.targets[name]=normalized.targets[name];const patterns=[];expand(normalized.targets[name].inputs??["default"],patterns,name);scans.push({target:name,patterns,compile:buildInputSourceRoleV1(true,false,[json.targets[name].metadata?.semio?.sourceInputObservation])==="compile"});}
   const requested=[];expand(inputNames,requested);scans.push({patterns:requested,compile:false});
   if(nativeObservation()!=="none")observeNative();
   const {matched,compileByTarget}=await readBuildSourceInputMatchesV1(scans,workspaceRoot,context);
-  for(const path of matched)addFile(path);
+  for(const path of matched)observedFiles.add(path);
   await stage("source-closure");
   for(const name of new Set([...compileByTarget.keys(),...declaredCompileEntries.keys()])){const declared=declaredCompileEntries.get(name)??new Set(),resources=commandResources.get(name)??new Set(),compiled=commandModules.get(name)??new Set(),modules=new Set([...compileByTarget.get(name)??[]].filter(path=>/\.[cm]?[jt]sx?$/u.test(path)).map(path=>join(workspaceRoot,path)).filter(path=>declared.has(path)||!resources.has(path)||compiled.has(path)));for(const path of declared)if(/\.[cm]?[jt]sx?$/u.test(path))modules.add(path);compileModules.set(name,modules);}
   const modules=[...new Set([...compileModules.values()].flatMap(paths=>[...paths]))];
@@ -232,7 +233,8 @@ export async function discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,
   }
  }
  for(const dependency of dependencies)for(const input of caretInputs)addInput(dependency,input);
- return {project:json,files:[...files].sort(),dependencies:[...dependencies].sort(),...(Object.keys(generatedDependencies).length?{generatedDependencies}:{}),dependencyInputs:Object.fromEntries([...dependencyInputs].sort(([a],[b])=>a.localeCompare(b)).map(([name,inputs])=>[name,[...inputs].sort()]))};
+ for(const producer of catalogProducers)dependencies.add(producer);
+ return {project:json,files:[...files].sort(),...(observedFiles.size?{observedFiles:[...observedFiles].filter(file=>!files.has(file)).sort()}:{}),dependencies:[...dependencies].sort(),...(Object.keys(generatedDependencies).length?{generatedDependencies}:{}),dependencyInputs:Object.fromEntries([...dependencyInputs].sort(([a],[b])=>a.localeCompare(b)).map(([name,inputs])=>[name,[...inputs].sort()]))};
 }
 
 /** 📜️ Reads the workspace's canonical owner declaration through original physical Source ancestry. */

@@ -35,7 +35,7 @@ export function specifierBetween(from: string, to: string): string {
 
 /** 🗃️ The files of one leaf that may hold its parsers, and where each parser belongs: the file that already defines it, else the parser folder of the file that declares its type, else the leaf (always the leaf for a `pinned` parser). A parser the leaf holds but a run is `moving` out of it belongs where a new one would go. */
 export class ParserFiles {
-  constructor(private readonly sources: SourceTree, readonly leaf: string, private readonly pinned: (name: string) => boolean = () => false) {}
+  private readonly sources:SourceTree; readonly leaf:string; private readonly pinned:(name: string) => boolean; constructor(sources: SourceTree, leaf: string, pinned: (name: string) => boolean = () => false) {this.sources=sources;this.leaf=leaf;this.pinned=pinned;}
 
   get files(): readonly string[] {
     return this.sources.owned(this.leaf);
@@ -62,7 +62,7 @@ export class ParserFiles {
 
 /** ▶️ The file a parser lives in, for any leaf of a run: importers name this file, never the leaf. A shared leaf (named by a package specifier) keeps every parser itself. */
 export class ParserHomes {
-  constructor(private readonly sources: SourceTree, private readonly pins: ReadonlyMap<string, ReadonlySet<string>>, private readonly shared: ReadonlySet<string>, private readonly moving: ReadonlyMap<string, ReadonlySet<string>>) {}
+  private readonly sources:SourceTree; private readonly pins:ReadonlyMap<string, ReadonlySet<string>>; private readonly shared:ReadonlySet<string>; private readonly moving:ReadonlyMap<string, ReadonlySet<string>>; constructor(sources: SourceTree, pins: ReadonlyMap<string, ReadonlySet<string>>, shared: ReadonlySet<string>, moving: ReadonlyMap<string, ReadonlySet<string>>) {this.sources=sources;this.pins=pins;this.shared=shared;this.moving=moving;}
 
   files(leaf: string): ParserFiles {
     return new ParserFiles(this.sources, leaf, (name) => this.shared.has(leaf) || (this.pins.get(leaf)?.has(name) ?? false));

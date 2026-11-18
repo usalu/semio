@@ -11,6 +11,7 @@ import{readNativeImageRetirementFileV1}from"../../../../../../../../../../../../
 import{withArtifactRelativeDirectoryV1}from"@semio-tech/framework-filesystem/observation/descriptor";
 import{spawnSync}from"node:child_process";
 import{readdirSync,readFileSync,rmSync}from"node:fs";
+import{leaseElapsedSecondsV1}from"../../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/📈️standing/🤝️yield/🟦️.ts";
 import{leaseProcessStartedAtMsV1,leaseRegistryFolderV1,leaseRegistryRootV1,type LeaseRegistryEntryV1}from"../../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🧭️order/🗂️registry/🟦️.ts";
 import{repositoryCacheImagePublicationOptionsV1}from"../../🟦️.ts";
 import setupSchema from"../🧬️schema.json"with{type:"json"};
@@ -24,14 +25,14 @@ const owner="repository:dependencies-store";
 type Marker=ReturnType<typeof readRepositoryDependencyAllocationMarkerV1>;
 type Observation=Readonly<{presence:"initial-empty";currentBytes:number;authority:false}>|Readonly<{presence:"present";state:NativeStorageStateV1;marker:Marker|undefined;markerSha256:string|undefined;markerIntent:boolean;currentBytes:number}>;
 /** ⏳️ How a child waits for the dependency store a sibling holds: polls start at `first`, double up to `maximum` with a quarter of jitter so two waiting children do not stay in step, say a line every `progress`, and give up after the queue bound of the store sync. */
-export const DEPENDENCY_STORE_WAIT_V1=Object.freeze({firstMilliseconds:200,maximumMilliseconds:2000,progressMilliseconds:10000,ancestorGraceMilliseconds:15000,limitMilliseconds:dependencyInstallSchema.$defs.SourceOwnerStoreSyncProtocol.const.maximumQueueWaitMilliseconds});
+export const DEPENDENCY_STORE_WAIT_V1=Object.freeze({firstMilliseconds:200,maximumMilliseconds:2000,progressMilliseconds:10000,ancestorGraceMilliseconds:15000,holderStartToleranceMilliseconds:5000,heartbeatStaleMilliseconds:300000,limitMilliseconds:dependencyInstallSchema.$defs.SourceOwnerStoreSyncProtocol.const.maximumQueueWaitMilliseconds});
 /** 🪪️ One process that holds the dependency store lease, as the lease registry published it: who (`pid`, `command`), since when (`sinceMs`), in which mode, and whether it is this process or one of its ancestors, whose release this process can never wait for. */
-export type DependencyStoreHolderV1=Readonly<{pid:number;command:string;sinceMs:number;mode:"shared"|"exclusive";ancestor:boolean}>;
+export type DependencyStoreHolderV1=Readonly<{pid:number;command:string;sinceMs:number;silentMs?:number;mode:"shared"|"exclusive";ancestor:boolean}>;
 /** 👁️ What one look at the registry found: the holders that are alive, and those whose process is gone and whose entry was removed by that look. */
 export type DependencyStoreHoldersV1=Readonly<{live:readonly DependencyStoreHolderV1[];gone:readonly DependencyStoreHolderV1[]}>;
 export type DependencyStoreWaitPortsV1=Readonly<{now():number;sleep(milliseconds:number,signal:AbortSignal):Promise<void>;say(seconds:number,limit:number,holder?:DependencyStoreHolderV1):void;limitMilliseconds:number;observe?():DependencyStoreHoldersV1;sayGone?(holder:DependencyStoreHolderV1):void}>;
 /** 🔌️ What the holder lookup touches outside its decisions: the registry entries of one lease directory with their files, process liveness, the ancestors of this process, the removal of an entry and the process start time. */
-export type DependencyStoreRegistryPortsV1=Readonly<{entries(directory:string):readonly Readonly<{path:string;entry:LeaseRegistryEntryV1}>[];alive(pid:number):boolean;ancestors():readonly number[];remove(path:string):void;pid:number;startedAtMs:number}>;
+export type DependencyStoreRegistryPortsV1=Readonly<{entries(directory:string):readonly Readonly<{path:string;entry:LeaseRegistryEntryV1}>[];alive(pid:number):boolean;osStartedAtMs?(pid:number):number|undefined;now?():number;ancestors():readonly number[];remove(path:string):void;pid:number;startedAtMs:number}>;
 /** 🧬️ Walks the parents of a process upward, nearest first, until a root, a repeat or the bound; a parent that cannot be read ends the walk. */
 export function processAncestorsV1(parentOf:(pid:number)=>number|undefined,start:number,limit=64):readonly number[]{
   const found:number[]=[];
@@ -42,6 +43,19 @@ const parentOfProcessV1=(pid:number):number|undefined=>{
   const run=process.platform==="win32"?spawnSync("powershell",["-NoProfile","-Command","(Get-CimInstance Win32_Process -Filter \"ProcessId="+pid+"\").ParentProcessId"],{encoding:"utf8"}):spawnSync("ps",["-o","ppid=","-p",String(pid)],{encoding:"utf8",env:{...process.env,LC_ALL:"C"}}),value=Number.parseInt(run.stdout,10);
   return run.status===0&&Number.isSafeInteger(value)?value:undefined;
 };
+/** 🧬️ Whether a live pid is not the process that registered the hold: the operating system started it more than the tolerance after the registered start, so the pid was reused (Windows reuses pids within hours); an unknown start never counts as reused. */
+export function dependencyStorePidReusedV1(registeredStartedAtMs:number|undefined,osStartedAtMs:number|undefined):boolean{return osStartedAtMs!==undefined&&Number.isFinite(osStartedAtMs)&&registeredStartedAtMs!==undefined&&Number.isFinite(registeredStartedAtMs)&&osStartedAtMs-registeredStartedAtMs>DEPENDENCY_STORE_WAIT_V1.holderStartToleranceMilliseconds;}
+/** 🫀️ Whether a registered holder is still a holder: its process is alive, is not a later process under a reused pid, and, when the operating system could not tell its start (a loaded Windows host often times out the lookup, which left the dead owner of a reused pid in the way for hours), has renewed its registration within `heartbeatStaleMilliseconds`; a holder whose start is known and matches stays whatever its heartbeat, it only reports how long it has been silent, and an ancestor of this process is never judged by its heartbeat (it blocks in a synchronous spawn while its child waits here). */
+export function dependencyStoreHolderPresentV1(alive:boolean,registeredStartedAtMs:number|undefined,osStartedAtMs:number|undefined,silentMs:number):boolean{return alive&&!dependencyStorePidReusedV1(registeredStartedAtMs,osStartedAtMs)&&!(osStartedAtMs===undefined&&silentMs>DEPENDENCY_STORE_WAIT_V1.heartbeatStaleMilliseconds);}
+/** 🗝️ The text a wait line uses: no holder known, a holder that renews its registration, or one that has been silent past the heartbeat bound and may be blocked. */
+export function dependencyStoreWaitKeyV1(holder?:DependencyStoreHolderV1):"dependency-store.waiting"|"dependency-store.waiting-for-holder"|"dependency-store.waiting-for-silent-holder"{return holder===undefined?"dependency-store.waiting":(holder.silentMs??0)>DEPENDENCY_STORE_WAIT_V1.heartbeatStaleMilliseconds?"dependency-store.waiting-for-silent-holder":"dependency-store.waiting-for-holder";}
+/** 📝️ The key and the exact values of one wait line: only the silent text takes `silent`, because the catalog refuses a value without a placeholder. */
+export function dependencyStoreWaitLineV1(seconds:number,limit:number,holder?:DependencyStoreHolderV1):Readonly<{key:ReturnType<typeof dependencyStoreWaitKeyV1>;values:Readonly<Record<string,string|number>>}>{const key=dependencyStoreWaitKeyV1(holder);return holder===undefined?{key,values:{seconds,limit}}:{key,values:{seconds,limit,...holderValuesV1(holder),...key==="dependency-store.waiting-for-silent-holder"?{silent:Math.round((holder.silentMs??0)/1000)}:{}}};}
+const osStartedAtMsOfProcessV1=(pid:number):number|undefined=>{
+  if(!Number.isSafeInteger(pid)||pid<1)return undefined;
+  if(process.platform==="win32"){const run=spawnSync("powershell",["-NoProfile","-Command","[DateTimeOffset]::new((Get-Process -Id "+pid+" -ErrorAction Stop).StartTime).ToUnixTimeMilliseconds()"],{encoding:"utf8",timeout:15000}),value=Number.parseInt(run.stdout,10);return run.status===0&&Number.isSafeInteger(value)?value:undefined;}
+  const run=spawnSync("ps",["-o","etime=","-p",String(pid)],{encoding:"utf8",env:{...process.env,LC_ALL:"C"},timeout:15000}),seconds=leaseElapsedSecondsV1(run.stdout);return run.status===0&&seconds!==undefined?Date.now()-seconds*1000:undefined;
+};
 const processAliveV1=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}};
 const registryPortsV1:DependencyStoreRegistryPortsV1=Object.freeze({
   entries:directory=>{
@@ -51,6 +65,7 @@ const registryPortsV1:DependencyStoreRegistryPortsV1=Object.freeze({
     return rows;
   },
   alive:processAliveV1,
+  osStartedAtMs:osStartedAtMsOfProcessV1,
   ancestors:()=>processAncestorsV1(parentOfProcessV1,process.ppid),
   remove:path=>{try{rmSync(path,{force:true});}catch{}},
   pid:process.pid,
@@ -61,14 +76,14 @@ export function observeDependencyStoreHoldersV1(directory:string,resource:string
   const parents=new Set<number>(ports.ancestors()),live:DependencyStoreHolderV1[]=[],gone:DependencyStoreHolderV1[]=[];
   for(const{path,entry}of ports.entries(directory)){
     const hold=entry.holds.find(row=>row.resource===resource);if(!hold)continue;
-    const self=entry.pid===ports.pid,holder=(ancestor:boolean):DependencyStoreHolderV1=>Object.freeze({pid:entry.pid,command:entry.command.slice(0,160),sinceMs:hold.sinceMs,mode:hold.mode,ancestor});
-    if(!self&&!ports.alive(entry.pid)){ports.remove(path);gone.push(holder(false));continue;}
+    const self=entry.pid===ports.pid,silentMs=Number.isFinite(entry.updatedAtMs)?Math.max(0,(ports.now?.()??Date.now())-entry.updatedAtMs):0,holder=(ancestor:boolean):DependencyStoreHolderV1=>Object.freeze({pid:entry.pid,command:entry.command.slice(0,160),sinceMs:hold.sinceMs,silentMs,mode:hold.mode,ancestor});
+    if(!self&&!dependencyStoreHolderPresentV1(ports.alive(entry.pid),entry.startedAtMs,ports.alive(entry.pid)?ports.osStartedAtMs?.(entry.pid):undefined,parents.has(entry.pid)?0:silentMs)){ports.remove(path);gone.push(holder(false));continue;}
     live.push(holder(self||parents.has(entry.pid)&&entry.startedAtMs<=ports.startedAtMs));
   }
   return Object.freeze({live:Object.freeze(live.sort((left,right)=>left.sinceMs-right.sinceMs)),gone:Object.freeze(gone)});
 }
 const holderValuesV1=(holder:DependencyStoreHolderV1)=>({pid:holder.pid,command:holder.command,since:new Date(holder.sinceMs).toISOString()});
-const dependencyStoreWaitPorts:DependencyStoreWaitPortsV1=Object.freeze({now:()=>Date.now(),sleep:(milliseconds,signal)=>new Promise<void>((done,fail)=>{signal.throwIfAborted();const stop=()=>{clearTimeout(timer);fail(signal.reason);},timer=setTimeout(()=>{signal.removeEventListener("abort",stop);done();},milliseconds);signal.addEventListener("abort",stop,{once:true});}),say:(seconds,limit,holder)=>holder?sayCachingV1("dependency-store.waiting-for-holder",{seconds,limit,...holderValuesV1(holder)}):sayCachingV1("dependency-store.waiting",{seconds,limit}),sayGone:holder=>sayCachingV1("dependency-store.holder-gone",holderValuesV1(holder),"warn"),limitMilliseconds:DEPENDENCY_STORE_WAIT_V1.limitMilliseconds});
+const dependencyStoreWaitPorts:DependencyStoreWaitPortsV1=Object.freeze({now:()=>Date.now(),sleep:(milliseconds,signal)=>new Promise<void>((done,fail)=>{signal.throwIfAborted();const stop=()=>{clearTimeout(timer);fail(signal.reason);},timer=setTimeout(()=>{signal.removeEventListener("abort",stop);done();},milliseconds);signal.addEventListener("abort",stop,{once:true});}),say:(seconds,limit,holder)=>{const line=dependencyStoreWaitLineV1(seconds,limit,holder);sayCachingV1(line.key,line.values);},sayGone:holder=>sayCachingV1("dependency-store.holder-gone",holderValuesV1(holder),"warn"),limitMilliseconds:DEPENDENCY_STORE_WAIT_V1.limitMilliseconds});
 /** 🧭️ The wait ports for one dependency store: the defaults plus a look at the registry for the holder of its image lease; the lease is named lazily, so a lookup that cannot even name it simply finds no holder. */
 export function dependencyStoreWaitPortsForV1(lease:()=>Readonly<{directory:string;resource:string}>,registry:DependencyStoreRegistryPortsV1=registryPortsV1):DependencyStoreWaitPortsV1{
   return Object.freeze({...dependencyStoreWaitPorts,observe:()=>{try{const named=lease();return observeDependencyStoreHoldersV1(named.directory,named.resource,registry);}catch{return Object.freeze({live:Object.freeze([]),gone:Object.freeze([])});}}});
@@ -100,7 +115,7 @@ export function readRepositoryDependencyFundingCurrentV1(options:Readonly<{direc
   }catch{check();return false;}
 }
 /** 🌊️ How a funding is re-run when the shared tree moved under it: bounded by the schema, with the pauses it declares. */
-export type DependencyFundingMovePortsV1=Readonly<{sleep(milliseconds:number,signal:AbortSignal):Promise<void>;say(attempt:number,limit:number,what:string,path:string,seconds:number):void}>;
+export type DependencyFundingMovePortsV1=Readonly<{now?():number;sleep(milliseconds:number,signal:AbortSignal):Promise<void>;say(attempt:number,limit:number,what:string,path:string,seconds:number):void}>;
 const fundingMovement=setupSchema.definitions.FundingMovementProtocol.const,fundingMovePorts:DependencyFundingMovePortsV1=Object.freeze({sleep:(milliseconds,signal)=>dependencyStoreWaitPorts.sleep(milliseconds,signal),say:(attempt,limit,what,path,seconds)=>sayCachingV1("dependency-store.funding-rerun",{attempt,limit,what,path,seconds})});
 /** 🔭️ Whether a failure of the funding says that something it consumes moved under it, found in the typed movement refusal or in the stable text of the input recheck anywhere in the chain of causes and aggregate members; names what moved. */
 export function dependencyFundingMovedV1(error:unknown):Readonly<{what:string;path:string}>|undefined{
@@ -114,14 +129,15 @@ export function dependencyFundingMovedV1(error:unknown):Readonly<{what:string;pa
   };
   return walk(error,0);
 }
-/** 🔁️ Runs a funding again when what it consumes moved under it, a bounded number of times with the declared pauses; anything else ends it at once, and past the bound it ends in a typed bilingual exit 75 refusal that names what moved. */
+/** 🔁️ Runs a funding again when what it consumes moved under it (a change of content, never of identity or times), for at most `maximumMilliseconds` with the declared pauses (the last repeats), each run resuming from the progress already published; anything else ends it at once, and past the bound it ends in a typed bilingual exit 75 refusal that names what moved. */
 export async function retryWhileDependencyFundingMovesV1<T>(control:ResourceLeaseControl,attempt:()=>Promise<T>,ports:DependencyFundingMovePortsV1=fundingMovePorts):Promise<T>{
+  const clock=ports.now??Date.now,began=clock();
   for(let run=0;;run++){
     checkResourceLeaseControl(control);
     try{return await attempt();}catch(error){
       const moved=dependencyFundingMovedV1(error);if(!moved)throw error;
-      if(run>=fundingMovement.maximumReruns)throw refuseCachingV1("unserved","dependency-store.moving",{attempts:run+1,what:moved.what,path:moved.path},{cause:error});
-      const pause=fundingMovement.pausesMilliseconds[Math.min(run,fundingMovement.pausesMilliseconds.length-1)]!;ports.say(run+1,fundingMovement.maximumReruns,moved.what,moved.path,Math.round(pause/1000));await ports.sleep(pause,control.signal);
+      if(clock()-began>=fundingMovement.maximumMilliseconds)throw refuseCachingV1("unserved","dependency-store.moving",{attempts:run+1,what:moved.what,path:moved.path},{cause:error});
+      const pause=fundingMovement.pausesMilliseconds[Math.min(run,fundingMovement.pausesMilliseconds.length-1)]!;ports.say(run+1,Math.round(fundingMovement.maximumMilliseconds/60000),moved.what,moved.path,Math.round(pause/1000));await ports.sleep(pause,control.signal);
     }
   }
 }

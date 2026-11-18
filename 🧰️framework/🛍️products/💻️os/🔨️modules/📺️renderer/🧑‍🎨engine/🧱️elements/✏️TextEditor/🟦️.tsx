@@ -7,7 +7,7 @@
 // #region 🔌️Adapters
 import { useEffect, useMemo, useRef, useState } from "../⚛️react-port/🟦️.ts";
 import { WasmCanvas } from "@semio-tech/framework/canvas/react-renderer";
-import { cn, ContextMenuController, ContextMenuTriggerButton, glassClass, Textarea, useLabel } from "@semio-tech/ui-react";
+import { Button, cn, ContextMenuController, ContextMenuTriggerButton, glassClass, Input, SharedBorderRow, SharedBorderRowCell, Textarea, useLabel } from "@semio-tech/ui-react";
 import { textEditorActions, type ActionDescriptor, type ActionDispatchLifecycleV1, type ComponentSceneHostProps, type ContextMenuItemSpec, type PluginContextMenuRequest, type TextEditorScene } from "@semio-tech/framework";
 import { useLocalDocumentOwnerV1, useLocalDocumentWindowV1 } from "../🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
 import { useClient } from "@semio-tech/framework-os-node-graph-rs/index";
@@ -226,27 +226,28 @@ export function WasmEditorSurface(props: WasmEditorSurfaceProps) {
         }}
       >
         {renameDraft ? (
-          <input
-            className={cn("pointer-events-auto absolute z-50 min-w-[12rem] rounded border border-border px-2 py-1 font-mono text-xs text-foreground shadow-md", glassClass)}
-            data-level="pane"
-            style={renamePosition ? { left: renamePosition.x, top: renamePosition.y - 4 } : { left: 12, top: 12 }}
-            value={renameDraft.text}
-            autoFocus
-            onChange={(event) => updateRenamePreview(event.target.value)}
-            onKeyDown={(event) => {
-              event.stopPropagation();
-              if (event.key === "Escape") {
-                event.preventDefault();
-                cancelRename();
-                return;
-              }
-              if (event.key === "Enter") {
-                event.preventDefault();
-                commitRename();
-              }
-            }}
-            onBlur={commitRename}
-          />
+          <div className={cn("pointer-events-auto absolute z-50 flex min-w-[12rem] shadow-md", glassClass)} data-level="pane" style={renamePosition ? { left: renamePosition.x, top: renamePosition.y - 4 } : { left: 12, top: 12 }}>
+            <Input
+              id="text-editor-rename"
+              className="font-mono text-xs text-foreground"
+              value={renameDraft.text}
+              autoFocus
+              onChange={(event) => updateRenamePreview(event.target.value)}
+              onKeyDown={(event) => {
+                event.stopPropagation();
+                if (event.key === "Escape") {
+                  event.preventDefault();
+                  cancelRename();
+                  return;
+                }
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  commitRename();
+                }
+              }}
+              onBlur={commitRename}
+            />
+          </div>
         ) : null}
         {completionsOpen && completions.length > 0
           ? (() => {
@@ -658,29 +659,33 @@ export function TextEditorHost({ node, onAction, requestContextMenu }: Component
         </div>
       )}
       {valueSource && failure ? (
-        <div className="flex items-center gap-2 border-t border-border px-3 py-2">
-          <span id={statusId} role="alert" className="flex-1 text-xs text-destructive">{failure}</span>
-          <button type="button" className="rounded border border-border px-3 py-1 text-xs" onClick={() => { sourceIssuedRef.current = null; writeSourceDraft(null); }}>{discardSourceLabel}</button>
-        </div>
+        <SharedBorderRow edges={["top"]}>
+          <SharedBorderRowCell id={statusId} role="alert" className="flex-1 text-xs text-destructive">{failure}</SharedBorderRowCell>
+          <Button icon="x" type="button" variant="outline" onClick={() => { sourceIssuedRef.current = null; writeSourceDraft(null); }}>{discardSourceLabel}</Button>
+        </SharedBorderRow>
       ) : null}
       {explicitDraft ? (
-        <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border px-3 py-2">
-          {failure ? <span id={statusId} role="alert" className="mr-auto break-words text-xs text-destructive">{failure}</span> : null}
-          {pending ? <span role="status" className="mr-auto text-xs text-muted-foreground">{explicitDraft.applyingLabel}</span> : null}
-          {pending ? <button type="button" className="shrink-0 rounded border border-border px-3 py-1 text-xs text-foreground disabled:opacity-50" disabled={currentDraft.operation === null || currentDraft.cancelling} aria-busy={currentDraft.cancelling || undefined} onClick={() => void cancelDraft()}>{explicitDraft.cancelLabel}</button> : null}
-          <button type="button" className="shrink-0 rounded border border-border px-3 py-1 text-xs text-foreground disabled:opacity-50" disabled={!currentDraft.dirty || pending} onClick={discardDraft}>{explicitDraft.discardLabel}</button>
-          <button type="button" className="shrink-0 rounded bg-accent px-3 py-1 text-xs text-accent-foreground disabled:opacity-50" disabled={!currentDraft.dirty || currentDraft.conflicted || pending} onClick={() => void applyDraft()}>{explicitDraft.applyLabel}</button>
-        </div>
+        <SharedBorderRow edges={["top"]} className="flex-wrap justify-end">
+          {failure ? <SharedBorderRowCell id={statusId} role="alert" className="mr-auto break-words text-xs text-destructive">{failure}</SharedBorderRowCell> : null}
+          {pending ? <SharedBorderRowCell role="status" className="mr-auto text-xs text-muted-foreground">{explicitDraft.applyingLabel}</SharedBorderRowCell> : null}
+          <SharedBorderRow framed={false} className="shrink-0">
+            {pending ? <Button icon="x" type="button" variant="outline" disabled={currentDraft.operation === null || currentDraft.cancelling} aria-busy={currentDraft.cancelling || undefined} onClick={() => void cancelDraft()}>{explicitDraft.cancelLabel}</Button> : null}
+            <Button icon="undo-2" type="button" variant="outline" disabled={!currentDraft.dirty || pending} onClick={discardDraft}>{explicitDraft.discardLabel}</Button>
+            <Button icon="check" type="button" disabled={!currentDraft.dirty || currentDraft.conflicted || pending} onClick={() => void applyDraft()}>{explicitDraft.applyLabel}</Button>
+          </SharedBorderRow>
+        </SharedBorderRow>
       ) : null}
       {diagnostics.length > 0 ? (
-        <div className="border-t border-border px-3 py-2 text-[0.6875rem] text-muted-foreground">
-          {diagnostics.slice(0, 4).map((diag, index) => (
-            <div key={`${diag.start}-${diag.end}-${index}`} className="truncate">
-              {diag.severity ? `[${diag.severity}] ` : ""}
-              {diag.message}
-            </div>
-          ))}
-        </div>
+        <SharedBorderRow edges={["top"]}>
+          <SharedBorderRowCell className="flex-col items-stretch text-[0.6875rem] text-muted-foreground">
+            {diagnostics.slice(0, 4).map((diag, index) => (
+              <div key={`${diag.start}-${diag.end}-${index}`} className="truncate">
+                {diag.severity ? `[${diag.severity}] ` : ""}
+                {diag.message}
+              </div>
+            ))}
+          </SharedBorderRowCell>
+        </SharedBorderRow>
       ) : null}
     </div>
   );

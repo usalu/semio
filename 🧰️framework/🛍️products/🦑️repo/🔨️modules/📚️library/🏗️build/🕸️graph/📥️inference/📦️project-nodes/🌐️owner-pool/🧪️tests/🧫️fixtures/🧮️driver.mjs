@@ -1,0 +1,17 @@
+import { join } from "node:path";
+import { createHash } from "node:crypto";
+import { createProjectFleetPortV1 } from "../../../../../../🪪️graph-state/📦️project-records/🟦️.ts";
+
+const sha = text => createHash("sha256").update(text).digest("hex");
+
+/** 🧮️ A synthetic driver for the real-process laws: the same claim and publish of the real driver through the real fleet port, an owner that only burns `burnMilliseconds` of wall time. */
+export async function openOwnerPoolInferenceV1({ root, environment, session }) {
+  const config = JSON.parse(Buffer.from(session).toString("utf8")), port = createProjectFleetPortV1({ root, environment, owner: `child:${process.pid}` });
+  const infoOf = unit => ({ cachePath: join(root, "np", unit.name + ".json"), fleet: `libs/${unit.name}`, keyText: JSON.stringify(["rev", null, [unit.name]]), exportRecord: () => ({ digest: sha(unit.name), authority: [], observations: [{ kind: "file", path: `${root}/${unit.name}/a.ts`, fact: { sha256: "x", size: 1, mtimeMs: 1, ctimeMs: 1, ino: 1 } }], image: JSON.stringify({ name: unit.name }) }), async import() { return false; } });
+  return {
+    revision: config.revision,
+    claim: unit => port.claim(infoOf(unit)),
+    async run() { const until = Date.now() + config.burnMilliseconds; while (Date.now() < until) Math.sqrt(Math.random()); return true; },
+    close() {},
+  };
+}

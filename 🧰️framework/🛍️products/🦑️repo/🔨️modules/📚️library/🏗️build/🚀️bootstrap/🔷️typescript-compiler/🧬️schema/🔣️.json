@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:typescript-compiler:v1",
+  "title": "TypeScript Compiler Of The Tooling",
+  "description": "🔷️ The one place that loads the TypeScript compiler API for the repo tooling. It never resolves the bare name `typescript`; it reads the exact version the parser package declares and loads the package at one of two declared directories (the install slot of the parser package, then the direct dependency of the workspace root), checks version and API, and otherwise refuses with a typed reason, retry never. 🔷️ Der einzige Ort, der die TypeScript-Compiler-API für die repo-Werkzeuge lädt. Er löst nie den blanken Namen `typescript` auf; er liest die genaue Version, die das Parser-Paket deklariert, und lädt das Paket aus einem von zwei deklarierten Verzeichnissen (Installationsplatz des Parser-Pakets, dann direkte Abhängigkeit der Arbeitsbereichswurzel), prüft Version und API und lehnt sonst mit einem typisierten Grund ab, Wiederholung nie.",
+  "definitions": {
+    "Declaration": {
+      "const": {
+        "package": "typescript",
+        "manifest": ["..", "📦️parsers", "package.json"],
+        "field": "devDependencies",
+        "exactVersion": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+        "rootMarker": "bun.lock",
+        "candidates": ["parser", "root"]
+      }
+    },
+    "Api": {
+      "const": {
+        "functions": [
+          "createProgram", "createSourceFile", "flattenDiagnosticMessageText", "forEachChild", "isCallExpression", "isIdentifier",
+          "isImportDeclaration", "isNewExpression", "isPropertyAccessExpression", "isStringLiteral", "isVariableStatement",
+          "parseJsonConfigFileContent", "preProcessFile", "readConfigFile", "resolveModuleName"
+        ],
+        "objects": ["ModuleKind", "ScriptTarget", "SyntaxKind", "sys"]
+      }
+    },
+    "Candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "found", "missing"],
+      "properties": {
+        "path": {"type": "string"},
+        "found": {"type": ["string", "null"]},
+        "missing": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "Refusal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "retry", "wanted", "resolved", "found", "missing", "tried", "en", "de"],
+      "properties": {
+        "code": {"enum": ["typescript-compiler-declaration", "typescript-compiler-absent", "typescript-compiler-version", "typescript-compiler-api"]},
+        "retry": {"const": "never"},
+        "wanted": {"type": ["string", "null"]},
+        "resolved": {"type": "string"},
+        "found": {"type": ["string", "null"]},
+        "missing": {"type": "array", "items": {"type": "string"}},
+        "tried": {"type": "array", "items": {"$ref": "#/definitions/Candidate"}},
+        "en": {"type": "string"},
+        "de": {"type": "string"}
+      }
+    },
+    "Texts": {
+      "const": {
+        "en": {
+          "typescript-compiler-declaration": "The workspace declares no exact TypeScript version for the tooling in {resolved} (found: {found}); the tooling compiler cannot be chosen. Retrying does not help: the declaration has to be repaired first.",
+          "typescript-compiler-absent": "No TypeScript compiler is installed where the tooling looks for it: {resolved} does not exist (wanted version {wanted}). Retrying does not help: the dependencies of this machine have to be installed first (repo dependencies sync --all).",
+          "typescript-compiler-version": "The TypeScript compiler of the tooling is not the declared one: {resolved} is version {found}, the workspace declares {wanted}. Retrying does not help: the dependency install of this machine has to be repaired first (repo dependencies sync --all).",
+          "typescript-compiler-api": "The TypeScript compiler of the tooling at {resolved} (version {found}, wanted {wanted}) lacks the API the tooling uses: {missing}. Retrying does not help: the install at that path is incomplete or not the compiler package; repair the dependency install of this machine."
+        },
+        "de": {
+          "typescript-compiler-declaration": "Der Arbeitsbereich deklariert in {resolved} keine genaue TypeScript-Version für die Werkzeuge (gefunden: {found}); der Werkzeug-Compiler lässt sich nicht wählen. Wiederholen hilft nicht: zuerst muss die Deklaration repariert werden.",
+          "typescript-compiler-absent": "Dort, wo die Werkzeuge ihn suchen, ist kein TypeScript-Compiler installiert: {resolved} existiert nicht (verlangte Version {wanted}). Wiederholen hilft nicht: zuerst müssen die Abhängigkeiten dieser Maschine installiert werden (repo dependencies sync --all).",
+          "typescript-compiler-version": "Der TypeScript-Compiler der Werkzeuge ist nicht der deklarierte: {resolved} ist Version {found}, der Arbeitsbereich deklariert {wanted}. Wiederholen hilft nicht: zuerst muss die Abhängigkeitsinstallation dieser Maschine repariert werden (repo dependencies sync --all).",
+          "typescript-compiler-api": "Dem TypeScript-Compiler der Werkzeuge in {resolved} (Version {found}, verlangt {wanted}) fehlt die API, die die Werkzeuge nutzen: {missing}. Wiederholen hilft nicht: die Installation an diesem Pfad ist unvollständig oder nicht das Compiler-Paket; die Abhängigkeitsinstallation dieser Maschine reparieren."
+        }
+      }
+    }
+  }
+}

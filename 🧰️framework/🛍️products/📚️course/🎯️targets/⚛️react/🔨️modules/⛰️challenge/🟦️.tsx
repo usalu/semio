@@ -11,6 +11,7 @@ import { useId, type ReactElement } from "react";
 import { CHALLENGES, challengeRules, type Challenge } from "@semio-tech/course";
 import type { CourseLocale, CourseText } from "../🌐️i18n/🟦️.ts";
 import { formatPoints } from "../📏️quantity/🟦️.ts";
+import { CELL } from "../🪟️chrome/🟦️.tsx";
 
 import { CHALLENGE_HINTS, CHALLENGE_LABELS } from "./🏷️labels/🟦️.ts";
 export { CHALLENGE_HINTS, CHALLENGE_LABELS } from "./🏷️labels/🟦️.ts";
@@ -20,13 +21,14 @@ export function challengeScored(challenge: Challenge, points: number, text: Cour
   return text("course.challenge.scored", { challenge: text(CHALLENGE_LABELS[challenge]), points: formatPoints(points, locale), par: formatPoints(challengeRules(challenge).par, locale) });
 }
 
-/** 🧗️ The challenge chooser of a quiz's page: four radios, each with what it asks and its most points. */
+/** 🧗️ The challenge chooser of a quiz's page: four radios, each with what it asks and its most points. It is a row of a
+ * flush card — a cell with no outline of its own, so its legend stands at the card's edge instead of a box inside it. */
 export function ChallengeChooser(props: { readonly challenge: Challenge; readonly onChange: (challenge: Challenge) => void; readonly text: CourseText; readonly locale: CourseLocale }): ReactElement {
   const { challenge, onChange, text, locale } = props;
   const scope = useId();
   return (
-    <fieldset data-options={CHALLENGES.length} className="course-kinds m-0 min-w-0 border border-normal p-double">
-      <legend className="px-single text-sm font-semibold">{text("course.challenge.legend")}</legend>
+    <fieldset data-options={CHALLENGES.length} {...CELL} className="course-kinds m-0 min-w-0 p-double">
+      <legend className="p-0 text-sm font-semibold">{text("course.challenge.legend")}</legend>
       {CHALLENGES.map((option) => (
         <div key={option} className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-single">
           <input

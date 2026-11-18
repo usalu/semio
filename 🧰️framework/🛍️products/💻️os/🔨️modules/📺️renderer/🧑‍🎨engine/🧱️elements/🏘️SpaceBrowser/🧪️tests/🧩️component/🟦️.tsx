@@ -47,6 +47,16 @@ import { type HubConnectionStorageV1, type HubSignInTransportV1 } from "@semio-t
 // #endregion 🔌️Adapters
 
 afterEach(cleanup);
+
+async function chooseOption(trigger: HTMLElement, name: string): Promise<void> {
+  fireEvent.click(trigger);
+  await waitFor(() => expect(screen.getByRole("option", { name })).toBeTruthy());
+  const option = screen.getByRole("option", { name });
+  fireEvent.pointerMove(option);
+  fireEvent.pointerDown(option);
+  fireEvent.click(option);
+  await waitFor(() => expect(document.querySelector('[role="listbox"]')).toBeNull());
+}
 beforeEach(async () => {
   await setUiLocale("en");
 });
@@ -338,20 +348,20 @@ describe("space browser surface", () => {
   it("lists every reachable space as a semantic list and marks the open one with aria-current", () => {
     const opened: string[] = [];
     const view = render(<BrowserHarness onOpenSpace={(id) => opened.push(id)} />);
-    const items = view.container.querySelectorAll("li[data-space-id]");
+    const items = view.container.querySelectorAll("[data-space-id]");
     expect(items).toHaveLength(4);
     const current = view.container.querySelectorAll('button[aria-current="true"]');
     expect(current).toHaveLength(1);
     expect(current[0]!.getAttribute("aria-label")?.includes("My atelier")).toBe(true);
-    fireEvent.click(view.container.querySelector('li[data-space-id="space-public"] button')!);
+    fireEvent.click(view.container.querySelector('[data-space-id="space-public"] button')!);
     expect(opened).toStrictEqual(["space-public"]);
   });
 
   it("switches spaces through the search box without losing the roster", () => {
     const view = render(<BrowserHarness />);
     fireEvent.change(view.container.querySelector<HTMLInputElement>('input[type="search"]')!, { target: { value: "commons" } });
-    expect(view.container.querySelectorAll("li[data-space-id]")).toHaveLength(1);
-    expect(view.container.querySelector('li[data-space-id="space-public"]')).toBeTruthy();
+    expect(view.container.querySelectorAll("[data-space-id]")).toHaveLength(1);
+    expect(view.container.querySelector('[data-space-id="space-public"]')).toBeTruthy();
     expect(view.container.querySelectorAll("li[data-user-id]")).toHaveLength(3);
   });
 
@@ -360,7 +370,7 @@ describe("space browser surface", () => {
     const status = view.container.querySelector('[data-semio-hub-spaces-status]')!;
     expect(status.getAttribute("aria-live")).toBe("polite");
     expect(status.textContent).toBe("Showing the spaces from your last connection.");
-    expect(view.container.querySelectorAll("li[data-space-id]")).toHaveLength(4);
+    expect(view.container.querySelectorAll("[data-space-id]")).toHaveLength(4);
   });
 
   it("shows presence per member and only puts connected members on the presence bar", () => {
@@ -370,15 +380,15 @@ describe("space browser surface", () => {
     expect(view.container.querySelectorAll('[data-row-id^="peer:"]')).toHaveLength(2);
   });
 
-  it("raises a create-space intent only for a non-empty name and hides the form when signed out", () => {
+  it("raises a create-space intent only for a non-empty name and hides the form when signed out", async () => {
     const created: unknown[] = [];
     const view = render(<BrowserHarness onCreateSpace={(name, kind, visibility) => created.push([name, kind, visibility])} />);
     const form = screen.getByRole("form", { name: "Create a space" });
     const name = form.querySelector<HTMLInputElement>('input[name="spaceName"]')!;
     expect((screen.getByRole("button", { name: "Create space" }) as HTMLButtonElement).disabled).toBe(true);
     fireEvent.change(name, { target: { value: "Atelier Two" } });
-    fireEvent.change(form.querySelectorAll("select")[0]!, { target: { value: "studio" } });
-    fireEvent.change(form.querySelectorAll("select")[1]!, { target: { value: "public" } });
+    await chooseOption(screen.getByRole("combobox", { name: "Space kind" }), "Studio");
+    await chooseOption(screen.getByRole("combobox", { name: "Visibility" }), "Public");
     fireEvent.click(screen.getByRole("button", { name: "Create space" }));
     expect(created).toStrictEqual([["Atelier Two", "studio", "public"]]);
     view.unmount();
@@ -386,12 +396,12 @@ describe("space browser surface", () => {
     expect(signedOut.container.querySelector('input[name="spaceName"]')).toBeNull();
   });
 
-  it("offers invitation creation only on a space I author, and shows the one-shot link with copy and discard", () => {
+  it("offers invitation creation only on a space I author, and shows the one-shot link with copy and discard", async () => {
     const invites: unknown[] = [];
     const view = render(<BrowserHarness onCreateInvite={(spaceId, role, ttl) => invites.push([spaceId, role, ttl])} />);
     const form = screen.getByRole("form", { name: "Invite someone" });
-    fireEvent.change(form.querySelectorAll("select")[0]!, { target: { value: "author" } });
-    fireEvent.change(form.querySelectorAll("select")[1]!, { target: { value: String(INVITE_TTL_CHOICES_SECS_V1[0]) } });
+    await chooseOption(screen.getByRole("combobox", { name: "They may" }), "Author");
+    await chooseOption(screen.getByRole("combobox", { name: "Invitation expires after" }), "1 hour");
     fireEvent.click(screen.getByRole("button", { name: "Create invitation" }));
     expect(invites).toStrictEqual([["space-mine", "author", INVITE_TTL_CHOICES_SECS_V1[0]]]);
     view.unmount();
@@ -453,6 +463,31 @@ describe("space browser surface", () => {
     await setUiLocale("en");
   });
 
+  it("consolidates rows, forms and the invitation card into single shared-border owners without per-row boxes or gaps", () => {
+    const view = render(<BrowserHarness invite={{ spaceId: "space-mine", link: `${ORIGIN}/#semio-invite=${INVITE_TOKEN}`, copy: "idle" }} />);
+    const list = view.container.querySelector<HTMLElement>('[data-element-alias="os.hub.spaces.list"]')!;
+    expect(list.getAttribute("data-shared-border-cells")).toBe("");
+    expect(list.getAttribute("data-shared-border-frame")).toBe("");
+    expect(list.getAttribute("data-orientation")).toBe("vertical");
+    expect(list.className).not.toMatch(/\bgap-/u);
+    const items = Array.from(list.querySelectorAll<HTMLElement>("[data-space-id]"));
+    expect(items).toHaveLength(4);
+    for (const item of items) {
+      expect(item.parentElement).toBe(list);
+      expect(item.hasAttribute("data-shared-border-cells")).toBe(true);
+      expect(item.className).not.toMatch(/\bborder\b|\brounded|\bgap-|\bpy-|\bpx-/u);
+    }
+    const card = view.container.querySelector<HTMLElement>("[data-semio-hub-invite]")!;
+    expect(card.getAttribute("data-shared-border-frame")).toBe("");
+    expect(card.className).not.toMatch(/\bborder\b|\brounded/u);
+    expect(view.container.querySelectorAll("select")).toHaveLength(0);
+    for (const form of Array.from(view.container.querySelectorAll("form"))) {
+      expect(form.querySelector(":scope > [data-shared-border-cells]")).toBeTruthy();
+      expect(form.querySelectorAll('[class~="rounded-sm"]')).toHaveLength(0);
+    }
+    expect(view.container.querySelectorAll('[class~="rounded-sm"]')).toHaveLength(0);
+  });
+
   it("lays out without a fixed pixel width so a phone viewport never scrolls sideways", () => {
     const view = render(<BrowserHarness />);
     for (const element of Array.from(view.container.querySelectorAll<HTMLElement>("input, select, button, section, ul, li, aside"))) {
@@ -460,7 +495,7 @@ describe("space browser surface", () => {
       expect(/\b(w|min-w|max-w)-\[\d+px\]/u.test(className)).toBe(false);
       expect(element.style.width === "" || element.style.width.endsWith("%")).toBe(true);
     }
-    expect(view.container.querySelector("aside")?.getAttribute("class")?.includes("w-full")).toBe(true);
+    expect(view.container.querySelector("aside")?.getAttribute("data-orientation")).toBe("vertical");
   });
 });
 //#endregion 🖥️Surface
@@ -592,7 +627,7 @@ describe("useHubConnection spaces lane", () => {
     const port = recordingPort();
     const view = render(<HookHarness port={port} />);
     await waitFor(() => expect(view.container.querySelector('[data-testid="rows"]')?.textContent).toBe("4"));
-    expect(view.container.querySelectorAll("li[data-space-id]")[0]?.getAttribute("data-space-id")).toBe("space-mine-new");
+    expect(view.container.querySelectorAll("[data-space-id]")[0]?.getAttribute("data-space-id")).toBe("space-mine-new");
   });
 
   it("sends create-space through the command path as a sealed canonical command, then reloads", async () => {
@@ -661,7 +696,7 @@ describe("useHubConnection spaces lane", () => {
     reachable = false;
     fireEvent.click(screen.getByRole("button", { name: "Refresh spaces" }));
     await waitFor(() => expect(view.container.querySelector('[data-testid="phase"]')?.textContent).toBe("stale"));
-    expect(view.container.querySelectorAll("li[data-space-id]")).toHaveLength(4);
+    expect(view.container.querySelectorAll("[data-space-id]")).toHaveLength(4);
   });
 
   it("retires a delayed A sign-out before B authority, rows, and invitation become current", async () => {

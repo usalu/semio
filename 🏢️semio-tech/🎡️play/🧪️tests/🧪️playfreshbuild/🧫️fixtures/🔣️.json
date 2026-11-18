@@ -117,12 +117,6 @@
       "job:puzzle-wasm",
       "job:map-tiles"
     ],
-    "pagesAfter": [
-      "job:bundle",
-      "job:support",
-      "job:canvas-runtime-assets",
-      "components:complete"
-    ],
     "laneJobs": [
       "flow-wasm",
       "surface-wasm",

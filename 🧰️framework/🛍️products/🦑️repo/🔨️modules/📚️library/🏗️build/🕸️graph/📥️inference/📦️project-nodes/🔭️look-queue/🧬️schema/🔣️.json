@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:graph:inference:project-nodes:look-queue:v1",
+  "title": "Owner looks are farm jobs / Projekt-Prüfungen sind Farm-Aufgaben",
+  "description": "EN: The take pass of a read looks at every owner: its assembly authority (the Cargo closure walk with its observed directory visits), the verdict on its stored record and the closure references. None of it runs in the parent of the read while a farm exists: the owners are queued in batches of at most `maximumOwnersPerJob`, one batch is one farm job, at most as many batches run at once as children are ready, and the parent only dispatches the batches and adopts their answers. An answer older than `freshMilliseconds` is asked again. DE: Der Durchgang einer Lesung prüft jedes Projekt: seine Zusammenbau-Autorität (der Cargo-Closure-Lauf mit beobachteten Verzeichnisbesuchen), das Urteil über seinen gespeicherten Eintrag und die Closure-Referenzen. Nichts davon läuft im Elternprozess der Lesung, solange eine Farm besteht: die Projekte stehen in Stapeln von höchstens `maximumOwnersPerJob` in der Warteschlange, ein Stapel ist eine Farm-Aufgabe, es laufen höchstens so viele Stapel gleichzeitig, wie Kindprozesse bereit sind, und der Elternprozess verteilt nur die Stapel und übernimmt ihre Antworten. Eine Antwort, die älter als `freshMilliseconds` ist, wird neu erfragt.",
+  "definitions": {
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maximumOwnersPerJob", "jobsPerChild", "leadJobsPerChild", "assumedChildren", "freshMilliseconds"],
+      "properties": {
+        "maximumOwnersPerJob": { "type": "integer", "minimum": 1 },
+        "jobsPerChild": { "type": "integer", "minimum": 1 },
+        "leadJobsPerChild": { "type": "integer", "minimum": 1 },
+        "assumedChildren": { "type": "integer", "minimum": 1 },
+        "freshMilliseconds": { "type": "integer", "minimum": 1 }
+      },
+      "const": { "maximumOwnersPerJob": 6, "jobsPerChild": 6, "leadJobsPerChild": 3, "assumedChildren": 4, "freshMilliseconds": 60000 }
+    },
+    "Texts": {
+      "const": {
+        "en": { "queued": "owner looks: {owners} owners in {jobs} farm jobs of up to {size} owners for {children} children; the parent only dispatches and adopts", "refused": "the look of {owner} failed in the farm ({reason}); the parent does not look itself" },
+        "de": { "queued": "Projekt-Prüfungen: {owners} Projekte in {jobs} Farm-Aufgaben mit bis zu {size} Projekten für {children} Kindprozesse; der Elternprozess verteilt und übernimmt nur", "refused": "die Prüfung von {owner} ist in der Farm gescheitert ({reason}); der Elternprozess prüft nicht selbst" }
+      }
+    }
+  }
+}

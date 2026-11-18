@@ -3,7 +3,7 @@ import * as React from "react";
 import {act,render} from "@testing-library/react";
 import {expect,it} from "vitest";
 import { createMemoryStoragePort } from "../../🔨️modules/🗄️storage-port/🟦️.ts";
-import { Window, uiSpacingPx } from "@semio-tech/ui-react/source";
+import { Window } from "@semio-tech/ui-react/source";
 import { Pane, PaneHost } from "../../🧱️elements/📌️WindowPane/🟦️.tsx";
 import { publishShellChromePanelBox } from "../../🔨️modules/🛟️chrome-safe-area/🟦️.tsx";
 import { type Anchor } from "../../🔨️modules/⚓️panel-anchor/🟦️.ts";
@@ -51,7 +51,7 @@ it("connects the Window Actions pane outside PaneHost to the live window bounds"
  try{
   const pane=app.querySelector('[data-slot="window-engagement-overlay"]')!;
   act(()=>publishShellChromePanelBox(root,"artifact","top-left",{left:4,top:44,right:304,bottom:636}));
-  expect(Number(pane.getAttribute("data-safe-area-inline")??0)).toBe(Math.ceil(304+uiSpacingPx(1)-8));
+  expect(Number(pane.getAttribute("data-safe-area-inline")??0)).toBe(Math.ceil(304-0.5-8));
   expect(Number(pane.getAttribute("data-safe-area-block")??0)).toBe(0);
   expect(app.querySelector('[data-testid="canvas"]')?.closest('[data-slot="pane-host-root"]')).not.toBeNull();
  }finally{view.unmount();root.remove();Element.prototype.getBoundingClientRect=original;}

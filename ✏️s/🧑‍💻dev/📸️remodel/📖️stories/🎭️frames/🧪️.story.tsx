@@ -17,6 +17,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
+import { Button, SharedBorderRow } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useCallback, useMemo, useState, type ReactElement } from "react";
 
@@ -56,13 +57,13 @@ function RemodelFramesStoryHost({ initialCursor, hostShaped }: { readonly initia
 
   return (
     <div style={{ display: "flex", height: "100%", width: "100%", flexDirection: "column" }}>
-      <div style={{ display: "flex", gap: 6, padding: 4, flexWrap: "wrap" }}>
+      <SharedBorderRow wrap>
         {CURSOR_CHOICES.map((choice) => (
-          <button key={choice.id} type="button" data-testid={`remodel-frames-cursor-${choice.id}`} onClick={() => onAction({ controllerId: REMODEL_EDITOR_CONTROLLER_ID, action: "setFrameCursor", args: { streamId: choice.cursor.streamId, frameIndex: choice.cursor.frameIndex } })}>
+          <Button variant="outline" icon="arrow-right" key={choice.id} type="button" data-testid={`remodel-frames-cursor-${choice.id}`} onClick={() => onAction({ controllerId: REMODEL_EDITOR_CONTROLLER_ID, action: "setFrameCursor", args: { streamId: choice.cursor.streamId, frameIndex: choice.cursor.frameIndex } })}>
             {choice.id}
-          </button>
+          </Button>
         ))}
-      </div>
+      </SharedBorderRow>
       <div style={{ position: "relative", flex: "1 1 auto", minHeight: 0 }}>
         <Canvas2dHost node={node} onAction={onAction} />
       </div>

@@ -1,6 +1,6 @@
 /** 🧱️ Container presentation borrows a record and rendered children without owning their source. */
 import type { MouseEventHandler, ReactNode } from "react";
-import { Field, Section, borderElementClass, cn } from "@semio-tech/ui-react";
+import { Field, SharedBorderRow, SharedBorderRowCell, borderElementClass, cn } from "@semio-tech/ui-react";
 import type { UiNodeRecord, Component } from "../../../../../../../../🔨️modules/🛂️manifest/🤖️generated/📜️ui-contract/🟦️.ts";
 import { accessibilityAriaProps, layoutSpecStyle, styleSpecDataAttributes } from "../📐️layout-accessibility/🟦️.tsx";
 import { activityBorderClass } from "../🔤️display-views/🟦️.tsx";
@@ -14,14 +14,28 @@ export interface UiContainerFrameProps {
   readonly selected?: boolean;
   readonly hovered?: boolean;
   readonly onActivate?: MouseEventHandler<HTMLDivElement>;
+  readonly row?: boolean;
 }
 
-export function UiContainerFrame({ record, id, children, controlId, selected, hovered, onActivate }: UiContainerFrameProps) {
+/** 🪢️ A container whose children are bordered controls or fields is one shared-border row: no gap, no padding, one hairline between children. */
+export function UiContainerFrame({ record, id, children, controlId, selected, hovered, onActivate, row }: UiContainerFrameProps) {
   const component = record.component as Extract<Component, { type: "container" }>;
   const { props: aria, describedBy } = accessibilityAriaProps(record.accessibility, id);
   const style = layoutSpecStyle(record.layout);
   const dataAttrs = styleSpecDataAttributes(record.style);
-  if (component.role === "section" || component.role === "group") return <Section id={id} title={component.label ? wireLabel(component.label) : undefined} className={cn(selected && "ring-primary ring-1")}>{describedBy}{children}</Section>;
-  if (component.role === "field") return <Field {...dataAttrs} {...aria} data-ui-node-id={record.id} data-ui-node-key={record.key} style={style} id={id} controlId={controlId} label={component.label ?? ""} description={component.description ?? undefined} required={component.required ?? undefined} error={component.error ?? undefined}>{describedBy}{children}</Field>;
+  const rowStyle = { ...style, gap: 0, padding: 0, flexWrap: "nowrap" as const, alignItems: "stretch" };
+  const orientation = record.layout.kind === "stack" && record.layout.axis === "horizontal" ? "horizontal" : "vertical";
+  if (component.role === "section" || component.role === "group") {
+    const title = component.label ? wireLabel(component.label) : undefined;
+    return (
+      <SharedBorderRow as="section" id={id} orientation="vertical" aria-labelledby={title ? `${id}.title` : undefined} className={cn(selected && "ring-primary ring-1")}>
+        {title ? <SharedBorderRowCell><h2 className="text-base font-semibold" id={`${id}.title`}>{title}</h2></SharedBorderRowCell> : null}
+        {describedBy}
+        {children}
+      </SharedBorderRow>
+    );
+  }
+  if (component.role === "field") return <Field {...dataAttrs} {...aria} data-ui-node-id={record.id} data-ui-node-key={record.key} style={rowStyle} id={id} controlId={controlId} label={component.label ?? ""} description={component.description ?? undefined} required={component.required ?? undefined} error={component.error ?? undefined}>{describedBy}{children}</Field>;
+  if (row && !onActivate) return <SharedBorderRow style={rowStyle} orientation={orientation} {...dataAttrs} {...aria} aria-label={record.accessibility.label ?? (component.role === "form" ? component.label ?? undefined : undefined)} role={component.role === "form" ? "form" : component.role === "toolbar" ? "toolbar" : undefined} id={id} data-ui-node-id={record.id} data-ui-node-key={record.key} data-activity={record.activity} className={cn(activityBorderClass(record), selected && "ring-primary ring-1", hovered && "outline-primary/50 outline-1")} aria-busy={record.activity === "loading" || record.activity === "waiting" || undefined}>{describedBy}{children}</SharedBorderRow>;
   return <div style={style} {...dataAttrs} {...aria} aria-label={record.accessibility.label ?? (component.role === "form" ? component.label ?? undefined : undefined)} role={onActivate ? "button" : component.role === "form" ? "form" : component.role === "toolbar" ? "toolbar" : undefined} id={id} data-ui-node-id={record.id} data-ui-node-key={record.key} data-activity={record.activity} className={cn(activityBorderClass(record), onActivate && cn(borderElementClass, "border cursor-pointer rounded-md"), selected && "ring-primary ring-1", hovered && "outline-primary/50 outline-1")} aria-busy={record.activity === "loading" || record.activity === "waiting" || undefined} onClick={onActivate}>{describedBy}{children}</div>;
 }

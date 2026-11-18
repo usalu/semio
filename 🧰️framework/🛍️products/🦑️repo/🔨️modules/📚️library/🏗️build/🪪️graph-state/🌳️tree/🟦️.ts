@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {createHash} from "node:crypto";
 import {mkdir,readFile,rename,rm,stat,writeFile} from "node:fs/promises";
 import {dirname,join} from "node:path";
@@ -53,4 +54,4 @@ export async function readTreeFilesV1(root:string,options:Readonly<{memoFile?:st
 }
 
 /** 🗒️ The default memo file of a worktree. */
-export const treeMemoFileV1=(root:string):string=>join(root,".cache","f",policy.treeStampFile);
+export const treeMemoFileV1=(root:string):string=>machinePathV1(root,".cache","f",policy.treeStampFile);

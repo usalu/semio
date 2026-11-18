@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {join,resolve} from "node:path";
 import {isMainModuleV1} from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
 import {GRAPH_STATE_POLICY_V1 as policy,graphPlatformV1,graphStateOfV1,type GraphStateKindV1} from "./🟦️.ts";
@@ -30,7 +31,7 @@ export async function runGraphStateScriptV1(args:readonly string[],environment:R
  const [command,...rest]=args,{positional,options}=parse(rest),root=resolve(options.get("root")??environment.SEMIO_WORKSPACE_ROOT??process.cwd());
  if(command==="digest-generated"){
   if(positional.length===0)throw Error("Name at least one directory / Mindestens ein Verzeichnis angeben");
-  return (await generatedInputsDigestV1(root,positional,join(root,".cache","f","graph-state-generated.json"))).digest;
+  return (await generatedInputsDigestV1(root,positional,machinePathV1(root,".cache","f","graph-state-generated.json"))).digest;
  }
  if(command==="state"){
   const kind=(options.get("kind")??"portable-graph") as GraphStateKindV1,source=options.get("source")??"auto",started=performance.now();

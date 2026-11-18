@@ -8,7 +8,7 @@ import {mergeStoryWorldSelectionV1,pickStoryWorldSelectionV1} from "../🎯️se
 // #endregion 🧲️Header
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import type { HistoryColumn } from "@semio-tech/ui-react";
+import { SharedBorderRow, type HistoryColumn } from "@semio-tech/ui-react";
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from "react";
 
 import { GraphTimelineHost, World3dHost } from "@semio-tech/framework-renderer-react";
@@ -255,14 +255,14 @@ function Puzzle5dTimelineStoryHost({ fixtureDsl }: { readonly fixtureDsl: string
 
   return (
     <div style={{ display: "flex", height: "100%", width: "100%", flexDirection: "column" }}>
-      <div style={{ position: "relative", display: "flex", flex: "1 1 auto", minHeight: 0 }}>
-        <div style={{ position: "relative", flex: "2 1 auto", minWidth: 0 }}>
+      <SharedBorderRow className="min-h-0 flex-auto">
+        <div data-shared-border-cell="" style={{ position: "relative", flex: "2 1 auto", minWidth: 0 }}>
           <World3dHost node={worldNode} onAction={onAction} />
         </div>
-        <div style={{ position: "relative", flex: "1 1 260px", minWidth: 220, borderLeft: "1px solid var(--border, #3333)", overflow: "auto" }}>
+        <div data-shared-border-cell="" style={{ position: "relative", flex: "1 1 260px", minWidth: 220, overflow: "auto" }}>
           <GraphTimelineHost node={timelineNode} onAction={onAction} />
         </div>
-      </div>
+      </SharedBorderRow>
       <pre data-testid="puzzle5d-timeline-debug" style={{ margin: 0, padding: 4, fontSize: 11 }}>
         {debug}
       </pre>

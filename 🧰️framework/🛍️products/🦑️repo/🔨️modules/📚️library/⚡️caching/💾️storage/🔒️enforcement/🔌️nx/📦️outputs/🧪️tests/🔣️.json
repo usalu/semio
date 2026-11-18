@@ -104,17 +104,32 @@
       "path": "/fixed/products/vite/release/site/out",
       "partition": "products",
       "prefix": "artifact:"
+    },
+    {
+      "path": "/fixed/workspace/proj/sub/.🧾️store/build.json",
+      "partition": "receipts",
+      "prefix": "artifact:"
+    },
+    {
+      "path": "/fixed/workspace/.🧾️store/native-build.json",
+      "partition": "receipts",
+      "prefix": "artifact:"
     }
   ],
   "invalid": [
     "/fixed/products/../foreign/out",
     "/fixed/products-sibling/out",
     "/tmp/out",
-    "relative/output"
+    "relative/output",
+    "/fixed/workspace/proj/dist/out",
+    "/fixed/workspace/proj/.🧾️store/nested/build.json",
+    "/fixed/workspace/proj/.🧾️store/build.txt",
+    "/fixed/workspace-sibling/proj/.🧾️store/build.json"
   ],
   "roots": {
     "rust": "/fixed/rust",
-    "products": "/fixed/products"
+    "products": "/fixed/products",
+    "receipts": "/fixed/workspace"
   },
   "nativeConstructors": {
     "workspace": "/workspace",

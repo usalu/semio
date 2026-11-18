@@ -1,4 +1,8 @@
 import{GRAPH_MEMORY_POLICY_V1,createMemoryGovernorV1,createMemoryPortsV1,hostMemoryMegabytesV1,selectGraphMemoryLanguagesV1}from"../🟨️.mjs";
+import{graphCutConcurrencyV1}from"../✂️cut/🟨️.mjs";
+import{availableParallelism}from"node:os";
+import{LEAN_SLICE_POLICY_V1,leanSlicePlanV1}from"../🪶️lean/🟨️.mjs";
+import{FOOTPRINT_POLICY_V1}from"../🦶️footprint/🟨️.mjs";
 import{ownerTooHeavyOfV1,runInOwnerScopeV1,throwIfOwnerExceededV1}from"../🎯️owner-scope/🟨️.mjs";
 import{createRequire}from"node:module";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
@@ -16,6 +20,12 @@ const P=PLAN_STAGE_POLICY_V1,MEGABYTE=1048576,megabytes=bytes=>Math.round(bytes/
 
 /** 🌐️ The listeners of the stage events of this process (a slice worker forwards them to its service). */
 const sinks=new Set();
+
+/** 🛑️ The listeners of the stops of the plan guard of this process. */
+const stopSinks=new Set();
+
+/** 🛑️ Registers a listener that is told when the plan guard of this process stops a plan (`{stage,operation,usedMegabytes,budgetMegabytes}`), at the moment of the stop and before the heap detail is written; returns the function that removes it. */
+export function onPlanStopV1(listener){stopSinks.add(listener);return()=>stopSinks.delete(listener);}
 
 /** 📡️ Registers a listener of the stage events (`StageEvent` of the schema) of every plan of this process; returns the function that removes it. */
 export function onPlanStageV1(listener){sinks.add(listener);return()=>sinks.delete(listener);}
@@ -36,14 +46,63 @@ export function planStageLimitBytesV1(environment=process.env,hostMegabytes=host
  const named=Number(text);
  if(text!==undefined&&text!==""&&Number.isFinite(named)&&named>0)return Math.floor(named)*MEGABYTE;
  if(!(hostMegabytes>0)||hostMegabytes>=policy.serveHostMegabytes)return Infinity;
- return Math.min(policy.maximumMegabytes,Math.max(policy.minimumMegabytes,Math.floor(hostMegabytes*policy.hostShare)))*MEGABYTE;
+ const lean=Math.min(Math.floor(hostMegabytes*LEAN_SLICE_POLICY_V1.ceilingBasisPoints/10000),LEAN_SLICE_POLICY_V1.parentMegabytes+LEAN_SLICE_POLICY_V1.childMegabytes);
+ return Math.min(policy.maximumMegabytes,Math.max(policy.minimumMegabytes,lean,Math.floor(hostMegabytes*policy.hostShare)))*MEGABYTE;
 }
 
-/** 🏊️ How many worker processes of `workerMegabytes` a plan that holds `residentMegabytes` already (its own resident set by default) may start so that its whole process tree stays within `treeShare` of the physical memory (the slice guard judges the tree, not the managed bytes of the plan); Infinity where the plan has no limit (a serving machine, `off`). @see ./🧬️schema/🔣️.json */
-export function planFarmWorkersV1({workerMegabytes,residentMegabytes=process.memoryUsage().rss/MEGABYTE,environment=process.env,hostMegabytes=hostMemoryMegabytesV1(),policy=PLAN_STAGE_POLICY_V1}){
- if(planStageLimitBytesV1(environment,hostMegabytes,policy)===Infinity)return Infinity;
- return Math.max(0,Math.floor((hostMegabytes*policy.treeShare-residentMegabytes)/workerMegabytes));
+const LEAN_CEILING_BASIS_POINTS_V1=LEAN_SLICE_POLICY_V1.ceilingBasisPoints;
+const farms=new Map();
+const priorityOf=kind=>P.farmPriority[kind]??0;
+const reservedMegabytes=kind=>{let total=0;for(const row of farms.values())if(priorityOf(row.kind)>=priorityOf(kind))total+=row.megabytes;return total;};
+
+/** 🏋️ The footprint a farm child may reach while it runs alone on a host of `hostMegabytes`: the declared `aloneCapMegabytes`, lowered to what the plan ceiling of the slice guard (`ceilingBasisPoints` of the lean plan) leaves beside the parent footprint, so a heavy owner on a small host gets the whole plan the guard allows and is stopped by this cap before the guard would stop the whole tree; the declared number on every host that has room for it.
+ * @see ./🧬️schema/🔣️.json */
+export function farmAloneCapV1(hostMegabytes,policy=PLAN_STAGE_POLICY_V1){
+ const declared=policy.farmChildFootprintMegabytes["project-farm"].aloneCapMegabytes;
+ if(!(hostMegabytes>0))return declared;
+ return Math.min(declared,Math.max(policy.farmChildFootprintMegabytes["project-farm"].capMegabytes,Math.floor(hostMegabytes*LEAN_SLICE_POLICY_V1.ceilingBasisPoints/10000)-policy.parentFootprintMegabytes));
 }
+
+/** 🪶️ The lean plan of the slice read on this machine (`../🪶️lean`): the plan limit of the machine, the ceiling the slice guard refuses at, the cores and what the parent holds already decide whether the read is lean and how many inference children the tree may hold. */
+export function leanSliceV1({environment=process.env,hostMegabytes=hostMemoryMegabytesV1(),cores=availableParallelism(),residentMegabytes=0,policy=PLAN_STAGE_POLICY_V1}={}){
+ const limit=planStageLimitBytesV1(environment,hostMegabytes,policy)/MEGABYTE;
+ return leanSlicePlanV1({limitMegabytes:limit,ceilingMegabytes:hostMegabytes>0?hostMegabytes*LEAN_CEILING_BASIS_POINTS_V1/10000:Infinity,cores,residentMegabytes,environment});
+}
+
+/** 📐️ How many children of a farm whose footprint is bounded by `child` (`typicalMegabytes`, `capMegabytes`) fit in the hard share of the tree: the parent at its declared footprint, then one child at its cap beside the others at their typical size; 0 where not even one fits. @see ./🧬️schema/🔣️.json */
+export function farmWidthV1({hostMegabytes,reservedMegabytes=0,policy=PLAN_STAGE_POLICY_V1,child,hardPercent=FOOTPRINT_POLICY_V1.hardPercent}){
+ const free=hostMegabytes*policy.treeShare*hardPercent/100-policy.parentFootprintMegabytes-reservedMegabytes;
+ return free>=child.capMegabytes?1+Math.floor((free-child.capMegabytes)/child.typicalMegabytes):0;
+}
+
+/** 🏊️ How many worker processes of `workerMegabytes` a plan that holds `residentMegabytes` already (its own resident set by default) may start so that its whole process tree stays within `treeShare` of the physical memory (the slice guard judges the tree, not the managed bytes of the plan); Infinity where the plan has no limit (a serving machine, `off`), or the cap of the cut of the load (`SEMIO_GRAPH_CUT_CONCURRENCY`, see `../✂️cut`) where the work was cut smaller. A lean read (`../🪶️lean`) plans with the parent it is designed to keep (`parentMegabytes` of the lean policy, never less than what it holds) and the budget of its child, and always grants the first project child when one fits beside the parent within the ceiling. @see ./🧬️schema/🔣️.json */
+export function planFarmWorkersV1({workerMegabytes,residentMegabytes=process.memoryUsage().rss/MEGABYTE,environment=process.env,hostMegabytes=hostMemoryMegabytesV1(),policy=PLAN_STAGE_POLICY_V1,kind,counted=kind}){
+ const cut=graphCutConcurrencyV1(environment);
+ if(planStageLimitBytesV1(environment,hostMegabytes,policy)===Infinity)return cut;
+ const child=kind===undefined?undefined:policy.farmChildFootprintMegabytes?.[kind];
+ if(child!==undefined)return Math.min(cut,farmWidthV1({hostMegabytes,reservedMegabytes:counted===undefined?0:reservedMegabytes(counted),policy,child}));
+ const lean=kind===undefined?undefined:leanSliceV1({environment,hostMegabytes,residentMegabytes,policy}),leaning=lean?.lean===true,parent=kind===undefined?residentMegabytes:Math.max(residentMegabytes,leaning?lean.parentMegabytes:policy.parentMegabytes),cost=kind===undefined?workerMegabytes:leaning&&kind==="project-farm"?lean.childMegabytes:Math.max(workerMegabytes,policy.farmWorkerPeakMegabytes[kind]??0);
+ const room=Math.max(0,Math.floor((hostMegabytes*policy.treeShare-parent-(counted===undefined?0:reservedMegabytes(counted)))/cost));
+ return Math.min(cut,room);
+}
+
+/**
+ * 🧮️ The one memory plan of the process tree: every kind of child process a plan starts (`project-farm`, `walk-farm`) takes its workers from the same `treeShare` of the physical memory, after what the process holds itself and after what the farms of the same or a higher priority (`farmPriority`) already reserved, so the sum of all farms and the parent stays within the share that the slice guard judges. A farm that does not fit asks the lower priority farms to give their children back (`yield`) before it takes less. Returns the workers granted and `release()` (idempotent), which the farm calls when its children are gone; nothing is recorded where the plan has no limit.
+ * @see ./🧬️schema/🔣️.json
+ */
+export function reserveFarmV1({kind,workerMegabytes,wanted=Infinity,residentMegabytes,environment=process.env,hostMegabytes,policy=PLAN_STAGE_POLICY_V1,yield:onYield}){
+ const lean=leanSliceV1({environment,policy,residentMegabytes:residentMegabytes??process.memoryUsage().rss/MEGABYTE,...hostMegabytes===undefined?{}:{hostMegabytes}}),cost=policy.farmChildFootprintMegabytes?.[kind]?.typicalMegabytes??(lean.lean&&kind==="project-farm"?lean.childMegabytes:Math.max(workerMegabytes,policy.farmWorkerPeakMegabytes[kind]??0)),roomOf=counted=>planFarmWorkersV1({workerMegabytes,environment,policy,kind,counted,...residentMegabytes===undefined?{}:{residentMegabytes},...hostMegabytes===undefined?{}:{hostMegabytes}});
+ let workers=Math.min(wanted,roomOf(kind));
+ const giveBack=()=>{for(const[token,row]of[...farms])if(priorityOf(row.kind)<priorityOf(kind)){farms.delete(token);try{row.yield?.();}catch{}}};
+ if(Math.min(wanted,roomOf("*"))<workers)giveBack();
+ if(lean.lean&&kind==="project-farm"&&lean.fits&&wanted>0&&workers<1){giveBack();workers=Math.min(wanted,Math.max(1,roomOf(kind)),graphCutConcurrencyV1(environment));}
+ const token=Symbol(kind);
+ if(workers>0&&planStageLimitBytesV1(environment,hostMegabytes??hostMemoryMegabytesV1(),policy)!==Infinity)farms.set(token,{kind,megabytes:workers*cost,yield:onYield});
+ return Object.freeze({workers,release(){farms.delete(token);}});
+}
+
+/** 📋️ What the farms of this process hold in the plan right now: one row per reservation. */
+export const farmReservationsV1=()=>[...farms.values()].map(row=>({kind:row.kind,megabytes:row.megabytes}));
 
 /**
  * 🪜️ Guards one plan (the assembly of a wave after its projects are inferred) as ONE owner of the memory governor, the same mechanism that stops one project: `run(work)` runs `work` inside the owner scope `plan`, `mark(stage)` names the stage that starts (and ends the one before it with its seconds and growth), `operation(name)` names the operation inside a stage and is a throw point for long operations, and a plan whose managed bytes grew past `limitBytes` (or a stage past its own budget `stageMegabytes`), confirmed by a full collection (garbage is no growth), is stopped at its next yield point, operation or stage boundary, `refuse({stage,operation,megabytes,limit})` building the typed error the caller throws. A sampler every `sampleMilliseconds` keeps the last samples (heap, external, array buffers, resident) and enforces the limits between yield points; when it stops a plan it writes ONE detail line measured at that moment (counters, fresh heap statistics, pending native requests, the recent samples), so the log says whether the growth is heap or buffers and when it began. Every stage start and end is one bilingual line to `report` (on a machine that has a limit, or with `SEMIO_GRAPH_PHASES=1`; a serving machine that has none stays quiet), so a plan that dies inside a stage names that stage in the log; `run` ends the last stage when the plan ends, whatever the outcome.
@@ -71,6 +130,7 @@ export function createPlanStageGuardV1({limitBytes=planStageLimitBytesV1(),ports
   stoppedIn??=stage??"?";stoppedDuring??=operationName;
   if(told)return;told=true;
   say("stopped",{stage:stoppedIn,operation:stoppedDuring,used:megabytes(grown),budget:megabytes(limit)});
+  for(const sink of stopSinks)try{sink({stage:stoppedIn,operation:stoppedDuring,usedMegabytes:megabytes(grown),budgetMegabytes:megabytes(limit)});}catch{}
   detail();
  };
  const over=()=>{

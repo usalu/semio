@@ -46,7 +46,7 @@ function renderContextMenuColor(color: string | undefined): React.ReactNode {
   if (!color) {
     return null;
   }
-  return <span aria-hidden className="size-small shrink-0 rounded-sm border border-border" style={{ background: color }} />;
+  return <span aria-hidden data-slot="context-menu-color-swatch" className="size-small shrink-0 rounded-sm" style={{ background: color, boxShadow: "inset 0 0 0 var(--stroke-hairline) var(--border)" }} />;
 }
 
 function renderContextMenuIcon(icon: ContextMenuItem["icon"], required = false): React.ReactNode {

@@ -3,7 +3,7 @@ import {isDiskFullV1} from "../../../../../../../🔨️modules/🏃️process/�
 import {refuseLowSpaceV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/💽️disk/🟦️.ts";
 import {casHostAreasV1} from "../📂️areas/🟦️.ts";
 import {collectCasV1,readCasUsageHintV1,type CasCollectionV1} from "../🧹️collector/🟦️.ts";
-import {casPartitionUsedFractionV1,decideCasEnforcementV1,measureCasPartitionV1,type CasEnforcementDecisionV1,type CasPartitionV1} from "../🌡️partition/🟦️.ts";
+import {casPartitionPolicyForV1,casPartitionUsedFractionV1,decideCasEnforcementV1,measureCasPartitionV1,type CasEnforcementDecisionV1,type CasPartitionV1} from "../🌡️partition/🟦️.ts";
 import {CAS_POLICY_V1,requireCasPolicyV1,type CasPolicyV1} from "../🧬️schema/🟦️.ts";
 import {casUsageV1} from "../🗃️store/📏️usage/🟦️.ts";
 
@@ -37,7 +37,7 @@ export function createCasGuardV1(options:Readonly<{root:string;policy?:CasPolicy
  const collected=():boolean=>state.collectedAt!==undefined&&now()-state.collectedAt<policy.minAgeMs;
  const run=(signal?:AbortSignal):Promise<CasCollectionV1|undefined>=>{
   state.running??=(async()=>{
-   try{const result=await collect({root,policy,partition:measure(root),signal});state.hintAt=undefined;state.checkedAt=undefined;state.admitted=0;return result;}
+   try{const partition=measure(root),result=await collect({root,policy:casPartitionPolicyForV1(policy,partition),partition,signal});state.hintAt=undefined;state.checkedAt=undefined;state.admitted=0;return result;}
    catch(error){state.failure=error;return undefined;}
    finally{state.collectedAt=now();state.running=undefined;}
   })();
@@ -56,9 +56,9 @@ export function createCasGuardV1(options:Readonly<{root:string;policy?:CasPolicy
  };
  const decide=(storeBytesNow:number|undefined,incomingBytes:number):{decision:CasEnforcementDecisionV1;partition:CasPartitionV1|undefined}=>{
   const partition=measure(root);
-  return{partition,decision:decideCasEnforcementV1({policy,storeBytes:storeBytesNow,incomingBytes,partition,collected:collected()})};
+  return{partition,decision:decideCasEnforcementV1({policy:casPartitionPolicyForV1(policy,partition),storeBytes:storeBytesNow,incomingBytes,partition,collected:collected()})};
  };
- const refuse=(partition:CasPartitionV1|undefined):never=>{throw refuseLowSpaceV1({partition:partition?.partition??root,freeBytes:partition?.freeBytes??0,totalBytes:partition?.totalBytes??1,limitFraction:policy.partition.criticalUsedFraction});};
+ const refuse=(partition:CasPartitionV1|undefined):never=>{throw refuseLowSpaceV1({partition:partition?.partition??root,freeBytes:partition?.freeBytes??0,totalBytes:partition?.totalBytes??1,limitFraction:casPartitionPolicyForV1(policy,partition).partition.criticalUsedFraction});};
  const guard:CasGuardV1={
   async admit(incomingBytes,signal){
    for(let pass=0;pass<3;pass++){

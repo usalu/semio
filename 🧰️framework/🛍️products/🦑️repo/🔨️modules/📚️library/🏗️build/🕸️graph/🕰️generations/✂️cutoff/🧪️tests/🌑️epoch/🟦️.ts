@@ -5,6 +5,7 @@ import{join}from"node:path";
 import{createClosureSettlerV1,stampOfV1}from"../../../../🧮️derived-nodes/🧩️closure-kinds/🟨️.mjs";
 import{staleSummaryV1,rowPathsV1}from"../../../../🧮️derived-nodes/🧩️closure-kinds/🧭️row-paths/🟨️.mjs";
 import{affectedPartsV1,createManifestV1,indexPartV1}from"../../../../🧮️derived-nodes/🧩️closure-kinds/📒️manifest/🟨️.mjs";
+import{rowKeyV1}from"../../../🧮️fact-rows/🟨️.mjs";
 import{createNodeStoreV1}from"../../../../🧮️derived-nodes/💾️store/🟨️.mjs";
 import{derivedOwnerNameV1,suspectRowsV1}from"../../🟨️.mjs";
 import{createFactIndexV1}from"../../../🟨️.mjs";
@@ -137,13 +138,13 @@ test("law: every part that holds a stale row is a part the stale summary reaches
   };
   const book=createManifestV1(),parts:any[][]=Array.from({length:10},()=>Array.from({length:1+Math.floor(next()*6)},makeRow));
   parts.forEach((rows,at)=>{
-   const meta:any={paths:[],dirs:[],bare:[],config:false,volatile:false,outside:[],size:rows.length};
-   for(const row of rows){const one=rowPathsV1(row,identity,"\0volatile");meta.paths.push(...one.paths);meta.dirs.push(...one.dirs);meta.bare.push(...one.bare);meta.config||=one.config;meta.volatile||=one.volatile;if(one.outside)meta.outside.push(row);}
+   const meta:any={paths:[],dirs:[],volatile:false,outside:[],size:rows.length};
+   for(const row of rows){const one=rowPathsV1(row,identity,"\0volatile");meta.paths.push(...one.paths);meta.dirs.push(...one.dirs);meta.volatile||=one.volatile;if(one.outside)meta.outside.push(row);}
    indexPartV1(book,"p"+at,meta);
   });
   const stale=parts.flat().filter(()=>next()<0.15);
   if(stale.length===0)continue;
-  const bits=await affectedPartsV1(book,staleSummaryV1(stale,identity,"\0volatile") as never,async()=>stale.filter(row=>row.path==="/outside/o.ts"));
+  const bits=await affectedPartsV1(book,staleSummaryV1(stale,identity,"\0volatile") as never,async rows=>(rows as any[]).filter(row=>stale.some(one=>rowKeyV1(one)===rowKeyV1(row))));
   parts.forEach((rows,at)=>{
    const holdsStale=rows.some(row=>stale.includes(row)),number=book.partNo.get("p"+at)!,hit=((bits[number>>5]??0)>>>(number&31)&1)===1;
    if(holdsStale)expect(hit,"seed "+seed+" part "+at).toBe(true);
@@ -151,11 +152,12 @@ test("law: every part that holds a stale row is a part the stale summary reaches
  }
 });
 
-test("the stale summary of rows above the checkout and of unknown kinds adds nothing, a bare resolution asks for every configuration and install part",()=>{
+test("the stale summary of rows above the checkout and of unknown kinds adds nothing, a bare resolution names only the file it resolved to and is asked again as an outside row, an owner row names its registry file",()=>{
  const identity=(path:string)=>path.startsWith("/ws/")?path.slice(4):"\0volatile";
  const quiet=staleSummaryV1([{kind:"file",path:"/elsewhere/x",fact:{}},{kind:"digest",path:"/ws/a",fact:{}}],identity,"\0volatile");
- expect([...quiet.paths]).toEqual([]);expect(quiet.configs).toBe(false);expect(quiet.modules).toBe(false);
- const bare=staleSummaryV1([{kind:"resolve",path:JSON.stringify(["/ws/a/b.ts","react"]),fact:"!MODULE_NOT_FOUND"}],identity,"\0volatile");
- expect(bare.configs).toBe(true);expect(bare.modules).toBe(true);expect(bare.directories.has("a")).toBe(true);
- const config=staleSummaryV1([{kind:"file",path:"/ws/p/package.json",fact:{}}],identity,"\0volatile");expect(config.configs).toBe(true);expect(config.paths.has("p/package.json")).toBe(true);
+ expect([...quiet.paths]).toEqual([]);expect(quiet.subtrees.size).toBe(0);
+ const row={kind:"resolve",path:JSON.stringify(["/ws/a/b.ts","react"]),fact:"/ws/node_modules/react/index.js"},bare=staleSummaryV1([row],identity,"\0volatile");
+ expect([...bare.paths]).toEqual(["node_modules/react/index.js"]);expect(bare.directories.has("node_modules/react")).toBe(true);expect(bare.directories.has("a")).toBe(false);
+ expect(rowPathsV1(row,identity,"\0volatile").outside).toBe(true);
+ const owner=rowPathsV1({kind:"registry",path:JSON.stringify(["/ws/","p"]),fact:"null"},identity,"\0volatile");expect(owner.paths).toEqual(["📋️build-owners.json"]);expect(owner.outside).toBe(false);
 });

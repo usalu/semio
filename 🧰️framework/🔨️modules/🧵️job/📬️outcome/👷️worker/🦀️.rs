@@ -23,6 +23,11 @@ impl OriginalWorkerPageReservation{
  fn validate(&self,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{cx.original_source_parent()?.validate_borrowed_context(cx)?;if self.binding.is_some_and(|binding|!binding.matches(cx)){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"worker preparation requires its actual admitting source").into())}Ok(())}
  /// 🌱️ Every admitted turn performs at most one real child action under the same current and lifetime currencies.
  pub fn admit_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+  let before=cx.retained_progress();let result=self.admit_step_inner(cx);
+  if matches!(result,Ok(false))&&before==cx.retained_progress(){let grant=cx.retained_grant();let builder=self.fault.as_ref().map(|b|(b.is_initialized(),b.staged_page_len(),b.published().is_some()));crate::debug_probe("worker_admit_false",format!("closing={} pending_return={} cancelled={} yield={} grant=(items {} copy {} depth {}) body_ready={} binding={} fault={:?} origin=[{}]",self.closing,self.has_pending_return(),cx.is_cancelled(),cx.should_yield(),grant.maximum_items,grant.maximum_copy_bytes,grant.maximum_depth,self.origin.body_ready(),self.binding.is_some(),builder,self.origin.debug_state()));}
+  result
+ }
+ fn admit_step_inner(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"worker preparation is already closing").into())}if self.has_pending_return(){return Ok(false)}
   let grant=cx.retained_grant();if cx.is_cancelled()||cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}self.validate(cx)?;
   if !self.origin.body_ready(){self.origin.admit(cx)?;return Ok(false)}

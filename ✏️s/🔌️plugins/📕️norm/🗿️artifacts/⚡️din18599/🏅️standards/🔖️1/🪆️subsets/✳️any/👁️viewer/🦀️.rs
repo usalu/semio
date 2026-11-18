@@ -52,6 +52,7 @@ impl ArtifactViewer for Din18599Viewer {
     }
     type Snapshot = Din18599Snapshot;
     type Mutation = semio_s_artifact_norm_din18599_mutations::Din18599Mutation;
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;

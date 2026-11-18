@@ -1,7 +1,11 @@
 /** 🥞️ Nested overview grids share live inert previews, glass, pan, zoom and accessible navigation. */
+import type { Locator } from "@playwright/test";
 import { COURSE, QUIZZES, activeOverview, boxOf, card, enter, expect, handle, openGrid, pane, playQuiz, screen, test, way, type Device } from "../../🎭️e2e/🚶️learner/🟦️.ts";
 
-const SCOPES = [{ id: undefined, pages: ["learner", "quizzes", "board", "badges", "prefs"] }, { id: "quizzes", pages: ["energy", "parametric", "grasshopper", "excel", "bim", "optimization"] }, { id: "energy", pages: ["physics", "ventilation", "heating", "cooling", "demand"] }];
+const SCOPES = [{ id: undefined, pages: ["learner", "quizzes", "assignments", "clips", "board", "badges", "prefs"] }, { id: "quizzes", pages: ["energy", "parametric", "grasshopper", "excel", "bim", "optimization"] }, { id: "energy", pages: ["physics", "ventilation", "heating", "cooling", "demand"] }];
+
+/** 🗂️ The height of the tab that stands on the top edge of every card: it reaches into the cell above. */
+const TAB_PX = 24;
 
 /** 🔬️ The immediate layer, excluding the nested preview grids. */
 function layer(device: Device, name: string) {
@@ -20,6 +24,14 @@ async function displacement(device: Device, id: string): Promise<number> {
   return Math.max(Math.abs(preview.x - frame.x), Math.abs(preview.y - frame.y));
 }
 
+/** 🧭️ How far the strip is panned away from its home corner, in percent of its own size: the previous scope's last click leaves the pointer on the explore control in the far corner of the card, so the pan starts there. */
+function panned(strip: Locator): Promise<number> {
+  return strip.evaluate((node) => {
+    const [, x, y] = /translate3d\((-?[\d.]+)%, (-?[\d.]+)%/u.exec(node.style.transform) ?? [];
+    return x === undefined || y === undefined ? Number.POSITIVE_INFINITY : Math.max(Math.abs(Number(x)), Math.abs(Number(y)));
+  });
+}
+
 test("home, topics and energy preserve the layered glass grid and immediate reading order", { tag: "@hierarchy" }, async ({ device }) => {
   const learner = await device("en");
   await enter(learner, { kind: "pseudonym", handle: handle("Nested Grid") }, true);
@@ -29,14 +41,15 @@ test("home, topics and energy preserve the layered glass grid and immediate read
     await expect(root).toHaveAttribute("data-mode", "strip");
     await expect(root).toHaveAttribute("data-pan", "pointer");
     expect(await layer(learner, "overlay").locator("[data-layered-card]").evaluateAll((cards) => cards.map((node) => node.getAttribute("data-layered-card")))).toEqual(scope.pages);
-    const frame = await boxOf(root);
     for (const [index, id] of scope.pages.entries()) {
-      const box = await boxOf(card(learner.page, id).locator("[data-overview-card]"));
-      const [column, row] = [index % 3, Math.floor(index / 3)];
-      expect(box.x).toBeGreaterThanOrEqual(frame.x + column * frame.width / 3 - 1);
-      expect(box.x + box.width).toBeLessThanOrEqual(frame.x + (column + 1) * frame.width / 3 + 1);
-      expect(box.y).toBeGreaterThanOrEqual(frame.y + row * frame.height / 2 - 1);
-      expect(box.y + box.height).toBeLessThanOrEqual(frame.y + (row + 1) * frame.height / 2 + 1);
+      const [columns, column, row, rows] = [3, index % 3, Math.floor(index / 3), Math.ceil(scope.pages.length / 3)];
+      await expect
+        .poll(async () => {
+          const [frame, box] = [await boxOf(root), await boxOf(card(learner.page, id).locator("[data-overview-card]"))];
+          const cell = { left: frame.x + column * frame.width / columns, right: frame.x + (column + 1) * frame.width / columns, top: frame.y + row * frame.height / rows, bottom: frame.y + (row + 1) * frame.height / rows };
+          return box.x >= cell.left - 1 && box.x + box.width <= cell.right + 1 && box.y >= cell.top - TAB_PX - 1 && box.y + box.height <= cell.bottom + 1;
+        }, { message: `${id} sits inside its grid cell (the footer may resize the grid while others come and go)` })
+        .toBe(true);
       await expect(pane(learner.page, id)).toHaveAttribute("inert", "");
       await expect(pane(learner.page, id)).not.toHaveAttribute("data-opened", "");
     }
@@ -54,6 +67,8 @@ test("each nested grid pans under glass, reveals crisp screen-sized previews and
     const frame = await boxOf(root);
     const strip = layer(learner, "strip");
     const veil = layer(learner, "veil");
+    await learner.page.mouse.move(frame.x + 2, frame.y + 2, { steps: 4 });
+    await expect.poll(() => panned(strip)).toBeLessThan(1);
     const before = await strip.getAttribute("style");
     await learner.page.mouse.move(frame.x + frame.width - 2, frame.y + frame.height - 2, { steps: 4 });
     await expect(veil).toHaveAttribute("data-veil", "whole");
@@ -61,6 +76,8 @@ test("each nested grid pans under glass, reveals crisp screen-sized previews and
     expect(await veil.evaluate((glass) => getComputedStyle(glass).backdropFilter)).toContain("blur(");
     await expect.poll(() => strip.getAttribute("style")).not.toBe(before);
     const id = scope.id === "quizzes" ? "energy" : scope.pages[1]!;
+    await learner.page.mouse.move(frame.x + 2, frame.y + 2, { steps: 4 });
+    await expect.poll(async () => { const [view, zoom] = [await boxOf(root), await boxOf(card(learner.page, id).locator("[data-layered-zoom]"))]; return zoom.x >= view.x && zoom.y >= view.y && zoom.x + zoom.width <= view.x + view.width && zoom.y + zoom.height <= view.y + view.height; }, { message: `${id} is panned back into view before it is hovered` }).toBe(true);
     await card(learner.page, id).locator("[data-layered-zoom]").hover();
     await expect(card(learner.page, id)).toHaveAttribute("data-revealed", "");
     await expect.poll(() => displacement(learner, id)).toBeLessThan(0.5);

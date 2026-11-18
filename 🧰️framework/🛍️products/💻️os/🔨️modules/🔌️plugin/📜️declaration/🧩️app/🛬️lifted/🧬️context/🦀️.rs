@@ -19,6 +19,7 @@ enum Source<A:ArtifactApp>{Admitted(SealedShared<ArtifactOwnedToolJobContext<A>>
 pub struct ArtifactOwnedContextHandle<A:ArtifactApp>{source:ManuallyDrop<Option<Source<A>>>}
 impl<A:ArtifactApp> ArtifactOwnedContextHandle<A>{
  pub fn admit(original:ArtifactOwnedToolJobContext<A>,grant:RetainedCloneGrant,cx:&mut StepContext<'_>)->(Self,RetainedCloneProgress){
+  let grant=match SealedShared::<ArtifactOwnedToolJobContext<A>>::source_admission_demand(){Ok(demand)=>RetainedCloneGrant{maximum_items:grant.maximum_items.max(1),maximum_copy_bytes:grant.maximum_copy_bytes.max(demand.copy_bytes),maximum_capacity_bytes:grant.maximum_capacity_bytes.max(demand.capacity_bytes),maximum_release_bytes:grant.maximum_release_bytes.max(demand.release_bytes),maximum_depth:grant.maximum_depth.max(demand.depth)},Err(_)=>grant};
   let mut input=Some(original);let mut output=None;
   let outcome=match cx.with_original_effect(grant,|_,effect|SealedShared::admit_from(&mut input,SharedIssuer::owned(),&mut output,effect)){Ok(Some((turn,_)))=>turn.result.map(|step|step.progress()),Ok(None)=>Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original context admission is not funded")),Err(error)=>Err(error)};
   let(source,progress)=match(output,outcome){(Some(source),outcome)=>(Source::Admitted(source),outcome.unwrap_or_default()),(None,outcome)=>(Source::Refused{original:input.take().expect("refused context admission retains its original"),fault:outcome.err().unwrap_or_else(unadmitted)},Default::default())};

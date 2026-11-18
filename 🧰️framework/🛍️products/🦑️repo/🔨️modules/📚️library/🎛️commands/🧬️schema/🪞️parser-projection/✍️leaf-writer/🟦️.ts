@@ -97,15 +97,15 @@ export class LeafWriter {
   private readonly touched = new Set<string>();
   private closed = false;
 
-  constructor(
-    private readonly sources: SourceStore,
-    private readonly root: string,
-    readonly leaf: string,
-    private readonly helper: string,
-    private readonly apply: boolean,
-    private readonly specifiers: ReadonlyMap<string, string>,
-    private readonly homes: ParserHomes,
-  ) {
+  private readonly sources:SourceStore; private readonly root:string; readonly leaf:string; private readonly helper:string; private readonly apply:boolean; private readonly specifiers:ReadonlyMap<string, string>; private readonly homes:ParserHomes; constructor(
+    sources: SourceStore,
+    root: string,
+    leaf: string,
+    helper: string,
+    apply: boolean,
+    specifiers: ReadonlyMap<string, string>,
+    homes: ParserHomes,
+  ) {this.sources=sources;this.root=root;this.leaf=leaf;this.helper=helper;this.apply=apply;this.specifiers=specifiers;this.homes=homes;
     this.files = homes.files(leaf);
   }
 

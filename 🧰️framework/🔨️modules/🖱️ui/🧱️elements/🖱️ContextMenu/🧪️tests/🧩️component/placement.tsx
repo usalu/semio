@@ -14,7 +14,7 @@ describe("fused context menu placement", () => {
   it("repositions successive wings and reclamps after fusion growth, resize and collapse", () => {
     let wingWidth = 90;
     const callbacks: ResizeObserverCallback[] = [];
-    vi.stubGlobal("ResizeObserver", class { constructor(callback: ResizeObserverCallback) { callbacks.push(callback); } observe() {} disconnect() {} });
+    vi.stubGlobal("ResizeObserver", class { constructor(callback: ResizeObserverCallback) { callbacks.push(callback); } observe() {} unobserve() {} disconnect() {} });
     const rect = (left: number, top: number, width: number, height: number) => ({ left, top, right: left + width, bottom: top + height, width, height }) as DOMRect;
     vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
       const slot = this.getAttribute("data-slot");

@@ -174,7 +174,7 @@ impl OriginalNativeDecodeSource{
   let mut receiving_refusal=None;
   if issued.grant!=grant||!issued.progress.fits(grant){receiving_refusal=Some(OriginalTurnFailure::from(refusal("original native producer changed its supplied grant or exceeded its physical receipt").with_retained_progress(issued.progress)))}
   if issued.work>fuel&&receiving_refusal.is_none(){receiving_refusal=Some(ValueError::literal(ValueRefusalKind::WorkLimit,"original native producer exceeded the supplied caller work").with_retained_progress(issued.progress).into())}
-  if issued.work<observed{let error=ValueError::literal(ValueRefusalKind::InvariantViolated,"original native producer omitted observed native work");if let Some(failure)=receiving_refusal.as_mut(){failure.context_refusal=Some(error)}else{receiving_refusal=Some(error.into())}}
+  if issued.work<observed{eprintln!("[DEBUG] omitted work issued={} observed={} bt={}",issued.work,observed,std::backtrace::Backtrace::force_capture());let error=ValueError::literal(ValueRefusalKind::InvariantViolated,"original native producer omitted observed native work");if let Some(failure)=receiving_refusal.as_mut(){failure.context_refusal=Some(error)}else{receiving_refusal=Some(error.into())}}
   let posted_work=issued.work.max(observed);cx.consume_fuel(posted_work);
   if let Err(error)=cx.consume_retained(issued.progress){if let Some(failure)=receiving_refusal.as_mut(){failure.receipt_refusal=Some(error)}else{receiving_refusal=Some(error.into())}}
   OriginalNativeDecodeOutcome{value:issued.value,progress:issued.progress,work:posted_work,reported_work:issued.work,observed_native_work:observed,receiving_refusal}

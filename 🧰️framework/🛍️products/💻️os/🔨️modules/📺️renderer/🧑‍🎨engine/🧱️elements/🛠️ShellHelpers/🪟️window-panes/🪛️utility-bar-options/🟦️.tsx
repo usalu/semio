@@ -34,8 +34,8 @@ export function SelectionUtilityOptions({ activeUtilityId, windowId, onAction, g
   };
 
   return (
-    <div className="flex w-full min-w-0 max-w-full flex-wrap items-start gap-double">
-      <div className="flex min-w-0 max-w-full flex-wrap items-center gap-single">
+    <div className="flex w-full min-w-0 max-w-full flex-wrap items-start gap-x-double gap-y-0">
+      <div className="flex min-w-0 max-w-full flex-wrap items-center gap-x-single gap-y-0">
         <span className="text-tiny text-muted-foreground uppercase tracking-wider font-semibold">{methodLabel}</span>
         <ToggleGroup
           kind="single"
@@ -55,7 +55,7 @@ export function SelectionUtilityOptions({ activeUtilityId, windowId, onAction, g
         />
       </div>
       <RibbonDivider />
-      <div className="flex min-w-0 max-w-full flex-wrap items-center gap-single">
+      <div className="flex min-w-0 max-w-full flex-wrap items-center gap-x-single gap-y-0">
         <span className="text-tiny text-muted-foreground uppercase tracking-wider font-semibold">{modeLabel}</span>
         <ToggleGroup
           kind="single"

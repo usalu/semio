@@ -65,6 +65,9 @@ const subsetOf = (appId: string): string => /@[^/]+\/([^#]+)#/u.exec(appId)?.[1]
 const baseKeyOf = (program: MatrixProgram): string => `${program.pluginId}/${kindOf(program.appId)}`;
 export const keyOf = (program: MatrixProgram): string => `${baseKeyOf(program)}${subsetOf(program.appId) === "*" ? "" : `/${subsetOf(program.appId)}`}`;
 
+/** 📕️ The plugins that split the fifteen norm families; every one stages its kind through `setSnapshot`. */
+const NORM_PLUGIN_IDS: ReadonlySet<string> = new Set(["norm", "norm-eurocode", "norm-eurocode-materials"]);
+
 /** 📕️ Each norm standard's `setSnapshot` stages ITS OWN codec-canonical document: the `➡️after` snapshot of the
  * standard's first committed mutation fixture, folded to one line by deleting line breaks only — never re-serialized, so
  * f64 carriers keep their exact JSON form. */
@@ -105,7 +108,7 @@ export function resolvePins(repoRoot: string, pins: MatrixPins, programs: readon
     if (verb) verbs[key] = verb;
     foldVerbPins(args, key, base, origin, pins.pluginArgs, pins.kindArgs);
     foldVerbPins(edits, key, base, origin, pins.pluginEdits, pins.kindEdits);
-    if (program.pluginId === "norm") {
+    if (NORM_PLUGIN_IDS.has(program.pluginId)) {
       const snapshot = normSnapshot(repoRoot, kindOf(program.appId));
       if (snapshot !== null) args[`${key}.setSnapshot`] = { snapshot };
     }

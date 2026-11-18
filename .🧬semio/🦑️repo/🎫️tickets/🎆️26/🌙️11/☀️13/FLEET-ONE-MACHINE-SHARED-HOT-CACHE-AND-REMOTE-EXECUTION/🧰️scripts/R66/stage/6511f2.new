@@ -1,0 +1,133 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:graph-state:wanted:cost:v1",
+  "title": "What inferring one project costs on a machine",
+  "description": "Projects are not equal: most owners need 100 to 800 MB of managed memory to infer, a few need gigabytes (measured on g1-server 2026-11-14: @semio-tech/s-dev-composition 14.0 GB above the surviving floor of its wave, @semio-tech/repo-lib 4.8 GB, @semio-tech/framework-rs 3.3 GB, the root owner `workspace` 3.1 GB of attributed growth; @semio-tech/framework-os-dev and @semio-tech/framework-os-kernel ran together in a wave that peaked 7.7 GB above its floor, seeded at half each). A reader therefore decides by the memory of each owner and not by their count: an owner whose recorded cost does not fit the admitted grant is never inferred on that machine, it is asked from the fleet and waited for. All costs in this file are MANAGED megabytes (JavaScript heap plus external buffers of the inferring process, the quantity the memory governor measures); the physical footprint is `footprintFactor` times that (measured 1.6 to 2.1 by the macOS footprint tool in package P4). The grant of a machine for one project is its admitted memory less `floorMegabytes`, the physical memory the parent holds before it infers anything (measured on g1-m02, 16 GB, in the four tries of round 5 that only waited for the fleet: the largest process was 3.14 to 3.74 GB resident). The costs are recorded per owner NAME, never per kind: a kind-wide window let one light owner after a heavy one erase the heavy one's cost.",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "footprintFactor": 2,
+        "marginPercent": 25,
+        "floorMegabytes": 3800,
+        "soloReserveMegabytes": 2048,
+        "samples": 5,
+        "halfLifeMilliseconds": 259200000,
+        "unknownMegabytes": 820,
+        "waveFloorMegabytes": 256,
+        "maximumNamed": 6,
+        "kindMegabytes": {
+          "root:language:cargo": 3100,
+          "language:typescript": 1100,
+          "project": 820,
+          "language:cargo": 300,
+          "language:rust": 300,
+          "language:go": 50,
+          "language:dotnet": 20
+        },
+        "seeds": {
+          "@semio-tech/s-dev-composition": 13976,
+          "@semio-tech/repo-lib": 4826,
+          "@semio-tech/framework-rs": 3259,
+          "@semio-tech/framework-os-dev": 3838,
+          "@semio-tech/framework-os-kernel": 3838,
+          "workspace": 3100
+        },
+        "directory": ".cache/f/graph-costs",
+        "file": "owner-costs.3.json",
+        "flushMilliseconds": 2000,
+        "heavySources": ["recorded", "seed"]
+      }
+    },
+    "Table": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "owners"
+      ],
+      "properties": {
+        "version": {
+          "const": 2
+        },
+        "owners": {
+          "type": "object",
+          "maxProperties": 20000,
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "rows",
+              "seconds",
+              "samples"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "maxLength": 128
+              },
+              "rows": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "seconds": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "samples": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 16,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "megabytes",
+                    "atMs",
+                    "stopped",
+                    "hostMegabytes"
+                  ],
+                  "properties": {
+                    "megabytes": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "atMs": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "stopped": {
+                      "type": "boolean"
+                    },
+                    "hostMegabytes": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Texts": {
+      "const": {
+        "en": {
+          "plan": "graph: {stale} stale projects, {taken} taken from the fleet, {heavy} too heavy for this machine ({named}; it can give about {grant} MB per project), it can infer {local} of the others ({wave} per wave); asking the fleet for {wanted}",
+          "list": "{name} (about {megabytes} MB)",
+          "more": "and {count} more",
+          "solo": "graph: the fleet did not deliver {count} too heavy project(s) ({named}); this machine infers them itself, one at a time and alone after the others, each with up to about {grant} MB",
+          "exceeds": "graph: nothing to infer locally: the too heavy project(s) {named} need(s) more than the about {grant} MB this machine can give one project even when nothing else of the read runs; try again when a machine with free memory serves the graph, or read the graph on a larger machine"
+        },
+        "de": {
+          "plan": "Graph: {stale} veraltete Projekte, {taken} aus der Flotte übernommen, {heavy} zu schwer für diese Maschine ({named}; sie kann etwa {grant} MB pro Projekt geben), sie kann {local} der übrigen berechnen ({wave} pro Welle); frage die Flotte nach {wanted}",
+          "list": "{name} (etwa {megabytes} MB)",
+          "more": "und {count} weitere",
+          "solo": "Graph: die Flotte lieferte {count} zu schwere(s) Projekt(e) nicht ({named}); diese Maschine berechnet sie selbst, einzeln und allein nach den anderen, jedes mit bis zu etwa {grant} MB",
+          "exceeds": "Graph: hier ist nichts lokal zu berechnen: das/die zu schwere(n) Projekt(e) {named} braucht/brauchen mehr als die etwa {grant} MB, die diese Maschine einem Projekt auch dann geben kann, wenn sonst nichts vom Lesen läuft; erneut versuchen, sobald eine Maschine mit freiem Speicher den Graphen bedient, oder den Graphen auf einer größeren Maschine lesen"
+        }
+      }
+    }
+  }
+}

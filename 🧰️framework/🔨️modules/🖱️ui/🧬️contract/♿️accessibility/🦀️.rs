@@ -60,7 +60,7 @@ pub fn accessibility_role(component: &crate::Component, activatable: bool) -> &'
 /// (a `Field` is a label plus its control, which is a group, not a landmark), `Section` is a region.
 fn container_role_name(role: crate::ContainerRole) -> &'static str {
     match role {
-        crate::ContainerRole::Plain | crate::ContainerRole::Group | crate::ContainerRole::Field => "group",
+        crate::ContainerRole::Plain | crate::ContainerRole::Group | crate::ContainerRole::Field | crate::ContainerRole::CardStack | crate::ContainerRole::Card => "group",
         crate::ContainerRole::Section => "region",
         crate::ContainerRole::Form => "form",
         crate::ContainerRole::Toolbar => "toolbar",
@@ -268,7 +268,7 @@ pub fn accessibility_projection_node(record: &crate::UiNodeRecord, depth: usize)
     let focusable = accessibility_is_focusable(&record.component, activatable);
     let value = accessibility_value(&record.component);
     let label = record.accessibility.label.as_ref().or_else(|| match &record.component {
-        crate::Component::Container(props) if matches!(props.role, crate::ContainerRole::Section | crate::ContainerRole::Group | crate::ContainerRole::Sheet) => props.label.as_ref(),
+        crate::Component::Container(props) if matches!(props.role, crate::ContainerRole::Section | crate::ContainerRole::Group | crate::ContainerRole::Sheet | crate::ContainerRole::Card) => props.label.as_ref(),
         crate::Component::Button(props) => Some(&props.label),
         crate::Component::TreeSection(props) => props.label.as_ref(),
         crate::Component::TreeItem(props) => Some(&props.label),

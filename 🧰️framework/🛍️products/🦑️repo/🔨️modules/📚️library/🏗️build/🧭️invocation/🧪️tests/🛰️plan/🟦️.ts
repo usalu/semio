@@ -17,14 +17,15 @@ import {recordPlanSuccessV1} from "../../🏃️run/🟦️.ts";
 import {createCasStoreV1} from "../../../🗄️cas/🗃️store/🟦️.ts";
 import {createTaskRecorderV1} from "../../../🕸️graph/🧮️derived-nodes/🎯️task-state/🟨️.mjs";
 import {workspaceIdV1} from "../../../🏡️resident/📨️protocol/📍️endpoint/🏠️host/🟨️.mjs";
-import {isRepoErrorV1,repoErrorDataV1} from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🗣️language/🚨️error/🟦️.ts";
+import {isRepoErrorV1,renderRepoErrorV1,repoErrorDataV1} from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🗣️language/🚨️error/🟦️.ts";
 import repoErrorSchema from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🗣️language/🚨️error/🧬️schema/🔣️.json" with {type:"json"};
 import {reportRepoErrorV1} from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🗣️language/📣️progress/🟦️.ts";
 import {PLAN_HANDOFF_V1,invocationPlanRequestV1,planHandoffEnvironmentV1,readSliceV1,requestInvocationPlanV1,scopedPlanOfReplyV1,takePlannedGraphV1} from "../../🛰️plan/🟦️.ts";
 
 const here=fileURLToPath(new URL(".",import.meta.url)),root=realpathSync(fileURLToPath(new URL("../../../../../../../../../",import.meta.url))),fixture=JSON.parse(readFileSync(join(here,"🔣️.json"),"utf8"));
 const base=mkdtempSync(join(tmpdir(),"semio-client-plan-"));
-afterAll(()=>rmSync(base,{recursive:true,force:true}));
+const runBase=mkdtempSync(join(process.platform==="win32"?tmpdir():"/tmp","cp-"));
+afterAll(()=>{rmSync(base,{recursive:true,force:true});rmSync(runBase,{recursive:true,force:true});});
 const pair=(id:string)=>{const split=id.lastIndexOf(":");return{project:id.slice(0,split),target:id.slice(split+1)};};
 
 test("a reply means the scoped plan the fixture and the independent Python oracle state",()=>{
@@ -43,12 +44,12 @@ test("a reply means the scoped plan the fixture and the independent Python oracl
  });
 });
 
-test("a plan that breaks the closed schema names the violated rule, the path and the counts in both languages",()=>{
- const tasks=Array.from({length:4097},(_,index)=>({id:"p"+index+":build",dependsOn:[] as string[],stale:true})),request={arguments:["run-many"],tool:"nx",targets:tasks.map(task=>task.id)};
- expect(()=>scopedPlanOfReplyV1(request,tasks)).toThrow("must contain at most 4096 item(s)");
- expect(()=>scopedPlanOfReplyV1(request,tasks)).toThrow("/scope/targets");
- expect(()=>scopedPlanOfReplyV1(request,tasks)).toThrow("Geschlossener Plan erforderlich");
- expect(()=>scopedPlanOfReplyV1(request,tasks)).toThrow("4097 tasks");
+test("a plan that breaks the closed schema is a typed refusal that names the violated rule, the path and the counts in both languages",()=>{
+ const tasks=[{id:"p".repeat(300)+":build",dependsOn:[] as string[],stale:true}],request={arguments:["run"],tool:"nx",targets:[tasks[0]!.id]};
+ let caught:unknown;try{scopedPlanOfReplyV1(request,tasks);}catch(error){caught=error;}
+ expect(isRepoErrorV1(caught),String(caught)).toBe(true);
+ const english=renderRepoErrorV1(caught as never,"en"),german=renderRepoErrorV1(caught as never,"de");
+ expect(english).toContain("at most 256 character(s)");expect(english).toContain("/scope/targets/0/project");expect(english).toContain("1 tasks");expect(german).toContain("1 Aufgaben");
 });
 
 test("the commands that plan a task graph ask the service, nothing else does",async()=>{
@@ -64,7 +65,7 @@ test("the commands that plan a task graph ask the service, nothing else does",as
 const graphOf=(names:readonly string[])=>({version:1,projects:Object.fromEntries(names.map(name=>[name,{name,root:"p/"+name,targets:{build:{execution:{kind:"noop"},dependsOn:names.indexOf(name)>0?["^build"]:[]}}}])),dependencies:names.slice(1).map((name,index)=>({source:name,target:names[index]!}))});
 
 test("a real client gets its plan and verified graph slice from a real service, and a corrupted slice is refused",async()=>{
- const runtimeDirectory=join(base,"run");mkdirSync(runtimeDirectory,{recursive:true});
+ const runtimeDirectory=join(runBase,"run");mkdirSync(runtimeDirectory,{recursive:true});
  const environment={...process.env,XDG_RUNTIME_DIR:runtimeDirectory,TMPDIR:runtimeDirectory,LOCALAPPDATA:runtimeDirectory,SEMIO_BUILD_TOOL:"nx"} as Record<string,string>,implementation="a".repeat(64),runtime=hostEndpointsV1(implementation,environment);
  const loads:string[][]=[];
  const planner=createGraphPlannerPortV1({loadSlice:async({arguments:invocation})=>{loads.push([...invocation]);return{graph:graphOf(["core","util","app"]),generationPin:"generation-1"};}});
@@ -94,7 +95,7 @@ test("without a handed-over plan the executing process refuses, in both language
 });
 
 test("the start timeout applies only to absent progress: a service that keeps writing its log is waited for, a silent one times out",async()=>{
- const directory=join(base,"slow");mkdirSync(directory,{recursive:true});
+ const directory=join(runBase,"slow");mkdirSync(directory,{recursive:true});
  const environment={...process.env,XDG_RUNTIME_DIR:directory,TMPDIR:directory,LOCALAPPDATA:directory} as Record<string,string>,implementation="c".repeat(64),runtime=hostEndpointsV1(implementation,environment),policy={...HOST_POLICY_V1,startTimeoutMilliseconds:200,startPollMilliseconds:20};
  const service=createHostServiceV1({runtime,implementation,ports:{planner:createGraphPlannerPortV1({loadSlice:async()=>({graph:graphOf(["a"])})})}});
  try{

@@ -101,7 +101,7 @@ impl NativeSnapshotEffectProgress{
  /// 🔭️ Borrows the canonical original encoder settlement status without moving its causes.
  pub fn encode_settlement_status(&self)->semio_framework_value::native_encoding::NativeEncodeEffectSettlementStatus{self.state.settlement_status()}
  /// 🧹️ Resets a completed marker only after its original settlement leaves the caller slot.
- pub fn reset_completed(&mut self)->Result<(),ValueError>{if self.state.settlement.is_some()||self.state.allocation.is_some()||self.state.outcome.is_some()||self.failure.is_some()||!semio_framework_value::retirement::RetireOwned::retirement_ready(&self.state){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"snapshot effect retains its original encoder settlement"))}self.state=Default::default();Ok(())}
+ pub fn reset_completed(&mut self)->Result<(),ValueError>{self.state.settle_claimed_work()?;if self.state.settlement.is_some()||self.state.allocation.is_some()||self.state.outcome.is_some()||self.failure.is_some()||!semio_framework_value::retirement::RetireOwned::retirement_ready(&self.state){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"snapshot effect retains its original encoder settlement"))}self.state=Default::default();Ok(())}
 }
 macro_rules! run_snapshot_effect{
  ($quote:ident,$post:ident,$cancel:ident)=>{

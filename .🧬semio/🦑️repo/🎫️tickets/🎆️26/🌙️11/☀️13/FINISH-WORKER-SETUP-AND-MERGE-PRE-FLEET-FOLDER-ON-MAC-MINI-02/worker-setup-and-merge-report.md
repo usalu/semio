@@ -179,3 +179,37 @@ The native build stays pending; `.cache/f/native-bootstrap.done` is absent.
 Raising the bound alone does not help: the next line requires every name to be one of the declared roles (`directoryRoles`: `{{generationDirectory}}`, `{{recipe.cache}}`, `{{recipe.global}}`, `{{recipe.bin}}`, `tmp`, `{{recipe.home}}`, `{{recipe.config}}`, `bootstrap`; `fileRoles`: `dependencies.json`, `storage-events.jsonl`; `service`: `.fseventsd`) and refuses the rest with `Closed current dependency image roles required`. `.metadata_never_index`, `generation`, `pointer`, `dotnet`, `nuget` and `python` are not declared. The selected dependency plan of `publication/🟦️.ts` (31 October) and the writers of the partition (generation receipts, .NET, NuGet, Python) disagree about what the partition may hold. Not changed here: which roles the plan has to know, and what it does with them when it publishes or retires a generation, is a decision of that protocol.
 
 With that, `repo tools setup all` fails standalone, and inside `workspace:setup` it is refused before it starts (envelope, section above). The toolchain is not provisioned, so `cpp-setup` and the Python interpreter install cannot pass, and the native build stays pending.
+
+## 15 November: The State That Diverged From The Last Micro Commit (16:26 – 16:45 CET)
+
+**Symptom.** `git status` of `~/Documents/semio` against `efff7f986f52` (micro commit of 15:04 CET) listed 7303 paths: 4218 staged deletions, 959 `MM`, 2118 untracked. The other machines showed `43/11/121` (modified/deleted/untracked).
+
+**Cause.** `.git/index.lock`, 0 bytes, created 12:17:11 CET, no process holding it (`lsof` empty). The replica could not write the stage since then: `.cache/f/git-index.json` said `degraded`, `write-tree-failed`, then `index-lock-stale`; `status` said `Git state: degraded … nothing is published or applied until it works`, 5181 incoming entries queued, 5171 stage paths waiting. The index of this machine stayed at 11:57 while `HEAD` moved to the new micro commits, so everything committed in between looked like a local change. Nothing in the files themselves had diverged.
+
+**Repair.** The index was copied aside, the lock removed (the remedy the `status` text names). 45 seconds later: `Git state: shared`, `git write-tree` = `d4f57b999b0e43f416cc7fdc7987626bc133b3e9` (the stage tree the fleet compares against), queue 10, `git status` 45 modified, 8 deleted, 83 untracked.
+
+**Nothing lost.**
+- `verify` after the repair: `Drift on 5 paths (288223 shared paths checked)`, all five are sample files in `WORKERS-READY-WITH-LOW-RESOURCES/workers/g1-m02` and `g1-m10` that those machines were writing at that moment. No file of this machine differs from the store.
+- `.cache/f/lost` got no new entry (newest: 03:38 CET), so the catch-up overwrote no local file and replaced no local stage.
+- The round 28 files of this worker (written 12:39 – 12:55 CET) are in the store.
+
+**Second difference of this machine.** `fleet` listed `g1-m07 differs in guards.infoExclude: 10 instead of 0`: `.git/info/exclude` held ten `**/.claude/…` rules under `# claude-code-runtime` (written 04:56 CET by the Claude runtime). None of the paths exists on disk, so the rules hid nothing. The rules were removed; the file holds one comment line. The runtime may write them again: `preflight` fails on a count above 0.
+
+**Preflight at 16:36 CET**: 23 checks, 2 failed, 3 warnings.
+- `FAIL cache endpoint: http://192.168.178.70:6090 is not reachable` (the group server answers ping, the port refuses): server side.
+- `FAIL worktree access: worktree-access-denied (waiting): a consent prompt for launcher waits in the logged-in session of the user: accept "repo would like to access files in your Documents folder"`. The receipt `launcher.json` says `waiting` for the replica supervisor (pid 59558, started 16:07 CET); the same daemon reads and writes the tree. Only the owner can answer a consent prompt.
+- Warnings: native build pending, time synchronisation needs root, event visibility 12476 ms at the 95th percentile.
+
+**Readiness.** This worker follows `26/11/14/WORKERS-READY-WITH-LOW-RESOURCES/PROTOCOL.md`; its reports are in `workers/g1-m07/` there (`round-28.md` written today; round 29 series started 16:46 CET). `repo tools setup all` ended with exit 0 at 12:36 CET. The marker `.cache/f/native-bootstrap.done` is absent: every try of round 28 ended with `native_rc=75` (plan stage inference about 9.9 GB against the 6553 MB a 16 GB machine gives a plan), which `ROUND.md` lists as known and being fixed in the shared code.
+
+### State at 17:55 CET
+
+- Replica: `Git state: shared`, g1-m07 verdict `ok`, code `203e01b3594f`, view `108/11/205`, the same as the group server. `.git/index.lock` absent, `.git/info/exclude` holds 0 rules.
+- Preflight: 23 checks, 1 failed (cache endpoint `http://192.168.178.70:6090` on the group server refuses connections), 3 warnings (native build pending, time synchronisation needs root, 23.6 GiB free disk below the recommended 30 GiB). The worktree access check is `ok` again.
+- Native build: round 29 tries 1 to 4 (16:34 – 17:50 CET) all ended with `native_rc=75`: the plan stage inference grows to 8.7 – 10.2 GB, this machine grants a plan 6553 MB. No project arrived from the fleet. Report: `26/11/14/WORKERS-READY-WITH-LOW-RESOURCES/workers/g1-m07/round-29.md`. Tries 5 to 10 run from 17:56 CET, as the protocol asks (no try limit). The marker cannot appear before the fleet code for that stage changes or the group server serves the graph.
+
+### State at 22:55 CET: the machine now sets itself up, sessions only observe
+
+- Round 30 (the graph read is cut smaller instead of refused): six tries on this machine, none ready. One ran all six steps and was still refused at about 10 GB; one ended on an internal failure (`invalid build.closure.provider-generated-import`, `@semio-tech/ui-rs:generate`); four were stopped by the protocol's own 8 GB rule, which collides with the new step-down. Reports: `round-29.md` (addendum) and `round-30.md` in `26/11/14/WORKERS-READY-WITH-LOW-RESOURCES/workers/g1-m07/`.
+- Round 31 (21:55 CET): sessions must no longer run setup. The fleet agent's `ready` child runs the stages itself; on g1-m07 native, repo-mcp, dependencies and tools are `ok`, the `workspace` stage is in its third run (exit 75, then exit 1 before). Two tries of this session still ran after that round was published; that is stated in `round-30.md`.
+- From 22:45 CET `observe-round-31.sh` (read-only, in the worker folder) appends an observation to `round-31.md` every 10 minutes for 8 hours, or until `ready.json` says ready.

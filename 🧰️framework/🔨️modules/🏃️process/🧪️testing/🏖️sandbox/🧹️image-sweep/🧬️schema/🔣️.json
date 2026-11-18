@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.dev/schemas/testing/sandbox-image-sweep.json",
+  "definitions": {
+    "Owner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "pid", "start"],
+      "properties": {
+        "version": { "const": 1 },
+        "pid": { "type": "integer", "minimum": 1 },
+        "start": { "type": ["string", "null"] }
+      }
+    },
+    "LedgerRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "device", "image", "pid", "start", "atMs"],
+      "properties": {
+        "version": { "const": 1 },
+        "device": { "type": "string", "pattern": "^/dev/disk[0-9]+$" },
+        "image": { "type": "string", "minLength": 1 },
+        "pid": { "type": "integer", "minimum": 1 },
+        "start": { "type": ["string", "null"] },
+        "atMs": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "Report": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "ours", "leaked", "foreign", "detached", "failed", "sandboxesRemoved", "sandboxesKept"],
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "ours": { "type": "integer", "minimum": 0 },
+        "leaked": { "type": "integer", "minimum": 0 },
+        "foreign": { "type": "integer", "minimum": 0 },
+        "detached": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 },
+        "sandboxesRemoved": { "type": "integer", "minimum": 0 },
+        "sandboxesKept": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "ledger": ".images.jsonl",
+        "owner": ".owner",
+        "sandboxName": "^r[A-Za-z0-9]{6}$",
+        "sandboxSegment": "/.cache/test-sandbox/",
+        "ourSegment": "/.cache/b/",
+        "messages": {
+          "en": "{total} disk images are attached: {ours} are ours, {leaked} belong to dead test sandboxes and {foreign} are foreign",
+          "de": "{total} Disk-Images sind eingehängt: {ours} gehören uns, {leaked} gehören toten Test-Sandboxes und {foreign} sind fremd",
+          "swept": {
+            "en": "detached {detached} leaked disk image(s) of dead test sandboxes and removed {removed} sandbox(es); {failed} could not be detached",
+            "de": "{detached} verwaiste Disk-Image(s) toter Test-Sandboxes ausgehängt und {removed} Sandbox(es) entfernt; {failed} ließen sich nicht aushängen"
+          }
+        }
+      }
+    }
+  }
+}

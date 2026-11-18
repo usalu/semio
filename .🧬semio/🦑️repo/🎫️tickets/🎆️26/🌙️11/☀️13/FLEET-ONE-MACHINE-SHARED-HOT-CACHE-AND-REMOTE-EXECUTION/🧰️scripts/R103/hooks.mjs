@@ -1,0 +1,7 @@
+const mb=n=>Math.round(n/1048576),seen=new Map();
+const log=(kind,size,extra)=>{const st=(new Error().stack||"").split("\n").slice(2,9).map(l=>l.replace(/^.*\/([^/]*\/[^/]*:\d+:\d+\)?)$/u,"$1").trim()).join(" < ");const k=kind+st.slice(0,120);seen.set(k,(seen.get(k)||0)+1);if(seen.get(k)<=3)console.log("BIG "+kind+" "+mb(size)+"MB "+(extra||"")+" @ "+st);};
+const parse=JSON.parse;JSON.parse=function(t,r){if(typeof t==="string"&&t.length>2e6)log("JSON.parse",t.length);return parse.call(this,t,r);};
+const str=JSON.stringify;JSON.stringify=function(...a){const out=str.apply(this,a);if(typeof out==="string"&&out.length>2e6)log("JSON.stringify",out.length);if(typeof out==="string"&&out.length>1e8&&a[0]&&typeof a[0]==="object"&&!globalThis.__k){globalThis.__k=1;const parts={};for(const k of Object.keys(a[0]))parts[k]=mb(str.call(JSON,a[0][k])?.length??0);console.log("BIGKEYS "+JSON.stringify(parts)+" sidecarKeys "+JSON.stringify(Object.keys(a[0].sidecar??{}).slice(0,6)));}return out;};
+const dec=TextDecoder.prototype.decode;TextDecoder.prototype.decode=function(b,o){const out=dec.call(this,b,o);if(out.length>2e6)log("decode",out.length);return out;};
+const rf=Bun.file.bind(Bun);globalThis.__hookedBunFile=true;
+import fs from "node:fs";const rfs=fs.readFileSync;fs.readFileSync=function(p,o){const out=rfs.call(this,p,o);const n=out?.length??0;if(n>2e6)log("readFileSync",n,String(p).slice(-60));return out;};

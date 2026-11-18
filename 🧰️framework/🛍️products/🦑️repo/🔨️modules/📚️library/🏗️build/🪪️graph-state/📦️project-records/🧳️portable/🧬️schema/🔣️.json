@@ -20,7 +20,9 @@
         "pathKinds",
         "jsonKinds",
         "factPathKinds",
-        "residue"
+        "residue",
+        "stampFields",
+        "stampValue"
       ],
       "properties": {
         "version": {
@@ -73,6 +75,15 @@
         },
         "residue": {
           "type": "string"
+        },
+        "stampFields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "stampValue": {
+          "type": "number"
         }
       },
       "const": {
@@ -115,7 +126,9 @@
           "realpathNative",
           "typescriptRealpath"
         ],
-        "residue": "⟦semio-"
+        "residue": "⟦semio-",
+        "stampFields": ["mtimeMs", "ctimeMs", "ino"],
+        "stampValue": 0
       }
     },
     "Row": {

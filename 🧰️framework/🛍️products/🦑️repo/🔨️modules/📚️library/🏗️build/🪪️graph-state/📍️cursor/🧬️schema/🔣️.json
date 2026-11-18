@@ -21,7 +21,7 @@
         "maximumSnapshots": 16,
         "maximumFiles": 4194304,
         "maximumBytes": 268435456,
-        "maximumRows": 400000,
+        "maximumRows": 1048576,
         "settleMilliseconds": 1500,
         "settleMaximumMilliseconds": 1500,
         "healthMaximumAgeMilliseconds": 30000,

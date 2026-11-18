@@ -1,0 +1,20 @@
+/** 🧵 The stroke polygons of one slender solid with and without the drawing: bun vegetation-stroke.ts <asset> <scale> <view> <solid id> */
+import type { Asset } from "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍️staffage/🧬️schema/🟦️.ts";
+import { assetPathsFromFiles, readStreamedAsset } from "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/📥️files/🟦️.ts";
+import { evaluate } from "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🧮️evaluation/🟦️.ts";
+import { drawnFor, followedWidth, referenceOf, strokesOf, worldSolids } from "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🧰️support/🌓️silhouette/🟦️.ts";
+const [name, scaleArg, view, id] = process.argv.slice(2) as string[];
+const scale = Number(scaleArg);
+const entry = (await assetPathsFromFiles()).find((e) => e.folder === name)!;
+const { asset } = (await readStreamedAsset(entry)) as { asset: Asset };
+const state = evaluate(asset, { kind: "pose", pose: asset.presentation.defaultPose }, { kind: "scale", scale: { denominator: scale } }) as any;
+const solid = worldSolids(asset, state.bones as never, scale).find((s) => s.id === id)!;
+const drawn = drawnFor(asset, state, view as never, scale);
+const bbox = (rings: readonly (readonly { x: number; y: number }[])[]): string => { const p = rings.flat(); return `x ${Math.min(...p.map((q) => q.x)).toFixed(3)}..${Math.max(...p.map((q) => q.x)).toFixed(3)} y ${Math.min(...p.map((q) => q.y)).toFixed(3)}..${Math.max(...p.map((q) => q.y)).toFixed(3)}`; };
+const withDrawing = strokesOf(view as never, solid, drawn);
+const without = strokesOf(view as never, solid, undefined);
+console.log("slender", solid.slender, "penM", solid.penM, "with drawing:", withDrawing.length, "rings", bbox(withDrawing), "without:", without.length, bbox(without));
+const cut = referenceOf(view as never, [solid], undefined, drawn).cut;
+console.log("reference groups", cut.length);
+console.log("drawn bone shapes", drawn.filter((d) => d.bone === solid.bone).map((d) => ({ closed: d.closed, filled: d.filled, penM: d.penM, rings: d.rings.length, box: bbox(d.rings) })));
+void followedWidth;

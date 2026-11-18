@@ -5,13 +5,15 @@
   "description": "EN: Derived questions whose answer needs a whole TypeScript program or a derived walk (peaks of 0.7 to 0.9 GB each) are asked in a child process, one at a time, under a resident memory cap, so they never enter the heap of the service worker; the answer returns as JSON and is stored by the derived node graph like any other. DE: Abgeleitete Fragen, deren Antwort ein ganzes TypeScript-Programm oder einen abgeleiteten Lauf braucht (je 0,7 bis 0,9 GB Spitze), werden in einem Kindprozess einzeln und unter einer Speichergrenze gestellt, damit sie nie in den Heap des Dienstarbeiters gelangen; die Antwort kehrt als JSON zurück und wird vom Graphen der abgeleiteten Knoten wie jede andere gespeichert.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["version", "environment", "memoryLimitMegabytes", "pollMilliseconds", "timeoutMilliseconds", "kinds"],
+  "required": ["version", "environment", "memoryLimitMegabytes", "pollMilliseconds", "timeoutMilliseconds", "heartbeatMilliseconds", "silenceMilliseconds", "kinds"],
   "properties": {
     "version": {"const": 1},
     "environment": {"type": "string", "pattern": "^SEMIO_[A-Z_]+$"},
     "memoryLimitMegabytes": {"type": "integer", "minimum": 256},
     "pollMilliseconds": {"type": "integer", "minimum": 10},
     "timeoutMilliseconds": {"type": "integer", "minimum": 1000},
+    "heartbeatMilliseconds": {"type": "integer", "minimum": 100, "description": "EN: A child writes one line of life to its standard error this often, from a timer of its own event loop. DE: Ein Kind schreibt so oft eine Lebenszeile auf seine Fehlerausgabe, aus einem Zeitgeber seiner eigenen Ereignisschleife."},
+    "silenceMilliseconds": {"type": "integer", "minimum": 1000, "description": "EN: A child that wrote nothing at all for this long is stuck (a lock, a dead peer, a blocked loop) and is stopped with a refusal that names the silence; the wall limit above only bounds a child that keeps living. DE: Ein Kind, das so lange gar nichts geschrieben hat, steckt fest (Sperre, toter Partner, blockierte Schleife) und wird mit einer Ablehnung gestoppt, die die Stille nennt; die Zeitgrenze oben begrenzt nur ein Kind, das weiterlebt."},
     "kinds": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["program", "derive"]}}
   }
 }

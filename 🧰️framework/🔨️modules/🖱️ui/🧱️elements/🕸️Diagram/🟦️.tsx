@@ -75,7 +75,7 @@ export const DiagramSkeleton: React.FC<DiagramSkeletonProps> = ({ nodeCount = 5,
     [edgeCount, nodeCount],
   );
   return (
-    <div className={cn("relative w-full h-full", loadingBorderClass, className)}>
+    <div data-border-probe-art="" className={cn("relative w-full h-full", loadingBorderClass, className)}>
       <HostReactFlow
         nodes={skeletonNodes}
         edges={skeletonEdges}

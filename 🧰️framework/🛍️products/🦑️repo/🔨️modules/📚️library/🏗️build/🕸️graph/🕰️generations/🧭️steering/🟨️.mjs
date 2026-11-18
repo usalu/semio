@@ -74,6 +74,17 @@ export function writeOfferedV1(environment,names,now=Date.now()){
  }catch{}
 }
 
+/** 🌡️ The pending file of a read that has no generation to publish yet (the cold state: all owners are inferred before the first generation): `done(name)` notes an owner whose record is complete, and the file lists the priority projects that are still dirty, at most once per `intervalMs` (a trailing write follows), so the server can tell a requester which of its projects are fresh while the read goes on and not only at the end of the generation. `begin()` writes the first file at once, `flush()` the last one. */
+export function createColdPendingV1(environment=process.env,intervalMs=1000,now=Date.now){
+ const done=new Set();let last=-Infinity,timer;
+ const write=()=>{timer=undefined;last=now();const priority=readPriorityV1(environment);if(priority===undefined)return;writePendingV1(environment,-1,priority.projects.filter(name=>!done.has(name)),priority);};
+ return Object.freeze({
+  begin:write,
+  done(name){done.add(name);if(timer!==undefined)return;const wait=Math.max(0,intervalMs-(now()-last));if(wait===0)write();else{timer=setTimeout(write,wait);timer.unref?.();}},
+  flush(){if(timer!==undefined){clearTimeout(timer);timer=undefined;}write();},
+ });
+}
+
 /** 👂️ The pending file of the read: undefined when there is none or it is damaged. */
 export function readPendingV1(directory){
  const row=readJson(join(directory,files.pending));

@@ -202,6 +202,13 @@ describe("presentation interaction dom", () => {
     });
     const nav = disposition.querySelector(".presentation-pdf-page-nav");
     expect(nav).toBeTruthy();
+    expect(nav!.hasAttribute("data-shared-border-frame")).toBe(true);
+    expect([...nav!.querySelectorAll("button")].map((button) => button.hasAttribute("data-shared-border-cell"))).toEqual([true, true]);
+    expect(globalsCssSource).toMatch(/\.presentation-pdf-page-nav\s*\{[^}]*gap:\s*0;/s);
+    expect(globalsCssSource).not.toMatch(/\.presentation-pdf-page-nav\s*\{[^}]*\bborder:/s);
+    expect(globalsCssSource).not.toMatch(/\.presentation-pdf-page-nav__button\s*\{[^}]*\bborder:/s);
+    expect(globalsCssSource).toMatch(/\.presentation-interaction-handle\s*\{[^}]*\bborder:\s*0;[^}]*box-shadow:/s);
+    expect(globalsCssSource).toMatch(/section:has\(\.presentation-interactive-disposition--selected\)\s+\.presentation-interaction-slide-reset\s*\{[^}]*visibility:\s*hidden/s);
     const page = disposition.querySelector(".presentation-media-pdf canvas") as HTMLElement;
     expect(page.dataset.page).toBe("1");
     const nextButton = disposition.querySelector(".presentation-pdf-page-nav__button--next") as HTMLButtonElement;
@@ -373,5 +380,10 @@ describe("presentation interaction dom", () => {
     });
     expect(tile.classList.contains("presentation-interactive-disposition--enlarged")).toBe(false);
     expect(tile.classList.contains("presentation-interactive-disposition--canvas-framed")).toBe(true);
+  });
+
+  it("keeps the reveal arrow buttons on non-overlapping boxes so no two controls stack on each other", () => {
+    expect(globalsCssSource).toMatch(/\.reveal \.controls button\s*\{[^}]*width:\s*3\.2em[^}]*height:\s*3\.2em/s);
+    expect(globalsCssSource).toMatch(/\.reveal \.controls \.navigate-down\s*\{[^}]*bottom:\s*0[^}]*padding-bottom:\s*0/s);
   });
 });

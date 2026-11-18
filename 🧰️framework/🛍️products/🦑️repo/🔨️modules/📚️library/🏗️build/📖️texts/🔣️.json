@@ -134,6 +134,18 @@
       "en": "The closure of script provider {port} imports generated outputs of {targets}: a provider closure may not import a generated output, because the projects that name it cannot depend on its producer; import it from the command instead",
       "de": "Der Abschluss des Skriptanbieters {port} importiert generierte Ausgaben von {targets}: ein Anbieterabschluss darf keine generierte Ausgabe importieren, weil die Projekte, die ihn nennen, nicht von ihrem Erzeuger abhängen können; importiere sie stattdessen im Befehl"
     },
+    "closure.tool-closures-refused": {
+      "en": "{count} declared tool closures are refused before the graph read starts: {details}. A tool closure may not import a generated output, because the projects that name it cannot depend on its producer; import it from the command instead or remove the tool from the shared closure policy",
+      "de": "{count} deklarierte Werkzeugabschlüsse werden vor dem Start des Graph-Lesens abgelehnt: {details}. Ein Werkzeugabschluss darf keine generierte Ausgabe importieren, weil die Projekte, die ihn nennen, nicht von ihrem Erzeuger abhängen können; importiere sie stattdessen im Befehl oder entferne das Werkzeug aus der Richtlinie der geteilten Abschlüsse"
+    },
+    "graph.heavy-question-failed": {
+      "en": "A heavy derived question failed in its child process (exit {exit}): {detail}",
+      "de": "Eine schwere abgeleitete Frage ist in ihrem Kindprozess fehlgeschlagen (Exit {exit}): {detail}"
+    },
+    "graph.heavy-question-silent": {
+      "en": "A heavy derived question was stopped: its child process wrote nothing for {seconds} s (stuck on a lock, a dead peer or a blocked loop): {detail}",
+      "de": "Eine schwere abgeleitete Frage wurde gestoppt: ihr Kindprozess hat {seconds} s lang nichts geschrieben (hängt an einer Sperre, einem toten Partner oder einer blockierten Schleife): {detail}"
+    },
     "closure.tool-unknown": {
       "en": "The shared closure policy declares no tool command {name}",
       "de": "Die Richtlinie der geteilten Abschlüsse deklariert keinen Werkzeugbefehl {name}"
@@ -463,8 +475,8 @@
       "de": "Die Quellen der Build-Implementierung änderten sich während {attempts} Übernahmen fortlaufend ({count} Dateien, zuerst: {files}; letzter Schreiber: {origin}). Es lief nichts mit einer gemischten Version; bitte später erneut versuchen."
     },
     "closure.capacity-exceeded": {
-      "en": "Implementation Source closure capacity exceeded: {path}",
-      "de": "Die Kapazität des Implementierungs-Quellabschlusses ist überschritten: {path}"
+      "en": "Implementation Source closure capacity exceeded: {path}. Drop the import that pulls this subtree into the entry, or raise maximumFiles, maximumSourceBytes and maximumSnapshotBytes together in the Policy of build/source/closure/schema.",
+      "de": "Die Kapazität des Implementierungs-Quellabschlusses ist überschritten: {path}. Entferne den Import, der diesen Teilbaum in den Einstieg zieht, oder erhöhe maximumFiles, maximumSourceBytes und maximumSnapshotBytes gemeinsam in der Policy von build/source/closure/schema."
     },
     "bazel.scope-table-refused": {
       "en": "[bazel] the declared implementation scope table is refused ({reason}), every action keeps the full executor closure",
@@ -570,6 +582,10 @@
       "en": "Canonical command closure reference required: {input}",
       "de": "Ein kanonischer Verweis auf den Befehlsabschluss ist erforderlich: {input}"
     },
+    "graph.unknown-source-input": {
+      "en": "Unknown selected named source input: {input} (owner {owner})",
+      "de": "Unbekannte benannte Quelleingabe: {input} (Eigentümer {owner})"
+    },
     "graph.farm-directory-kind-required": {
       "en": "Declared graph farm temporary directory kind required: {kind}",
       "de": "Eine deklarierte Art des temporären Graph-Farm-Verzeichnisses ist erforderlich: {kind}"
@@ -598,6 +614,14 @@
       "en": "{text}",
       "de": "{text}"
     },
+    "sdk.derivative-capacity": {
+      "en": "Not enough storage to publish the {derivative} of the {sdk} SDK: it needs {need} bytes, the declared ceiling is {ceiling} bytes and {free} bytes are free on the tool store. Free disk space or reduce the SDK; nothing was written",
+      "de": "Zu wenig Speicher, um das {derivative} des {sdk}-SDK zu veröffentlichen: es braucht {need} Bytes, die deklarierte Obergrenze ist {ceiling} Bytes und im Werkzeugspeicher sind {free} Bytes frei. Speicherplatz freigeben oder das SDK verkleinern; es wurde nichts geschrieben"
+    },
+    "graph.plan-not-closed": {
+      "en": "The plan of this command breaks the closed plan schema and was not run: {detail} ({tasks} tasks, {edges} edges, {projects} projects, {targets} scope targets). This is a defect of the build tool, not of the command; report it with this text",
+      "de": "Der Plan dieses Befehls verletzt das geschlossene Plan-Schema und wurde nicht ausgeführt: {detail} ({tasks} Aufgaben, {edges} Kanten, {projects} Projekte, {targets} Bereichsziele). Das ist ein Fehler des Build-Werkzeugs, nicht des Befehls; melde ihn mit diesem Text"
+    },
     "graph.wanted-expired": {
       "en": "The project graph cannot be read on this machine: it can infer only {local} of the stale projects, the fleet was asked for {wanted} and delivered {arrived} within {seconds} s, {missing} are still missing{heavy}. Run the command again when a machine with free memory serves the graph, or read the graph on a larger machine",
       "de": "Der Projektgraph kann auf diesem Rechner nicht gelesen werden: er kann nur {local} der veralteten Projekte selbst ableiten, die Flotte wurde um {wanted} gebeten und lieferte innerhalb von {seconds} s {arrived}, {missing} fehlen noch{heavy}. Führe den Befehl erneut aus, sobald ein Rechner mit freiem Speicher den Graphen bereitstellt, oder lies den Graphen auf einem größeren Rechner"
@@ -606,9 +630,13 @@
       "en": "The project graph cannot be read on this machine yet: the plan stage {stage} (during {operation}) grew to {megabytes} MB, more than the {limit} MB this machine gives a plan. It was stopped before the host ran short of memory; run the command again when a machine with free memory serves the graph, or read the graph on a larger machine",
       "de": "Der Projektgraph kann auf diesem Rechner noch nicht gelesen werden: die Plan-Stufe {stage} (während {operation}) ist auf {megabytes} MB gewachsen, mehr als die {limit} MB, die diese Maschine einem Plan gibt. Sie wurde gestoppt, bevor dem Rechner der Speicher ausging; führe den Befehl erneut aus, sobald ein Rechner mit freiem Speicher den Graphen bereitstellt, oder lies den Graphen auf einem größeren Rechner"
     },
+    "graph.no-progress": {
+      "en": "The project graph read stopped: no owner made progress for {minutes} minutes ({done} of {total} owners done). Running: {running}. Waiting on: {waiting}. It stops instead of blocking every other read of this machine; run the command again when memory or the fleet is free",
+      "de": "Das Lesen des Projektgraphen wurde abgebrochen: kein Projekt kam {minutes} Minuten voran ({done} von {total} Projekten fertig). Es laufen: {running}. Es wartet auf: {waiting}. Es bricht ab, statt jedes andere Lesen dieses Rechners zu blockieren; führe den Befehl erneut aus, sobald Speicher oder Flotte frei sind"
+    },
     "graph.owner-too-heavy": {
-      "en": "The project graph cannot be read on this machine yet: {named} need(s) more memory than this machine can give one project even when it infers it alone and nothing else of the read runs ({limit} MB). The inference was stopped (or not started) before the host ran short of memory; run the command again when a machine with free memory serves the graph, or read the graph on a larger machine",
-      "de": "Der Projektgraph kann auf diesem Rechner noch nicht gelesen werden: {named} braucht/brauchen mehr Speicher, als dieser Rechner einem Projekt geben kann, auch wenn er es allein berechnet und sonst nichts vom Lesen läuft ({limit} MB). Die Berechnung wurde gestoppt (oder gar nicht begonnen), bevor dem Rechner der Speicher ausging; führe den Befehl erneut aus, sobald ein Rechner mit freiem Speicher den Graphen bereitstellt, oder lies den Graphen auf einem größeren Rechner"
+      "en": "The project graph cannot be read on this machine yet: {named} need(s) more memory than this machine can give one project even when it infers it alone and nothing else of the read runs ({limit} MB); {producers} machine(s) of the fleet delivered records for this read. The inference was stopped (or not started) before the host ran short of memory; run the command again when a machine with free memory serves the graph, or read the graph on a larger machine",
+      "de": "Der Projektgraph kann auf diesem Rechner noch nicht gelesen werden: {named} braucht/brauchen mehr Speicher, als dieser Rechner einem Projekt geben kann, auch wenn er es allein berechnet und sonst nichts vom Lesen läuft ({limit} MB); {producers} Rechner der Flotte haben für dieses Lesen Datensätze geliefert. Die Berechnung wurde gestoppt (oder gar nicht begonnen), bevor dem Rechner der Speicher ausging; führe den Befehl erneut aus, sobald ein Rechner mit freiem Speicher den Graphen bereitstellt, oder lies den Graphen auf einem größeren Rechner"
     },
     "graph.consent-denied": {
       "en": "macOS does not let `repo` read your {folder} folder: {place} is refused, so {root} cannot be read. Open System Settings, Privacy & Security, Files & Folders, switch on {folder} Folder for `repo` ({identity}) (or give it Full Disk Access) or click \"Allow\" on the dialog \"repo would like to access files in your {folder} folder\", then run the command again. The consent is asked once per machine; a checkout outside Documents, Desktop and Downloads needs none.",

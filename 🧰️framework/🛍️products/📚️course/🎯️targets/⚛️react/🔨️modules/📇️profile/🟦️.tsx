@@ -18,7 +18,7 @@ import { learnerName } from "../🪪️identity/🟦️.tsx";
 import { awardOf } from "../🏅️badges/🟦️.tsx";
 import { ownRow } from "../🏆️leaderboard/🟦️.tsx";
 import type { Act } from "../📖️quiz-page/🟦️.tsx";
-import { CardAction, CardIcon, Dialog, Facts, Glyph, Missing, PageFrame, CourseCard, Records, TABLE, cn, type PaneView } from "../🪟️chrome/🟦️.tsx";
+import { CELL, CardAction, CardIcon, CardSection, Dialog, Facts, Glyph, Missing, PageFrame, CourseCard, Records, RowList, TABLE, cn, type PaneView } from "../🪟️chrome/🟦️.tsx";
 import { PanePeers, PresenceList } from "../👥️presence/🟦️.tsx";
 import { usePresenceFollow } from "../👀️follow/🟦️.tsx";
 import { PRESENCE_ANCHORS } from "../👥️presence/👁️view/🟦️.ts";
@@ -185,7 +185,7 @@ export function LearnerPage(props: LearnerProps & { readonly view: PaneView; rea
     const award = awardOf(state, badge.id);
     return award === undefined ? [] : [{ badge, award }];
   });
-  const head = "border-b-2 border-normal px-single py-single text-left font-semibold course-nowrap";
+  const head = "border-b border-normal px-single py-single text-left font-semibold course-nowrap";
   const columns = ["course.learner.quiz", "course.learner.status", "course.learner.challenge", "course.learner.score", "course.learner.points", "course.learner.started", "course.learner.submitted"] as const;
   return (
     <PageFrame page={HOME_PAGES.learner} wide overlay={<PanePeers scope={state.course === undefined ? undefined : roomScope(state.course.id, { screen: "learner" })} opened={props.view.opened} />}>
@@ -194,9 +194,11 @@ export function LearnerPage(props: LearnerProps & { readonly view: PaneView; rea
         <p className="m-0 text-2xl font-semibold tabular-nums">{shown.points}</p>
         <Facts items={shown.facts} />
       </CourseCard>
-      <CourseCard id={`${id}-runs`} card="runs" icon={<CardIcon icon="list" />} title={text("course.learner.runs")}>
+      <CourseCard flush id={`${id}-runs`} card="runs" icon={<CardIcon icon="list" />} title={text("course.learner.runs")}>
         {runs.length === 0 ? (
-          <p className="m-0 text-sm text-muted-foreground">{text("course.learner.noRuns")}</p>
+          <CardSection>
+            <p className="m-0 text-sm text-muted-foreground">{text("course.learner.noRuns")}</p>
+          </CardSection>
         ) : (
           <Records fold={60}>
             <table {...TABLE.table} className="course-fold w-full border-collapse text-sm" aria-labelledby={`${id}-runs`}>
@@ -221,19 +223,21 @@ export function LearnerPage(props: LearnerProps & { readonly view: PaneView; rea
           </Records>
         )}
       </CourseCard>
-      <CourseCard id={`${id}-badges`} card="learner-badges" icon={<CardIcon icon="award" />} title={text("course.learner.badges")}>
+      <CourseCard flush id={`${id}-badges`} card="learner-badges" icon={<CardIcon icon="award" />} title={text("course.learner.badges")}>
         {held.length === 0 ? (
-          <p className="m-0 text-sm text-muted-foreground">{text("course.learner.noBadges")}</p>
+          <CardSection>
+            <p className="m-0 text-sm text-muted-foreground">{text("course.learner.noBadges")}</p>
+          </CardSection>
         ) : (
-          <ul role="list" className="m-0 flex list-none flex-col gap-single p-0">
+          <RowList>
             {held.map(({ badge, award }) => (
-              <li key={badge.id} className="flex min-w-0 items-center gap-double text-sm">
+              <li key={badge.id} {...CELL} className="flex min-w-0 items-center gap-double p-double text-sm">
                 <Glyph emoji={badge.emoji} className="text-lg" />
                 <span className="min-w-0 flex-1 font-medium">{localized(badge.label, locale)}</span>
                 <span className="course-nowrap text-xs text-muted-foreground">{text("course.home.earnedAt", { date: formatDate(award.at, locale) })}</span>
               </li>
             ))}
-          </ul>
+          </RowList>
         )}
       </CourseCard>
     </PageFrame>

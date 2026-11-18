@@ -352,6 +352,27 @@ describe("resuming a verify epoch",()=>{
   const dead=journalGraphSeamsV1({root:s.root,journal:{cursor:async()=>{throw Error("journal lost");},since:async()=>({complete:false,reason:"x"}),excluded:()=>()=>false},store:memoryStore(),ports:s.ports,digest:()=>"d",membership:async()=>({digest:"x",frontier:first.frontier,changes:[]}),holds:async()=>true});
   expect(await dead.unchanged(await dead.membership(undefined).catch(()=>({})))).toBe(false);
  });
+ test("law: a plan made from a fact index stays valid across a journal delta that names none of the paths of that index, and not across one that does, a directory change or an incomplete answer",async()=>{
+  const s=await setup2(),first=await s.seams.membership(undefined),instance="0123456789abcdef";
+  s.store.set("g3",{instance,seq:2});
+  const previous={manifest:{generation:3,membership:first.digest},frontier:first.frontier};
+  s.journal.state.head=6;s.journal.state.answers.push({complete:true,cursor:{instance,seq:6},rows:[]});
+  const live=await s.seams.membership(previous);
+  const texts=[s.root+"/a/x/src/main.ts","file","JSON "+JSON.stringify([s.root+"/a/x/mod.ts","pkg"]).slice(5),s.root+"/a/x"];
+  const index={stringCount:texts.length,textOf:(at:number)=>texts[at],rows:[{kind:"file",path:texts[0]}],rowKindOf:()=>"file",rowPathIdOf:()=>0};
+  s.seams.doubtfulIds(index as never,[0]);
+  expect(await s.seams.unchanged(live),"same cursor").toBe(true);
+  const move=async(rows:unknown[],head:number,complete=true)=>{s.journal.state.head=head;s.journal.state.answers.push({complete,cursor:{instance,seq:head},rows});return s.seams.unchanged(live);};
+  expect(await move([["m",0,"elsewhere/other.txt"]],8),"a path no fact names").toBe(true);
+  expect(await move([["m",0,"a/x/src/main.ts"]],9),"a path a fact names").toBe(false);
+  expect(await move([["a",0,"a/x/new.ts"]],10),"an entry of a directory a fact lists").toBe(false);
+  expect(await move([["m",0,"a/x/mod.ts"]],11),"an element of a resolve key").toBe(false);
+  expect(await move([["a",1,"fresh/dir"]],12),"a directory change").toBe(false);
+  expect(await move([["m",0,"elsewhere/other.txt"]],13,false),"an incomplete answer").toBe(false);
+  const bare=await setup2(),again=await bare.seams.membership(undefined);
+  bare.journal.state.head+=1;
+  expect(await bare.seams.unchanged(again),"no plan index: a moved journal is a changed plan").toBe(false);
+ });
  test("a verify epoch whose stale paths exceed the old bound of 20000 persists its cursor and the next read resumes from it",async()=>{
   const s=await setup2();
   const first=await s.seams.membership(undefined);

@@ -9,7 +9,7 @@ import{remoteCacheFetchV1}from"../../../../🌐️remote-cache/🛰️fleet/🟦
 import{graphFleetClientV1}from"../../../🛰️exchange/🟦️.ts";
 import{graphFleetSettingsV1}from"../../../🧶️nx/🟦️.ts";
 import{wantedPolicyV1}from"../../🟦️.ts";
-import{classifyOwnersV1,clampOwnerCostTableV1,createOwnerCostRecorderV1,ownerCostCeilingV1,describeHeavyV1,emptyOwnerCostTableV1,estimateOwnerCostV1,estimateRemainingMillisecondsV1,mergeOwnerCostTablesV1,orderByCostV1,ownerCostPathV1,ownerCostPolicyV1,ownerCostTextV1,ownerGrantV1,planSoloV1,publishOwnerCostsV1,readOwnerCostFileV1,readOwnerCostsV1,recordOwnerCostFileV1,recordOwnerCostV1,soloGrantV1,waveEvidenceV1,writeOwnerCostFileV1,type OwnerCostInputV1}from"../🟦️.ts";
+import{classifyOwnersV1,clampOwnerCostTableV1,createOwnerCostRecorderV1,ownerCostCeilingV1,describeHeavyV1,emptyOwnerCostTableV1,estimateOwnerCostV1,estimateRemainingMillisecondsV1,mergeOwnerCostTablesV1,orderByCostV1,ownerCostPathV1,ownerCostPolicyV1,ownerParentFootprintV1,ownerSystemReserveV1,ownerCostTextV1,ownerGrantV1,planSoloV1,publishOwnerCostsV1,readOwnerCostFileV1,readOwnerCostsV1,recordOwnerCostFileV1,recordOwnerCostV1,soloGrantV1,waveEvidenceV1,writeOwnerCostFileV1,type OwnerCostInputV1}from"../🟦️.ts";
 
 /** 💰️ Contract: projects are weighed by memory, one owner at a time. The recorded cost of an owner is its own, the heavy ones are found by the grant of the machine, the order of a serving machine follows the cost, and the table survives files, merges and the fleet. */
 const scratch:string[]=[];
@@ -20,7 +20,7 @@ const sample=(name:string,megabytes:number,atMs:number,stopped=false,kind="proje
 const BASE=wantedPolicyV1,SIXTEEN=ownerGrantV1(8192,BASE);
 
 test("the grant of a 16 GB machine is the admitted half less the base, divided by the footprint factor and the margin; a serving machine has none",()=>{
- expect(SIXTEEN).toEqual({footprintMegabytes:4392,managedMegabytes:Math.floor(4392/2/1.25)});expect(SIXTEEN.managedMegabytes).toBe(1756);
+ expect(SIXTEEN).toEqual({footprintMegabytes:5120,managedMegabytes:Math.floor(5120/2/1.25)});expect(SIXTEEN.managedMegabytes).toBe(2048);
  expect(ownerGrantV1(9400,BASE).managedMegabytes).toBe(Number.POSITIVE_INFINITY);
  expect(ownerGrantV1(16384,BASE).footprintMegabytes).toBe(Number.POSITIVE_INFINITY);
  expect(ownerGrantV1(1000,BASE)).toEqual({footprintMegabytes:0,managedMegabytes:0});
@@ -79,7 +79,7 @@ test("a wave proves the cost of its only project at the peak, nothing of several
 
 test("the table is a file that validates against its schema with Ajv, survives damage and foreign content as empty, and merges equal samples once",()=>{
  const directory=temp("file"),path=ownerCostPathV1(directory);
- expect(path).toBe(join(directory,".cache/f/graph-costs/owner-costs.json"));
+ expect(path).toBe(join(directory,".cache/f/graph-costs/owner-costs.3.json"));
  expect(readOwnerCostFileV1(path)).toEqual(emptyOwnerCostTableV1());
  const first=recordOwnerCostFileV1(path,sample("a",700,10)),second=recordOwnerCostFileV1(path,sample("a",9000,20,true));
  expect(validate(second)).toBe(true);expect(validate(JSON.parse(readFileSync(path,"utf8")))).toBe(true);
@@ -149,15 +149,15 @@ test("the time left comes from what the read finished, else from the measured ta
  expect(estimateRemainingMillisecondsV1({table,remaining:["a"],parallel:1,observed:{done:0,milliseconds:60_000}})).toBe(10_000);
 });
 
-test("the solo grant is what ONE owner can be given while nothing else runs: the host less the parent floor and the system reserve, lowered to what is available now less the floor; a 16 GB Mac gives a heavy owner 4214 managed MB at rest and less when busy, never a serving machine's unlimited grant",()=>{
- const host=16384,reserve=ownerCostPolicyV1.soloReserveMegabytes,floor=ownerCostPolicyV1.floorMegabytes;
+test("the solo grant is what ONE owner can be given while nothing else runs: the host less the parent floor and the system reserve, lowered to what is available now less the floor; a 16 GB Mac gives a heavy owner 4505 managed MB at rest and less when busy, never a serving machine's unlimited grant",()=>{
+ const host=16384,reserve=ownerSystemReserveV1(host),floor=ownerParentFootprintV1(host);
  expect(soloGrantV1({hostMegabytes:host},BASE)).toEqual({footprintMegabytes:host-reserve-floor,managedMegabytes:Math.floor((host-reserve-floor)/2/1.25)});
- expect(soloGrantV1({hostMegabytes:host},BASE).managedMegabytes).toBe(4214);
+ expect(soloGrantV1({hostMegabytes:host},BASE).managedMegabytes).toBe(4505);
  expect(soloGrantV1({hostMegabytes:host,availableMegabytes:12000},BASE).managedMegabytes).toBe(Math.floor((12000-BASE.availableFloorMegabytes)/2/1.25));
- expect(soloGrantV1({hostMegabytes:host,availableMegabytes:20000},BASE).managedMegabytes).toBe(4214);
+ expect(soloGrantV1({hostMegabytes:host,availableMegabytes:20000},BASE).managedMegabytes).toBe(4505);
  expect(soloGrantV1({hostMegabytes:host,availableMegabytes:7599},BASE).managedMegabytes).toBe(2220);
  expect(soloGrantV1({hostMegabytes:host,availableMegabytes:1000},BASE)).toEqual({footprintMegabytes:0,managedMegabytes:0});
- expect(soloGrantV1({hostMegabytes:4000},BASE)).toEqual({footprintMegabytes:0,managedMegabytes:0});
+ expect(soloGrantV1({hostMegabytes:1500},BASE)).toEqual({footprintMegabytes:0,managedMegabytes:0});
  expect(Number.isFinite(soloGrantV1({hostMegabytes:65536},BASE).managedMegabytes)).toBe(true);
  expect(soloGrantV1({hostMegabytes:host},BASE).managedMegabytes).toBeGreaterThan(SIXTEEN.managedMegabytes);
 });
@@ -212,4 +212,12 @@ test("an owner this machine measured is judged by its own samples: the inflated 
  expect(classifyOwnersV1(["@semio-tech/repo-lib"],name=>estimateOwnerCostV1(merged,name,undefined,undefined,context),SIXTEEN).heavy).toEqual([]);
  expect(recordOwnerCostV1(emptyOwnerCostTableV1(),sample("x",1,1)).owners.x!.samples[0]!.hostMegabytes).toBeGreaterThan(0);
  expect(validate(merged)).toBe(true);
+});
+
+test("the grants follow the host: the parent and the system reserve shrink with a small host, so the whole plan that they leave is what one heavy owner may take alone, and the share of each parallel owner is a quarter of a 16 GB machine's on an 8 GB one",()=>{
+ const rows=[[8192,3072,1536],[16384,3072,2048],[32768,3072,2048],[6144,2304,1152]] as const;
+ for(const [host,parent,reserve] of rows){expect(ownerParentFootprintV1(host)).toBe(parent);expect(ownerSystemReserveV1(host)).toBe(reserve);expect(soloGrantV1({hostMegabytes:host},BASE).footprintMegabytes,String(host)).toBe(host-parent-reserve);}
+ expect(soloGrantV1({hostMegabytes:8192},BASE).managedMegabytes).toBe(1433);
+ expect(soloGrantV1({hostMegabytes:8192,availableMegabytes:4096},BASE).managedMegabytes).toBe(Math.floor((4096-1536)/2/1.25));
+ expect(ownerGrantV1(4096,BASE).managedMegabytes).toBe(409);
 });

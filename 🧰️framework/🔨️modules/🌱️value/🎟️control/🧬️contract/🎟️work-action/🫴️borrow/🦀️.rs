@@ -12,6 +12,8 @@ impl OriginalWorkBindingIdentity{
  pub fn validates_loan(&self,loan:&crate::OriginalWorkLoan<'_>)->Result<bool,ValueError>{loan.validate_context()?;Ok(self.issuer==loan.identity()&&self.source==loan.source_turn())}
  /// 🧷️ Matches a genuine effect from the same original Work owner across action boundaries.
  pub fn matches_effect(&self,effect:&RetainedAllocationEffect<'_>)->bool{let action=effect.work_identity().action_identity();self.scope==action.scope&&self.issuer==action.issuer&&self.source==effect.work_source_turn()}
+ /// 🔗️ Matches a genuine effect of the same Source dispatch although each effect opens its own Work issuer and scope, so a resident owner captured by one turn's effect retires under a later turn's.
+ pub fn matches_source(&self,effect:&RetainedAllocationEffect<'_>)->bool{self.source==effect.work_source_turn()}
 
 }
 trait Port{

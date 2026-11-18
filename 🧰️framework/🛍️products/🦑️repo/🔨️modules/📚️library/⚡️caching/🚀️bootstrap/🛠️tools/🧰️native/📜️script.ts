@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {join, resolve} from "node:path";
 import {createIssuedResourceControlV1, receiveScriptProcessInvocation, Script, ScriptRouter} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {withResourceLeases} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
@@ -22,7 +23,7 @@ export class PrepareScript extends Script {
       await store.recheck();
       if (store.root !== repositoryCachePartitionRootV1(workspace, "tools")) throw new Error(toolchainMessageV1("directory", {path: store.root}));
       const signal = actual.signal;
-      await withResourceLeases({directory: join(workspace, ".cache/b/l/m/data"), signal, control: actual, resources: [{resource: "native-tools:v1", mode: "exclusive"}]}, async () => {
+      await withResourceLeases({directory: machinePathV1(workspace, ".cache/b/l/m/data"), signal, control: actual, resources: [{resource: "native-tools:v1", mode: "exclusive"}]}, async () => {
         await provisionNativeToolsV1(NATIVE_TOOL_IDS_V1, store.root, ownedNativeToolPortV1(store.environment, actual), signal);
       });
     });

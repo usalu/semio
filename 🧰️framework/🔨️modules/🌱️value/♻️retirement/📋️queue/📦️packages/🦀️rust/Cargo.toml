@@ -30,6 +30,7 @@ semio-framework-value-paged-list = { path="../../../../📋️list/📦️packag
 serde_json = { workspace = true }
 semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-value-factory = { path = "../../../🏭️factory/📦️packages/🦀️rust" }
+semio-framework-value-clone-source-testing = { path = "../../../../🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }
 semio-framework-value-testing-allocator = { path = "../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 semio-framework-value-testing-effect-bank = { path = "../../../../🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
 

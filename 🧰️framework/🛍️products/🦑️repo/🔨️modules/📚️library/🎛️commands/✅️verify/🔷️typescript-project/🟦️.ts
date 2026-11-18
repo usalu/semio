@@ -4,12 +4,14 @@
  * @see 📜️script.ts
  */
 
+import{machinePathV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { totalmem } from "node:os";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type ts from "typescript";
+import { typescriptCompilerFileV1, typescriptCompilerV1 } from "../../../🏗️build/🚀️bootstrap/🔷️typescript-compiler/🟨️.mjs";
 import { GlobV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🌐️glob/🟦️.ts";
 import { isMainModuleV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
 import { runtimeTypeEnvironmentV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
@@ -213,7 +215,7 @@ export function typescriptProjectDocument(roots: readonly string[], toRoot: stri
 
 /** 📂️ Default home of the generated project and its logs: the gitignored `.cache` of the checkout. */
 function defaultProjectFolder(root: string): string {
-  return join(root, ".cache", "semio", "typescript");
+  return machinePathV1(root, ".cache", "semio", "typescript");
 }
 
 /** 📃️ Reads a root list file: one repo-relative or absolute path per line, blank lines and `#` lines skipped, absolute paths below the checkout made relative. */
@@ -273,7 +275,7 @@ export function summarizeTypescriptSyntaxFiles(log: string): TypescriptSyntaxFil
 
 /** 🧪️ The child: type-checks one project through the compiler API, writes every diagnostic in `tsc --pretty false` spelling to `logPath` and the syntax errors alone to `syntaxLogPath`; a file that does not parse is reported but not checked semantically, every other file is. Returns the `tsc` exit status (0 clean, 2 diagnostics). */
 async function checkTypescriptProjectInChild(projectPath: string, logPath: string, syntaxLogPath: string): Promise<number> {
-  const typescript: typeof ts = (await import("typescript")).default;
+  const typescript = typescriptCompilerV1() as unknown as typeof ts;
   const configHost: ts.ParseConfigFileHost = {
     ...typescript.sys,
     onUnRecoverableConfigFileDiagnostic: (diagnostic) => {
@@ -302,7 +304,7 @@ async function checkTypescriptProjectInChild(projectPath: string, logPath: strin
 /** ⏱️ Type-checks `projectPath` in a Node child with the given heap, writing every diagnostic to `logPath` and the syntax errors to `syntaxLogPath`; heartbeat on stderr, interrupts are forwarded, so a long check can be cancelled. Resolves to the `tsc`-style exit status (0 clean, 2 diagnostics). */
 export function runTypescriptCompiler(root: string, projectPath: string, logPath: string, syntaxLogPath: string, heapMegabytes: number, timeoutMinutes: number): Promise<number> {
   try {
-    createRequire(import.meta.url).resolve("typescript");
+    typescriptCompilerFileV1();
   } catch {
     throw refuseVerifyV1("failed","typescript.the-package-is-not-installed",{tag:String(TYPESCRIPT_TAG),url:String(fileURLToPath(import.meta.url))});
   }

@@ -1,0 +1,152 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "A worker that makes itself ready: the numbers of the loop, the stages with what each depends on, the refusal texts and the status file `<store>/v1/origins/<origin>/ready.json`.",
+  "definitions": {
+    "Hex": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "Policy": {
+      "const": {
+        "version": 1,
+        "statusName": "ready.json",
+        "stateName": "state.json",
+        "humanName": "human.json",
+        "humanLegacyCommand": "native-bootstrap.sh",
+        "retryExit": 75,
+        "leaseName": "lease.json",
+        "markerName": "native-bootstrap.done",
+        "directory": [".cache", "f", "ready"],
+        "backoffInitialMilliseconds": 30000,
+        "backoffMaximumMilliseconds": 1200000,
+        "backoffJitterBasisPoints": 1000,
+        "memoryPollMilliseconds": 60000,
+        "observePollMilliseconds": 30000,
+        "idlePollMilliseconds": 120000,
+        "statusIntervalMilliseconds": 5000,
+        "leaseRenewMilliseconds": 10000,
+        "leaseStaleMilliseconds": 60000,
+        "humanFreshMilliseconds": 90000,
+        "humanMaximumMilliseconds": 7200000,
+        "graceMilliseconds": 10000,
+        "samplerMilliseconds": 5000,
+        "pollMilliseconds": 250,
+        "progressMilliseconds": 2000,
+        "inflightName": "running.json",
+        "cancelName": "cancel",
+        "tailBytes": 16384,
+        "mirrorLines": 200,
+        "mirrorLineCharacters": 400,
+        "mirrorBytes": 65536,
+        "mirrorMilliseconds": 10000,
+        "timingsKept": 40,
+        "mirrorPrefix": "ready-log-",
+        "timingsName": "ready-timings.json",
+        "memoryFloorMegabytes": 1536,
+        "megabytesPerJob": 1536,
+        "tailLines": 20,
+        "tailCharacters": 300,
+        "serverSuffix": "-server",
+        "offEnvironment": "SEMIO_READY",
+        "languageEnvironment": "SEMIO_LANGUAGE",
+        "repoNames": {"unix": "repo", "windows": "repo.exe"},
+        "repoDirectories": {"unix": [".local/bin", ".local/share/semio/launcher/bin"], "windows": [".local/bin", "AppData/Local/semio/launcher/bin"]},
+        "launcherEnvironment": "LOCALAPPDATA",
+        "locale": {"macos": "en_US.UTF-8", "linux": "C.UTF-8"},
+        "pathDirectories": [".local/bin", ".cargo/bin", ".local/share/semio/launcher/bin"],
+        "systemPath": {"unix": ["/usr/local/bin", "/usr/bin", "/bin", "/usr/sbin", "/sbin", "/opt/homebrew/bin"], "windows": []},
+        "droppedEnvironment": ["SEMIO_REMOTE_CACHE_ENDPOINT", "SEMIO_REMOTE_CACHE_ACCESS", "SEMIO_REMOTE_CACHE_INSTANCE", "SEMIO_REMOTE_CACHE_TOKEN", "SEMIO_FLEET_CACHE_ENDPOINT"],
+        "bootstrap": {
+          "unix": ["🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "🔩️native", "🥾️bootstrap", "🐚️.sh"],
+          "windows": ["🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "🔩️native", "🥾️bootstrap", "🔵️.ps1"]
+        }
+      }
+    },
+    "Human": {"type": "object", "additionalProperties": false, "required": ["version", "pid", "startedMs"], "properties": {"version": {"const": 1}, "pid": {"type": "integer", "minimum": 1}, "startedMs": {"type": "integer", "minimum": 1}}},
+    "Stages": {
+      "const": [
+        {"name": "native", "kind": "bootstrap", "arguments": ["setup"], "timeoutMilliseconds": 7200000, "inputs": ["🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🧬️schema/🔣️.json", "global.json"], "bootstrapInput": true},
+        {"name": "repo-mcp", "kind": "repo", "arguments": ["run", "repo-mcp:install"], "timeoutMilliseconds": 3600000, "inputs": [], "bootstrapInput": false},
+        {"name": "dependencies", "kind": "repo", "arguments": ["dependencies", "sync", "--all"], "timeoutMilliseconds": 3600000, "inputs": ["bun.lock", "package.json"], "bootstrapInput": false},
+        {"name": "tools", "kind": "repo", "arguments": ["tools", "setup", "all"], "timeoutMilliseconds": 3600000, "inputs": ["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧰️tool-setup/🔣️.json", "package.json"], "bootstrapInput": false},
+        {"name": "workspace", "kind": "repo", "arguments": ["run", "workspace:setup"], "timeoutMilliseconds": 14400000, "inputs": [], "bootstrapInput": false}
+      ]
+    },
+    "Texts": {
+      "const": {
+        "en": {
+          "ready": "Ready: every stage is current.",
+          "human-running": "A person is running the setup on this machine; this machine only observes.",
+          "lease-held": "Another runner on this machine (process {holder}) holds the setup lease; this runner waits and observes.",
+          "memory-low": "Not enough free memory for stage {stage} ({available} MB free, {needed} MB needed); waiting.",
+          "stage-failed": "Stage {stage} failed with exit status {exit}; retrying with back-off.",
+          "stage-timeout": "Stage {stage} did not finish in time and was stopped; retrying with back-off.",
+          "stage-stalled": "Stage {stage} showed nothing new for {minutes} minutes; its whole process tree was stopped and the stage starts again at once (not counted as a failure).",
+          "spawn-failed": "Stage {stage} could not be started; retrying with back-off.",
+          "interrupted": "Stage {stage} was stopped before it finished.",
+          "server": "The group server is never set up by this service."
+        },
+        "de": {
+          "ready": "Bereit: jede Stufe ist aktuell.",
+          "human-running": "Eine Person führt das Setup auf dieser Maschine aus; diese Maschine beobachtet nur.",
+          "lease-held": "Ein anderer Läufer auf dieser Maschine (Prozess {holder}) hält die Setup-Sperre; dieser Läufer wartet und beobachtet.",
+          "memory-low": "Zu wenig freier Speicher für Stufe {stage} ({available} MB frei, {needed} MB nötig); wartet.",
+          "stage-failed": "Stufe {stage} schlug mit Exit-Status {exit} fehl; neuer Versuch mit Wartezeit.",
+          "stage-timeout": "Stufe {stage} wurde nicht rechtzeitig fertig und wurde gestoppt; neuer Versuch mit Wartezeit.",
+          "stage-stalled": "Stufe {stage} zeigte {minutes} Minuten lang nichts Neues; ihr ganzer Prozessbaum wurde beendet und die Stufe startet sofort neu (zählt nicht als Fehler).",
+          "spawn-failed": "Stufe {stage} konnte nicht gestartet werden; neuer Versuch mit Wartezeit.",
+          "interrupted": "Stufe {stage} wurde vor dem Ende gestoppt.",
+          "server": "Der Gruppenserver wird von diesem Dienst nie eingerichtet."
+        }
+      }
+    },
+    "Reasons": {
+      "const": {
+        "en": {"first-run": "First run of stage {stage} on this machine.", "inputs-changed": "Inputs of stage {stage} changed since it last succeeded.", "previous-failed": "Stage {stage} failed before; retrying after the back-off.", "stalled": "Stage {stage} showed nothing new for 10 minutes and was stopped; started again at once.", "adopted": "Adopted stage {stage}, which was already running; not restarted.", "binary-missing": "The repo binary is missing, starting again at stage {stage}."},
+        "de": {"first-run": "Erster Lauf der Stufe {stage} auf dieser Maschine.", "inputs-changed": "Die Eingaben der Stufe {stage} haben sich seit ihrem letzten Erfolg geändert.", "previous-failed": "Stufe {stage} schlug zuvor fehl; neuer Versuch nach der Wartezeit.", "stalled": "Stufe {stage} zeigte 10 Minuten lang nichts Neues und wurde beendet; sofort neu gestartet.", "adopted": "Stufe {stage} übernommen, sie lief schon; nicht neu gestartet.", "binary-missing": "Das repo-Programm fehlt, Neustart bei Stufe {stage}."}
+      }
+    },
+    "Reason": {
+      "type": "object", "additionalProperties": false, "required": ["code", "en", "de"],
+      "properties": {"code": {"enum": ["first-run", "inputs-changed", "previous-failed", "stalled", "adopted", "binary-missing"]}, "en": {"type": "string"}, "de": {"type": "string"}}
+    },
+    "Refusal": {
+      "type": "object", "additionalProperties": false, "required": ["code", "en", "de"],
+      "properties": {"code": {"enum": ["human-running", "lease-held", "memory-low", "stage-failed", "stage-timeout", "stage-stalled", "spawn-failed", "interrupted", "server"]}, "en": {"type": "string"}, "de": {"type": "string"}}
+    },
+    "Timings": {
+      "description": "Per-stage timings of one worker in the store under `v1/origins/<origin>/ready-timings.json`: the last runs, newest last.",
+      "type": "object", "additionalProperties": false, "required": ["version", "origin", "runs", "updatedMs"],
+      "properties": {
+        "version": {"const": 1}, "origin": {"type": "string"}, "updatedMs": {"type": "integer"},
+        "runs": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["stage", "startedMs", "endedMs", "seconds", "exit", "outcome", "peakMegabytes", "attempts", "digest"],
+          "properties": {"stage": {"type": "string"}, "startedMs": {"type": "integer"}, "endedMs": {"type": "integer"}, "seconds": {"type": "integer"}, "exit": {"type": ["integer", "null"]}, "outcome": {"enum": ["ok", "stage-failed", "stage-timeout", "stalled", "spawn-failed", "interrupted"]}, "peakMegabytes": {"type": ["integer", "null"]}, "attempts": {"type": "integer"}, "digest": {"type": "string"}}}}
+      }
+    },
+    "Status": {
+      "description": "What a worker says about its readiness, in the store of the fleet under `v1/origins/<origin>/ready.json`, replaced atomically.",
+      "type": "object", "additionalProperties": false,
+      "required": ["version", "origin", "host", "platform", "pid", "state", "digest", "ready", "stage", "stageIndex", "stageCount", "attempts", "exit", "refusal", "reason", "peakMegabytes", "tail", "nextAttemptMs", "readyMs", "startedMs", "updatedMs"],
+      "properties": {
+        "version": {"const": 1},
+        "origin": {"type": "string"},
+        "host": {"type": "string"},
+        "platform": {"enum": ["linux", "macos", "windows"]},
+        "pid": {"type": "integer"},
+        "state": {"enum": ["ready", "running", "waiting", "backoff", "observing", "server"]},
+        "digest": {"$ref": "#/definitions/Hex"},
+        "ready": {"type": "boolean"},
+        "stage": {"type": ["string", "null"]},
+        "stageIndex": {"type": "integer", "minimum": 0},
+        "stageCount": {"type": "integer", "minimum": 0},
+        "attempts": {"type": "integer", "minimum": 0},
+        "exit": {"type": ["integer", "null"]},
+        "refusal": {"anyOf": [{"type": "null"}, {"$ref": "#/definitions/Refusal"}]},
+        "reason": {"anyOf": [{"type": "null"}, {"$ref": "#/definitions/Reason"}]},
+        "peakMegabytes": {"type": ["integer", "null"]},
+        "tail": {"type": "array", "items": {"type": "string"}},
+        "nextAttemptMs": {"type": ["integer", "null"]},
+        "readyMs": {"type": ["integer", "null"]},
+        "startedMs": {"type": "integer"},
+        "updatedMs": {"type": "integer"}
+      }
+    }
+  }
+}

@@ -41,6 +41,8 @@ impl NativeEncodeEffectState{
  pub fn allocation_status(&self)->NativeEncodeAllocationOutcomeStatus{native_encode_allocation_outcome_status(&self.outcome)}
  /// 👁️ Borrows the retained original settlement status.
  pub fn settlement_status(&self)->NativeEncodeEffectSettlementStatus{native_encode_effect_settlement_status(&self.settlement)}
+ /// 🧮️ Moves the performed work a completed action claimed into this marker's report, so a finished marker may retire; the action's own receipt already carried that work to its caller.
+ pub fn settle_claimed_work(&mut self)->Result<(),ValueError>{self.view().claim_producer_work().map(drop)}
  /// 👁️ Reborrows the same retained action and allocation slots.
  pub fn view(&mut self)->NativeEncodeEffectProgress<'_>{NativeEncodeEffectProgress{producer_refusal:&mut self.producer_refusal,work_claim:&mut self.work_claim,actual_work:&mut self.actual_work,work_reported:&mut self.work_reported,partial_outcome:&mut self.partial_outcome,local_binding:&mut self.local_binding,request:&mut self.request,checkpoint_reply:&mut self.checkpoint_reply,producer_settled:&mut self.producer_settled,quote_started:&mut self.quote_started,checkpoint_ready:&mut self.checkpoint_ready,checkpoint:&mut self.checkpoint,selection:&mut self.selection,producer_ready:&mut self.producer_ready,native_outcome:&mut self.native_outcome,claim_refusal:&mut self.claim_refusal,producer:&mut self.producer,performed_receipt:&mut self.performed_receipt,performed:&mut self.performed,physical:&mut self.physical,actual:&mut self.actual,attempted_work:&mut self.attempted_work,allocation:&mut self.allocation,outcome:&mut self.outcome,settlement:&mut self.settlement}}
 }

@@ -9063,6 +9063,7 @@ dependencies = [
  "semio-plugin-decl-tool-contract",
  "semio-plugin-ownership",
  "semio-plugin-retained-command",
+ "semio-ui-contract-values",
  "serde",
  "serde_json",
 ]
@@ -20098,6 +20099,7 @@ name = "semio-ui-contract-values"
 version = "0.1.0"
 dependencies = [
  "semio-framework-job",
+ "semio-framework-job-testing-caller",
  "semio-framework-value",
  "semio-framework-value-native-owned",
  "semio-framework-value-persistent",

@@ -2,6 +2,7 @@ import type { IntroductionGesture, IntroductionCursor, IntroductionKeyModifier, 
 import * as React from "react";
 import { reactHostPort } from "@semio-tech/ui/elements/Ports/react";
 import { useShellScopeOptional } from "@semio-tech/ui/elements/ShellScope";
+import { useSharedBorderFrameRef } from "@semio-tech/ui/elements/WindowChrome";
 import { cn } from "@semio-tech/ui/modules/class-name-composition";
 import { INTRODUCTION_DEMO_IDLE_THRESHOLD_MS, type IntroductionResolvedPoint, resolveIntroductionPoint, useIntroductionPointerIdle } from "../🧭️introduction-resolve/🟦️.ts";
 import { introductionPointRelativeToHost } from "../📐️introduction-geometry/🟦️.ts";
@@ -123,6 +124,7 @@ export const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstration
   const overlayRef = reactHostPort.useRef<HTMLDivElement | null>(null);
   const ghostRef = reactHostPort.useRef<HTMLDivElement | null>(null);
   const calloutRef = reactHostPort.useRef<HTMLDivElement | null>(null);
+  const chipsRef = useSharedBorderFrameRef<HTMLDivElement>();
   const trailPathRef = reactHostPort.useRef<SVGPathElement | null>(null);
   const rippleHostRef = reactHostPort.useRef<HTMLDivElement | null>(null);
   const shellScope = useShellScopeOptional();
@@ -407,26 +409,26 @@ export const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstration
           <path className="introduction-demo-mouse-seam" d="M8 28H40" />
           <path className="introduction-demo-mouse-wheel" d="M24 14v10" />
         </svg>
-        <div className="introduction-demo-callout-chips">
-          <kbd className="introduction-demo-callout-chip" data-chip="zoom-in">
+        <div ref={chipsRef} className="introduction-demo-callout-chips" data-shared-border-frame="" data-shared-border-edges="top right bottom left" data-orientation="vertical">
+          <kbd className="introduction-demo-callout-chip" data-shared-border-cell="" data-chip="zoom-in">
             +
           </kbd>
-          <kbd className="introduction-demo-callout-chip" data-chip="zoom-out">
+          <kbd className="introduction-demo-callout-chip" data-shared-border-cell="" data-chip="zoom-out">
             −
           </kbd>
-          <kbd className="introduction-demo-callout-chip" data-chip="double">
+          <kbd className="introduction-demo-callout-chip" data-shared-border-cell="" data-chip="double">
             2×
           </kbd>
-          <kbd className="introduction-demo-callout-chip" data-chip="alt">
+          <kbd className="introduction-demo-callout-chip" data-shared-border-cell="" data-chip="alt">
             Alt
           </kbd>
-          <kbd className="introduction-demo-callout-chip" data-chip="shift">
+          <kbd className="introduction-demo-callout-chip" data-shared-border-cell="" data-chip="shift">
             Shift
           </kbd>
-          <kbd className="introduction-demo-callout-chip" data-chip="control">
+          <kbd className="introduction-demo-callout-chip" data-shared-border-cell="" data-chip="control">
             Ctrl
           </kbd>
-          <kbd className="introduction-demo-callout-chip" data-chip="meta">
+          <kbd className="introduction-demo-callout-chip" data-shared-border-cell="" data-chip="meta">
             ⌘️
           </kbd>
         </div>

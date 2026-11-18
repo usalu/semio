@@ -226,7 +226,7 @@ describe("🧍️ cast export of plan casts", { timeout: 60_000 }, () => {
       const figure = evaluate(catalogAsset(cast.asset), { kind: "pose", pose: cast.pose }, select(cast.scale)).shapes.elevation.filter((evaluated) => evaluated.shape.role !== "ground").flatMap((evaluated) => evaluated.rings.flat());
       const height = Math.max(...figure.map((p) => p.y)) - Math.min(...figure.map((p) => p.y));
       expect(Math.abs(index.logical.heightM - height), `${id}: heightM is the physical figure height in the side elevation, whatever the viewpoint of the cast`).toBeLessThan(0.01);
-      if (index.viewpoint === "plan") expect(index.logical.heightM, `${id}: heightM is the physical figure height, not the plan depth`).toBeGreaterThan(depth + 0.3);
+      if (index.viewpoint === "plan") expect(Math.abs(index.logical.heightM - depth), `${id}: heightM is the physical figure height, not the plan depth (a 1.5 m city car is lower than it is wide, so the two differ in either direction)`).toBeGreaterThan(0.15);
       else expect(Math.abs(index.logical.heightM - depth), id).toBeLessThan(0.15);
     }
   });

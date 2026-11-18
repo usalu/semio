@@ -8,12 +8,12 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { loadingBorderClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️.ts";
 import { shellFloorFillClass } from "../../🔨️modules/🏠️shell-floor-presentation/🟦️.ts";
 import { WindowChrome, windowChromeTitleChipClass } from "../🗂️WindowChrome/🟦️.tsx";
 import { windowBodyFrameClass } from "../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
 import { LevelProvider, SurfaceScope, useSurface } from "../🌈️Surface/🟦️.tsx";
 import { SceneSkeleton } from "../🎬️Scene/🟦️.tsx";
+import { SharedBorderRow, SharedBorderRowCell } from "../🪢️SharedBorderRow/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🦴️Skeletons
@@ -25,9 +25,9 @@ export const skeletonPulseClass = "animate-pulse rounded bg-muted-foreground/20 
 export const SkeletonBlock: React.FC<{ className?: string }> = ({ className = "" }) => <div className={cn(skeletonPulseClass, className)} aria-hidden />;
 
 const SkeletonLoadingRow: React.FC<{ readonly name: string }> = ({ name }) => (
-  <div className={cn("flex items-center gap-single p-single opacity-50 pointer-events-none", loadingBorderClass)}>
+  <SharedBorderRowCell data-shared-border-state="loading" className="opacity-50 pointer-events-none">
     <span className="flex-1 truncate">{name}</span>
-  </div>
+  </SharedBorderRowCell>
 );
 
 export type ElementSkeletonKind =
@@ -84,19 +84,19 @@ export function elementSkeleton(kind: ElementSkeletonKind): React.ReactElement {
       return <SkeletonBlock className="h-medium w-full" />;
     case "field":
       return (
-        <div className="flex flex-col gap-single w-full">
-          <SkeletonBlock className="h-3 w-24" />
-          <SkeletonBlock className="h-medium w-full" />
-        </div>
+        <SharedBorderRow orientation="vertical" className="w-full">
+          <SharedBorderRowCell><SkeletonBlock className="h-3 w-24" /></SharedBorderRowCell>
+          <SharedBorderRowCell className="flex-col items-stretch"><SkeletonBlock className="h-medium w-full" /></SharedBorderRowCell>
+        </SharedBorderRow>
       );
     case "group":
     case "section":
       return (
-        <div className="flex flex-col gap-double w-full p-single">
-          <SkeletonBlock className="h-4 w-32" />
-          <SkeletonBlock className="h-medium w-full" />
-          <SkeletonBlock className="h-medium w-full" />
-        </div>
+        <SharedBorderRow orientation="vertical" className="w-full">
+          <SharedBorderRowCell><SkeletonBlock className="h-4 w-32" /></SharedBorderRowCell>
+          <SharedBorderRowCell className="flex-col items-stretch"><SkeletonBlock className="h-medium w-full" /></SharedBorderRowCell>
+          <SharedBorderRowCell className="flex-col items-stretch"><SkeletonBlock className="h-medium w-full" /></SharedBorderRowCell>
+        </SharedBorderRow>
       );
     case "stack":
       return (
@@ -124,11 +124,11 @@ export const WindowBodySkeleton: React.FC<{ className?: string }> = ({ className
 
 /** 🌳️ Panel tree placeholder while a tab body is refreshing. */
 export const PanelTreeSkeleton: React.FC<{ className?: string }> = ({ className = "" }) => (
-  <div className={cn("flex flex-col gap-single p-single w-full", className)} role="status" aria-busy="true">
+  <SharedBorderRow orientation="vertical" className={cn("w-full", className)} role="status" aria-busy="true">
     <SkeletonLoadingRow name="…" />
     <SkeletonLoadingRow name="…" />
     <SkeletonLoadingRow name="…" />
-  </div>
+  </SharedBorderRow>
 );
 
 const CanvasSkeletonWindow: React.FC<{ active?: boolean }> = ({ active = false }) => (
@@ -164,8 +164,8 @@ export const CanvasSkeleton: React.FC<{ className?: string; label?: string }> = 
   const floorClass = shellFloorFillClass(parent);
   return (
     <LevelProvider level="base">
-      <div className={cn("box-border flex h-full min-h-0 w-full flex-col overflow-hidden p-single", floorClass, className)} role="status" aria-busy="true" aria-label={label}>
-        <div className="flex h-full min-h-0 w-full flex-row gap-single">
+      <div className={cn("box-border flex h-full min-h-0 w-full flex-col overflow-hidden", floorClass, className)} role="status" aria-busy="true" aria-label={label}>
+        <div className="flex h-full min-h-0 w-full flex-row">
           <div className="flex min-h-0 min-w-0 flex-1 flex-col">
             <CanvasSkeletonWindow active />
           </div>

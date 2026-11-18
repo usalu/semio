@@ -20,6 +20,7 @@ export type ViewpointSelectorProps = {
   readonly names?: Readonly<Partial<Record<ViewpointKey, string>>>;
   readonly choices?: readonly ViewpointChoice[];
   readonly className?: string;
+  readonly inline?: boolean;
 };
 
 /** 📢️ What a screen reader hears when the choice changes. */
@@ -30,10 +31,13 @@ export function announcement(value: ViewpointChoice, language: Language, focus: 
 
 /** 🔭️ The selector. */
 export function ViewpointSelector(props: ViewpointSelectorProps): ReactElement {
-  const { value, language, onChange, resolutions, names, className, focus, choices = VIEWPOINT_CHOICES } = props;
+  const { value, language, onChange, resolutions, names, className, focus, inline, choices = VIEWPOINT_CHOICES } = props;
   return (
-    <div data-viewpoint-selector="" className={className}>
+    <>
       <Segmented
+        data={{ "data-viewpoint-selector": "" }}
+        {...(className === undefined ? {} : { className })}
+        {...(inline === undefined ? {} : { inline })}
         label={viewpointWord("viewpoints.label", language)}
         value={value}
         onChange={onChange}
@@ -49,6 +53,6 @@ export function ViewpointSelector(props: ViewpointSelectorProps): ReactElement {
       <span role="status" aria-live="polite" data-viewpoint-announcement="" className="sr-only">
         {announcement(value, language, focus)}
       </span>
-    </div>
+    </>
   );
 }

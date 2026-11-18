@@ -22,19 +22,19 @@
  * up, and when the time of a task runs out while another is shown, the run's polite status says so once. A timed run
  * can be submitted at any time; the confirmation names the tasks still open and where their clocks stand.
  *
- * @see ../../🎨️.css — `.course-run-head`, `.course-task`, `.course-clock`
+ * @see ../../🎨️.css — `.course-task`, `.course-clock`
  * @see https://www.w3.org/WAI/WCAG22/Understanding/timing-adjustable.html
  */
 
 import { AccessGate, clientAccess, useReleaseClock } from "../🔓️access/🟦️.tsx";
-import { memo, useCallback, useEffect, useId, useRef, useState, type CSSProperties, type ReactElement } from "react";
+import { memo, useCallback, useEffect, useId, useRef, useState, type CSSProperties, type ReactElement, type ReactNode } from "react";
 import { answerComplete, challengeRules, thinkingScope, type Answer, type Hint, type Id, type RunView, type SheetTask, type Slug } from "@semio-tech/course";
 import { TASK_KIND_LABELS, localized, type CourseLabelKey, type CourseLocale, type CourseText } from "../🌐️i18n/🟦️.ts";
 import { ClassificationTaskView } from "../🗂️classification/🟦️.tsx";
 import { SortingTaskView } from "../↕️sorting/🟦️.tsx";
 import { MatchingTaskView } from "../🃏️matching/🟦️.tsx";
 import { failureProblem, thrownProblem } from "../🪪️identity/🟦️.tsx";
-import { BodyButton, CardAction, CardIcon, Dialog, Glyph, IconLabel, LiveRegion, Mark, ProblemNote, CourseCard, TaskGlyph, cn, useAnnouncement, type Problem } from "../🪟️chrome/🟦️.tsx";
+import { BodyButton, CELL, CardAction, CardIcon, CardSection, Dialog, GROUP, Glyph, IconLabel, LiveRegion, Mark, ProblemNote, CourseCard, TaskGlyph, cn, useAnnouncement, type Problem } from "../🪟️chrome/🟦️.tsx";
 import type { CourseSession } from "../🧭️session/🟦️.ts";
 import type { CourseState } from "../🧭️session/🧮️state/🟦️.ts";
 import type { SessionFailure, SubmissionPhase } from "../🧭️session/📋️session-model/🟦️.ts";
@@ -185,25 +185,27 @@ export function TaskClock(props: {
   return (
     <>
       {stage === "closed" ? (
-        <div className="course-clock flex flex-col gap-single" data-clock={stage}>
-          <p className="course-prose m-0 text-sm leading-normal">{text("course.run.clockIntro")}</p>
-          <p className="m-0 text-sm font-semibold tabular-nums">{text("course.run.clockAllowed", { time: formatCountdown(seconds * 1000) })}</p>
-          <div className="flex flex-wrap items-center gap-double">
-            <BodyButton primary onClick={start}>
-              {text("course.run.clockStart")}
-            </BodyButton>
-            {starting === undefined ? null : (
-              <>
+        <div {...GROUP} {...CELL} className="course-clock flex flex-col" data-clock={stage}>
+          <CardSection className="gap-single">
+            <p className="course-prose m-0 text-sm leading-normal">{text("course.run.clockIntro")}</p>
+            <p className="m-0 text-sm font-semibold tabular-nums">{text("course.run.clockAllowed", { time: formatCountdown(seconds * 1000) })}</p>
+          </CardSection>
+          <BodyButton row primary onClick={start}>
+            {text("course.run.clockStart")}
+          </BodyButton>
+          {starting === undefined ? null : (
+            <>
+              <CardSection className="gap-single">
                 <progress aria-label={text("course.run.clockStarting")} className="course-progress" />
                 <span className="text-sm">{text("course.run.clockStarting")}</span>
-                <BodyButton onClick={() => starting.abort()}>{text("course.run.cancel")}</BodyButton>
-              </>
-            )}
-          </div>
-          {problem === undefined ? null : <ProblemNote problem={problem} text={text} />}
+              </CardSection>
+              <BodyButton row onClick={() => starting.abort()}>{text("course.run.cancel")}</BodyButton>
+            </>
+          )}
+          {problem === undefined ? null : <ProblemNote cell problem={problem} text={text} />}
         </div>
       ) : (
-        <p className="course-clock m-0 flex flex-col gap-single text-sm" data-clock={stage} role="timer">
+        <p {...CELL} className="course-clock m-0 flex flex-col gap-single text-sm" data-clock={stage} role="timer">
           <span className="font-semibold tabular-nums">
             <Mark symbol={CLOCK_SYMBOLS[stage]} />
             {stage === "up" ? (
@@ -305,7 +307,7 @@ type Submission = { readonly stage: "confirming" } | { readonly stage: "working"
  * as an answer when the lock comes; the polite status says that the time is up — after the clock's own announcements —
  * and whether something was lost, and the loss also shows under the clock. The interaction lies in the pets' topic of
  * the task (`<quiz>/<task>`), so its items mark themselves for the pets of their topic. */
-function TaskBody(props: { readonly session: CourseSession; readonly view: RunView; readonly task: SheetTask; readonly now: () => number; readonly onStarted: () => void; readonly text: CourseText; readonly locale: CourseLocale; readonly readOnly?: boolean }): ReactElement {
+function TaskBody(props: { readonly lead: ReactNode; readonly session: CourseSession; readonly view: RunView; readonly task: SheetTask; readonly now: () => number; readonly onStarted: () => void; readonly text: CourseText; readonly locale: CourseLocale; readonly readOnly?: boolean }): ReactElement {
   const { session, view, task, now, text, locale } = props;
   const opened = view.opened?.[task.id];
   const deadline = task.seconds === undefined || opened === undefined ? undefined : opened + task.seconds * 1000;
@@ -336,16 +338,19 @@ function TaskBody(props: { readonly session: CourseSession; readonly view: RunVi
   return (
     <>
       {task.seconds === undefined ? null : (
-        <div className="flex flex-col gap-single">
-          <TaskClock seconds={task.seconds} deadline={deadline} now={now} onStart={(signal) => session.openTask(view.run, task.id, signal)} onStarted={props.onStarted} announce={announce} text={text} locale={locale} />
-          {dropped ? <p className="m-0 text-xs text-muted-foreground">{text("course.task.dropped")}</p> : null}
-          <LiveRegion announcement={announcement} />
-        </div>
-      )}
-      {task.seconds !== undefined && opened === undefined ? null : (
         <>
-          <p className="course-prose m-0 text-sm leading-normal">{localized(task.prompt, locale)}</p>
-          <div className="course-task">
+          <TaskClock seconds={task.seconds} deadline={deadline} now={now} onStart={(signal) => session.openTask(view.run, task.id, signal)} onStarted={props.onStarted} announce={announce} text={text} locale={locale} />
+          {dropped ? <CardSection><p className="m-0 text-xs text-muted-foreground">{text("course.task.dropped")}</p></CardSection> : null}
+          <LiveRegion announcement={announcement} />
+        </>
+      )}
+      {task.seconds !== undefined && opened === undefined ? <CardSection>{props.lead}</CardSection> : (
+        <>
+          <CardSection>
+            {props.lead}
+            <p className="course-prose m-0 text-sm leading-normal">{localized(task.prompt, locale)}</p>
+          </CardSection>
+          <div {...GROUP} {...CELL} className="course-task">
             <PetTopic topic={petProp(view.quiz, task.id)}>
               <SteadyTaskView task={task} answer={view.answers[task.id]} onAnswer={answer} onDropped={drop} hints={view.hints?.[task.id]} locked={locked} text={text} locale={locale} />
             </PetTopic>
@@ -429,8 +434,9 @@ export function RunScreen(props: { readonly session: CourseSession; readonly sta
 
   return (
     <AccessGate course={state.course} page={view.quiz} at={at} locale={locale} text={text}>
-    <div className="course-run flex flex-col gap-double">
+    <div className="course-run flex flex-col">
       <CourseCard
+        flush
         id={`${scope}-title`}
         card="run"
         anchor={PRESENCE_ANCHORS.run}
@@ -444,13 +450,15 @@ export function RunScreen(props: { readonly session: CourseSession; readonly sta
           </CardAction>
         }
       >
-        <p className="course-prose m-0 text-sm leading-normal text-muted-foreground">{localized(view.sheet.description, locale)}</p>
-        <p className="m-0 text-sm font-semibold">{text("course.run.challenge", { challenge: text(CHALLENGE_LABELS[view.sheet.challenge]) })}</p>
-        <div className="course-run-head">
-          <nav aria-label={text("course.run.tasks")} className="min-w-0">
-            <ol role="list" className="course-steps m-0 list-none p-0">
-              {tasks.map((entry, position) => (
-                <li key={entry.id}><AccessGate course={state.course} page={view.quiz} task={entry.id} at={at} locale={locale} text={text}>
+        <CardSection>
+          <p className="course-prose m-0 text-sm leading-normal text-muted-foreground">{localized(view.sheet.description, locale)}</p>
+          <p className="m-0 text-sm font-semibold">{text("course.run.challenge", { challenge: text(CHALLENGE_LABELS[view.sheet.challenge]) })}</p>
+        </CardSection>
+        <nav aria-label={text("course.run.tasks")} {...CELL} className="min-w-0">
+          <ol role="list" {...GROUP} className="course-steps m-0 list-none p-0">
+            {tasks.map((entry, position) => (
+              <li key={entry.id} {...CELL} data-active={position === index ? "true" : undefined}>
+                <AccessGate course={state.course} page={view.quiz} task={entry.id} at={at} locale={locale} text={text}>
                   <button
                     type="button"
                     data-icon-host=""
@@ -458,7 +466,7 @@ export function RunScreen(props: { readonly session: CourseSession; readonly sta
                     disabled={!clientAccess(state.course, view.quiz, at, entry.id)}
                     onClick={() => go(position)}
                     className={cn(
-                      "course-step course-target min-w-0 cursor-pointer border border-normal px-double py-single text-left text-sm transition-colors",
+                      "course-step course-target min-w-0 cursor-pointer px-double py-single text-left text-sm transition-colors",
                       position === index ? "bg-active-base text-active-foreground" : "text-foreground hover:bg-hover-interactive-fill",
                     )}
                   >
@@ -473,26 +481,33 @@ export function RunScreen(props: { readonly session: CourseSession; readonly sta
                       {entry.seconds === undefined ? null : <> · {clockOf(entry)}</>}
                     </span>
                   </button>
-                </AccessGate></li>
-              ))}
-            </ol>
-          </nav>
-          <div className="course-run-progress text-sm">
-            <progress max={tasks.length} value={done} aria-labelledby={`${scope}-progress`} className="course-progress" />
-            <span id={`${scope}-progress`}>{text("course.run.progress", { done, total: tasks.length })}</span>
-          </div>
-        </div>
+                </AccessGate>
+              </li>
+            ))}
+          </ol>
+        </nav>
+        <CardSection className="course-run-progress flex-row items-center text-sm">
+          <progress max={tasks.length} value={done} aria-labelledby={`${scope}-progress`} className="course-progress" />
+          <span id={`${scope}-progress`}>{text("course.run.progress", { done, total: tasks.length })}</span>
+        </CardSection>
         {ready ? null : (
-          <p id={`${scope}-hint`} className="m-0 text-xs text-muted-foreground">
-            {text("course.run.submitHint")}
-          </p>
+          <CardSection>
+            <p id={`${scope}-hint`} className="m-0 text-xs text-muted-foreground">
+              {text("course.run.submitHint")}
+            </p>
+          </CardSection>
         )}
-        {problem === undefined ? null : <ProblemNote problem={problem} text={text} />}
-        {timed && view.status === "open" ? <ClockWatch tasks={tasks} opened={view.opened} shown={task?.id} now={now} text={text} /> : null}
+        {problem === undefined ? null : <ProblemNote cell problem={problem} text={text} />}
+        {timed && view.status === "open" ? (
+          <CardSection>
+            <ClockWatch tasks={tasks} opened={view.opened} shown={task?.id} now={now} text={text} />
+          </CardSection>
+        ) : null}
       </CourseCard>
       {task === undefined ? null : (
         <AccessGate course={state.course} page={view.quiz} task={task.id} at={at} locale={locale} text={text}>
         <CourseCard
+          flush
           id={`${scope}-task`}
           card="task"
           anchor={PRESENCE_ANCHORS.task(task.id)}
@@ -511,13 +526,19 @@ export function RunScreen(props: { readonly session: CourseSession; readonly sta
             </CardAction>
           }
         >
-          <p className="m-0 text-xs text-muted-foreground">
-            {text("course.run.task", { index: index + 1, total: tasks.length })} · {text(TASK_KIND_LABELS[task.kind])} · {complete[index] ? text("course.run.complete") : text("course.run.incomplete")}
-          </p>
-          <TaskBody key={task.id} session={session} view={view} task={task} now={now} onStarted={() => taskHeading.current?.focus()} text={text} locale={locale} readOnly={props.readOnly} />
+          <TaskBody
+            lead={
+              <p className="m-0 text-xs text-muted-foreground">
+                {text("course.run.task", { index: index + 1, total: tasks.length })} · {text(TASK_KIND_LABELS[task.kind])} · {complete[index] ? text("course.run.complete") : text("course.run.incomplete")}
+              </p>
+            }
+            key={task.id} session={session} view={view} task={task} now={now} onStarted={() => taskHeading.current?.focus()} text={text} locale={locale} readOnly={props.readOnly}
+          />
           <CrowdDoor gate={gate} onAsk={() => session.askCrowd(view.quiz)} onUnask={() => session.unaskCrowd(view.quiz)} text={text} />
           {crowdShown(gate) ? (
-            <TaskFigures task={task} title={localized(task.title, locale)} crowd={state.crowds[view.quiz]} thinking={state.course === undefined ? [] : thinking.get(thinkingScope(state.course.id, view.quiz))} answer={view.answers[task.id]} text={text} locale={locale} />
+            <CardSection>
+              <TaskFigures task={task} title={localized(task.title, locale)} crowd={state.crowds[view.quiz]} thinking={state.course === undefined ? [] : thinking.get(thinkingScope(state.course.id, view.quiz))} answer={view.answers[task.id]} text={text} locale={locale} />
+            </CardSection>
           ) : null}
         </CourseCard>
         </AccessGate>

@@ -12,7 +12,7 @@
     },
     "cases": {
       "type": "array",
-      "minItems": 8,
+      "minItems": 10,
       "items": {
         "type": "object",
         "required": [
@@ -35,7 +35,7 @@
           "outcomes": {
             "type": "array",
             "minItems": 1,
-            "maxItems": 9,
+            "maxItems": 128,
             "items": {
               "enum": [
                 "ready",

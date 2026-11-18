@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import{createIssuedResourceControlV1,requireIssuedResourceControlInvocationV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{withNxSdkDerivativeReaderV1}from"../📦️sdk/📥️source/🔗️derivative/📥️reader/🟦️.ts";
 import {repositoryCachePartitionRootV1} from "../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
@@ -19,7 +20,7 @@ export type NxToolingUseAuthorityV1={readonly identity:string;readonly toolkitRo
 export type NxToolingUseWitnessV1={readonly version:1;readonly identity:string;readonly toolkitRoot:string;readonly processId:number;readonly nonce:string;readonly startedAt:number;readonly original:ScriptProcessEnvelope;readonly endpoint:{readonly host:"127.0.0.1";readonly port:number}};
 
 /** 🗂️ Names the shared physical toolkit lifetime namespace for one workspace. */
-export function nxToolingUseStorageV1(root:string):NxToolingUseStorageV1{return {directory:join(root,".cache/b/l/m/data"),witnessDirectory:join(repositoryCachePartitionRootV1(root,"tools"),"use")};}
+export function nxToolingUseStorageV1(root:string):NxToolingUseStorageV1{return {directory:machinePathV1(root,".cache/b/l/m/data"),witnessDirectory:join(repositoryCachePartitionRootV1(root,"tools"),"use")};}
 
 /** 🎟️ Keeps one exact immutable toolkit in use through its original owned operation. */
 export async function withNxToolingUseV1<T>(storage:NxToolingUseStorageV1,authority:NxToolingUseAuthorityV1,phaseControl:ResourceLeaseControl,run:(witness:NxToolingUseWitnessV1,actualPhase:ResourceLeaseControl)=>Promise<T>):Promise<T>{

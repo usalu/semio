@@ -23,7 +23,7 @@ import { UI_MOBILE_MEDIA_QUERY, UI_TABLET_MEDIA_QUERY, elementsSurfaceDeviceForL
 import { isSlug, roomScope, type Challenge, type Slug } from "@semio-tech/course";
 import { COURSE_LOCALES, isCourseLocale, courseText, type CourseLabelKey, type CourseLocale, type CourseText } from "../🌐️i18n/🟦️.ts";
 import { isChallenge, isRecord, type LocalStore } from "../💾️persistence/🟦️.ts";
-import { BodyButton, CardAction, CardIcon, PageFrame, CourseCard, Segments, cn, type PaneView } from "../🪟️chrome/🟦️.tsx";
+import { BodyButton, CELL, CardAction, CardIcon, GROUP, PageFrame, CourseCard, RowList, Segments, cn, type PaneView } from "../🪟️chrome/🟦️.tsx";
 import { PRESENCE_ANCHORS } from "../👥️presence/👁️view/🟦️.ts";
 import { PanePeers } from "../👥️presence/🟦️.tsx";
 import { OTHERS_CHOICES, type OthersChoice } from "../🗳️crowd/🟦️.tsx";
@@ -164,9 +164,9 @@ export function textScale(size: TextSize): number {
 
 /** 🔀️ The language switch: one pressed button per language, each a globe and its name in its own language; a `compact`
  * one — the navbar's — shows the language codes (EN, DE) below tablet width, still beside the globe. */
-export function LanguageSwitch(props: { readonly locale: CourseLocale; readonly text: CourseText; readonly onChange: (locale: CourseLocale) => void; readonly compact?: boolean }): ReactElement {
-  const { locale, text, onChange, compact } = props;
-  return <Segments label={text("course.preferences.language")} options={COURSE_LOCALES.map((option) => ({ value: option, label: text(LOCALE_NAMES[option]), lang: option, icon: LOCALE_ICONS[option], ...(compact ? { short: option.toUpperCase() } : {}) }))} value={locale} onChange={onChange} />;
+export function LanguageSwitch(props: { readonly locale: CourseLocale; readonly text: CourseText; readonly onChange: (locale: CourseLocale) => void; readonly compact?: boolean; readonly flush?: boolean }): ReactElement {
+  const { locale, text, onChange, compact, flush } = props;
+  return <Segments flush={flush} label={text("course.preferences.language")} options={COURSE_LOCALES.map((option) => ({ value: option, label: text(LOCALE_NAMES[option]), lang: option, icon: LOCALE_ICONS[option], ...(compact ? { short: option.toUpperCase() } : {}) }))} value={locale} onChange={onChange} />;
 }
 
 /** 🌈️ One text in every offered language, each part marked with its language, joined by a middle dot. */
@@ -193,15 +193,15 @@ export function everyLanguage(label: CourseLabelKey): string {
 export function LanguageChoice(props: { readonly onChoose: (locale: CourseLocale) => void }): ReactElement {
   const id = useId();
   return (
-    <CourseCard id={id} card="language" headingLevel={1} focusableHeading icon={<CardIcon icon="globe" />} title={<EveryLanguage label="course.preferences.language" />}>
-      <ul role="list" className="m-0 flex list-none flex-col gap-double p-0">
+    <CourseCard flush id={id} card="language" headingLevel={1} focusableHeading icon={<CardIcon icon="globe" />} title={<EveryLanguage label="course.preferences.language" />}>
+      <RowList>
         {COURSE_LOCALES.map((locale) => (
-          <li key={locale} lang={locale} className="flex flex-wrap items-center gap-double">
-            <BodyButton onClick={() => props.onChoose(locale)}>{courseText(locale)(LOCALE_NAMES[locale])}</BodyButton>
-            <span className="text-sm">{courseText(locale)("course.preferences.choose")}</span>
+          <li key={locale} lang={locale} {...CELL} className="flex flex-col">
+            <BodyButton row onClick={() => props.onChoose(locale)}>{courseText(locale)(LOCALE_NAMES[locale])}</BodyButton>
+            <span className="px-double pb-double text-sm">{courseText(locale)("course.preferences.choose")}</span>
           </li>
         ))}
-      </ul>
+      </RowList>
     </CourseCard>
   );
 }
@@ -225,70 +225,57 @@ export function PreferencesPanel(props: { readonly preferences: CoursePreference
   const resting = pets === "off" || pets === "still";
   const restingId = useId();
   const icons = effectiveIconMotion(preferences.animateIcons, preferences.iconsChosen);
-  const row = "course-setting";
+  const row = "course-setting flex min-w-0 flex-col";
   const name = "course-setting-name text-xs text-muted-foreground";
-  const allowance = cn("course-target flex w-fit items-center gap-single text-sm", resting ? "cursor-not-allowed text-muted-foreground" : "cursor-pointer");
+  const allowance = cn("course-target flex w-full items-center gap-single p-double text-sm", resting ? "cursor-not-allowed text-muted-foreground" : "cursor-pointer");
+  const setting = (label: string, control: ReactElement, notes?: ReactElement | null): ReactElement => (
+    <div {...GROUP} {...CELL} className={row}>
+      <span {...CELL} className={cn(name, "px-double py-single")} aria-hidden="true">
+        {label}
+      </span>
+      {control}
+      {notes}
+    </div>
+  );
+  const note = (content: string): ReactElement => (
+    <p {...CELL} className="m-0 p-double text-xs text-muted-foreground">
+      {content}
+    </p>
+  );
   return (
-    <div className="course-settings">
-      <div className={row}>
-        <span className={name} aria-hidden="true">
-          {text("course.preferences.language")}
-        </span>
-        <LanguageSwitch locale={locale} text={text} onChange={(chosen) => onChange({ ...preferences, locale: chosen })} />
-      </div>
-      <div className={row}>
-        <span className={name} aria-hidden="true">
-          {text("course.preferences.theme")}
-        </span>
-        <Segments label={text("course.preferences.theme")} options={THEME_CHOICES.map((choice) => ({ value: choice.value, label: text(choice.label), icon: choice.icon }))} value={preferences.theme} onChange={(theme) => onChange({ ...preferences, theme })} />
-      </div>
-      <div className={row}>
-        <span className={name} aria-hidden="true">
-          {text("course.preferences.textSize")}
-        </span>
-        <Segments label={text("course.preferences.textSize")} options={TEXT_SIZES.map((size) => ({ value: size.value, label: text(size.label), icon: size.icon }))} value={preferences.textSize} onChange={(textSize) => onChange({ ...preferences, textSize })} />
-      </div>
-      {device === "mobile" ? null : (
-        <div className={row}>
-          <span className={name} aria-hidden="true">
-            {text("course.preferences.device")}
-          </span>
-          <Segments label={text("course.preferences.device")} options={COURSE_DEVICES.map((choice) => ({ value: choice.value, label: text(choice.label), icon: choice.icon }))} value={device} onChange={(chosen) => onChange({ ...preferences, device: chosen })} />
-        </div>
+    <div {...GROUP} {...CELL} className="course-settings flex min-w-0 flex-col">
+      {setting(text("course.preferences.language"), <LanguageSwitch locale={locale} text={text} flush onChange={(chosen) => onChange({ ...preferences, locale: chosen })} />)}
+      {setting(text("course.preferences.theme"), <Segments flush label={text("course.preferences.theme")} options={THEME_CHOICES.map((choice) => ({ value: choice.value, label: text(choice.label), icon: choice.icon }))} value={preferences.theme} onChange={(theme) => onChange({ ...preferences, theme })} />)}
+      {setting(text("course.preferences.textSize"), <Segments flush label={text("course.preferences.textSize")} options={TEXT_SIZES.map((size) => ({ value: size.value, label: text(size.label), icon: size.icon }))} value={preferences.textSize} onChange={(textSize) => onChange({ ...preferences, textSize })} />)}
+      {device === "mobile" ? null : setting(text("course.preferences.device"), <Segments flush label={text("course.preferences.device")} options={COURSE_DEVICES.map((choice) => ({ value: choice.value, label: text(choice.label), icon: choice.icon }))} value={device} onChange={(chosen) => onChange({ ...preferences, device: chosen })} />)}
+      {setting(
+        text("course.preferences.pets"),
+        <Segments flush label={text("course.preferences.pets")} options={PET_CHOICES.map((choice) => ({ value: choice, label: text(PET_CHOICE_LABELS[choice]), icon: PET_CHOICE_ICONS[choice] }))} value={pets} onChange={(choice) => onChange(withPets(preferences, choice))} />,
+        <>
+          {forced ? note(text("course.preferences.petsForced")) : null}
+          {cast.length === 0 ? null : note(text("course.preferences.petsCast", { names: cast.join(" · ") }))}
+        </>,
       )}
-      <div className={row}>
-        <span className={name} aria-hidden="true">
-          {text("course.preferences.pets")}
-        </span>
-        <Segments label={text("course.preferences.pets")} options={PET_CHOICES.map((choice) => ({ value: choice, label: text(PET_CHOICE_LABELS[choice]), icon: PET_CHOICE_ICONS[choice] }))} value={pets} onChange={(choice) => onChange(withPets(preferences, choice))} />
-        {forced ? <p className="m-0 text-xs text-muted-foreground">{text("course.preferences.petsForced")}</p> : null}
-        {cast.length === 0 ? null : <p className="m-0 text-xs text-muted-foreground">{text("course.preferences.petsCast", { names: cast.join(" · ") })}</p>}
-      </div>
-      <label className={allowance} data-pets-allow="play">
+      <label {...CELL} className={allowance} data-pets-allow="play">
         <input type="checkbox" className="course-check" checked={!resting && preferences.petsPlay} disabled={resting} aria-describedby={resting ? restingId : undefined} onChange={(event) => onChange({ ...preferences, petsPlay: event.target.checked })} />
         {text("course.preferences.petsPlay")}
       </label>
-      <label className={allowance} data-pets-allow="mischief">
+      <label {...CELL} className={allowance} data-pets-allow="mischief">
         <input type="checkbox" className="course-check" checked={!resting && preferences.petsMischief} disabled={resting} aria-describedby={resting ? restingId : undefined} onChange={(event) => onChange({ ...preferences, petsMischief: event.target.checked })} />
         {text("course.preferences.petsMischief")}
       </label>
       {resting ? (
-        <p id={restingId} className="m-0 text-xs text-muted-foreground">
+        <p id={restingId} {...CELL} className="m-0 p-double text-xs text-muted-foreground">
           {text("course.preferences.petsResting")}
         </p>
       ) : null}
       <PetsPlay text={text} row={row} name={name} />
-      <div className={row}>
-        <span className={name} aria-hidden="true">
-          {text("course.preferences.others")}
-        </span>
-        <Segments label={text("course.preferences.others")} options={OTHERS_CHOICES.map((choice) => ({ value: choice, label: text(OTHERS_CHOICE_LABELS[choice]), icon: OTHERS_CHOICE_ICONS[choice] }))} value={preferences.others} onChange={(others) => onChange({ ...preferences, others })} />
-      </div>
-      <label className="course-target flex w-fit cursor-pointer items-center gap-single text-sm">
+      {setting(text("course.preferences.others"), <Segments flush label={text("course.preferences.others")} options={OTHERS_CHOICES.map((choice) => ({ value: choice, label: text(OTHERS_CHOICE_LABELS[choice]), icon: OTHERS_CHOICE_ICONS[choice] }))} value={preferences.others} onChange={(others) => onChange({ ...preferences, others })} />)}
+      <label {...CELL} className="course-target flex w-full cursor-pointer items-center gap-single p-double text-sm">
         <input type="checkbox" className="course-check" checked={preferences.showCursors} onChange={(event) => onChange({ ...preferences, showCursors: event.target.checked })} />
         {text("course.preferences.cursors")}
       </label>
-      <label className="course-target flex w-fit cursor-pointer items-center gap-single text-sm">
+      <label {...CELL} className="course-target flex w-full cursor-pointer items-center gap-single p-double text-sm">
         <input type="checkbox" className="course-check" checked={icons} onChange={(event) => onChange(withIcons(preferences, event.target.checked))} />
         {text("course.preferences.motion")}
       </label>
@@ -300,7 +287,7 @@ export function PreferencesPanel(props: { readonly preferences: CoursePreference
 export function PreferencesPanelCard(props: { readonly preferences: CoursePreferences; readonly locale: CourseLocale; readonly text: CourseText; readonly onChange: (preferences: CoursePreferences) => void }): ReactElement {
   const id = useId();
   return (
-    <CourseCard id={id} card="preferences" icon={<CardIcon icon="settings" />} title={props.text("course.preferences.title")}>
+    <CourseCard flush id={id} card="preferences" icon={<CardIcon icon="settings" />} title={props.text("course.preferences.title")}>
       <PreferencesPanel {...props} />
     </CourseCard>
   );

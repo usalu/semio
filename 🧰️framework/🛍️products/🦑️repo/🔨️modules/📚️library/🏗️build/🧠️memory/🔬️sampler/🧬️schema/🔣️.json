@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:graph:slice-sampler:v1",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "drainMilliseconds": 15000,
+        "bucketsUptimeSeconds": [
+          150,
+          400
+        ],
+        "top": 24,
+        "maximumKeys": 4000,
+        "maximumFrames": 48
+      }
+    },
+    "Summary": {
+      "type": "object",
+      "required": [
+        "samples",
+        "dropped",
+        "self",
+        "inclusive",
+        "attributed"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "samples": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "dropped": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "self": {
+          "$ref": "#/definitions/Rows"
+        },
+        "inclusive": {
+          "$ref": "#/definitions/Rows"
+        },
+        "attributed": {
+          "$ref": "#/definitions/Rows"
+        }
+      }
+    },
+    "Rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "file",
+          "line",
+          "samples"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "file": {
+            "type": "string"
+          },
+          "line": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "samples": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "parent": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Texts": {
+      "const": {
+        "en": "Sampling profile of this process: self, inclusive and caller-attributed samples of the functions the take looks run in, by uptime bucket.",
+        "de": "Stichprobenprofil dieses Prozesses: Eigen-, Gesamt- und dem Aufrufer zugerechnete Stichproben der Funktionen, in denen die Nachschlagevorgänge laufen, nach Laufzeitabschnitt."
+      }
+    }
+  }
+}

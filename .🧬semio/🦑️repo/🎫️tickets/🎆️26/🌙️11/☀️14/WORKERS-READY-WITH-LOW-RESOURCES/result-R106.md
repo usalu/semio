@@ -1,0 +1,41 @@
+# R106: why the server's own graph read made no progress, and what bounds a wait now
+
+Landed 2026-11-17 02:00:00 to 02:03:40 UTC under `landing.lock` (owner claude-R106, released). Scripts: `T/🧰️scripts/R106/` (`land.py`, `window.sh`, `spin.sh`, `runall.sh`, `restore.py`, `newtests.py`, the two test files). T = `☀️13/FLEET-ONE-MACHINE-SHARED-HOT-CACHE-AND-REMOTE-EXECUTION`.
+
+## Why the server read (pid 58106 / 58107 / 58206) stalls
+
+Evidence, all read-only, 2026-11-17 00:55 to 01:10 UTC:
+
+1. It does not wait on peer claims. The claim table of the cache server (`.cache/f/cache-server/v1/claims.jsonl`, replayed) holds 6 to 7 live claims in the whole fleet at any look (heartbeat age 1 to 33 s, one per machine or two), none of them on an owner of this read: the reader holds no claim named `g1-server|<host>:<pid>` at all, the only `g1-server` claim is the wanted-serve claim of the puller (pid 11485). A reader that deferred to live peers would show claims of peers on its running owners; there are none.
+2. The log says what it waits on instead. `read.log` (6400 lines): `owner records present: 0 of 4775` (a cold server: nothing stored here), then from 3200 s on only `owners 22 of 4775 done: ... 22 inferred here (27 running), 4753 wanted from the fleet`, eight to nine owners in flight with `0 rows` for 1000 to 7500 s (`procedural-generation3d-rs` 7465 s, `mit-bestand-demonstrator` 6350 s), each one reported as parked in the generic inference stage ("in a farm child, queued for one, waiting for the memory governor to let the owner back into the process, or in this process"), and 361 lines `waiting for memory headroom (21842 of 14336..27101 MB reserved, 8 projects running)` while `the process held 17105 MB of its grant of 14336 MB`. The nine `bun --eval` children of 58206 are idle (30 to 130 MB, 0 to 0.7 % CPU): the farm computed, the parent cannot take the owners back because its own heap (13.4 million objects, managed 5.7 GB, external 5.0 GB) sits above its grant, and the owners that hold the reservation are the ones waiting for it.
+3. So "4753 wanted from the fleet" is a published count (the reader announces its open owners to the pools), not a wait: the reader itself never blocks on it. The 900 s fleet gate (`decideGraphEntryV1`, one deadline per decision) is bounded and was not entered for these owners.
+4. Old code: the process started 22:27 UTC, after R98 (22:00 to 22:03, early release of the inference) but before R97 (22:34, a worker owner no longer holds twelve unpacked closure entries), R99 (23:00), R100 (23:00), R101 (23:02, 23:30) and R104 (00:32). R97 is the one that targets the parent heap above the grant; the stall is consistent with the pre-R97 behaviour. Not proven: the live process cannot be inspected without signalling it.
+
+5. Rate. The log of this read (`read.log`, owners line against the `still running after N s` heartbeat): 2 owners done at 440 s, 4 at 670 s, 8 at 1362 s, 13 at 1723 s, 21 at 2723 s, 22 at 2903 s, about 0.3 to 0.5 owners per minute from the first minutes on, all of them `inferred here` (`0 present, 0 fetched`), with eight workers. So it infers, very slowly, and never waited on a peer: the inference of one owner on this machine costs minutes of the single parent thread and the parent runs out of its memory grant. The two earlier reads on the same machine (`read.1794862776003.log`, `read.1794867836802.log`) show the same: 1 to 8 owners done after 1000 to 1700 s.
+
+What was missing in every version, including today's: nothing stops a read that makes no owner progress. This is the gap R106 closes; the peer wait is bounded as well (below).
+
+## Change
+Files edited (anchored, backups in the scratchpad `R106/backup`): see the landing section.
+- `🪪️graph-state/🛰️exchange/🟦️.ts`: `graphHeldVerdictV1` (lapsed, compute, skip, wait), `graphFleetWaitingV1`, `decideGraphEntryV1` takes `busy` and `strong`; wait is at most `leaseTakeOverMilliseconds` (60 s) since the owner was first seen held (was 900 s), a lapsed lease is claimed again at once, a busy reader skips the owner (outcome `skip`), a large machine computes at once (`reason: strong`).
+- `🪪️graph-state/📦️project-records/🟦️.ts`: the gate passes `busy` and `strong`, answers `deferred` on a skip.
+- `👁️observation/🟨️.mjs`: a deferred gate throws `BUILD_OWNER_DEFERRED` (outside the swallowing catch).
+- `📦️project-nodes/🟨️.mjs`: `inferOrDefer` re-queues a deferred owner at the tail, the tail runs with `limit` workers when no owner needs a solo grant, a progress watch every 10 s fails the read after 300 s without any change of (owners done, looks, cursor, rows of running owners) with `graph.no-progress`; the workers are not awaited then.
+- `📥️take/🟨️.mjs` + schema + d.mts: `createProgressWatchV1`, `takeNoProgressTextV1`, `takeStrongMachineV1`, policy `noProgressMilliseconds` 300000, `watchMilliseconds` 10000, `strongMemoryMegabytes` 24576, `strongCores` 8, texts EN and DE.
+- `📖️texts/🔣️.json`: `graph.no-progress` EN and DE.
+
+## Proof
+| law | test | before | after |
+|---|---|---|---|
+| a lapsed lease is no reason to wait, a live one is; a busy reader skips; a large machine computes; the oldest-held owner is taken over after the lease time even when the holder keeps renewing | `🪪️graph-state/🧪️tests/⏳️lease-wait` (verdicts, 5 tests) | red (export missing) | 5 pass |
+| `decideGraphEntryV1`: lapsed lease reclaimed without `await`, busy reader returns `skip` in under 500 ms and never awaits, idle reader awaits at most `leaseTakeOverMilliseconds` (60 s, was 900 s), large machine returns `compute` with reason `strong` and never awaits, the waited-for owners are listed and removed, the first sight survives a skip | same (6 tests) | red | 6 pass (11 in the file) |
+| no owner progress for 300000 ms stops the read: watch, restart on every change of the sign, text with owners, holder and reason in EN and DE, large machine by memory and cores | `📥️take/🧪️tests/🚦️no-progress` | red (export missing) | 5 pass |
+Regression under the lock: graph-state 14, project-records 5 pass 1 fail and too-heavy 5 pass 1 fail (identical to the baseline of 01:08), retry 8, take 7, two-machines 3, project-nodes take 11, inferred 3, slow-last 5, stopped-wave 5, lookup-holds 1, standing preflights 2 and 10. The first landing attempt (01:34) was restored by my own script after `too-heavy` and `set-aside` source-text assertions would have been lost; both literals are kept now (checked against every `toContain`/`indexOf` literal of the tests under `🏗️build`: 0 lost).
+
+## Not verified
+- No fresh read was measured: `repo show projects` has no slice option, a read of my own would be a second cold 4775-owner read beside 58106 at load average 38 to 48 (the stop rule is 30), and a read on this machine attaches or queues behind 58106. Measured instead: the rate of the stalled read itself (0.3 to 0.5 owners per minute from its first minutes, 22 after 2903 s) and of the two earlier reads of this machine (1 to 8 owners after 1000 to 1700 s).
+- The progress watch and the deferral were not run in a real read (no live process was touched: 58106, 58107 and 58206 are untouched and still running with the old code). The wiring is proven by syntax, the source-literal tests and the unit laws, not by an end-to-end read.
+- "The machine with the most free memory and cores": the fleet publishes no capacity per machine, so a machine is large when it has at least 24 GiB and 8 cores (`strongMemoryMegabytes`, `strongCores`); g1-server (32 GiB, 10 cores) is, the 16 GiB minis are not. A comparison against real peer capacities needs those numbers published first.
+- The watch counts owners done, looks, cursor, started owners, rows of running owners and fleet producers as progress. One owner that computes alone for more than 5 minutes without a row and with nothing else moving is also stopped (that is what 58106 does for hours); the number is `noProgressMilliseconds`.
+- The resident service maps known refusal keys to its host texts; `graph.no-progress` reaches the CLI with its own EN and DE text, a `host-graph-no-progress` row in `🏡️resident` is not added.
+- The inference rate of this machine (parent thread, parent heap 17 GB over a 14 GB grant, farm children idle) is not fixed here: R97, R103 and the farm are the places.

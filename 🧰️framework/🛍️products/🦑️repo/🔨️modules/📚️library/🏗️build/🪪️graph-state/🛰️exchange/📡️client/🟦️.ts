@@ -2,6 +2,7 @@ import {createHash} from "node:crypto";
 import {mkdirSync,statSync,utimesSync,writeFileSync} from "node:fs";
 import {join} from "node:path";
 import {GRAPH_STATE_POLICY_V1 as policy} from "../../🟦️.ts";
+import {graphRefusalOfV1,type GraphRefusalV1} from "../🧯️refusal/🟦️.ts";
 
 const EMPTY=createHash("sha256").digest("hex");
 /** ⚙️ Where the fleet cache is and what this machine may do there; `stateDirectory` holds the markers of the unreachable-or-denied breaker shared by the processes of one machine. */
@@ -11,16 +12,20 @@ export type GraphFleetFaultV1="down"|"denied"|"unsupported";
 /** 🎟️ The answer to a claim. */
 export type GraphFleetClaimV1={state:"granted";untilMilliseconds:number}|{state:"held";by:string;untilMilliseconds:number;expectedMilliseconds?:number}|{state:"stored"}|{state:"full"}|{state:"unavailable";fault:GraphFleetFaultV1};
 
+/** 📥️ What a write ended with: stored, or the refusal with its true reason (the status and first words of the answer of the cache, no answer in time, no connection). */
+export type GraphPutV1=Readonly<{stored:true}>|Readonly<{stored:false;refusal:GraphRefusalV1}>;
+
 /** 📡️ The fleet cache as the graph exchange uses it. Every call is bounded by a timeout and never throws; a fault is an answer and is remembered beside the cache so the next processes skip the tier for a while. */
 export interface GraphFleetClientV1{
  readonly settings:GraphFleetSettingsV1;
  usable():boolean;
+ breakerRemainingMilliseconds?():number;
  claimsUsable():boolean;
  getResult(key:string):Promise<Uint8Array|"miss"|GraphFleetFaultV1>;
  getBlob(hash:string,size:number):Promise<Uint8Array|undefined>;
  hasBlob(hash:string):Promise<boolean|undefined>;
- putBlob(hash:string,bytes:Uint8Array):Promise<boolean>;
- putResult(key:string,bytes:Uint8Array,slot:string):Promise<boolean>;
+ putBlob(hash:string,bytes:Uint8Array):Promise<GraphPutV1>;
+ putResult(key:string,bytes:Uint8Array,slot:string,expect?:string):Promise<GraphPutV1>;
  claim(key:string,owner:string,ttlMilliseconds:number,expectedMilliseconds?:number):Promise<GraphFleetClaimV1>;
  renew(key:string,owner:string,ttlMilliseconds:number):Promise<"granted"|"lost"|"fault">;
  release(key:string,owner:string):Promise<void>;
@@ -29,6 +34,7 @@ export interface GraphFleetClientV1{
 
 const body=(bytes:Uint8Array):BodyInit=>isOwned(bytes)?bytes:new Uint8Array(bytes),isOwned=(bytes:Uint8Array):bytes is Uint8Array<ArrayBuffer>=>bytes.buffer instanceof ArrayBuffer;
 const fresh=(path:string,window:number):boolean=>{try{return Date.now()-statSync(path).mtimeMs<window;}catch{return false;}};
+const remaining=(path:string,window:number):number=>{try{return Math.max(0,Math.ceil(window-(Date.now()-statSync(path).mtimeMs)));}catch{return 0;}};
 const stamp=(directory:string,name:string):void=>{try{mkdirSync(directory,{recursive:true});const path=join(directory,name);writeFileSync(path,String(Date.now()));const now=new Date();utimesSync(path,now,now);}catch{}};
 
 /** 📡️ Creates the client of one process. */
@@ -37,14 +43,27 @@ export function createGraphFleetClientV1(settings:GraphFleetSettingsV1,world:Rea
  const faultOf=(status:number):GraphFleetFaultV1=>status===401||status===403?"denied":status===404||status===405?"unsupported":"down";
  const mark=(fault:GraphFleetFaultV1)=>stamp(settings.stateDirectory,fault==="denied"?"denied":fault==="unsupported"?"noclaims":"down");
  async function call(method:string,url:string,timeout:number,init:{body?:BodyInit;headers?:Record<string,string>}={}):Promise<{status:number;response:Response}|GraphFleetFaultV1>{
+  const answer=await attempt(method,url,timeout,init);
+  if("error" in answer){mark("down");return "down";}
+  return answer;
+ }
+ async function attempt(method:string,url:string,timeout:number,init:{body?:BodyInit;headers?:Record<string,string>}):Promise<{status:number;response:Response}|{error:"timeout"|"network"}>{
   try{const response=await request(url,{method,headers:headers(init.headers),signal:AbortSignal.timeout(timeout),...(init.body===undefined?{}:{body:init.body})});return{status:response.status,response};}
-  catch{mark("down");return "down";}
+  catch(error){return{error:(error as {name?:string})?.name==="TimeoutError"||(error as {name?:string})?.name==="AbortError"?"timeout":"network"};}
+ }
+ async function put(url:string,timeout:number,init:{body:BodyInit;headers:Record<string,string>}):Promise<GraphPutV1>{
+  const answer=await attempt("PUT",url,timeout,init);
+  if("error" in answer){mark("down");return{stored:false,refusal:graphRefusalOfV1(answer.error)};}
+  if(answer.status===200)return{stored:true};
+  let body="";try{body=await answer.response.text();}catch{}
+  return{stored:false,refusal:graphRefusalOfV1(answer.status,body)};
  }
  const json=async<T>(response:Response):Promise<T|undefined>=>{try{return await response.json() as T;}catch{return undefined;}};
  const blobTimeout=(size:number)=>t.blobMilliseconds+Math.ceil(size/t.blobBytesPerSecond*1000);
  return Object.freeze<GraphFleetClientV1>({
   settings,
   usable(){return!fresh(join(settings.stateDirectory,"down"),b.downMilliseconds)&&!fresh(join(settings.stateDirectory,"denied"),b.deniedMilliseconds);},
+  breakerRemainingMilliseconds(){return Math.max(remaining(join(settings.stateDirectory,"down"),b.downMilliseconds),remaining(join(settings.stateDirectory,"denied"),b.deniedMilliseconds));},
   claimsUsable(){return settings.upload&&!fresh(join(settings.stateDirectory,"noclaims"),b.noClaimsMilliseconds);},
   async getResult(key){
    const answer=await call("GET",`${base}/ac/${key}`,t.lookupMilliseconds);
@@ -66,13 +85,11 @@ export function createGraphFleetClientV1(settings:GraphFleetSettingsV1,world:Rea
    return answer.status===200?true:answer.status===404?false:undefined;
   },
   async putBlob(hash,bytes){
-   if(hash===EMPTY)return true;
-   const answer=await call("PUT",`${base}/cas/${hash}`,blobTimeout(bytes.length),{body:body(bytes),headers:{"content-type":"application/octet-stream"}});
-   return typeof answer!=="string"&&answer.status===200;
+   if(hash===EMPTY)return{stored:true};
+   return put(`${base}/cas/${hash}`,blobTimeout(bytes.length),{body:body(bytes),headers:{"content-type":"application/octet-stream"}});
   },
-  async putResult(key,bytes,slot){
-   const answer=await call("PUT",`${base}/ac/${key}`,t.claimMilliseconds*4,{body:body(bytes),headers:{"content-type":"application/octet-stream",[policy.slotHeader]:slot}});
-   return typeof answer!=="string"&&answer.status===200;
+  async putResult(key,bytes,slot,expect){
+   return put(`${base}/ac/${key}`,t.claimMilliseconds*4,{body:body(bytes),headers:{"content-type":"application/octet-stream",[policy.slotHeader]:slot,...(expect===undefined?{}:{"x-semio-expect":expect})}});
   },
   async claim(key,owner,ttlMilliseconds,expectedMilliseconds){
    const answer=await call("POST",`${base}/claim/ac/${key}`,t.claimMilliseconds,{body:JSON.stringify({owner,ttlMilliseconds,...(expectedMilliseconds===undefined?{}:{expectedMilliseconds})})});

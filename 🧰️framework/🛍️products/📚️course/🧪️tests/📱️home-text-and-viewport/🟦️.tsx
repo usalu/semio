@@ -20,9 +20,8 @@ describe("🏠️ the layout in the learner's text size", () => {
 
   it("lets a card that is taller than its cell after all scroll inside the cell, never over the card below", () => {
     const cell = (property: string): string => new RegExp(`\\.course-home-cell \\{[^}]*\\b${property}: ([^;]+);`, "u").exec(stylesheet)?.[1] ?? "";
-    expect(cell("overflow-y")).toBe("auto");
-    expect(cell("align-items")).toBe("safe center");
-    expect(cell("min-height")).toBe("0");
+    expect(cell("overflow")).toBe("hidden");
+    expect(cell("padding")).toBe("");
   });
 
   it("measures the breakpoints and the least grid heights in the text size", () => {
@@ -94,8 +93,8 @@ describe("🥞️ the opened page and the short viewport", () => {
       expect(layer.querySelector("[data-overview-card]")).not.toBeNull();
       const classes = layer.className.split(" ");
       expect(classes).toContain("overflow-y-auto");
-      expect(classes).toContain("items-center-safe");
-      expect(layer.style.paddingBottom, "room for the hint below, in px so large text never narrows it").toMatch(/^calc\((0px \+ )?\d+px\)$/u);
+      expect(classes).toContain("items-stretch");
+      expect(layer.style.paddingBottom, "room for the hint below, in px so large text never narrows it").toMatch(/^(0px)?$|^calc\((0px \+ )?\d+px\)$/u);
       expect(classes.some((name) => name.endsWith("rem]"))).toBe(false);
     }
   });

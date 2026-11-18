@@ -1634,6 +1634,8 @@
             "key": "power",
             "heatW": 22
           },
+          "ratedPowerW": 200,
+          "ratedPowerBasis": "electrical-input",
           "source": "authored-estimate",
           "reference": "wilkins-hosni-2011"
         },

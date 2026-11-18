@@ -1,0 +1,22 @@
+{
+  "title": "Staffage Catalog Silhouette Guard Passes For Every Asset",
+  "emoji": "🧍",
+  "status": "open",
+  "description": "Make the staffage library guard catalog-silhouette pass for every catalog asset by fixing authored drawings, volumes or declared dimensions per mismatch, never loosening the guard.",
+  "goal": "runningproducts",
+  "sessions": [
+    "c67232e5-1dff-4cc7-9741-6908e642486f"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-17 19:36:58",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Make the staffage library guard catalog-silhouette pass for every catalog asset by fixing authored drawings, volumes or declared dimensions per mismatch, never loosening the guard.",
+      "llm": "sonnet-5-5"
+    }
+  ]
+}

@@ -92,7 +92,7 @@ class Auxiliaries {
   private readonly claimed = new Set<string>();
   private readonly texts = new Map<string, string>();
 
-  constructor(private readonly taken: Taken, root: string) {
+  private readonly taken:Taken; constructor(taken: Taken, root: string) {this.taken=taken;
     this.claimed.add(root);
   }
 

@@ -52,6 +52,7 @@ fn a_loading_text_node_paints_skeleton_blocks_instead_of_its_glyphs() {
             break;
         }
     }
+    while !draw.finalize_shared_borders_step().expect("shared border finalization") {}
     let instances: Vec<_> = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).collect();
     assert_eq!(instances.iter().filter(|instance| (instance.params[2] - KIND_GLYPH).abs() < 0.01).count(), 0, "React never paints half-built text under `activity: loading`");
     assert!(instances.iter().any(|instance| (instance.params[2] - KIND_LOADING_BORDER).abs() < 0.01), "the loading border treatment stays");
@@ -166,8 +167,8 @@ fn section_and_field_chrome_paint_only_inside_their_measured_bands() {
     let description: Vec<_> = glyphs.iter().copied().filter(|instance| color_matches(instance, theme.text_muted)).collect();
     let error: Vec<_> = glyphs.iter().copied().filter(|instance| color_matches(instance, theme.error)).collect();
     assert!(!description.is_empty() && !error.is_empty());
-    assert!(description.iter().all(|glyph| glyph.rect[1] >= semio_ui_wgpu_layout::flex::FIELD_LABEL_LINE_HEIGHT && glyph.rect[1] + glyph.rect[3] <= control_layout.y + 0.01));
-    assert!(error.iter().all(|glyph| glyph.rect[1] >= control_layout.y + control_layout.height + theme.gap_standard - 0.01));
+    assert!(description.iter().all(|glyph| glyph.rect[1] >= number(&["field", "descriptionTop"]) - 0.01 && glyph.rect[1] + glyph.rect[3] <= control_layout.y + 0.01));
+    assert!(error.iter().all(|glyph| glyph.rect[1] >= number(&["field", "errorTop"]) - 0.01 && glyph.rect[1] >= control_layout.y + control_layout.height + number(&["density", "cellDivider"]) - 0.01));
 }
 
 #[test]
@@ -189,3 +190,41 @@ fn number_stepper_catalog_icons_match_chromiums_measured_content_boxes() {
         }
     }
 }
+
+//#region 🃏️CardStackPaint
+/// 🃏️ A native `CardStack` of `OverviewCard`s mounts as retained nodes and renders interlocked: the lower card starts exactly on the upper card's bottom line (no gap), its cap row is the band the upper card's footer chip shares, and every coincident line paints ONCE (`compositor.cases.json` `interlock` geometry, consumed by `stack.test.rs`).
+#[test]
+fn a_native_card_stack_lays_out_gapless_and_paints_each_shared_line_once() {
+    use semio_ui_declaration::ui::{UiCardStackNode, UiOverviewCardNode};
+    let card = |id: &str, title: &str, footer: Option<&str>| UiNode::OverviewCard(UiOverviewCardNode { id: id.into(), title: Label::data(title), footer: footer.map(str::to_string), presence: UiPresence::default(), menu: None, children: vec![text("body")] });
+    let stack = UiNode::CardStack(UiCardStackNode { id: "quiz".into(), presence: UiPresence::default(), menu: None, children: vec![card("one", "Question one", Some("Submit quiz")), card("two", "Question two", None)] });
+    let mut tree = UiTree::new();
+    tree.apply_tree(&stack);
+    let root = tree.root.expect("card stack root");
+    let theme = Theme::default();
+    let mut atlas = FontAtlas::shaped_default();
+    assert!(semio_ui_wgpu_mounted_layout::layout_tree_now(&mut tree, root, theme, 400.0, 600.0));
+    let first = tree.node(root).and_then(|node| node.first_child).expect("first card");
+    let second = tree.node(first).and_then(|node| node.next_sibling).expect("second card");
+    let (a, b) = (tree.accepted_layout(first).expect("first layout"), tree.accepted_layout(second).expect("second layout"));
+    assert!((b.y - (a.y + a.height)).abs() < 0.01, "no gap between cards: {a:?} {b:?}");
+    let body_a = tree.node(first).and_then(|node| node.first_child).and_then(|child| tree.accepted_layout(child)).expect("first body");
+    let body_b = tree.node(second).and_then(|node| node.first_child).and_then(|child| tree.accepted_layout(child)).expect("second body");
+    assert!((body_a.y - theme.control_height).abs() < 0.01, "the cap row is one control row: {body_a:?}");
+    assert!((body_b.y - theme.control_height).abs() < 0.01, "the shared band is as high as the cap row: {body_b:?}");
+    assert!((a.height - (theme.control_height + body_a.height)).abs() < 0.01, "the upper card's footer chip lives in the lower card's cap band, not below the upper card: {a:?} {body_a:?}");
+
+    let mut draw = paint_retained_node_for_test(&tree, root, &theme, &mut atlas);
+    settle_borders(&mut draw);
+    let lines: Vec<[f32; 4]> = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|item| item.rect[2] > 0.0 && item.rect[3] > 0.0 && (item.rect[3] - theme.stroke_hairline).abs() < 0.001 && item.rect[2] > 2.0 * theme.stroke_hairline).map(|item| item.rect).collect();
+    assert!(!lines.is_empty(), "the silhouettes paint border lines");
+    for (index, one) in lines.iter().enumerate() {
+        for other in &lines[index + 1..] {
+            let overlap = (one[0] + one[2]).min(other[0] + other[2]) - one[0].max(other[0]);
+            assert!(!((one[1] - other[1]).abs() < 0.001 && overlap > 1.5), "a coincident line is painted twice: {one:?} {other:?}");
+        }
+    }
+    let glyphs = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|item| (item.params[2] - KIND_GLYPH).abs() < 0.01).count();
+    assert!(glyphs >= "Question oneSubmit quizQuestion two".chars().filter(|c| !c.is_whitespace()).count(), "both title chips and the footer chip are drawn as text");
+}
+//#endregion 🃏️CardStackPaint

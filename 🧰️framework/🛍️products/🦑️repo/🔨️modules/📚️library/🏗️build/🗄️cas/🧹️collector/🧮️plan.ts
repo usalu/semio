@@ -40,7 +40,8 @@ export function casCutV1(access:Float64Array,size:Float64Array,indices:Uint32Arr
 
 class Rule{
  private left:number;
- constructor(private readonly cut:CasCutV1){this.left=cut.tieBytes;}
+ private readonly cut:CasCutV1;
+ constructor(cut:CasCutV1){this.cut=cut;this.left=cut.tieBytes;}
  test(access:number,size:number):boolean{
   if(access<this.cut.access)return true;
   if(access===this.cut.access&&this.left>0){this.left-=size;return true;}

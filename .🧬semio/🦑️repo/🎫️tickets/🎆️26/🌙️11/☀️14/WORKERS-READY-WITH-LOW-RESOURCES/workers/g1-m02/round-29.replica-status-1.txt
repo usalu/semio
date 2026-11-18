@@ -1,0 +1,43 @@
+Replica g1-m02 of group g1, store /Volumes/semio-store: reachable
+Synchronization: on
+Daemon: running (pid 3548)
+298979 files tracked; queued: 10 incoming, ? outgoing; 1889 overwritten files kept in .cache/f/lost
+Refused paths that this machine does not carry to the others: 1 on record (illegal-character 1; 1 refusals counted; the last 200 are kept in .cache/f/refused-paths.json). The newest:
+  illegal-character: .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️14/WORKERS-READY-WITH-LOW-RESOURCES/workers/g1-m02/round-26.p12-try-4.txt.sample-2026-11-15T08:49:58Z.txt
+Recurring failures of kind refused: 2 times, last 10 s ago.
+Recurring failures of kind loop-blocked-restart: 14 times, last 54699 s ago.
+Sidecar build-agent: running (process 3884, 0 restart(s), 542 s in this state, last exit -).
+Sidecar build-scheduler: off on this machine (process -, 0 restart(s), 572 s in this state, last exit -).
+Sidecar build-cache: off on this machine (process -, 0 restart(s), 572 s in this state, last exit -).
+Journal: 36.46 MiB in 32 segments of 10 origins.
+Newest snapshot by g1-m01: 23287s old, 91.56 MiB.
+Reclaimable now: 15 journal segments (20.53 MiB).
+Last compaction 117827s ago: 861 blobs (27.00 GiB) removed; 88 blobs (129.23 MiB) were still too young.
+Git state: shared (the stage of the group server and commits replicate; a stage made here is replaced by the group server's); stage tree bb58893207bab4930c7772b9e165f8a862e67a27.
+Background tiers, last pass (cost, duty cycle of one core): hot 9 ms 2.8%, directory sweep 377 ms 10%, file sweep 2619 ms 3.3%, tree walk -, git view 43396 ms 5%.
+Latency over the last 100 publishes and 100 applies: publish p50 207 ms, p95 962 ms; apply p50 358 ms, p95 1390 ms.
+g1-m01: 0 events (0 B) behind, last event 2s ago
+g1-m02: 0 events (0 B) behind, last event 1s ago
+g1-m03: 1 events (406 B) behind, last event 0s ago
+g1-m04: 2 events (801 B) behind, last event 0s ago
+g1-m05: 0 events (0 B) behind, last event 8186s ago
+g1-m06: 0 events (0 B) behind, last event 14306s ago
+g1-m07: 1 events (403 B) behind, last event 0s ago
+g1-m08: 0 events (0 B) behind, last event 23s ago
+g1-m10: 0 events (0 B) behind, last event 3s ago
+g1-server: 0 events (0 B) behind, last event 56s ago
+Fleet: origin platform age lag (origins behind/queued) basis (cp:s = compared at its checkpoint taken s seconds ago, now = compared as it is now) sync code view (modified/deleted/untracked) latency (publish p50/p95 ms | apply p50/p95 ms) verdict
+  g1-m01 macos 0s 1/0 cp:0s on b4c6513b87ef 159/11/326 188/1677|364/1462 ok
+  g1-m02 macos 0s 1/0 cp:0s on b4c6513b87ef 159/11/326 207/962|374/1390 ok
+  g1-m03 macos 1s 2/0 cp:1s on b4c6513b87ef 155/11/312 274/1921|334/881 lagging (not settled: no common checkpoint within 60 s yet, still moving)
+  g1-m04 linux 0s 1/0 cp:0s on b4c6513b87ef 159/11/327 201/796|554/1150 ok
+  g1-m05 windows 2s 4/22 cp:- on b4c6513b87ef 158/11/316 -/-|2995/5193 lagging (not settled: no common checkpoint within 60 s yet, still moving)
+  g1-m06 macos 1919s 8/1 cp:- on b93aabf29dd1 - -/-|198325/199386 stale (attestation too old)
+  g1-m07 macos 0s 1/0 cp:0s on b4c6513b87ef 159/11/326 301/1228|700/1812 ok
+  g1-m08 macos 0s 2/0 cp:0s on b4c6513b87ef 159/11/327 882/3707|1432/4027 lagging (not settled: no common checkpoint within 60 s yet, still moving)
+  g1-m10 macos 2s 4/0 cp:2s on b4c6513b87ef 159/11/325 693/2601|1429/3707 ok
+  g1-server macos 0s 1/0 cp:0s on b4c6513b87ef 159/11/327 2105/6219|632/2917 ok
+  warning: g1-m04 runs git 2.55.0, other machines run another version
+  warning: the volume of g1-m04 behaves differently from most (case=sensitive normalisation=sensitive); the view is pinned, so this is a capability difference, not a divergence
+  warning: g1-m09 is registered in the store (fleet-auth.json) but has never attested: start the replica on that machine (run the provisioning script there, then `status`), or take it out of the fleet with `retire g1-m09`
+The fleet is not in agreement (10 origins; fresh and checkpoint age mean within 60 s; lagging is not wrong, only not yet comparable).

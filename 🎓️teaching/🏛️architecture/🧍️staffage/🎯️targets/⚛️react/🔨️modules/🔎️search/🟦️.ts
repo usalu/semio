@@ -6,7 +6,7 @@
  * @see ../🗺️routing/🟦️.ts — where these parameters live in the address
  * @see https://unicode.org/reports/tr15/ — normalisation behind accent folding
  */
-import { CATEGORIES, COMPLETION } from "@teaching/staffage";
+import { CATEGORIES, COMPLETION, formatNumber, totalPowerW } from "@teaching/staffage";
 import type { Asset, CategoryId, Completion, Revision, Issue, Language, ManifestEntry } from "@teaching/staffage";
 
 /** 🧮️ The analyses an asset can offer. */
@@ -16,7 +16,7 @@ export const ANALYTICS = ["thermal", "structural"] as const;
 export type Analytic = (typeof ANALYTICS)[number];
 
 /** ↕️ The sort keys. */
-export const SORT_KEYS = ["name", "height", "mass", "category"] as const;
+export const SORT_KEYS = ["name", "height", "mass", "power", "category"] as const;
 
 /** ↕️ One of {@link SORT_KEYS}. */
 export type SortKey = (typeof SORT_KEYS)[number];
@@ -28,6 +28,8 @@ export type Filters = {
   readonly analytics: readonly Analytic[];
   readonly heightMinM: number | null;
   readonly heightMaxM: number | null;
+  readonly powerMinW: number | null;
+  readonly powerMaxW: number | null;
   readonly rootMotion: boolean;
   readonly completion: readonly Completion[];
   readonly sort: SortKey;
@@ -35,7 +37,7 @@ export type Filters = {
 };
 
 /** 🧹️ No narrowing, ordered by name. */
-export const NO_FILTERS: Filters = { q: "", categories: [], analytics: [], heightMinM: null, heightMaxM: null, rootMotion: false, completion: [], sort: "name", descending: false };
+export const NO_FILTERS: Filters = { q: "", categories: [], analytics: [], heightMinM: null, heightMaxM: null, powerMinW: null, powerMaxW: null, rootMotion: false, completion: [], sort: "name", descending: false };
 
 /** 🗂️ One catalog row: the manifest entry, and the asset once its category is loaded and valid. `pending`: its category is not loaded yet; `missing`: loaded, but the asset is not authored; `failed`: its category file could not be read; `invalid`: authored, but it fails validation (`issues` say why). */
 export type Row = { readonly entry: ManifestEntry; readonly status: "ready" | "pending" | "invalid" | "missing" | "failed"; readonly asset?: Asset; readonly revision?: Revision; readonly issues?: readonly Issue[] };
@@ -55,6 +57,7 @@ function metres(text: string): number | null {
 /** 🔗️ The filters of an address query; unknown values are dropped. */
 export function filtersFromParams(params: URLSearchParams): Filters {
   const [low = "", high = ""] = (params.get("h") ?? "").split("-");
+  const [powerLow = "", powerHigh = ""] = (params.get("w") ?? "").split("-");
   const sort = params.get("sort");
   return {
     q: (params.get("q") ?? "").slice(0, 120),
@@ -62,6 +65,8 @@ export function filtersFromParams(params: URLSearchParams): Filters {
     analytics: list(params.get("an"), ANALYTICS),
     heightMinM: metres(low),
     heightMaxM: metres(high),
+    powerMinW: metres(powerLow),
+    powerMaxW: metres(powerHigh),
     rootMotion: params.get("root") === "1",
     completion: list(params.get("done"), COMPLETION),
     sort: (SORT_KEYS as readonly string[]).includes(sort ?? "") ? (sort as SortKey) : "name",
@@ -75,6 +80,7 @@ export function filtersToParams(filters: Filters, into: URLSearchParams = new UR
   if (filters.categories.length > 0) into.set("cat", filters.categories.join(","));
   if (filters.analytics.length > 0) into.set("an", filters.analytics.join(","));
   if (filters.heightMinM !== null || filters.heightMaxM !== null) into.set("h", `${filters.heightMinM ?? ""}-${filters.heightMaxM ?? ""}`);
+  if (filters.powerMinW !== null || filters.powerMaxW !== null) into.set("w", `${filters.powerMinW ?? ""}-${filters.powerMaxW ?? ""}`);
   if (filters.rootMotion) into.set("root", "1");
   if (filters.completion.length > 0) into.set("done", filters.completion.join(","));
   if (filters.sort !== "name") into.set("sort", filters.sort);
@@ -84,7 +90,7 @@ export function filtersToParams(filters: Filters, into: URLSearchParams = new UR
 
 /** 🔢️ How many narrowing filters (not the query and not the order) are on. */
 export function activeFilterCount(filters: Filters): number {
-  return (filters.categories.length > 0 ? 1 : 0) + (filters.analytics.length > 0 ? 1 : 0) + (filters.heightMinM !== null || filters.heightMaxM !== null ? 1 : 0) + (filters.rootMotion ? 1 : 0) + (filters.completion.length > 0 ? 1 : 0);
+  return (filters.categories.length > 0 ? 1 : 0) + (filters.analytics.length > 0 ? 1 : 0) + (filters.heightMinM !== null || filters.heightMaxM !== null ? 1 : 0) + (filters.powerMinW !== null || filters.powerMaxW !== null ? 1 : 0) + (filters.rootMotion ? 1 : 0) + (filters.completion.length > 0 ? 1 : 0);
 }
 
 /** 📥️ Whether the filters read what only loaded assets carry. */
@@ -109,6 +115,16 @@ export const rowHeightM = (row: Row): number => row.asset?.dimensions.heightM ??
 /** ⚖️ The nominal mass of a row in kilograms, once loaded. */
 export const rowMassKg = (row: Row): number | null => row.asset?.dimensions.massKg ?? null;
 
+/** ⚡️ The total power of all elements of a row in watts: the asset's own once loaded, else the manifest's (the manifest is validated against the asset). */
+export const rowPowerW = (row: Row): number => (row.asset === undefined ? row.entry.powerW : totalPowerW(row.asset));
+
+/** 🔌️ A power with its unit in the language's number format: watts below 1 kW (one decimal below 10 W unless whole, else none), kilowatts of three significant digits from 1 kW. */
+export function formatPowerW(watts: number, language: Language): string {
+  if (Math.round(watts) < 1000) return `${formatNumber(watts, watts < 10 && !Number.isInteger(watts) ? 1 : 0, language)} W`;
+  const kilowatts = watts / 1000;
+  return `${formatNumber(kilowatts, kilowatts >= 100 ? 0 : kilowatts >= 10 ? 1 : 2, language)} kW`;
+}
+
 /** ✅️ The completion of a row: the asset's own once loaded, else the plan's. */
 export const rowCompletion = (row: Row): Completion => row.asset?.completion ?? row.entry.completion;
 
@@ -123,6 +139,9 @@ export function matches(row: Row, filters: Filters): boolean {
   const height = rowHeightM(row);
   if (filters.heightMinM !== null && height < filters.heightMinM) return false;
   if (filters.heightMaxM !== null && height > filters.heightMaxM) return false;
+  const power = rowPowerW(row);
+  if (filters.powerMinW !== null && power < filters.powerMinW) return false;
+  if (filters.powerMaxW !== null && power > filters.powerMaxW) return false;
   if (filters.rootMotion && !hasRootMotion(row.asset)) return false;
   if (filters.completion.length > 0 && !filters.completion.includes(rowCompletion(row))) return false;
   const words = normalize(filters.q).split(/\s+/u).filter(Boolean);
@@ -135,7 +154,7 @@ export function matches(row: Row, filters: Filters): boolean {
 export function filterAndSort(rows: readonly Row[], filters: Filters, language: Language): readonly Row[] {
   const direction = filters.descending ? -1 : 1;
   const byName = (a: Row, b: Row): number => a.entry.title[language].localeCompare(b.entry.title[language], language);
-  const value = (row: Row): number | null => (filters.sort === "height" ? rowHeightM(row) : filters.sort === "mass" ? rowMassKg(row) : filters.sort === "category" ? CATEGORIES.indexOf(row.entry.category) : null);
+  const value = (row: Row): number | null => (filters.sort === "height" ? rowHeightM(row) : filters.sort === "mass" ? rowMassKg(row) : filters.sort === "power" ? rowPowerW(row) : filters.sort === "category" ? CATEGORIES.indexOf(row.entry.category) : null);
   return rows.filter((row) => matches(row, filters)).sort((a, b) => {
     const [x, y] = [value(a), value(b)];
     if (filters.sort === "name") return direction * byName(a, b);

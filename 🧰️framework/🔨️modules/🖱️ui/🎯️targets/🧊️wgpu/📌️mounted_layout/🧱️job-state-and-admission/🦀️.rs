@@ -234,12 +234,17 @@ impl MountedLayoutJob {
                     }
                     UiNode::Stack(stack) => content.is_none().then(|| tree_row_kind(tree, id, parent_kind, &self.row_metrics)).flatten().unwrap_or(LayoutNodeKind::Stack {
                         horizontal: stack.direction == "horizontal",
-                        gap: gap_for_token(&self.theme, stack.gap.as_deref()),
+                        gap: stack_gap_for_token(&self.theme, stack.gap.as_deref(), tree.children(id).any(|child| tree.node(child).is_some_and(|node| ui_node_is_bordered(&node.spec.0)))),
                         padding: padding_for_token(&self.theme, stack.padding.as_deref()),
                     }),
                     UiNode::Field(_) | UiNode::Section(_) if content.is_some() => LayoutNodeKind::Leaf,
                     UiNode::Field(_) => LayoutNodeKind::Field { top: 0.0, bottom: 0.0 },
-                    UiNode::Section(_) => LayoutNodeKind::Section { gap: self.theme.gap_standard, top: 0.0, bottom: 0.0 },
+                    UiNode::Section(_) => LayoutNodeKind::Section { gap: 0.0, top: 0.0, bottom: 0.0 },
+                    UiNode::CardStack(_) => LayoutNodeKind::Section { gap: 0.0, top: 0.0, bottom: 0.0 },
+                    UiNode::OverviewCard(card) => {
+                        let shares_footer = tree.node(id).and_then(|node| node.next_sibling).and_then(|next| tree.node(next)).is_some_and(|next| matches!(next.spec.0, UiNode::OverviewCard(_)));
+                        LayoutNodeKind::Section { gap: 0.0, top: self.theme.control_height, bottom: if card.footer.is_some() && !shares_footer { self.theme.control_height } else { 0.0 } }
+                    }
                     UiNode::Button(_) => LayoutNodeKind::Control { height: self.theme.control_height, label_padding: Some(self.theme.padding_standard) },
                     UiNode::Input(_) | UiNode::Select(_) => LayoutNodeKind::Control { height: if tree_inline_control { self.theme.control_height_small } else { self.theme.control_height }, label_padding: None },
                     UiNode::Toggle(_) | UiNode::Slider(_) | UiNode::NumberStepper(_) | UiNode::Ring(_) | UiNode::IconSelect(_) => LayoutNodeKind::Control { height: self.theme.control_height, label_padding: None },
@@ -253,6 +258,7 @@ impl MountedLayoutJob {
         let index = self.nodes.as_deref().expect("live layout list owner").len();
         let chrome = match &node.spec.0 {
             UiNode::Section(_) | UiNode::Field(_) if content.is_some() => ChromeTextRanges::None,
+            UiNode::CardStack(_) | UiNode::OverviewCard(_) => ChromeTextRanges::Banded,
             UiNode::Section(section) => ChromeTextRanges::Section { title: section.label.as_ref().map(|_| GlyphRange::default()) },
             UiNode::Field(field) => ChromeTextRanges::Field { label: GlyphRange::default(), description: field.description.as_ref().map(|_| GlyphRange::default()), error: field.error.as_ref().map(|_| GlyphRange::default()) },
             UiNode::Slider(slider) if slider.unit.as_deref().is_some_and(|unit| !unit.is_empty()) => ChromeTextRanges::SliderUnit { label: GlyphRange::default() },

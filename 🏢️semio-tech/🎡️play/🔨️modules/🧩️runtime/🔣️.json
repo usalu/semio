@@ -917,6 +917,15 @@
           "exampleLabel": "Demo"
         },
         {
+          "variant": "stdio-ifc-4x3",
+          "label": "IFC 4.3",
+          "tagline": "Edit IFC 4.3 models",
+          "description": "Open IFC 4.3 infrastructure and building models and edit their entities.",
+          "icon": "building",
+          "example": "demo",
+          "exampleLabel": "Demo"
+        },
+        {
           "variant": "stdio-bcf",
           "label": "BCF",
           "tagline": "Edit BIM issues",
@@ -1085,6 +1094,13 @@
           "tagline": "Edit presentations",
           "description": "Open ECMA-376 pptx presentations and edit their parts and slides.",
           "icon": "monitor"
+        },
+        {
+          "variant": "stdio-idml",
+          "label": "InDesign Markup",
+          "tagline": "Edit InDesign documents",
+          "description": "Open IDML packages and edit their stories and spreads.",
+          "icon": "file-text"
         },
         {
           "variant": "stdio-pptx-strict",

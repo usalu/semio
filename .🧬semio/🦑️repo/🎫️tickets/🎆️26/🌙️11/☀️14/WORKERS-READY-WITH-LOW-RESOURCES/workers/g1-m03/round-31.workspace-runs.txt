@@ -1,0 +1,18 @@
+== 2026-11-16T02:22:20Z workspace runs of the ready child (stage, seconds, exit, outcome, peak MB of the child) from .cache/f/ready/ready-timings.json
+native 4 0 ok None
+repo-mcp 27 0 ok 1690
+dependencies 45 0 ok 1289
+tools 695 1 stage-failed 3042
+tools 1168 0 ok 2039
+workspace 132 1 stage-failed 1304
+workspace 101 1 stage-failed 150
+workspace 102 1 stage-failed 148
+workspace 359 1 stage-failed 107
+workspace 991 1 stage-failed 68
+workspace 101 1 stage-failed 156
+workspace 741 1 stage-failed 146
+workspace 3555 1 stage-failed 58
+workspace 4206 75 stage-failed 84
+workspace 3383 75 stage-failed 155
+-- last failed run (ready-log-workspace-failed.txt, 02:15:13Z):
+The project graph could not be read on this machine yet: the plan stage inference (during inference) grew to 8722 MB, more than the 6553 MB this machine gives a plan, and only 4007 MB of memory were available (at least 2048 MB are kept in reserve) after it gave back what it could. It was stopped bef

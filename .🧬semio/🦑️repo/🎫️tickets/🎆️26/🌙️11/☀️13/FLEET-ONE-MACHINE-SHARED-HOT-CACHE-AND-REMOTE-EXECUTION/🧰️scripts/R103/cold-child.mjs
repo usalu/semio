@@ -1,0 +1,17 @@
+import{readFileSync,mkdirSync}from"node:fs";import{deserialize}from"node:v8";
+const R="/Users/ueli/Documents/semio",B=R+"/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/",PN=B+"🕸️graph/📥️inference/📦️project-nodes/";
+const E=process.env,wave=E.R103_WAVE,root=E.R103_ROOT,name=E.R103_OWNER;
+const svc=await import(PN+"🏊️project-farm/👷️service/🟨️.mjs");
+const head=JSON.parse(readFileSync(wave+"/head.json","utf8")),session=deserialize(readFileSync(wave+"/session.bin"));
+const mb=n=>Math.round(n/1048576),m0=()=>{const m=process.memoryUsage();return{rss:mb(m.rss),heap:mb(m.heapUsed),ext:mb(m.external)}};
+mkdirSync(E.R103_STAGING,{recursive:true});
+await svc.open({...session,workspaceRoot:R,closureStore:undefined,stagingBase:E.R103_STAGING,authority:undefined},{slot:0,generation:1});
+console.log(JSON.stringify({t:"opened",...m0()}));
+const pn=await import(PN+"🟨️.mjs");const env=svc.sessionEnvironmentV1();
+const json={...JSON.parse(readFileSync(R+"/"+root+"/📋️project.json","utf8")),root};
+const job=pn.ownerJobV1(env,head.globals,{name,json});
+const JSC=await import("bun:jsc");const OB=await import(B+"👁️observation/🟨️.mjs");const SI=await import(B+"🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs");const t0=performance.now();
+const tick=setInterval(()=>{const h=JSC.heapStats();console.log("TICK "+JSON.stringify({s:Math.round((performance.now()-t0)/1000),...m0(),heapSize:mb(h.heapSize),extra:mb(h.extraMemorySize),objs:h.objectCount}));if(E.R103_TYPES==="1"){const ty=Object.entries(h.objectTypeCounts).sort((a,b)=>b[1]-a[1]).slice(0,6);console.log("TYPES "+JSON.stringify(ty)+" "+JSON.stringify(OB.inferenceCacheSizesV1())+" "+JSON.stringify(SI.closureEntryCountsV1()));}},2000);
+const r=await svc.run(job);
+console.log(JSON.stringify({t:"done",ms:Math.round(performance.now()-t0),reply:r,...m0(),maxrss:mb(process.resourceUsage().maxRSS*1024)}));
+clearInterval(tick);process.exit(0);

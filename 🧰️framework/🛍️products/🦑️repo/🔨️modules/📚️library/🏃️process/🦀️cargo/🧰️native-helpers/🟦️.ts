@@ -10,6 +10,7 @@ import type {ResourceLeaseControl} from "../../../../../../../🔨️modules/�
 import {ensureUnitCacheShimV1,unitCacheRootV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🚪️launch/🟦️.ts";
 import {withCompilerWorkspaceSharedWriteV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
 import {withRepositoryCompilerStoreV1,type RepositoryCompilerStoreV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
+import {shareSchedulerBuildV1} from "./🛰️fleet/🟦️.ts";
 import {refuseProcessV1} from "../../../../../../../🔨️modules/🏃️process/📖️texts/🟦️.ts";
 
 /** 🧰️ The two native helpers every Cargo build of the repository starts with, as they now exist on disk. */
@@ -37,7 +38,7 @@ export function prepareRepositoryCargoSchedulerV1(invocation:ScriptInvocation,co
  requireIssuedResourceControlInvocationV1(control,invocation);
  const selection=schedulerCargoSelectionV1(false,readBuildMode(store.environment.SEMIO_BUILD_MODE!)),leaseDirectory=readNativeStorageReservationPolicyV1(store.storage,store.control).leaseDirectory;
  return withRepositoryCargoInputsV1({invocation,workspace,cwd:workspace,...selection,environment:store.environment,control,storage:store.storage,network:repositoryCargoNetworkV1(invocation,workspace),consumption:{kind:"compiler",producer:"artifact",operation:"build"}},input=>{const held=readSchedulerExecutablesV1(store.environment.CARGO_TARGET_DIR!,store.toolchain.digest,input.environment)?.get("semio-build-scheduler");if(held)return Promise.resolve(held);return withCompilerWorkspaceSharedWriteV1(store.storage,leaseDirectory,input.control,writer=>withCompilerCapacityConsumptionV1({directory:leaseDirectory,control:writer,environment:input.environment,request:{kind:"exact",parallelism:1}},async(_capacity,cpuControl)=>{
-  const built=(await buildSchedulerV1({cwd:workspace,targetDirectory:store.environment.CARGO_TARGET_DIR!,buildDirectory:store.buildDirectory,environment:input.environment,arguments:input.selections[0]!.arguments,toolchain:store.toolchain.digest,control:cpuControl,storage:store.storage,sourceBoundary:store.sourceBoundary})).get("semio-build-scheduler");
+  const built=(await shareSchedulerBuildV1({workspace,targetDirectory:store.environment.CARGO_TARGET_DIR!,toolchain:store.toolchain.digest,environment:input.environment,mode:readBuildMode(store.environment.SEMIO_BUILD_MODE!),manifest:selection.manifest,say:line=>console.log(line),build:()=>buildSchedulerV1({cwd:workspace,targetDirectory:store.environment.CARGO_TARGET_DIR!,buildDirectory:store.buildDirectory,environment:input.environment,arguments:input.selections[0]!.arguments,toolchain:store.toolchain.digest,control:cpuControl,storage:store.storage,sourceBoundary:store.sourceBoundary})})).get("semio-build-scheduler");
   if(built===undefined||!existsSync(built))throw refuseProcessV1("failed","nativeHelpers.scheduler-absent",{path:built??""});return async()=>built;
  }));});
 }

@@ -7,6 +7,7 @@
  */
 
 import type { ReactElement } from "react";
+import { SharedBorderRow } from "@semio-tech/ui-react/chrome";
 import { LANGUAGES } from "@semio-tech/course";
 
 type CourseLocale = (typeof LANGUAGES)[number];
@@ -35,14 +36,14 @@ export function LoadFallback(props: { readonly failed: boolean; readonly onRetry
             {failed ? LOAD_FALLBACK_TEXTS[locale].failed : LOAD_FALLBACK_TEXTS[locale].loading}
           </p>
           {failed ? (
-            <span className="flex flex-wrap justify-center gap-single">
-              <button type="button" onClick={onRetry} className="cursor-pointer rounded-md border border-border bg-transparent px-double py-single text-sm text-foreground">
+            <SharedBorderRow>
+              <button type="button" data-shared-border-cell="" onClick={onRetry} className="cursor-pointer bg-transparent px-double py-single text-sm text-foreground">
                 {LOAD_FALLBACK_TEXTS[locale].retry}
               </button>
-              <button type="button" onClick={onReload} className="cursor-pointer rounded-md border border-border bg-transparent px-double py-single text-sm text-foreground">
+              <button type="button" data-shared-border-cell="" onClick={onReload} className="cursor-pointer bg-transparent px-double py-single text-sm text-foreground">
                 {LOAD_FALLBACK_TEXTS[locale].reload}
               </button>
-            </span>
+            </SharedBorderRow>
           ) : null}
         </section>
       ))}

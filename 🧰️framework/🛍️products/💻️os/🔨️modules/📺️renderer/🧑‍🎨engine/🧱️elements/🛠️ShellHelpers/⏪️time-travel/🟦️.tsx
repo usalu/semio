@@ -398,7 +398,7 @@ export type TimeTravelChromePropsV1 = { readonly session: HistoryTimeTravel; rea
  * session, so the window descriptors that carry it do not rebuild on every replay progress step. */
 export function TimeTravelWindowIndicator({ stage, description }: { readonly stage: HistoryTimeTravelStage; readonly description: string }): ReactElement {
   return (
-    <span role="note" aria-label={description} title={description} data-semio-time-travel-indicator={stage} className="pointer-events-auto inline-flex items-center gap-tiny rounded-sm border border-accent bg-base px-single text-xs">
+    <span role="note" aria-label={description} title={description} data-semio-time-travel-indicator={stage} data-shared-border-cell="" className="pointer-events-auto inline-flex items-center gap-tiny self-stretch bg-transparent px-single text-xs text-accent">
       <Icon icon="clock" size="small" />
       <span aria-hidden="true">{shellLabel("ui.timeTravel.indicator")}</span>
     </span>

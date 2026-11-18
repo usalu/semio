@@ -26,6 +26,8 @@ fn variant_discriminant(node: &UiNode) -> u32 {
         UiNode::ComponentScene(_) => 17,
         UiNode::ExternalSlot(_) => 18,
         UiNode::Group(_) => 19,
+        UiNode::CardStack(_) => 21,
+        UiNode::OverviewCard(_) => 22,
     }
 }
 
@@ -45,6 +47,8 @@ fn explicit_id(node: &UiNode) -> Option<&str> {
         UiNode::Field(n) => Some(n.id.as_str()),
         UiNode::Section(n) => Some(n.id.as_str()),
         UiNode::Group(n) => Some(n.id.as_str()),
+        UiNode::CardStack(n) => Some(n.id.as_str()),
+        UiNode::OverviewCard(n) => Some(n.id.as_str()),
         UiNode::Image(n) => Some(n.id.as_str()),
         UiNode::ComponentScene(n) => Some(n.surface_id.as_str()),
         UiNode::ExternalSlot(n) => Some(n.body_key.as_str()),
@@ -76,6 +80,8 @@ fn children_of(node: &UiNode, open: bool) -> Vec<Cow<'_, UiNode>> {
         UiNode::Stack(n) => n.children.iter().map(Cow::Borrowed).collect(),
         UiNode::Section(n) => n.children.iter().map(Cow::Borrowed).collect(),
         UiNode::Group(n) => n.children.iter().map(Cow::Borrowed).collect(),
+        UiNode::CardStack(n) => n.children.iter().map(Cow::Borrowed).collect(),
+        UiNode::OverviewCard(n) => n.children.iter().map(Cow::Borrowed).collect(),
         UiNode::Field(n) => vec![Cow::Borrowed(n.child.as_ref())],
         UiNode::Select(select) if open => select.items.iter().map(|item| Cow::Owned(select_item_row(select, item))).collect(),
         UiNode::Select(_) => Vec::new(),

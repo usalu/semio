@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {createHash,createPrivateKey,createPublicKey,generateKeyPairSync,randomBytes,sign,verify,type KeyObject} from "node:crypto";
 import {readFileSync,statSync} from "node:fs";
 import {mkdir,readdir,readFile,rename,rm,writeFile} from "node:fs/promises";
@@ -49,7 +50,7 @@ const exportPrivate=(key:KeyObject):string=>key.export({type:"pkcs8",format:"der
 const valid=(key:KeyObject,data:Uint8Array,signature:string):boolean=>{try{return verify(null,data,key,Buffer.from(signature,"base64url"));}catch{return false;}};
 
 /** 🗂️ Where a machine keeps its identity: `<worktree>/.cache/f/identity/`, never replicated. */
-export const fleetIdentityDirectoryV1=(root:string):string=>join(root,".cache","f","identity");
+export const fleetIdentityDirectoryV1=(root:string):string=>machinePathV1(root,".cache","f","identity");
 
 const keyPath=(root:string,name:string):string=>join(fleetIdentityDirectoryV1(root),`${name}.key`);
 const registrationPath=(root:string):string=>join(fleetIdentityDirectoryV1(root),"registration.json");
@@ -57,7 +58,7 @@ const registrationPath=(root:string):string=>join(fleetIdentityDirectoryV1(root)
 /** 🏠️ The machine facts the identity needs from `.cache/f/machine.json`: its origin, its group and the store root. */
 export function readFleetMachineV1(root:string):Readonly<{originId:string;group:string;storeRoot:string|undefined}>|undefined{
  try{
-  const value=JSON.parse(readFileSync(join(root,".cache","f","machine.json"),"utf8")) as {originId?:unknown;groupId?:unknown;storeRoot?:unknown};
+  const value=JSON.parse(readFileSync(machinePathV1(root,".cache","f","machine.json"),"utf8")) as {originId?:unknown;groupId?:unknown;storeRoot?:unknown};
   return typeof value.originId==="string"&&ORIGIN.test(value.originId)&&typeof value.groupId==="string"&&ORIGIN.test(value.groupId)?{originId:value.originId,group:value.groupId,storeRoot:typeof value.storeRoot==="string"&&value.storeRoot!==""?value.storeRoot:undefined}:undefined;
  }catch{return undefined;}
 }
@@ -272,7 +273,7 @@ export type FleetRegistryOptionsV1=Readonly<{storeRoot:string;group:string;group
 /** 📚️ Reads `origins/<origin>/fleet-auth.json` and `retired.json` of the group store, at most once per TTL (5 s) and bounded by a timeout; an origin it does not know yet is looked up on its own, at most once per second per origin, keeping the last good view when the store stalls. The fleet may be several groups: `groups` names the peer groups whose origins are admitted when they appear in this store (copied by the relay), `peerStores` maps a peer group to the folder where its store is mounted, and its `origins/` are read from there; `pinned` maps an origin to the public key that is trusted for it before anything is seen (a topology pin, stronger than first sight). Pins the origin key of the first valid registration per origin in `pinsPath`; a later registration with another origin key is accepted only with a rotation signature of the pinned key, or after the origin was retired and re-admitted; a retired origin has no keys. */
 export function createFleetRegistryV1(options:FleetRegistryOptionsV1):FleetRegistryV1{
  const clock=options.now??Date.now,ttl=options.ttlMilliseconds??5000,timeout=options.timeoutMilliseconds??1500;
- let checked=-Infinity,view=new Map<string,{status:FleetOriginStatusV1;keys:Map<FleetRoleV1,KeyObject>}>(),pins:Record<string,{publicKey:string;pinnedAtMs:number}>|undefined,running:Promise<void>|undefined;
+ let checked=-Infinity,view=new Map<string,{status:FleetOriginStatusV1;keys:Map<FleetRoleV1,KeyObject>;group?:string}>(),pins:Record<string,{publicKey:string;pinnedAtMs:number}>|undefined,running:Promise<void>|undefined;
  const loadPins=async():Promise<Record<string,{publicKey:string;pinnedAtMs:number}>>=>{
   if(pins!==undefined)return pins;
   if(options.pinsPath===undefined){pins={};for(const [id,publicKey] of Object.entries(options.pinned??{}))pins[id]={publicKey,pinnedAtMs:0};return pins;}

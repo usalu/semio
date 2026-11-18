@@ -46,7 +46,7 @@ test("the scoped plan equals the restriction of the whole-workspace plan",async(
 });
 
 test("the scoped plan agrees with the independent Python oracle",async()=>{
- const run=Bun.spawnSync(["/home/deck/semio/.venv/bin/python","-I",join(import.meta.dir,"🐍️oracle.py"),join(import.meta.dir,"🔣️.json")]),oracle=JSON.parse(run.stdout.toString());
+ const run=Bun.spawnSync([process.env.SEMIO_TEST_PYTHON_BINARY??"python3","-I",join(import.meta.dir,"🐍️oracle.py"),join(import.meta.dir,"🔣️.json")]),oracle=JSON.parse(run.stdout.toString());
  expect(run.exitCode,run.stderr.toString()).toBe(0);
  for(const row of cases.filter(row=>!row.error)){const plan=await planScopedTargetsV1(counting([]),row.scope);expect({tasks:ids(plan),projects:[...plan.projects]},row.name).toEqual(oracle[row.name]);}
 });

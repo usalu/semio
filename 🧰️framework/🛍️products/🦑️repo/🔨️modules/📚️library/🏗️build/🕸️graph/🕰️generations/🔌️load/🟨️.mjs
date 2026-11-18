@@ -8,6 +8,7 @@ import{decodeVerifiedScopeV1}from"../🔭️coverage/🟨️.mjs";
 import{readPinnedGenerationV1}from"../🧷️pin/🟨️.mjs";
 import{CUSTODY_POLICY_V1}from"../🔐️custody/🟨️.mjs";
 import{closureMissingErrorV1}from"../../🩹️closure-repair/🟨️.mjs";
+import{runtimeCollectGarbageV1}from"../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
 /** 🗣️ The bilingual texts of the graph generation; the schema file declares the same table and a law keeps both equal. */
 export const GENERATION_MESSAGES_V1=Object.freeze({
@@ -47,6 +48,11 @@ export const GENERATION_MESSAGES_V1=Object.freeze({
   restored:"graph: generation {generation} ({owners} projects) restored from the remote cache, {documents} documents ({megabytes} MB) downloaded in {seconds} s, from a state {age} min old with {stale} projects stale",
   uploaded:"graph: generation {generation} ({owners} projects) uploaded to the remote cache, {documents} documents ({megabytes} MB) in {seconds} s",
   exchangeFailed:"graph: the remote cache did not exchange the generation ({reason}), going on without it",
+  storing:"graph: all project results are in, storing {count} project fragments",
+  indexing:"graph: fragments stored, merging the facts of {count} projects into the fact index",
+  resumed:"graph: generation {generation} ({owners} projects) was built by a command that was cut off and is published now; the tree is checked against it next",
+  resumedWaves:"graph: {done} of {total} projects were derived by a command that was cut off, deriving the rest",
+  sealing:"graph: fact index merged, packing and publishing generation {generation}",
  }),
  de:Object.freeze({
   current:"Graph: Generation {generation} wird ohne Prüfung geliefert (Graph-Richtlinie current)",
@@ -84,6 +90,11 @@ export const GENERATION_MESSAGES_V1=Object.freeze({
   restored:"Graph: Generation {generation} ({owners} Projekte) aus dem Remote-Cache wiederhergestellt, {documents} Dokumente ({megabytes} MB) in {seconds} s geladen, von einem Stand von vor {age} Min. mit {stale} veralteten Projekten",
   uploaded:"Graph: Generation {generation} ({owners} Projekte) in den Remote-Cache hochgeladen, {documents} Dokumente ({megabytes} MB) in {seconds} s",
   exchangeFailed:"Graph: der Remote-Cache hat die Generation nicht ausgetauscht ({reason}), es geht ohne sie weiter",
+  storing:"Graph: alle Projektergebnisse liegen vor, {count} Projektfragmente werden gespeichert",
+  indexing:"Graph: Fragmente gespeichert, die Fakten von {count} Projekten werden in den Faktenindex eingefügt",
+  resumed:"Graph: Generation {generation} ({owners} Projekte) wurde von einem abgebrochenen Befehl aufgebaut und wird jetzt veröffentlicht; danach wird der Arbeitsbaum dagegen geprüft",
+  resumedWaves:"Graph: {done} von {total} Projekten wurden von einem abgebrochenen Befehl abgeleitet, der Rest wird abgeleitet",
+  sealing:"Graph: Faktenindex zusammengeführt, Generation {generation} wird verpackt und veröffentlicht",
  }),
 });
 
@@ -210,27 +221,75 @@ export function survivingStubsV1(stubs,removed){const gone=new Set(removed);retu
 /** 🔢️ The edges of one owner in the order of their canonical text, so the fragment of an owner does not depend on the order in which its files were visited (a discovery of all owners and of some of them publish the same bytes). */
 function orderedEdgesV1(edges){return edges.map(edge=>[canonicalJsonV1(edge),edge]).sort((a,b)=>a[0]<b[0]?-1:a[0]>b[0]?1:0).map(row=>row[1]);}
 
-/**
- * 🧩️ Shapes what one partial inference produced into the compute result of the store: every owner carries the facts of its own inference record plus the captured facts below its roots, edges go to their source owner, facts nobody consumed belong to the environment.
- * `workspaceRoot` makes row paths comparable (rows carry absolute paths); the root project never claims facts by path.
+/** ♻️ After how many batches of rows the streamed claim collects garbage, so the parsed rows of the pass never pile up in the resident set. */
+const COLLECT_EVERY_BATCHES=32;
+
+/** 🗃️ Whether rows are a row log list (counted, keyed, read in batches) and not an array of row objects. */
+const lazyRowsV1=rows=>!Array.isArray(rows)&&typeof rows?.concat==="function"&&typeof rows.keys==="function";
+
+/** 🧩️ Shapes what one partial inference produced into the compute result of the store: every owner carries the facts of its own inference record plus the captured facts below its roots, edges go to their source owner, facts nobody consumed belong to the environment.
+ * `workspaceRoot` makes row paths comparable (rows carry absolute paths); the root project never claims facts by path. A part whose `rows` is a row log list is claimed in one streamed pass over the log (ids only, a batch of rows at a time); a part with an array of rows is claimed over the sorted array.
  */
 export function shapeComputeResultV1({workspaceRoot,part,stubs,separator="/",implementation={all:[],environment:[]}}){
  const processed=new Set([...part.owners.map(owner=>owner.name),...part.edgeOnly.map(owner=>owner.name)]),edgesOf=new Map(),other=[];
  for(const edge of part.edges){if(processed.has(edge.source)){let list=edgesOf.get(edge.source);if(!list)edgesOf.set(edge.source,list=[]);list.push(edge);}else other.push(edge);}
  const prefix=root=>root==="."?undefined:workspaceRoot+separator+root.split("/").join(separator)+separator,prefixes=roots=>roots.filter(Boolean).map(prefix).filter(Boolean);
- const claimed=new Set(),owners=[],ordered=part.rows.map((row,at)=>[row.path,at]).sort((a,b)=>a[0]<b[0]?-1:a[0]>b[0]?1:a[1]-b[1]);
- const under=entry=>{let low=0,high=ordered.length;while(low<high){const middle=(low+high)>>>1;if(ordered[middle][0]<entry)low=middle+1;else high=middle;}const found=[];for(;low<ordered.length&&ordered[low][0].startsWith(entry);low++)found.push(ordered[low][1]);return found;};
- const lazy=rows=>!Array.isArray(rows)&&typeof rows?.concat==="function"&&typeof rows.keys==="function",keysOf=rows=>lazy(rows)?rows.keys():(function*(){for(const row of rows)yield rowKeyV1(row);})(),joined=(rows,extra)=>lazy(rows)?rows.concat(extra):[...rows,...extra];
- const claimedLists=new WeakSet(),claim=(base,roots)=>{
-  const list=prefixes(roots),found=list.length?[...new Set(list.flatMap(under))].sort((a,b)=>a-b):[];let rows=base;
-  if(found.length){const wanted=new Map();for(const at of found){const row=part.rows[at],key=rowKeyV1(row);if(!wanted.has(key))wanted.set(key,row);}for(const key of keysOf(base)){if(!wanted.size)break;wanted.delete(key);}if(wanted.size)rows=joined(base,[...wanted.values()]);}
-  if(!claimedLists.has(rows)){claimedLists.add(rows);for(const key of keysOf(rows))claimed.add(key);}return rows;
- };
- for(const owner of part.owners)owners.push({name:owner.name,root:owner.root,kind:owner.unavailable?"unavailable":"project",node:owner.unavailable??owner.node,edges:orderedEdgesV1(edgesOf.get(owner.name)??[]),targets:owner.unavailable?[]:Object.keys(owner.node?.targets??{}),...(owner.config?{config:owner.config}:{}),...(owner.nativeRoot?{nativeRoot:owner.nativeRoot}:{}),...(owner.tag?{tag:owner.tag}:{}),...(owner.reads?{reads:owner.reads}:{}),rows:joined(claim(owner.nodeRows??[],[owner.root,owner.nativeRoot]),implementation.all)});
- for(const owner of part.edgeOnly){const stub=stubs[owner.name];owners.push({name:owner.name,partial:"edges",...(owner.streamed?{}:{edges:orderedEdgesV1(edgesOf.get(owner.name)??[]),...(part.readsOf?.(owner.name)?{reads:part.readsOf(owner.name)}:{})}),rows:claim([],[stub.root,stub.nativeRoot])});}
- const environment=[...part.env.rows,...part.rows.filter(row=>!claimed.has(rowKeyV1(row))),...implementation.all,...implementation.environment];
+ const slots=[],claim=(base,roots)=>slots.push({base,prefixes:prefixes(roots)})-1;
+ const joined=(rows,extra)=>lazyRowsV1(rows)?rows.concat(extra):[...rows,...extra];
+ const owners=[],slotOf=[];
+ for(const owner of part.owners){slotOf.push(claim(owner.nodeRows??[],[owner.root,owner.nativeRoot]));owners.push({name:owner.name,root:owner.root,kind:owner.unavailable?"unavailable":"project",node:owner.unavailable??owner.node,edges:orderedEdgesV1(edgesOf.get(owner.name)??[]),targets:owner.unavailable?[]:Object.keys(owner.node?.targets??{}),...(owner.config?{config:owner.config}:{}),...(owner.nativeRoot?{nativeRoot:owner.nativeRoot}:{}),...(owner.tag?{tag:owner.tag}:{}),...(owner.reads?{reads:owner.reads}:{})});}
+ const edgeOnly=[];
+ for(const owner of part.edgeOnly){const stub=stubs[owner.name];edgeOnly.push({name:owner.name,slot:claim([],[stub.root,stub.nativeRoot]),...(owner.streamed?{}:{edges:orderedEdgesV1(edgesOf.get(owner.name)??[]),...(part.readsOf?.(owner.name)?{reads:part.readsOf(owner.name)}:{})})});}
+ const claims=lazyRowsV1(part.rows)&&part.rows.log!==undefined?claimStreamedV1({all:part.rows,slots,workspaceRoot,separator}):claimListedV1({all:part.rows,slots}),all=implementation.all;
+ owners.forEach((owner,at)=>{owner.rows=joined(claims.rows[slotOf[at]],all);});
+ for(const owner of edgeOnly){const{name,slot,...rest}=owner;owners.push({name,partial:"edges",...rest,rows:claims.rows[slot]});}
+ const environment=claims.environment(part.env.rows,[...implementation.all,...implementation.environment]);
  return{owners,...(part.carried?.length?{carried:part.carried}:{}),...(part.readsOf?{readsOf:part.readsOf}:{}),...(part.reEdge?{reEdge:async(name,fragment)=>orderedEdgesV1(await part.reEdge(name,fragment))}:{}),...(part.derived?.length?{derived:part.derived}:{}),env:{digest:part.env.digest,rows:environment,...(part.env.parts?{parts:part.env.parts}:{})},global:{version:1,externalNodes:part.externalNodes??{},edges:other,unavailable:part.parseUnavailable??[]},replaceTags:part.replaceTags??[],...(Number.isSafeInteger(part.inferred)?{inferred:part.inferred}:{}),...(part.phases?{phases:part.phases}:{}),...(part.dispose?{dispose:part.dispose}:{})};
 }
+
+/** 📚️ Claims over an array of rows: the rows below the roots of each slot come from a path-sorted copy of the array; what no slot holds is the environment's. */
+function claimListedV1({all,slots}){
+ const claimed=new Set(),ordered=all.map((row,at)=>[row.path,at]).sort((a,b)=>a[0]<b[0]?-1:a[0]>b[0]?1:a[1]-b[1]);
+ const under=entry=>{let low=0,high=ordered.length;while(low<high){const middle=(low+high)>>>1;if(ordered[middle][0]<entry)low=middle+1;else high=middle;}const found=[];for(;low<ordered.length&&ordered[low][0].startsWith(entry);low++)found.push(ordered[low][1]);return found;};
+ const keysOf=rows=>lazyRowsV1(rows)?rows.keys():(function*(){for(const row of rows)yield rowKeyV1(row);})(),joined=(rows,extra)=>lazyRowsV1(rows)?rows.concat(extra):[...rows,...extra];
+ const claimedLists=new WeakSet(),claim=({base,prefixes:list})=>{
+  const found=list.length?[...new Set(list.flatMap(under))].sort((a,b)=>a-b):[];let rows=base;
+  if(found.length){const wanted=new Map();for(const at of found){const row=all[at],key=rowKeyV1(row);if(!wanted.has(key))wanted.set(key,row);}for(const key of keysOf(base)){if(!wanted.size)break;wanted.delete(key);}if(wanted.size)rows=joined(base,[...wanted.values()]);}
+  if(!claimedLists.has(rows)){claimedLists.add(rows);for(const key of keysOf(rows))claimed.add(key);}return rows;
+ };
+ const rows=slots.map(claim);
+ return{rows,environment:(own,extra)=>[...own,...all.filter(row=>!claimed.has(rowKeyV1(row))),...extra]};
+}
+
+/** 🌊️ Claims over a row log list in one pass: every row of the log is read once in batches, the slots whose roots lie above its path are found by its ancestor directories, and only row numbers are kept (a bitmap of the claimed numbers, the numbers a slot holds beyond its own list). Memory is a few bytes per row whatever the number of owners. */
+function claimStreamedV1({all,slots,workspaceRoot,separator}){
+ const log=all.log,start=workspaceRoot+separator,batch=2048;
+ let bits=new Uint8Array((log.size()>>>3)+8);
+ const mark=id=>{const byte=id>>>3;if(byte>=bits.length){const next=new Uint8Array(Math.max(byte+8,bits.length*2));next.set(bits);bits=next;}bits[byte]|=1<<(id&7);},marked=id=>(id>>>3)<bits.length&&(bits[id>>>3]&(1<<(id&7)))!==0;
+ const idsOf=base=>lazyRowsV1(base)&&base.log===log&&!base.tails.length?base.ids:Uint32Array.from(lazyRowsV1(base)?base.rows():base,row=>log.id(row));
+ const known=new Map(),sortedOf=base=>{let ids=known.get(base);if(ids===undefined){ids=base.length?Uint32Array.from(idsOf(base)).sort():new Uint32Array(0);known.set(base,ids);}return ids;};
+ const has=(ids,id)=>{let low=0,high=ids.length;while(low<high){const middle=(low+high)>>>1;if(ids[middle]<id)low=middle+1;else high=middle;}return low<ids.length&&ids[low]===id;};
+ const byPrefix=new Map(),sorted=slots.map(slot=>sortedOf(slot.base)),extras=slots.map(()=>[]);
+ slots.forEach((slot,at)=>{for(const prefix of slot.prefixes){const list=byPrefix.get(prefix);if(list===undefined)byPrefix.set(prefix,[at]);else if(list[list.length-1]!==at)list.push(at);}});
+ const visit=(id,row)=>{
+  const path=row.path;if(!byPrefix.size||typeof path!=="string"||!path.startsWith(start))return;
+  for(let at=start.length;;){const next=path.indexOf(separator,at);if(next<0)return;const hit=byPrefix.get(path.slice(0,next+1));if(hit!==undefined)for(const slot of hit)if(!has(sorted[slot],id)){const list=extras[slot];if(list[list.length-1]!==id)list.push(id);}at=next+1;}
+ };
+ const ids=all.ids;
+ for(let at=0;at<ids.length;at+=batch){const slice=ids.subarray(at,Math.min(ids.length,at+batch)),rows=log.read(slice);for(let item=0;item<slice.length;item++)visit(slice[item],rows[item]);if((at/batch)%COLLECT_EVERY_BATCHES===COLLECT_EVERY_BATCHES-1)runtimeCollectGarbageV1(true);}
+ const tailIds=[];for(const tail of all.tails)for(const row of tail){const id=log.id(row);tailIds.push(id);visit(id,row);}
+ const marked0=new Set();for(const slot of slots){if(marked0.has(slot.base))continue;marked0.add(slot.base);for(const id of sortedOf(slot.base))mark(id);}
+ for(const list of extras)for(const id of list)mark(id);
+ const rows=slots.map((slot,at)=>extras[at].length===0?slot.base:log.list([...idsOf(slot.base),...extras[at]]));
+ return{rows,environment:(own,extra)=>{
+  const seen=new Set(),ids=[],add=id=>{if(!seen.has(id)){seen.add(id);ids.push(id);}};
+  for(const row of own)add(log.id(row));
+  for(const id of all.ids)if(!marked(id))add(id);
+  for(const id of tailIds)if(!marked(id))add(id);
+  return log.list(ids).concat(extra);
+ }};
+}
+
 
 /** 🔍️ Names the exact input behind one stale reason of a plan: the stamp of an inferrer, an input file, a directory listing, a declared data file, a source analysis or a workspace file that appeared, vanished or changed. `current` maps stamp paths to the stamps this process carries. */
 export function describeGenerationReasonV1(reason,{workspaceRoot,separator="/",current=new Map(),language}){
@@ -268,13 +327,20 @@ const progressSinksV1=new Set();
 export function onGenerationProgressV1(listener){progressSinksV1.add(listener);return()=>progressSinksV1.delete(listener);}
 
 export function createGenerationProgressV1(clock){
- const active=new Set();let chain=Promise.resolve(),reportedAt=-Infinity;
- const handle=async({phase,done,total,running,decision})=>{
+ const active=new Set(),seen=new Map();let chain=Promise.resolve(),reportedAt=-Infinity;
+ const apply=async({phase,done,total,running,decision})=>{
   if(running!==undefined){if(!active.has(phase))return;await clock.running?.(phase,running,decision);const at=performance.now();if(progressSinksV1.size&&at-reportedAt>=GENERATION_POLICY_V1.progressReportMilliseconds){reportedAt=at;for(const sink of progressSinksV1)try{sink({phase,done,total,running,...decision===undefined?{}:{decision}});}catch{}}return;}
-  if(done===0||!active.has(phase)){if(active.has(phase))await clock.end(phase);await clock.begin(phase,total);active.add(phase);}
-  await clock.advance(phase,done);
+  if(done===0||!active.has(phase)){if(active.has(phase))await clock.end(phase);await clock.begin(phase,total);active.add(phase);seen.set(phase,-1);}
+  else if(done<seen.get(phase))return;
+  seen.set(phase,done);await clock.advance(phase,done);
   const at=performance.now();if(progressSinksV1.size&&(done>=total||at-reportedAt>=GENERATION_POLICY_V1.progressReportMilliseconds)){reportedAt=at;for(const sink of progressSinksV1)try{sink({phase,done,total});}catch{}}
   if(done>=total){await clock.end(phase);active.delete(phase);}
+ };
+ const handle=async event=>{
+  const{phase,done,total,running}=event;
+  if(typeof phase!=="string"||!/^[a-z]+$/u.test(phase))return;
+  if(running===undefined&&(!Number.isSafeInteger(done)||done<0||!Number.isSafeInteger(total)||total<0))return;
+  try{await apply(event);}catch{active.delete(phase);seen.delete(phase);try{await clock.end(phase);}catch{}}
  };
  return event=>{const run=chain.then(()=>handle(event));chain=run.catch(()=>undefined);return run;};
 }
@@ -363,12 +429,12 @@ export async function loadGenerationGraphV1(host,{policy="fresh",closure,selecti
   const options=host.storeOptions(store,control);
   if(!builder&&host.exchange?.ahead&&pin===undefined&&await host.exchange.ahead({root:options.root,fs:options.fs??createNodeFilePortV1(),signal:host.signal,implementation}).catch(()=>false))return{needsBuild:true,pending:{generation:-1,dirty:[],roots:{},structural:true},generation:-1};
   const restored=builder&&host.exchange?await restoreRemoteGenerationV1(host,options,implementation):undefined;let answers=answersByRoot.get(options.root);if(!answers)answersByRoot.set(options.root,answers=createAnswersV1({root:options.root,fs:options.fs,durable:options.durableAnswers!==false,workspaceRoot:host.workspaceRoot}));
-  const engine=createGenerationStoreV1({...options,answers,workspaceRoot:host.workspaceRoot}),progress=createGenerationProgressV1(host.clock(control));
+  const engine=createGenerationStoreV1({...options,answers,workspaceRoot:host.workspaceRoot,say:(key,fields)=>host.say(key,fields)}),progress=createGenerationProgressV1(host.clock(control));
   await settleRestoredClosuresV1(host,engine,restored,implementation);
   let reached=0;const owners=(done,total,more)=>progress({phase:"owners",done:reached=Math.max(reached,done),total,...more});
   const compute=builder?async(spec,signal)=>{announceGenerationBuildV1(host,spec,rows);const wanted=spec.owners.length+spec.discover.length,before=spec.done??0,overall=(spec.total??spec.owners.length)+spec.discover.length;let inferred=0;if(wanted)await owners(before,overall);const cutAt=Date.now();await host.releaseCutoff?.();const cutMs=Date.now()-cutAt;const part=await host.discoverPart(spec,signal,control,()=>{if(wanted&&inferred<wanted-1)owners(before+ ++inferred,overall).catch(()=>undefined);},(running,decision)=>owners(before+inferred,overall,{running,decision}).catch(()=>undefined));if(wanted)await owners(before+wanted,overall);announceWithheldProjectsV1(host,part);const releaseAt=Date.now();await host.release?.({more:spec.more===true});const shaped=shapeComputeResultV1({workspaceRoot:host.workspaceRoot,separator:host.separator,part,stubs:spec.stubs,implementation:scoped});return{...shaped,phases:{...shaped.phases,cutoff:cutMs,release:Date.now()-releaseAt}};}:async()=>{throw Error("A shared graph reader never computes");};
   pointer=join(options.root,GENERATION_POLICY_V1.pointer);
-  const base={identity,implementation,policy:builder?"fresh":policy,published:builder&&host.published?(generation,info)=>host.published(generation,info):undefined,membership:host.membership,compute,prime:builder?host.prime:undefined,signal:host.signal,progress,requestedAt,builder:builder?body=>body(builder===true?undefined:builder):needsBuild,planned:builder&&carried&&host.planUnchanged?{...carried,holds:()=>host.planUnchanged(carried.live)}:undefined};
+  const base={identity,implementation,policy:builder?"fresh":policy,published:builder&&host.published?(generation,info)=>host.published(generation,info):undefined,wave:builder&&host.waveDone?info=>host.waveDone(info):undefined,membership:host.membership,compute,prime:builder?host.prime:undefined,signal:host.signal,progress,requestedAt,builder:builder?body=>body(builder===true?undefined:builder):needsBuild,unchanged:builder&&host.planUnchanged?live=>host.planUnchanged(live):undefined,planned:builder&&carried&&host.planUnchanged?{...carried,holds:()=>host.planUnchanged(carried.live)}:undefined};
   const closeFn=slice?async(current)=>{const global=await engine.readGlobal(current.manifest);return sliceClosureV1({owners:Object.fromEntries(Object.entries(current.manifest.owners).map(([name,row])=>[name,row.root])),external:Object.keys(global.externalNodes??{}),fragment:name=>engine.readFragment(current.manifest.owners[name]).then(value=>{if(!value)throw Object.assign(Error("Fragment of "+name+" is missing"),{code:"GENERATION_INCOMPLETE"});return sliceViewV1(value);}),selection:slice.selection,roots:slice.roots,providers:slice.providers??[]});}:undefined;
   const started=Date.now(),result=pin!==undefined?await readPinnedGenerationV1({engine,pin,identity,roots,closure:closeFn,signal:host.signal}):roots?await engine.refreshClosure({...base,roots,closure:closeFn}):await engine.refresh(base);
   engine.dropIndexes();if(typeof builder==="object")await builder.release();

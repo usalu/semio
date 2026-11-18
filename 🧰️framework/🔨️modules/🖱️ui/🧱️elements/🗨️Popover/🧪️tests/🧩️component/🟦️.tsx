@@ -2,6 +2,7 @@
 
 import { describe } from "vitest";
 import { registerOwnsUncontrolledDefaultControlledTests } from "./🔶️owns-uncontrolled-default-controlled/🟦️.tsx";
+import { registerSharedBorderCellsTests } from "./🔹️shared-border-cells/🟦️.tsx";
 import { registerRoutesSiblingEscapeFocusTests } from "./🔸️routes-sibling-escape-focus/🟦️.tsx";
 // #endregion 🔌️Adapters
 
@@ -9,5 +10,6 @@ import { registerRoutesSiblingEscapeFocusTests } from "./🔸️routes-sibling-e
 describe("Popover", () => {
   registerOwnsUncontrolledDefaultControlledTests();
   registerRoutesSiblingEscapeFocusTests();
+  registerSharedBorderCellsTests();
 });
 // #endregion 🗨️PopoverMatrix

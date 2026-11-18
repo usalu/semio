@@ -60,7 +60,7 @@ test("Light commands and fixed-block operations leave the arguments and the para
  const directory=join(fresh(),"gate"),environment:NodeJS.ProcessEnv={LANG:"en_US.UTF-8",SEMIO_BUILD_PARALLEL:"7"};
  await withBuildCapacityV1(["cache","status"],environment,async granted=>{expect(granted).toMatchObject({args:["cache","status"],handle:undefined,limit:undefined});},{directory,policy:fast,strip});
  expect(existsSync(directory)).toBe(false);
- await withBuildCapacityV1(["show","projects"],environment,async granted=>{expect(granted.args).toEqual(["show","projects"]);expect(environment.SEMIO_BUILD_PARALLEL).toBe("7");expect(granted.handle).toMatchObject({jobs:1,reservedMegabytes:5120});},{directory,policy:fast,strip,sample:async()=>({host:host(),swappedOutMegabytes:0})});
+ await withBuildCapacityV1(["show","projects"],environment,async granted=>{expect(granted.args).toEqual(["show","projects"]);expect(environment.SEMIO_BUILD_PARALLEL).toBe("7");expect(granted.handle).toMatchObject({jobs:1,reservedMegabytes:3072});},{directory,policy:fast,strip,sample:async()=>({host:host(),swappedOutMegabytes:0})});
 });
 
 test("Law: `dependencies ensure` asks for no capacity up front (a fresh receipt never queues), only the installer asks, and sync and lock still ask",async()=>{
@@ -68,8 +68,8 @@ test("Law: `dependencies ensure` asks for no capacity up front (a fresh receipt 
  const directory=join(fresh(),"gate"),environment:NodeJS.ProcessEnv={LANG:"en_US.UTF-8"},sample=async()=>({host:host(),swappedOutMegabytes:0});
  await withBuildCapacityV1(["dependencies","ensure"],environment,async granted=>{expect(granted).toMatchObject({args:["dependencies","ensure"],handle:undefined,limit:undefined});},{directory,policy:fast,strip,sample});
  expect(existsSync(directory),"no gate entry for the fresh path").toBe(false);
- await withBuildCapacityV1(["dependencies","ensure"],environment,async granted=>{expect(granted.handle).toMatchObject({reservedMegabytes:6144});},{directory,policy:fast,strip,sample,admitDeferred:true});
- for(const args of [["dependencies","sync","--all"],["dependencies","lock","--all"]])await withBuildCapacityV1(args,environment,async granted=>{expect(granted.handle,args.join(" ")).toMatchObject({reservedMegabytes:6144});},{directory,policy:fast,strip,sample});
+ await withBuildCapacityV1(["dependencies","ensure"],environment,async granted=>{expect(granted.handle).toMatchObject({reservedMegabytes:3584});},{directory,policy:fast,strip,sample,admitDeferred:true});
+ for(const args of [["dependencies","sync","--all"],["dependencies","lock","--all"]])await withBuildCapacityV1(args,environment,async granted=>{expect(granted.handle,args.join(" ")).toMatchObject({reservedMegabytes:3584});},{directory,policy:fast,strip,sample});
  const starved=async()=>({host:host({availableMegabytes:1000,pressure:"critical"}),swappedOutMegabytes:0});
  let ran=false;await withBuildCapacityV1(["dependencies","ensure"],environment,async()=>{ran=true;},{directory:join(fresh(),"starved"),policy:fast,strip,sample:starved});
  expect(ran,"a starved host does not delay the fresh path").toBe(true);

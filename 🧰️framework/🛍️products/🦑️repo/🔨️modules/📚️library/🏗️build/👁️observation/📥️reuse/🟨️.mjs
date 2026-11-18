@@ -9,6 +9,8 @@ import{requireIssuedResourceControlV1}from"../../../../../../../🔨️modules/�
 import{checkResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{readInventoryRecordLeanV1,rememberInventoryRecordV1,inventoryRecordStillHoldsV1}from"../../📥️inputs/🪶️lean-inventory/🟨️.mjs";
 import{captureSourceInputInventoryV1,captureCargoLockInventoryV1}from"../../📥️inputs/📋️data/📥️load/🟨️.mjs";
+import{createPresenceCoalescerV1}from"./🧺️coalesce/🟨️.mjs";
+import{observationRoundV1}from"../🟨️.mjs";
 const epochURLs=[new URL(physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),new URL("./🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),new URL("../../📥️inputs/🧮️digest/📥️read/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL))],epochCaptures=epochURLs.map((url,index)=>index===0?captureBoundedSourceRevisionV1(fileURLToPath(url),8388608):captureBoundedSourceRevisionV1(fileURLToPath(url),65536,true)),loadedEpoch=epochCaptures.map(row=>row.sha256),revision=(url,index)=>captureBoundedSourceRevisionV1(fileURLToPath(url),index===0?8388608:65536).sha256,policy=Object.freeze({...JSON.parse(epochCaptures[1].text??"").definitions.Policy.const}),readPolicy=Object.freeze({...JSON.parse(epochCaptures[2].text??"").definitions.Policy.const});
 const reference=/^SEMIO_(?:SOURCE_CLOSURE|CARGO_LOCK)_[a-f0-9]{64}$/u,prefix=/^SEMIO_(?:SOURCE_CLOSURE|CARGO_LOCK)_/u;
 
@@ -43,35 +45,69 @@ export function planInferenceInventoryCohortsV1(extents){
 export function inferenceInventoryRecordHoldsV1(root,name,file){if(typeof name!=="string"||!reference.test(name))throw Error("Closed compact inventory name required");const source=name.startsWith("SEMIO_SOURCE_CLOSURE_"),key=name.slice(source?"SEMIO_SOURCE_CLOSURE_".length:"SEMIO_CARGO_LOCK_".length);if(!file||file.sha256!==key)return false;if(source)captureSourceInputInventoryV1(file.value,root);else captureCargoLockInventoryV1(file.value,root);return true;}
 
 /** 🧱️ Captures no-follow directory identities from the filesystem root through one actual image namespace. */
-function inventoryParentsV1(storeRoot,directory,control){
- const base=parse(directory).root,parts=relative(base,directory).split(sep).filter(Boolean);if(parts.length>readPolicy.maximumAncestors)throw Error("Inference inventory ancestry capacity exceeded");const rows=[];let path=base,device;
- for(const part of["",...parts]){checkResourceLeaseControl(control);if(part)path=join(path,part);const row=lstatSync(path,{bigint:true});if(!row.isDirectory()||row.isSymbolicLink())throw Error("Original no-follow inventory ancestry required");if(path===storeRoot)device=row.dev;if(device!==undefined&&row.dev!==device)throw Error("Original inventory image device required");rows.push({path,dev:row.dev,ino:row.ino,mode:row.mode});}
- if(device===undefined)throw Error("Exact managed inventory image ancestry required");return Object.freeze({rows:Object.freeze(rows),device});
+/** 🫙️ The no-follow directory identities from the filesystem root down to the namespace directory of a store; the namespace directory itself may be absent (a machine that never stored a closure of that namespace), every ancestor above it must exist. */
+export function inventoryAncestryV1(storeRoot,directory,check){
+ const base=parse(directory).root,parts=relative(base,directory).split(sep).filter(Boolean);if(parts.length>readPolicy.maximumAncestors)throw Error("Inference inventory ancestry capacity exceeded");const rows=[];let path=base,device,absent;
+ for(const[at,part]of["",...parts].entries()){check();if(part)path=join(path,part);let row;try{row=lstatSync(path,{bigint:true});}catch(error){if(at===parts.length&&at>0&&device!==undefined&&inferenceInventoryLeafMissingV1(error?.code)){absent=path;break;}throw error;}if(!row.isDirectory()||row.isSymbolicLink())throw Error("Original no-follow inventory ancestry required");if(path===storeRoot)device=row.dev;if(device!==undefined&&row.dev!==device)throw Error("Original inventory image device required");rows.push({path,dev:row.dev,ino:row.ino,mode:row.mode});}
+ if(device===undefined)throw Error("Exact managed inventory image ancestry required");return Object.freeze({rows:Object.freeze(rows),device,...(absent===undefined?{}:{absent})});
 }
 
+function inventoryParentsV1(storeRoot,directory,control){return inventoryAncestryV1(storeRoot,directory,()=>checkResourceLeaseControl(control));}
+
 /** 🪪️ Rechecks every admitted ancestor without treating missing or replaced directories as an inventory miss. */
-function recheckInventoryParentsV1(parents,control){for(const before of parents.rows){checkResourceLeaseControl(control);const row=lstatSync(before.path,{bigint:true});if(!row.isDirectory()||row.isSymbolicLink()||row.dev!==before.dev||row.ino!==before.ino||row.mode!==before.mode)throw Error("Inference inventory ancestry changed");}}
+/** 🫙️ Rechecks the ancestry of a namespace directory: an absent namespace directory must still be absent, one that appeared meanwhile is a typed change. */
+export function recheckInventoryAncestryV1(parents,check){for(const before of parents.rows){check();const row=lstatSync(before.path,{bigint:true});if(!row.isDirectory()||row.isSymbolicLink()||row.dev!==before.dev||row.ino!==before.ino||row.mode!==before.mode)throw inventoryChangedV1("Inference inventory ancestry changed");}if(parents.absent!==undefined){check();try{lstatSync(parents.absent,{bigint:true});}catch(error){if(inferenceInventoryLeafMissingV1(error?.code))return;throw error;}throw inventoryChangedV1("Inference inventory ancestry changed");}}
+function recheckInventoryParentsV1(parents,control){recheckInventoryAncestryV1(parents,()=>checkResourceLeaseControl(control));}
+/** 🪻️ A refusal that a concurrent writer of the store caused (a record appeared, was replaced or was removed while a batch looked at it): the batch is looked at again, and an owner whose look still changes is requeued by its reader.
+ * @see ../../🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs */
+const inventoryChangedV1=text=>Object.assign(Error(text),{code:"BUILD_STORE_CHANGED"});
 const inventoryStampV1=row=>[row.dev,row.ino,row.mode,row.nlink,row.size,row.mtimeNs,row.ctimeNs].join(":");
 
 /** 🕳️ Classifies only the exact leaf ENOENT spelling; ancestry and custody proofs remain mandatory at the caller. */
 export function inferenceInventoryLeafMissingV1(code){return code==="ENOENT";}
 
 /** ❓️ Refuses a changed absence observation and propagates every error except the exact immutable leaf's ENOENT. */
-function requireInventoryLeafAbsentV1(path,parents,control){recheckInventoryParentsV1(parents,control);try{lstatSync(path,{bigint:true});}catch(error){if(!inferenceInventoryLeafMissingV1(error?.code))throw error;recheckInventoryParentsV1(parents,control);checkResourceLeaseControl(control);return;}throw Error("Inference inventory absence changed");}
+function requireInventoryLeafAbsentV1(path,parents,control){recheckInventoryParentsV1(parents,control);try{lstatSync(path,{bigint:true});}catch(error){if(!inferenceInventoryLeafMissingV1(error?.code))throw error;recheckInventoryParentsV1(parents,control);checkResourceLeaseControl(control);return;}throw inventoryChangedV1("Inference inventory absence changed");}
 
-/** 📥️ Retains genuine image custody while revalidating physical identities before each immutable-record memo hit. */
-export async function inferenceInventoryReferencesHoldV1(root,value,control){
- requireIssuedResourceControlV1(control);checkResourceLeaseControl(control);requireCurrentInferenceInventoryReuseV1();const names=captureInferenceInventoryReferencesV1(value);if(!names.length)return true;
+/** 📥️ The inventory names of `names` that are not stored, under one storage consumer: genuine image custody is retained while the physical identities are revalidated before each immutable-record memo hit. */
+async function missingInventoryNamesV1(root,names,control){
  return withRepositoryBuildGraphConsumerV1(root,control,async(store,actual)=>{
   const parents=new Map(),missing=[],present=[];let bytes=0,done=0;await store.recheck();
   for(const name of names){
    checkResourceLeaseControl(actual);const source=name.startsWith("SEMIO_SOURCE_CLOSURE_"),directory=resolve(store.root,source?"build-input-closures":"build-lock-closures"),key=name.slice(source?"SEMIO_SOURCE_CLOSURE_".length:"SEMIO_CARGO_LOCK_".length),path=join(directory,key+".json");if(path.length>policy.maximumPathUnits)throw Error("Inference inventory path exceeds256 units");let ancestry=parents.get(directory);if(!ancestry){ancestry=inventoryParentsV1(store.root,directory,actual);parents.set(directory,ancestry);}recheckInventoryParentsV1(ancestry,actual);
-   let before;try{before=lstatSync(path,{bigint:true});}catch(error){if(!inferenceInventoryLeafMissingV1(error?.code))throw error;await actual.yieldContinuation();checkResourceLeaseControl(actual);await store.recheck();requireInventoryLeafAbsentV1(path,ancestry,actual);missing.push({path,ancestry});continue;}
+   if(ancestry.absent!==undefined){missing.push({name,path,ancestry});continue;}
+   let before;try{before=lstatSync(path,{bigint:true});}catch(error){if(!inferenceInventoryLeafMissingV1(error?.code))throw error;await actual.yieldContinuation();checkResourceLeaseControl(actual);await store.recheck();requireInventoryLeafAbsentV1(path,ancestry,actual);missing.push({name,path,ancestry});continue;}
    if(!before.isFile()||before.isSymbolicLink()||before.nlink!==1n||before.dev!==ancestry.device||before.size<1n||before.size>BigInt(readPolicy.maximumClosureBytes))throw Error("Single-link bounded original inventory record required");const size=Number(before.size);if(bytes>policy.maximumInventoryBytes-size)throw Error("Inference inventory aggregate bytes exceeded before read");bytes+=size;
-   if(!inventoryRecordStillHoldsV1(root,directory,key)){const file=readInventoryRecordLeanV1(directory,key,readPolicy.maximumClosureBytes);if(!inferenceInventoryRecordHoldsV1(root,name,file))throw Error("Inference inventory record identity refused");rememberInventoryRecordV1(root,directory,key,file.stamp);}else{const descriptor=openSync(path,constants.O_RDONLY|(constants.O_NOFOLLOW??0)|(constants.O_NONBLOCK??0));try{const opened=fstatSync(descriptor,{bigint:true});if(!opened.isFile()||inventoryStampV1(opened)!==inventoryStampV1(before))throw Error("Inference inventory descriptor changed");}finally{closeSync(descriptor);}}
-   recheckInventoryParentsV1(ancestry,actual);const after=lstatSync(path,{bigint:true});if(!after.isFile()||after.isSymbolicLink()||inventoryStampV1(after)!==inventoryStampV1(before))throw Error("Inference inventory leaf changed");present.push({path,ancestry,stamp:inventoryStampV1(after)});
+   if(!inventoryRecordStillHoldsV1(root,directory,key)){const file=readInventoryRecordLeanV1(directory,key,readPolicy.maximumClosureBytes);if(!inferenceInventoryRecordHoldsV1(root,name,file))throw Error("Inference inventory record identity refused");rememberInventoryRecordV1(root,directory,key,file.stamp);}else{const descriptor=openSync(path,constants.O_RDONLY|(constants.O_NOFOLLOW??0)|(constants.O_NONBLOCK??0));try{const opened=fstatSync(descriptor,{bigint:true});if(!opened.isFile()||inventoryStampV1(opened)!==inventoryStampV1(before))throw inventoryChangedV1("Inference inventory descriptor changed");}finally{closeSync(descriptor);}}
+   recheckInventoryParentsV1(ancestry,actual);const after=lstatSync(path,{bigint:true});if(!after.isFile()||after.isSymbolicLink()||inventoryStampV1(after)!==inventoryStampV1(before))throw inventoryChangedV1("Inference inventory leaf changed");present.push({path,ancestry,stamp:inventoryStampV1(after)});
    if(++done%128===0){await store.recheck();await actual.yieldContinuation();checkResourceLeaseControl(actual);}
   }
-  checkResourceLeaseControl(actual);await store.recheck();for(const ancestry of parents.values())recheckInventoryParentsV1(ancestry,actual);for(const row of missing)requireInventoryLeafAbsentV1(row.path,row.ancestry,actual);for(const row of present){recheckInventoryParentsV1(row.ancestry,actual);const after=lstatSync(row.path,{bigint:true});if(!after.isFile()||after.isSymbolicLink()||inventoryStampV1(after)!==row.stamp)throw Error("Inference inventory leaf changed before delivery");}checkResourceLeaseControl(actual);requireCurrentInferenceInventoryReuseV1();return missing.length===0;
+  checkResourceLeaseControl(actual);await store.recheck();for(const ancestry of parents.values())recheckInventoryParentsV1(ancestry,actual);for(const row of missing)requireInventoryLeafAbsentV1(row.path,row.ancestry,actual);for(const row of present){recheckInventoryParentsV1(row.ancestry,actual);const after=lstatSync(row.path,{bigint:true});if(!after.isFile()||after.isSymbolicLink()||inventoryStampV1(after)!==row.stamp)throw inventoryChangedV1("Inference inventory leaf changed before delivery");}checkResourceLeaseControl(actual);requireCurrentInferenceInventoryReuseV1();return new Set(missing.map(row=>row.name));
  });
+}
+
+/** 🛝️ Looks at `names` again while a concurrent writer changed the store under the look, at most `attempts` times, each time against the state that is there now (a record that was absent and was stored meanwhile is simply present in the next look; the answer is always one state of the store); a look that still changes after the last attempt ends with its change, which the owner that asked is answered with, not the read. A pure function of its arguments.
+ * @see ./🧬️schema/🔣️.json */
+export async function inventoryNamesSettledV1(run,names,{attempts=policy.changeAttempts,say=()=>{}}={}){
+ for(let attempt=0;;attempt++){
+  try{return await run(names);}
+  catch(error){
+   if(error?.code!=="BUILD_STORE_CHANGED"||attempt>=attempts)throw error;
+   say("inference inventory changed while it was looked at ("+error.message+"), looking again "+(attempt+1)+" of "+attempts+" / Inferenz-Inventar während der Prüfung geändert ("+error.message+"), erneute Prüfung "+(attempt+1)+" von "+attempts);
+  }
+ }
+}
+
+/** 🧺️ The presence coalescers of this process, one per storage control and workspace root: every look that asks while a batch is running joins the next batch instead of taking a lease of its own. */
+const presenceCoalescersV1=new WeakMap(),inventoryLogV1=line=>{try{process.stderr.write("[inventory] "+line+"\n");}catch{}};
+const presenceCoalescerV1=(root,control)=>{let byRoot=presenceCoalescersV1.get(control);if(byRoot===undefined){byRoot=new Map();presenceCoalescersV1.set(control,byRoot);}let coalescer=byRoot.get(root);if(coalescer===undefined){coalescer=createPresenceCoalescerV1({run:names=>inventoryNamesSettledV1(list=>missingInventoryNamesV1(root,list,control),names,{say:inventoryLogV1}),maximumNames:policy.maximumReferences>512?512:policy.maximumReferences});byRoot.set(root,coalescer);}return coalescer;};
+
+/** 📊️ How the inventory presence checks of `control` and `root` went: asked, answered from the memory of the round, batches that took a lease, names they checked, batches asked again caller by caller. */
+export function inferenceInventoryPresenceStatsV1(root,control){return presenceCoalescersV1.get(control)?.get(root)?.stats()??{asked:0,remembered:0,batches:0,retried:0,names:0};}
+
+/** 📥️ Whether every inventory record `value` names is stored: the names are captured once, answered from the memory of the running validation round when they were found before, else checked with the other looks that ask at the same time under one storage consumer. */
+export async function inferenceInventoryReferencesHoldV1(root,value,control){
+ requireIssuedResourceControlV1(control);checkResourceLeaseControl(control);requireCurrentInferenceInventoryReuseV1();const names=captureInferenceInventoryReferencesV1(value);if(!names.length)return true;
+ const holds=process.env.SEMIO_INVENTORY_COALESCE==="off"?(await inventoryNamesSettledV1(list=>missingInventoryNamesV1(root,list,control),names,{say:inventoryLogV1})).size===0:await presenceCoalescerV1(root,control).ask(names,observationRoundV1());
+ checkResourceLeaseControl(control);requireCurrentInferenceInventoryReuseV1();return holds;
 }

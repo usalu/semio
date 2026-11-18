@@ -1,0 +1,22 @@
+import{readdirSync,readFileSync,statSync}from"node:fs";import{brotliDecompressSync}from"node:zlib";import{createHash}from"node:crypto";
+const R="/Users/ueli/Documents/semio",D=R+"/.cache/b/g/m/inference/selections/8d8f21d74af11ed12bed7540aa42908f48a1a023e5437e26666ef5722ed50089/ce/l";
+const B=R+"/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/";
+const{libraryBootstrap}=await import(B+"🕸️graph/📥️inference/🟨️.mjs");await libraryBootstrap;
+const OB:any=await import(B+"👁️observation/🟨️.mjs");
+const names=readdirSync(D).filter(n=>n.endsWith(".json.br"));
+const N=Number(process.argv[2]||300),pick:string[]=[];for(let i=0;i<names.length&&pick.length<N;i+=Math.floor(names.length/N))pick.push(names[i]);
+const t:any={read:0,brotli:0,sha:0,parse:0,share:0,hold:0,bytes:0,rows:0,heldTrue:0};
+const ms=()=>performance.now();
+await OB.observeInferenceSnapshotV1(async()=>{
+let idx=0;const mb=(x:number)=>Math.round(x/1048576);const samp=()=>{Bun.gc(true);const m=process.memoryUsage();const c=OB.inferenceCacheSizesV1();console.log("after",idx,"layers heapUsedMB",mb(m.heapUsed),"externalMB",mb(m.external),"rss",mb(m.rss),"interned",c.interned,"rowStoreChars",c.rowStore.characters,"settledReadBytesMB",mb(c.settledReadBytes),"settledReads",c.settledReads);};samp();
+for(const n of pick){if(idx%50===0&&idx>0)samp();idx++;
+ let a=ms();const raw=readFileSync(D+"/"+n);t.read+=ms()-a;a=ms();
+ const bytes=brotliDecompressSync(raw);t.brotli+=ms()-a;a=ms();t.bytes+=bytes.length;
+ createHash("sha256").update(bytes).digest("hex");t.sha+=ms()-a;a=ms();
+ const rows=JSON.parse(bytes.toString("utf8"));t.parse+=ms()-a;a=ms();t.rows+=rows.length;
+ const shared=OB.shareObservationRowsV1(rows);t.share+=ms()-a;a=ms();
+ const h=await OB.observationsHold(shared);t.hold+=ms()-a;if(h)t.heldTrue++;
+}});
+for(const k in t)t[k]=Math.round(t[k]*10)/10;
+console.log(JSON.stringify({layers:pick.length,...t,perLayerMs:Object.fromEntries(["read","brotli","sha","parse","share","hold"].map(k=>[k,Math.round(t[k]/pick.length*100)/100]))}));
+process.exit(0);

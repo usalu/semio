@@ -56,11 +56,21 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtif
     }
 
     pub async fn with_registry(app: A, registry: AppActionRegistry, actor: ActorId, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Self, Fault> {
-        Self::with_registry_on_bus(app, registry, semio_framework::ActionBus::new(), actor, mounted_policy, identity).await
+        Ok(*Self::with_registry_boxed(app, registry, actor, mounted_policy, identity).await?)
+    }
+
+    /// 📦️ [`Self::with_registry`] built in place on the heap: the instance is about a megabyte inline, so a constructor that must not move it through a stack frame hands out the box.
+    pub async fn with_registry_boxed(app: A, registry: AppActionRegistry, actor: ActorId, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Box<Self>, Fault> {
+        Self::with_registry_on_bus_boxed(app, registry, semio_framework::ActionBus::new(), actor, mounted_policy, identity).await
     }
 
     /// 🫂️ Activates an app controller against Platform's injected shared production registry.
     pub async fn with_registry_on_bus(app: A, registry: AppActionRegistry, tool_jobs: semio_framework::ActionBus, actor: ActorId, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Self, Fault> {
+        Ok(*Self::with_registry_on_bus_boxed(app, registry, tool_jobs, actor, mounted_policy, identity).await?)
+    }
+
+    /// 📦️ [`Self::with_registry_on_bus`] initialized field by field in its final heap allocation, never as one inline value.
+    pub async fn with_registry_on_bus_boxed(app: A, registry: AppActionRegistry, tool_jobs: semio_framework::ActionBus, actor: ActorId, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Box<Self>, Fault> {
         let mounted_policy = mounted_policy.validate().expect("explicit app embedding policy");
         let app_id = app.instance_id().await.to_string();
         PluginRuntimeRegistry::publish_framework_schema_documents().expect("the OS's own schema documents never conflict");
@@ -161,30 +171,40 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtif
             presence_store.install_peer_retirement_factory(factory).expect("presence peer retirement factory installs exactly once during app construction");
         }
         let composition = CompositionCoordinator::new().await;
-        let mut this = Self {
-            app,
-            mounted_policy,
-            original_controller_close:None,
-            constructor: ConstructorState::new(),
-            stores: InstanceStores::new(store, config_store, draft_store, presence_store, window_config_store, window_transient_store, artifact_one_item_factory, config_one_item_factory, draft_one_item_factory, presence_one_item_factory, transient_one_item_factory, presence_local_root_retirement_factory, transient_local_root_retirement_factory, unsupported_publication_contracts, interaction_store),
-            roster: PeerRoster::new(),
-            ingress: ActionIngress::new(),
-            original_typing:Default::default(),original_emission:Default::default(),original_typed_command:Default::default(),original_host_event_command:Default::default(),original_command_scope:None,original_host_event_scope:None,original_typed_tag:std::mem::ManuallyDrop::new(None),original_typed_tag_close:Default::default(),
-            interaction: LocalInteraction::new(),
-            history: CommandHistory::new(),
-            host_events: HostEvents::new(),
-            txn: Transactions::new(),
-            child_composition: ChildComposition::new(composition),
-            pending: PendingReserved::new(dispatch_report),
-            tools: ToolOperations::new(registry, tool_job_controller_id, tool_jobs, bounded_tool_proofs, bounded_tool_contracts, framework_tool_registrations, app_tool_registrations, instance_operation_owner),
-            media: MediaTransfers::new(),
-            ingest: EnvelopeJobs::new(),
-            maintenance: MaintenanceCursors::new(),
-            close: CloseCursors::new(),
-            tool_runs: ToolRunLedger::default(),
-            time_travel: TimeTravelLedger::default(),
-            tool_machines: ToolMachineRuntime::default(),
-        };
+        let mut slot = Box::<Self>::new_uninit();
+        let target = slot.as_mut_ptr();
+        unsafe {
+            std::ptr::addr_of_mut!((*target).app).write(app);
+            std::ptr::addr_of_mut!((*target).mounted_policy).write(mounted_policy);
+            std::ptr::addr_of_mut!((*target).original_controller_close).write(None);
+            std::ptr::addr_of_mut!((*target).constructor).write(ConstructorState::new());
+            std::ptr::addr_of_mut!((*target).stores).write(InstanceStores::new(store, config_store, draft_store, presence_store, window_config_store, window_transient_store, artifact_one_item_factory, config_one_item_factory, draft_one_item_factory, presence_one_item_factory, transient_one_item_factory, presence_local_root_retirement_factory, transient_local_root_retirement_factory, unsupported_publication_contracts, interaction_store));
+            std::ptr::addr_of_mut!((*target).roster).write(PeerRoster::new());
+            std::ptr::addr_of_mut!((*target).ingress).write(ActionIngress::new());
+            std::ptr::addr_of_mut!((*target).original_typing).write(Default::default());
+            std::ptr::addr_of_mut!((*target).original_emission).write(Default::default());
+            std::ptr::addr_of_mut!((*target).original_typed_command).write(Default::default());
+            std::ptr::addr_of_mut!((*target).original_host_event_command).write(Default::default());
+            std::ptr::addr_of_mut!((*target).original_command_scope).write(None);
+            std::ptr::addr_of_mut!((*target).original_host_event_scope).write(None);
+            std::ptr::addr_of_mut!((*target).original_typed_tag).write(std::mem::ManuallyDrop::new(None));
+            std::ptr::addr_of_mut!((*target).original_typed_tag_close).write(Default::default());
+            std::ptr::addr_of_mut!((*target).interaction).write(LocalInteraction::new());
+            std::ptr::addr_of_mut!((*target).history).write(CommandHistory::new());
+            std::ptr::addr_of_mut!((*target).host_events).write(HostEvents::new());
+            std::ptr::addr_of_mut!((*target).txn).write(Transactions::new());
+            std::ptr::addr_of_mut!((*target).child_composition).write(ChildComposition::new(composition));
+            std::ptr::addr_of_mut!((*target).pending).write(PendingReserved::new(dispatch_report));
+            std::ptr::addr_of_mut!((*target).tools).write(ToolOperations::new(registry, tool_job_controller_id, tool_jobs, bounded_tool_proofs, bounded_tool_contracts, framework_tool_registrations, app_tool_registrations, instance_operation_owner));
+            std::ptr::addr_of_mut!((*target).media).write(MediaTransfers::new());
+            std::ptr::addr_of_mut!((*target).ingest).write(EnvelopeJobs::new());
+            std::ptr::addr_of_mut!((*target).maintenance).write(MaintenanceCursors::new());
+            std::ptr::addr_of_mut!((*target).close).write(CloseCursors::new());
+            std::ptr::addr_of_mut!((*target).tool_runs).write(ToolRunLedger::default());
+            std::ptr::addr_of_mut!((*target).time_travel).write(TimeTravelLedger::default());
+            std::ptr::addr_of_mut!((*target).tool_machines).write(ToolMachineRuntime::default());
+        }
+        let mut this = unsafe { slot.assume_init() };
         this.child_composition.seed_genesis_children(&mut this.stores, identity).await.expect("ArtifactApp::genesis_child_pack members must open cleanly onto a freshly constructed store");
         this.child_composition.followed_parent_generation = this.stores.store.generation_now();
         Ok(this)

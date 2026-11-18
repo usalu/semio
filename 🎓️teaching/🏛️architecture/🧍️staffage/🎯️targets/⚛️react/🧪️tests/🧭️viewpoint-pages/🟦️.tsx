@@ -24,7 +24,7 @@ const manifest = {
   version: "semio.staffage/v2",
   categories: [{ id: "humans", emoji: "", title: { en: "Humans", de: "Menschen" }, description: { en: "h", de: "h" }, folder: "humans" }],
   collections: [],
-  entries: [{ id: walker.id, category: "humans", title: walker.title, heightM: walker.dimensions.heightM, widthM: walker.dimensions.widthM, poses: [], clips: [], representations: { "500": "unavailable", "200": "authored", "100": "authored", "50": "authored" }, symbols: [{ id: "position-dot", semantics: "true-position" }, { id: "figure-block", semantics: "true-extent" }], analytics: ["thermal", "structural"], exports: [], distinction: walker.summary, completion: "authored" }],
+  entries: [{ id: walker.id, category: "humans", title: walker.title, heightM: walker.dimensions.heightM, widthM: walker.dimensions.widthM, powerW: 0, poses: [], clips: [], representations: { "500": "unavailable", "200": "authored", "100": "authored", "50": "authored" }, symbols: [{ id: "position-dot", semantics: "true-position" }, { id: "figure-block", semantics: "true-extent" }], analytics: ["thermal", "structural"], exports: [], distinction: walker.summary, completion: "authored" }],
 } as unknown as Manifest;
 const source = () => new CatalogStore({ manifest: async () => manifest, category: async () => ({ assets: [walker], revisions: {} }) satisfies CategoryDocument });
 
@@ -80,18 +80,18 @@ describe("⚖️ compare page", () => {
 });
 
 describe("🧪️ playground selector, position and yaw", () => {
-  it("is one radio group of the three viewpoints and stores the choice", async () => {
+  it("is one radio group of the two section viewpoints and stores the choice", async () => {
     const store = await open("playground");
     const group = await screen.findByRole("radiogroup", { name: "Viewpoint" });
-    expect(within(group).getAllByRole("radio").map((radio) => radio.getAttribute("aria-label"))).toEqual(["Side elevation", "Front elevation", "Plan (top view)"]);
+    expect(within(group).getAllByRole("radio").map((radio) => radio.getAttribute("aria-label"))).toEqual(["Side elevation", "Front elevation"]);
     fireEvent.click(within(group).getByRole("radio", { name: "Front elevation" }));
     expect(store.getSnapshot().playground.viewpoint).toBe("front");
     expect(playgroundToParams(store.getSnapshot().playground).get("vp")).toBe("front");
   });
 
-  it("sets sideways position and yaw by field and key, keeps them in the address and says yaw is not drawn", async () => {
+  it("sets sideways position and yaw by field and key, keeps them in the address and says yaw is drawn in 3D only", async () => {
     const store = await open("playground");
-    store.dispatch({ type: "placement-added", placement: { id: "w", asset: walker.id, xM: 2, zM: 0, yawDeg: 0, pick: null, offsetS: 0, mirrored: false } });
+    store.dispatch({ type: "placement-added", placement: { id: "w", asset: walker.id, xM: 2, zM: 0, yawDeg: 0, pick: null, offsetS: 0, mirrored: false, startS: 0, durationS: null, speed: 1, loop: true, holdS: null } });
     const hit = await waitFor(() => {
       const node = document.querySelector<HTMLElement>('[data-placement="w"]');
       expect(node).not.toBeNull();
@@ -102,7 +102,7 @@ describe("🧪️ playground selector, position and yaw", () => {
     expect(store.getSnapshot().playground.placements[0]!.zM).toBeCloseTo(0.1, 9);
     fireEvent.keyDown(document.querySelector<HTMLElement>('[data-placement="w"]')!, { key: "PageUp" });
     expect(store.getSnapshot().playground.placements[0]!.yawDeg).toBe(5);
-    const z = await screen.findByLabelText(ENGLISH["playground.z"]);
+    const z = await screen.findByLabelText(ENGLISH["playground.z"], { exact: false });
     fireEvent.change(z, { target: { value: "-0.5" } });
     expect(store.getSnapshot().playground.placements[0]!.zM).toBe(-0.5);
     expect(document.querySelector("[data-yaw-note]")!.textContent).toMatch(/yaw of 5°/u);
@@ -114,20 +114,21 @@ describe("🧪️ playground selector, position and yaw", () => {
   it("orders figures in the front elevation by depth along the line and keeps them at their sideways position", async () => {
     const store = await open("playground");
     store.dispatch({ type: "playground-configured", patch: { viewpoint: "front" } });
-    store.dispatch({ type: "placement-added", placement: { id: "far", asset: walker.id, xM: 2, zM: 0.2, yawDeg: 0, pick: null, offsetS: 0, mirrored: false } });
-    store.dispatch({ type: "placement-added", placement: { id: "near", asset: walker.id, xM: 6, zM: 0.2, yawDeg: 0, pick: null, offsetS: 0, mirrored: false } });
+    store.dispatch({ type: "placement-added", placement: { id: "far", asset: walker.id, xM: 2, zM: 0.2, yawDeg: 0, pick: null, offsetS: 0, mirrored: false, startS: 0, durationS: null, speed: 1, loop: true, holdS: null } });
+    store.dispatch({ type: "placement-added", placement: { id: "near", asset: walker.id, xM: 6, zM: 0.2, yawDeg: 0, pick: null, offsetS: 0, mirrored: false, startS: 0, durationS: null, speed: 1, loop: true, holdS: null } });
     await waitFor(() => expect(document.querySelectorAll("[data-near]").length).toBe(2));
     const order = (id: string): number => Number(document.querySelector(`[data-placement="${id}"]`)!.getAttribute("data-z-m") === "0.2" ? document.querySelector<HTMLElement>(`[data-placement="${id}"]`)!.style.zIndex : -1);
     expect(order("near")).toBeGreaterThan(order("far"));
-    const placement = (xM: number, zM: number) => linePosition("front", { xM, zM }, 24);
+    const placement = (xM: number, zM: number) => linePosition("front", { xM, zM }, { lengthM: 24, depthM: 12 });
     expect(placement(2, 0.2).horizontalM).toBe(placement(6, 0.2).horizontalM);
     expect(placement(6, 0.2).nearness).toBeGreaterThan(placement(2, 0.2).nearness);
   });
 
   it("projects one position by the camera: elevation keeps x, front keeps z, plan lifts by z", () => {
-    expect(linePosition("elevation", { xM: 3, zM: 1 }, 24)).toEqual({ horizontalM: 3, liftM: 0, nearness: -1 });
-    expect(linePosition("front", { xM: 3, zM: 1 }, 24)).toEqual({ horizontalM: 13, liftM: 0, nearness: 3 });
-    expect(linePosition("plan", { xM: 3, zM: 1 }, 24)).toEqual({ horizontalM: 3, liftM: 1, nearness: 0 });
+    const ground = { lengthM: 24, depthM: 12 };
+    expect(linePosition("elevation", { xM: 3, zM: 1 }, ground)).toEqual({ horizontalM: 3, liftM: 0, nearness: -1 });
+    expect(linePosition("front", { xM: 3, zM: 1 }, ground)).toEqual({ horizontalM: 7, liftM: 0, nearness: 3 });
+    expect(linePosition("plan", { xM: 3, zM: 1 }, ground)).toEqual({ horizontalM: 3, liftM: 1, nearness: 0 });
   });
 
   it("maps Up, Down, Page Up and Page Down to sideways steps and turns", () => {

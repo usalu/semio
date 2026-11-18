@@ -1,0 +1,296 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Graph memory governor / Speichergrenze des Graph-Aufbaus",
+  "description": "EN: The project inference of the service is admitted against the headroom of the cgroup it shares with its pool (the limit minus the memory in use minus a safety margin, a declared share of the limit): a new project starts while the headroom, less what the running projects are still expected to take, covers the learned peak of one project, never more than the worker count run at once, one project always runs, equal long strings of results and stored documents are one instance. DE: Die Projektableitung des Dienstes wird gegen die Speicherreserve der cgroup zugelassen, die er mit seinem Pool teilt (Limit minus belegter Speicher minus Sicherheitsabstand, ein deklarierter Anteil des Limits): ein neues Projekt startet, solange die Reserve abzüglich dessen, was die laufenden Projekte noch brauchen werden, den gelernten Spitzenbedarf eines Projekts deckt, es laufen nie mehr Projekte als Arbeiter, ein Projekt läuft immer, gleiche lange Zeichenketten von Ergebnissen und gespeicherten Dokumenten sind eine Instanz. EN: The language of every line is the one the environment names (SEMIO_LANGUAGE, dashboard locale, system locale); when none is named every supported language is printed, English first and German second, so there is no default language. DE: Die Sprache jeder Zeile ist die, die die Umgebung nennt; nennt sie keine, werden alle unterstützten Sprachen ausgegeben, zuerst Englisch, dann Deutsch, es gibt also keine Standardsprache. EN: The graph child that plans a build is told a fixed JavaScriptCore memory size (childHeapMegabytes), never the capacity grant of the whole run: the grant pays for every process of the run, and a larger size only lets the child keep more garbage before it collects. DE: Dem Graph-Kindprozess, der einen Build plant, wird eine feste JavaScriptCore-Speichergröße genannt (childHeapMegabytes), nie die Kapazitätszusage des ganzen Laufs: die Zusage bezahlt jeden Prozess des Laufs, und eine größere Angabe lässt das Kind nur mehr Abfall halten, bevor es aufräumt. EN: The learned peak of an owner kind is the largest growth among its last `peakSamples` completed owners, so one outlier (the first owner of a kind builds the shared closures, a collection that had not run) stops serializing the kind after that many completions; the root project of the repository is its own kind, its cost is not a crate's. DE: Der gelernte Spitzenbedarf einer Projektart ist das größte Wachstum ihrer letzten `peakSamples` abgeschlossenen Projekte, ein Ausreißer (das erste Projekt einer Art baut die gemeinsamen Closures, eine Speicherbereinigung, die noch nicht lief) hält die Art also nach so vielen Abschlüssen nicht mehr einzeln; das Wurzelprojekt des Repositorys ist eine eigene Art, sein Bedarf ist nicht der einer Crate. EN: Before the peak of an owner kind is learned (it persists per kind), one owner of that kind runs alone until it completes; an in-flight owner is estimated as the larger of the learned peak and the growth observed so far, and a new owner starts only when the measured headroom less the remaining estimates covers its own estimate. DE: Solange der Spitzenbedarf einer Projektart nicht gelernt ist (er bleibt je Art gespeichert), läuft ein Projekt dieser Art allein, bis es fertig ist; ein laufendes Projekt wird mit dem größeren Wert aus gelerntem Spitzenbedarf und bisher beobachtetem Wachstum geschätzt, und ein neues startet nur, wenn die gemessene Reserve abzüglich der restlichen Schätzungen den eigenen Bedarf deckt. EN: The parent may add at most `parentManagedMegabytes` of managed memory (heap in use plus external buffers, about half of the physical footprint it adds) to what it holds when a read starts: the governor admits one more project only while that budget less the growth since the start covers the project, and the collector runs a full collection after every `collectEveryProjects` finished projects once the managed memory passed `collectAboveMegabytes` (the next trigger is `collectGrowthMegabytes` above what survived, never twice within `collectMinimumIntervalMilliseconds`) and at the end of every wave. DE: Der Elternprozess darf zu dem, was er beim Start eines Laufs hält, höchstens `parentManagedMegabytes` verwalteten Speicher (belegter Heap plus externe Puffer, etwa die Hälfte des physischen Fußabdrucks, den er hinzufügt) hinzufügen: der Governor lässt ein weiteres Projekt nur zu, solange dieses Budget abzüglich des Wachstums seit dem Start das Projekt deckt, und der Sammler führt nach je `collectEveryProjects` fertigen Projekten eine volle Speicherbereinigung aus, sobald der verwaltete Speicher `collectAboveMegabytes` überschritt (der nächste Auslöser liegt `collectGrowthMegabytes` über dem Überlebenden, nie zweimal innerhalb von `collectMinimumIntervalMilliseconds`), und am Ende jeder Welle. EN: The wait for headroom is bounded: when at most one project runs and the project at the head of the queue has waited `waitBoundMilliseconds`, the smallest pending project is admitted if its estimate fits the grant of one project (`grantMegabytes`, or the owner limit when the machine declares one), otherwise the run is refused with the typed error `BUILD_GRAPH_MEMORY_REFUSED` (exit code `refusalExitCode`, 75) that names what it needs and what one project is granted; every waiting line names the project, what it needs and how long it has waited, and after `fleetFallbackMilliseconds` the governor asks the fleet (when a fleet port is given, answered within `fleetAskMilliseconds`) for the remaining projects. DE: Das Warten auf Speicherreserve ist begrenzt: läuft höchstens ein Projekt und wartet das erste Projekt der Schlange seit `waitBoundMilliseconds`, wird das kleinste wartende Projekt zugelassen, wenn sein Bedarf in die Zusage eines Projekts passt (`grantMegabytes`, oder die Projektgrenze, wenn die Maschine eine erklärt), sonst wird der Lauf mit dem typisierten Fehler `BUILD_GRAPH_MEMORY_REFUSED` (Exit-Code `refusalExitCode`, 75) abgewiesen, der nennt, was es braucht und was ein Projekt bekommt; jede Wartezeile nennt das Projekt, seinen Bedarf und wie lange es wartet, und nach `fleetFallbackMilliseconds` bittet der Governor die Flotte (wenn ein Flottenport gegeben ist, Antwort binnen `fleetAskMilliseconds`) um die übrigen Projekte.",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "languages": [
+          "en",
+          "de"
+        ],
+        "minimumBudgetMegabytes": 1024,
+        "maximumBudgetMegabytes": 16384,
+        "hostShare": 0.25,
+        "grantShare": 0.5,
+        "pollMilliseconds": 50,
+        "admitMinimumMilliseconds": 100,
+        "progressMilliseconds": 5000,
+        "retainedImageBytes": 33554432,
+        "minimumInternedLength": 24,
+        "maximumInternedCharacters": 8388608,
+        "maximumCachedClosureEntries": 4194304,
+        "maximumParsedManifests": 256,
+        "childHeapMegabytes": 512,
+        "serviceHeapMegabytes": 1024,
+        "serviceHostShare": 0.6,
+        "serviceMinimumMegabytes": 2048,
+        "initialOwnerMegabytes": 256,
+        "floorOwnerMegabytes": 64,
+        "peakSamples": 8,
+        "peakCeilingMegabytes": 4608,
+        "safetyMarginBasisPoints": 1000,
+        "parentManagedMegabytes": 1536,
+        "parentHostShare": 0.0625,
+        "serveHostMegabytes": 24000,
+        "serveHostShare": 0.25,
+        "collectEveryProjects": 2,
+        "collectAboveMegabytes": 768,
+        "collectGrowthMegabytes": 384,
+        "collectMinimumIntervalMilliseconds": 3000,
+        "collectDutyPercent": 10,
+        "hostAvailableFloorMegabytes": 1536,
+        "budgetEnvironment": "SEMIO_GRAPH_MEMORY_MB",
+        "heapEnvironment": "BUN_JSC_forceRAMSize",
+        "planEnvironment": "SEMIO_HOST_CAPACITY_PLAN",
+        "limitEnvironment": "SEMIO_GRAPH_MEMORY_LIMIT_MB",
+        "planCeilingEnvironment": "SEMIO_GRAPH_PLAN_CEILING_MB",
+        "waitBoundMilliseconds": 60000,
+        "fleetFallbackMilliseconds": 180000,
+        "fleetAskMilliseconds": 10000,
+        "grantMegabytes": 2048,
+        "refusalExitCode": 75,
+        "stopCollectMinimumMilliseconds": 1000
+      }
+    },
+    "Messages": {
+      "const": {
+        "en": {
+          "waiting": "graph: waiting for memory headroom ({used} of {budget} MB reserved, {running} projects running): {key} needs {need} MB and has waited {seconds} s; after {limit} s it runs alone if it fits the {available} MB one project is granted, otherwise the run is refused with exit 75",
+          "admittedAlone": "graph: {key} waited {seconds} s for {need} MB of headroom ({budget} MB free, {running} project(s) running) and now runs because it fits the {available} MB one project is granted",
+          "refused": "graph: {key} needs {need} MB but one project is granted {available} MB here and {budget} MB are free after {seconds} s: refused with exit 75 (try again later or let the fleet infer it)",
+          "fleet": "graph: waited {seconds} s for memory headroom, asking the fleet to infer the remaining {count} project(s)",
+          "serial": "graph: headroom of {budget} MB is below one project ({used} MB), inferring one project at a time",
+          "resumed": "graph: headroom of {budget} MB again ({used} MB taken), resuming",
+          "learning": "graph: no memory peak learned for {kind} projects yet ({used} MB assumed, {budget} MB headroom), inferring one at a time: {key} has waited {seconds} s for the running project, at most {limit} s",
+          "stopped": "graph: project {key} ({kind}) grew by {used} MB, more than the {budget} MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here"
+        },
+        "de": {
+          "waiting": "Graph: wartet auf Speicherreserve ({used} von {budget} MB reserviert, {running} Projekte laufen): {key} braucht {need} MB und wartet seit {seconds} s; nach {limit} s läuft es allein, wenn es in die {available} MB passt, die ein Projekt bekommt, sonst wird der Lauf mit Exit 75 abgewiesen",
+          "admittedAlone": "Graph: {key} hat {seconds} s auf {need} MB Reserve gewartet ({budget} MB frei, {running} Projekt(e) laufen) und läuft jetzt, weil es in die {available} MB passt, die ein Projekt bekommt",
+          "refused": "Graph: {key} braucht {need} MB, ein Projekt bekommt hier aber {available} MB und nach {seconds} s sind {budget} MB frei: abgewiesen mit Exit 75 (später erneut versuchen oder von der Flotte ableiten lassen)",
+          "fleet": "Graph: nach {seconds} s Warten auf Speicherreserve wird die Flotte gebeten, die übrigen {count} Projekt(e) abzuleiten",
+          "serial": "Graph: Reserve von {budget} MB unter einem Projekt ({used} MB), Projekte werden einzeln abgeleitet",
+          "resumed": "Graph: Reserve von {budget} MB wieder da ({used} MB belegt), es geht weiter",
+          "learning": "Graph: für {kind}-Projekte ist noch kein Speicherbedarf gelernt ({used} MB angenommen, {budget} MB Reserve), Projekte werden einzeln abgeleitet: {key} wartet seit {seconds} s auf das laufende Projekt, höchstens {limit} s",
+          "stopped": "Graph: das Projekt {key} ({kind}) ist um {used} MB gewachsen, mehr als die {budget} MB, die diese Maschine einem Projekt gibt; die Berechnung wird gestoppt, bevor dem Rechner der Speicher ausgeht, und das Projekt ist hier als zu schwer markiert"
+        }
+      }
+    },
+    "ReservationBudgetCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "carriedMegabytes",
+        "fixedMegabytes",
+        "expectedMegabytes"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "carriedMegabytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fixedMegabytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reservedMegabytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "explicitMegabytes": {
+          "type": "integer",
+          "minimum": 1024
+        },
+        "foreign": {
+          "type": "boolean"
+        },
+        "expectedMegabytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "PhysicalPressureCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "counters",
+        "expectedBytes"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "counters": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "rss",
+            "heapUsed",
+            "external"
+          ],
+          "properties": {
+            "rss": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "heapUsed": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "external": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "expectedBytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ParentAllocationCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reservedMegabytes",
+        "expected"
+      ],
+      "properties": {
+        "reservedMegabytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "parentMegabytes",
+            "fixedMegabytes",
+            "workerMegabytes",
+            "ownMegabytes"
+          ],
+          "properties": {
+            "parentMegabytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "fixedMegabytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "workerMegabytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "ownMegabytes": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "ReservationLivenessCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "expectedMegabytes"
+      ],
+      "properties": {
+        "state": {
+          "enum": [
+            "active",
+            "stale",
+            "previous-boot",
+            "dead",
+            "quiet",
+            "zero"
+          ]
+        },
+        "expectedMegabytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        }
+      }
+    },
+    "WorkerRefreshCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "previous",
+        "next",
+        "retire"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "previous": {
+          "type": "object",
+          "required": [
+            "workers",
+            "megabytes"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "workers": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "megabytes": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "next": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "required": [
+                "workers",
+                "megabytes"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "workers": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "megabytes": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          ]
+        },
+        "retire": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

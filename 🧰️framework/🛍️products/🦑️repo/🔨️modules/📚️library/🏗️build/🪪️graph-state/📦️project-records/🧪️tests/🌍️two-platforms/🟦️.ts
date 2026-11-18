@@ -54,7 +54,7 @@ test("a macOS record is taken by a Linux machine at another checkout: its paths,
   expect(text).not.toContain(rootA);expect(text).not.toContain(GENERATION_A);
   expect(rows.some(row=>row.kind==="lstat"&&above(rootA).some(ancestor=>ancestor.path===row.path))).toBe(false);
   expect(rows).toContainEqual({kind:"lstat",path:rootB,fact:"directory"});
-  expect(rows).toContainEqual({kind:"file",path:`${rootB}/libs/alpha/src/a.ts`,fact:{sha256:"e".repeat(64),size:3,mtimeMs:1,ctimeMs:1,ino:1}});
+  expect(rows).toContainEqual({kind:"file",path:`${rootB}/libs/alpha/src/a.ts`,fact:{sha256:"e".repeat(64),size:3,mtimeMs:0,ctimeMs:0,ino:0}});
   expect(rows).toContainEqual({kind:"lstat",path:`${rootB}/.cache/b/d/m/j/${GENERATION_B}/node_modules/typescript/lib/typescript.js`,fact:"file"});
   expect(rows.filter(row=>row.kind==="field").map(row=>row.path)).toEqual([`${rootB}/.cache/b/d/m/j/${GENERATION_B}/node_modules/typescript/lib/typescript.js`]);
   expect(record.image).toBe(JSON.stringify({name:"alpha",root:"libs/alpha"}));
@@ -134,7 +134,7 @@ test("a Windows record is taken by a macOS machine: POSIX paths and separators, 
   expect(text).not.toContain("C:");expect(text).not.toContain(GENERATION_A);expect(record.observations.some(row=>row.path.includes("\\"))).toBe(false);
   const rows=record.observations;
   expect(rows).toContainEqual({kind:"lstat",path:rootM,fact:"directory"});
-  expect(rows).toContainEqual({kind:"file",path:`${rootM}/libs/alpha/src/a.ts`,fact:{sha256:"e".repeat(64),size:3,mtimeMs:1,ctimeMs:1,ino:1}});
+  expect(rows).toContainEqual({kind:"file",path:`${rootM}/libs/alpha/src/a.ts`,fact:{sha256:"e".repeat(64),size:3,mtimeMs:0,ctimeMs:0,ino:0}});
   expect(rows.find(row=>row.kind==="resolve")).toEqual({kind:"resolve",path:JSON.stringify([`${rootM}/tool/x.mjs`,"typescript"]),fact:`${rootM}/.cache/b/d/m/j/*/node_modules/typescript/lib/typescript.js`});
   expect(rows.find(row=>row.kind==="field")!.path).toBe(`${rootM}/.cache/b/d/m/j/${GENERATION_B}/node_modules/typescript/lib/typescript.js`);
   expect((rows.find(row=>row.kind==="analysis")!.fact as{provider:string}).provider).toBe(PROVIDER+takerOwner);
@@ -153,7 +153,7 @@ test("a macOS record is taken by a Windows machine: its root, backslashes in row
   (await mac.gate(infoOf(rootM,PLAIN,store))).publish();await mac.flush();
   expect((await windows.gate(infoOf(taker,PLAIN,got))).seeded).toBe(true);
   const record=got.imported![0] as Imported,rows=record.observations;
-  expect(rows).toContainEqual({kind:"file",path:"D:\\work\\semio\\libs\\alpha\\src\\a.ts",fact:{sha256:"e".repeat(64),size:3,mtimeMs:1,ctimeMs:1,ino:1}});
+  expect(rows).toContainEqual({kind:"file",path:"D:\\work\\semio\\libs\\alpha\\src\\a.ts",fact:{sha256:"e".repeat(64),size:3,mtimeMs:0,ctimeMs:0,ino:0}});
   expect(rows.find(row=>row.kind==="field")!.path).toBe("D:\\work\\semio\\.cache\\b\\d\\m\\j\\c6d139b55ee3b931e7e4\\node_modules\\typescript\\lib\\typescript.js");
   expect(JSON.parse(rows.find(row=>row.kind==="resolve")!.path)).toEqual(["D:\\work\\semio\\tool\\x.mjs","typescript"]);
   expect(rows.some(row=>row.kind==="lstat"&&row.path==="/")).toBe(false);

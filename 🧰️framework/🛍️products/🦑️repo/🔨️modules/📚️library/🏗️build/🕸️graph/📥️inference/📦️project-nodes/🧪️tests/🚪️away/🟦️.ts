@@ -5,6 +5,6 @@ import{readFileSync}from"node:fs";
 test("the farm wait runs away from the governor slot",()=>{
  const source=readFileSync(new URL("../../🟨️.mjs",import.meta.url),"utf8");
  expect(source).toMatch(/governor\.run\(async\(\{away[,}]/u);
- expect(source).toContain("prepare:farm?()=>{missed.add(name);return away(()=>farm.prepare(");
+ expect(source).toContain("prepare:farm?()=>{missed.add(name);return stagedPrepareV1(name,away,()=>farm.prepare(");
  expect(source).toContain("inferProject(job,away)");
 });

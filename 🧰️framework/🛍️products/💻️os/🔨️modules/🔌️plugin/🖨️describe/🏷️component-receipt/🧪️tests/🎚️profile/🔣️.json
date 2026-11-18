@@ -42,13 +42,13 @@
     },
     {
       "profile": "release",
-      "bytes": 268435456,
+      "bytes": 1073741824,
       "valid": true,
       "shipped": true
     },
     {
       "profile": "release",
-      "bytes": 268435457,
+      "bytes": 1073741825,
       "valid": false,
       "shipped": false
     },

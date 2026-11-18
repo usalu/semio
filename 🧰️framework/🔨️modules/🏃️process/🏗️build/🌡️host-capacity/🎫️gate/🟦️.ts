@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../🏠️machine-state/🟦️.ts";
 import {concurrentEditV1,retryOnConcurrentEditSyncV1,type ChurnOptionsV1} from "../../../../📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 
 import {spawnSync} from "node:child_process";
@@ -25,7 +26,7 @@ export function newHostCapacityIdV1():string{return randomBytes(16).toString("ba
 /** 🎟️ What an admitted operation holds and the environment its children inherit. */
 export type HostCapacityHandleV1=Readonly<{id:string;jobs:number;cpu:number;reservedMegabytes:number;plan:HostPlanV1;inherited:boolean;adopted:boolean;bypassed:boolean;environment:Readonly<Record<string,string>>}>;
 
-import type {HostCapacityOptionsV1,HostCapacityPortsV1,HostLedgerPrimitivesV1,HostProcessIdentityV1} from "./📋️contract/🟦️.ts";
+import type {HostCapacityOptionsV1,HostImageSweepV1,HostCapacityPortsV1,HostLedgerPrimitivesV1,HostProcessIdentityV1} from "./📋️contract/🟦️.ts";
 export type {HostCapacityOptionsV1,HostCapacityPortsV1,HostLedgerPrimitivesV1,HostProcessIdentityV1,HostRunV1} from "./📋️contract/🟦️.ts";
 
 /** 📥️ Reads the plan an enclosing grant carried into the environment, or undefined when the process runs under none. */
@@ -179,10 +180,17 @@ export const releaseHostLockV1=releaseLock;
 export const holdsHostLockV1=holdsLock;
 
 
-/** ⏳️ The progress line of a waiting request, naming what it stands behind (`hostBlockersV1`). */
-function waitingLine(language:"en"|"de",request:HostRequestV1,host:HostSampleV1,evaluation:HostEvaluationV1,running:number,seconds:number,policy:HostCapacityPolicyV1,ledger:readonly HostGrantV1[],waiters:readonly HostWaiterV1[],nowMs:number):string{
- const cap=Math.max(0,host.totalMegabytes-evaluation.floorMegabytes),position=evaluation.decisions.findIndex(row=>row.id===request.id),mine=evaluation.decisions[position]!,before=evaluation.decisions.slice(0,position),spare=evaluation.headroomMegabytes-before.reduce((sum,row)=>sum+row.reservedMegabytes,0);
- return formatHostCapacityV1(language,"waiting",{seconds,operation:request.operation,reason:describeHostReasonV1(language,mine.reason as Exclude<HostReasonV1,"fits"|"reduced"|"override"|"shrunk"|"lent">),need:Math.min(request.fixedMegabytes+request.minimumJobs*request.perJobMegabytes,cap),spare,floor:evaluation.floorMegabytes,load:host.load===null?"n/a":host.load,running,ahead:position,behind:describeHostBlockersV1(language,hostBlockersV1(policy,ledger,waiters,evaluation,request.id,nowMs))});
+/** 💿️ Detaches the images of dead test sandboxes below the workspace of the caller before an image count refuses a request, and counts what is ours, leaked and foreign. */
+async function sweepLeakedImagesV1(environment:Readonly<Record<string,string|undefined>>):Promise<HostImageSweepV1>{
+ const{sweepLeakedSandboxImagesV1}=await import("../../../🧪️testing/🏖️sandbox/🧹️image-sweep/🟦️.ts"),root=environment.SEMIO_WORKSPACE_ROOT;
+ return sweepLeakedSandboxImagesV1({parents:root===undefined?[]:[machinePathV1(root,".cache","test-sandbox")]});
+}
+
+/** ⏳️ The progress line of a waiting request: the arithmetic of the room (available, floor, what is reserved but not yet resident, what was admitted ahead), how many megabytes it is short and who holds them (`hostBlockersV1`).
+ * @see ../🧪️tests/🧾️blockers/🟦️.ts */
+export function hostWaitingLineV1(language:"en"|"de",request:HostRequestV1,host:HostSampleV1,evaluation:HostEvaluationV1,running:number,seconds:number,policy:HostCapacityPolicyV1,ledger:readonly HostGrantV1[],waiters:readonly HostWaiterV1[],nowMs:number):string{
+ const cap=Math.max(0,host.totalMegabytes-evaluation.floorMegabytes),position=evaluation.decisions.findIndex(row=>row.id===request.id),mine=evaluation.decisions[position]!,before=evaluation.decisions.slice(0,position),taken=before.reduce((sum,row)=>sum+row.reservedMegabytes,0),spare=evaluation.headroomMegabytes-taken,need=Math.min(request.fixedMegabytes+request.minimumJobs*request.perJobMegabytes,cap);
+ return formatHostCapacityV1(language,"waiting",{seconds,operation:request.operation,reason:describeHostReasonV1(language,mine.reason as Exclude<HostReasonV1,"fits"|"reduced"|"override"|"shrunk"|"lent">),need,spare,available:host.availableMegabytes,held:evaluation.unrealizedMegabytes,taken,short:mine.reason==="memory"&&need>spare?formatHostCapacityV1(language,"waitingShort",{megabytes:need-spare}):"",floor:evaluation.floorMegabytes,load:host.load===null?"n/a":host.load,running,ahead:position,behind:describeHostBlockersV1(language,hostBlockersV1(policy,ledger,waiters,evaluation,request.id,nowMs))});
 }
 
 /** 🚪️ Admits one operation against the whole machine and runs its body under the grant: it waits in a fair machine-wide queue with progress lines and cancellation, reserves memory and cores while the body runs and always gives them back. A nested invocation runs its body under an inherited grant at once, with the plan the holder carried and its jobs and cores (for a quiet grant those of the full request, never the quiet row's single job: a forecast changes what a run reserves, never what it may use); it never grows a quiet grant itself, an executor of the run asks when work has to run (`requestHostCapacityUpgradeV1`). */
@@ -208,11 +216,20 @@ export async function withHostCapacityV1<T>(options:HostCapacityOptionsV1,body:(
  const arrivedAtMs=now(),waiterPath=queuePath(directory,arrivedAtMs,request.id),record:HostWaiterV1={request,arrivedAtMs,pid,...options.session===undefined?{}:{session:options.session.address,weight:options.session.weight}};
  writeJson(waiterPath,record);
  let grant:HostGrantV1|undefined,admittedHost:HostSampleV1|undefined,lastProgress=-Infinity;
+ let sweptAtMs=-Infinity,split:string|undefined;
  const endAdmissionWait=beginAdmissionWaitV1();
  try{
   while(!grant){
    checkResourceLeaseControl(options.control);
-   const host=await currentSample(directory,policy,options.control,options,environment);
+   let host=await currentSample(directory,policy,options.control,options,environment);
+   if(host.attachedImages!==null&&host.attachedImages>=policy.attaches.maximum&&now()-sweptAtMs>=policy.wait.progressMilliseconds){
+    sweptAtMs=now();
+    try{
+     const swept=await(options.sweepImages??(()=>sweepLeakedImagesV1(environment)))();
+     split=(await import("../../../🧪️testing/🏖️sandbox/🧹️image-sweep/🟦️.ts")).describeImageSplitV1(language,swept);
+     if(swept.detached>0){host=Object.freeze({...host,attachedImages:Math.max(0,host.attachedImages-swept.detached)});write("[capacity] "+(await import("../../../🧪️testing/🏖️sandbox/🧹️image-sweep/🟦️.ts")).describeImageSweepV1(language,swept.detached));}
+    }catch{}
+   }
    try{utimesSync(waiterPath,new Date(),new Date());}catch{}
    let progressAt:number|undefined;
    if(takeLock(directory,now(),policy,pid)){
@@ -236,7 +253,7 @@ export async function withHostCapacityV1<T>(options:HostCapacityOptionsV1,body:(
       else if(mine.reason==="reduced")write(formatHostCapacityV1(language,options.upgrade!==undefined&&options.upgrade.perJobMegabytes>0?"reducedGrows":"reduced",{operation:request.operation,jobs:mine.jobs,preferred:request.preferredJobs}));
       else write(formatHostCapacityV1(language,"admitted",{operation:request.operation,jobs:mine.jobs,reserved:mine.reservedMegabytes,available:host.availableMegabytes,floor:evaluation.floorMegabytes}));
      }else if(at-lastProgress>=policy.wait.progressMilliseconds){
-      lastProgress=at;write(waitingLine(language,request,host,evaluation,ledger.length,Math.round((at-arrivedAtMs)/1000),policy,ledger,waiters,at));progressAt=at;
+      lastProgress=at;write(hostWaitingLineV1(language,request,host,evaluation,ledger.length,Math.round((at-arrivedAtMs)/1000),policy,ledger,waiters,at)+(split!==undefined&&mine.reason==="attaches"?"; "+split:""));progressAt=at;
      }
     }finally{releaseLock(directory,pid);}
    }

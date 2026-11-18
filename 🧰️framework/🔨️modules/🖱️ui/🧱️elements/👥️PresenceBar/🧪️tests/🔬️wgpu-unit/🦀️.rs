@@ -98,3 +98,19 @@ async fn an_activity_badges_its_row_and_is_announced_in_the_accessible_name() {
     );
     assert_eq!(presence_bar_chip_accessible_text(&[], None, Locale::De), "Niemand sonst ist hier");
 }
+
+fn assert_no_gaps(node: &UiNode) {
+    if let UiNode::Stack(stack) = node {
+        assert!(stack.gap.as_deref() == Some("none") && stack.padding.is_none(), "stack {:?} must not separate bordered avatars", stack.id);
+        stack.children.iter().for_each(assert_no_gaps);
+    }
+}
+
+/// 🪢️ Avatars touch: no stack of the roster (root, peer rows, badges, overflow) carries the explicit `none` gap and no padding.
+#[semio_framework_async_macros::async_test]
+async fn the_roster_has_no_gap_between_avatars() {
+    let agent = PresencePeerRow { is_agent: true, activity: Some(PresenceActivity { text: "Editing".into(), badge: "E".into() }), ..peer("actor-agent", "Agent", None) };
+    let mut peers = vec![peer("actor-a", "Ada", Some(PresenceRole::Author)), agent];
+    peers.extend((0..6).map(|i| peer(&format!("actor-{i}"), "Peer", None)));
+    assert_no_gaps(&build_presence_bar("s-presence-peers", &peers, Some(5), Locale::En));
+}

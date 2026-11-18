@@ -21,7 +21,7 @@ describe("🖱️ Canvas2d mounted input contract", () => {
   beforeEach(() => {
     canvasInputSessions().length = 0;
     vi.stubGlobal("ResizeObserver", class {
-      observe() {}
+      observe() {} unobserve() {}
       disconnect() {}
     });
   });

@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {createHash,randomBytes} from "node:crypto";
 import {cp,lstat,mkdir,readdir,readFile,readlink,rename,rm} from "node:fs/promises";
 import {existsSync} from "node:fs";
@@ -104,7 +105,7 @@ export async function fleetSetupOutputV1(context:FleetFetchContextV1,spec:SetupO
  const klass=setupClassV1(spec.kind,options.host);
  if(klass===undefined)return local(reasons["no-class"]!);
  if(context.storeRoot===undefined||context.root===undefined)return local(reasons["no-store"]!);
- const parts=setupKeyPartsV1(spec.task,spec.inputs,spec.kind,spec.roots,klass),staging=join(context.root,...policy.stagingDirectory,randomBytes(6).toString("hex")),out=policy.stageRoot;
+ const parts=setupKeyPartsV1(spec.task,spec.inputs,spec.kind,spec.roots,klass),staging=machinePathV1(context.root,...policy.stagingDirectory,randomBytes(6).toString("hex")),out=policy.stageRoot;
  const events:FleetInstallEventV1[]=[];
  const request:FleetInstallRequestV1={
   context,projectionSha256:parts.projectionSha256,runtime:parts.runtime,directory:staging,lockFile:"",lock:{packages:spec.roots.length,sha256:parts.projectionSha256},space:policy.space,keep:policy.keepStates,

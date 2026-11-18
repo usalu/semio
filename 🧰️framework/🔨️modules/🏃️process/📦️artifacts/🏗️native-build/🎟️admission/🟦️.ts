@@ -337,11 +337,11 @@ export async function startAdmissionBrokerV1(options: Readonly<{ physicalBytes: 
   };
 }
 
-/** 🗃️ The compiler chain of a build whose environment names a unit cache (`SEMIO_UNIT_CACHE_ROOT` and the wrapper script): Cargo runs the cache's wrapper, which serves a unit from the cache or falls through to this driver's scheduler, and reports every served unit to the broker so the unit list, critical path and provenance stay complete. Empty when no cache is named. */
+/** 🗃️ The compiler chain of a build whose environment names a unit cache (`SEMIO_UNIT_CACHE_ROOT` and the executable wrapper `SEMIO_UNIT_CACHE_WRAPPER`): Cargo runs the cache's wrapper as `RUSTC_WRAPPER` (`RUSTC` stays the real compiler, never the wrapper), which serves a unit from the cache or falls through to this driver's scheduler, and reports every served unit to the broker so the unit list, critical path and provenance stay complete. Empty when no cache is named. */
 export function compilerWrapperEnvironmentV1(scheduler: string, laneRoot: string, environment: Readonly<Record<string, string | undefined>>): Record<string, string> {
-  const root = environment.SEMIO_UNIT_CACHE_ROOT, script = environment.SEMIO_UNIT_CACHE_SCRIPT;
-  if (!root || !script || environment.SEMIO_UNIT_CACHE === "off") return {};
-  return { RUSTC_WRAPPER: process.execPath, RUSTC: script, SEMIO_UNIT_CACHE_ROOT: root, SEMIO_UNIT_CACHE_LANE: "g", SEMIO_UNIT_CACHE_LANE_ROOT: laneRoot, SEMIO_UNIT_CACHE_INNER: JSON.stringify([scheduler, environment.RUSTC ?? "rustc"]), SEMIO_UNIT_CACHE_SLOTS: environment.SEMIO_UNIT_CACHE_SLOTS ?? String(availableParallelism()), SEMIO_UNIT_CACHE_FOCUS: "", SEMIO_UNIT_CACHE_BUILD_SCRIPTS: "on", SEMIO_UNIT_CACHE_BROKER_REPLAY: "on", ...(environment.SEMIO_UNIT_CACHE_TOOLCHAIN ? { SEMIO_UNIT_CACHE_TOOLCHAIN: environment.SEMIO_UNIT_CACHE_TOOLCHAIN } : {}) };
+  const root = environment.SEMIO_UNIT_CACHE_ROOT, wrapper = environment.SEMIO_UNIT_CACHE_WRAPPER;
+  if (!root || !wrapper || environment.SEMIO_UNIT_CACHE === "off") return {};
+  return { RUSTC_WRAPPER: wrapper, SEMIO_UNIT_CACHE_ROOT: root, SEMIO_UNIT_CACHE_LANE: "g", SEMIO_UNIT_CACHE_LANE_ROOT: laneRoot, SEMIO_UNIT_CACHE_INNER: JSON.stringify([scheduler, environment.RUSTC ?? "rustc"]), SEMIO_UNIT_CACHE_SLOTS: environment.SEMIO_UNIT_CACHE_SLOTS ?? String(availableParallelism()), SEMIO_UNIT_CACHE_FOCUS: "", SEMIO_UNIT_CACHE_BUILD_SCRIPTS: "on", SEMIO_UNIT_CACHE_BROKER_REPLAY: "on", ...(environment.SEMIO_UNIT_CACHE_TOOLCHAIN ? { SEMIO_UNIT_CACHE_TOOLCHAIN: environment.SEMIO_UNIT_CACHE_TOOLCHAIN } : {}) };
 }
 
 /** 🪜️ Recorded observations of a finished build: every successful unit's peak, measured output footprint (`outputBytes` by unit artifact), wall, CPU and

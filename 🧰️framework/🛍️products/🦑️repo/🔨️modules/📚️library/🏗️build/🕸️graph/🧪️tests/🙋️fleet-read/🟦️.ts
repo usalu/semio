@@ -43,7 +43,7 @@ test("the workspace root is too heavy to share a 16 GB machine but a machine wit
 });
 
 test("a project this machine recorded as heavy runs alone when the solo grant holds it, is attempted alone even when its recorded cost is above the grant (a learned number never refuses), and a light one stays local",async()=>{
- const record=(megabytes:number)=>(root:string)=>{recordOwnerCostFileV1(join(root,".cache/f/graph-costs/owner-costs.json"),{name:"@semio-tech/stopped",kind:"project",megabytes,seconds:30,rows:100,stopped:true,atMs:Date.now()});};
+ const record=(megabytes:number)=>(root:string)=>{recordOwnerCostFileV1(join(root,".cache/f/graph-costs/owner-costs.3.json"),{name:"@semio-tech/stopped",kind:"project",megabytes,seconds:30,rows:100,stopped:true,atMs:Date.now()});};
  const fits=await run(0,{SEMIO_HOST_CAPACITY_TOTAL_MEGABYTES:"16384"},["@semio-tech/stopped"],{},record(3500));
  expect(fits.error).toBeUndefined();expect(fits.result?.solo?.owners.map(row=>row.name)).toEqual(["@semio-tech/stopped"]);expect(fits.lines.join("")).toContain("@semio-tech/stopped");
  const over=await run(0,{SEMIO_HOST_CAPACITY_TOTAL_MEGABYTES:"16384"},["@semio-tech/stopped"],{},record(5000));

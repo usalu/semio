@@ -1,0 +1,20 @@
+import{createHash}from"node:crypto";
+import{mkdirSync,mkdtempSync,rmSync}from"node:fs";
+import{tmpdir}from"node:os";
+import{join,resolve}from"node:path";
+const holdSeconds=Number(process.argv[2]??30);
+const worker="/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🧪️tests/📥️worker/🟦️.ts";
+const root=mkdtempSync(join(resolve(process.env.R170_SCRATCH??tmpdir()),"repro-")),lease=join(root,"l"),registry=join(root,"r"),state=join(root,"s");for(const p of[lease,registry,state])mkdirSync(p,{recursive:true});
+const env:Record<string,string>={...process.env as Record<string,string>,SEMIO_LEASE_REGISTRY_DIRECTORY:registry,SEMIO_MACHINE_STATE_DIRECTORY:state};delete env.SEMIO_LEASE_ORDER;delete env.SEMIO_LEASE_ORDER_POLICY;
+const mapping="native-storage-mapping:"+createHash("sha256").update("/scratch/image").digest("hex"),facts="repository-graph-facts:/Users/ueli/Documents/semio:shard:53";
+function start(spec:object){const c=Bun.spawn([process.execPath,worker,JSON.stringify(spec)],{stdin:"pipe",stdout:"pipe",stderr:"pipe",env});const lines:string[]=[],waiting:{p:string;r:(l:string)=>void}[]=[];let buf="";
+ (async()=>{const d=new TextDecoder();for await(const ch of c.stdout){buf+=d.decode(ch);for(let at=buf.indexOf("\n");at>=0;at=buf.indexOf("\n")){const l=buf.slice(0,at);buf=buf.slice(at+1);lines.push(l);for(const w of[...waiting])if(l.startsWith(w.p)){waiting.splice(waiting.indexOf(w),1);w.r(l);}}}})();
+ return{pid:c.pid,send:(t:string)=>{c.stdin.write(t+"\n");c.stdin.flush();},next:(p:string,ms=120000)=>{const f=lines.find(l=>l.startsWith(p));return f?Promise.resolve(f):new Promise<string>((r,j)=>{waiting.push({p,r});setTimeout(()=>j(Error("timeout "+p)),ms).unref();});}};}
+const a=start({mode:"hold",directory:lease,resource:mapping,access:"exclusive"});await a.next("HELD");
+const b=start({mode:"chain",queued:true,directory:lease,first:{resource:facts,access:"exclusive"},second:{resource:mapping,access:"shared"}});await b.next("HELD");
+const t0=Date.now();b.send("go");
+const release=new Promise<void>(r=>setTimeout(()=>{a.send("release");r();},holdSeconds*1000));
+const result=await b.next("RESULT");await release;
+console.log(`holder pid ${a.pid} held the mapping exclusively for ${holdSeconds} s; reader pid ${b.pid} result after ${((Date.now()-t0)/1000).toFixed(1)} s:`);
+console.log(result.slice(0,1500));
+b.send("done");rmSync(root,{recursive:true,force:true});process.exit(0);

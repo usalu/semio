@@ -506,6 +506,12 @@ test(`overview chrome ${language}`, async ({ page }) => {
     await expect(card.locator('[data-slot*="drag"], [data-drag-handle]')).toHaveCount(0);
   }
 
+  const boxes = await page.locator("[data-layered-card] [data-overview-card]").evaluateAll((elements) => elements.map((element) => element.getBoundingClientRect()).map(({ left, right, top }) => ({ left, right, top })));
+  const rows = [...new Set(boxes.map((box) => Math.round(box.top)))];
+  for (const row of rows) {
+    const sameRow = boxes.filter((box) => Math.round(box.top) === row).sort((a, b) => a.left - b.left);
+    for (let index = 1; index < sameRow.length; index++) expect(Math.abs(sameRow[index]!.left - sameRow[index - 1]!.right)).toBeLessThan(1);
+  }
 });
 });
 

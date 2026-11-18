@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {createHash} from "node:crypto";
 import {readFileSync,readdirSync,renameSync,rmSync,statSync,writeFileSync} from "node:fs";
 import {totalmem} from "node:os";
@@ -15,7 +16,7 @@ import {CLOSURE_POLICY_V1,closureLeafPutterV1,closureOwnersV1,closuresOfFragment
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
 /** 🏷️ The inline description of one uploaded generation: what a client compares before it downloads anything. `manifest` names the neutral manifest; `signature` is the root independent state; `stateMs` is the time of the tree state it describes and `stale` the owners its producer knew stale in it, which together rank the heads of different machines (`publishedMs` only dates the upload). */
-export type GenerationNoteV1=Readonly<{version:1;generation:number;owners:number;identity:string;manifest:string;signature:string;platform:string;publishedMs:number;origin:string;stateMs:number;implementation:string;stale?:number;snapshot?:string}>;
+export type GenerationNoteV1=Readonly<{version:1;generation:number;owners:number;identity:string;manifest:string;signature:string;platform:string;publishedMs:number;origin:string;stateMs:number;implementation:string;stale?:number;snapshot?:string;scope?:string}>;
 /** 📍️ The state of the shared files a generation was verified against: a producer hands over the snapshot of its generation, a restoring machine installs it as the cursor of the restored generation. */
 export type GenerationCursorsV1=Readonly<{snapshotFor(generation:number):Promise<{instance:string;bytes:Uint8Array}|undefined>;install(generation:number,snapshot:{instance:string;bytes:Uint8Array}):Promise<void>;distance?(snapshot:{instance:string;bytes:Uint8Array}):Promise<number|undefined>}>;
 /** 🧾️ What one exchange did; a refusal or a failure never fails the graph load that asked. */
@@ -42,12 +43,15 @@ export interface GenerationExchangeV1{
  leaf(options:{namespace:ClosureNamespaceV1;key:string;signal?:AbortSignal}):Promise<Uint8Array|undefined>;
 }
 type Files=Pick<GenerationFilePortV1,"read"|"write"|"list">;
-type Location=Readonly<{content:RemoteExecutionContentV1;instance:string;key:string;root:string;workspace:string;platform:string;files:Files;signal?:AbortSignal;now?:()=>number;cursors?:GenerationCursorsV1;keys?:readonly string[];origin?:string;implementation?:string;stale?:number;serving?:boolean;closures?:ClosurePortV1}>;
+type Location=Readonly<{content:RemoteExecutionContentV1;instance:string;key:string;root:string;workspace:string;platform:string;files:Files;signal?:AbortSignal;now?:()=>number;cursors?:GenerationCursorsV1;keys?:readonly string[];origin?:string;implementation?:string;stale?:number;serving?:boolean;closures?:ClosurePortV1;scope?:string}>;
 
 const restoredReason="restored from the remote cache",policy=schema.definitions.Policy.const,document=new RegExp(policy.document,"u"),closureDocument=new RegExp(policy.closure,"u"),snapshotDocument=new RegExp(policy.snapshot,"u"),sha=(bytes:Uint8Array):string=>createHash("sha256").update(bytes).digest("hex");
 
 /** 🗝️ The action key of the head of the generations one machine of the group published, for a registry on one platform: the generation format, the owner registry identity, the platform and the origin that writes it, never a path. The server keeps the first bytes of a key against every other origin (a key must determine its bytes), so each origin owns one head, overwrites only its own, and a reader takes the newest head of all origins. */
-export function generationExchangeKeyV1(identity:string,platform:string,origin:string):string{return sha(Buffer.from(JSON.stringify([policy.domain,identity,platform,origin])));}
+export function generationExchangeKeyV1(identity:string,platform:string,origin:string,scope:string=policy.allScope):string{return sha(Buffer.from(JSON.stringify(scope===policy.allScope?[policy.domain,identity,platform,origin]:[policy.domain,identity,platform,origin,scope])));}
+
+/** 🔭️ Whether a head describes the scope a reader wants: a head of one slice is never the generation of another slice or of the whole workspace, and the whole workspace is the scope of a head that names none. */
+export const generationScopeMatchesV1=(note:Readonly<{scope?:string}>,scope:string|undefined):boolean=>(note.scope??policy.allScope)===(scope??policy.allScope);
 
 type HeadV1=Readonly<{note:GenerationNoteV1|undefined;entries:readonly {path:string;hash:string;size:number}[];from:string}>;
 type RankedV1=HeadV1&Readonly<{note:GenerationNoteV1}>;
@@ -67,7 +71,7 @@ export function rankGenerationHeadsV1<T extends Readonly<{note:GenerationNoteV1}
 /** 🪪️ The origin of this machine in the replica group and every origin of the group (the folders below `<store>/v1/origins`), read from the replica state of the worktree; a worktree without a replica is its own group of one. */
 export function fleetOriginsV1(workspace:string):Readonly<{self:string;all:readonly string[]}>{
  try{
-  const machine=JSON.parse(readFileSync(join(workspace,".cache","f","machine.json"),"utf8")) as {originId:string;storeRoot:string},valid=/^[a-z0-9][a-z0-9-]{0,39}$/u;
+  const machine=JSON.parse(readFileSync(machinePathV1(workspace,".cache","f","machine.json"),"utf8")) as {originId:string;storeRoot:string},valid=/^[a-z0-9][a-z0-9-]{0,39}$/u;
   if(!valid.test(machine.originId))throw Error("origin");
   let listed:string[]=[];try{listed=readdirSync(join(machine.storeRoot,"v1","origins")).filter(name=>valid.test(name));}catch{}
   return{self:machine.originId,all:[...new Set([machine.originId,...listed])].sort()};
@@ -223,9 +227,9 @@ export async function publishGenerationV1(location:Location&Readonly<{ifAbsent?:
  await profilePhaseV1("graph.upload.write",()=>each(rows.filter(row=>missing.has(row.hash)),async row=>{const data=row.bytes??sending.get(row.hash)!;await content.write(instance,{hash:row.hash,size:row.size},data,signal);bytesSent+=row.size;sent++;}));
  writeNeutralMemoV1(memoFile,memoKey,moved.known);
  const entries=rows.map(row=>({path:row.path,hash:row.hash,size:row.size})),fragmentNames=[...new Set<string>([local.manifest.global,...Object.values(local.manifest.owners).map(owner=>owner.fragment)])].sort(),leaves=await profilePhaseV1("graph.upload.closures",()=>uploadClosuresV1(location,local.manifest,fragmentNames,entries)).catch((error):GenerationClosuresV1=>({named:0,sent:0,fetched:0,missing:[{key:"0".repeat(64),namespace:"build-input-closures",projects:[String(error?.message??error).slice(0,120)]}]})),naming=new Set(leaves.missing.flatMap(row=>row.projects)).size;
- const note:GenerationNoteV1={version:1,generation:local.generation,owners:Object.keys(local.manifest.owners).length,identity:local.manifest.identity,manifest:manifestName,signature,platform:location.platform,publishedMs:(location.now??Date.now)(),origin:location.origin??"local",stateMs:Math.floor(local.modifiedMs),implementation:local.manifest.implementation,...location.stale===undefined?{}:{stale:Math.min(owners,Math.max(0,Math.floor(location.stale))+naming)},...shipped?{snapshot:shipped.instance}:{}};
+ const note:GenerationNoteV1={version:1,generation:local.generation,owners:Object.keys(local.manifest.owners).length,identity:local.manifest.identity,manifest:manifestName,signature,platform:location.platform,publishedMs:(location.now??Date.now)(),origin:location.origin??"local",stateMs:Math.floor(local.modifiedMs),implementation:local.manifest.implementation,...location.stale===undefined?{}:{stale:Math.min(owners,Math.max(0,Math.floor(location.stale))+naming)},...shipped?{snapshot:shipped.instance}:{},...location.scope===undefined||location.scope===policy.allScope?{}:{scope:location.scope}};
  const result=encodeProtobufV1(REAPI_V1.actionResult,{output_files:entries.map(row=>({path:row.path,digest:{hash:row.hash,size_bytes:row.size}})),stdout_raw:Buffer.from(JSON.stringify(note))});
- await content.writeActionResult(instance,key,result,signal);
+ try{await content.writeActionResult(instance,key,result,signal);}catch(error){if((error as {code?:number})?.code===3)rmSync(root+".closures-sent.json",{force:true});throw error;}
  return{status:"uploaded",generation:note.generation,owners:note.owners,documents:rows.length,sent,bytes:bytesSent,closures:leaves};
 }
 
@@ -233,13 +237,13 @@ export async function publishGenerationV1(location:Location&Readonly<{ifAbsent?:
 /** 🔭️ Whether the remote cache holds a state of this registry and platform that this store would take: the same decision `restoreGenerationV1` makes before it downloads a single document, so a load can go to the restore before it spends a verification pass on a local state that the restore would replace. */
 export async function remoteGenerationAheadV1(location:Location&Readonly<{identity:string;marginMilliseconds?:number}>):Promise<boolean>{
  const local=await localState(location.root,location.files),remote=await remoteNote(location,{implementation:location.implementation});if(!remote)return false;
- const{note}=remote;if(!note||note.identity!==location.identity||note.platform!==location.platform)return false;
+ const{note}=remote;if(!note||note.identity!==location.identity||note.platform!==location.platform||!generationScopeMatchesV1(note,location.scope))return false;
  return!(local&&keepsLocalV1(local,note,remote.from,location));
 }
 
 export async function restoreGenerationV1(location:Location&Readonly<{identity:string;marginMilliseconds?:number}>):Promise<GenerationExchangeOutcomeV1>{
  const{content,instance,root,files,signal}=location,local=await localState(root,files),remote=await remoteNote(location,{implementation:location.implementation,nearest:true});if(!remote)return{status:"absent"};
- const{note,entries}=remote;if(!note||note.identity!==location.identity||note.platform!==location.platform)return{status:"foreign"};
+ const{note,entries}=remote;if(!note||note.identity!==location.identity||note.platform!==location.platform||!generationScopeMatchesV1(note,location.scope))return{status:"foreign"};
  if(local&&keepsLocalV1(local,note,remote.from,location))return{status:"local"};
  const manifestPath=`${P.manifests}/${note.manifest}.json`,snapshotPath=note.snapshot===undefined?undefined:`s/${note.snapshot}.snapshot.br`,documents=entries.filter(entry=>entry.path!==snapshotPath&&!closureDocument.test(entry.path));
  if(documents.length>policy.maximumDocuments+1||entries.length>policy.maximumDocuments+policy.maximumClosures+1||!documents.some(entry=>entry.path===manifestPath)||documents.some(entry=>!document.test(entry.path)||!entry.path.includes(entry.hash)||!(entry.size>=0)))return{status:"incomplete",reason:"action result"};
@@ -272,12 +276,12 @@ export function workspaceClosurePortV1(workspace:string):ClosurePortV1|undefined
 }
 
 /** 🌐️ The exchange of this process: `undefined` while no remote cache endpoint is configured. A failure disables it for the rest of the process, so a dead cache server costs one short probe instead of a timeout per load. */
-export function remoteGenerationExchangeV1(input:Readonly<{environment:Readonly<Record<string,string|undefined>>;workspace:string;identity():Promise<string>;platform?:string;cursors?:GenerationCursorsV1;origins?:Readonly<{self:string;all:readonly string[]}>;serving?:boolean;closures?:ClosurePortV1}>):GenerationExchangeV1|undefined{
+export function remoteGenerationExchangeV1(input:Readonly<{environment:Readonly<Record<string,string|undefined>>;workspace:string;identity():Promise<string>;platform?:string;cursors?:GenerationCursorsV1;origins?:Readonly<{self:string;all:readonly string[]}>;serving?:boolean;closures?:ClosurePortV1;scope?:string}>):GenerationExchangeV1|undefined{
  let resolved;try{resolved=resolveRemoteCacheV1(input.environment,{root:input.workspace});}catch{return undefined;}
  if(!resolved)return undefined;
  const contract=resolved.contract,signedFetch=remoteCacheFetchV1(resolved.environment,{root:input.workspace});
  const platform=input.platform??`${process.platform}-${process.arch}`.toLowerCase(),token=resolved.token,make=(probe:boolean)=>httpRemoteExecutionContentV1({endpoint:contract.endpoint,token,fetch:signedFetch,timeoutSeconds:probe?policy.probeTimeoutSeconds:contract.timeoutSeconds,retries:probe?policy.probeRetries:contract.retries});
- const origins=input.origins??fleetOriginsV1(input.workspace),serving=input.serving??totalmem()/1048576>=policy.servingTotalMegabytes,heads=(identity:string)=>({key:generationExchangeKeyV1(identity,platform,origins.self),keys:origins.all.map(origin=>generationExchangeKeyV1(identity,platform,origin)),origin:origins.self});
+ const origins=input.origins??fleetOriginsV1(input.workspace),serving=input.serving??totalmem()/1048576>=policy.servingTotalMegabytes,scope=input.scope??policy.allScope,heads=(identity:string)=>({key:generationExchangeKeyV1(identity,platform,origins.self,scope),keys:origins.all.map(origin=>generationExchangeKeyV1(identity,platform,origin,scope)),origin:origins.self,scope});
  const closures=input.closures??workspaceClosurePortV1(input.workspace);let down=false;
  const guard=async(run:()=>Promise<GenerationExchangeOutcomeV1>):Promise<GenerationExchangeOutcomeV1>=>{
   if(down)return{status:"failed",reason:"the remote cache was unreachable earlier in this process"};

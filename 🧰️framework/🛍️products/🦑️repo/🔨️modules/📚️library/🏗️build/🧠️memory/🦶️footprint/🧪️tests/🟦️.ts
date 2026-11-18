@@ -12,8 +12,8 @@ import{spawnSync}from"node:child_process";
 import{implementationProcessEnvironmentV1}from"../../../🏛️sealed/📥️execution/🟦️.ts";
 import{graphChildEnvironmentV1}from"../../🐏️child-environment/🟨️.mjs";
 import{mkdirSync,writeFileSync}from"node:fs";
-import{createMemoryGovernorV1}from"../../🟨️.mjs";
 import{releaseOwnerStateV1,createScriptInputCache}from"../../../🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs";
+import{INFERENCE_LIMITS_V1}from"../../../🕸️graph/📥️inference/🧬️schema/🟨️.mjs";
 import{createSharedSourceFilesV1}from"../../../🕸️graph/📥️inference/🧭️script-inputs/♨️reuse/🟨️.mjs";
 import{partInferenceEngagementV1}from"../../../🕸️graph/🧭️discovery/🟦️.ts";
 import{openProjectFarmV1,closeProjectFarmsV1}from"../../../🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🟨️.mjs";
@@ -23,6 +23,9 @@ import{createGraphParentMemoryGovernorV1,createMemoryGovernorV1,serviceMemoryHea
 import{createClosureSettlerV1,useCapacityGrantV1}from"../../../🕸️graph/🧮️derived-nodes/🧩️closure-kinds/🟨️.mjs";
 import{createFactIndexV1,type GenerationRowV1}from"../../../🕸️graph/🕰️generations/🟨️.mjs";
 import{derivedOwnerNameV1,suspectRowsV1}from"../../../🕸️graph/🕰️generations/✂️cutoff/🟨️.mjs";
+import{Database}from"bun:sqlite";
+import{GRAPH_MEMORY_POLICY_V1}from"../../🟨️.mjs";
+import{planCeilingBytesV1,useSliceCeilingGateV1}from"../🟨️.mjs";
 
 /** 🦶️ Contract: the memory of a graph read is bounded by its grant. The physical footprint of the parent (not the resident set, not the managed heap) is read without blocking, compared with the grant, the admission of new work slows before the grant is overrun, and the process settles after every published wave and says so in one line.
  * @see ../🧬️schema/🔣️.json */
@@ -342,12 +345,15 @@ test("a slow stretch names itself in the trace, a fast one does not",()=>{
  expect(spent).toBeGreaterThanOrEqual(2500);expect(lines.length).toBe(1);expect(lines[0]).toMatch(/^slow typescript-program x 2[5-9]\d\d ms$/u);
 });
 
-test("the walk caches of the owners survive while the footprint is below the soft limit, whatever the governor's headroom said, and are released by the footprint alone",()=>{
+test("the walk caches of the owners are released every declared interval whatever the footprint reads and whatever the governor's headroom said; only the shrink and the spill of entries follow the footprint",()=>{
  const scripts=createScriptInputCache({workspaceRoot:"/w"}) as any,fill=()=>{scripts.files.set("a",1);scripts.closures.set("b",1);scripts.commandDependencies.set("c",1);scripts.walkNodes=new Map([["n",1]]);scripts.reachState={graph:new Map()};};
  const gate=(share:number)=>({grantBytes:()=>1000*MB,footprintBytes:()=>1000*MB*share/100});
- fill();for(let owner=0;owner<100;owner++)releaseOwnerStateV1(scripts,{shrink:true,gate:gate(30)});
+ const interval=INFERENCE_LIMITS_V1.ownersPerRelease;
+ fill();for(let owner=0;owner<interval-1;owner++)releaseOwnerStateV1(scripts,{shrink:true,gate:gate(30)});
  expect([scripts.files.size,scripts.closures.size,scripts.commandDependencies.size,scripts.walkNodes.size,scripts.reachState!==undefined]).toEqual([1,1,1,1,true]);
- for(let owner=0;owner<31;owner++)releaseOwnerStateV1(scripts,{gate:gate(70)});
+ releaseOwnerStateV1(scripts,{shrink:true,gate:gate(30)});
+ expect([scripts.files.size,scripts.closures.size,scripts.commandDependencies.size,scripts.walkNodes.size,scripts.reachState]).toEqual([0,0,0,0,undefined]);
+ fill();for(let owner=0;owner<interval-1;owner++)releaseOwnerStateV1(scripts,{gate:gate(70)});
  expect(scripts.walkNodes.size).toBe(1);
  releaseOwnerStateV1(scripts,{gate:gate(70)});
  expect([scripts.files.size,scripts.walkNodes.size,scripts.reachState]).toEqual([0,0,undefined]);
@@ -486,4 +492,75 @@ test("the step label names the running graph phase beside the profile phase and 
   noteFootprintStepV1("build:graph-phase:owners:4:5102");expect(footprintStepV1().endsWith("build:graph-phase:owners:4:5102")).toBe(true);
   noteFootprintStepV1("x".repeat(500));expect(footprintStepV1().length).toBeLessThan(260);
  }finally{noteFootprintStepV1(undefined);}
+});
+
+test("R57 law: the heap census takes at most censusDutyPercent of the wall time however long the loop stays starved, every starved row is still written and carries the last counts",()=>{
+ const P=FOOTPRINT_POLICY_V1,time=clock(),rows:Record<string,string|number>[]=[];let counted=0,spent=0;
+ const costMilliseconds=2000,sampler=createHeapSamplerV1({meter:{bytes:()=>1},statsSync:()=>{counted++;spent+=costMilliseconds;time.advance(costMilliseconds);return{heapSize:300*MB,extraMemorySize:50*MB,objectCount:1000+counted,objectTypeCounts:{Object:counted}};},stack:()=>"s",usage:()=>({rss:2*MB}),now:time.now,emit:fields=>rows.push(fields)});
+ const began=time.now();let calls=0;
+ for(;time.now()-began<600_000;calls++){time.advance(P.pulseMilliseconds);sampler.starved(time.now());}
+ expect(rows.length).toBe(calls);
+ expect(counted).toBeGreaterThanOrEqual(2);
+ expect(spent/(time.now()-began)).toBeLessThanOrEqual(P.censusDutyPercent/100+0.005);
+ expect(rows[0]!.objects).toBe(1001);expect(rows[1]!.objects).toBe(1001);expect(rows[rows.length-1]!.objects).toBe(1000+counted);
+ expect(new Set(rows.map(row=>row.objects)).size).toBe(counted);
+});
+
+test("R57 law: a regular sample waits for the census quiet time instead of walking the heap again, and speaks once it passed",async()=>{
+ const P=FOOTPRINT_POLICY_V1,time=clock(),rows:Record<string,string|number>[]=[];let counted=0,rss=100*MB;
+ const sampler=createHeapSamplerV1({meter:{bytes:()=>1},stats:async()=>{counted++;time.advance(1000);return{heapSize:MB,objectCount:counted};},usage:()=>({rss}),now:time.now,emit:fields=>rows.push(fields)});
+ await sampler.tick();expect(rows.length).toBe(1);expect(counted).toBe(1);
+ rss+=P.sampleGrowthBytes;time.advance(P.sampleMilliseconds);await sampler.tick();
+ expect(rows.length).toBe(1);expect(counted).toBe(1);
+ time.advance(1000*(100-P.censusDutyPercent)/P.censusDutyPercent);await sampler.tick();
+ expect(rows.length).toBe(2);expect(counted).toBe(2);
+});
+
+test("R57 law: a forced release is bounded to releaseDutyPercent of the wall time, never runs below the soft limit of the grant, and runs from it",()=>{
+ const P=FOOTPRINT_POLICY_V1,state={quietUntil:-Infinity};let at=1_000_000,used=0,released=0,spent=0;
+ const call=(more:Record<string,unknown>={})=>releaseIfGrownV1({usage:()=>used,release:()=>{released++;spent+=3000;at+=3000;},threshold:100*MB,now:()=>at,decision:()=>"settle",state,...more});
+ const began=at;
+ for(;at-began<600_000;at+=1000){used+=200*MB;call();}
+ expect(released).toBeGreaterThanOrEqual(2);
+ expect(spent/(at-began)).toBeLessThanOrEqual(P.releaseDutyPercent/100+0.01);
+ const before=released;used+=500*MB;at+=1_000_000;expect(call({decision:()=>"run"})).toBe(false);expect(released).toBe(before);
+ expect(call({decision:()=>"settle"})).toBe(true);expect(released).toBe(before+1);
+ used+=500*MB;at+=1_000_000;expect(call({decision:()=>"wait"})).toBe(true);
+});
+
+test("R57 law: the release decision of a process reads the footprint gate it holds: below soft nothing, from soft a release",()=>{
+ let footprint=100*MB;const state={quietUntil:-Infinity,releasedAt:0},gate={grantBytes:()=>1000*MB,footprintBytes:()=>footprint,stop:()=>undefined};let released=0,used=0,at=1_000_000;
+ const call=()=>releaseIfGrownV1({usage:()=>used,release:()=>{released++;at+=5;},threshold:50*MB,state,now:()=>at});
+ try{
+  useFootprintGateV1(gate as never);
+  used+=300*MB;expect(call()).toBe(false);expect(released).toBe(0);
+  footprint=FOOTPRINT_POLICY_V1.softPercent*10*MB+MB;expect(call()).toBe(true);expect(released).toBe(1);
+ }finally{useFootprintGateV1(undefined);}
+ used+=300*MB;at+=1_000_000;expect(call()).toBe(true);
+});
+
+const shareOracle=(footprint:number,grant:number)=>{const database=new Database(":memory:"),row=database.query("select case when ?1*100.0/?2>=?3 then 'wait' when ?1*100.0/?2>=?4 then 'settle' else 'run' end as decision").get(footprint,grant,FOOTPRINT_POLICY_V1.hardPercent,FOOTPRINT_POLICY_V1.softPercent) as {decision:string};database.close();return row.decision;};
+
+test("a slice worker told its plan ceiling gates the whole tree it holds against it and spills its owner state before the ceiling is reached; a worker told none stays ungated",async()=>{
+ const name=GRAPH_MEMORY_POLICY_V1.planCeilingEnvironment;
+ expect(planCeilingBytesV1({})).toBeUndefined();for(const nonsense of["","x","0","-5","Infinity"])expect(planCeilingBytesV1({[name]:nonsense})).toBeUndefined();
+ expect(planCeilingBytesV1({[name]:"6553"})).toBe(6553*MB);
+ expect(useSliceCeilingGateV1({})).toBeUndefined();expect(footprintGateV1()).toBeUndefined();
+ let tree=300*MB;const asked:number[]=[],scripts=createScriptInputCache({workspaceRoot:"/w"}) as any,fill=()=>{scripts.files.set("a",1);scripts.closures.set("b",1);scripts.commandDependencies.set("c",1);};
+ const gate=useSliceCeilingGateV1({[name]:"1000"},{pid:4242,read:async pid=>{asked.push(pid);return tree;},bind:(grant,ports)=>bindProcessGateV1(grant,{...ports,trace:()=>undefined,write:()=>undefined})})!;
+ try{
+  expect(gate).toBe(footprintGateV1());expect(gate.grantBytes()).toBe(1000*MB);expect(useSliceCeilingGateV1({[name]:"2000"})).toBe(gate);
+  for(const held of[300,599,600,849,850,1200]){tree=held*MB;await gate.settle(false);expect(gate.footprintBytes()).toBe(held*MB);expect(decideFootprintV1({footprintBytes:gate.footprintBytes(),grantBytes:gate.grantBytes()!})).toBe(shareOracle(held*MB,1000*MB));}
+  expect(new Set(asked)).toEqual(new Set([4242]));
+  tree=900*MB;await gate.settle(false);fill();releaseOwnerStateV1(scripts);
+  expect([scripts.files.size,scripts.closures.size,scripts.commandDependencies.size]).toEqual([0,0,0]);
+  tree=300*MB;await gate.settle(false);
+  const calm=createScriptInputCache({workspaceRoot:"/w"}) as any,interval=INFERENCE_LIMITS_V1.ownersPerRelease;
+  calm.files.set("a",1);calm.closures.set("b",1);calm.commandDependencies.set("c",1);
+  for(let owner=0;owner<interval-1;owner++)releaseOwnerStateV1(calm);
+  expect([calm.files.size,calm.closures.size,calm.commandDependencies.size]).toEqual([1,1,1]);
+  releaseOwnerStateV1(calm);
+  expect([calm.files.size,calm.closures.size,calm.commandDependencies.size]).toEqual([0,0,0]);
+ }finally{useFootprintGateV1(undefined);}
+ expect(footprintGateV1()).toBeUndefined();
 });

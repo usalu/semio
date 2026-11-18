@@ -1,0 +1,184 @@
+== 2026-11-16T10:13:44Z graph service during the stalled workspace stage (read-only look)
+service logs by time: host-04d9fa2bd114.log host-4cff49da86db.log host-4bdd0c801786.log  (a new log = new code version; three since 08:42Z)
+invalidated generations in the newest log: 5
+-- last graph lines of the newest log:
+graph: the process held 5396 MB of its grant of 6553 MB; collected and shrunk to 5194 MB
+graph: heap census at 5396 MB: managed 3337 MB, external 651 MB, 8233665 objects; most numerous: string 3108098, Array 1948710, Object 799301, Structure 93387, WeakRef 58602, Function 41512
+graph: no usable generation (invalidated), building the first one
+graph: plan stage inference starts (managed 173 MB, resident 730 MB)
+graph: asking the host for up to 1 worker processes for 4774 projects; the projects wait for them
+graph: inferring projects with 1 worker processes (1700 MB each)
+== 2026-11-16T13:03:34Z workspace attempt 15 of the ready child: unexpected failure b28ca173 (grep -a 'request-failed b28ca173' -A12)
+2026-11-16T12:36:40.364Z request-failed b28ca173 Error: Slice worker exited with code null
+    at <anonymous> (semio-source:/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🟨️.mjs:241:38)
+    at processTicksAndRejections (native:7:39)
+graph: plan answered, managed 109 MB, resident 198 MB (released 0 MB)
+[repository:command] still running after 330 s
+[repository:command] still running after 340 s
+[repo] still working after 350 s; last phase started: source.served
+[repository:command] still running after 350 s
+[repository:command] still running after 360 s
+[repository:command] still running after 370 s
+[repo] still working after 380 s; last phase started: source.served
+[repository:command] still running after 380 s
+[repository:command] still running after 390 s
+== 2026-11-16T15:58:20Z graph read of the ready child waits for a memory reservation although memory is free (full line):
+Reading the project graph slice (991 s): reservation 0 of 6553; running (name, kind, seconds, rows): ; waiting for memory: 6553 MB are asked for (2048 MB are enough to start), 7004 MB are free above the 2048 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+== 2026-11-16T16:27:32Z workspace attempt 17 of the ready child: unexpected failure 0aeec40b (grep -a 'request-failed 0aeec40b' -A12)
+2026-11-16T16:18:16.311Z request-failed 0aeec40b Error: Resource lease timed out: graph-custody:/Users/ueli/Documents/semio/.cache/b/g/m/generations:653863ce669729982050f089
+    at acquireHoldingGate (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts:435:314)
+    at async acquireResourceLeaseBody (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts:359:19)
+    at async acquireOrderedResourceLeaseV1 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts:329:37)
+    at async traceLeaseV1 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts:335:54)
+    at async tryHold (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧩️claims/🟨️.mjs:209:86)
+    at async hold (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔐️custody/🟨️.mjs:106:39)
+    at async <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🛑️custody/🟦️.ts:42:136)
+    at async <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs:220:97)
+    at async <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs:190:97)
+    at async <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs:190:38)
+    at async settleConsumers (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts:64:154)
+    at processTicksAndRejections (native:7:39)
+== 2026-11-16T17:16:07Z ready child waits for the graph service (more than 660 s)
+-- ps service host:
+90824 90807       11:15  71424 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM
+90861 90824       11:11 146160 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval \012const fs=await import('node:fs'),path=await import('node:path'),
+-- newest service logs:
+98019 Nov 16 18:16 /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-6d9ff380f4f7.log
+41289 Nov 16 18:06 /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-4ed997872440.log
+66778 Nov 16 17:18 /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-b59d361b6128.log
+-- last 8 lines of the newest:
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+-- launchctl:
+-	0	tech.semio.repo.service.202d92e72cdc
+-	0	tech.semio.repo.service.97b2467d3ef1
+-	0	tech.semio.repo.service.c8d29306b22d
+-	0	tech.semio.repo.probe.3f08bbea4d32
+-	0	tech.semio.repo.service.093c6befab4b
+-	0	tech.semio.fleet.compact
+49594	0	tech.semio.fleet.replica
+== 2026-11-16T20:09:26Z ready.json reason text for 'stalled' (verbatim): Stage workspace showed nothing new for 10 minutes and was stopped; started again at once.
+Observation: 58 of my 10-minute observations since 04:46Z show reason=stalled. In those the stage log shows a freshly started command (elapsed 20 to 700 s) that mostly waits with 'waiting for the load of this checkout that is running ahead of this one (1 load(s) of 2 workers busy)'. Read together: the ready child stops the stage after 10 quiet minutes and starts it again, and the new command then queues behind a graph load that is still running in the service (possibly the one its stopped predecessor asked for; I did not verify whose load it is). A read that had reached 'taken 302 of 4774' at 19:11Z was at 'taken 0 of 4774' at 19:21Z.
+== 2026-11-17T03:43:34Z workspace attempt 24 of the ready child (ran about 2 h 15 min, one read reached 434 of 4774): unexpected failure c5b672dd in /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-a70f467b493d.log (grep -A12)
+2026-11-17T03:14:06.370Z request-failed c5b672dd RepoError: invalid build.closure.provider-entry-stale {"port":"layers"} code=invalid
+Error
+    at repoErrorV1 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🚨️error/🟦️.ts:33:14)
+    at closureLayerBatchesV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs:1205:67)
+    at closureLayerListV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs:1224:142)
+    at resolve (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs:1724:427)
+    at async resolveClosureRefsV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs:487:80)
+    at async <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs:391:111)
+    at async tagProjectFailureV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs:104:22)
+    at async <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs:391:32)
+    at processTicksAndRejections (unknown:7:39)
+graph: plan answered, managed 109 MB, resident 381 MB (released 0 MB)
+[repo] still working after 19133 s; last phase started: source.served
+== 2026-11-17T06:24:22Z workspace attempt 25 of the ready child ended with exit 1 after about 8721 s (last line of ready-log-workspace-failed.txt):
+The graph service could not answer (silent The graph service sent nothing for 120 s although it should hold the request; the request is treated as lost and asked again. / Der Graphdienst hat 120 s lang nichts gesendet, obwohl er die Anfrage halten sollte; die Anfrage geht verloren und wird neu geste
+== 2026-11-17T11:46:04Z workspace attempt 26 of the ready child (ran about 5 h, one read reached 616 of 4774): unexpected failure 1a2a91c6 in host-a70f467b493d.log (grep -A12)
+2026-11-17T11:15:22.233Z request-failed 1a2a91c6 Error: the parent of a read must not run infer (@semio-tech/s-spatial-kernel-semio-session-rs): it is a job of a farm child / der Elternprozess eines Laufs darf infer (@semio-tech/s-spatial-kernel-semio-session-rs) nicht ausführen: es ist eine Aufgabe eines Farm-Kindprozesses code=graph.read-parent-computes
+Error
+    at assertNotReadParentV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🚧️read-parent/🟨️.mjs:36:27)
+    at inferProjectBodyV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs:160:3)
+    at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs:181:278)
+    at run (node:async_hooks:144:29)
+    at run (node:async_hooks:144:29)
+    at observeInferenceComputationV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs:1036:50)
+    at async observeProjectInferenceV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs:181:20)
+    at async tagProjectFailureV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs:106:22)
+    at async <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs:478:417)
+    at processTicksAndRejections (unknown:7:39)
+graph: plan answered, managed 110 MB, resident 180 MB (released 0 MB)
+== 2026-11-17T12:06:12Z workspace attempt 27 of the ready child: unexpected failure c4b84959 in host-f7f1b7406764.log (grep -A12)
+2026-11-17T11:36:35.312Z request-failed c4b84959 Error: the parent of a read must not run refs (@semio-tech/stdio-artifact-contract-rs): it is a job of a farm child / der Elternprozess eines Laufs darf refs (@semio-tech/stdio-artifact-contract-rs) nicht ausführen: es ist eine Aufgabe eines Farm-Kindprozesses code=graph.read-parent-computes
+Error: the parent of a read must not run refs (@semio-tech/stdio-artifact-contract-rs): it is a job of a farm child / der Elternprozess eines Laufs darf refs (@semio-tech/stdio-artifact-contract-rs) nicht ausführen: es ist eine Aufgabe eines Farm-Kindprozesses
+    at assertNotReadParentV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🚧️read-parent/🟨️.mjs:36:27)
+    at resolveClosureRefsV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs:488:3)
+    at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs:481:844)
+    at async tagProjectFailureV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs:106:22)
+    at async <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs:481:32)
+    at processTicksAndRejections (native:7:39)
+graph: plan answered, managed 127 MB, resident 367 MB (released 0 MB)
+[repository:command] still running after 70 s
+[repo] still working after 80 s; last phase started: source.served
+[repository:command] still running after 80 s
+[repository:command] still running after 90 s
+== 2026-11-17T15:18:49Z graph read stands at 'taken 534 of 4774' for 10 minutes; last graph lines of host-f7f1b7406764.log:
+graph: waiting for memory headroom (1358 of 34 MB reserved, 1 projects running): @semio-tech/hub-space-document-sources-test needs 1557 MB and has waited 7 s; after 60 s it runs beside the others as soon as it fits the memory that is really free and the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (1358 of 14 MB reserved, 1 projects running): @semio-tech/hub-space-document-sources-test needs 1557 MB and has waited 23 s; after 60 s it runs beside the others as soon as it fits the memory that is really free and the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (1358 of 185 MB reserved, 1 projects running): @semio-tech/hub-space-document-sources-test needs 1557 MB and has waited 37 s; after 60 s it runs beside the others as soon as it fits the memory that is really free and the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: @semio-tech/hub-space-document-sources-test has run 533 s with 0 rows and is parked: the farm child is done; waiting for the memory governor to let the owner back into the process [no children] / Graph: @semio-tech/hub-space-document-sources-test läuft seit 533 s ohne Zeile und ist geparkt: der Farm-Kindprozess ist fertig; wartet darauf, dass die Speichersteuerung den Owner wieder in den P
+graph: headroom of -1194 MB is below one project (897 MB), inferring one project at a time
+graph: waiting for memory headroom (897 of 0 MB reserved, 1 projects running): @semio-tech/hub-hostile-input-laws-rs needs 897 MB and has waited 0 s; after 60 s it runs beside the others as soon as it fits the memory that is really free and the 1756 MB one project is granted, otherwise the run is refused with exit 75
+-- five largest processes:
+1533936 29344 23006       04:50 rustc --crate-name kernel_event_receiving --edition=2021 M-pM^_M^SM-&M-oM-8M^Opackages/M-pM^_M-&M^@M-oM-8M^Orust/../../M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^N\240M-oM-8M
+572032 33240 77936       00:11 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=fals
+481152 27783 24966       06:32 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --experimental-import-meta-resolve --require /Users/uel
+387920 37509   308    02:13:29 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Ofra
+283616 26736 24966       07:53 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --experimental-import-meta-resolve --require /Users/uel
+-- System-wide memory free percentage: 39%
+== 2026-11-17T16:08:15Z workspace attempt 28 of the ready child (ran about 4 h, read stood at 599 of 4774): unexpected failure 0546aa54 in host-f7f1b7406764.log (grep -A12)
+2026-11-17T15:43:53.221Z request-failed 0546aa54 RepoError: unserved build.graph.no-progress {"minutes":5,"done":599,"total":4774,"running":"@semio-tech/framework-pack-json-rs (529 s, 0 rows), @semio-tech/framework-actor (310 s, 0 rows)","waiting":"the running owners themselves, which show no row / die laufenden Projekte selbst, die keine Zeile zeigen"} code=unserved
+Error
+    at repoErrorV1 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🚨️error/🟦️.ts:33:14)
+    at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs:598:17)
+    at processTicksAndRejections (unknown:7:39)
+graph: plan answered, managed 110 MB, resident 178 MB (released 0 MB)
+[repository:command] still running after 13640 s
+[repository:command] still running after 13650 s
+[repo] still working after 13656 s; last phase started: source.served
+[repository:command] still running after 13660 s
+[repository:command] still running after 13670 s
+[repository:command] still running after 13680 s
+[repo] still working after 13686 s; last phase started: source.served
+== 2026-11-17T16:28:00Z workspace attempt 29 of the ready child: unexpected failure f8b20b65 in host-64965675c7a2.log (grep -A12)
+2026-11-17T16:07:12.203Z request-failed f8b20b65 Error: Unknown selected named source input: scriptProvider:artifact-package:native
+Error
+    at visit (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🚪️admission/🟦️.ts:83:502)
+    at buildSourceContractGroupsV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🚪️admission/🟦️.ts:84:100)
+    at declaredSourceInputs (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs:308:21)
+    at inferProjectInputs (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.mjs:334:33)
+    at projectInputs (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs:331:17)
+    at projectWithDefaults (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs:458:29)
+    at async discoverBuildOwnerAdmissionFactsV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔎️owner-discovery/🟨️.mjs:197:55)
+    at processTicksAndRejections (unknown:7:39)
+graph: plan answered, managed 109 MB, resident 183 MB (released 0 MB)
+[repo] still working after 200 s; last phase started: source.served
+[repository:command] still running after 200 s
+== 2026-11-17T18:33:44Z the same read (attempt 31, more than 5800 s) counts up and falls back: 957 (17:25Z), 3446 (17:35Z), 362 (17:45Z), 2561 (17:54Z), 4070 (18:04Z), 1174 (18:14Z), 4384 (18:23Z), 1184 (18:33Z) of 4455. Graph lines of host-237b3832b8c6.log without the headroom lines, last 14:
+graph: no memory peak learned for language:cargo projects yet (256 MB assumed, 965 MB headroom), inferring one at a time: @semio-tech/flow-extension-list-rust has waited 10 s for the running project, at most 60 s
+== 2026-11-17T20:16:00Z read stands at 'taken 4384 of 4455' since 20:04Z (also the highest value at 18:23Z); last graph lines of host-237b3832b8c6.log:
+graph: headroom of 437 MB is below one project (2035 MB), inferring one project at a time
+graph: headroom of 437 MB again (351 MB taken), resuming
+graph: headroom of 436 MB is below one project (944 MB), inferring one project at a time
+graph: headroom of 436 MB again (64 MB taken), resuming
+graph: headroom of 435 MB is below one project (1210 MB), inferring one project at a time
+graph: headroom of 403 MB again (373 MB taken), resuming
+graph: headroom of 403 MB is below one project (419 MB), inferring one project at a time
+graph: headroom of 402 MB again (322 MB taken), resuming
+== 2026-11-17T21:37:32Z workspace attempt 32 of the ready child ended without exit code (ready.json: 'failed with exit status -') after the read stood at 4384 of 4455 from 20:04Z to 21:17Z; last 4 lines of ready-log-workspace-failed.txt:
+2026-11-17T21:29:20.220Z workspace-failed
+                                                                                                                                                                                                                                                                                                            
+== 2026-11-17T21:44:20Z workspace attempt 33 of the ready child: exit 1 after 1 s, log holds only '2026-11-17T21:29:20.091Z workspace' and '…220Z workspace-failed' (no command output). Timings of the last four runs (stage seconds exit outcome): workspace 6457 None stage-failed / workspace 2881 None stalled / workspace 4623 None stage-failed / workspace 1 1 stage-failed
+== 2026-11-17T21:44:37Z the fleet replica agent (tech.semio.fleet.replica, pid 60797) was started 23 min 42 s before 21:44:50Z, i.e. about 21:21Z; the machine itself did not restart (boot time 2026-11-11 22:03:49Z, load averages 22.09 18.70 16.36). ready.json 'tail' holds NUL bytes at 21:44Z. Local .cache/f/ready/workspace.log now shows 'Reading the project graph slice (1615 s): taken 587 of 590' (a much smaller total than 4455).
+== 2026-11-17T23:17:08Z workspace attempt 35 of the ready child: exit 1 at once (23:15:16Z), stage log empty again as in attempt 33. .cache/f/ready/workspace.log:   670887 bytes, of them NUL bytes:   661635
+== 2026-11-17T23:17:19Z while ready.json says backoff (attempt 35 failed at 23:15:16Z), .cache/f/ready/workspace.log is still being written at 23:17Z with 'Reading the project graph slice (7184 s): taken 387 of 590', i.e. a stage command started about 21:17Z is still alive and writes into the truncated log (hence the NUL bytes). Last lines of kills.log:
+2026-11-17T22:19:49.906Z Process 84904 (bun) received SIGTERM from the ready stage runner of this worker (runner process 78820, stage workspace, owner ready:31a731c45270:workspace:1794952162938): the stage waited for a holder while its code changed and was stopped as a whole to start again with the new code. / Prozess 84904 (bun) erhielt SIGTERM vom Stufen-Läufer dieses Arbeiters (Läufer-Prozess 78820, Stufe workspace, Besitzer ready:31a731c45270:workspace:1794952162938): die Stufe wartete auf einen Halter, während sich ihr Code änderte, und wurde als Ganzes gestoppt, um mit dem neuen Code
+2026-11-17T22:20:11.313Z Process 84901 (bun) received SIGKILL from the ready stage runner of this worker (runner process 78820, stage workspace, owner ready:31a731c45270:workspace:1794952162938): the stage waited for a holder while its code changed and was stopped as a whole to start again with the new code. / Prozess 84901 (bun) erhielt SIGKILL vom Stufen-Läufer dieses Arbeiters (Läufer-Prozess 78820, Stufe workspace, Besitzer ready:31a731c45270:workspace:1794952162938): die Stufe wartete auf einen Halter, während sich ihr Code änderte, und wurde als Ganzes gestoppt, um mit dem neuen Code
+2026-11-17T22:20:11.348Z Process 84904 ((bun)) received SIGKILL from the ready stage runner of this worker (runner process 78820, stage workspace, owner ready:31a731c45270:workspace:1794952162938): the stage waited for a holder while its code changed and was stopped as a whole to start again with the new code. / Prozess 84904 ((bun)) erhielt SIGKILL vom Stufen-Läufer dieses Arbeiters (Läufer-Prozess 78820, Stufe workspace, Besitzer ready:31a731c45270:workspace:1794952162938): die Stufe wartete auf einen Halter, während sich ihr Code änderte, und wurde als Ganzes gestoppt, um mit dem neuen 
+2026-11-17T22:50:56.541Z Process 11450 (bun) received SIGTERM from the ready stage runner of this worker (runner process 78820, stage workspace, owner ready:31a731c45270:workspace:1794954039576): the stage waited for a holder while its code changed and was stopped as a whole to start again with the new code. / Prozess 11450 (bun) erhielt SIGTERM vom Stufen-Läufer dieses Arbeiters (Läufer-Prozess 78820, Stufe workspace, Besitzer ready:31a731c45270:workspace:1794954039576): die Stufe wartete auf einen Halter, während sich ihr Code änderte, und wurde als Ganzes gestoppt, um mit dem neuen Code
+2026-11-17T22:50:56.550Z Process 11466 (bun) received SIGTERM from the ready stage runner of this worker (runner process 78820, stage workspace, owner ready:31a731c45270:workspace:1794954039576): the stage waited for a holder while its code changed and was stopped as a whole to start again with the new code. / Prozess 11466 (bun) erhielt SIGTERM vom Stufen-Läufer dieses Arbeiters (Läufer-Prozess 78820, Stufe workspace, Besitzer ready:31a731c45270:workspace:1794954039576): die Stufe wartete auf einen Halter, während sich ihr Code änderte, und wurde als Ganzes gestoppt, um mit dem neuen Code
+2026-11-17T23:15:14.025Z Process 40893 (bun) received SIGTERM from the ready stage runner of this worker (runner process 53384, stage workspace, owner ready:31a731c45270:workspace:1794954039576): it is an orphan that carries the owner token of a stopped try of this stage, and nothing else. / Prozess 40893 (bun) erhielt SIGTERM vom Stufen-Läufer dieses Arbeiters (Läufer-Prozess 53384, Stufe workspace, Besitzer ready:31a731c45270:workspace:1794954039576): er ist ein Waise, der das Besitzer-Zeichen eines gestoppten Versuchs dieser Stufe trägt, und sonst nichts.
+-- workspace.tree.json: {"version":1,"stage":"workspace","root":{"pid":64667,"startMs":1794957314720},"sampledMs":1794957315306,"processes":[{"pid":64667,"startMs":1794957314304,"name":"bun"}]}
+-- processes:
+== 2026-11-18T00:35:35Z workspace attempt 36 of the ready child: exit 1, failure text from ready-log-workspace-failed.txt:
+The resident service met an unexpected failure (reference f0be4e1a): Error: Build source authority keeps changing during inference
+  at loadBuildGraphUnpinnedV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️load/🟦️.ts:217:9)
+  at async withImplementationPinV1 (unknown)
+  at processTicksAndRejections (native:7:39); try again, the details under that reference are in the service log /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-237b3832b8c6.log.

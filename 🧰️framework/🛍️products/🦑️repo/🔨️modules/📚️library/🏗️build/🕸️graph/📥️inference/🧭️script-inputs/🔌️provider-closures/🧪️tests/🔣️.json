@@ -25,6 +25,10 @@
     "tool:cargo-lock-owner"
   ],
   "files": {
+    "lib/🦀️cargo/🏃️execution/📜️script.ts": "export const execution = 1;\n",
+    "lib/🧭️routing/📥️owner-command/📜️script.ts": "export const fixture = 1;\n",
+    "📦️packages/🟦️typescript/📇️inventory/🟦️.ts": "export const fixture = 1;\n",
+    "🧹️normalization/🧵️digests/🟦️.ts": "export const fixture = 1;\n",
     "📦️packages/🟦️typescript/🧪️testing/🟦️.ts": "export const testing = 1;\n",
     "app/own.ts": "import { util } from \"../lib/util.ts\";\nexport const own = util;\n",
     "app/📜️script.ts": "import { defineScriptProviderV1 } from \"../lib/port.ts\";\nimport { own } from \"./own.ts\";\ndefineScriptProviderV1(\"tooling\");\nexport const script = own;\n",
@@ -279,6 +283,159 @@
     "testing-framework": {
       "entries": [
         "📦️packages/🟦️typescript/🧪️testing/🟦️.ts"
+      ],
+      "resources": []
+    },
+    "extension-package": {
+      "entries": [
+        "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧩️extension-package/🟦️.ts"
+      ],
+      "resources": []
+    },
+    "free-space": {
+      "entries": [
+        "../../../../🔨️modules/🏃️process/🆓️free-space/🟦️.ts"
+      ],
+      "resources": []
+    },
+    "inventory-index": {
+      "entries": [
+        "📦️packages/🟦️typescript/📇️inventory/🟦️.ts"
+      ],
+      "resources": []
+    },
+    "module-tree": {
+      "entries": [
+        "../../../../🔨️modules/📚️compiler/📦️packages/🟦️typescript/📖️syntax/🌳️module-tree/🟦️.ts"
+      ],
+      "resources": []
+    },
+    "native-toolchain": {
+      "entries": [],
+      "resources": [
+        "lib/🦀️cargo/🏃️execution/📜️script.ts",
+        "../../../../../rustfmt.toml",
+        "../../../../../bunfig.toml",
+        "../../../../../tsconfig.json"
+      ]
+    },
+    "normalization-digests": {
+      "entries": [
+        "🧹️normalization/🧵️digests/🟦️.ts"
+      ],
+      "resources": []
+    },
+    "orphans-parent-script": {
+      "entries": [
+        "../../../../🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/👷️parent/📜️script.ts"
+      ],
+      "resources": []
+    },
+    "owned-execution": {
+      "entries": [
+        "../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts"
+      ],
+      "resources": []
+    },
+    "owner-command": {
+      "entries": [
+        "lib/🧭️routing/📥️owner-command/📜️script.ts"
+      ],
+      "resources": []
+    },
+    "package-budget": {
+      "entries": [
+        "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts"
+      ],
+      "resources": []
+    },
+    "package-execution": {
+      "entries": [
+        "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts"
+      ],
+      "resources": []
+    },
+    "package-router": {
+      "entries": [
+        "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"
+      ],
+      "resources": []
+    },
+    "runtime-identity": {
+      "entries": [
+        "../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts"
+      ],
+      "resources": []
+    },
+    "runtime-main-module": {
+      "entries": [
+        "../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts"
+      ],
+      "resources": []
+    },
+    "runtime-main-package": {
+      "entries": [
+        "../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts"
+      ],
+      "resources": []
+    },
+    "runtime-parse": {
+      "entries": [
+        "../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts"
+      ],
+      "resources": []
+    },
+    "runtime-sqlite": {
+      "entries": [
+        "../../../../📦️packages/🟦️typescript/⚙️runtime/🗃️sqlite/🟦️.ts"
+      ],
+      "resources": []
+    },
+    "test-adapter": {
+      "entries": [
+        "../../../../📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts"
+      ],
+      "resources": []
+    },
+    "test-source-text": {
+      "entries": [
+        "../../../../📦️packages/🟦️typescript/🧪️test/📖️source-text/🟦️.ts"
+      ],
+      "resources": []
+    },
+    "testing-budget": {
+      "entries": [
+        "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts"
+      ],
+      "resources": []
+    },
+    "testing-cargo": {
+      "entries": [
+        "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts"
+      ],
+      "resources": []
+    },
+    "testing-execution": {
+      "entries": [
+        "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts"
+      ],
+      "resources": []
+    },
+    "testing-vitest": {
+      "entries": [
+        "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts"
+      ],
+      "resources": []
+    },
+    "typescript-build": {
+      "entries": [
+        "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts"
+      ],
+      "resources": []
+    },
+    "validator-oracles": {
+      "entries": [
+        "../../../../🔨️modules/🧬️schema/📦️packages/🟦️typescript/🔮️oracles/✅️validator/🟦️.ts"
       ],
       "resources": []
     },

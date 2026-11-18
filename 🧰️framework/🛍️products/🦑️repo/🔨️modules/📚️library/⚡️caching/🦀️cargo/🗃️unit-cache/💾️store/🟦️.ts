@@ -160,10 +160,17 @@ function placeV1(destination:string,write:(temporary:string)=>void):void{
 export function restoreUnitV1(root:string,entry:UnitEntryV1,context:Readonly<{outDir:string;laneRoot:string|undefined;stampDirectory:string|undefined}>):{stdout:string;stderr:string}{
  const render=(text:string)=>laneRestoreV1(text.split(policy.key.outputToken).join(context.outDir),context.laneRoot);
  ensure(context.outDir);
- for(const row of entry.outputs){
-  const destination=join(context.outDir,row.name),source=objectPath(row.sha256);
-  if(row.template){const text=render(readFileSync(source,"utf8"));placeV1(destination,temporary=>writeFileSync(temporary,text));}
-  else placeV1(destination,temporary=>{copyFileSync(source,temporary,constants.COPYFILE_FICLONE);chmodSync(temporary,row.executable?0o755:0o644);});
+ const staged:Array<{row:UnitEntryV1["outputs"][number];destination:string;temporary:string}>=[];
+ try{
+  for(const row of entry.outputs){
+   const destination=join(context.outDir,row.name),temporary=destination+"."+randomBytes(4).toString("hex")+".tmp",source=objectPath(row.sha256);
+   staged.push({row,destination,temporary});
+   if(row.template)writeFileSync(temporary,render(readFileSync(source,"utf8")));
+   else{copyFileSync(source,temporary,constants.COPYFILE_FICLONE);chmodSync(temporary,row.executable?0o755:0o644);}
+  }
+ }catch(error){for(const item of staged)rmSync(item.temporary,{force:true});throw error;}
+ for(const {row,destination,temporary} of staged){
+  renameSync(temporary,destination);
   touchCasObjectSyncV1(casRootV1(),row.sha256);const now=new Date();
   if(!row.template)utimesSync(destination,now,now);
   if(!row.template&&context.stampDirectory)stampFile(destination,row.sha256,context.stampDirectory);

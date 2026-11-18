@@ -39,7 +39,9 @@ export interface NativeImageStorageV1{
 /** 📖️ Carries observed descendant names as DATA without enrolling any child. */
 export type NativeProtectedParentReadV1=Readonly<{descendants:readonly string[];port:import("../🔌️port/🟦️.ts").NativeStorageObservationPortV1;verify(control:ResourceLeaseControl):Promise<readonly string[]>}>;
 /** 🏛️ Captures a distinct maintenance request without promoting an existing read purpose. */
-export type NativeProtectedMaintenanceRequestV1=Omit<NativeProtectedParentRequestV1,"purpose">&Readonly<{purpose:"mounted-parent-maintenance"}>;
+/** 🪪️ One physical identity as an exact token: a JSON integer while it is a safe number, else its decimal digits. */
+export type NativePhysicalIdentityV1=number|string;
+export type NativeProtectedMaintenanceRequestV1=Readonly<{version:1;purpose:"mounted-parent-maintenance";wait:false;receiptSha256:string;directory:Readonly<{dev:NativePhysicalIdentityV1;ino:NativePhysicalIdentityV1;mode:number}>;backing:Readonly<{dev:NativePhysicalIdentityV1;ino:NativePhysicalIdentityV1;size:number;allocatedBytes:number}>;root:Readonly<{dev:NativePhysicalIdentityV1;ino:NativePhysicalIdentityV1;mode:number}>}>;
 /** 🗺️ Describes one complete actual association as DATA; it grants no mapping or image owner. */
 export type NativeProtectedMaintenanceAssociationV1=Readonly<{root:string;image:string;backingIdentity:string;kernelIdentity:string}>;
 /** 📦️ Declares an independently owned current image; this DATA never creates a funded child history. */

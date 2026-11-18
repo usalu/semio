@@ -165,7 +165,7 @@ export function AgentApprovalAffordance({ approvalId, summary, requestedAtMs, st
   const decidable = pending && onDecision !== undefined;
 
   return (
-    <section id={agentApprovalElementId(approvalId)} tabIndex={-1} aria-labelledby={titleId} data-semio-agent-approval-id={approvalId} data-semio-agent-approval-state={pending ? "pending" : state === "withdrawn" ? "withdrawn" : (decision ?? "resolved")} data-semio-agent-approval-withdrawal={withdrawal ?? ""} className="flex min-w-0 flex-col gap-single rounded-sm text-xs text-foreground outline-none focus-visible:ring-2 focus-visible:ring-emphasized">
+    <section id={agentApprovalElementId(approvalId)} tabIndex={-1} aria-labelledby={titleId} data-semio-agent-approval-id={approvalId} data-semio-agent-approval-state={pending ? "pending" : state === "withdrawn" ? "withdrawn" : (decision ?? "resolved")} data-semio-agent-approval-withdrawal={withdrawal ?? ""} className="flex min-w-0 flex-col gap-single rounded-sm pt-single text-xs text-foreground outline-none focus-visible:ring-2 focus-visible:ring-emphasized [&>:not([role=group])]:px-single">
       <p id={titleId} className="min-w-0 break-words" data-semio-agent-approval-verb={parsed.capabilityId ?? ""}>
         <span className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">{parsed.capabilityTitle ? `${verbLabel}: ` : `${roleLabel}: `}</span>
         <span className="font-medium">{subject}</span>
@@ -206,10 +206,10 @@ export function AgentApprovalAffordance({ approvalId, summary, requestedAtMs, st
         </p>
       )}
       {decidable ? (
-        <div role="group" aria-label={actionsLabel} className="flex flex-wrap items-center gap-single">
-          <Button type="button" variant="ghost" icon="x" id={`framework.approvals.deny.${approvalId}`} text={denyLabel} aria-label={`${denyLabel}: ${subject}`} onClick={() => onDecision?.(approvalId, "deny")} />
-          <Button type="button" icon="check" id={`framework.approvals.once.${approvalId}`} text={onceLabel} aria-label={`${onceLabel}: ${subject}`} onClick={() => onDecision?.(approvalId, "once")} />
-          <Button type="button" variant="ghost" icon="check" id={`framework.approvals.session.${approvalId}`} text={sessionLabel} aria-label={`${sessionLabel}: ${subject}`} onClick={() => onDecision?.(approvalId, "session")} />
+        <div role="group" aria-label={actionsLabel} className="flex flex-wrap items-stretch">
+          <Button type="button" variant="ghost" icon="x" className="flex-1" id={`framework.approvals.deny.${approvalId}`} text={denyLabel} aria-label={`${denyLabel}: ${subject}`} onClick={() => onDecision?.(approvalId, "deny")} />
+          <Button type="button" icon="check" className="flex-1" id={`framework.approvals.once.${approvalId}`} text={onceLabel} aria-label={`${onceLabel}: ${subject}`} onClick={() => onDecision?.(approvalId, "once")} />
+          <Button type="button" variant="ghost" icon="check" className="flex-1" id={`framework.approvals.session.${approvalId}`} text={sessionLabel} aria-label={`${sessionLabel}: ${subject}`} onClick={() => onDecision?.(approvalId, "session")} />
         </div>
       ) : null}
     </section>

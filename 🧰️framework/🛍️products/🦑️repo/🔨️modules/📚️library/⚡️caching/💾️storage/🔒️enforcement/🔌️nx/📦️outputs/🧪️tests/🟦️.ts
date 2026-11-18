@@ -93,3 +93,28 @@ test("a namespace bound inside a nested tooling store settles with that store on
  const released=withRepositoryCacheStoreV1(repository.root,"tools",original,nxPhase,async()=>{const namespace=await bind(identity,null,implementation);await namespace.release();await namespace.release();return "released";});
  expect(await race(released,120000)).toBe("released");
 })),600000);
+test("an Nx output outside every declared partition is refused as a typed bilingual refusal naming path and partitions",()=>{
+ const path="/fixed/workspace/proj/dist/out";
+ try{classifyNxOutputV1(fixture.roots,path);throw Error("not refused");}catch(error){const refusal=error as {code?:string;path?:string;partitions?:Record<string,string>;en?:string;de?:string;message:string};
+  expect(refusal.code).toBe("nx-output-escapes-partitions");expect(refusal.path).toBe(path);expect(refusal.partitions).toEqual(fixture.roots);
+  expect(refusal.message).toContain("escapes declared cache partitions");expect(refusal.en).toContain(path);expect(refusal.en).toContain("/fixed/rust");expect(refusal.en).toContain("/fixed/workspace");
+  expect(refusal.de).toContain(path);expect(refusal.de).toContain("/fixed/products");expect(refusal.de).not.toBe(refusal.en);}
+});
+test("every cached build output of the readiness closure lies in a declared partition or is the task's store receipt (static, no build needed)",async()=>{
+ const{projectBuildTargetForNxV1}=await import("../../../../../../🟨️.mjs"),policy=(await import("../../../📦️budget/🔣️policy.json")).default,root=resolve(import.meta.dir,"../../../../../../../../../../.."),
+ roots={rust:join(root,policy.partitions.rust.directory,"m"),products:join(root,policy.partitions.products.directory,"m"),receipts:root},
+ projects=["🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust","🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust","🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript","🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust","✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/📦️packages/🟦️typescript","✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/📦️packages/🦀️rust","🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp"];
+ let cachedOutputs=0;
+ for(const directory of projects){
+  const project=JSON.parse(readFileSync(join(root,directory,"📋️project.json"),"utf8"));
+  for(const[name,target]of Object.entries(project.targets??{}as Record<string,any>)as[string,any][]){
+   const projected=projectBuildTargetForNxV1({execution:{kind:"command",command:"x"},cache:target.cache,outputs:target.outputs} as any,name);
+   if(projected.cache===false)continue;
+   for(const output of(target.outputs??[]).filter((value:string)=>!value.startsWith("!"))){
+    const absolute=resolve(output.startsWith("{projectRoot}/")?join(root,directory,output.slice("{projectRoot}/".length)):join(root,output.slice("{workspaceRoot}/".length)));
+    try{classifyNxOutputV1(roots,absolute);cachedOutputs++;}catch(error){throw Error(project.name+":"+name+" declares a cached output outside the declared partitions: "+(error as Error).message);}
+   }
+  }
+ }
+ expect(cachedOutputs).toBeGreaterThan(1);
+});

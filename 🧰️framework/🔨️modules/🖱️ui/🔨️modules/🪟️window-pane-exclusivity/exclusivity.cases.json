@@ -1,0 +1,11 @@
+{
+  "schema": "window-pane-exclusivity/v1",
+  "cases": [
+    { "name": "wide window keeps every open pane", "open": { "engagement": true, "search": true, "measures": true, "utility": true }, "last": "search", "exclusive": false, "expanded": { "engagement": true, "search": true, "measures": true, "utility": true }, "quickActionsCovered": false },
+    { "name": "narrow window shows the pane opened last", "open": { "engagement": true, "search": false, "measures": true, "utility": false }, "last": "measures", "exclusive": true, "expanded": { "engagement": false, "search": false, "measures": true, "utility": false }, "quickActionsCovered": true },
+    { "name": "narrow window falls back to priority when the last pane is closed", "open": { "engagement": false, "search": true, "measures": true, "utility": true }, "last": "engagement", "exclusive": true, "expanded": { "engagement": false, "search": true, "measures": false, "utility": false }, "quickActionsCovered": true },
+    { "name": "narrow window without a last pane picks the highest priority", "open": { "engagement": true, "search": true, "measures": true, "utility": true }, "last": null, "exclusive": true, "expanded": { "engagement": true, "search": false, "measures": false, "utility": false }, "quickActionsCovered": false },
+    { "name": "narrow window with only the utility pane open leaves the quick actions", "open": { "engagement": false, "search": false, "measures": false, "utility": true }, "last": null, "exclusive": true, "expanded": { "engagement": false, "search": false, "measures": false, "utility": true }, "quickActionsCovered": false },
+    { "name": "narrow window with nothing open shows nothing", "open": { "engagement": false, "search": false, "measures": false, "utility": false }, "last": "search", "exclusive": true, "expanded": { "engagement": false, "search": false, "measures": false, "utility": false }, "quickActionsCovered": false }
+  ]
+}

@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {createHash,randomBytes} from "node:crypto";
 import {createReadStream,createWriteStream,constants} from "node:fs";
 import {appendFile,copyFile,mkdir,open,readFile,rename,rm,stat,writeFile} from "node:fs/promises";
@@ -5,6 +6,7 @@ import {dirname,join} from "node:path";
 import {Readable} from "node:stream";
 import {remoteCacheFetchV1,resolveRemoteCacheV1,fleetStoreRootV1} from "../../../🏗️build/🌐️remote-cache/🛰️fleet/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+import {claimFleetWorkV1} from "./🎟️work-claim/🟦️.ts";
 
 /** 📐️ The authored fetch policy: store layout, timeouts, size limits and environment names.
  * @see ./🧬️schema/🔣️.json */
@@ -68,7 +70,7 @@ export async function hashFleetFileV1(path:string,signal?:AbortSignal,algorithm:
  }catch{return undefined;}
 }
 
-const markerPath=(context:FleetFetchContextV1,sha256:string):string|undefined=>context.root===undefined?undefined:join(context.root,".cache","f","fetch-verified",sha256);
+const markerPath=(context:FleetFetchContextV1,sha256:string):string|undefined=>context.root===undefined?undefined:machinePathV1(context.root,".cache","f","fetch-verified",sha256);
 const stamp=(facts:{size:number;mtimeMs:number}):string=>`${facts.size}:${Math.floor(facts.mtimeMs)}`;
 
 /** ✅️ Proves a store file holds its sha256, remembering the proof by size and modification time so a large blob is hashed once per machine. */
@@ -95,7 +97,7 @@ export async function fleetBlobOpenV1(context:FleetFetchContextV1,sha256:string,
   if(bytes!==undefined){await recordFleetFetchV1(context,{sha256,source:"store",bytes,milliseconds:context.now()-started,direction:"get"});return Object.freeze({source:"store",bytes,path,dispose:async()=>{}});}
  }
  if(context.remote!==undefined&&sha256.length===64&&(expectedBytes===undefined||expectedBytes<=policy.httpMaximumBytes)){
-  const remote=context.remote,staging=context.root===undefined?undefined:join(context.root,".cache","f","fetch-tmp"),temporary=staging===undefined?undefined:join(staging,randomBytes(8).toString("hex"));
+  const remote=context.remote,staging=context.root===undefined?undefined:machinePathV1(context.root,".cache","f","fetch-tmp"),temporary=staging===undefined?undefined:join(staging,randomBytes(8).toString("hex"));
   if(temporary!==undefined&&staging!==undefined){
    const bytes=await guarded(policy.httpTimeoutMilliseconds*4,async signal=>{
     await mkdir(staging,{recursive:true});
@@ -163,18 +165,22 @@ export function pinFromIntegrityV1(url:string,integrity:string,bytes?:number):Pi
 /** 🌐️ What a pinned download is: the upstream URL, the sha256 that is its whole trust and its size when pinned. */
 export type PinnedDownloadV1=Readonly<{url:string;sha256:string;bytes?:number}>;
 
-/** ⬇️ A drop-in `fetch` for one pinned artifact. The fleet is asked first, by the sha256, and answers from the group store or the cache without touching the internet; on a miss the upstream is fetched, and while the body streams to the caller it is hashed and staged, and a body whose hash and size match the pin is published to the fleet when the stream ends. The caller keeps verifying the pin itself. A request with a method other than GET, a `Range` header or a non-success status passes through unchanged. */
+/** ⬇️ A drop-in `fetch` for one pinned artifact. The fleet is asked first, by the sha256, and answers from the group store or the cache without touching the internet; on a miss the upstream is fetched, and while the body streams to the caller it is hashed and staged, and a body whose hash and size match the pin is published to the fleet when the stream ends. The caller keeps verifying the pin itself. On a fleet miss the download is claimed first (`claimFleetWorkV1`, kind `blob`, identity the pin), so of any number of machines asking at once exactly one downloads while the others wait and are served the published blob; a claim that cannot be had means the download runs here as before. A request with a method other than GET, a `Range` header or a non-success status passes through unchanged. */
 export async function pinnedFetchV1(context:FleetFetchContextV1,pin:PinnedDownloadV1,init:RequestInit={}):Promise<Response>{
  const method=(init.method??"GET").toUpperCase(),headers=new Headers(init.headers);
  if(method!=="GET"||headers.has("range")||!DIGEST.test(pin.sha256))return context.fetch(pin.url,init);
- const hit=await fleetBlobOpenV1(context,pin.sha256,pin.bytes);
+ const found:{blob?:FleetBlobV1}={blob:await fleetBlobOpenV1(context,pin.sha256,pin.bytes)};
+ const claim=found.blob?undefined:await claimFleetWorkV1(context,{kind:"blob",identity:pin.sha256,ready:async()=>(found.blob??=await fleetBlobOpenV1(context,pin.sha256,pin.bytes))!==undefined});
+ const hit=found.blob;
  if(hit){
   const stream=Readable.toWeb(createReadStream(hit.path)) as unknown as ReadableStream<Uint8Array>,closing=new TransformStream<Uint8Array,Uint8Array>({flush:async()=>{await hit.dispose();}});
   return new Response(stream.pipeThrough(closing),{status:200,headers:{"content-length":String(hit.bytes),"content-type":"application/octet-stream","x-semio-fleet-source":hit.source}});
  }
- const started=context.now(),response=await context.fetch(pin.url,init);
- if(!response.ok||!response.body||(context.storeRoot===undefined&&context.remote===undefined))return response;
- const staging=context.storeRoot!==undefined?`${fleetBlobStorePathV1(context.storeRoot,pin.sha256)}.${randomBytes(6).toString("hex")}.tmp`:join(context.root??".",".cache","f","fetch-tmp",`${randomBytes(6).toString("hex")}.tmp`),hash=createHash(algorithmOf(pin.sha256));
+ const started=context.now();
+ let response:Response;
+ try{response=await context.fetch(pin.url,init);}catch(error){await claim?.release();throw error;}
+ if(!response.ok||!response.body||(context.storeRoot===undefined&&context.remote===undefined)){await claim?.release();return response;}
+ const staging=context.storeRoot!==undefined?`${fleetBlobStorePathV1(context.storeRoot,pin.sha256)}.${randomBytes(6).toString("hex")}.tmp`:machinePathV1(context.root??".",".cache","f","fetch-tmp",`${randomBytes(6).toString("hex")}.tmp`),hash=createHash(algorithmOf(pin.sha256));
  let file:Awaited<ReturnType<typeof open>>|undefined,bytes=0,broken=false;
  try{await mkdir(dirname(staging),{recursive:true});file=await open(staging,"wx",0o600);}catch{broken=true;}
  const transform=new TransformStream<Uint8Array,Uint8Array>({
@@ -188,7 +194,7 @@ export async function pinnedFetchV1(context:FleetFetchContextV1,pin:PinnedDownlo
    try{
     await recordFleetFetchV1(context,{sha256:pin.sha256,source:"upstream",bytes,milliseconds:context.now()-started,direction:"get",url:pin.url.slice(0,512)});
     if(!broken&&hash.digest("hex")===pin.sha256&&(pin.bytes===undefined||bytes===pin.bytes))await fleetBlobPublishFileV1(context,pin.sha256,staging,bytes,context.storeRoot!==undefined);
-   }finally{await rm(staging,{force:true}).catch(()=>{});}
+   }finally{await rm(staging,{force:true}).catch(()=>{});await claim?.release();}
   }
  });
  return new Response(response.body.pipeThrough(transform),{status:response.status,statusText:response.statusText,headers:response.headers});

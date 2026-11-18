@@ -71,6 +71,309 @@
           "de": "Das Testgerüst-Modul, das die Paketskripte von Go-, TypeScript- und .NET-Paketen zum Ausführen ihrer Tests laden, mit allem, was die Test-Läufer importieren."
         }
       },
+      "extension-package": {
+        "entries": [
+          "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧩️extension-package/🟦️.ts"
+        ],
+        "resources": [],
+        "view": "scheduling",
+        "selection": "included",
+        "contract": {
+          "en": "The extension package module that package scripts load, with everything it imports.",
+          "de": "Das Modul extension package, das Paketskripte laden, mit allem, was es importiert."
+        }
+      },
+      "free-space": {
+        "entries": [
+          "../../../../../../🔨️modules/🏃️process/🆓️free-space/🟦️.ts"
+        ],
+        "resources": [],
+        "view": "scheduling",
+        "selection": "included",
+        "contract": {
+          "en": "The free space module that package scripts load, with everything it imports.",
+          "de": "Das Modul free space, das Paketskripte laden, mit allem, was es importiert."
+        }
+      },
+      "inventory-index": {
+        "entries": [
+          "../../📦️packages/🟦️typescript/📇️inventory/🟦️.ts"
+        ],
+        "resources": [],
+        "view": "scheduling",
+        "selection": "included",
+        "contract": {
+          "en": "The inventory index module that package scripts load, with everything it imports.",
+          "de": "Das Modul inventory index, das Paketskripte laden, mit allem, was es importiert."
+        }
+      },
+      "module-tree": {
+        "entries": [
+          "../../../../../../🔨️modules/📚️compiler/📦️packages/🟦️typescript/📖️syntax/🌳️module-tree/🟦️.ts"
+        ],
+        "resources": [],
+        "view": "scheduling",
+        "selection": "included",
+        "contract": {
+          "en": "The module tree module that package scripts load, with everything it imports.",
+          "de": "Das Modulbaum-Modul, das Paketskripte laden, mit allem, was es importiert."
+        }
+      },
+      "native-toolchain": {
+        "entries": [],
+        "resources": [
+          "../🦀️cargo/🏃️execution/📜️script.ts",
+          "../../../../../../../rustfmt.toml",
+          "../../../../../../../bunfig.toml",
+          "../../../../../../../tsconfig.json"
+        ],
+        "view": "native",
+        "selection": "included",
+        "contract": {
+          "en": "The toolchain files of every native leaf: the cargo execution script and the Rust format, Bun and TypeScript configuration of the workspace.",
+          "de": "Die Toolchain-Dateien jedes nativen Blatts: das Cargo-Ausführungsskript sowie die Rust-Format-, Bun- und TypeScript-Konfiguration des Arbeitsbereichs."
+        }
+      },
+      "normalization-digests": {
+        "entries": [
+          "../../🧹️normalization/🧵️digests/🟦️.ts"
+        ],
+        "resources": [],
+        "view": "scheduling",
+        "selection": "included",
+        "contract": {
+          "en": "The normalization digests module that package scripts load, with everything it imports.",
+          "de": "Das Modul normalization digests, das Paketskripte laden, mit allem, was es importiert."
+        }
+      },
+      "orphans-parent-script": {
+        "entries": [
+          "../../../../../../🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/👷️parent/📜️script.ts"
+        ],
+        "resources": [],
+        "view": "scheduling",
+        "selection": "included",
+        "contract": {
+          "en": "The orphans parent script module that package scripts load, with everything it imports.",
+          "de": "Das Modul orphans parent script, das Paketskripte laden, mit allem, was es importiert."
+        }
+      },
+      "owned-execution": {
+        "entries": [
+          "../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts"
+        ],
+        "resources": [],
+        "view": "scheduling",
+        "selection": "included",
+        "contract": {
+          "en": "The owned execution module that package scripts load, with everything it imports.",
+          "de": "Das Modul owned execution, das Paketskripte laden, mit allem, was es importiert."
+        }
+      },
+      "owner-command": {
+        "entries": [
+          "../🧭️routing/📥️owner-command/📜️script.ts"
+        ],
+        "resources": [],
+        "view": "scheduling",
+        "selection": "included",
+        "contract": {
+          "en": "The owner command script that native owner commands run.",
+          "de": "Das Owner-Command-Skript, das native Owner-Befehle ausführen."
+        }
+      },
+      "package-budget": {
+        "entries": [
+          "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts"
+        ],
+        "resources": [],
+        "view": "scheduling",
+        "selection": "included",
+        "contract": {
+          "en": "The budget module that package and repository scripts load, with everything it imports.",
+          "de": "Das Modul budget, das Paket- und Repository-Skripte laden, mit allem, was es importiert."
+        }
+      },
+      "package-execution": {
+        "entries": [
+          "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts"
+        ],
+        "resources": [],
+        "view": "scheduling",
+        "selection": "included",
+        "contract": {
+          "en": "The execution module that package and repository scripts load, with everything it imports.",
+          "de": "Das Modul execution, das Paket- und Repository-Skripte laden, mit allem, was es importiert."
+        }
+      },
+      "package-router": {
+        "entries": [
+          "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"
+        ],
+        "resources": [],
+        "view": "scheduling",
+        "selection": "included",
+        "contract": {
+          "en": "The routing module that package and repository scripts load, with everything it imports.",
+          "de": "Das Modul routing, das Paket- und Repository-Skripte laden, mit allem, was es importiert."
+        }
+      },
+      "runtime-identity": {
+        "entries": [
+          "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts"
+        ],
+        "resources": [],
+        "view": "scheduling",
+        "selection": "included",
+        "contract": {
+          "en": "The runtime identity module that package and repository scripts load, with everything it imports.",
+          "de": "Das Modul runtime identity, das Paket- und Repository-Skripte laden, mit allem, was es importiert."
+        }
+      },
+      "runtime-main-module": {
+        "entries": [
+          "../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts"
+        ],
+        "resources": [],
+        "view": "scheduling",
+        "selection": "included",
+        "contract": {
+          "en": "The modules runtime main module that package and repository scripts load, with everything it imports.",
+          "de": "Das Modul modules runtime main, das Paket- und Repository-Skripte laden, mit allem, was es importiert."
+        }
+      },
+      "runtime-main-package": {
+        "entries": [
+          "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts"
+        ],
+        "resources": [],
+        "view": "scheduling",
+        "selection": "included",
+        "contract": {
+          "en": "The runtime main module that package and repository scripts load, with everything it imports.",
+          "de": "Das Modul runtime main, das Paket- und Repository-Skripte laden, mit allem, was es importiert."
+        }
+      },
+      "runtime-parse": {
+        "entries": [
+          "../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts"
+        ],
+        "resources": [],
+        "view": "scheduling",
+        "selection": "included",
+        "contract": {
+          "en": "The runtime parse module that package and repository scripts load, with everything it imports.",
+          "de": "Das Modul runtime parse, das Paket- und Repository-Skripte laden, mit allem, was es importiert."
+        }
+      },
+      "runtime-sqlite": {
+        "entries": [
+          "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗃️sqlite/🟦️.ts"
+        ],
+        "resources": [],
+        "view": "scheduling",
+        "selection": "included",
+        "contract": {
+          "en": "The runtime sqlite module that package scripts load, with everything it imports.",
+          "de": "Das Modul runtime sqlite, das Paketskripte laden, mit allem, was es importiert."
+        }
+      },
+      "test-adapter": {
+        "entries": [
+          "../../../../../../📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts"
+        ],
+        "resources": [],
+        "view": "scheduling",
+        "selection": "included",
+        "contract": {
+          "en": "The test adapter module that package scripts load, with everything it imports.",
+          "de": "Das Modul test adapter, das Paketskripte laden, mit allem, was es importiert."
+        }
+      },
+      "test-source-text": {
+        "entries": [
+          "../../../../../../📦️packages/🟦️typescript/🧪️test/📖️source-text/🟦️.ts"
+        ],
+        "resources": [],
+        "view": "scheduling",
+        "selection": "included",
+        "contract": {
+          "en": "The test source text module that package scripts load, with everything it imports.",
+          "de": "Das Modul test source text, das Paketskripte laden, mit allem, was es importiert."
+        }
+      },
+      "testing-budget": {
+        "entries": [
+          "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts"
+        ],
+        "resources": [],
+        "view": "scheduling",
+        "selection": "included",
+        "contract": {
+          "en": "The testing budget module that package and repository scripts load, with everything it imports.",
+          "de": "Das Modul testing budget, das Paket- und Repository-Skripte laden, mit allem, was es importiert."
+        }
+      },
+      "testing-cargo": {
+        "entries": [
+          "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts"
+        ],
+        "resources": [],
+        "view": "scheduling",
+        "selection": "included",
+        "contract": {
+          "en": "The testing cargo module that package and repository scripts load, with everything it imports.",
+          "de": "Das Modul testing cargo, das Paket- und Repository-Skripte laden, mit allem, was es importiert."
+        }
+      },
+      "testing-execution": {
+        "entries": [
+          "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts"
+        ],
+        "resources": [],
+        "view": "scheduling",
+        "selection": "included",
+        "contract": {
+          "en": "The testing execution module that package and repository scripts load, with everything it imports.",
+          "de": "Das Modul testing execution, das Paket- und Repository-Skripte laden, mit allem, was es importiert."
+        }
+      },
+      "testing-vitest": {
+        "entries": [
+          "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts"
+        ],
+        "resources": [],
+        "view": "scheduling",
+        "selection": "included",
+        "contract": {
+          "en": "The testing vitest module that package and repository scripts load, with everything it imports.",
+          "de": "Das Modul testing vitest, das Paket- und Repository-Skripte laden, mit allem, was es importiert."
+        }
+      },
+      "typescript-build": {
+        "entries": [
+          "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts"
+        ],
+        "resources": [],
+        "view": "scheduling",
+        "selection": "included",
+        "contract": {
+          "en": "The build module that package and repository scripts load, with everything it imports.",
+          "de": "Das Modul build, das Paket- und Repository-Skripte laden, mit allem, was es importiert."
+        }
+      },
+      "validator-oracles": {
+        "entries": [
+          "../../../../../../🔨️modules/🧬️schema/📦️packages/🟦️typescript/🔮️oracles/✅️validator/🟦️.ts"
+        ],
+        "resources": [],
+        "view": "scheduling",
+        "selection": "included",
+        "contract": {
+          "en": "The validator oracles module that package scripts load, with everything it imports.",
+          "de": "Das Modul validator oracles, das Paketskripte laden, mit allem, was es importiert."
+        }
+      },
       "cargo-lock-owner": {
         "entries": [
           "../../🏗️build/📥️inputs/🔒️lock/📜️script.ts"

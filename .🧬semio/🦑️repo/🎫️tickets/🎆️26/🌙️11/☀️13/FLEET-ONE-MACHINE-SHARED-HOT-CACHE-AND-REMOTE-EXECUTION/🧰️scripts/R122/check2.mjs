@@ -1,0 +1,3 @@
+import{readFileSync}from"node:fs";const{all,apply,PN}=await import(import.meta.dir+"/patches2.mjs");
+const out=apply(PN,readFileSync("/Users/ueli/Documents/semio/"+PN,"utf8"),all);
+for(const s of ["withReadParentScopeV1(readScope=>emojiProjectJsonNodesBodyV1(","readScope.arm(()=>farm.exists())","immediate:true","unmarkParent?.();await farm?.close()","verdictFinal:farm!==undefined","verdict:observeJob===undefined?undefined:","await primeSharedClosuresInChildV1({workspaceRoot,storeDirectory","askOwnerRefsV1({farm,job:observeJob,headerDigest})",'assertNotReadParentV1("infer", name)']) console.log(out.includes(s)?"ok":"MISSING",s);

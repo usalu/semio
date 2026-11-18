@@ -1,0 +1,200 @@
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4480","mode":"shared","elapsedMs":49769.308542}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:4480 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4512","mode":"shared","elapsedMs":49771.807792}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:4512 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4544","mode":"shared","elapsedMs":49774.260917}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:4544 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4576","mode":"shared","elapsedMs":49777.724167}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:4576 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4608","mode":"shared","elapsedMs":49782.348708000005}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:4608 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4640","mode":"shared","elapsedMs":49787.744167000004}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:4640 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4672","mode":"shared","elapsedMs":49793.239958000006}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:4672 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4704","mode":"shared","elapsedMs":49797.551583}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:4704 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4736","mode":"shared","elapsedMs":49804.389875}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:4736 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4768","mode":"shared","elapsedMs":49807.571917}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:4768 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4800","mode":"shared","elapsedMs":49809.548625}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:4800 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4832","mode":"shared","elapsedMs":49816.929792}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:4832 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4864","mode":"shared","elapsedMs":49823.3975}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:4864 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4896","mode":"shared","elapsedMs":49827.420750000005}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:4896 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4928","mode":"shared","elapsedMs":49832.507333}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:4928 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4960","mode":"shared","elapsedMs":49835.641708}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:4960 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4992","mode":"shared","elapsedMs":49839.527}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:4992 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5024","mode":"shared","elapsedMs":49842.695}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5024 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5056","mode":"shared","elapsedMs":49847.710833000005}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5056 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5088","mode":"shared","elapsedMs":49855.064792000005}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5088 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5120","mode":"shared","elapsedMs":49857.566042}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5120 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5152","mode":"shared","elapsedMs":49859.478042}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5152 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5184","mode":"shared","elapsedMs":49861.714625}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5184 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5216","mode":"shared","elapsedMs":49864.2125}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5216 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5248","mode":"shared","elapsedMs":49866.248292000004}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5248 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5280","mode":"shared","elapsedMs":49868.7275}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5280 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5312","mode":"shared","elapsedMs":49871.114917}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5312 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5344","mode":"shared","elapsedMs":49872.992125000004}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5344 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5376","mode":"shared","elapsedMs":49875.28775}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5376 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5408","mode":"shared","elapsedMs":49878.257667000005}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5408 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5440","mode":"shared","elapsedMs":49880.002417}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5440 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5472","mode":"shared","elapsedMs":49882.505625000005}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5472 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5504","mode":"shared","elapsedMs":49884.089583}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5504 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5536","mode":"shared","elapsedMs":49886.313792}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5536 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5568","mode":"shared","elapsedMs":49888.337083}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5568 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5600","mode":"shared","elapsedMs":49889.998417}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5600 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5632","mode":"shared","elapsedMs":49891.741625}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5632 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5664","mode":"shared","elapsedMs":49895.110250000005}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5664 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5696","mode":"shared","elapsedMs":49897.222583}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5696 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5728","mode":"shared","elapsedMs":49900.336792}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5728 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5760","mode":"shared","elapsedMs":49910.1875}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5760 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5792","mode":"shared","elapsedMs":49914.157458}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5792 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5824","mode":"shared","elapsedMs":49916.496792000005}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5824 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5856","mode":"shared","elapsedMs":49918.377542}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5856 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5888","mode":"shared","elapsedMs":49920.274542}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5888 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5920","mode":"shared","elapsedMs":49923.781292}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5920 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5952","mode":"shared","elapsedMs":49926.5475}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5952 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5984","mode":"shared","elapsedMs":49928.958792000005}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5984 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6016","mode":"shared","elapsedMs":49931.458042}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6016 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6048","mode":"shared","elapsedMs":49934.496833000005}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6048 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6080","mode":"shared","elapsedMs":49935.92325}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6080 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6112","mode":"shared","elapsedMs":49937.959458000005}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6112 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6144","mode":"shared","elapsedMs":49941.430625}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6144 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6176","mode":"shared","elapsedMs":49943.809667}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6176 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6208","mode":"shared","elapsedMs":49946.6215}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6208 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6240","mode":"shared","elapsedMs":49948.575625000005}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6240 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6272","mode":"shared","elapsedMs":49951.064583}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6272 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6304","mode":"shared","elapsedMs":49952.935375}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6304 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6336","mode":"shared","elapsedMs":49955.375542}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6336 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6368","mode":"shared","elapsedMs":49957.619333}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6368 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6400","mode":"shared","elapsedMs":49959.345583}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6400 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6432","mode":"shared","elapsedMs":49960.864042}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6432 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6464","mode":"shared","elapsedMs":49963.357375}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6464 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6496","mode":"shared","elapsedMs":49965.787917}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6496 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6528","mode":"shared","elapsedMs":49969.8945}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6528 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6560","mode":"shared","elapsedMs":49971.307208000006}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6560 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6592","mode":"shared","elapsedMs":49972.163667}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6592 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6624","mode":"shared","elapsedMs":49972.978917}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6624 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6656","mode":"shared","elapsedMs":49973.642958000004}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6656 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6688","mode":"shared","elapsedMs":49974.284417}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6688 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6720","mode":"shared","elapsedMs":49974.983125}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6720 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6752","mode":"shared","elapsedMs":49977.307250000005}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6752 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6784","mode":"shared","elapsedMs":49979.536250000005}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6784 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6816","mode":"shared","elapsedMs":49982.892625}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6816 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6848","mode":"shared","elapsedMs":49984.117542}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6848 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6880","mode":"shared","elapsedMs":49984.917792}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6880 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6912","mode":"shared","elapsedMs":49985.635042}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6912 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6944","mode":"shared","elapsedMs":49987.084708}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6944 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6976","mode":"shared","elapsedMs":49988.058458}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6976 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7008","mode":"shared","elapsedMs":49988.917208}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:7008 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7040","mode":"shared","elapsedMs":49989.605125}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:7040 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7072","mode":"shared","elapsedMs":49991.585792000005}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:7072 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7104","mode":"shared","elapsedMs":49993.961042}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:7104 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7136","mode":"shared","elapsedMs":49997.027917}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:7136 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7168","mode":"shared","elapsedMs":49998.240833}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:7168 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7200","mode":"shared","elapsedMs":50000.509333}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:7200 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7232","mode":"shared","elapsedMs":50001.631792}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:7232 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7264","mode":"shared","elapsedMs":50002.492542}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:7264 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7296","mode":"shared","elapsedMs":50003.523167}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:7296 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7328","mode":"shared","elapsedMs":50004.388625}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:7328 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7360","mode":"shared","elapsedMs":50005.19125}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:7360 (shared, 50 s)
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7392","mode":"shared","elapsedMs":50006.021458}}
+[script] bun:dependency-storage remains active on dependencies:sync-gate:7392 (shared, 50 s)
+[DATA] Store dependency sync current {"version":1,"purpose":"current-store-dependency-sync-current","scopes":6}
+[script] {"owner":"repository:build","command":"repo","stage":"complete"}
+[semio] workspace:setup…
+[capacity] run: sized at 70% of the default from 6 earlier run(s) of its class
+[capacity] admitted run: 1 job(s), 512 MB reserved (7340 MB available, 2048 MB floor)
+[script] {"owner":"repository:build","command":"repo","stage":"loading"}
+[script] {"owner":"repository:build","command":"repo","stage":"running"}
+Starting the repo graph service for this host.
+The graph service runs under the access of the calling app: the launchd route was refused for /Users/ueli/Documents/semio earlier since this machine started / Der Graphdienst läuft mit dem Zugriff der aufrufenden App: die launchd-Route wurde für /Users/ueli/Documents/semio seit dem Start dieses Rechners bereits abgewiesen
+Waiting for the repo graph service (10 ms).
+Waiting for the repo graph service (2042 ms).
+Waiting for the repo graph service (4076 ms).
+[repo] still working after 5 s; last phase started: door.script
+The graph service could not answer (lost the service was killed without an exit record (its cgroup is gone) [log: [script] build:implementation-source · Reading the sources of the build implementation | Internal error: Relative filesystem fstatat failed (EPERM) | repository:command failed with exit code 1]); look at `repo service host status` and try again
+end 2026-11-15T07:59:38Z
+native_rc=1

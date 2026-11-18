@@ -23,9 +23,9 @@
     {"pattern": "*a*y*", "project": "layout", "matches": true}
   ],
   "stacks": [
-    {"topology": "dev", "requested": [], "split": true, "stacks": [{"label": "dev-shared", "waves": [{"shard": "shared", "parallel": true, "projects": ["desktop", "phone", "layout", "pets"]}]}, {"label": "dev-exclusive", "waves": [{"shard": "exclusive", "parallel": false, "projects": ["presence", "shortage", "away", "faults"]}]}]},
-    {"topology": "dev", "requested": [], "split": false, "stacks": [{"label": "dev", "waves": [{"shard": "shared", "parallel": true, "projects": ["desktop", "phone", "layout", "pets"]}, {"shard": "exclusive", "parallel": false, "projects": ["presence", "shortage", "away", "faults"]}]}]},
-    {"topology": "rehearsal", "requested": [], "split": true, "stacks": [{"label": "rehearsal", "waves": [{"shard": "shared", "parallel": true, "projects": ["desktop", "phone", "layout", "pets"]}, {"shard": "exclusive", "parallel": false, "projects": ["presence", "shortage", "away", "faults"]}]}]},
+    {"topology": "dev", "requested": [], "split": true, "stacks": [{"label": "dev-shared", "waves": [{"shard": "shared", "parallel": true, "projects": ["desktop", "phone", "layout", "pets"]}]}, {"label": "dev-exclusive", "waves": [{"shard": "exclusive", "parallel": false, "projects": ["presence", "shortage", "away", "faults", "chaos", "reconnect"]}]}]},
+    {"topology": "dev", "requested": [], "split": false, "stacks": [{"label": "dev", "waves": [{"shard": "shared", "parallel": true, "projects": ["desktop", "phone", "layout", "pets"]}, {"shard": "exclusive", "parallel": false, "projects": ["presence", "shortage", "away", "faults", "chaos", "reconnect"]}]}]},
+    {"topology": "rehearsal", "requested": [], "split": true, "stacks": [{"label": "rehearsal", "waves": [{"shard": "shared", "parallel": true, "projects": ["desktop", "phone", "layout", "pets"]}, {"shard": "exclusive", "parallel": false, "projects": ["presence", "shortage", "away", "faults", "chaos", "reconnect"]}]}]},
     {"topology": "dev", "requested": ["pets"], "split": true, "stacks": [{"label": "dev", "waves": [{"shard": "shared", "parallel": true, "projects": ["pets"]}]}]},
     {"topology": "dev", "requested": ["faults", "desktop"], "split": true, "stacks": [{"label": "dev-shared", "waves": [{"shard": "shared", "parallel": true, "projects": ["desktop"]}]}, {"label": "dev-exclusive", "waves": [{"shard": "exclusive", "parallel": false, "projects": ["faults"]}]}]},
     {"topology": "dev", "requested": ["boot"], "split": true, "stacks": [{"label": "dev", "waves": []}]},

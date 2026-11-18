@@ -11,15 +11,15 @@ import fixture from"../../../⌨️command/🧭️selection/🔣️.json";
 import{repositoryCommandKernelV1}from"../../../⌨️command/🧭️selection/🟦️.ts";
 import schema from"../../../📥️source/🔏️closure/🧬️schema/🔣️.json";
 
-const headroomFiles=64,headroomBytes=2_097_152;
+const headroomShare=2;
 const root=(()=>{let at=dirname(fileURLToPath(import.meta.url));while(!existsSync(join(at,"go.work"))){const up=dirname(at);if(up===at)throw Error("Workspace root required");at=up;}return at;})();
 const entry=relative(root,fileURLToPath(new URL("../../🚪️entry/🟦️.ts",import.meta.url))).replaceAll("\\","/");
 const census=await censusNxAuthorizerSourcesV1(root,entry,AbortSignal.timeout(240000),{installed:true});
 
 test("the sealed door entry keeps headroom below the admission policy",()=>{
  const policy=schema.definitions.Policy.const;
- expect({files:census.files,limit:policy.maximumFiles,fits:census.files<=policy.maximumFiles-headroomFiles}).toEqual({files:census.files,limit:policy.maximumFiles,fits:true});
- expect({bytes:census.sourceBytes,limit:policy.maximumSourceBytes,fits:census.sourceBytes<=policy.maximumSourceBytes-headroomBytes}).toEqual({bytes:census.sourceBytes,limit:policy.maximumSourceBytes,fits:true});
+ expect({files:census.files,limit:policy.maximumFiles,fits:census.files<=Math.floor(policy.maximumFiles/headroomShare)}).toEqual({files:census.files,limit:policy.maximumFiles,fits:true});
+ expect({bytes:census.sourceBytes,limit:policy.maximumSourceBytes,fits:census.sourceBytes<=Math.floor(policy.maximumSourceBytes/headroomShare)}).toEqual({bytes:census.sourceBytes,limit:policy.maximumSourceBytes,fits:true});
 },300000);
 
 test("the sealed door entry captures no backend adapter, no verb kernel and no warm-only storage image",()=>{

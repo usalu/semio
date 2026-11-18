@@ -30,7 +30,7 @@ func fleetStoreDirectory(root string, env Environment) string {
 	if named := env("SEMIO_FLEET_STORE_ROOT"); named != "" {
 		return named
 	}
-	data, err := os.ReadFile(filepath.Join(root, ".cache", "f", "machine.json"))
+	data, err := os.ReadFile(MachinePath(env, root, ".cache", "f", "machine.json"))
 	if err != nil {
 		return ""
 	}

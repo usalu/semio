@@ -319,8 +319,8 @@ export async function registerUidriverAndMoreTests(vitest: Tests2Vitest, depende
         expect(markup).toContain('data-loading="true"');
         expect(markup).toContain("border-loading");
         expect(markup).not.toMatch(/data-slot="window-measure-tree-row"[^>]*border-loading/);
-        expect(markup).toContain('data-tree-guide-line=""');
-        expect(markup).toMatch(/data-tree-guide-line="" class="w-px h-full bg-muted-foreground\/40 group-hover\/tree-row:bg-emphasized/);
+        expect(markup).toContain('data-slot="tree-parent-guide"');
+        expect(markup).toMatch(/data-slot="tree-parent-guide" class="pointer-events-none absolute w-px bg-muted-foreground\/40 group-hover\/tree-row:bg-emphasized/);
       });
   
       it("puts a waiting ring on a window measure tree leaf's own row", () => {
@@ -349,7 +349,7 @@ export async function registerUidriverAndMoreTests(vitest: Tests2Vitest, depende
         );
         expect(markup).toContain('data-slot="window-measure-tree-content"');
         expect(markup).toContain('data-slot="tree-guide"');
-        expect(markup.match(/data-tree-guide-line="" class="w-px h-full bg-muted-foreground\/40 group-hover\/tree-row:bg-emphasized/g)?.length ?? 0).toBeGreaterThanOrEqual(1);
+        expect(markup.match(/data-slot="tree-parent-guide" class="pointer-events-none absolute w-px bg-muted-foreground\/40 group-hover\/tree-row:bg-emphasized/g)?.length ?? 0).toBeGreaterThanOrEqual(1);
         expect(markup).toContain('data-slot="tree-branch-elbow"');
       });
   

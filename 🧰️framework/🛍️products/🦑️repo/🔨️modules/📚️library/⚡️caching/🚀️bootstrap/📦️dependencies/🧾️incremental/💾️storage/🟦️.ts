@@ -1,5 +1,5 @@
+import {createHash} from "node:crypto";
 import {lstatSync,readFileSync,readdirSync,readlinkSync,unlinkSync} from "node:fs";
-import {lstat,readdir} from "node:fs/promises";
 import {join} from "node:path";
 import type {ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
@@ -37,12 +37,12 @@ export function installedLedgerSinkV1(startedAtMs:number=Date.now()):InstalledLe
  const threshold=installedThresholdNsV1(startedAtMs),rows:InstalledRowV1[]=[];
  return Object.freeze({rows,directory:(portable:string,facts:StampSourceV1,children:readonly InstalledChildV1[])=>{rows.push(installedRowV1(portable,facts,children,threshold));}});
 }
-/** 🔌️ Binds the two no-follow operations a ledger verification needs to one generation root. */
+/** 🔌️ Binds the two no-follow operations a ledger verification needs to one generation root; both are synchronous system calls (a stat through the thread pool costs milliseconds on a loaded machine, a synchronous one microseconds) and the verification loop yields every `progressWork` rows. */
 export function installedPortsV1(root:string,control:IncrementalControlV1):InstalledPortsV1{
  const path=(portable:string)=>portable==="."?root:join(root,...portable.split("/"));
  return Object.freeze({control,
-  stat:async(portable:string)=>{try{const facts=await lstat(path(portable),{bigint:true});return Object.freeze({kind:kindOf(facts),stamp:installedStampV1(facts)});}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return undefined;throw error;}},
-  children:async(portable:string)=>(await readdir(path(portable),{withFileTypes:true})).map(entry=>Object.freeze({name:entry.name,kind:kindOf(entry)})),
+  stat:async(portable:string)=>{try{const facts=lstatSync(path(portable),{bigint:true});return Object.freeze({kind:kindOf(facts),stamp:installedStampV1(facts)});}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return undefined;throw error;}},
+  children:async(portable:string)=>readdirSync(path(portable),{withFileTypes:true}).map(entry=>Object.freeze({name:entry.name,kind:kindOf(entry)})),
  });
 }
 
@@ -67,6 +67,31 @@ export async function sealJavascriptDependencyInstalledReceiptV1(storeRoot:strin
  sweepEvidence(storeRoot,protocol.installed.receiptSuffix,protocol.installed.evidenceSuffix,parseInstalledReceiptV1);
  return receipt.sha256;
 }
+/** 🩹️ Re-derives the evidence a sealed installed-paths receipt lost and seals it again, only when the generation directory still has exactly the receipt's device, counts, path width and digest of every path and kind; a receipt whose evidence is present is never touched. See [the evidence law](../🧪️tests/🩹️evidence/🟦️.ts). */
+export async function repairJavascriptDependencyInstalledReceiptV1(storeRoot:string,root:string,generation:string,expectedSha256:string,control:IncrementalControlV1,checkpoint:()=>void,yieldContinuation:()=>Promise<void>):Promise<string|undefined>{
+ let receipt:ReturnType<typeof parseInstalledReceiptV1>|undefined;
+ for(const name of names(storeRoot,generation.slice(0,20)+".",protocol.installed.receiptSuffix))try{const candidate=parseInstalledReceiptV1(bounded(join(directory(storeRoot),name),protocol.installed.maximumReceiptBytes));if(candidate.generation===generation&&candidate.sha256===expectedSha256){receipt=candidate;break;}}catch{}
+ if(!receipt||lstatSync(join(directory(storeRoot),receipt.evidence.name),{throwIfNoEntry:false}))return undefined;
+ const policy=installSchema.$defs.InstalledPathProtocol.const,sink=installedLedgerSinkV1(),hash=createHash("sha256");let entries=0,maximumPathUnits=0,work=0,device:bigint|undefined;
+ const visit=async(path:string,portable:string,depth:number):Promise<string>=>{
+  control.check();if(depth>policy.maximumDepth||++entries>policy.maximumEntries)throw Error("Installed dependency path capacity exceeded");
+  const facts=lstatSync(path,{bigint:true});if(device===undefined)device=facts.dev;else if(facts.dev!==device)throw Error("Original installed dependency volume required");
+  const kind=kindOf(facts);if(kind==="foreign"||depth===0&&kind!=="directory")throw Error("Original physical installed dependency entry required");
+  maximumPathUnits=Math.max(maximumPathUnits,path.length);hash.update(JSON.stringify([portable,kind])+"\n");
+  if(++work%protocol.installed.progressWork===0)await control.tick(work);
+  if(kind!=="directory")return kind;
+  const children=readdirSync(path).sort((left,right)=>Buffer.from(left).compare(Buffer.from(right))),kinds:string[]=[];
+  for(const name of children)kinds.push(await visit(join(path,name),portable==="."?name:portable+"/"+name,depth+1));
+  sink.directory(portable,facts,children.map((name,index)=>({name,kind:kinds[index]!})));
+  return"directory";
+ };
+ try{await visit(root,".",0);}catch(error){if((error as Error)?.name==="AbortError")throw error;return undefined;}
+ const counts=installedCountsV1(sink.rows),shape={...counts,maximumPathUnits,sha256:hash.digest("hex")};
+ if(String(device)!==receipt.device||(Object.keys(shape)as(keyof typeof shape)[]).some(key=>shape[key]!==receipt.shape[key]))return undefined;
+ try{await sealJavascriptDependencyInstalledReceiptV1(storeRoot,generation,shape,sink.rows,checkpoint,yieldContinuation);}catch{return undefined;}
+ const sealed=newestJavascriptDependencyInstalledReceiptV1(storeRoot,generation);
+ return sealed!==undefined&&lstatSync(join(directory(storeRoot),encodeInstalledLedgerV1(sink.rows).evidence.name),{throwIfNoEntry:false})?sealed:undefined;
+}
 /** 🧹️ Removes every installed-paths ledger whose generation no current scope names; failure only costs disk. */
 export function retireJavascriptDependencyInstalledReceiptsV1(storeRoot:string,live:readonly string[]):void{
  const keep=new Set(live.map(generation=>generation.slice(0,20)));
@@ -89,13 +114,25 @@ export async function verifyJavascriptDependencySyncCurrentV1(workspace:string,c
  if(sync.runtimeSha256!==javascriptDependencySourceOwnerRuntimeV1())return stale("runtime");
  let present:string[];try{present=readdirSync(join(root,javascriptDependencyGenerationDirectoryV1));}catch{return stale("generations");}
  if(selectObsoleteJavascriptDependencyGenerationsV1(present,sync.scopes.map(row=>row.generation.slice(0,20)),[]).length)return stale("obsolete-generations");
- const incremental=controlOf(context,control,"sync-gate");
+ const incremental=controlOf(context,control,"sync-gate"),repaired=new Map<string,string>();
  for(const row of sync.scopes){
   const read=await verifyJavascriptDependencyGenerationReceiptV1(workspace,context,control,row.scope);
   if(read.status!=="match")return stale("generation:"+row.scope,generationCauseV1(read,row.scope));
   if(read.sha256!==row.read||read.receipts.find(receipt=>receipt.scope===row.scope)?.generation!==row.generation)return stale("generation:"+row.scope,{class:"sha-changed"});
-  const installed=await verifyJavascriptDependencyInstalledReceiptV1(root,requireNativeStoragePathV1(root,join(root,javascriptDependencyGenerationDirectoryV1,row.generation.slice(0,20))),row.generation,incremental);
-  if(!installed||installed.sha256!==row.installed)return stale("installed:"+row.scope);
+  const directoryOf=requireNativeStoragePathV1(root,join(root,javascriptDependencyGenerationDirectoryV1,row.generation.slice(0,20)));
+  let installed=await verifyJavascriptDependencyInstalledReceiptV1(root,directoryOf,row.generation,incremental);
+  if(!installed){
+   const sha=await repairJavascriptDependencyInstalledReceiptV1(root,directoryOf,row.generation,row.installed,incremental,()=>context.check(control),()=>control.yieldContinuation());
+   if(sha!==undefined){installed=await verifyJavascriptDependencyInstalledReceiptV1(root,directoryOf,row.generation,incremental);if(installed?.sha256===sha)repaired.set(row.scope,sha);}
+  }
+  if(!installed||installed.sha256!==(repaired.get(row.scope)??row.installed))return stale("installed:"+row.scope);
+ }
+ if(repaired.size){
+  try{
+   await publishJavascriptDependencySyncReceiptV1(root,{version:1,purpose:"dependency-sync-receipt",selection:"all",runtimeSha256:sync.runtimeSha256,scopes:sync.scopes.map(row=>({...row,installed:repaired.get(row.scope)??row.installed}))},()=>context.check(control),()=>control.yieldContinuation());
+   retireJavascriptDependencyInstalledReceiptsV1(root,sync.scopes.map(row=>row.generation));
+  }catch(error){if(control.signal.aborted)throw error;return stale("installed-repair");}
+  console.error("[DATA] Store dependency installed-paths evidence repaired "+JSON.stringify({version:1,purpose:"current-dependency-installed-evidence-repair",scopes:[...repaired.keys()]}));
  }
  return Object.freeze({status:"current",scopes:sync.scopes.length});
 }

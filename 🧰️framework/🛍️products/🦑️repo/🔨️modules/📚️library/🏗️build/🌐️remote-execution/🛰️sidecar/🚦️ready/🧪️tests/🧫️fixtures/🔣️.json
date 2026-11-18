@@ -1,0 +1,702 @@
+{
+ "digests": [
+  {
+   "name": "linux, every input present",
+   "platform": "linux",
+   "files": {
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧰️tool-setup/🔣️.json": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🧬️schema/🔣️.json": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "global.json": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "package.json": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "bun.lock": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh": "5555555555555555555555555555555555555555555555555555555555555555"
+   }
+  },
+  {
+   "name": "linux, lock file changed",
+   "platform": "linux",
+   "files": {
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧰️tool-setup/🔣️.json": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🧬️schema/🔣️.json": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "global.json": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "package.json": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "bun.lock": "9999999999999999999999999999999999999999999999999999999999999999",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh": "5555555555555555555555555555555555555555555555555555555555555555"
+   }
+  },
+  {
+   "name": "windows, script is the PowerShell one",
+   "platform": "windows",
+   "files": {
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1": "6666666666666666666666666666666666666666666666666666666666666666",
+    "package.json": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+   }
+  },
+  {
+   "name": "macos, nothing present",
+   "platform": "macos",
+   "files": {}
+  }
+ ],
+ "backoff": [
+  {
+   "attempts": 1,
+   "unit": 0
+  },
+  {
+   "attempts": 2,
+   "unit": 0
+  },
+  {
+   "attempts": 3,
+   "unit": 0
+  },
+  {
+   "attempts": 4,
+   "unit": 0
+  },
+  {
+   "attempts": 5,
+   "unit": 0
+  },
+  {
+   "attempts": 6,
+   "unit": 0
+  },
+  {
+   "attempts": 7,
+   "unit": 0
+  },
+  {
+   "attempts": 12,
+   "unit": 0
+  },
+  {
+   "attempts": 1,
+   "unit": 0.5
+  },
+  {
+   "attempts": 3,
+   "unit": 0.999
+  },
+  {
+   "attempts": 7,
+   "unit": 0.9
+  }
+ ],
+ "jobs": [
+  {
+   "cores": 1,
+   "availableMegabytes": null
+  },
+  {
+   "cores": 2,
+   "availableMegabytes": null
+  },
+  {
+   "cores": 4,
+   "availableMegabytes": 4096
+  },
+  {
+   "cores": 4,
+   "availableMegabytes": 1600
+  },
+  {
+   "cores": 16,
+   "availableMegabytes": 4096
+  },
+  {
+   "cores": 16,
+   "availableMegabytes": null
+  },
+  {
+   "cores": 8,
+   "availableMegabytes": 100
+  },
+  {
+   "cores": 8,
+   "availableMegabytes": 100000
+  }
+ ],
+ "tree": [
+  {
+   "root": 10,
+   "rows": "10 1 2048\n11 10 4096\n12 11 1024\n13 1 99999\n14 12 2048\n"
+  },
+  {
+   "root": 99,
+   "rows": "10 1 100\n"
+  }
+ ],
+ "decide": [
+  {
+   "name": "server never runs",
+   "input": {
+    "server": true,
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "stages": [
+     {
+      "name": "native",
+      "digest": "1111111111111111111111111111111111111111111111111111111111111111"
+     },
+     {
+      "name": "tools",
+      "digest": "2222222222222222222222222222222222222222222222222222222222222222"
+     },
+     {
+      "name": "workspace",
+      "digest": "3333333333333333333333333333333333333333333333333333333333333333"
+     }
+    ],
+    "done": {},
+    "marker": false,
+    "repo": false,
+    "human": false,
+    "lease": "free",
+    "memoryOk": true,
+    "failure": null,
+    "now": 1000000
+   }
+  },
+  {
+   "name": "ready does nothing",
+   "input": {
+    "server": false,
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "stages": [
+     {
+      "name": "native",
+      "digest": "1111111111111111111111111111111111111111111111111111111111111111"
+     },
+     {
+      "name": "tools",
+      "digest": "2222222222222222222222222222222222222222222222222222222222222222"
+     },
+     {
+      "name": "workspace",
+      "digest": "3333333333333333333333333333333333333333333333333333333333333333"
+     }
+    ],
+    "done": {
+     "native": "1111111111111111111111111111111111111111111111111111111111111111",
+     "tools": "2222222222222222222222222222222222222222222222222222222222222222",
+     "workspace": "3333333333333333333333333333333333333333333333333333333333333333"
+    },
+    "marker": true,
+    "repo": true,
+    "human": false,
+    "lease": "free",
+    "memoryOk": true,
+    "failure": null,
+    "now": 1000000
+   }
+  },
+  {
+   "name": "ready stages without marker only write it",
+   "input": {
+    "server": false,
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "stages": [
+     {
+      "name": "native",
+      "digest": "1111111111111111111111111111111111111111111111111111111111111111"
+     },
+     {
+      "name": "tools",
+      "digest": "2222222222222222222222222222222222222222222222222222222222222222"
+     },
+     {
+      "name": "workspace",
+      "digest": "3333333333333333333333333333333333333333333333333333333333333333"
+     }
+    ],
+    "done": {
+     "native": "1111111111111111111111111111111111111111111111111111111111111111",
+     "tools": "2222222222222222222222222222222222222222222222222222222222222222",
+     "workspace": "3333333333333333333333333333333333333333333333333333333333333333"
+    },
+    "marker": false,
+    "repo": true,
+    "human": false,
+    "lease": "free",
+    "memoryOk": true,
+    "failure": null,
+    "now": 1000000
+   }
+  },
+  {
+   "name": "no repo binary starts at the first stage",
+   "input": {
+    "server": false,
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "stages": [
+     {
+      "name": "native",
+      "digest": "1111111111111111111111111111111111111111111111111111111111111111"
+     },
+     {
+      "name": "tools",
+      "digest": "2222222222222222222222222222222222222222222222222222222222222222"
+     },
+     {
+      "name": "workspace",
+      "digest": "3333333333333333333333333333333333333333333333333333333333333333"
+     }
+    ],
+    "done": {
+     "native": "1111111111111111111111111111111111111111111111111111111111111111",
+     "tools": "2222222222222222222222222222222222222222222222222222222222222222",
+     "workspace": "3333333333333333333333333333333333333333333333333333333333333333"
+    },
+    "marker": true,
+    "repo": false,
+    "human": false,
+    "lease": "free",
+    "memoryOk": true,
+    "failure": null,
+    "now": 1000000
+   }
+  },
+  {
+   "name": "fresh machine runs the first stage",
+   "input": {
+    "server": false,
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "stages": [
+     {
+      "name": "native",
+      "digest": "1111111111111111111111111111111111111111111111111111111111111111"
+     },
+     {
+      "name": "tools",
+      "digest": "2222222222222222222222222222222222222222222222222222222222222222"
+     },
+     {
+      "name": "workspace",
+      "digest": "3333333333333333333333333333333333333333333333333333333333333333"
+     }
+    ],
+    "done": {},
+    "marker": false,
+    "repo": false,
+    "human": false,
+    "lease": "free",
+    "memoryOk": true,
+    "failure": null,
+    "now": 1000000
+   }
+  },
+  {
+   "name": "changed middle stage runs there",
+   "input": {
+    "server": false,
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "stages": [
+     {
+      "name": "native",
+      "digest": "1111111111111111111111111111111111111111111111111111111111111111"
+     },
+     {
+      "name": "tools",
+      "digest": "2222222222222222222222222222222222222222222222222222222222222222"
+     },
+     {
+      "name": "workspace",
+      "digest": "3333333333333333333333333333333333333333333333333333333333333333"
+     }
+    ],
+    "done": {
+     "native": "1111111111111111111111111111111111111111111111111111111111111111",
+     "tools": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "marker": true,
+    "repo": true,
+    "human": false,
+    "lease": "free",
+    "memoryOk": true,
+    "failure": null,
+    "now": 1000000
+   }
+  },
+  {
+   "name": "a person running setup is observed",
+   "input": {
+    "server": false,
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "stages": [
+     {
+      "name": "native",
+      "digest": "1111111111111111111111111111111111111111111111111111111111111111"
+     },
+     {
+      "name": "tools",
+      "digest": "2222222222222222222222222222222222222222222222222222222222222222"
+     },
+     {
+      "name": "workspace",
+      "digest": "3333333333333333333333333333333333333333333333333333333333333333"
+     }
+    ],
+    "done": {},
+    "marker": false,
+    "repo": false,
+    "human": true,
+    "lease": "free",
+    "memoryOk": true,
+    "failure": null,
+    "now": 1000000
+   }
+  },
+  {
+   "name": "another runner holds the lease",
+   "input": {
+    "server": false,
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "stages": [
+     {
+      "name": "native",
+      "digest": "1111111111111111111111111111111111111111111111111111111111111111"
+     },
+     {
+      "name": "tools",
+      "digest": "2222222222222222222222222222222222222222222222222222222222222222"
+     },
+     {
+      "name": "workspace",
+      "digest": "3333333333333333333333333333333333333333333333333333333333333333"
+     }
+    ],
+    "done": {},
+    "marker": false,
+    "repo": false,
+    "human": false,
+    "lease": "other",
+    "memoryOk": true,
+    "failure": null,
+    "now": 1000000
+   }
+  },
+  {
+   "name": "own lease runs",
+   "input": {
+    "server": false,
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "stages": [
+     {
+      "name": "native",
+      "digest": "1111111111111111111111111111111111111111111111111111111111111111"
+     },
+     {
+      "name": "tools",
+      "digest": "2222222222222222222222222222222222222222222222222222222222222222"
+     },
+     {
+      "name": "workspace",
+      "digest": "3333333333333333333333333333333333333333333333333333333333333333"
+     }
+    ],
+    "done": {},
+    "marker": false,
+    "repo": false,
+    "human": false,
+    "lease": "own",
+    "memoryOk": true,
+    "failure": null,
+    "now": 1000000
+   }
+  },
+  {
+   "name": "failure of this digest waits for its back-off",
+   "input": {
+    "server": false,
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "stages": [
+     {
+      "name": "native",
+      "digest": "1111111111111111111111111111111111111111111111111111111111111111"
+     },
+     {
+      "name": "tools",
+      "digest": "2222222222222222222222222222222222222222222222222222222222222222"
+     },
+     {
+      "name": "workspace",
+      "digest": "3333333333333333333333333333333333333333333333333333333333333333"
+     }
+    ],
+    "done": {},
+    "marker": false,
+    "repo": false,
+    "human": false,
+    "lease": "free",
+    "memoryOk": true,
+    "failure": {
+     "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+     "nextAttemptMs": 1090000
+    },
+    "now": 1000000
+   }
+  },
+  {
+   "name": "failure of an older digest retries at once",
+   "input": {
+    "server": false,
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "stages": [
+     {
+      "name": "native",
+      "digest": "1111111111111111111111111111111111111111111111111111111111111111"
+     },
+     {
+      "name": "tools",
+      "digest": "2222222222222222222222222222222222222222222222222222222222222222"
+     },
+     {
+      "name": "workspace",
+      "digest": "3333333333333333333333333333333333333333333333333333333333333333"
+     }
+    ],
+    "done": {},
+    "marker": false,
+    "repo": false,
+    "human": false,
+    "lease": "free",
+    "memoryOk": true,
+    "failure": {
+     "digest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+     "nextAttemptMs": 1090000
+    },
+    "now": 1000000
+   }
+  },
+  {
+   "name": "elapsed back-off retries",
+   "input": {
+    "server": false,
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "stages": [
+     {
+      "name": "native",
+      "digest": "1111111111111111111111111111111111111111111111111111111111111111"
+     },
+     {
+      "name": "tools",
+      "digest": "2222222222222222222222222222222222222222222222222222222222222222"
+     },
+     {
+      "name": "workspace",
+      "digest": "3333333333333333333333333333333333333333333333333333333333333333"
+     }
+    ],
+    "done": {},
+    "marker": false,
+    "repo": false,
+    "human": false,
+    "lease": "free",
+    "memoryOk": true,
+    "failure": {
+     "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+     "nextAttemptMs": 900000
+    },
+    "now": 1000000
+   }
+  },
+  {
+   "name": "low memory waits",
+   "input": {
+    "server": false,
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "stages": [
+     {
+      "name": "native",
+      "digest": "1111111111111111111111111111111111111111111111111111111111111111"
+     },
+     {
+      "name": "tools",
+      "digest": "2222222222222222222222222222222222222222222222222222222222222222"
+     },
+     {
+      "name": "workspace",
+      "digest": "3333333333333333333333333333333333333333333333333333333333333333"
+     }
+    ],
+    "done": {},
+    "marker": false,
+    "repo": false,
+    "human": false,
+    "lease": "free",
+    "memoryOk": false,
+    "failure": null,
+    "now": 1000000
+   }
+  },
+  {
+   "name": "restart pending takes nothing new",
+   "input": {
+    "server": false,
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "stages": [
+     {
+      "name": "native",
+      "digest": "1111111111111111111111111111111111111111111111111111111111111111"
+     },
+     {
+      "name": "tools",
+      "digest": "2222222222222222222222222222222222222222222222222222222222222222"
+     },
+     {
+      "name": "workspace",
+      "digest": "3333333333333333333333333333333333333333333333333333333333333333"
+     }
+    ],
+    "done": {},
+    "marker": false,
+    "repo": false,
+    "human": false,
+    "lease": "free",
+    "memoryOk": true,
+    "failure": null,
+    "now": 1000000,
+    "restartPending": true
+   }
+  },
+  {
+   "name": "ready beats a person",
+   "input": {
+    "server": false,
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "stages": [
+     {
+      "name": "native",
+      "digest": "1111111111111111111111111111111111111111111111111111111111111111"
+     },
+     {
+      "name": "tools",
+      "digest": "2222222222222222222222222222222222222222222222222222222222222222"
+     },
+     {
+      "name": "workspace",
+      "digest": "3333333333333333333333333333333333333333333333333333333333333333"
+     }
+    ],
+    "done": {
+     "native": "1111111111111111111111111111111111111111111111111111111111111111",
+     "tools": "2222222222222222222222222222222222222222222222222222222222222222",
+     "workspace": "3333333333333333333333333333333333333333333333333333333333333333"
+    },
+    "marker": true,
+    "repo": true,
+    "human": true,
+    "lease": "free",
+    "memoryOk": true,
+    "failure": null,
+    "now": 1000000
+   }
+  }
+ ],
+ "human": [
+  {
+   "name": "fresh record, process alive",
+   "input": {
+    "now": 10000000,
+    "touchedAgeMilliseconds": 20000,
+    "birthAgeMilliseconds": 60000,
+    "record": {
+     "pid": 4242,
+     "startedMs": 9940000
+    },
+    "pidAlive": true,
+    "legacyProcess": false
+   }
+  },
+  {
+   "name": "fresh record, process gone",
+   "input": {
+    "now": 10000000,
+    "touchedAgeMilliseconds": 20000,
+    "birthAgeMilliseconds": 60000,
+    "record": {
+     "pid": 4242,
+     "startedMs": 9940000
+    },
+    "pidAlive": false,
+    "legacyProcess": false
+   }
+  },
+  {
+   "name": "stale touch, process alive",
+   "input": {
+    "now": 10000000,
+    "touchedAgeMilliseconds": 90000,
+    "birthAgeMilliseconds": 60000,
+    "record": {
+     "pid": 4242,
+     "startedMs": 9940000
+    },
+    "pidAlive": true,
+    "legacyProcess": false
+   }
+  },
+  {
+   "name": "alive and fresh but started three hours ago (creation time unusable)",
+   "input": {
+    "now": 10000000,
+    "touchedAgeMilliseconds": 5000,
+    "birthAgeMilliseconds": 1000,
+    "record": {
+     "pid": 4242,
+     "startedMs": -800000
+    },
+    "pidAlive": true,
+    "legacyProcess": false
+   }
+  },
+  {
+   "name": "started just inside the maximum",
+   "input": {
+    "now": 10000000,
+    "touchedAgeMilliseconds": 5000,
+    "birthAgeMilliseconds": 1000,
+    "record": {
+     "pid": 4242,
+     "startedMs": 2800001
+    },
+    "pidAlive": true,
+    "legacyProcess": false
+   }
+  },
+  {
+   "name": "empty marker, wrapper command listed",
+   "input": {
+    "now": 10000000,
+    "touchedAgeMilliseconds": 5000,
+    "birthAgeMilliseconds": 60000,
+    "record": null,
+    "pidAlive": false,
+    "legacyProcess": true
+   }
+  },
+  {
+   "name": "empty marker, no wrapper command",
+   "input": {
+    "now": 10000000,
+    "touchedAgeMilliseconds": 5000,
+    "birthAgeMilliseconds": 60000,
+    "record": null,
+    "pidAlive": false,
+    "legacyProcess": false
+   }
+  },
+  {
+   "name": "empty marker, wrapper listed, created three hours ago",
+   "input": {
+    "now": 10000000,
+    "touchedAgeMilliseconds": 5000,
+    "birthAgeMilliseconds": 10800000,
+    "record": null,
+    "pidAlive": false,
+    "legacyProcess": true
+   }
+  }
+ ]
+}

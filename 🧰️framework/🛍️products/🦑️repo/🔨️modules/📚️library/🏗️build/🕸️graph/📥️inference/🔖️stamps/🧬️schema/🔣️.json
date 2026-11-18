@@ -74,7 +74,7 @@
             ]
           },
           "script-inputs": {
-            "stamp": "semio.graph-inferrer.script-inputs/4",
+            "stamp": "semio.graph-inferrer.script-inputs/5",
             "scope": "project",
             "sources": [
               "🏗️build/🕸️graph/📥️inference/🧭️script-inputs/",

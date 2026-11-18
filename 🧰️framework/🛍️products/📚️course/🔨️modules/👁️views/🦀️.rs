@@ -40,6 +40,7 @@ use std::collections::BTreeMap;
 pub fn course_view(course: &Course, quizzes: &[Quiz]) -> CourseView {
     CourseView {
         assignments: course.assignments.clone(),
+        clips: course.clips.clone(),
         unlocks: course.unlocks.clone(),
         id: course.id.clone(),
         title: course.title.clone(),

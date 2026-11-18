@@ -1289,7 +1289,7 @@
     },
     {
       "mode": "ancestor-drift",
-      "accepted": false
+      "accepted": true
     },
     {
       "mode": "leaf-drift",
@@ -1420,8 +1420,8 @@
     },
     {
       "mode": "parent-roster",
-      "accepted": false,
-      "changed": false
+      "accepted": true,
+      "changed": true
     }
   ],
   "unreadyRelations": [

@@ -5,8 +5,8 @@ import {capturePhysicalSourceTextV1,physicalSourceOriginV1,type PhysicalSourceMo
 export type BunWorkspaceDeclarationV1 = Readonly<{ schemaVersion: 1; members: readonly string[]; owners: readonly string[] }>;
 export type BunWorkspaceScope = Readonly<{ directory: string; manifest: string; lock: string; declaration: BunWorkspaceDeclarationV1 }>;
 export type BunRepositoryMembership = Readonly<{ scopes: readonly BunWorkspaceScope[]; packages: readonly string[] }>;
-/** 🎯️ Selects all authored installation scopes or exactly one declared owner. */
-export type BunWorkspaceSelection = Readonly<{kind:"all"}> | Readonly<{kind:"scope";owner:string}>;
+/** 🎯️ Selects all authored installation scopes, exactly one declared owner, or the closure of the root scope and the given declared scopes over the deepest declaring scope of their members. */
+export type BunWorkspaceSelection = Readonly<{kind:"all"}> | Readonly<{kind:"scope";owner:string}> | Readonly<{kind:"closure";roots:readonly string[]}>;
 /** 📣️ Reports actual physical and ownership visits of one fresh verification. */
 export type BunWorkspaceProgress = Readonly<{ operation: "state" | "list" | "readText" | "membership" | "frontier" | "selection" | "publication"; path: string; completedOperations: number }>;
 /** 🎛️ Receives the original operation signal and continuation without constructing authority. */

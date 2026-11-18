@@ -112,7 +112,7 @@ export function servedStateV1(requester:string):GraphStateV1{
 /** 📣️ Tells the requester which of its projects are done (their records and the generation are in the fleet cache) and, with `progress`, how its request stands: how many projects it holds, when the server's work last advanced and how long the rest is estimated to take (null when nothing measured says), so the requester keeps waiting while this advances. False when the fleet cannot take it. */
 export async function publishServedV1(input:Readonly<{client:GraphFleetClientV1;server:string;request:WantedRequestV1;projects:readonly string[];generation:number|null;progress?:WantedProgressRecordV1;now?:()=>number}>):Promise<boolean>{
  const served:WantedServedV1={version:1,requester:input.request.requester,platform:input.request.platform,server:input.server,projects:[...input.projects].sort(),...input.request.left===undefined||input.request.left.length===0?{}:{left:[...input.request.left].sort()},generation:input.generation,atMs:(input.now??Date.now)(),...input.progress===undefined?{}:input.progress};
- return publishGraphEntryV1({client:input.client,state:servedStateV1(input.request.requester),owner:input.server,documents:[{name:"served",bytes:Buffer.from(JSON.stringify(served))}]});
+ return publishGraphEntryV1({client:input.client,state:servedStateV1(input.request.requester),owner:input.server,head:true,documents:[{name:"served",bytes:Buffer.from(JSON.stringify(served))}]});
 }
 
 /** 👂️ The newest answer to this requester, or undefined when there is none, it is damaged or the fleet cannot answer. */
@@ -140,6 +140,14 @@ export function fleetGrantMegabytesV1(input:Readonly<{hostMegabytes:number}>,pol
 
 /** 💾️ What a serving machine keeps between two processes of its graph server (a restart for new code must not lose them): the requests it holds with the projects it already told the requesters about, the claims it completed and whether a read was running. See `ServeState` in the schema. */
 export type ServeStateV1=Readonly<{version:1;owner:string;platform:string;savedMs:number;held:readonly Readonly<{request:WantedRequestV1;list:readonly string[];told:boolean;toldAt:number;heldAt:number}>[];told:readonly string[];reading:"none"|"request"|"refresh"}>;
+
+/** 🔭️ What the detached runner of a graph read keeps in `read-record.json` (see `ReadRecord` in the schema): who runs the read, since when, when the runner last wrote, where the output is and, once the read ended, its exit status. */
+export type ReadRecordV1=Readonly<{version:1;reason:"request"|"refresh";runner:number;read:number|null;startedMs:number;beatMs:number;log:string;status:number|null;endedMs:number|null}>;
+
+/** 📼️ The record of a graph read if it has the shape of the schema, else undefined. */
+export function readReadRecordV1(value:unknown):ReadRecordV1|undefined{
+ return validateJsonSchemaSubset({$ref:"#/definitions/ReadRecord"},value,schema).length===0?value as ReadRecordV1:undefined;
+}
 
 /** 📼️ The state if it has the shape of the schema, else undefined. */
 export function readServeStateV1(value:unknown):ServeStateV1|undefined{

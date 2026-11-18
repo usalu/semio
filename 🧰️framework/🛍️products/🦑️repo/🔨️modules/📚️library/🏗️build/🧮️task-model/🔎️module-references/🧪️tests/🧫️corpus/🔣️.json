@@ -1,0 +1,405 @@
+[
+ {
+  "name": "static-import",
+  "source": "import a from \"./a.ts\";\nimport {b,c as d} from './b.ts';\nimport * as e from \"./e.mjs\";\nimport \"./side.ts\";\nimport f,{g} from \"pkg-f\";\nimport h,* as i from \"pkg-h\";",
+  "references": [
+   {
+    "kind": "module",
+    "specifier": "./a.ts"
+   },
+   {
+    "kind": "module",
+    "specifier": "./b.ts"
+   },
+   {
+    "kind": "module",
+    "specifier": "./e.mjs"
+   },
+   {
+    "kind": "module",
+    "specifier": "./side.ts"
+   },
+   {
+    "kind": "module",
+    "specifier": "pkg-f"
+   },
+   {
+    "kind": "module",
+    "specifier": "pkg-h"
+   }
+  ]
+ },
+ {
+  "name": "type-only-imports",
+  "source": "import type {A} from \"./types.ts\";\nimport type B from \"./b-types.ts\";\nimport {type C} from \"./c-types.ts\";\nimport type * as D from \"./d-types.ts\";\nimport type from \"./type-default.ts\";\nexport type {E} from \"./e-types.ts\";\nexport type * from \"./all-types.ts\";",
+  "references": [
+   {
+    "kind": "module",
+    "specifier": "./types.ts"
+   },
+   {
+    "kind": "module",
+    "specifier": "./b-types.ts"
+   },
+   {
+    "kind": "module",
+    "specifier": "./c-types.ts"
+   },
+   {
+    "kind": "module",
+    "specifier": "./d-types.ts"
+   },
+   {
+    "kind": "module",
+    "specifier": "./type-default.ts"
+   },
+   {
+    "kind": "module",
+    "specifier": "./e-types.ts"
+   },
+   {
+    "kind": "module",
+    "specifier": "./all-types.ts"
+   }
+  ]
+ },
+ {
+  "name": "re-exports",
+  "source": "export * from \"./star.ts\";\nexport * as ns from \"./ns.ts\";\nexport {x,y as z} from \"./named.ts\";\nexport {local};\nexport const value=1;\nexport import q=require(\"./exported-require.cjs\");",
+  "references": [
+   {
+    "kind": "module",
+    "specifier": "./star.ts"
+   },
+   {
+    "kind": "module",
+    "specifier": "./named.ts"
+   },
+   {
+    "kind": "module",
+    "specifier": "./exported-require.cjs"
+   }
+  ]
+ },
+ {
+  "name": "dynamic-import",
+  "source": "const a=await import(\"./dyn-a.ts\");\nconst b=import('./dyn-b.ts');\nconst c=import(`./dyn-c.ts`);\nconst d=import(name);\nconst e=import(`./dyn-${x}.ts`);\nobj.import(\"./not-an-import.ts\");\nobj?.import(\"./optional-chain.ts\");",
+  "references": [
+   {
+    "kind": "module",
+    "specifier": "./dyn-a.ts"
+   },
+   {
+    "kind": "module",
+    "specifier": "./dyn-b.ts"
+   },
+   {
+    "kind": "module",
+    "specifier": "./dyn-c.ts"
+   },
+   {
+    "kind": "module",
+    "specifier": "./optional-chain.ts"
+   }
+  ]
+ },
+ {
+  "name": "require-calls",
+  "source": "const a=require(\"./req-a.cjs\");\nconst b=require('req-b');\nconst c=require(`req-c`);\nconst d=createRequire(import.meta.url)(\"typescript\");\nimport e=require(\"./import-equals.cjs\");\nx.require(\"./member-require.cjs\");",
+  "references": [
+   {
+    "kind": "module",
+    "specifier": "./req-a.cjs"
+   },
+   {
+    "kind": "module",
+    "specifier": "req-b"
+   },
+   {
+    "kind": "module",
+    "specifier": "req-c"
+   },
+   {
+    "kind": "module",
+    "specifier": "./import-equals.cjs"
+   },
+   {
+    "kind": "module",
+    "specifier": "./member-require.cjs"
+   }
+  ]
+ },
+ {
+  "name": "comments",
+  "source": "// import \"./line-comment.ts\";\n/* import \"./block-comment.ts\"; */\n/** import {x} from \"./doc-comment.ts\" */\nimport \"./real.ts\";\n// new URL(\"./comment-url.txt\", import.meta.url)",
+  "references": [
+   {
+    "kind": "module",
+    "specifier": "./real.ts"
+   }
+  ]
+ },
+ {
+  "name": "strings",
+  "source": "const a=\"import './in-string.ts'\";\nconst b='export * from \"./in-single.ts\"';\nconst c=\"escaped \\\"import 'x'\\\" quote\";\nimport \"./after-strings.ts\";\nconst d=\"a\\u0062c\";\nimport \"./esc\\u0061ped.ts\";",
+  "references": [
+   {
+    "kind": "module",
+    "specifier": "./after-strings.ts"
+   },
+   {
+    "kind": "module",
+    "specifier": "./escaped.ts"
+   }
+  ]
+ },
+ {
+  "name": "template-literals",
+  "source": "const a=`import \"./in-template.ts\"`;\nconst b=`outer ${import(\"./in-substitution.ts\")} tail`;\nconst c=`a ${`nested ${import(\"./nested.ts\")}`} z`;\nconst d=`${ {k:1}.k }`;\nimport \"./after-template.ts\";",
+  "references": [
+   {
+    "kind": "module",
+    "specifier": "./in-substitution.ts"
+   },
+   {
+    "kind": "module",
+    "specifier": "./nested.ts"
+   },
+   {
+    "kind": "module",
+    "specifier": "./after-template.ts"
+   }
+  ]
+ },
+ {
+  "name": "regex-literals",
+  "source": "const a=/[\"']/g;\nconst b=/\\/import \".\\/in-regex.ts\"/;\nconst c=x/2/3;\nimport \"./after-regex.ts\";\nconst d=/[/]\\//;",
+  "references": [
+   {
+    "kind": "module",
+    "specifier": "./in-regex.ts"
+   },
+   {
+    "kind": "module",
+    "specifier": "./after-regex.ts"
+   }
+  ]
+ },
+ {
+  "name": "regex-quote-to-line-end",
+  "source": "const r=/'/;\nimport \"./hidden-by-regex-quote.ts\";\nconst s='';",
+  "references": [
+   {
+    "kind": "module",
+    "specifier": "./hidden-by-regex-quote.ts"
+   }
+  ]
+ },
+ {
+  "name": "url-references",
+  "source": "const a=new URL(\"./data.json\",import.meta.url);\nconst b=new URL(\"../dir/\",import.meta.url);\nconst c=new URL('./single.txt',import.meta.url);\nconst d=new URL(`./tpl.txt`,import.meta.url);\nconst e=new URL(\"https://example.test/x\",import.meta.url);\nconst f=new URL(\"not-relative.txt\",import.meta.url);\nconst g=new URL(\"./other.txt\",base);\nconst h=new URL(\"./three.txt\",import.meta.url,1);\nconst i=new URL(\"./trailing-comma.txt\",import.meta.url,);\nconst j=new URL(\"./spaced.txt\", import . meta . url);",
+  "references": [
+   {
+    "kind": "file-url",
+    "specifier": "./data.json"
+   },
+   {
+    "kind": "directory-url",
+    "specifier": "../dir/"
+   },
+   {
+    "kind": "file-url",
+    "specifier": "./single.txt"
+   },
+   {
+    "kind": "file-url",
+    "specifier": "./tpl.txt"
+   },
+   {
+    "kind": "file-url",
+    "specifier": "./trailing-comma.txt"
+   }
+  ]
+ },
+ {
+  "name": "url-in-trivia",
+  "source": "// new URL(\"./line.txt\",import.meta.url)\n/* new URL(\"./block.txt\",import.meta.url) */\nconst s='new URL(\"./string.txt\",import.meta.url)';\nconst t=`new URL(\"./template.txt\",import.meta.url)`;\nconst r=/new URL\\(\"x\"\\)/;\nconst u=new URL(\"./real.txt\",import.meta.url);",
+  "references": [
+   {
+    "kind": "file-url",
+    "specifier": "./real.txt"
+   }
+  ]
+ },
+ {
+  "name": "url-in-template-substitution",
+  "source": "const a=`${new URL(\"./in-sub.txt\",import.meta.url)}`;\nconst b=`x ${ `y ${new URL(\"./nested-sub.txt\",import.meta.url)}` }`;",
+  "references": [
+   {
+    "kind": "file-url",
+    "specifier": "./in-sub.txt"
+   },
+   {
+    "kind": "file-url",
+    "specifier": "./nested-sub.txt"
+   }
+  ]
+ },
+ {
+  "name": "declare-module",
+  "source": "declare module \"ambient-top\" { export const a:number; }\nimport \"./local.ts\";\nnamespace N { declare module \"ambient-nested\" {} }",
+  "references": [
+   {
+    "kind": "module",
+    "specifier": "./local.ts"
+   },
+   {
+    "kind": "module",
+    "specifier": "ambient-top"
+   },
+   {
+    "kind": "module",
+    "specifier": "ambient-nested"
+   }
+  ]
+ },
+ {
+  "name": "declare-module-script",
+  "source": "declare module \"ambient-script-top\" { export const a:number; }\nnamespace N { declare module \"ambient-script-nested\" {} }",
+  "references": [
+   {
+    "kind": "module",
+    "specifier": "ambient-script-nested"
+   }
+  ]
+ },
+ {
+  "name": "amd-define",
+  "source": "define([\"amd-a\",\"./amd-b\"],function(a,b){});\ndefine(\"named\",[\"amd-c\"],function(c){});\ndefine(function(){});",
+  "references": [
+   {
+    "kind": "module",
+    "specifier": "amd-a"
+   },
+   {
+    "kind": "module",
+    "specifier": "./amd-b"
+   },
+   {
+    "kind": "module",
+    "specifier": "amd-c"
+   }
+  ]
+ },
+ {
+  "name": "shebang-and-bom",
+  "source": "#!/usr/bin/env bun\nimport \"./after-shebang.ts\";",
+  "references": [
+   {
+    "kind": "module",
+    "specifier": "./after-shebang.ts"
+   }
+  ]
+ },
+ {
+  "name": "jsx-like-and-generics",
+  "source": "const a=<T,>(x:T)=>x;\nconst b=a<number>(1);\nimport \"./after-generics.ts\";\nlet c=1<2>3;",
+  "references": [
+   {
+    "kind": "module",
+    "specifier": "./after-generics.ts"
+   }
+  ]
+ },
+ {
+  "name": "numbers-and-operators",
+  "source": "const a=0x1F+1_000+.5+1e3+10n;\nconst b=a**2>>1>>>2;\nconst c=x??y?.z;\nimport \"./after-numbers.ts\";",
+  "references": [
+   {
+    "kind": "module",
+    "specifier": "./after-numbers.ts"
+   }
+  ]
+ },
+ {
+  "name": "unterminated",
+  "source": "import \"./first.ts\";\nconst s=\"never closed\nimport \"./after-unterminated-string.ts\";",
+  "references": [
+   {
+    "kind": "module",
+    "specifier": "./first.ts"
+   },
+   {
+    "kind": "module",
+    "specifier": "./after-unterminated-string.ts"
+   }
+  ]
+ },
+ {
+  "name": "empty",
+  "source": "",
+  "references": []
+ },
+ {
+  "name": "duplicates",
+  "source": "import \"./dup.ts\";\nimport \"./dup.ts\";\nexport * from \"./dup.ts\";\nconst u=new URL(\"./dup.txt\",import.meta.url);\nconst v=new URL(\"./dup.txt\",import.meta.url);",
+  "references": [
+   {
+    "kind": "module",
+    "specifier": "./dup.ts"
+   },
+   {
+    "kind": "file-url",
+    "specifier": "./dup.txt"
+   }
+  ]
+ },
+ {
+  "name": "unicode-identifiers",
+  "source": "const héllo=1;\nconst 日本=2;\nconst 😀=\"emoji\";\nimport \"./after-unicode.ts\";",
+  "references": [
+   {
+    "kind": "module",
+    "specifier": "./after-unicode.ts"
+   }
+  ]
+ },
+ {
+  "name": "conflict-marker",
+  "source": "<<<<<<< ours\nimport \"./ours.ts\";\n=======\nimport \"./theirs.ts\";\n>>>>>>> theirs\nimport \"./after-conflict.ts\";",
+  "references": [
+   {
+    "kind": "module",
+    "specifier": "./ours.ts"
+   },
+   {
+    "kind": "module",
+    "specifier": "./after-conflict.ts"
+   }
+  ]
+ },
+ {
+  "name": "export-import-equals",
+  "source": "export import a=require(\"./exp-import-equals.cjs\");\nexport import type b=require(\"./exp-type-equals.cjs\");",
+  "references": [
+   {
+    "kind": "module",
+    "specifier": "./exp-import-equals.cjs"
+   },
+   {
+    "kind": "module",
+    "specifier": "./exp-type-equals.cjs"
+   }
+  ]
+ },
+ {
+  "name": "import-meta-and-keywords",
+  "source": "const u=import.meta.url;\nconst d=import.meta.dirname;\nconst from=1,as=2,type=3,require=4;\nimport {from as f2} from \"./keyword-names.ts\";",
+  "references": [
+   {
+    "kind": "module",
+    "specifier": "./keyword-names.ts"
+   }
+  ]
+ }
+]

@@ -21,7 +21,7 @@ import { localized, type CourseLocale, type CourseText } from "../🌐️i18n/�
 import { formatClock, formatInstant, formatPoints } from "../📏️quantity/🟦️.ts";
 import { CHALLENGE_LABELS } from "../⛰️challenge/🏷️labels/🟦️.ts";
 import { learnerName } from "../🪪️identity/🟦️.tsx";
-import { CARD_CHIP_WRAP, CardAction, CardIcon, Missing, PageFrame, CourseCard, Records, Segments, TABLE, cn, textPresentation, type PaneView, type Segment } from "../🪟️chrome/🟦️.tsx";
+import { CARD_CHIP_WRAP, CardAction, CardIcon, CardSection, Missing, PageFrame, CourseCard, Records, Segments, TABLE, cn, textPresentation, type PaneView, type Segment } from "../🪟️chrome/🟦️.tsx";
 import { HOME_PAGES, shownLeaderboard, type HeldLeaderboard, type CourseState } from "../🧭️session/🧮️state/🟦️.ts";
 import { type CourseSession } from "../🧭️session/🟦️.ts";
 import { type RefreshOutcome } from "../🧭️session/📋️session-model/🟦️.ts";
@@ -184,16 +184,17 @@ function categoryLabel(quiz: CourseView["quizzes"][number], locale: CourseLocale
 }
 
 /** 👀️ The choice of the leaderboard to look at: its period and — with `categories` — its category, every quiz or one. */
-function BoardChoices(props: { readonly session: CourseSession; readonly state: CourseState; readonly text: CourseText; readonly locale: CourseLocale; readonly categories?: boolean }): ReactElement {
+function BoardChoices(props: { readonly session: CourseSession; readonly state: CourseState; readonly text: CourseText; readonly locale: CourseLocale; readonly categories?: boolean; readonly flush?: boolean }): ReactElement {
   const { session, state, text, locale } = props;
   const { board } = state;
   const periods: readonly Segment<LeaderboardPeriod>[] = LEADERBOARD_PERIODS.map((period) => ({ value: period, label: text(PERIOD_TEXT[period]), icon: PERIOD_ICONS[period] }));
   const quizzes: readonly Segment<string>[] = [{ value: EVERY_QUIZ, label: text("course.leaderboard.everyQuiz"), icon: "layout-grid" }, ...(state.course?.quizzes ?? []).map((quiz) => ({ value: quiz.id, label: localized(quiz.title, locale), glyph: quiz.emoji }))];
+  if (props.flush) return <Segments flush label={text("course.leaderboard.period")} options={periods} value={board.period} onChange={(period) => session.chooseBoard({ ...board, period })} />;
   return (
-    <div data-board-choices="" className="flex flex-wrap items-start gap-double">
-      <Segments label={text("course.leaderboard.period")} options={periods} value={board.period} onChange={(period) => session.chooseBoard({ ...board, period })} />
-      {props.categories ? <Segments label={text("course.leaderboard.category")} options={quizzes} value={board.quiz ?? EVERY_QUIZ} onChange={(quiz) => session.chooseBoard(quiz === EVERY_QUIZ ? { period: board.period } : { period: board.period, quiz })} /> : null}
-    </div>
+    <>
+      <Segments flush label={text("course.leaderboard.period")} options={periods} value={board.period} onChange={(period) => session.chooseBoard({ ...board, period })} />
+      {props.categories ? <Segments flush label={text("course.leaderboard.category")} options={quizzes} value={board.quiz ?? EVERY_QUIZ} onChange={(quiz) => session.chooseBoard(quiz === EVERY_QUIZ ? { period: board.period } : { period: board.period, quiz })} /> : null}
+    </>
   );
 }
 
@@ -284,6 +285,7 @@ export function LeaderboardCard(props: { readonly session: CourseSession; readon
   const { colours } = usePresenceView();
   return (
     <CourseCard
+      flush
       id={id}
       card="board"
       anchor={PRESENCE_ANCHORS.home("board")}
@@ -299,16 +301,22 @@ export function LeaderboardCard(props: { readonly session: CourseSession; readon
         </CardAction>
       }
     >
-      <BoardChoices session={session} state={state} text={text} locale={locale} />
+      <BoardChoices flush session={session} state={state} text={text} locale={locale} />
       {category === undefined ? null : (
-        <p data-board-category="" className="m-0 text-xs text-muted-foreground">
-          {text("course.leaderboard.category")}: {categoryLabel(category, locale)}
-        </p>
+        <CardSection>
+          <p data-board-category="" className="m-0 text-xs text-muted-foreground">
+            {text("course.leaderboard.category")}: {categoryLabel(category, locale)}
+          </p>
+        </CardSection>
       )}
       {board === undefined ? (
-        <p className="m-0 text-xs text-muted-foreground">{text("course.app.fetching")}</p>
+        <CardSection>
+          <p className="m-0 text-xs text-muted-foreground">{text("course.app.fetching")}</p>
+        </CardSection>
       ) : top.length === 0 ? (
-        <p className="m-0 text-xs text-muted-foreground">{text(state.board.period === "all-time" && state.board.quiz === undefined ? "course.leaderboard.empty" : "course.leaderboard.emptyScope")}</p>
+        <CardSection>
+          <p className="m-0 text-xs text-muted-foreground">{text(state.board.period === "all-time" && state.board.quiz === undefined ? "course.leaderboard.empty" : "course.leaderboard.emptyScope")}</p>
+        </CardSection>
       ) : (
         <Records fold={19} className="min-h-0 flex-1">
           <table {...TABLE.table} data-head="sort" className="course-fold w-full border-collapse text-sm">
@@ -404,6 +412,7 @@ export function LeaderboardPage(props: { readonly session: CourseSession; readon
   return (
     <PageFrame page={HOME_PAGES.leaderboard} wide overlay={<PanePeers scope={state.course === undefined ? undefined : roomScope(state.course.id, { screen: "leaderboard" })} opened={view.opened} />}>
       <CourseCard
+        flush
         id={`${scope}-title`}
         card="leaderboard"
         anchor={PRESENCE_ANCHORS.leaderboard}
@@ -413,33 +422,41 @@ export function LeaderboardPage(props: { readonly session: CourseSession; readon
       >
         <BoardChoices session={session} state={state} text={text} locale={locale} categories />
         {counted === undefined ? null : (
-          <p data-board-window="" className="m-0 text-sm text-muted-foreground">
-            {text("course.leaderboard.window", { from: formatInstant(counted.from, locale), until: formatInstant(counted.until, locale) })}
-          </p>
+          <CardSection>
+            <p data-board-window="" className="m-0 text-sm text-muted-foreground">
+              {text("course.leaderboard.window", { from: formatInstant(counted.from, locale), until: formatInstant(counted.until, locale) })}
+            </p>
+          </CardSection>
         )}
         {board === undefined ? (
-          <p role={view.opened ? "status" : undefined} className="m-0 text-sm">
-            {text("course.app.fetching")}
-          </p>
+          <CardSection>
+            <p role={view.opened ? "status" : undefined} className="m-0 text-sm">
+              {text("course.app.fetching")}
+            </p>
+          </CardSection>
         ) : rows.length === 0 ? (
-          <p data-board-empty="" className="m-0 text-sm">
-            {text(state.board.period === "all-time" && bests ? "course.leaderboard.empty" : "course.leaderboard.emptyScope")}
-          </p>
+          <CardSection>
+            <p data-board-empty="" className="m-0 text-sm">
+              {text(state.board.period === "all-time" && bests ? "course.leaderboard.empty" : "course.leaderboard.emptyScope")}
+            </p>
+          </CardSection>
         ) : (
           <>
-            <p id={`${scope}-description`} className="m-0 text-sm text-muted-foreground">
-              {text("course.leaderboard.caption")}
-            </p>
-            <p data-board-count="" className="m-0 flex flex-wrap gap-x-double text-sm">
-              <span className="course-nowrap">{text("course.leaderboard.learners", { count: board.board.learners })}</span>
-              {board.board.learners > rows.length ? <span className="course-nowrap text-muted-foreground">{text("course.leaderboard.shown", { count: rows.length })}</span> : null}
-            </p>
+            <CardSection className="gap-single">
+              <p id={`${scope}-description`} className="m-0 text-sm text-muted-foreground">
+                {text("course.leaderboard.caption")}
+              </p>
+              <p data-board-count="" className="m-0 flex flex-wrap gap-x-double text-sm">
+                <span className="course-nowrap">{text("course.leaderboard.learners", { count: board.board.learners })}</span>
+                {board.board.learners > rows.length ? <span className="course-nowrap text-muted-foreground">{text("course.leaderboard.shown", { count: rows.length })}</span> : null}
+              </p>
+            </CardSection>
             <Records fold={bests ? 80 : 44} role="region" aria-labelledby={`${scope}-title`} aria-describedby={`${scope}-description`} tabIndex={0}>
               <table {...TABLE.table} data-head="sort" className="course-fold w-full border-collapse text-sm" aria-labelledby={`${scope}-title`} aria-describedby={`${scope}-description`}>
                 <thead {...TABLE.group}>
                   <tr {...TABLE.row}>
                     {shown.map((column) => (
-                      <SortHeading key={column.key} column={column} sort={sort} onSort={(key) => { const next = nextSort(sort, key); setSort(next); follow.onSort(next); }} text={text} className={cn(EDGE, "course-nowrap border-b-2")} />
+                      <SortHeading key={column.key} column={column} sort={sort} onSort={(key) => { const next = nextSort(sort, key); setSort(next); follow.onSort(next); }} text={text} className={cn(EDGE, "course-nowrap border-b")} />
                     ))}
                   </tr>
                 </thead>
@@ -461,7 +478,9 @@ export function LeaderboardPage(props: { readonly session: CourseSession; readon
                 )}
               </table>
             </Records>
-            <p className="m-0 text-xs text-muted-foreground">{text("course.leaderboard.forFun")}</p>
+            <CardSection>
+              <p className="m-0 text-xs text-muted-foreground">{text("course.leaderboard.forFun")}</p>
+            </CardSection>
           </>
         )}
       </CourseCard>

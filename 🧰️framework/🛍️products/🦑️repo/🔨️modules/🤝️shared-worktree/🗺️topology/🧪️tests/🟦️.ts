@@ -233,8 +233,8 @@ test("the worker service keeps the replica daemon alive on every platform",()=>{
  expect(macos).not.toContain("UserName");
  expect(macos).toContain("<key>LimitLoadToSessionType</key><string>Aqua</string>");
  expect(windows).not.toContain("<WorkingDirectory>");
- expect(windows).toContain("<Command>powershell.exe</Command>");
- expect(windows).toContain("<Arguments>-NoProfile -ExecutionPolicy Bypass -File &quot;__WORKER_HOME__\\AppData\\Local\\semio\\fleet\\entry\\boot.ps1&quot; run</Arguments>");
+ expect(windows).toContain("<Command>conhost.exe</Command>");
+ expect(windows).toContain("<Arguments>--headless powershell.exe -NoProfile -ExecutionPolicy Bypass -File &quot;__WORKER_HOME__\\AppData\\Local\\semio\\fleet\\entry\\boot.ps1&quot; run</Arguments>");
  expect(windows).not.toContain(SCRIPT);
  expect(windows).toContain("<RestartOnFailure>");
  expect(windows).toContain("<LogonTrigger>");
@@ -322,7 +322,7 @@ test("a Windows worker mounts its store at every logon and again every minute un
   expect(definition).toContain("<LogonTrigger><Enabled>true</Enabled></LogonTrigger>");
   expect(definition).toContain("<Interval>PT1M</Interval>");
   expect(definition).toContain("<StartWhenAvailable>true</StartWhenAvailable>");
-  expect(definition).toContain("<Command>cmd.exe</Command>");
+  expect(definition).toContain("<Command>conhost.exe</Command>");
   expect(definition).toContain(`/d /c if not exist ${drive}\\ ${protocol==="smb"?"net.exe use":"mount.exe -o"}`);
   expect(definition).toContain("<LogonType>InteractiveToken</LogonType><RunLevel>LeastPrivilege</RunLevel>");
   expect(parts["definition"]).toContain("<StartWhenAvailable>true</StartWhenAvailable>");
@@ -453,9 +453,9 @@ test("the Windows group server shares the store with Server for NFS or, for an s
  expect(nfs["share"]).toContain("Grant-NfsSharePermission -Name store-c -ClientName nfs.b2.example.test -ClientType host -Permission readonly");
  expect(nfs["firewall"]).toContain("-LocalPort 2049,111,1048 -RemoteAddress 10.3.0.0/24");
  expect(nfs["firewall"]).toContain("-LocalPort 443 -RemoteAddress 10.3.0.0/24");
- expect(nfs["relay-unit"]).toContain(`<Arguments>${relay}</Arguments>`);
+ expect(nfs["relay-unit"]).toContain(`<Arguments>--headless repo ${relay}</Arguments>`);
  expect(nfs["relay-unit"]).toContain("<WorkingDirectory>C:\\semio\\"+REPLICA.replaceAll("/","\\")+"</WorkingDirectory>");
- expect(nfs["cache-unit"]).toContain("<Command>powershell.exe</Command>");
+ expect(nfs["cache-unit"]).toContain("<Command>conhost.exe</Command>");
  expect(nfs["cache-unit"]).toContain("$env:SEMIO_FLEET_NETWORK='");expect(nfs["cache-unit"]).toContain("remote-cache serve --host fleet --port 443 --directory C:\\semio-remote-cache --max-bytes 214748364800");
  expect(nfs["cache-unit"]).toContain("Get-Content C:\\ProgramData\\semio\\remote-cache.env");
  expect(nfs["cache-unit"]).toContain("&quot;");
@@ -515,7 +515,7 @@ test("every worker and every group server gets a daily compaction next to its re
  expect(windows["compact-definition"]).not.toContain("--collect-blobs");
  expect(workerPartsV1(topology,"a1","linux",true)["compact-definition"]).toContain(`ExecStart=/usr/local/bin/repo ./${SCRIPT} compact --collect-blobs`);
  expect(workerPartsV1(topology,"b2","macos",true)["compact-definition"]).toContain(`<string>./${SCRIPT}</string><string>compact</string><string>--collect-blobs</string>`);
- expect(workerPartsV1(topology,"c3","windows",true)["compact-definition"]).toContain(`<Arguments>./${SCRIPT} compact --collect-blobs</Arguments>`);
+ expect(workerPartsV1(topology,"c3","windows",true)["compact-definition"]).toContain(`<Arguments>--headless repo ./${SCRIPT} compact --collect-blobs</Arguments>`);
  expect(workerPartsV1(topology,"a1","linux",true)["definition"]).toBe(linux["definition"]);
  expect(()=>workerPartsV1(topology,"a1","macos",true)).toThrow("Server platform required");
  expect(()=>workerPartsV1(topology,"b2","linux",true)).toThrow("Server platform required");
@@ -530,7 +530,7 @@ test("every worker and every group server gets a daily compaction next to its re
  expect(macos["compact-definition"]).not.toContain("KeepAlive");
  for(const text of[macos["definition"]!,macos["compact-definition"]!]){expect(text).not.toContain("UserName");expect(text).toContain("<key>HOME</key><string>__WORKER_HOME__</string>");}
  expect(windows["compact-target"]).toBe("semio-fleet-compact");
- expect(windows["compact-definition"]).toContain(`<Arguments>./${SCRIPT} compact</Arguments>`);
+ expect(windows["compact-definition"]).toContain(`<Arguments>--headless repo ./${SCRIPT} compact</Arguments>`);
  expect(windows["compact-definition"]).toContain("<CalendarTrigger>");
 });
 
@@ -563,7 +563,7 @@ test("the provisioning script resolves the worktree template and fills the servi
  writeFileSync(text,"WorkingDirectory=__WORKER_HOME__/semio/x\n<key>HOME</key><string>__WORKER_HOME__</string>\nUser=__WORKER_USER__\n");
  try{
   for(const [platform,template,home] of [["linux","~/semio","/home/ann"],["macos","~/Documents/semio","/Users/Zoë Ångström"],["macos","~/Documents/semio","/Users/it's & <me>|x\\y/"],["macos","~/Documents/semio","/Users/日本語"]] as const){
-   const run=Bun.spawnSync([bash!,"-c",`set -euo pipefail\nfail(){ printf 'FAIL %s\\n' "$*"; exit 3; }\njson_object(){ :; }\njson_string(){ printf '%s' "$TEMPLATE"; }\nTOPOLOGY_TEXT=x; PLATFORM=${platform}\n${block}\nprintf '%s' "$WORKTREE"`],{env:{...process.env,TEMPLATE:template,WORKER_HOME:home},stdout:"pipe",stderr:"pipe"});
+   const run=Bun.spawnSync([bash!,"-c",`set -euo pipefail\nfail(){ printf 'FAIL %s\\n' "$*"; exit 3; }\njson_fact(){ printf '%s' "$TEMPLATE"; }\nTOPOLOGY_FLAT=x; PLATFORM=${platform}\n${block}\nprintf '%s' "$WORKTREE"`],{env:{...process.env,TEMPLATE:template,WORKER_HOME:home},stdout:"pipe",stderr:"pipe"});
    expect(run.stdout.toString()).toBe(worktreePathV1(topology,platform,home));
    if(python)expect(Bun.spawnSync([python,"-I",oracle,"worktree",file,platform,home],{stdout:"pipe"}).stdout.toString().trimEnd()).toBe(run.stdout.toString());
    for(const kind of ["plain","xml"] as const){
@@ -573,7 +573,7 @@ test("the provisioning script resolves the worktree template and fills the servi
     expect(filled.stdout.toString()).toContain(kind==="xml"?home.replace(/\/+$/u,"").replaceAll("&","&amp;").replaceAll("<","&lt;"):home.replace(/\/+$/u,""));
    }
   }
-  const bad=Bun.spawnSync([bash!,"-c",`set -euo pipefail\nfail(){ printf 'FAIL %s\\n' "$*"; exit 3; }\njson_object(){ :; }\njson_string(){ printf '%s' "$TEMPLATE"; }\nTOPOLOGY_TEXT=x; PLATFORM=linux\n${block}`],{env:{...process.env,TEMPLATE:"~",WORKER_HOME:"/home/ann"},stdout:"pipe",stderr:"pipe"});
+  const bad=Bun.spawnSync([bash!,"-c",`set -euo pipefail\nfail(){ printf 'FAIL %s\\n' "$*"; exit 3; }\njson_fact(){ printf '%s' "$TEMPLATE"; }\nTOPOLOGY_FLAT=x; PLATFORM=linux\n${block}`],{env:{...process.env,TEMPLATE:"~",WORKER_HOME:"/home/ann"},stdout:"pipe",stderr:"pipe"});
   expect(bad.exitCode).toBe(3);expect(bad.stdout.toString()).toContain("no usable worktree template");
  }finally{rmSync(folder,{recursive:true,force:true});}
 });

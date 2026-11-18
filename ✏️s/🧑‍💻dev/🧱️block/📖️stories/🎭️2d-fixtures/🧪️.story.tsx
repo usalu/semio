@@ -15,6 +15,7 @@
 // #endregion 🧲️Header
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { SharedBorderRow } from "@semio-tech/ui-react";
 import { useMemo, type ReactElement } from "react";
 
 import { Board2dHost } from "@semio-tech/framework-renderer-react";
@@ -28,7 +29,7 @@ function Block2dFixturePane({ exampleId }: { readonly exampleId: string }): Reac
   const lines = useMemo(() => block2dBoardRenderLines(state.snapshot), [state]);
 
   return (
-    <section style={{ display: "flex", flex: "1 1 0", flexDirection: "column", minWidth: 0, borderLeft: "1px solid var(--border, #3333)" }}>
+    <section data-shared-border-cell="" style={{ display: "flex", flex: "1 1 0", flexDirection: "column", minWidth: 0 }}>
       <h3 style={{ margin: 0, padding: 4, fontSize: 12 }}>{exampleId}</h3>
       <div style={{ position: "relative", flex: "1 1 auto", minHeight: 0 }}>
         <Board2dHost node={node} onAction={() => undefined} />
@@ -68,11 +69,11 @@ function Block2dFixturesStoryHost({ exampleIds }: { readonly exampleIds: readonl
 
   return (
     <div style={{ display: "flex", height: "100%", width: "100%", flexDirection: "column" }}>
-      <div style={{ display: "flex", flex: "1 1 auto", minHeight: 0 }}>
+      <SharedBorderRow className="min-h-0 flex-auto">
         {exampleIds.map((exampleId) => (
           <Block2dFixturePane key={exampleId} exampleId={exampleId} />
         ))}
-      </div>
+      </SharedBorderRow>
       <pre data-testid="block2d-fixtures-debug" style={{ margin: 0, padding: 4, fontSize: 11 }}>
         {debug}
       </pre>

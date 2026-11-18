@@ -33,7 +33,7 @@ mod extension_invocation_and_command_ingress;
 pub use extension_invocation_and_command_ingress::*;
 
 thread_local!{
-    static RETAINED_EXTENSION_INVOCATIONS:RefCell<[Option<RetainedExtensionInvocation>;requests::REQUEST_SLOTS]>=const{RefCell::new([const{None};requests::REQUEST_SLOTS])};
+    static RETAINED_EXTENSION_INVOCATIONS:RefCell<semio_framework_async::LazySlots<RetainedExtensionInvocation,{requests::REQUEST_SLOTS}>>=const{RefCell::new(semio_framework_async::LazySlots::new())};
     static RETAINED_EXTENSION_CURSOR:Cell<usize>=const{Cell::new(0)};
 }
 

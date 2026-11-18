@@ -1,10 +1,20 @@
 use super::*;
 use ui_contract::{AbsoluteLayout, Align, Axis, EdgeSpace, GridLayout, GridTrack, Justify, LayoutSpec, LeafLayout, ScrollAxes, ScrollLayout, Sizing, SpaceToken, StackLayout};
 
+fn granted<T>(grant: semio_framework_job::RetainedCloneGrant, operation: impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<T, semio_framework_value::ValueError>) -> T {
+    use semio_framework_value_testing_admission::{bank_run, EffectBank, Wallet};
+    let stock = semio_framework_job::RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 30, maximum_release_bytes: 1 << 30, maximum_depth: 1 << 10 };
+    let mut bank = EffectBank::new(Wallet::new(stock, 1 << 30));
+    match bank_run(&mut bank, grant, 1 << 20, |effect| { let result = operation(effect); semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result, work: effect.performed_work() }) }).0 {
+        semio_framework_value::RetainedWorkPoll::Complete(turn) => turn.result.expect("granted layout turn"),
+        semio_framework_value::RetainedWorkPoll::Pending { .. } => panic!("a granted layout turn stayed pending"),
+    }
+}
+
 fn funded<T, E: std::fmt::Debug>(operation: impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::RetainedWorkOutcome<T, E>) -> T {
     use semio_framework_value_testing_admission::{bank_run, EffectBank, Wallet};
     let stock = ui_contract::UI_WORKER_RETIREMENT_POLICY;
-    let mut bank = EffectBank::new(Wallet::new(RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 30, maximum_release_bytes: 1 << 30, maximum_depth: 1 << 10 }, 1 << 30));
+    let mut bank = EffectBank::new(Wallet::new(semio_framework_job::RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 30, maximum_release_bytes: 1 << 30, maximum_depth: 1 << 10 }, 1 << 30));
     match bank_run(&mut bank, stock, 1 << 20, |effect| semio_framework_value::RetainedWorkPoll::Complete(operation(effect))).0 {
         semio_framework_value::RetainedWorkPoll::Complete(turn) => turn.result.expect("funded layout turn"),
         semio_framework_value::RetainedWorkPoll::Pending { .. } => panic!("a funded layout turn stayed pending"),
@@ -19,9 +29,9 @@ fn original_flex_grid_close_preserves_native_depth_denial_and_exact_release(){
         let mut released=birth.released_bytes;let mut turns=0;let mut depth_denials=0;
         while !owner.close_is_empty(){
             let depth=owner.next_close_depth_demand().unwrap();let original=owner.grids.last().and_then(Option::as_deref).map(|grid|grid as*const _);let bytes=owner.next_close_release_byte_demand().unwrap();
-            for denied in [semio_framework_job::RetainedCloneGrant{maximum_items:0,..grant},semio_framework_job::RetainedCloneGrant{maximum_depth:depth.saturating_sub(1),..grant}]{let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_granted(denied).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(owner.grids.last().and_then(Option::as_deref).map(|grid|grid as*const _),original);}
+            for denied in [semio_framework_job::RetainedCloneGrant{maximum_items:0,..grant},semio_framework_job::RetainedCloneGrant{maximum_depth:depth.saturating_sub(1),..grant}]{let(step,heap)=granted(denied,|effect|Ok(semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_granted(effect).unwrap())));assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(owner.grids.last().and_then(Option::as_deref).map(|grid|grid as*const _),original);}
             if depth>1{depth_denials+=1;}assert!(depth<=grant.maximum_depth&&bytes<=grant.maximum_release_bytes);
-            let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_granted(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),(heap.requested_bytes,heap.released_bytes));released+=heap.released_bytes;turns+=1;assert!(turns<4096);
+            let(step,heap)=granted(grant,|effect|Ok(semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_granted(effect).unwrap())));assert!(step.progress().fits(grant));assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),(heap.requested_bytes,heap.released_bytes));released+=heap.released_bytes;turns+=1;assert!(turns<4096);
         }
         assert!(depth_denials>0);assert_eq!(birth.requested_bytes,released);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
     }
@@ -411,7 +421,7 @@ fn a_field_reserves_its_label_band_and_its_control_keeps_its_own_height() {
     let mut fixture = Fixture::new();
     let parent = fixture.push(LayoutNodeKind::Field { top: metrics.top, bottom: metrics.bottom }, None, None);
     let child = fixture.push(LayoutNodeKind::Control { height: theme.control_height, label_padding: None }, Some(parent), None);
-    fixture.solve(200.0, 100.0);
+    fixture.solve(200.0, 200.0);
     let rect = fixture.rect(child);
     assert!(close(rect.y, metrics.top), "child starts below the label and description bands, got {}", rect.y);
     assert!(close(rect.height, theme.control_height), "child keeps its own control line, got {}", rect.height);
@@ -518,10 +528,10 @@ fn the_flex_tree_releases_exactly_one_node_per_close_grant() {
         while !matches!(funded(|effect| flex.fund_next_node(effect)), NodeFunding::Ready) {}
         assert!(flex.push(LayoutNodeKind::Leaf, if index == 0 { None } else { Some(0) }, None, &metrics, None, None).is_some());
     }
-    let grant = |release| RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1, maximum_capacity_bytes: 0, maximum_release_bytes: release, maximum_depth: 64 };
+    let grant = |release| RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1 << 10, maximum_capacity_bytes: 0, maximum_release_bytes: release, maximum_depth: 64 };
     for step in (1..=4).rev() {
         assert_eq!(flex.len(), step);
-        assert!(matches!(flex.close_granted(grant(0)).unwrap(), Step::Pending { progress } if progress.copied_items == 1 && progress.released_bytes == 0), "each granted logical owner advances exactly once");
+        assert!(matches!(granted(grant(0), |effect| flex.close_granted(effect)), Step::Pending { progress } if progress.copied_items == 1 && progress.released_bytes == 0), "each granted logical owner advances exactly once");
     }
     assert!(flex.is_empty());
     assert!(!flex.close_is_empty(), "logical emptiness retains physical backing");
@@ -531,12 +541,12 @@ fn the_flex_tree_releases_exactly_one_node_per_close_grant() {
         assert!(turns <= 64, "physical close terminates");
         let bytes = flex.next_close_release_byte_demand().unwrap();
         assert!(bytes > 0);
-        assert!(matches!(flex.close_granted(grant(bytes - 1)).unwrap(), Step::Pending { progress } if progress == RetainedCloneProgress::default()));
-        let result = flex.close_granted(grant(bytes)).unwrap();
+        assert!(matches!(granted(grant(bytes - 1), |effect| flex.close_granted(effect)), Step::Pending { progress } if progress == RetainedCloneProgress::default()));
+        let result = granted(grant(bytes), |effect| flex.close_granted(effect));
         assert!(matches!(result, Step::Pending { progress } if progress.copied_items == 1 && progress.released_bytes == bytes && progress.fits(grant(bytes))));
     }
     assert!(flex.close_is_empty());
-    assert!(matches!(flex.close_granted(grant(0)).unwrap(), Step::Complete { progress } if progress == RetainedCloneProgress::default()), "physically empty repeated close releases nothing");
+    assert!(matches!(granted(grant(0), |effect| flex.close_granted(effect)), Step::Complete { progress } if progress == RetainedCloneProgress::default()), "physically empty repeated close releases nothing");
 }
 
 #[test]

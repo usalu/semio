@@ -1,0 +1,104 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:remote-execution:sidecar:ready:process-tree:v1",
+  "title": "Which processes belong to a setup stage, whether a recorded process is still the one that was started, who may take over a lease, and when a stage that runs long enough to be stopped is stopped",
+  "description": "A stage runs as a detached process tree. When it is stopped (time cap, cancel, a restart that finds it vanished) the whole tree must end on every platform, including processes whose parent has already exited (on Windows a tree is only a chain of recorded parent ids and a child of an exited parent is no longer reachable from the root). So the supervisor samples the process table while the stage runs, keeps the `{pid, startMs}` of every process of the tree in `<stage>.tree.json`, and stops exactly those that are still there with the same start time (a reused pid has another start time and is never touched). A lease or an in-flight record names a process by `{pid, startMs}` for the same reason. The cap of a stage is a soft cap: past it the stage keeps running while the counters in its log keep changing (`progressPatterns`), up to `hardCapMultiplier` times the soft cap, and is stopped as stalled as soon as no counter changed for `stallMilliseconds`. Independent of the cap, a stage whose output shows nothing new for `stallStopMilliseconds` is stopped and tried again at once without counting as a failure: progress is a change in WHAT is being worked on or a growing work counter, never elapsed time in any spelling. Output is not the only sign of life: while the processes of the tree (and every recorded member) spend at least `livenessCpuMilliseconds` of processor time between two samples, or a new process joins the tree, the stage is alive and the stall clock restarts (a silent `rustc` compile is not stalled); the hard cap still bounds it. A process that other agents use (`spare`, a resident service) and everything below it is never part of a kill plan. A line is new when it differs from every earlier line of the run after every elapsed-time spelling named by `normalisePatterns` is replaced by `#` (seconds and minutes with a unit, clocks, ISO stamps, JSON members named like elapsed, waited, since, duration or ending in Ms, any JSON member holding a fractional number, epoch milliseconds, every `[repo leases]` report line of the background lease sweep, whose retired counts differ from sweep to sweep and are not the work of the stage); a counter such as `1957 of 2927` or the suffix of a resource such as `javascript-selected-payload:48022` is not normalised away, so it counts as progress; at most `stallSeenMaximum` distinct lines are remembered. A stage that waits on a named holder (a line matching `holderWaitPatterns`) for `holderWaitRestartMilliseconds` while a file of `codeRoots` (extensions `codeExtensions`, not below `codeSkipDirectories`, looked at every `codeCheckMilliseconds`) was modified after the stage started is stopped and started again at once with the new code, which may know that the holder is dead.",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "toleranceMilliseconds": 15000,
+        "treeName": "tree.json",
+        "reservedPids": 4,
+        "hardCapMultiplier": 4,
+        "stallMilliseconds": 600000,
+        "stallStopMilliseconds": 600000,
+        "stallRestartMaximum": 5,
+        "stallRestartBackoffMilliseconds": 30000,
+        "stallRestartBackoffMaximumMilliseconds": 600000,
+        "livenessCpuMilliseconds": 500,
+        "stallSeenMaximum": 4000,
+        "normalisePatterns": ["\\d{4}-\\d{2}-\\d{2}[T ]\\d{2}:\\d{2}:\\d{2}(?:[.,]\\d+)?Z?", "\\b\\d{1,2}:\\d{2}:\\d{2}\\b", "\\b\\d+(?:\\.\\d+)? ?(?:ms|s|sec|secs|seconds|min|minutes|h|hours|Sekunden|Minuten|Stunden)\\b", "\"[A-Za-z]*(?:[Ee]lapsed|[Ww]aited|[Ss]ince|[Dd]uration|[Uu]ptime|Ms|Milliseconds|Seconds|Sec)\"\\s*:\\s*-?\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?", "\"\\w{1,40}\"\\s*:\\s*-?\\d+\\.\\d+(?:[eE][+-]?\\d+)?", "\\b1[5-9]\\d{11}\\b", "\\[repo leases\\] .*"],
+        "holderWaitPatterns": ["holds the dependency store since", "waiting for it \\(", "[Ww]aiting for (?:the )?(?:holder|lease)"],
+        "holderWaitRestartMilliseconds": 600000,
+        "codeCheckMilliseconds": 60000,
+        "staleStageMilliseconds": 1800000,
+        "codeRoots": ["🧰️framework/🔨️modules/🏃️process", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build"],
+        "codeExtensions": [".ts", ".mjs", ".js", ".json"],
+        "codeSkipDirectories": ["node_modules", "target", ".cache", "🗑️generated", "📖️texts", "🧪️tests", "🧪️testing"],
+        "readingPatterns": ["Reading the project graph", "Loading the project graph", "Planning every target", "Lese den Projektgraph", "Lade den Projektgraph"],
+        "executingPatterns": ["Running target \\S+ for (?:project|\\d+ projects)", "^\\s*> nx run \\S+", "graph: plan answered", "Graph: Plan beantwortet"],
+        "progressPatterns": ["store-ownership:[a-zA-Z]+:\\d+", "Checking declared package providers: \\d+ edges", "\"completedOperations\":\\d+", "native-artifact-input-(?:stage|read|verification):\\d+"]
+      }
+    },
+    "Process": {"type": "object", "additionalProperties": false, "required": ["pid", "ppid", "startMs"], "properties": {"pid": {"type": "integer", "minimum": 1}, "ppid": {"type": "integer", "minimum": 0}, "startMs": {"type": "integer", "minimum": 0}, "name": {"type": "string"}}},
+    "Known": {"type": "object", "additionalProperties": false, "required": ["pid", "startMs"], "properties": {"pid": {"type": "integer", "minimum": 1}, "startMs": {"type": "integer", "minimum": 0}, "name": {"type": "string"}}},
+    "Tree": {
+      "description": "`<directory>/<stage>.tree.json`: the root of the stage and every process seen below it, replaced atomically at each sample.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "stage", "root", "sampledMs", "processes"],
+      "properties": {"version": {"const": 1}, "stage": {"type": "string"}, "root": {"$ref": "#/definitions/Known"}, "sampledMs": {"type": "integer"}, "processes": {"type": "array", "items": {"$ref": "#/definitions/Known"}}}
+    },
+    "LeaseCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "nowMs", "staleMs", "expect"],
+      "properties": {
+        "name": {"type": "string"},
+        "lease": {"type": ["object", "null"], "properties": {"pid": {"type": "integer"}, "startMs": {"type": ["integer", "null"]}, "wallMs": {"type": "integer"}}},
+        "nowMs": {"type": "integer"},
+        "staleMs": {"type": "integer"},
+        "process": {"enum": ["alive", "gone", "unknown"]},
+        "processStartMs": {"type": ["integer", "null"]},
+        "expect": {"type": "object", "additionalProperties": false, "required": ["state", "reason"], "properties": {"state": {"enum": ["free", "held"]}, "reason": {"enum": ["none", "expired", "owner-gone", "pid-reused", "held"]}}}
+      }
+    },
+    "TreeCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "table", "root", "known", "self", "kill"],
+      "properties": {"name": {"type": "string"}, "spare": {"type": "array", "items": {"type": "integer"}}, "table": {"type": "array", "items": {"$ref": "#/definitions/Process"}}, "root": {"$ref": "#/definitions/Known"}, "known": {"type": "array", "items": {"$ref": "#/definitions/Known"}}, "self": {"type": "integer"}, "kill": {"type": "array", "items": {"type": "integer"}}}
+    },
+    "DeadlineCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "elapsedMs", "softMs", "sinceProgressMs", "verdict"],
+      "properties": {"name": {"type": "string"}, "elapsedMs": {"type": "integer"}, "softMs": {"type": "integer"}, "sinceProgressMs": {"type": "integer"}, "verdict": {"enum": ["run", "extended", "timeout", "stalled"]}}
+    },
+    "ProgressCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "lines", "key"],
+      "properties": {"name": {"type": "string"}, "lines": {"type": "array", "items": {"type": "string"}}, "key": {"type": ["string", "null"]}}
+    },
+    "StallCase": {
+      "description": "Rounds of the last log lines of one stage run, in order, and whether each round showed anything new.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "rounds", "fresh"],
+      "properties": {"name": {"type": "string"}, "rounds": {"type": "array", "items": {"type": "array", "items": {"type": "string"}}}, "fresh": {"type": "array", "items": {"type": "boolean"}}}
+    },
+    "HolderCase": {
+      "description": "Rounds of the last log lines of one stage run with the milliseconds since the stage started and whether a file of the code roots was modified after the start; `waitingMs` is how long a named holder has been waited for at the end of each round (0 when no round line names a holder) and `restart` whether the stage is stopped to start again with the new code.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "rounds"],
+      "properties": {"name": {"type": "string"}, "rounds": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["atMs", "lines", "codeChanged", "waitingMs", "restart"], "properties": {"atMs": {"type": "integer"}, "lines": {"type": "array", "items": {"type": "string"}}, "codeChanged": {"type": "boolean"}, "waitingMs": {"type": "integer"}, "restart": {"type": "boolean"}}}}}
+    },
+    "CpuCase": {
+      "description": "`ps -A -o pid=,ppid=,rss=,time=` text, the root and the extra pids of a stage, the processor time of its tree in ms, and the same of the sample before with the verdict whether the stage is alive between them.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "rows", "root", "extra", "tree", "before", "alive"],
+      "properties": {"name": {"type": "string"}, "rows": {"type": "string"}, "root": {"type": "integer"}, "extra": {"type": "array", "items": {"type": "integer"}}, "tree": {"type": "object", "additionalProperties": {"type": "integer"}}, "before": {"type": "object", "additionalProperties": {"type": "integer"}}, "alive": {"type": "boolean"}}
+    },
+    "Fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lease", "tree", "deadline", "progress", "stall", "holder", "cpu"],
+      "properties": {"cpu": {"type": "array", "items": {"$ref": "#/definitions/CpuCase"}}, "holder": {"type": "array", "items": {"$ref": "#/definitions/HolderCase"}}, "stall": {"type": "array", "items": {"$ref": "#/definitions/StallCase"}}, "lease": {"type": "array", "items": {"$ref": "#/definitions/LeaseCase"}}, "tree": {"type": "array", "items": {"$ref": "#/definitions/TreeCase"}}, "deadline": {"type": "array", "items": {"$ref": "#/definitions/DeadlineCase"}}, "progress": {"type": "array", "items": {"$ref": "#/definitions/ProgressCase"}}}
+    }
+  },
+  "oneOf": [{"$ref": "#/definitions/Policy"}]
+}

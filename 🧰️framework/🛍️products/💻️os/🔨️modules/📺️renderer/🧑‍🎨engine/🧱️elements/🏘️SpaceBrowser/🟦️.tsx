@@ -11,7 +11,7 @@
 
 // #region 🔌️Adapters
 import { useId, useState, type FormEvent, type ReactElement } from "../⚛️react-port/🟦️.ts";
-import { Button, PresenceBar, useLabel, type PresencePeer } from "@semio-tech/ui-react";
+import { Button, Input, PresenceBar, SharedBorderRow, SharedBorderRowCell, useLabel, type PresencePeer } from "@semio-tech/ui-react";
 import type { DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility } from "@semio-tech/framework/directory/schema";
 import {
   INVITE_TTL_CHOICES_SECS_V1,
@@ -21,6 +21,7 @@ import {
   type SpaceMemberPresenceV1,
   type SpaceRowV1
 } from "@semio-tech/framework/directory/spaces";
+import { HubFieldRow, HubRowItem, HubRowList, HubSelectField } from "../🔗️HubConnection/🪢️hub-rows/🟦️.tsx";
 import { hubUiLabel } from "../🔗️HubConnection/🌐️ui-labels/🟦️.ts";
 import { type HubInviteCapabilityV1, type HubRedemptionStateV1 } from "../🔗️HubConnection/🔌️connection-contract/🟦️.ts";
 // #endregion 🔌️Adapters
@@ -81,30 +82,15 @@ function CreateSpaceForm({ disabled, onCreateSpace }: { readonly disabled: boole
   };
 
   return (
-    <form aria-label={titleLabel} onSubmit={submit} className="flex flex-col gap-2">
-      <h3 className="text-sm font-medium">{titleLabel}</h3>
-      <div className="flex flex-col gap-1">
-        <label htmlFor={`${id}-name`} className="text-xs text-muted-foreground">{nameLabel}</label>
-        <input id={`${id}-name`} data-element-alias="os.hub.spaces.createName" name="spaceName" required value={name} disabled={disabled} onChange={(event) => setName(event.target.value)} className="w-full min-w-0 rounded-sm border px-single py-1 text-sm" />
-      </div>
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <label htmlFor={`${id}-kind`} className="text-xs text-muted-foreground">{kindLabel}</label>
-          <select id={`${id}-kind`} value={kind} disabled={disabled} onChange={(event) => setKind(event.target.value === "studio" ? "studio" : "atelier")} className="w-full min-w-0 rounded-sm border px-single py-1 text-sm">
-            <option value="atelier">{atelierLabel}</option>
-            <option value="studio">{studioLabel}</option>
-          </select>
-        </div>
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <label htmlFor={`${id}-visibility`} className="text-xs text-muted-foreground">{visibilityLabel}</label>
-          <select id={`${id}-visibility`} value={visibility} disabled={disabled} onChange={(event) => setVisibility(event.target.value === "public" ? "public" : "private")} className="w-full min-w-0 rounded-sm border px-single py-1 text-sm">
-            <option value="private">{privateLabel}</option>
-            <option value="public">{publicLabel}</option>
-          </select>
-        </div>
-      </div>
-      <Button id="os.hub.spaces.createSubmit" icon="plus" type="submit" variant="outline" aria-label={submitLabel} disabled={disabled || !valid}>{submitLabel}</Button>
-    </form>
+    <SharedBorderRow as="form" orientation="vertical" aria-label={titleLabel} onSubmit={submit}>
+      <SharedBorderRowCell><h3 className="text-sm font-medium">{titleLabel}</h3></SharedBorderRowCell>
+        <HubFieldRow htmlFor={`${id}-name`} label={nameLabel}>
+          <Input id={`${id}-name`} data-element-alias="os.hub.spaces.createName" name="spaceName" required value={name} disabled={disabled} onChange={(event) => setName(event.target.value)} />
+        </HubFieldRow>
+        <HubSelectField id={`${id}-kind`} label={kindLabel} value={kind} disabled={disabled} options={[{ value: "atelier", label: atelierLabel }, { value: "studio", label: studioLabel }]} onValueChange={(next) => setKind(next === "studio" ? "studio" : "atelier")} />
+        <HubSelectField id={`${id}-visibility`} label={visibilityLabel} value={visibility} disabled={disabled} options={[{ value: "private", label: privateLabel }, { value: "public", label: publicLabel }]} onValueChange={(next) => setVisibility(next === "public" ? "public" : "private")} />
+        <Button id="os.hub.spaces.createSubmit" icon="plus" type="submit" variant="outline" aria-label={submitLabel} disabled={disabled || !valid}>{submitLabel}</Button>
+    </SharedBorderRow>
   );
 }
 //#endregion 🔖️CreateSpace
@@ -169,80 +155,67 @@ function InvitePanel({ row, invite, redemption, disabled, onCreateInvite, onCopy
                 : errorRefused;
 
   return (
-    <section aria-label={titleLabel} className="flex flex-col gap-3 border-t pt-3">
-      <h3 className="text-sm font-medium">{titleLabel}</h3>
+    <SharedBorderRow as="section" orientation="vertical" aria-label={titleLabel}>
+      <SharedBorderRowCell><h3 className="text-sm font-medium">{titleLabel}</h3></SharedBorderRowCell>
 
       {row === null || !spaceRowInvitableV1(row) ? null : (
-        <form
+        <SharedBorderRow
+          as="form"
+          orientation="vertical"
           aria-label={createTitleLabel}
           onSubmit={(event) => {
             event.preventDefault();
             if (!disabled) onCreateInvite(row.id, role, ttlSecs);
           }}
-          className="flex flex-col gap-2"
         >
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <div className="flex min-w-0 flex-1 flex-col gap-1">
-              <label htmlFor={`${id}-role`} className="text-xs text-muted-foreground">{roleLabel}</label>
-              <select id={`${id}-role`} data-element-alias="os.hub.invite.role" value={role} disabled={disabled} onChange={(event) => setRole(event.target.value === "author" ? "author" : "spectator")} className="w-full min-w-0 rounded-sm border px-single py-1 text-sm">
-                <option value="spectator">{spectatorLabel}</option>
-                <option value="author">{authorLabel}</option>
-              </select>
-            </div>
-            <div className="flex min-w-0 flex-1 flex-col gap-1">
-              <label htmlFor={`${id}-ttl`} className="text-xs text-muted-foreground">{expiryLabel}</label>
-              <select id={`${id}-ttl`} data-element-alias="os.hub.invite.expiry" value={String(ttlSecs)} disabled={disabled} onChange={(event) => setTtlSecs(Number.parseInt(event.target.value, 10))} className="w-full min-w-0 rounded-sm border px-single py-1 text-sm">
-                <option value={String(INVITE_TTL_CHOICES_SECS_V1[0])}>{hourLabel}</option>
-                <option value={String(INVITE_TTL_CHOICES_SECS_V1[1])}>{dayLabel}</option>
-                <option value={String(INVITE_TTL_CHOICES_SECS_V1[2])}>{weekLabel}</option>
-              </select>
-            </div>
-          </div>
-          <Button id="os.hub.invite.create" icon="users" type="submit" variant="outline" aria-label={createLabel} disabled={disabled}>{createLabel}</Button>
-        </form>
+            <HubSelectField id={`${id}-role`} alias="os.hub.invite.role" label={roleLabel} value={role} disabled={disabled} options={[{ value: "spectator", label: spectatorLabel }, { value: "author", label: authorLabel }]} onValueChange={(next) => setRole(next === "author" ? "author" : "spectator")} />
+            <HubSelectField id={`${id}-ttl`} alias="os.hub.invite.expiry" label={expiryLabel} value={String(ttlSecs)} disabled={disabled} options={[{ value: String(INVITE_TTL_CHOICES_SECS_V1[0]), label: hourLabel }, { value: String(INVITE_TTL_CHOICES_SECS_V1[1]), label: dayLabel }, { value: String(INVITE_TTL_CHOICES_SECS_V1[2]), label: weekLabel }]} onValueChange={(next) => setTtlSecs(Number.parseInt(next, 10))} />
+            <Button id="os.hub.invite.create" icon="users" type="submit" variant="outline" aria-label={createLabel} disabled={disabled}>{createLabel}</Button>
+        </SharedBorderRow>
       )}
 
       {invite === null ? null : (
-        <div role="status" aria-live="polite" data-semio-hub-invite={invite.spaceId} className="flex flex-col gap-2 rounded-sm border px-single py-1">
-          <p className="text-xs text-muted-foreground">{readyLabel}</p>
-          <output htmlFor={`${id}-invite`} className="break-all text-xs">{invite.link}</output>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <Button id="os.hub.invite.copy" icon="copy" type="button" variant="outline" aria-label={copyLabel} onClick={onCopyInvite}>{copyLabel}</Button>
-            <Button icon="x" type="button" variant="outline" aria-label={dismissLabel} onClick={onDismissInvite}>{dismissLabel}</Button>
-          </div>
-          {invite.copy === "copied" ? <p className="text-xs">{copiedLabel}</p> : null}
-          {invite.copy === "failed" ? <p role="alert" className="text-xs text-destructive">{copyFailedLabel}</p> : null}
-        </div>
+        <SharedBorderRow orientation="vertical" role="status" aria-live="polite" data-semio-hub-invite={invite.spaceId}>
+          <SharedBorderRowCell><p className="text-xs text-muted-foreground">{readyLabel}</p></SharedBorderRowCell>
+          <SharedBorderRowCell><output htmlFor={`${id}-invite`} className="break-all text-xs">{invite.link}</output></SharedBorderRowCell>
+          <SharedBorderRow>
+            <Button id="os.hub.invite.copy" icon="copy" type="button" variant="outline" aria-label={copyLabel} className="flex-1 min-w-0" onClick={onCopyInvite}>{copyLabel}</Button>
+            <Button icon="x" type="button" variant="outline" aria-label={dismissLabel} className="flex-1 min-w-0" onClick={onDismissInvite}>{dismissLabel}</Button>
+          </SharedBorderRow>
+          {invite.copy === "copied" ? <SharedBorderRowCell><p className="text-xs">{copiedLabel}</p></SharedBorderRowCell> : null}
+          {invite.copy === "failed" ? <SharedBorderRowCell><p role="alert" className="text-xs text-destructive">{copyFailedLabel}</p></SharedBorderRowCell> : null}
+        </SharedBorderRow>
       )}
 
-      <form
+      <SharedBorderRow
+        as="form"
+        orientation="vertical"
         aria-label={redeemTitleLabel}
         onSubmit={(event) => {
           event.preventDefault();
           if (redemption.phase !== "redeeming") onRedeemInvite(typed);
         }}
-        className="flex flex-col gap-2"
       >
-        <label htmlFor={`${id}-redeem`} className="text-xs text-muted-foreground">{redeemFieldLabel}</label>
-        <input
-          id={`${id}-redeem`}
-          data-element-alias="os.hub.invite.redeemField"
-          name="invitation"
-          required
-          value={typed}
-          disabled={redemption.phase === "redeeming"}
-          aria-invalid={redemption.error !== null}
-          aria-describedby={redemption.error === null ? undefined : `${id}-redeem-error`}
-          onChange={(event) => setTyped(event.target.value)}
-          className="w-full min-w-0 rounded-sm border px-single py-1 text-sm"
-        />
-        <Button icon="unlock" type="submit" variant="outline" aria-busy={redemption.phase === "redeeming"} aria-label={redemption.phase === "redeeming" ? redeemingLabel : redeemLabel} disabled={redemption.phase === "redeeming" || typed.trim().length === 0}>
-          {redemption.phase === "redeeming" ? redeemingLabel : redeemLabel}
-        </Button>
-        {redemption.phase === "redeemed" ? <p role="status" aria-live="polite" className="text-xs">{redeemedLabel}</p> : null}
-        {redemptionError === null ? null : <p id={`${id}-redeem-error`} role="alert" data-semio-hub-redemption-error={redemption.error ?? ""} className="text-xs text-destructive">{redemptionError}</p>}
-      </form>
-    </section>
+          <HubFieldRow htmlFor={`${id}-redeem`} label={redeemFieldLabel}>
+            <Input
+              id={`${id}-redeem`}
+              data-element-alias="os.hub.invite.redeemField"
+              name="invitation"
+              required
+              value={typed}
+              disabled={redemption.phase === "redeeming"}
+              aria-invalid={redemption.error !== null}
+              aria-describedby={redemption.error === null ? undefined : `${id}-redeem-error`}
+              onChange={(event) => setTyped(event.target.value)}
+            />
+          </HubFieldRow>
+          <Button icon="unlock" type="submit" variant="outline" aria-busy={redemption.phase === "redeeming"} aria-label={redemption.phase === "redeeming" ? redeemingLabel : redeemLabel} disabled={redemption.phase === "redeeming" || typed.trim().length === 0}>
+            {redemption.phase === "redeeming" ? redeemingLabel : redeemLabel}
+          </Button>
+        {redemption.phase === "redeemed" ? <SharedBorderRowCell><p role="status" aria-live="polite" className="text-xs">{redeemedLabel}</p></SharedBorderRowCell> : null}
+        {redemptionError === null ? null : <SharedBorderRowCell tone="destructive"><p id={`${id}-redeem-error`} role="alert" data-semio-hub-redemption-error={redemption.error ?? ""} className="text-xs text-destructive">{redemptionError}</p></SharedBorderRowCell>}
+      </SharedBorderRow>
+    </SharedBorderRow>
   );
 }
 //#endregion 🔖️Invite
@@ -265,13 +238,14 @@ function SpaceRow({ row, active, busy, roleText, currentLabel, onOpenSpace, onAr
   const documentsLabel = useLabel(hubUiLabel("os.hub.spaces.documentCount"), { count: row.documentCount });
   const onlineLabel = useLabel(hubUiLabel("os.hub.spaces.onlineCount"), { count: row.activeConnections });
   return (
-    <li data-space-id={row.id} data-space-access={row.access} className="flex flex-col gap-1 rounded-sm border px-single py-1 sm:flex-row sm:items-center sm:justify-between">
+    <HubRowItem data-space-id={row.id} data-space-access={row.access}>
       <button
         type="button"
+        data-shared-border-cell=""
         aria-current={active ? "true" : undefined}
         aria-label={`${openLabel} — ${roleText}${active ? ` (${currentLabel})` : ""}`}
         onClick={() => onOpenSpace(row.id)}
-        className="min-w-0 flex-1 text-left text-sm"
+        className="min-w-0 flex-1 px-single py-1 text-left text-sm"
       >
         <span className="block truncate font-medium">{row.name}</span>
         <span className="block text-xs text-muted-foreground">{`${roleText} · ${membersLabel} · ${documentsLabel}${row.activeConnections > 0 ? ` · ${onlineLabel}` : ""}`}</span>
@@ -281,7 +255,7 @@ function SpaceRow({ row, active, busy, roleText, currentLabel, onOpenSpace, onAr
           {archiveLabel}
         </Button>
       ) : null}
-    </li>
+    </HubRowItem>
   );
 }
 //#endregion 🔖️Row
@@ -335,59 +309,55 @@ export function SpaceBrowser({
   const peers = spaceBrowserPresencePeersV1(members);
 
   return (
-    <section aria-labelledby={`${id}-title`} data-semio-hub-spaces-phase={phase} className="flex w-full min-w-0 flex-col gap-4 p-4">
-      <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <h2 id={`${id}-title`} className="text-base font-medium">{title}</h2>
+    <SharedBorderRow as="section" orientation="vertical" aria-labelledby={`${id}-title`} data-semio-hub-spaces-phase={phase} className="w-full">
+      <SharedBorderRow as="header">
+        <SharedBorderRowCell className="flex-1 flex-wrap gap-x-4">
+          <h2 id={`${id}-title`} className="text-base font-medium">{title}</h2>
+          <p role="status" aria-live="polite" data-semio-hub-spaces-status={phase} className="text-xs text-muted-foreground">{statusText}</p>
+        </SharedBorderRowCell>
         <Button icon="rotate-cw" type="button" variant="outline" aria-label={refreshLabel} disabled={busy} onClick={onRefresh}>{refreshLabel}</Button>
-      </header>
+      </SharedBorderRow>
 
-      <p role="status" aria-live="polite" data-semio-hub-spaces-status={phase} className="text-xs text-muted-foreground">{statusText}</p>
+      <HubFieldRow htmlFor={`${id}-search`} label={searchLabel}>
+        <Input id={`${id}-search`} name="spaceSearch" type="search" value={search} onChange={(event) => onSearch(event.target.value)} />
+      </HubFieldRow>
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor={`${id}-search`} className="text-xs text-muted-foreground">{searchLabel}</label>
-        <input id={`${id}-search`} name="spaceSearch" type="search" value={search} onChange={(event) => onSearch(event.target.value)} className="w-full min-w-0 rounded-sm border px-single py-1 text-sm" />
-      </div>
+      {rows.length === 0 ? (
+        <SharedBorderRowCell><p className="text-sm text-muted-foreground">{search.trim().length > 0 ? noMatchesLabel : emptyLabel}</p></SharedBorderRowCell>
+      ) : (
+        <HubRowList data-element-alias="os.hub.spaces.list" aria-label={listLabel}>
+          {rows.map((row) => (
+            <SpaceRow
+              key={row.id}
+              row={row}
+              active={row.id === activeSpaceId}
+              busy={busy}
+              currentLabel={currentLabel}
+              roleText={row.access === "public" ? publicLabel : row.role === "author" ? authorLabel : spectatorLabel}
+              onOpenSpace={onOpenSpace}
+              onArchiveSpace={onArchiveSpace}
+            />
+          ))}
+        </HubRowList>
+      )}
 
-      <div className="flex flex-col gap-4 md:flex-row md:items-start">
-        <div className="flex min-w-0 flex-1 flex-col gap-2">
-          {rows.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{search.trim().length > 0 ? noMatchesLabel : emptyLabel}</p>
-          ) : (
-            <ul role="list" data-element-alias="os.hub.spaces.list" aria-label={listLabel} className="flex flex-col gap-1">
-              {rows.map((row) => (
-                <SpaceRow
-                  key={row.id}
-                  row={row}
-                  active={row.id === activeSpaceId}
-                  busy={busy}
-                  currentLabel={currentLabel}
-                  roleText={row.access === "public" ? publicLabel : row.role === "author" ? authorLabel : spectatorLabel}
-                  onOpenSpace={onOpenSpace}
-                  onArchiveSpace={onArchiveSpace}
-                />
-              ))}
-            </ul>
-          )}
-        </div>
-
-        <aside aria-label={membersLabel} className="flex w-full min-w-0 flex-col gap-2 md:w-64">
-          <h3 className="text-sm font-medium">{membersLabel}</h3>
-          <PresenceBar peers={peers} />
-          <ul role="list" className="flex flex-col gap-1">
-            {members.map((member) => (
-              <li key={member.userId} data-user-id={member.userId} data-online={member.online ? "true" : "false"} className="flex items-center justify-between gap-2 text-xs">
-                <span className="min-w-0 truncate">{member.displayName}</span>
-                <span className="shrink-0 text-muted-foreground">{`${member.owner ? `${ownerLabel} · ` : ""}${member.role === "author" ? authorLabel : spectatorLabel} · ${member.online ? onlineLabel : awayLabel}`}</span>
-              </li>
-            ))}
-          </ul>
-        </aside>
-      </div>
+      <SharedBorderRow as="aside" orientation="vertical" aria-label={membersLabel}>
+        <SharedBorderRowCell><h3 className="text-sm font-medium">{membersLabel}</h3></SharedBorderRowCell>
+        <PresenceBar peers={peers} />
+        {members.length === 0 ? null : <HubRowList>
+          {members.map((member) => (
+            <SharedBorderRowCell as="li" key={member.userId} data-user-id={member.userId} data-online={member.online ? "true" : "false"} className="justify-between gap-2 text-xs">
+              <span className="min-w-0 truncate">{member.displayName}</span>
+              <span className="shrink-0 text-muted-foreground">{`${member.owner ? `${ownerLabel} · ` : ""}${member.role === "author" ? authorLabel : spectatorLabel} · ${member.online ? onlineLabel : awayLabel}`}</span>
+            </SharedBorderRowCell>
+          ))}
+        </HubRowList>}
+      </SharedBorderRow>
 
       {signedIn ? <CreateSpaceForm disabled={busy} onCreateSpace={onCreateSpace} /> : null}
 
       <InvitePanel row={activeRow} invite={invite} redemption={redemption} disabled={busy} onCreateInvite={onCreateInvite} onCopyInvite={onCopyInvite} onDismissInvite={onDismissInvite} onRedeemInvite={onRedeemInvite} />
-    </section>
+    </SharedBorderRow>
   );
 }
 //#endregion 🔖️Browser

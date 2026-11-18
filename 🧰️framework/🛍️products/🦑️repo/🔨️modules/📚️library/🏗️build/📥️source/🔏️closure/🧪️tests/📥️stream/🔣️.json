@@ -2,14 +2,14 @@
   "cases": [
     {
       "name": "exact-snapshot-boundary",
-      "bytes": 33554432,
+      "bytes": 100663296,
       "digest": "same",
       "eval": "single",
       "accepted": true
     },
     {
       "name": "one-byte-over-snapshot-boundary",
-      "bytes": 33554433,
+      "bytes": 100663297,
       "digest": "same",
       "eval": "single",
       "accepted": false

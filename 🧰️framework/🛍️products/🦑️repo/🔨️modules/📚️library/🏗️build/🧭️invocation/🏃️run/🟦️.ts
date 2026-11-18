@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {currentAgentSessionV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts";
 import {invocationPlanRequestV1,planHandoffEnvironmentV1,requestInvocationPlanV1,PLAN_HANDOFF_V1} from "../🛰️plan/🟦️.ts";
 import {runScheduledInvocationV1} from "../🗓️schedule/🟦️.ts";
@@ -12,7 +13,7 @@ export async function recordPlanSuccessV1(options:Readonly<{root:string;args:rea
  const{root,args,keys}=options;
  if(!TASK_RECORDING_COMMANDS_V1.includes(args[0]??"")||args.includes("--dry-run")||Object.keys(keys).length===0)return 0;
  const[{createCasStoreV1},{createTaskRecorderV1},{workspaceIdV1}]=await Promise.all([import("../../🗄️cas/🗃️store/🟦️.ts"),import("../../🕸️graph/🧮️derived-nodes/🎯️task-state/🟨️.mjs"),import("../../🏡️resident/📨️protocol/📍️endpoint/🏠️host/🟨️.mjs")]);
- await createTaskRecorderV1({directory:join(root,".cache/b/g/m/task-keys"),cas:options.cas??createCasStoreV1()}).record(workspaceIdV1(root),Object.entries(keys).map(([id,key])=>({id,key})));
+ await createTaskRecorderV1({directory:machinePathV1(root,".cache/b/g/m/task-keys"),cas:options.cas??createCasStoreV1()}).record(workspaceIdV1(root),Object.entries(keys).map(([id,key])=>({id,key})));
  return Object.keys(keys).length;
 }
 

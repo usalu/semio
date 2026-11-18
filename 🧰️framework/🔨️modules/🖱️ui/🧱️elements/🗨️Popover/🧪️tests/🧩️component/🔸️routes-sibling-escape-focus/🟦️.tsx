@@ -125,7 +125,7 @@ export function registerRoutesSiblingEscapeFocusTests(): void {
       anchorRect.current = { top: 50, right: 80, bottom: 70, left: 60, width: 20, height: 20 };
       for (const notify of observers) notify();
       await waitFor(() => expect(contentElement.style.left).toBe("50px"));
-      expect(contentElement.style.top).toBe("74px");
+      expect(contentElement.style.top).toBe("70px");
     } finally {
       globalThis.ResizeObserver = OriginalObserver;
     }

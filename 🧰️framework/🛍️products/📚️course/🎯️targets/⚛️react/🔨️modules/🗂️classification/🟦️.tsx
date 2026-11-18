@@ -26,7 +26,7 @@ import type { Category, ClassificationAnswer, Hint, SheetClassificationTask, She
 import { ItemMockup } from "../🖥️mockup/🟦️.tsx";
 import { localized, type CourseLocale, type CourseText } from "../🌐️i18n/🟦️.ts";
 import { RadarChart, type RadarAxis } from "../🕸️radar/🟦️.tsx";
-import { IconLabel, LiveRegion, useAnnouncement } from "../🪟️chrome/🟦️.tsx";
+import { CELL, GROUP, IconLabel, LiveRegion, RowList, useAnnouncement } from "../🪟️chrome/🟦️.tsx";
 import { DROP_ZONE_CLASS, DragGrip, HintNote, LockedNote, SELECT_ANNOUNCEMENT_DELAY_MS, SELECT_CLASS, describedBy, elementId, hintName, hintTerm, useFocusAfterRender, useHintAnnouncement, type TaskViewProps } from "../🧩️task/🟦️.tsx";
 import { PRESENCE_ANCHORS } from "../👥️presence/👁️view/🟦️.ts";
 import { petProp, usePetTopic } from "../🐾️pets/🟦️.tsx";
@@ -109,7 +109,7 @@ export function ClassificationTaskView(props: TaskViewProps<SheetClassificationT
     const hint = asked.get(item.id);
     const hintId = hint === undefined ? undefined : elementId(scope, item.id, "hint");
     return (
-      <li key={item.id} data-icon-host="" data-course-drag="" data-course-item={item.id} data-presence-anchor={PRESENCE_ANCHORS.item(item.id)} data-pet-prop={petProp(topic, item.id)} className="course-chip border border-normal bg-background p-single">
+      <li key={item.id} data-icon-host="" data-course-drag="" data-course-item={item.id} data-presence-anchor={PRESENCE_ANCHORS.item(item.id)} data-pet-prop={petProp(topic, item.id)} {...CELL} className="course-chip bg-background">
         <DragGrip title={text("course.classification.drag", { item: itemLabel(item) })} locked={locked} onDrop={drop(item)} />
         <span className="course-row-label min-w-0 text-sm font-semibold">
           <IconLabel icon={item.icon}>
@@ -143,33 +143,53 @@ export function ClassificationTaskView(props: TaskViewProps<SheetClassificationT
   };
 
   const pool = task.items.filter((item) => assignments[item.id] === undefined);
-  const chips = "course-rows m-0 flex list-none flex-col gap-single p-0";
+  const chips = "course-rows";
   return (
-    <div className="course-classify">
-      <section data-course-drop={POOL_ZONE} aria-labelledby={elementId(scope, "pool")} className={`course-pool ${DROP_ZONE_CLASS}`}>
-        <h3 id={elementId(scope, "pool")} className="m-0 text-sm font-semibold">
+    <div {...GROUP} className="course-classify">
+      <section data-course-drop={POOL_ZONE} aria-labelledby={elementId(scope, "pool")} {...GROUP} {...CELL} className="course-pool flex min-w-0 flex-col">
+        <h3 id={elementId(scope, "pool")} {...CELL} className="m-0 p-double text-sm font-semibold">
           {text("course.classification.pool")}
         </h3>
-        {pool.length === 0 ? <p className="m-0 text-xs text-muted-foreground">{text("course.classification.poolEmpty")}</p> : <ul role="list" className={chips}>{pool.map(chip)}</ul>}
+        {pool.length === 0 ? (
+          <p {...CELL} className="m-0 p-double text-xs text-muted-foreground">
+            {text("course.classification.poolEmpty")}
+          </p>
+        ) : (
+          <RowList className={chips}>{pool.map(chip)}</RowList>
+        )}
       </section>
-      <section aria-labelledby={elementId(scope, "categories")} className="flex flex-col gap-single">
-        <h3 id={elementId(scope, "categories")} className="m-0 text-sm font-semibold">
+      <section aria-labelledby={elementId(scope, "categories")} {...GROUP} {...CELL} className="course-categories flex min-w-0 flex-col">
+        <h3 id={elementId(scope, "categories")} {...CELL} className="m-0 p-double text-sm font-semibold">
           {text("course.classification.categories")}
         </h3>
-        <div className="course-bins">
+        <div {...GROUP} {...CELL} className="course-bins">
           {task.categories.map((category) => {
             const members = task.items.filter((item) => assignments[item.id] === category.id);
             const label = localized(category.label, locale);
             return (
-              <section key={category.id} data-course-drop={`${CATEGORY_ZONE}${category.id}`} data-presence-anchor={PRESENCE_ANCHORS.category(category.id)} aria-labelledby={elementId(scope, "category", category.id)} className={DROP_ZONE_CLASS}>
-                <h4 data-icon-host="" id={elementId(scope, "category", category.id)} className="m-0 text-sm font-semibold">
+              <section key={category.id} data-course-drop={`${CATEGORY_ZONE}${category.id}`} data-presence-anchor={PRESENCE_ANCHORS.category(category.id)} aria-labelledby={elementId(scope, "category", category.id)} {...GROUP} {...CELL} className={DROP_ZONE_CLASS}>
+                <h4 data-icon-host="" id={elementId(scope, "category", category.id)} {...CELL} className="m-0 p-double text-sm font-semibold">
                   <IconLabel icon={category.icon}>
                     {label}
                   </IconLabel>
                 </h4>
-                {category.description === undefined ? null : <p className="m-0 text-xs text-muted-foreground">{localized(category.description, locale)}</p>}
-                {category.profile === undefined || axes.length === 0 ? null : <RadarChart name={label} axes={axes} values={category.profile} normalised={normalised} text={text} locale={locale} />}
-                {members.length === 0 ? <p className="m-0 text-xs italic text-muted-foreground">{text("course.classification.binEmpty")}</p> : <ul role="list" className={chips}>{members.map(chip)}</ul>}
+                {category.description === undefined ? null : (
+                  <p {...CELL} className="m-0 p-double text-xs text-muted-foreground">
+                    {localized(category.description, locale)}
+                  </p>
+                )}
+                {category.profile === undefined || axes.length === 0 ? null : (
+                  <div {...CELL} className="p-double">
+                    <RadarChart name={label} axes={axes} values={category.profile} normalised={normalised} text={text} locale={locale} />
+                  </div>
+                )}
+                {members.length === 0 ? (
+                  <p {...CELL} className="m-0 p-double text-xs italic text-muted-foreground">
+                    {text("course.classification.binEmpty")}
+                  </p>
+                ) : (
+                  <RowList className={chips}>{members.map(chip)}</RowList>
+                )}
               </section>
             );
           })}

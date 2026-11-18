@@ -1,0 +1,138 @@
+== /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-ec883dab0a20.log (lines after 8245)
+-- waiting for the fleet: first and last line, largest x
+largest x: 
+-- waiting for memory headroom: first and last line
+-- request-failed entries with 12 lines after
+-- last 30 lines when the try ended
+[repository:command] still running after 31661 s
+[repository:command] still running after 31671 s
+[repository:command] still running after 31681 s
+[repo] still working after 31695 s; last phase started: source.served
+[repository:command] still running after 31691 s
+[repository:command] still running after 31701 s
+[repository:command] still running after 31711 s
+[repo] still working after 31725 s; last phase started: source.served
+[repository:command] still running after 31721 s
+[repository:command] still running after 31731 s
+[repository:command] still running after 31741 s
+[repo] still working after 31755 s; last phase started: source.served
+[repository:command] still running after 31751 s
+[repository:command] still running after 31761 s
+[repository:command] still running after 31771 s
+[repo] still working after 31785 s; last phase started: source.served
+[repository:command] still running after 31781 s
+[repository:command] still running after 31791 s
+[repository:command] still running after 31801 s
+[repo] still working after 31815 s; last phase started: source.served
+[repository:command] still running after 31811 s
+[repository:command] still running after 31821 s
+[repository:command] still running after 31831 s
+[repo] still working after 31845 s; last phase started: source.served
+[repository:command] still running after 31841 s
+[repository:command] still running after 31851 s
+[repository:command] still running after 31861 s
+[repo] still working after 31875 s; last phase started: source.served
+[repository:command] still running after 31871 s
+[repository:command] still running after 31881 s
+== /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-f13cda8149a9.log (lines after 9148)
+graph: plan stage inference starts (managed 202 MB, resident 1064 MB)
+graph: waiting for memory headroom (1505 of 581 MB reserved, 1 projects running): @semio-tech/mit-bestand-bericht needs 1505 MB and has waited 0 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (1798 of 754 MB reserved, 1 projects running): @semio-tech/mit-bestand-bericht needs 1505 MB and has waited 6 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (1505 of 675 MB reserved, 1 projects running): @semio-tech/writer-writer needs 232 MB and has waited 1 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (1305 of 695 MB reserved, 1 projects running): @semio-tech/mathematical-js needs 1505 MB and has waited 1 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (1915 of 2464 MB reserved, 1 projects running): @semio-tech/mit-bestand-bericht needs 1505 MB and has waited 0 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (1915 of 571 MB reserved, 1 projects running): @semio-tech/mathematical-js needs 1915 MB and has waited 2 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: plan stage inference took 136.4 s (managed 1048 MB, 845 MB more than at its start, resident 2328 MB)
+-- waiting for the fleet: first and last line, largest x
+largest x: 
+-- waiting for memory headroom: first and last line
+graph: waiting for memory headroom (1505 of 581 MB reserved, 1 projects running): @semio-tech/mit-bestand-bericht needs 1505 MB and has waited 0 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (1915 of 571 MB reserved, 1 projects running): @semio-tech/mathematical-js needs 1915 MB and has waited 2 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+-- request-failed entries with 12 lines after
+2026-11-15T19:44:37.840Z request-failed 6a8ac318 RepoError: invalid build.closure.provider-entry-stale {"port":"layers"} code=invalid
+Error
+    at repoErrorV1 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🚨️error/🟦️.ts:33:14)
+    at closureLayerBatchesV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs:1159:67)
+    at closureLayerListV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs:1166:71)
+    at resolve (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs:1507:427)
+    at async resolveClosureRefsV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs:487:80)
+    at async <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs:315:111)
+    at async tagProjectFailureV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs:83:22)
+    at async <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs:315:32)
+    at async <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs:334:639)
+    at async run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧠️memory/🟨️.mjs:255:21)
+    at async <anonymous> (unknown)
+-- last 30 lines when the try ended
+[repository:command] still running after 2230 s
+[repo] still working after 2242 s; last phase started: source.served
+[repository:command] still running after 2240 s
+[capacity] admitted exec: 1 job(s), 1536 MB reserved (6287 MB available, 2048 MB floor)
+graph: inferring projects with 1 worker processes (1536 MB each)
+[repository:command] still running after 2251 s
+[fleet] projects from the fleet: 3 taken with 0 closure entries (0 did not hold here and were inferred again), 5 stored, 0 not shared, 0 offered, 0 waited for another machine, 6 computed here | Projekte aus der Flotte: 3 übernommen mit 0 Closure-Einträgen (0 hier nicht gültig und neu berechnet), 5 gespeichert, 0 nicht geteilt, 0 angeboten, 0 auf eine andere Maschine gewartet, 6 hier berechnet
+graph: plan stage inference took 136.4 s (managed 1048 MB, 845 MB more than at its start, resident 2328 MB)
+2026-11-15T19:44:37.840Z request-failed 6a8ac318 RepoError: invalid build.closure.provider-entry-stale {"port":"layers"} code=invalid
+Error
+    at repoErrorV1 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🚨️error/🟦️.ts:33:14)
+    at closureLayerBatchesV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs:1159:67)
+    at closureLayerListV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs:1166:71)
+    at resolve (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs:1507:427)
+    at async resolveClosureRefsV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs:487:80)
+    at async <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs:315:111)
+    at async tagProjectFailureV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs:83:22)
+    at async <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs:315:32)
+    at async <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs:334:639)
+    at async run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧠️memory/🟨️.mjs:255:21)
+    at async <anonymous> (unknown)
+    at async awaitGrowingV1 (unknown)
+    at async emojiProjectJsonNodes (unknown)
+    at processTicksAndRejections (unknown:7:39)
+graph: plan answered, managed 105 MB, resident 158 MB (released 0 MB)
+[repository:command] still running after 2261 s
+[repo] still working after 2272 s; last phase started: source.served
+[repository:command] still running after 2271 s
+[repository:command] still running after 2281 s
+[repository:command] still running after 2291 s
+-- bootstrap log: cut smaller lines
+highest step: 
+-- bootstrap log: last 40 lines
+[repo] still working after 80 s; last phase started: door.script
+Reading the project graph slice (80 s).
+Reading the project graph slice (82 s).
+Reading the project graph slice (84 s).
+Reading the project graph slice (86 s).
+Reading the project graph slice (88 s).
+Reading the project graph slice (90 s).
+Reading the project graph slice (92 s).
+Reading the project graph slice (94 s).
+Reading the project graph slice (96 s).
+Reading the project graph slice (98 s).
+Reading the project graph slice (100 s).
+Reading the project graph slice (102 s).
+Reading the project graph slice (104 s).
+Reading the project graph slice (106 s).
+Reading the project graph slice (108 s).
+[repo] still working after 110 s; last phase started: door.script
+Reading the project graph slice (110 s).
+Reading the project graph slice (112 s).
+Reading the project graph slice (114 s).
+Reading the project graph slice (116 s).
+Reading the project graph slice (118 s).
+Reading the project graph slice (120 s).
+Reading the project graph slice (122 s).
+Reading the project graph slice (124 s).
+Reading the project graph slice (126 s).
+Reading the project graph slice (128 s).
+Reading the project graph slice (130 s).
+Reading the project graph slice (132 s).
+Reading the project graph slice (134 s).
+Reading the project graph slice (136 s).
+Reading the project graph slice (138 s).
+[repo] still working after 140 s; last phase started: door.script
+Reading the project graph slice (140 s).
+Reading the project graph slice (142 s).
+Reading the project graph slice (144 s).
+Reading the project graph slice (146 s).
+The resident service met an unexpected failure (reference 6a8ac318); try again, the details under that reference are in the service log /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-f13cda8149a9.log.
+end 2026-11-15T19:44:39Z
+native_rc=1

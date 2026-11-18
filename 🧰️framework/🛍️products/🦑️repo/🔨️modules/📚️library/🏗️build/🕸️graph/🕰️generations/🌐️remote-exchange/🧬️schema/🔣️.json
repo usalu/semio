@@ -12,7 +12,7 @@
   "maximumClosures": 20000,
   "maximumClosureReports": 64,
         "maximumSnapshotBytes": 134217728,
-        "maximumDocuments": 20000,
+        "maximumDocuments": 32768,
         "maximumDocumentBytes": 536870912,
         "concurrency": 8,
         "probeTimeoutSeconds": 5,
@@ -23,7 +23,8 @@
         "ownersPerChangedPath": 0.25,
         "shadowMarginOwners": 50,
         "servingTotalMegabytes": 24000,
-        "rankCandidates": 3
+        "rankCandidates": 3,
+        "allScope": "all"
       }
     },
     "Note": {
@@ -96,6 +97,11 @@
           "minimum": 0,
           "maximum": 65536,
           "description": "How many owners the producer knew stale in this generation when it was written (0 for a complete read); absent when the producer did not know, which readers count as the policy's unmeasuredStale."
+        },
+        "scope": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "The digest of the scope (selection and registry) of a slice generation; absent for the generation of the whole workspace. A reader takes only heads of its own scope."
         },
         "snapshot": {
           "type": "string",

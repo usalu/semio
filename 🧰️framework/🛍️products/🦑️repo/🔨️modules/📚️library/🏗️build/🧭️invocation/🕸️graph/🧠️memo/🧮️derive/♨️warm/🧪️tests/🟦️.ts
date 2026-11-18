@@ -1,5 +1,5 @@
 /** ♨️ Laws of the warm deriver: over the adversarial corpus `./🔣️.json` the warm program question (reused parsed files, the previous program while the guard holds) answers exactly what a cold derivation answers after every step, with real TypeScript and the planner's own observation check, and an always-armed deriver is wrong where the corpus says; the request protocol (identity, one at a time, idle exit, cancellation, a live endpoint refuses a second server); the detached process refuses an implementation that is not on disk; the memo asks the warm deriver before the derivation child and starts one after it. */
-import {expect,test} from "bun:test";
+import {beforeAll,expect,test} from "bun:test";
 import {spawnSync} from "node:child_process";
 import {existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,realpathSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
@@ -12,6 +12,7 @@ import type {MemoRowV1} from "../../../🟦️.ts";
 import type {MemoDeriverV1} from "../../🟦️.ts";
 import {askWarmDeriverV1,serveWarmDeriverV1,warmClosureStampsHoldV1,warmClosureStampsV1,warmDeriverEndpointV1,warmProgramDeriverV1} from "../🟦️.ts";
 import corpus from "./🔣️.json" with {type:"json"};
+beforeAll(async()=>{await (await import("../../../../../../🕸️graph/📥️inference/🟨️.mjs")).libraryBootstrap;});
 
 const scratch=(prefix:string)=>realpathSync(mkdtempSync(join(tmpdir(),prefix)));
 const directoryOf=(path:string)=>{try{return readdirSync(path,{withFileTypes:true}).map(entry=>({name:entry.name,directory:entry.isDirectory(),file:entry.isFile()}));}catch{return undefined;}};

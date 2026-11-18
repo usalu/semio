@@ -1,0 +1,11 @@
+2026-11-15T17:51:44Z state=running stage=dependencies (3 of 5) attempts=0 exit=null peak=1773 MB
+2026-11-15T17:54:16Z state=running stage=tools (4 of 5) attempts=0 exit=null peak=3820 MB
+2026-11-15T18:48:44Z state=running stage=workspace (5 of 5) attempts=0 exit=null peak=3820 MB
+2026-11-15T19:06:55Z state=running stage=native (1 of 5) attempts=0 exit=null peak=3820 MB
+2026-11-15T19:12:00Z state=running stage=repo-mcp (2 of 5) attempts=0 exit=null peak=3820 MB
+2026-11-15T19:12:30Z state=running stage=dependencies (3 of 5) attempts=0 exit=null peak=3820 MB
+2026-11-15T19:17:03Z state=running stage=repo-mcp (2 of 5) attempts=0 exit=null peak=3820 MB
+2026-11-15T19:17:34Z state=running stage=tools (4 of 5) attempts=0 exit=null peak=3820 MB
+2026-11-15T19:55:24Z state=running stage=workspace (5 of 5) attempts=0 exit=null peak=3820 MB
+2026-11-15T21:25:08Z state=backoff stage=workspace (5 of 5) attempts=1 exit=75 peak=10208 MB
+2026-11-15T21:25:08Z OBSERVER END: backoff

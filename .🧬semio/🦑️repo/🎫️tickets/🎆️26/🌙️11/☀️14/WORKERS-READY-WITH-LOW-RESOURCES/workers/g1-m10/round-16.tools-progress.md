@@ -43,3 +43,15 @@ Update 2026-11-15T08:57:22Z: attempt 5 rc=1 in 338 s, same lease timeout, same c
 Update 2026-11-15T09:05:56Z: round 27 try 1 native_rc=75 reported in round-27.md. Next: wait 3 min, re-read ROUND.md, try 2.
 
 Update 2026-11-15T09:26:11Z: try 2 stopped by my helper's obsolete pressure-level-4 rule (round 23 removed it). Fix to run-observed.py was denied by the permission classifier; waiting for the user.
+
+Update 2026-11-15T15:22:16Z: user approved removing the obsolete pressure-level-4 stop from run-observed.py; done. Starting try 3 (3 min after try 2 end plus delay).
+
+Update 2026-11-15T15:37:32Z: round 29 read. Round 28 diagnostic done (round-28.sqlite-diagnostics.txt: lease file holds only native-storage:[16777233,1112611,38653698048,16777255], no lsof holder). Waiting for replica agreement with code 32b23f76..., then step 0 once (log round-29.tools-setup.log), then fresh series label round-29, 5 min apart.
+
+Update 2026-11-15T17:39:10Z: step-0 attempt 6 (round 29 label) was cut off by SIGTERM at 16:47 local when the previous Claude session ended (log round-29.tools-setup.attempt6-sigterm.log, no metrics). ROUND.md is now 30: run native-bootstrap with the new code; fresh series labelled round-30, once agreement is reached. Step 0 not rerun.
+
+Update 2026-11-15T19:27:26Z: round-30 try 1 native_rc=75 after step 6 of 6; report in round-30.md. Try 2 in 5 min.
+
+Update 2026-11-15T20:15:36Z: round-30 try 2 stopped by resident-above-8GiB (slice worker 8448 MiB, step 4 of 6); reported. Try 3 in 5 min.
+
+Update 2026-11-15T22:11:23Z: round 31 read: no more setup runs from this session. Try 3 of round 30 ended (8 GiB stop). Observer observe-round-31.sh started (every 10 min, writes round-31.md).

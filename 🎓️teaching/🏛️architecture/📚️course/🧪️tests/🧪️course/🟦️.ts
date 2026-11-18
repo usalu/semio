@@ -6,7 +6,7 @@
  * items the hints can measure the others against.
  * @see ../../🔣️.json — the course under test
  * @see ../../../../../🧰️framework/🛍️products/📚️course/🧬️schema/🔣️.json — the contract ajv validates against */
-import { MOTIONS, courseIssues, courseView, courseViewIssues, challengeMeets, quizIssues, sheetOf, type Course, type Quiz } from "@semio-tech/course";
+import { MOTIONS, courseIssues, courseView, courseViewIssues, challengeMeets, quizIssues, runSeed, sheetOf, type Course, type Quiz } from "@semio-tech/course";
 import Ajv from "ajv";
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
@@ -95,17 +95,19 @@ describe("architecture course", () => {
     expect(isCourseView({ ...view, topics: view.topics!.map((topic, index) => index === 1 ? { ...topic, id: reserved } : topic) })).toBe(false);
   });
 
-  it("accepts grouped and assignment-free flat views while rejecting orphaned assignments", () => {
+  it("accepts grouped and assignment-free flat views while rejecting orphaned assignments and clips", () => {
     const view = courseView(course, quizzes.map(({ quiz }) => quiz));
     expect(isCourseView(view)).toBe(true);
     expect(courseViewIssues(view)).toEqual([]);
     expect(validView(view) ? [] : validView.errors).toEqual([]);
-    const { topics, assignments, ...flat } = view;
+    const { topics, assignments, clips, ...flat } = view;
     expect(isCourseView(flat)).toBe(true);
     expect(courseViewIssues(flat)).toEqual([]);
     expect(validView(flat) ? [] : validView.errors).toEqual([]);
     expect(isCourseView({ ...flat, assignments })).toBe(false);
     expect(courseViewIssues({ ...flat, assignments })).toContainEqual({ path: "/assignments/0/topic", code: "value-invalid" });
+    expect(isCourseView({ ...flat, clips })).toBe(false);
+    expect(courseViewIssues({ ...flat, clips })).toContainEqual({ path: "/clips/0/topic", code: "value-invalid" });
     expect(isCourseView({ ...view, quizzes: [...view.quizzes, view.quizzes[0]] })).toBe(false);
   });
 
@@ -228,11 +230,43 @@ describe("balanced question pools", () => {
             previous.add(item.id);
           }
           seen.set(task.id, previous);
-          for (const slot of source.pool!.slots) expect(task.items.filter(({ id }) => slot.includes(id))).toHaveLength(1);
+          for (const slot of source.pool!.slots) {
+            const chosen = task.items.filter(({ id }) => slot.includes(id));
+            if (source.pool!.distribution) expect(chosen.length).toBeLessThanOrEqual(1);
+            else expect(chosen).toHaveLength(1);
+          }
         }
       }
     }
   });
+});
+
+/** 📉️ The numeric energy tasks draw Zipf-distributed slots: everyday small magnitudes dominate, the largest stay a small reachable minority. */
+describe("zipf-distributed energy pools", () => {
+  const magnitude = (item: { value?: number; values?: Record<string, number> }, dimension: string | undefined): number => Math.abs(item.value ?? item.values![dimension!]!);
+  for (const { quiz } of quizzes) for (const source of quiz.tasks) {
+    if (source.kind === "classification") continue;
+    it(`${quiz.id}/${source.id}`, () => {
+      expect(source.pool?.distribution).toEqual({ kind: "zipf", exponent: 1.5 });
+      const dimension = source.kind === "matching" ? source.dimensions[0]!.id : undefined;
+      const ordered = source.items.map((item) => magnitude(item as never, dimension)).sort((left, right) => left - right);
+      const median = ordered[Math.floor(ordered.length / 2)]!;
+      const topDecile = ordered[Math.ceil(ordered.length * 0.9) - 1]!;
+      const byId = new Map(source.items.map((item) => [item.id, magnitude(item as never, dimension)]));
+      let lower = 0;
+      let top = 0;
+      let dealt = 0;
+      for (let index = 0; index < 1500; index++) for (const item of sheetOf(quiz, runSeed("zipf-" + index), "medium").tasks.find(({ id }) => id === source.id)!.items) {
+        dealt++;
+        lower += byId.get(item.id)! < median ? 1 : 0;
+        top += byId.get(item.id)! >= topDecile ? 1 : 0;
+      }
+      expect(lower / dealt).toBeGreaterThan(0.6);
+      expect(lower / dealt).toBeLessThan(0.8);
+      expect(top / dealt).toBeLessThan(0.1);
+      expect(top).toBeGreaterThan(0);
+    });
+  }
 });
 
 /** 🌬️ The language-neutral ventilation vectors define ownership, statements, preserved rates and spider profiles. */

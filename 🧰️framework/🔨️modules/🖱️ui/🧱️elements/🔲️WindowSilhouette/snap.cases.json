@@ -1,0 +1,11 @@
+{
+  "schema": "shared-border-snap/v1",
+  "cases": [
+    {"name": "a card bottom a fraction above the footer top joins the footer line", "xs": [0, 288], "ys": [28.796875, 877.71875, 878.015625], "queries": [{"axis": "y", "value": 877.71875, "expected": 877.71875}, {"axis": "y", "value": 878.015625, "expected": 877.71875}]},
+    {"name": "a scroller's rounded scroll range leaves a card edge 0.56 px above the footer line and joins it", "xs": [0, 375], "ys": [780.640625, 781.203125], "queries": [{"axis": "y", "value": 780.640625, "expected": 780.640625}, {"axis": "y", "value": 781.203125, "expected": 780.640625}]},
+    {"name": "edges further apart than the tolerance stay two lines", "xs": [], "ys": [100, 101], "queries": [{"axis": "y", "value": 100, "expected": 100}, {"axis": "y", "value": 101, "expected": 101}]},
+    {"name": "a coordinate far from every edge is untouched", "xs": [0, 100], "ys": [0, 100], "queries": [{"axis": "x", "value": 50.3, "expected": 50.3}]},
+    {"name": "the axes are independent", "xs": [10, 10.25], "ys": [10, 20], "queries": [{"axis": "x", "value": 10.25, "expected": 10}, {"axis": "y", "value": 10.25, "expected": 10}]},
+    {"name": "clusters do not chain", "xs": [], "ys": [0, 0.5, 1], "queries": [{"axis": "y", "value": 0.5, "expected": 0}, {"axis": "y", "value": 1, "expected": 1}]}
+  ]
+}

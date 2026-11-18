@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.read-parent/1",
+  "title": "The parent of a read computes nothing / Der Elternprozess eines Laufs rechnet nichts",
+  "description": "EN: The process that runs a read of the project graph (its parent) never infers an owner, never walks a closure, never resolves modules with the TypeScript compiler, never derives a closure entry and never resolves the closure references of an owner while a farm exists: each such job is a job of a farm child, and when no child can take it the job waits with the reason shown. A computation that is called in the parent is a defect and ends with this refusal. DE: Der Prozess, der einen Lauf des Projektgraphen führt (sein Elternprozess), leitet nie ein Projekt ab, läuft nie eine Closure ab, löst nie Module mit dem TypeScript-Compiler auf, leitet nie einen Closure-Eintrag ab und löst nie die Closure-Referenzen eines Projekts auf, solange eine Farm besteht: jede solche Aufgabe gehört einem Farm-Kindprozess, und kann kein Kindprozess sie übernehmen, wartet sie mit sichtbarem Grund. Eine Berechnung, die im Elternprozess aufgerufen wird, ist ein Fehler und endet mit dieser Ablehnung.",
+  "$defs": {
+    "kinds": {
+      "description": "EN: The computations the parent never runs, by the name the refusal carries. DE: Die Berechnungen, die der Elternprozess nie ausführt, mit dem Namen, den die Ablehnung trägt.",
+      "const": ["infer", "walk", "resolve", "derive", "refs", "observe"]
+    },
+    "refusal": {
+      "description": "EN/DE: The code and the texts of the refusal. DE: Der Code und die Texte der Ablehnung.",
+      "const": {
+        "code": "graph.read-parent-computes",
+        "en": "the parent of a read must not run {kind} ({what}): it is a job of a farm child",
+        "de": "der Elternprozess eines Laufs darf {kind} ({what}) nicht ausführen: es ist eine Aufgabe eines Farm-Kindprozesses"
+      }
+    },
+    "waits": {
+      "description": "EN/DE: What a job in the queue says while no child can take it. DE: Was eine Aufgabe in der Warteschlange sagt, solange kein Kindprozess sie übernehmen kann.",
+      "const": {
+        "en": "{project} waits in the queue for a farm child ({reason}); the parent computes nothing",
+        "de": "{project} wartet in der Warteschlange auf einen Farm-Kindprozess ({reason}); der Elternprozess rechnet nichts"
+      }
+    }
+  }
+}

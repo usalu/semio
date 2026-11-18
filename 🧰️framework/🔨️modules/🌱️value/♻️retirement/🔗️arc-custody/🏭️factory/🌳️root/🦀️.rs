@@ -55,7 +55,7 @@ impl<P:Send+Sync+'static> ArcRootRetirement<P>{
     pub fn new(alias:Arc<P>,issuer:Arc<dyn ArtifactOwnedValueRetirementFactory<P>>)->Self{Self::from_parts(Some(alias),Some(RootIssuer::Owned(issuer)))}
     /// 🆕️ Takes custody of a root and its snapshot issuer before any election.
     pub fn new_snapshot(alias:Arc<P>,issuer:Arc<dyn SnapshotRetirementFactory<P>>)->Self{Self::from_parts(Some(alias),Some(RootIssuer::Snapshot(issuer)))}
-    fn admit(original:&mut Option<Arc<P>>,issuer:Option<RootIssuer<P>>,output:&mut Option<Retired>,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
+    fn admit(original:&mut Option<Arc<P>>,issuer:&mut Option<RootIssuer<P>>,output:&mut Option<Retired>,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
         if output.is_some()||effect.actual().is_some(){return refuse("store root output or allocation marker occupied")}
         if original.is_none(){return done(Ok(RetainedCloneStep::Complete(Default::default())),0)}
         if issuer.is_none(){return refuse("store root issuer is absent")}
@@ -65,13 +65,19 @@ impl<P:Send+Sync+'static> ArcRootRetirement<P>{
         *effect.actual()=Some(0);let layout=std::alloc::Layout::new::<Self>();
         let Some(pointer)=std::ptr::NonNull::new(unsafe{std::alloc::alloc(layout)}.cast::<Self>())else{return done(Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"store root frame allocation failed").into()),work)};
         *effect.actual()=Some(layout.size());
-        let owner=unsafe{pointer.as_ptr().write(Self::from_parts(original.take(),issuer));Box::from_raw(pointer.as_ptr())};*output=Some(owner);
+        let owner=unsafe{pointer.as_ptr().write(Self::from_parts(original.take(),issuer.take()));Box::from_raw(pointer.as_ptr())};*output=Some(owner);
         done(Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:layout.size(),..Default::default()})),work)
     }
-    /// 🪑️ Moves the root and an owned-value issuer into one resident frame.
-    pub fn admit_original(original:&mut Option<Arc<P>>,factory:&mut Option<Arc<dyn ArtifactOwnedValueRetirementFactory<P>>>,output:&mut Option<Retired>,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{Self::admit(original,factory.take().map(RootIssuer::Owned),output,effect)}
-    /// 🪑️ Moves the root and a snapshot issuer into one resident frame.
-    pub fn admit_snapshot(original:&mut Option<Arc<P>>,factory:&mut Option<Arc<dyn SnapshotRetirementFactory<P>>>,output:&mut Option<Retired>,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{Self::admit(original,factory.take().map(RootIssuer::Snapshot),output,effect)}
+    /// 🪑️ Moves the root and an owned-value issuer into one resident frame; an issuer the turn did not admit stays in the caller's slot.
+    pub fn admit_original(original:&mut Option<Arc<P>>,factory:&mut Option<Arc<dyn ArtifactOwnedValueRetirementFactory<P>>>,output:&mut Option<Retired>,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
+        let mut issuer=factory.take().map(RootIssuer::Owned);let poll=Self::admit(original,&mut issuer,output,effect);
+        if let Some(RootIssuer::Owned(returned))=issuer{*factory=Some(returned)}poll
+    }
+    /// 🪑️ Moves the root and a snapshot issuer into one resident frame; an issuer the turn did not admit stays in the caller's slot.
+    pub fn admit_snapshot(original:&mut Option<Arc<P>>,factory:&mut Option<Arc<dyn SnapshotRetirementFactory<P>>>,output:&mut Option<Retired>,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
+        let mut issuer=factory.take().map(RootIssuer::Snapshot);let poll=Self::admit(original,&mut issuer,output,effect);
+        if let Some(RootIssuer::Snapshot(returned))=issuer{*factory=Some(returned)}poll
+    }
     fn terminal(&self)->bool{self.alias.is_none()&&self.elected.is_none()&&self.storage.is_none()&&self.active.is_none()&&self.ticket.is_empty()&&self.issuer.is_none()&&self.closing.is_none()}
     fn issuer_closing(&self)->bool{self.alias.is_none()&&self.elected.is_none()&&self.storage.is_none()&&self.active.is_none()&&self.ticket.is_empty()&&self.closing.as_ref().is_some_and(|owner|!owner.terminal_is_empty())}
     fn lost()->ValueError{ValueError::invariant("store root storage lost its issuer")}

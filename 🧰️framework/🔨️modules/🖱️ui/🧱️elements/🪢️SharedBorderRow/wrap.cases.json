@@ -1,0 +1,11 @@
+{
+  "$schema": "./wrap.schema.json",
+  "placements": [
+    { "name": "one line: only the last cell closes the line, every cell is on the last line", "tops": [0, 0, 0], "tolerance": 1, "expected": [{ "end": false, "last": true }, { "end": false, "last": true }, { "end": true, "last": true }] },
+    { "name": "two lines: the cell before each break closes its line, only line two is last", "tops": [0, 0, 28, 28], "tolerance": 1, "expected": [{ "end": false, "last": false }, { "end": true, "last": false }, { "end": false, "last": true }, { "end": true, "last": true }] },
+    { "name": "three lines with a single cell in the middle", "tops": [0, 0, 28, 56, 56], "tolerance": 1, "expected": [{ "end": false, "last": false }, { "end": true, "last": false }, { "end": true, "last": false }, { "end": false, "last": true }, { "end": true, "last": true }] },
+    { "name": "sub-pixel offsets inside the tolerance share a line", "tops": [0, 0.4, 28, 28.6], "tolerance": 1, "expected": [{ "end": false, "last": false }, { "end": true, "last": false }, { "end": false, "last": true }, { "end": true, "last": true }] },
+    { "name": "a single cell is both line end and last", "tops": [12], "tolerance": 1, "expected": [{ "end": true, "last": true }] },
+    { "name": "no cells", "tops": [], "tolerance": 1, "expected": [] }
+  ]
+}

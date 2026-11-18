@@ -62,7 +62,8 @@ for (const id of ["physics", "demand"]) {
       const right = task.rows.filter((row) => row.text.includes("✓")).length;
       const wrong = task.rows.filter((row) => /[✗◐]/u.test(row.text)).length;
       expect(wrong, `${task.task}: the mistake is marked`).toBeGreaterThan(0);
-      expect(right, `${task.task}: the correct items are marked`).toBeGreaterThan(wrong);
+      expect(right, `${task.task}: the correct items are marked`).toBeGreaterThan(0);
+      expect(right, `${task.task}: a swap marks two items, so the rest of the sheet stays right`).toBeGreaterThanOrEqual(wrong);
     }
     await expect(screen(learner.page, "results").locator("[data-earned]")).toHaveCount(0);
     await goHome(learner);
@@ -90,7 +91,9 @@ for (const quiz of QUIZZES) {
         expect(ids).toHaveLength(task.draw!);
         const previous = seen.get(task.id) ?? new Set<string>();
         expect(ids.filter((id) => previous.has(id))).toEqual([]);
-        for (const slot of task.pool!.slots) expect(ids.filter((id) => slot.includes(id))).toHaveLength(1);
+        const perSlot = task.pool!.slots.map((slot) => ids.filter((id) => slot.includes(id)).length);
+        expect(Math.max(...perSlot), `${task.id}: at most one variant per slot`).toBe(1);
+        expect(perSlot.reduce((sum, count) => sum + count, 0), `${task.id}: every item of the sheet belongs to a slot`).toBe(ids.length);
         for (const id of ids) previous.add(id);
         seen.set(task.id, previous);
       }

@@ -79,7 +79,7 @@
   {
    "name": "every builder holds a slice claim under the one generation scope",
    "function": "generationHostV1",
-   "text": "withGenerationCustodyV1(root,invocation,phaseControl,request,(store,control,claim)=>{image=store.root;return body(store,control,claim);})"
+   "text": "withGenerationCustodyV1(root,invocation,phaseControl,request,(store,control,claim)=>{image=store.root;profileMarkV1(\"graph.host.custody-held\");return body(store,control,claim);})"
   },
   {
    "name": "the facts resource is the workspace graph facts lease",

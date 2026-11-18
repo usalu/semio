@@ -18,8 +18,8 @@ export function usePreviewViewpoint(): readonly [PlanarViewpoint, (viewpoint: Pl
 }
 
 /** 🎚️ The selector of the preview viewpoint (the three single viewpoints, no sheet). */
-export function PreviewViewpointSelector(props: { readonly className?: string }): ReactElement {
+export function PreviewViewpointSelector(props: { readonly className?: string; readonly inline?: boolean }): ReactElement {
   const { language } = useArchive();
   const [viewpoint, setViewpoint] = usePreviewViewpoint();
-  return <ViewpointSelector className={props.className} value={viewpoint} language={language} choices={PLANAR_VIEWPOINTS} onChange={(choice) => isViewpoint(choice) && setViewpoint(choice)} />;
+  return <ViewpointSelector {...(props.className === undefined ? {} : { className: props.className })} {...(props.inline === undefined ? {} : { inline: props.inline })} value={viewpoint} language={language} choices={PLANAR_VIEWPOINTS} onChange={(choice) => isViewpoint(choice) && setViewpoint(choice)} />;
 }

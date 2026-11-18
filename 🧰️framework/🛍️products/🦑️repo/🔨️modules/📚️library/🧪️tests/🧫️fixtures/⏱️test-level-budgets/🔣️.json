@@ -70,6 +70,12 @@
     "semio-hub-norm": {
       "quick": 1800000
     },
+    "semio-hub-norm-eurocode": {
+      "quick": 1800000
+    },
+    "semio-hub-norm-eurocode-materials": {
+      "quick": 1800000
+    },
     "semio-hub-playbook": {
       "quick": 600000
     },

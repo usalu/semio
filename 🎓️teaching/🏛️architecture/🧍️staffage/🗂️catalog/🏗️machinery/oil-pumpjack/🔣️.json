@@ -471,6 +471,21 @@
        "material": "painted-steel"
       },
       {
+        "id": "wellhead-flange",
+        "bone": "base",
+        "role": "body",
+        "z": 3.1,
+        "filled": true,
+        "tone": 0.7,
+        "kind": "rect",
+        "region": "wellhead",
+        "material": "painted-steel",
+        "x": -3.2,
+        "y": 0.5,
+        "w": 0.4,
+        "h": 0.03
+      },
+      {
        "id": "stuffing-box",
        "bone": "base",
        "role": "body",
@@ -511,7 +526,7 @@
        "x": -3.025,
        "y": 1.28,
        "w": 0.05,
-       "h": 3.12,
+       "h": 3.145,
        "region": "steel",
        "material": "painted-steel"
       },
@@ -523,24 +538,7 @@
        "filled": true,
        "tone": 0.62,
        "kind": "poly",
-       "points": [
-        [
-         -1.6,
-         0
-        ],
-        [
-         -1.36,
-         0
-        ],
-        [
-         0.06,
-         3.6
-        ],
-        [
-         -0.14,
-         3.6
-        ]
-       ],
+       "points": [[-1.6301, -0.0791], [-1.6294, -0.0911], [-1.6139, -0.0996], [-1.5331, -0.1326], [-1.4347, -0.169], [-1.4259, -0.1609], [0.0463, 3.5655], [0.0455, 3.5751], [0.0324, 3.5822], [-0.036, 3.6101], [-0.1191, 3.6409], [-0.1263, 3.6345]],
        "closed": true,
        "region": "steel",
        "material": "painted-steel"
@@ -553,24 +551,7 @@
        "filled": true,
        "tone": 0.62,
        "kind": "poly",
-       "points": [
-        [
-         1.6,
-         0
-        ],
-        [
-         1.36,
-         0
-        ],
-        [
-         -0.06,
-         3.6
-        ],
-        [
-         0.14,
-         3.6
-        ]
-       ],
+       "points": [[-0.0463, 3.5655], [1.4259, -0.1609], [1.4347, -0.169], [1.4518, -0.1645], [1.5331, -0.1326], [1.6294, -0.0911], [1.6301, -0.0791], [0.1263, 3.6345], [0.1191, 3.6409], [0.1047, 3.637], [0.036, 3.6101], [-0.0455, 3.5751]],
        "closed": true,
        "region": "steel",
        "material": "painted-steel"
@@ -659,52 +640,7 @@
        "filled": true,
        "tone": 0.78,
        "kind": "poly",
-       "points": [
-        [
-         -2.81908,
-         1.02606
-        ],
-        [
-         -2.89778,
-         0.77646
-        ],
-        [
-         -2.95442,
-         0.52094
-        ],
-        [
-         -2.98858,
-         0.26147
-        ],
-        [
-         -3,
-         0
-        ],
-        [
-         -2.98858,
-         -0.26147
-        ],
-        [
-         -2.95442,
-         -0.52094
-        ],
-        [
-         -2.89778,
-         -0.77646
-        ],
-        [
-         -2.81908,
-         -1.02606
-        ],
-        [
-         -2.1,
-         -0.45
-        ],
-        [
-         -2.1,
-         0.45
-        ]
-       ],
+       "points": [[-2.9886, -0.2615], [-2.9544, -0.5209], [-2.8978, -0.7765], [-2.8191, -1.0261], [-2.7791, -1.0261], [-2.7791, -0.9941], [-2.1, -0.45], [-2.1, 0.45], [-2.7791, 0.9941], [-2.7791, 1.0261], [-2.8191, 1.0261], [-2.8978, 0.7765], [-2.9544, 0.5209], [-2.9886, 0.2615], [-3, 0]],
        "closed": true,
        "region": "steel",
        "material": "painted-steel"
@@ -1022,7 +958,7 @@
        "y": -0.25,
        "w": 1.1,
        "h": 0.7,
-       "r": 0.08,
+       "r": 0,
        "region": "motor",
        "material": "motor-steel"
       },
@@ -1065,9 +1001,9 @@
        "tone": 0.5,
        "kind": "rect",
        "x": -0.15,
-       "y": 0.45,
+       "y": 0.44,
        "w": 0.3,
-       "h": 0.2,
+       "h": 0.21,
        "region": "motor",
        "material": "motor-steel"
       },
@@ -1104,19 +1040,50 @@
        "material": "concrete"
       },
       {
-       "id": "skid",
-       "bone": "skid",
-       "role": "body",
-       "z": 3.05,
-       "filled": true,
-       "tone": 0.5,
-       "kind": "rect",
-       "x": -1.0,
-       "y": 0.3,
-       "w": 2.0,
-       "h": 0.25,
-       "region": "base",
-       "material": "painted-steel"
+        "id": "skid",
+        "bone": "skid",
+        "role": "body",
+        "z": 3.05,
+        "filled": true,
+        "tone": 0.5,
+        "kind": "poly",
+        "points": [
+          [
+            -0.95,
+            0.3
+          ],
+          [
+            0.95,
+            0.3
+          ],
+          [
+            0.95,
+            0.54
+          ],
+          [
+            1.0,
+            0.54
+          ],
+          [
+            1.0,
+            0.55
+          ],
+          [
+            -1.0,
+            0.55
+          ],
+          [
+            -1.0,
+            0.54
+          ],
+          [
+            -0.95,
+            0.54
+          ]
+        ],
+        "closed": true,
+        "region": "base",
+        "material": "painted-steel"
       },
       {
        "id": "wellhead-base",
@@ -1147,6 +1114,21 @@
        "h": 0.5,
        "region": "wellhead",
        "material": "painted-steel"
+      },
+      {
+        "id": "wellhead-flange",
+        "bone": "base",
+        "role": "body",
+        "z": 3.15,
+        "filled": true,
+        "tone": 0.7,
+        "kind": "rect",
+        "region": "wellhead",
+        "material": "painted-steel",
+        "x": -0.2,
+        "y": 0.5,
+        "w": 0.4,
+        "h": 0.03
       },
       {
        "id": "stuffing-box",
@@ -1201,24 +1183,7 @@
        "filled": true,
        "tone": 0.62,
        "kind": "poly",
-       "points": [
-        [
-         0.8,
-         0.55
-        ],
-        [
-         0.95,
-         0.55
-        ],
-        [
-         0.22,
-         4.15
-        ],
-        [
-         0.1,
-         4.15
-        ]
-       ],
+       "points": [[0.2162, 4.187], [0.2068, 4.1909], [0.1132, 4.1749], [0.1038, 4.1678], [0.101, 4.1399], [0.8285, 0.3855], [0.8403, 0.381], [0.9573, 0.4011], [0.9691, 0.4096], [0.9726, 0.4426]],
        "closed": true,
        "region": "steel",
        "material": "painted-steel"
@@ -1231,24 +1196,7 @@
        "filled": true,
        "tone": 0.62,
        "kind": "poly",
-       "points": [
-        [
-         -0.8,
-         0.55
-        ],
-        [
-         -0.95,
-         0.55
-        ],
-        [
-         -0.22,
-         4.15
-        ],
-        [
-         -0.1,
-         4.15
-        ]
-       ],
+       "points": [[-0.9726, 0.4426], [-0.9691, 0.4096], [-0.9573, 0.4011], [-0.8403, 0.381], [-0.8285, 0.3855], [-0.101, 4.1399], [-0.1038, 4.1678], [-0.1132, 4.1749], [-0.2068, 4.1909], [-0.2162, 4.187]],
        "closed": true,
        "region": "steel",
        "material": "painted-steel"
@@ -1860,19 +1808,20 @@
        }
       },
       {
-       "id": "gearbox",
-       "bone": "gearbox",
-       "role": "body",
-       "z": 3.5,
-       "filled": true,
-       "tone": 0.62,
-       "kind": "rect",
-       "x": -0.6,
-       "y": 0.7,
-       "w": 1.2,
-       "h": 1.3,
-       "region": "gearbox",
-       "material": "cast-iron"
+        "id": "gearbox",
+        "bone": "gearbox",
+        "role": "body",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.62,
+        "kind": "rect",
+        "x": -0.6,
+        "y": 0.7,
+        "w": 1.2,
+        "h": 1.3,
+        "r": 0.1,
+        "region": "gearbox",
+        "material": "cast-iron"
       },
       {
        "id": "pedestal",
@@ -1958,9 +1907,9 @@
        "tone": 0.5,
        "kind": "rect",
        "x": -0.15,
-       "y": 1.35,
+       "y": 1.34,
        "w": 0.3,
-       "h": 0.2,
+       "h": 0.21,
        "region": "motor",
        "material": "motor-steel"
       },
@@ -2042,6 +1991,21 @@
        "material": "painted-steel"
       },
       {
+        "id": "wellhead-flange",
+        "bone": "base",
+        "role": "body",
+        "z": 3.15,
+        "filled": true,
+        "tone": 0.7,
+        "kind": "ellipse",
+        "region": "wellhead",
+        "material": "painted-steel",
+        "cx": -3,
+        "cy": 0,
+        "rx": 0.2,
+        "ry": 0.2
+      },
+      {
        "id": "stuffing-box",
        "bone": "base",
        "role": "body",
@@ -2085,6 +2049,19 @@
        "ry": 0.04,
        "region": "steel",
        "material": "painted-steel"
+      },
+      {
+        "id": "polished-rod-axis",
+        "bone": "base",
+        "role": "body",
+        "z": 3.3000000000000003,
+        "filled": false,
+        "tone": 0.9,
+        "kind": "path",
+        "d": "M -3 -0.001 L -3 0.001",
+        "penMm": 1.0,
+        "region": "steel",
+        "material": "painted-steel"
       },
       {
        "id": "leg-fl",
@@ -2155,19 +2132,20 @@
        "material": "painted-steel"
       },
       {
-       "id": "gearbox",
-       "bone": "gearbox",
-       "role": "body",
-       "z": 3.2,
-       "filled": true,
-       "tone": 0.62,
-       "kind": "rect",
-       "x": 2,
-       "y": -0.6,
-       "w": 1.4,
-       "h": 1.2,
-       "region": "gearbox",
-       "material": "cast-iron"
+        "id": "gearbox",
+        "bone": "gearbox",
+        "role": "body",
+        "z": 3.2,
+        "filled": true,
+        "tone": 0.62,
+        "kind": "rect",
+        "x": 2,
+        "y": -0.6,
+        "w": 1.4,
+        "h": 1.2,
+        "r": 0.1,
+        "region": "gearbox",
+        "material": "cast-iron"
       },
       {
        "id": "pedestal",
@@ -2987,24 +2965,7 @@
        "filled": true,
        "tone": 0.62,
        "kind": "poly",
-       "points": [
-        [
-         -1.6,
-         0
-        ],
-        [
-         -1.36,
-         0
-        ],
-        [
-         0.06,
-         3.6
-        ],
-        [
-         -0.14,
-         3.6
-        ]
-       ],
+       "points": [[-1.6301, -0.0791], [-1.6282, -0.091], [-1.6102, -0.101], [-1.5331, -0.1326], [-1.4354, -0.1681], [-1.4259, -0.1609], [0.0463, 3.5655], [0.0446, 3.575], [0.0293, 3.5834], [-0.036, 3.6101], [-0.1185, 3.6403], [-0.1263, 3.6345]],
        "closed": true,
        "region": "steel",
        "material": "painted-steel"
@@ -3017,24 +2978,7 @@
        "filled": true,
        "tone": 0.62,
        "kind": "poly",
-       "points": [
-        [
-         1.6,
-         0
-        ],
-        [
-         1.36,
-         0
-        ],
-        [
-         -0.06,
-         3.6
-        ],
-        [
-         0.14,
-         3.6
-        ]
-       ],
+       "points": [[-0.0463, 3.5655], [1.4259, -0.1609], [1.4354, -0.1681], [1.4554, -0.1629], [1.5331, -0.1326], [1.6282, -0.091], [1.6301, -0.0791], [0.1263, 3.6345], [0.1185, 3.6403], [0.1016, 3.6357], [0.036, 3.6101], [-0.0446, 3.575]],
        "closed": true,
        "region": "steel",
        "material": "painted-steel"
@@ -3108,52 +3052,7 @@
        "filled": true,
        "tone": 0.78,
        "kind": "poly",
-       "points": [
-        [
-         -2.81908,
-         1.02606
-        ],
-        [
-         -2.89778,
-         0.77646
-        ],
-        [
-         -2.95442,
-         0.52094
-        ],
-        [
-         -2.98858,
-         0.26147
-        ],
-        [
-         -3,
-         0
-        ],
-        [
-         -2.98858,
-         -0.26147
-        ],
-        [
-         -2.95442,
-         -0.52094
-        ],
-        [
-         -2.89778,
-         -0.77646
-        ],
-        [
-         -2.81908,
-         -1.02606
-        ],
-        [
-         -2.1,
-         -0.45
-        ],
-        [
-         -2.1,
-         0.45
-        ]
-       ],
+       "points": [[-2.9886, -0.2615], [-2.9544, -0.5209], [-2.8978, -0.7765], [-2.8191, -1.0261], [-2.7691, -1.0261], [-2.7691, -0.9861], [-2.1, -0.45], [-2.1, 0.45], [-2.7691, 0.9861], [-2.7691, 1.0261], [-2.8191, 1.0261], [-2.8978, 0.7765], [-2.9544, 0.5209], [-2.9886, 0.2615], [-3, 0]],
        "closed": true,
        "region": "steel",
        "material": "painted-steel"
@@ -3413,19 +3312,50 @@
        "material": "concrete"
       },
       {
-       "id": "skid",
-       "bone": "skid",
-       "role": "body",
-       "z": 3.05,
-       "filled": true,
-       "tone": 0.5,
-       "kind": "rect",
-       "x": -1.0,
-       "y": 0.3,
-       "w": 2.0,
-       "h": 0.25,
-       "region": "base",
-       "material": "painted-steel"
+        "id": "skid",
+        "bone": "skid",
+        "role": "body",
+        "z": 3.05,
+        "filled": true,
+        "tone": 0.5,
+        "kind": "poly",
+        "points": [
+          [
+            -0.95,
+            0.3
+          ],
+          [
+            0.95,
+            0.3
+          ],
+          [
+            0.95,
+            0.535
+          ],
+          [
+            1.0,
+            0.535
+          ],
+          [
+            1.0,
+            0.55
+          ],
+          [
+            -1.0,
+            0.55
+          ],
+          [
+            -1.0,
+            0.535
+          ],
+          [
+            -0.95,
+            0.535
+          ]
+        ],
+        "closed": true,
+        "region": "base",
+        "material": "painted-steel"
       },
       {
        "id": "wellhead-base",
@@ -3900,6 +3830,21 @@
        }
       },
       {
+        "id": "crank-hub",
+        "bone": "crank",
+        "role": "body",
+        "z": 5.75,
+        "filled": true,
+        "tone": 0.58,
+        "kind": "rect",
+        "x": -0.8,
+        "y": 1.61,
+        "w": 1.6,
+        "h": 0.28,
+        "region": "crank",
+        "material": "cast-iron"
+      },
+      {
        "id": "crank-arm-r",
        "bone": "crank",
        "role": "body",
@@ -3963,19 +3908,20 @@
        }
       },
       {
-       "id": "gearbox",
-       "bone": "gearbox",
-       "role": "body",
-       "z": 3.5,
-       "filled": true,
-       "tone": 0.62,
-       "kind": "rect",
-       "x": -0.6,
-       "y": 0.7,
-       "w": 1.2,
-       "h": 1.3,
-       "region": "gearbox",
-       "material": "cast-iron"
+        "id": "gearbox",
+        "bone": "gearbox",
+        "role": "body",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.62,
+        "kind": "rect",
+        "x": -0.6,
+        "y": 0.7,
+        "w": 1.2,
+        "h": 1.3,
+        "r": 0.1,
+        "region": "gearbox",
+        "material": "cast-iron"
       },
       {
        "id": "pedestal",
@@ -4130,6 +4076,19 @@
        "material": "painted-steel"
       },
       {
+        "id": "polished-rod-axis",
+        "bone": "base",
+        "role": "body",
+        "z": 3.3000000000000003,
+        "filled": false,
+        "tone": 0.9,
+        "kind": "path",
+        "d": "M -3 -0.001 L -3 0.001",
+        "penMm": 0.5,
+        "region": "steel",
+        "material": "painted-steel"
+      },
+      {
        "id": "leg-fl",
        "bone": "post",
        "role": "body",
@@ -4198,19 +4157,20 @@
        "material": "painted-steel"
       },
       {
-       "id": "gearbox",
-       "bone": "gearbox",
-       "role": "body",
-       "z": 3.2,
-       "filled": true,
-       "tone": 0.62,
-       "kind": "rect",
-       "x": 2,
-       "y": -0.6,
-       "w": 1.4,
-       "h": 1.2,
-       "region": "gearbox",
-       "material": "cast-iron"
+        "id": "gearbox",
+        "bone": "gearbox",
+        "role": "body",
+        "z": 3.2,
+        "filled": true,
+        "tone": 0.62,
+        "kind": "rect",
+        "x": 2,
+        "y": -0.6,
+        "w": 1.4,
+        "h": 1.2,
+        "r": 0.1,
+        "region": "gearbox",
+        "material": "cast-iron"
       },
       {
        "id": "pedestal",
@@ -4640,6 +4600,21 @@
        }
       },
       {
+        "id": "crank-hub",
+        "bone": "crank",
+        "role": "body",
+        "z": 3.75,
+        "filled": true,
+        "tone": 0.58,
+        "kind": "rect",
+        "x": 2.56,
+        "y": -0.8,
+        "w": 0.28,
+        "h": 1.6,
+        "region": "crank",
+        "material": "cast-iron"
+      },
+      {
        "id": "crank-arm-r",
        "bone": "crank",
        "role": "body",
@@ -5037,7 +5012,7 @@
        "y": -1.05,
        "w": 1.4,
        "h": 1.3,
-       "r": 0.1,
+       "r": 0,
        "region": "gearbox",
        "material": "cast-iron"
       },
@@ -5235,19 +5210,50 @@
        "material": "concrete"
       },
       {
-       "id": "skid",
-       "bone": "skid",
-       "role": "body",
-       "z": 3.05,
-       "filled": true,
-       "tone": 0.5,
-       "kind": "rect",
-       "x": -1.0,
-       "y": 0.3,
-       "w": 2.0,
-       "h": 0.25,
-       "region": "base",
-       "material": "painted-steel"
+        "id": "skid",
+        "bone": "skid",
+        "role": "body",
+        "z": 3.05,
+        "filled": true,
+        "tone": 0.5,
+        "kind": "poly",
+        "points": [
+          [
+            -0.95,
+            0.3
+          ],
+          [
+            0.95,
+            0.3
+          ],
+          [
+            0.95,
+            0.52
+          ],
+          [
+            1.0,
+            0.52
+          ],
+          [
+            1.0,
+            0.55
+          ],
+          [
+            -1.0,
+            0.55
+          ],
+          [
+            -1.0,
+            0.52
+          ],
+          [
+            -0.95,
+            0.52
+          ]
+        ],
+        "closed": true,
+        "region": "base",
+        "material": "painted-steel"
       },
       {
        "id": "wellhead",
@@ -5707,6 +5713,21 @@
        }
       },
       {
+        "id": "crank-hub",
+        "bone": "crank",
+        "role": "body",
+        "z": 5.75,
+        "filled": true,
+        "tone": 0.58,
+        "kind": "rect",
+        "x": -0.8,
+        "y": 1.61,
+        "w": 1.6,
+        "h": 0.28,
+        "region": "crank",
+        "material": "cast-iron"
+      },
+      {
        "id": "crank-arm-r",
        "bone": "crank",
        "role": "body",
@@ -5878,6 +5899,19 @@
        "ry": 0.04,
        "region": "steel",
        "material": "painted-steel"
+      },
+      {
+        "id": "polished-rod-axis",
+        "bone": "base",
+        "role": "body",
+        "z": 3.3000000000000003,
+        "filled": false,
+        "tone": 0.9,
+        "kind": "path",
+        "d": "M -3 -0.001 L -3 0.001",
+        "penMm": 0.25,
+        "region": "steel",
+        "material": "painted-steel"
       },
       {
        "id": "leg-fl",
@@ -6390,6 +6424,21 @@
        }
       },
       {
+        "id": "crank-hub",
+        "bone": "crank",
+        "role": "body",
+        "z": 3.75,
+        "filled": true,
+        "tone": 0.58,
+        "kind": "rect",
+        "x": 2.56,
+        "y": -0.8,
+        "w": 0.28,
+        "h": 1.6,
+        "region": "crank",
+        "material": "cast-iron"
+      },
+      {
        "id": "crank-arm-r",
        "bone": "crank",
        "role": "body",
@@ -6730,7 +6779,7 @@
        "y": -1.05,
        "w": 1.4,
        "h": 1.3,
-       "r": 0.1,
+       "r": 0,
        "region": "gearbox",
        "material": "cast-iron"
       },
@@ -6928,19 +6977,50 @@
        "material": "concrete"
       },
       {
-       "id": "skid",
-       "bone": "skid",
-       "role": "body",
-       "z": 3.05,
-       "filled": true,
-       "tone": 0.5,
-       "kind": "rect",
-       "x": -1.0,
-       "y": 0.3,
-       "w": 2.0,
-       "h": 0.25,
-       "region": "base",
-       "material": "painted-steel"
+        "id": "skid",
+        "bone": "skid",
+        "role": "body",
+        "z": 3.05,
+        "filled": true,
+        "tone": 0.5,
+        "kind": "poly",
+        "points": [
+          [
+            -0.95,
+            0.3
+          ],
+          [
+            0.95,
+            0.3
+          ],
+          [
+            0.95,
+            0.52
+          ],
+          [
+            1.0,
+            0.52
+          ],
+          [
+            1.0,
+            0.55
+          ],
+          [
+            -1.0,
+            0.55
+          ],
+          [
+            -1.0,
+            0.52
+          ],
+          [
+            -0.95,
+            0.52
+          ]
+        ],
+        "closed": true,
+        "region": "base",
+        "material": "painted-steel"
       },
       {
        "id": "wellhead",
@@ -7556,6 +7636,19 @@
        "ry": 0.04,
        "region": "steel",
        "material": "painted-steel"
+      },
+      {
+        "id": "polished-rod-axis",
+        "bone": "base",
+        "role": "body",
+        "z": 3.3000000000000003,
+        "filled": false,
+        "tone": 0.9,
+        "kind": "path",
+        "d": "M -3 -0.001 L -3 0.001",
+        "penMm": 0.1,
+        "region": "steel",
+        "material": "painted-steel"
       },
       {
        "id": "leg-fl",
@@ -9642,6 +9735,8 @@
       "key": "pumping",
       "heatW": 1800
      },
+     "ratedPowerW": 22000,
+     "ratedPowerBasis": "rated-output",
      "source": "authored-estimate",
      "reference": "incropera-2018"
     }
@@ -9693,53 +9788,43 @@
         },
         {
           "id": "skid-beam-l",
-          "kind": "extrude",
+          "kind": "box",
           "bone": "skid",
           "material": "painted-steel",
           "role": "body",
           "tone": 0.5,
-          "profile": [
-            [0.0, 0.75],
-            [0.0, 0.95],
-            [0.015, 0.95],
-            [0.015, 0.856],
-            [0.225, 0.856],
-            [0.225, 0.95],
-            [0.24, 0.95],
-            [0.24, 0.75],
-            [0.225, 0.75],
-            [0.225, 0.844],
-            [0.015, 0.844],
-            [0.015, 0.75]
+          "size": [
+            7.2,
+            0.24,
+            0.2
           ],
-          "plane": "yz",
-          "from": 0.0,
-          "to": 7.2
+          "transform": {
+            "translation": [
+              3.6,
+              0.12,
+              0.85
+            ]
+          }
         },
         {
           "id": "skid-beam-r",
-          "kind": "extrude",
+          "kind": "box",
           "bone": "skid",
           "material": "painted-steel",
           "role": "body",
           "tone": 0.5,
-          "profile": [
-            [0.0, -0.95],
-            [0.0, -0.75],
-            [0.015, -0.75],
-            [0.015, -0.844],
-            [0.225, -0.844],
-            [0.225, -0.75],
-            [0.24, -0.75],
-            [0.24, -0.95],
-            [0.225, -0.95],
-            [0.225, -0.856],
-            [0.015, -0.856],
-            [0.015, -0.95]
+          "size": [
+            7.2,
+            0.24,
+            0.2
           ],
-          "plane": "yz",
-          "from": 0.0,
-          "to": 7.2
+          "transform": {
+            "translation": [
+              3.6,
+              0.12,
+              -0.85
+            ]
+          }
         },
         {
           "id": "skid-cross",
@@ -9748,7 +9833,7 @@
           "material": "painted-steel",
           "role": "body",
           "tone": 0.5,
-          "size": [0.15, 0.22, 1.5],
+          "size": [0.15, 0.24, 1.5],
           "transform": {
             "translation": [0.3, 0.12, 0.0]
           },
@@ -9775,6 +9860,7 @@
           "bone": "base",
           "material": "painted-steel",
           "role": "body",
+          "tone": 0.55,
           "profile": [[0.0, 0.17], [0.5, 0.17]],
           "axis": [0.0, 1.0, 0.0],
           "origin": [-3.0, 0.0, 0.0]
@@ -9785,6 +9871,7 @@
           "bone": "base",
           "material": "painted-steel",
           "role": "body",
+          "tone": 0.55,
           "profile": [[0.0, 0.2], [0.03, 0.2]],
           "axis": [0.0, 1.0, 0.0],
           "origin": [-3.0, 0.5, 0.0]
@@ -9795,6 +9882,7 @@
           "bone": "base",
           "material": "painted-steel",
           "role": "body",
+          "tone": 0.7,
           "profile": [[0.0, 0.1], [0.5, 0.1]],
           "axis": [0.0, 1.0, 0.0],
           "origin": [-3.0, 0.5, 0.0]
@@ -9805,6 +9893,7 @@
           "bone": "base",
           "material": "painted-steel",
           "role": "body",
+          "tone": 0.45,
           "profile": [[0.0, 0.08], [0.28, 0.08]],
           "axis": [0.0, 1.0, 0.0],
           "origin": [-3.0, 1.0, 0.0]
@@ -9815,6 +9904,7 @@
           "bone": "base",
           "material": "painted-steel",
           "role": "body",
+          "tone": 0.55,
           "profile": [[0.0, 0.06], [0.83, 0.06]],
           "axis": [1.0, 0.0, 0.0],
           "origin": [-2.83, 0.68, 0.0]
@@ -9825,6 +9915,7 @@
           "bone": "base",
           "material": "painted-steel",
           "role": "body",
+          "tone": 0.9,
           "slender": true,
           "profile": [[0.0, 0.025], [3.12, 0.025]],
           "axis": [0.0, 1.0, 0.0],
@@ -10444,9 +10535,9 @@
           "material": "motor-steel",
           "role": "body",
           "tone": 0.5,
-          "size": [1.0, 0.1, 0.9],
+          "size": [1.0, 0.12, 0.9],
           "transform": {
-            "translation": [0.0, -0.3, 0.0]
+            "translation": [0.0, -0.29, 0.0]
           }
         },
         {
@@ -10480,9 +10571,9 @@
           "material": "motor-steel",
           "role": "body",
           "tone": 0.5,
-          "size": [0.3, 0.2, 0.3],
+          "size": [0.3, 0.21, 0.3],
           "transform": {
-            "translation": [0.0, 0.55, 0.0]
+            "translation": [0.0, 0.545, 0.0]
           }
         },
         {
@@ -10551,8 +10642,7 @@
         {
           "id": "th-polished-rod",
           "of": "polished-rod",
-          "region": "steel",
-          "slender": true
+          "region": "steel"
         },
         {
           "id": "th-leg-fl",
@@ -10866,8 +10956,7 @@
           "id": "member-polished-rod",
           "of": "polished-rod",
           "member": "base",
-          "part": "member",
-          "slender": true
+          "part": "member"
         },
         {
           "id": "member-gearbox",
@@ -11028,7 +11117,7 @@
           "material": "painted-steel",
           "role": "body",
           "tone": 0.5,
-          "size": [0.15, 0.215, 1.5],
+          "size": [0.15, 0.235, 1.5],
           "transform": {
             "translation": [0.3, 0.1175, 0.0]
           },
@@ -11055,6 +11144,7 @@
           "bone": "base",
           "material": "painted-steel",
           "role": "body",
+          "tone": 0.55,
           "profile": [[0.0, 0.17], [0.5, 0.17]],
           "axis": [0.0, 1.0, 0.0],
           "origin": [-3.0, 0.0, 0.0]
@@ -11065,6 +11155,7 @@
           "bone": "base",
           "material": "painted-steel",
           "role": "body",
+          "tone": 0.6,
           "profile": [[0.0, 0.1], [0.78, 0.1]],
           "axis": [0.0, 1.0, 0.0],
           "origin": [-3.0, 0.5, 0.0]
@@ -11075,6 +11166,7 @@
           "bone": "base",
           "material": "painted-steel",
           "role": "body",
+          "tone": 0.9,
           "slender": true,
           "profile": [[0.0, 0.025], [3.12, 0.025]],
           "axis": [0.0, 1.0, 0.0],
@@ -11648,9 +11740,9 @@
           "material": "motor-steel",
           "role": "body",
           "tone": 0.5,
-          "size": [1.0, 0.1, 0.9],
+          "size": [1.0, 0.12, 0.9],
           "transform": {
-            "translation": [0.0, -0.3, 0.0]
+            "translation": [0.0, -0.29, 0.0]
           }
         },
         {
@@ -11712,8 +11804,7 @@
         {
           "id": "th-polished-rod",
           "of": "polished-rod",
-          "region": "steel",
-          "slender": true
+          "region": "steel"
         },
         {
           "id": "th-leg-fl",
@@ -12002,8 +12093,7 @@
           "id": "member-polished-rod",
           "of": "polished-rod",
           "member": "base",
-          "part": "member",
-          "slender": true
+          "part": "member"
         },
         {
           "id": "member-gearbox",
@@ -12152,7 +12242,7 @@
           "material": "painted-steel",
           "role": "body",
           "tone": 0.5,
-          "size": [0.15, 0.2, 1.5],
+          "size": [0.15, 0.22, 1.5],
           "transform": {
             "translation": [0.3, 0.11, 0.0]
           },
@@ -12179,6 +12269,7 @@
           "bone": "base",
           "material": "painted-steel",
           "role": "body",
+          "tone": 0.6,
           "profile": [[0.0, 0.15], [1.28, 0.15]],
           "axis": [0.0, 1.0, 0.0],
           "origin": [-3.0, 0.0, 0.0]
@@ -12189,6 +12280,7 @@
           "bone": "base",
           "material": "painted-steel",
           "role": "body",
+          "tone": 0.9,
           "slender": true,
           "profile": [[0.0, 0.025], [3.12, 0.025]],
           "axis": [0.0, 1.0, 0.0],
@@ -12706,9 +12798,9 @@
           "material": "motor-steel",
           "role": "body",
           "tone": 0.5,
-          "size": [1.0, 0.1, 0.9],
+          "size": [1.0, 0.12, 0.9],
           "transform": {
-            "translation": [0.0, -0.3, 0.0]
+            "translation": [0.0, -0.29, 0.0]
           }
         },
         {
@@ -12765,8 +12857,7 @@
         {
           "id": "th-polished-rod",
           "of": "polished-rod",
-          "region": "steel",
-          "slender": true
+          "region": "steel"
         },
         {
           "id": "th-leg-fl",
@@ -13030,8 +13121,7 @@
           "id": "member-polished-rod",
           "of": "polished-rod",
           "member": "base",
-          "part": "member",
-          "slender": true
+          "part": "member"
         },
         {
           "id": "member-gearbox",
@@ -13221,6 +13311,7 @@
           "bone": "base",
           "material": "painted-steel",
           "role": "body",
+          "tone": 0.6,
           "profile": [[0.0, 0.17], [1.28, 0.17]],
           "axis": [0.0, 1.0, 0.0],
           "origin": [-3.0, 0.0, 0.0]
@@ -13231,6 +13322,7 @@
           "bone": "base",
           "material": "painted-steel",
           "role": "body",
+          "tone": 0.9,
           "slender": true,
           "profile": [[0.0, 0.05], [3.12, 0.05]],
           "axis": [0.0, 1.0, 0.0],
@@ -13689,9 +13781,9 @@
           "material": "motor-steel",
           "role": "body",
           "tone": 0.5,
-          "size": [1.0, 0.1, 0.9],
+          "size": [1.0, 0.12, 0.9],
           "transform": {
-            "translation": [0.0, -0.3, 0.0]
+            "translation": [0.0, -0.29, 0.0]
           }
         },
         {
@@ -13748,8 +13840,7 @@
         {
           "id": "th-polished-rod",
           "of": "polished-rod",
-          "region": "steel",
-          "slender": true
+          "region": "steel"
         },
         {
           "id": "th-leg-fl",
@@ -13964,8 +14055,7 @@
           "id": "member-polished-rod",
           "of": "polished-rod",
           "member": "base",
-          "part": "member",
-          "slender": true
+          "part": "member"
         },
         {
           "id": "member-gearbox",

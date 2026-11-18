@@ -28,7 +28,7 @@ pub trait ArtifactOwnedDisposer<T>: Send {
     /// 🧊️ [`Self::close_step`] outside any Job turn under one explicit authoring wallet whose stock is `grant`.
     fn close_step_cold(&mut self, owner: &mut T, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
         let mut wallet = semio_framework_value::AuthoringWallet::new(grant, 64);
-        match wallet.run(grant, 64, |effect| self.close_step(owner, effect)).map_err(|error| Fault::from(error.into_message()))? {
+        match wallet.run_invoked(grant, 64, |effect| self.close_step(owner, effect)).map_err(|error| Fault::from(error.into_message()))? {
             Some(done) => done.output,
             None => Ok(PluginLifecycleStep::Progress(Default::default())),
         }

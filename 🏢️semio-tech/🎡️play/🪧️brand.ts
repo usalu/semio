@@ -110,7 +110,10 @@ export function playPaneBrand(variant: string, label: string, exampleId?: string
   };
 }
 
-export const PLAY_PANES: readonly PlayPaneSpec[] = PLAY_RUNTIME_PANES.map(pane => ({
+/** 🔭️ The scope a scoped development server was started for (a pane variant or a group id); absent in the full grid and the release. */
+const PLAY_SCOPE: string | undefined = import.meta.env?.SEMIO_TECH_PLAY_SCOPE || undefined;
+
+export const PLAY_PANES: readonly PlayPaneSpec[] = PLAY_RUNTIME_PANES.filter(pane => PLAY_SCOPE === undefined || pane.variant === PLAY_SCOPE || pane.group === PLAY_SCOPE).map(pane => ({
   id: pane.variant,
   variant: pane.variant,
   group: pane.group,

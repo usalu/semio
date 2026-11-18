@@ -1,11 +1,12 @@
 import{refuseBuildV1}from"./🏗️build/📖️texts/🟦️.ts";
 import {remoteGuardInputsV1} from "./🏗️build/🧮️task-model/🛡️remote-guard/🟦️.ts";
+import {splitNxPlatformInputsV1} from "./🏗️build/🧮️task-model/🧭️platform-class/🟦️.ts";
 import {nxTaskArgumentsSourceIdentityV1} from "./⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🟨️.mjs";
 import {readFileSync,existsSync,lstatSync,realpathSync} from "node:fs";
 import {join,resolve,relative,dirname,isAbsolute,sep} from "node:path";
 import {createHash} from "node:crypto";
 import {fileURLToPath} from "node:url";
-import {createRequire} from "node:module";
+import {classifyModuleReferencesV1} from "./🏗️build/🧮️task-model/🔎️module-references/🟦️.ts";
 import {nxBuildDependencySourceIdentityV1,nxBuildDependencySourceChangesV1,nxBuildDependencySourceRevisionsV1,nxBuildDependencySourceChangesFromV1,nxBuildDependencySourceProbeV1,nxEngineNamedInputV1 as engineNamedInput,nxEngineNativeNamedInputV1 as engineNativeNamedInput} from "./⚡️caching/🚀️bootstrap/🔌️nx-plugin/🔏️implementation/🟨️.mjs";
 import {nxEngineUnkeyedPrefixesV1,splitNxEngineFilesV1,nxEngineFamilyV1,nxEnginePolicyV1,nxEngineSpawnOnlyV1} from "./⚡️caching/🚀️bootstrap/🔌️nx-plugin/🧮️engine-digest/🟦️.ts";
 import {withNxBuildGraphPublicationV1} from "./⚡️caching/🚀️bootstrap/🔌️nx-plugin/📌️graph-pin/🟨️.mjs";
@@ -23,16 +24,9 @@ export function nxBuildDependencyImplementationChangesFromV1(revisions){return n
 export function nxBuildDependencyImplementationProbeV1(options){return nxBuildDependencySourceProbeV1(options);}
 
 
-/** 🔎️ Classifies exact literal module and URL references as portable source facts. */
-export function nxBuildEngineReferencesV1(source){
- const ts=createRequire(import.meta.url)("typescript"),references=[],identities=new Set(),add=(kind,specifier)=>{const identity=kind+"\0"+specifier;if(!identities.has(identity)){identities.add(identity);references.push({kind,specifier});}};
- for(const imported of ts.preProcessFile(source,true,true).importedFiles)add("module",imported.fileName);
- if(!source.includes("URL"))return references;
- const syntax=ts.createSourceFile("engine.ts",source,ts.ScriptTarget.Latest,false),visit=node=>{
-  if(ts.isNewExpression(node)&&ts.isIdentifier(node.expression)&&node.expression.text==="URL"&&node.arguments?.length===2&&ts.isStringLiteralLike(node.arguments[0])&&node.arguments[0].text.startsWith(".")&&node.arguments[1].getText(syntax)==="import.meta.url"){const specifier=node.arguments[0].text;add(new URL(specifier,"file:///engine.ts").pathname.endsWith("/")?"directory-url":"file-url",specifier);}
-  ts.forEachChild(node,visit);
- };visit(syntax);return references;
-}
+/** 🔎️ Classifies exact literal module and URL references as portable source facts through the own string scanner; the compiler package is only the test oracle.
+ * @see ./🏗️build/🧮️task-model/🔎️module-references/🧬️schema/🔣️.json */
+export function nxBuildEngineReferencesV1(source){return classifyModuleReferencesV1(source).map(({kind,specifier})=>({kind,specifier}));}
 
 /** 📄️ Resolves actual engine modules, retaining directory-index imports and missing-file refusals. */
 export function nxBuildEngineSourceFileV1(owner,specifier){
@@ -109,7 +103,7 @@ export function projectBuildTargetForNxV1(target,name=""){
 export function projectBuildGraphForNxV1(graph){
  if([engineNamedInput,engineNativeNamedInput].some(name=>Object.hasOwn(graph.namedInputs??{},name)||Object.values(graph.projects).some(project=>Object.hasOwn(project.namedInputs??{},name))))throw Error("Private engine named input is reserved");
  const engine=nxBuildEngineInputsV1(),engineNative=nxBuildEngineInputsV1("native"),known=new Set(Object.keys(graph.projects)),present=names=>Array.isArray(names)?names.filter(name=>typeof name!=="string"||/[*!:,]/u.test(name)||known.has(name)):names,projects=Object.fromEntries(Object.entries(graph.projects).map(([name,project])=>[name,{...project,...(project.implicitDependencies===undefined?{}:{implicitDependencies:present(project.implicitDependencies)}),namedInputs:{...graph.namedInputs,...project.namedInputs,[engineNamedInput]:engine,[engineNativeNamedInput]:engineNative},targets:Object.fromEntries(Object.entries(project.targets).map(([name,target])=>[name,projectBuildTargetForNxV1(target,name)]))}]));
- return {projects:shareNxProjectInputsV1(liftNxNamedInputReferencesV1(projects)),externalNodes:graph.externalNodes??{}};
+ return {projects:shareNxProjectInputsV1(splitNxPlatformInputsV1(liftNxNamedInputReferencesV1(projects))),externalNodes:graph.externalNodes??{}};
 }
 
 /** 🪜️ Nx refuses a named input that refers to another project, while the build graph names a provider closure as a `{input,projects}` row inside a command source group (`🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🔌️provider-closures`): every such row moves out of its group into each target that uses the group, directly or through other groups of its project (a target without inputs uses `default`), so Nx hashes the same inputs. A `^` input of a group that holds such rows is refused: the dependency's rows could not follow it. */

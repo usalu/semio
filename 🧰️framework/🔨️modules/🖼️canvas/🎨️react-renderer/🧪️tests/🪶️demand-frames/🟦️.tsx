@@ -25,7 +25,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
     HTMLElement.prototype.getBoundingClientRect = () => ({ x: 0, y: 0, left: 0, top: 0, right: 400, bottom: 300, width: 400, height: 300, toJSON: () => ({}) }) as DOMRect;
     const observer = (globalThis as { ResizeObserver?: unknown }).ResizeObserver;
     (globalThis as { ResizeObserver?: unknown }).ResizeObserver = class {
-      observe(): void {}
+      observe(): void {} unobserve(): void {}
       disconnect(): void {}
     };
     restore.push(() => {

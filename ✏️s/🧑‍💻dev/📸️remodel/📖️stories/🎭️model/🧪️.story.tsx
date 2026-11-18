@@ -15,6 +15,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
+import { Button, SharedBorderRow } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useCallback, useMemo, useState, type ReactElement } from "react";
 
@@ -49,13 +50,13 @@ function RemodelModelStoryHost({ document }: { readonly document: RemodelScene }
 
   return (
     <div style={{ display: "flex", height: "100%", width: "100%", flexDirection: "column" }}>
-      <div style={{ display: "flex", gap: 6, padding: 4, flexWrap: "wrap" }}>
+      <SharedBorderRow wrap>
         {LAYER_IDS.map((layer) => (
-          <button key={layer} type="button" data-testid={`remodel-model-layer-${layer}`} onClick={() => onAction({ controllerId: REMODEL_EDITOR_CONTROLLER_ID, action: "setLayerVisibility", args: { layer, visible: !config.layers[layer] } })}>
+          <Button variant="outline" icon="arrow-right" key={layer} type="button" data-testid={`remodel-model-layer-${layer}`} onClick={() => onAction({ controllerId: REMODEL_EDITOR_CONTROLLER_ID, action: "setLayerVisibility", args: { layer, visible: !config.layers[layer] } })}>
             {layer}: {config.layers[layer] ? "on" : "off"}
-          </button>
+          </Button>
         ))}
-      </div>
+      </SharedBorderRow>
       <div style={{ position: "relative", flex: "1 1 auto", minHeight: 0 }}>
         <World3dHost node={node} onAction={onAction} />
       </div>

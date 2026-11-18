@@ -9,7 +9,7 @@ def arg(name):
     return sys.argv[sys.argv.index(name)+1] if name in sys.argv else None
 def root():
     if arg("--root"):return os.path.abspath(arg("--root"))
-    for c in ["/Users/Shared/semio","/Users/ueli/Documents/semio"]:
+    for c in ["/Users/ueli/Documents/semio"]:
         if os.path.exists(c+"/AGENTS.md") and os.path.exists(c+"/.cache/f/machine.json"):return c
     sys.exit("no worktree root found")
 R=root()

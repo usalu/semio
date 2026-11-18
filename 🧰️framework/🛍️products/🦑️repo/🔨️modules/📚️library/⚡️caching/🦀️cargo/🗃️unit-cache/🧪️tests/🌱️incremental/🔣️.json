@@ -16,11 +16,10 @@
     "publishedEdits": 2,
     "served": {
       "hits": [
-        "core"
-      ],
-      "misses": [
+        "core",
         "leaf"
-      ]
+      ],
+      "misses": []
     }
   }
 }

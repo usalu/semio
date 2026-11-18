@@ -460,8 +460,22 @@ describe("hub sign-in pane", () => {
     const stored = book();
     const relabeled = { ...stored, connections: stored.connections.map((entry) => (entry.kind === "local-bootstrap" ? { ...entry, label: "stored text" } : entry)) };
     const view = render(<HubSignInPane book={relabeled} session={hubSessionInitialStateV1("local-bootstrap")} locale="en" onSelectConnection={() => undefined} onAddHub={() => null} onForgetHub={() => undefined} onSignIn={() => undefined} onCancel={() => undefined} onSignOut={() => undefined} />);
-    const option = view.container.querySelector<HTMLOptionElement>(`option[value="${LOCAL_BOOTSTRAP_HUB_CONNECTION_ID_V1}"]`);
-    expect(option?.textContent?.startsWith("This device — ")).toBe(true);
+    const trigger = view.container.querySelector<HTMLElement>('[data-element-alias="os.hub.signIn.hub"]');
+    expect(trigger?.textContent?.startsWith("This device — ")).toBe(true);
+    view.unmount();
+  });
+
+  it("lays the hub and address fields out as cells of shared-border rows instead of native bordered boxes", () => {
+    const view = render(<PaneHarness session={hubSessionInitialStateV1("local-bootstrap")} />);
+    const address = view.container.querySelector<HTMLInputElement>('input[name="hubOrigin"]')!;
+    const addressRow = address.closest('[data-slot="input-root"]')!.parentElement!;
+    expect(addressRow.getAttribute("data-slot")).toBe("hub-field-row");
+    expect(addressRow.hasAttribute("data-shared-border-cells")).toBe(true);
+    expect(addressRow.querySelector(":scope > [data-slot=shared-border-row-label] > label")?.getAttribute("for")).toBe(address.id);
+    expect(view.container.querySelector('[data-element-alias="os.hub.signIn.hub"]')?.closest('[data-slot="hub-field-row"]')).not.toBeNull();
+    expect(addressRow.querySelector("button[type=submit]")?.closest("[data-slot=button-group]")?.parentElement).toBe(addressRow);
+    expect(view.container.querySelector("select")).toBeNull();
+    expect(view.container.querySelector('[class*="rounded-sm border px-single"]')).toBeNull();
     view.unmount();
   });
 

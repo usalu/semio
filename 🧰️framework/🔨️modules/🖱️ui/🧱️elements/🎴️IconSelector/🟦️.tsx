@@ -14,6 +14,7 @@ import { Textarea } from "../🔤️Textarea/🟦️.tsx";
 import { useLabel } from "../🏷️Label/🟦️.tsx";
 import { type IconSelectorMode, decodeIcon, encodeIcon, classifyIconSelectorMode, Icon } from "../🔣️Icons/🟦️.tsx";
 import { Button } from "../🔘️Button/🟦️.tsx";
+import { SharedBorderRow, SharedBorderRowCell } from "../🪢️SharedBorderRow/🟦️.tsx";
 import { isIconName } from "@semio-tech/assets";
 // #endregion 🔌️Adapters
 
@@ -196,7 +197,7 @@ export function IconSelector({ id, value, onChange, disabled = false, uniform = 
   })();
 
   return (
-    <div className={cn("flex min-w-0 flex-col gap-2 rounded-md border p-2", locked && "pointer-events-none opacity-60")} data-slot="icon-selector">
+    <SharedBorderRow orientation="vertical" className={cn(locked && "pointer-events-none opacity-60")} data-slot="icon-selector">
       <Select id={`${id}.mode.select`} disabled={locked} onValueChange={onModeSelect} value={activeMode}>
         <SelectTrigger aria-labelledby={labelledBy} className="h-8 w-full min-w-0 px-2 text-xs whitespace-normal" id={`${id}.mode`}>
           <SelectValue />
@@ -237,13 +238,13 @@ export function IconSelector({ id, value, onChange, disabled = false, uniform = 
         rows={activeMode === "data" || activeMode === "vector" ? 5 : 4}
         value={editorValue}
       />
-      <div className="bg-muted/30 flex min-h-peta items-center justify-center overflow-hidden rounded-sm border px-1 py-2">{preview}</div>
-      <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
-        <Button className="h-7 shrink-0 gap-1 px-2 text-xs" disabled={locked} onClick={() => fileInputRef.current?.click()} type="button" variant="outline" icon="folder-open" text={importFileLabel} />
-        <Button className="h-7 shrink-0 px-2 text-xs whitespace-nowrap" disabled={locked} onClick={() => onChange("")} type="button" variant="ghost" icon="x" text={clearLabel} />
-      </div>
+      <SharedBorderRowCell className="bg-muted/30 min-h-peta justify-center overflow-hidden">{preview}</SharedBorderRowCell>
+      <SharedBorderRow>
+        <Button className="min-w-0 flex-1 text-xs" disabled={locked} onClick={() => fileInputRef.current?.click()} type="button" variant="outline" icon="folder-open" text={importFileLabel} />
+        <Button className="min-w-0 flex-1 text-xs whitespace-nowrap" disabled={locked} onClick={() => onChange("")} type="button" variant="ghost" icon="x" text={clearLabel} />
+      </SharedBorderRow>
       <input accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml,.svg,.png,.jpg,.jpeg,.webp,.gif" className="hidden" onChange={onPickFiles} ref={fileInputRef} type="file" />
-    </div>
+    </SharedBorderRow>
   );
 }
 

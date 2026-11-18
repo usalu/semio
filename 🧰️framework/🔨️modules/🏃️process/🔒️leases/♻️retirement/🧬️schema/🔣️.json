@@ -22,7 +22,9 @@
         "budgetMilliseconds": 3000,
         "pressureSweepIntervalMilliseconds": 30000,
         "nestedStoresPerSweep": 16,
-        "nestedEntries": 512
+        "nestedEntries": 512,
+        "createReserveBytes": 8388608,
+        "createReliefIntervalMilliseconds": 30000
       }
     },
     "Store": {
@@ -56,6 +58,10 @@
         "failed": {
           "en": "Lease store sweep failed ({reason}); the store stays as it is and the next opener tries again.",
           "de": "Lease-Speicher-Aufräumen fehlgeschlagen ({reason}); der Speicher bleibt unverändert und der nächste Aufrufer versucht es erneut."
+        },
+        "full": {
+          "en": "{message} Retired {databases} idle lease databases, {queues} empty queues and {claims} settled claims ({freed} freed) in {directory} and tried the create again; it is still full: free space there.",
+          "de": "{message} {databases} ungenutzte Lease-Datenbanken, {queues} leere Warteschlangen und {claims} erledigte Ansprüche ({freed} frei geworden) in {directory} entfernt und das Anlegen erneut versucht; es ist weiterhin voll: dort Platz freigeben."
         },
         "cancelled": {
           "en": "Lease store sweep cancelled after {slices} slices; the cursor is kept.",

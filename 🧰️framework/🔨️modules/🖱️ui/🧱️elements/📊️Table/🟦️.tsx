@@ -62,6 +62,8 @@ export interface TableColumn<T = unknown> {
   width?: string;
   className?: string;
   headerClassName?: string;
+  /** 🧱️ `row`: the cell hosts a shared border row that fills it edge to edge, so the cell draws no padding or gap of its own. */
+  cell?: "row";
   sortable?: boolean;
   visible?: boolean | ((data: T[]) => boolean);
 }
@@ -218,8 +220,8 @@ function TableHtml5DragRow<T>({
       data-row-id={rowId}
     >
       {visibleColumns.map((column, columnIndex) => (
-        <td key={column.id} className={`${rowHeightClass} px-single py-0 align-middle text-sm [&_svg:not([class*='size-'])]:size-small [&_img]:size-small ${column.className || ""}`}>
-          <div className="flex items-center h-full min-w-0 gap-1">
+        <td key={column.id} className={`${rowHeightClass} ${column.cell === "row" ? "p-0" : "px-single"} py-0 align-middle text-sm [&_svg:not([class*='size-'])]:size-small [&_img]:size-small ${column.className || ""}`}>
+          <div className={column.cell === "row" ? "flex h-full min-w-0 items-stretch" : "flex items-center h-full min-w-0 gap-1"}>
             {wantsDrag && !driverSurfaceDrag && columnIndex === 0 ? (
               <DragHandle labelId="ui.tree.drag.transfer" iconKind="move" onPointerDown={arm} onClick={(event) => event.stopPropagation()} />
             ) : null}
@@ -255,7 +257,7 @@ function TableDraggableRow<T>({ row, rowId, index, isSelected, customRowClassNam
     setDraggableRef(node);
     setDroppableRef(node);
   };
-  const baseRowClassName = cn(borderNormalBottomClass, rowHeightClass, tableRowInteractiveClass, isSelected && tableRowSelectedClass, isOver && !isSelected && "bg-hover-interactive-fill text-emphasized ring-2 ring-active");
+  const baseRowClassName = cn(borderNormalBottomClass, rowHeightClass, tableRowInteractiveClass, isSelected && tableRowSelectedClass, isOver && !isSelected && "bg-hover-interactive-fill text-emphasized !border-b-[color:var(--active-base)]");
   const isDragging = activeId === rowId || isDraggingHook;
   return (
     <tr
@@ -280,8 +282,8 @@ function TableDraggableRow<T>({ row, rowId, index, isSelected, customRowClassNam
       data-row-id={rowId}
     >
       {visibleColumns.map((column, columnIndex) => (
-        <td key={column.id} className={`${rowHeightClass} px-single py-0 align-middle text-sm [&_svg:not([class*='size-'])]:size-small [&_img]:size-small ${column.className || ""}`}>
-          <div className="flex items-center h-full min-w-0 gap-1">
+        <td key={column.id} className={`${rowHeightClass} ${column.cell === "row" ? "p-0" : "px-single"} py-0 align-middle text-sm [&_svg:not([class*='size-'])]:size-small [&_img]:size-small ${column.className || ""}`}>
+          <div className={column.cell === "row" ? "flex h-full min-w-0 items-stretch" : "flex items-center h-full min-w-0 gap-1"}>
             {canDragRow && !driverSurfaceDrag && columnIndex === 0 ? (
               <DragHandle labelId="ui.tree.drag.sort" attributes={attributes} listeners={listeners} onClick={(event) => event.stopPropagation()} />
             ) : null}

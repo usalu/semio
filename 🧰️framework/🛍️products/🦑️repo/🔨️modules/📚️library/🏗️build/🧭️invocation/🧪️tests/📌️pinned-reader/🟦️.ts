@@ -4,6 +4,8 @@ import{createIssuedResourceControlV1}from"../../../../../../../../🔨️modules
 import{loadBuildGraphV1}from"../../../🕸️graph/🟦️.ts";
 import{loadBuildInvocationGraphV1}from"../../🕸️graph/🟦️.ts";
 import{withGraphTestInvocationV1}from"../../../🧪️tests/🕸️graph/🧰️support/🟦️.ts";
+import{existsSync as existsRootV1}from"node:fs";import{dirname as dirnameRootV1,join as joinRootV1}from"node:path";
+const repositoryRootV1=(()=>{let directory=import.meta.dir;while(!existsRootV1(joinRootV1(directory,"MODULE.bazel"))&&dirnameRootV1(directory)!==directory)directory=dirnameRootV1(directory);return directory;})();
 
 const pin={path:"/nonexistent/semio-pinned-reader-law/snapshot.json",digest:"0".repeat(64)};
 
@@ -14,16 +16,16 @@ const withPin=async(body:()=>Promise<void>)=>{
 };
 
 test("the bare primitive refuses a reusing load that holds no Graph reader",()=>withPin(async()=>{
- await expect(withGraphTestInvocationV1(async original=>{await loadBuildGraphV1(process.cwd(),original,createIssuedResourceControlV1(original,"graph:pinned-reader-bare",0),{selection:{kind:"all"},reuse:true});})).rejects.toThrow(/Required original cache (consumer|reader) unavailable/u);
+ await expect(withGraphTestInvocationV1(async original=>{await loadBuildGraphV1(repositoryRootV1,original,createIssuedResourceControlV1(original,"graph:pinned-reader-bare",0),{selection:{kind:"all"},reuse:true});})).rejects.toThrow(/Required original cache (consumer|reader) unavailable/u);
 }),60000);
 
 test("a reusing invocation load opens its own Graph reader and reaches the pinned snapshot identity check",()=>withPin(async()=>{
- await expect(withGraphTestInvocationV1(async original=>{await loadBuildInvocationGraphV1(process.cwd(),["show","projects"],original,original,createIssuedResourceControlV1(original,"graph:pinned-reader-opened",0),true);})).rejects.toThrow("Original retained Graph snapshot identity required");
+ await expect(withGraphTestInvocationV1(async original=>{await loadBuildInvocationGraphV1(repositoryRootV1,["show","projects"],original,original,createIssuedResourceControlV1(original,"graph:pinned-reader-opened",0),true);})).rejects.toThrow("Original retained Graph snapshot identity required");
 }),60000);
 
 test("a neutral child is its own root and never inherits the pinned graph of its parent",()=>withPin(async()=>{
  await withGraphTestInvocationV1(async original=>{
-  const{projectOwnedBuildChildEnvironmentV1}=await import("../../../📥️caller/📤️child/🟦️.ts"),environment=await projectOwnedBuildChildEnvironmentV1(process.cwd(),["show","projects"],original,createIssuedResourceControlV1(original,"graph:pinned-reader-child",0));
+  const{projectOwnedBuildChildEnvironmentV1}=await import("../../../📥️caller/📤️child/🟦️.ts"),environment=await projectOwnedBuildChildEnvironmentV1(repositoryRootV1,["show","projects"],original,createIssuedResourceControlV1(original,"graph:pinned-reader-child",0));
   expect(process.env.SEMIO_BUILD_GRAPH_PATH).toBe(pin.path);
   for(const name of["SEMIO_BUILD_GRAPH_PATH","SEMIO_BUILD_GRAPH_DIGEST","SEMIO_BUILD_REUSE_GRAPH"])expect(environment[name]).toBeUndefined();
  });

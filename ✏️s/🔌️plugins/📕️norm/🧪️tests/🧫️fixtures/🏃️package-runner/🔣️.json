@@ -1,6 +1,10 @@
 {
   "schemaVersion": 1,
-  "descriptor": "🌎️hub/🧩️compositions/📕️norm/🧩️component/🔣️.json",
+  "descriptors": [
+    "🌎️hub/🧩️compositions/📕️norm/🧩️component/🔣️.json",
+    "🌎️hub/🧩️compositions/📕️norm/🧩️extensions/📗️eurocode/🧩️component/🔣️.json",
+    "🌎️hub/🧩️compositions/📕️norm/🧩️extensions/📙️eurocode-materials/🧩️component/🔣️.json"
+  ],
   "suites": [
     "🧪️tests/🏷️mutation-label-census/🟦️.ts",
     "🧪️tests/🧪️wire-twins/🟦️.ts",

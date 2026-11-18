@@ -15021,19 +15021,18 @@
    "digest": "d07eac4f145eae098ab447dc6d79796c7c8f3047b819a2215a889eab7444e0d5"
   },
   {
-   "name": "paths with spaces, emoji, umlauts and newlines are kept and a nested repository is one entry",
+   "name": "paths with spaces, emoji and umlauts are kept, a path with a newline (which the replica never carries) leaves the view, and a nested repository is one entry",
    "porcelain": "?? dir with space/a b.txt\u0000?? 🧬️x/ü.txt\u0000 M line\nbreak.txt\u0000?? nested/\u0000",
    "staged": 0,
-   "modified": 1,
+   "modified": 0,
    "deleted": 0,
    "untracked": 3,
    "lines": [
-    " M line\nbreak.txt",
     "?? dir with space/a b.txt",
     "?? nested/",
     "?? 🧬️x/ü.txt"
    ],
-   "digest": "95806bec533cb24b92616dc99422fd7414d90abb5fb18c1e09770478a0b22f90"
+   "digest": "852fb97371e4a52246421bc227412f479d42a800337b576d089c04b66f386c59"
   },
   {
    "name": "unmerged entries are lines and ignored entries are not",

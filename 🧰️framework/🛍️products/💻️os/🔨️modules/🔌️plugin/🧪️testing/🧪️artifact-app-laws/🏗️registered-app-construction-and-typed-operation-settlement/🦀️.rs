@@ -95,13 +95,23 @@ pub async fn new_app_with_registry<A: ArtifactApp + Default>(manifest: fn() -> A
 /// 🧬️ `new_app_with_registry` over an explicit member roster `M` — for an app whose snapshot
 /// composes children it derives (`ArtifactApp::genesis_child_pack`), which `NoMembers` can never open.
 pub async fn new_app_with_registry_and_members<A: ArtifactApp + Default, M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static>(manifest: fn() -> App, actor: protocol::ActorId, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<A, M> {
+    *new_app_with_registry_boxed_and_members::<A, M>(manifest, actor, mounted_policy, identity).await
+}
+
+/// 📦️ [`new_app_with_registry_and_members`] whose app lives on the heap from its construction, never as a megabyte inline value.
+pub async fn new_app_with_registry_boxed_and_members<A: ArtifactApp + Default, M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static>(manifest: fn() -> App, actor: protocol::ActorId, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Box<VcsArtifactApp<A, M>> {
     publish_framework_schemas();
     let definition = manifest().definition;
     let registry = AppActionRegistry::from_definition(&definition);
     drop(definition);
-    let mut app = VcsArtifactApp::with_registry(A::default(), registry, actor, mounted_policy, identity).await.expect("the reference snapshot births");
-    settle_store_constructor(&mut app, mounted_policy);
+    let mut app = VcsArtifactApp::with_registry_boxed(A::default(), registry, actor, mounted_policy, identity).await.expect("the reference snapshot births");
+    settle_store_constructor(&mut *app, mounted_policy);
     app
+}
+
+/// 📦️ [`new_app_with_registry_boxed_and_members`] over the default (empty) member roster.
+pub async fn new_app_with_registry_boxed<A: ArtifactApp + Default>(manifest: fn() -> App, actor: protocol::ActorId, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Box<VcsArtifactApp<A>> {
+    new_app_with_registry_boxed_and_members::<A, store::NoMembers>(manifest, actor, mounted_policy, identity).await
 }
 
 /// 🧬️ A registry-backed wrapper whose manifest is authored asynchronously by the concrete fixture,
@@ -134,13 +144,24 @@ where
     M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
     Manifest: std::future::Future<Output = App>,
 {
+    *new_registered_app_boxed_with_members::<A, M, Manifest>(manifest, actor, mounted_policy, identity).await
+}
+
+/// 📦️ [`new_registered_app_with_members`] whose app lives on the heap from its construction: a mounted instance is about a megabyte inline, so laws that hold several of them across awaits keep the box, never the value.
+pub async fn new_registered_app_boxed_with_members<A, M, Manifest>(manifest: Manifest, actor: protocol::ActorId, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Box<VcsArtifactApp<A, M>>
+where
+    A: ArtifactApp + Default,
+    M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
+    Manifest: std::future::Future<Output = App>,
+{
     publish_framework_schemas();
     let definition = manifest.await.definition;
-    let mut app = VcsArtifactApp::with_registry(A::default(), AppActionRegistry::from_definition(&definition), actor, mounted_policy, identity).await.expect("the reference snapshot births");
+    let mut app = VcsArtifactApp::with_registry_boxed(A::default(), AppActionRegistry::from_definition(&definition), actor, mounted_policy, identity).await.expect("the reference snapshot births");
     app.bind_instance_id(meta("local").instance_id).await;
-    settle_store_constructor(&mut app, mounted_policy);
+    settle_store_constructor(&mut *app, mounted_policy);
     app
 }
+
 
 /// 🏗️ A `VcsArtifactApp` is born constructing: its store owner catalogs are installed by metered constructor turns
 /// the reactor drives before it admits any command. A fixture that reaches the stores directly settles that
@@ -414,6 +435,7 @@ pub fn fixture_close_grant(mounted_policy: semio_plugin_mounted_owner::MountedOw
 
 /// 🧹️ Closes one registered fixture through the exact retained app close state machine.
 pub fn close_registered_fixture_app<A: PluginApp>(app: &mut A, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Vec<TypedOperationFixtureOwnershipReceipt>,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    fixture_end_turn(cx)?;
     let mut pending_authority = None;
     let mut last_quote = None;
     let mut close_turn = 0usize;let maximum_turns=OriginalFixtureCaller::maximum_turns();

@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:nx-engine-module-references:v1",
+  "title": "Nx Engine Module References",
+  "description": "🔎️ The literal references one source text of the private Nx engine names: module specifiers (import and export from, dynamic import, require, define, ambient module declarations) and `new URL(\"./…\", import.meta.url)` file and directory references. Order of first occurrence, each pair once. A string-only scanner reads them, so the engine closure needs no compiler package at runtime; the TypeScript compiler API is only the test oracle. 🔎️ Welche literalen Verweise ein Quelltext des privaten Nx-Motors nennt: Modulbezeichner und `new URL(\"./…\", import.meta.url)`-Verweise, in Reihenfolge des ersten Auftretens, jedes Paar einmal; ein reiner Textscanner liest sie, die Compiler-Bibliothek dient nur im Test als Gegenprobe.",
+  "oneOf": [{ "$ref": "#/definitions/References" }],
+  "definitions": {
+    "Reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "specifier"],
+      "properties": {
+        "kind": { "enum": ["module", "file-url", "directory-url"] },
+        "specifier": { "type": "string" }
+      }
+    },
+    "References": { "type": "array", "items": { "$ref": "#/definitions/Reference" } },
+    "Corpus": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "source", "references"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "source": { "type": "string" },
+          "references": { "$ref": "#/definitions/References" }
+        }
+      }
+    }
+  }
+}

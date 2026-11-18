@@ -2,6 +2,7 @@ import {copyFile,mkdir,readdir,readFile,rename,rm,stat} from "node:fs/promises";
 import {dirname,join,resolve} from "node:path";
 import {randomBytes} from "node:crypto";
 import {fleetBlobOpenV1,fleetBlobPublishFileV1,fleetBlobStorePathV1,hashFleetFileV1,type FleetFetchContextV1} from "../🟦️.ts";
+import {claimFleetWorkV1,type WorkClaimV1} from "../🎟️work-claim/🟦️.ts";
 
 /** 📌️ One crate file of a lockfile: Cargo pins its bytes by the sha256 of the `.crate` archive. */
 export type CratePinV1=Readonly<{name:string;version:string;sha256:string}>;
@@ -70,11 +71,13 @@ export async function fleetCratesPublishV1(context:FleetFetchContextV1,home:stri
  return published;
 }
 
-/** 🦀️ Runs a `cargo fetch` between a restore and a publish: the crate files come from the fleet when it has them, the fetch downloads what is still missing from crates.io, and what it downloaded goes back to the fleet. The index entries stay with Cargo. Every failure of the fleet is swallowed; the fetch itself runs exactly as before. */
+/** 🦀️ Runs a `cargo fetch` between a restore and a publish: the crate files come from the fleet when it has them, the fetch downloads what is still missing from crates.io, and what it downloaded goes back to the fleet. The index entries stay with Cargo. The restore runs under the fleet claim of the lockfile's crate set (`claimFleetWorkV1`, kind `crates`): of any number of machines with one lockfile exactly one downloads while the others wait and restore what it published. Every failure of the fleet is swallowed; the fetch itself runs exactly as before. */
 export async function fleetCargoRegistryAroundV1<T>(context:FleetFetchContextV1,request:Readonly<{home:string;manifest:string;workspace:string}>,fetch:()=>Promise<T>):Promise<T>{
- let pins:readonly CratePinV1[]=[];
- try{const lock=await findCargoLockV1(request.manifest,request.workspace);if(lock)pins=cargoLockRegistryCratesV1(await readFile(lock,"utf8"));if(pins.length)await fleetCratesRestoreV1(context,request.home,pins);}catch{}
- const result=await fetch();
- try{if(pins.length)await fleetCratesPublishV1(context,request.home,pins);}catch{}
- return result;
+ let pins:readonly CratePinV1[]=[],claim:WorkClaimV1|undefined;
+ try{const lock=await findCargoLockV1(request.manifest,request.workspace);if(lock)pins=cargoLockRegistryCratesV1(await readFile(lock,"utf8"));if(pins.length)claim=await claimFleetWorkV1(context,{kind:"crates",identity:pins.map(pin=>pin.sha256).sort().join("\n"),ready:async()=>(await fleetCratesRestoreV1(context,request.home,pins)).missing===0});}catch{}
+ try{
+  const result=await fetch();
+  try{if(pins.length)await fleetCratesPublishV1(context,request.home,pins);}catch{}
+  return result;
+ }finally{await claim?.release().catch(()=>{});}
 }

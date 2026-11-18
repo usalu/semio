@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:remote-execution:sidecar:restart:v1",
+  "title": "When and how a build sidecar restarts for new code",
+  "description": "A sidecar restarts only when a byte of the files it actually loads (its import closure) differs from the closure it started with. Fleet machines receive edits of the build module continuously, so the restart waits until the closure was quiet for quietMilliseconds (a closure that is edited without a pause restarts after maximumDeferralMilliseconds at the latest), stops taking new work (drain), lets the work in flight finish for up to graceMilliseconds and then exits with status 75 so that its launcher starts it again with the new code. The `ready` role never defers its restart for a stage in flight (`serveDeferralMilliseconds` 0): its stage is a detached process that the next child adopts, so new code reaches a machine whose stage waits for hours at once, instead of after an hour. An edit that is reverted before the restart cancels it. The closure is looked at every watchMilliseconds. The restart is logged with the changed files and the time it was deferred. A role that holds a long computation whose results are keyed by the implementation that produced them (the graph server while it serves held requests) does not restart for a code change while that work is in flight: the restart waits until the work is done, for serveDeferralMilliseconds at the latest counted from the first change, takes no new work while it waits and restarts at once when the work ends; the other roles keep the rule above.",
+  "definitions": {
+    "Restart": {
+      "const": {
+        "watchMilliseconds": 30000,
+        "quietMilliseconds": 90000,
+        "maximumDeferralMilliseconds": 600000,
+        "graceMilliseconds": 300000,
+        "serveDeferralMilliseconds": 3600000,
+        "minimumIntervalMilliseconds": 0,
+        "pool": {"watchMilliseconds": 5000, "quietMilliseconds": 90000, "maximumDeferralMilliseconds": 600000, "serveDeferralMilliseconds": 600000, "minimumIntervalMilliseconds": 600000},
+        "ready": {"serveDeferralMilliseconds": 0}
+      }
+    },
+    "Texts": {
+      "const": {
+        "en": {
+          "deferred": "{role}: code of the sidecar edited ({files}); restarting after {quiet} s without a further change, after {maximum} s at the latest",
+          "restarting": "{role} code changed, restarting (deferred {deferred} s, {reason}; changed: {files})",
+          "draining": "{role}: finishing the work in flight for up to {grace} s before the restart",
+          "reasonQuiet": "quiet period over",
+          "reasonMaximum": "maximum deferral reached",
+          "waitingForServe": "{role}: code changed ({files}); restarting when the serve in flight is done (at most {minutes} min)",
+          "reasonServed": "serve in flight is done",
+          "reasonServeMaximum": "maximum deferral of the serve reached"
+        },
+        "de": {
+          "deferred": "{role}: Code des Sidecars geändert ({files}); Neustart nach {quiet} s ohne weitere Änderung, spätestens nach {maximum} s",
+          "restarting": "{role}: Code geändert, Neustart (verzögert um {deferred} s, {reason}; geändert: {files})",
+          "draining": "{role}: beende die laufende Arbeit (bis zu {grace} s) vor dem Neustart",
+          "reasonQuiet": "Ruhezeit vorbei",
+          "reasonMaximum": "maximale Verzögerung erreicht",
+          "waitingForServe": "{role}: Code geändert ({files}); Neustart, sobald der laufende Serve fertig ist (höchstens {minutes} min)",
+          "reasonServed": "laufender Serve fertig",
+          "reasonServeMaximum": "maximale Verzögerung des Serves erreicht"
+        }
+      }
+    }
+  }
+}

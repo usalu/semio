@@ -689,6 +689,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
             let Some((operation_id, operation)) = self.tools.tool_operations.entry(index).map(|entry| (entry.0, &entry.1)) else { continue };
             occupied = true;
             match operation.stage {
+                MountedTypedCommandFullOperationStage::Worker if operation.producer_build_pending() => every_operation_awaits_presented_ack = false,
                 MountedTypedCommandFullOperationStage::Worker => return MaintenanceTool::Worker(index, operation_id),
                 MountedTypedCommandFullOperationStage::AwaitingAck if operation.result_page_presented => {}
                 MountedTypedCommandFullOperationStage::Retiring | MountedTypedCommandFullOperationStage::Publishing | MountedTypedCommandFullOperationStage::AwaitingAck => every_operation_awaits_presented_ack = false,

@@ -2,9 +2,9 @@
  * @see ../../../../../../🧬️schema/🟦️.ts — `Provenance`, `Reference` */
 import type { ReactElement } from "react";
 import type { Asset, ParameterSource } from "@teaching/staffage";
-import { Icon } from "../../🪟️chrome/🟦️.tsx";
+import { Icon, Note, Section, SectionTitle } from "../../🪟️chrome/🟦️.tsx";
 import { useArchive } from "../../🧭️context/🟦️.tsx";
-import { DataTable, Fact, Row } from "../🧱️tables/🟦️.tsx";
+import { DataTable, Fact, FactList, Row } from "../🧱️tables/🟦️.tsx";
 import { SOURCES } from "../🧱️tables/🟦️.tsx";
 
 /** 🔗️ How many parameters cite each reference id. */
@@ -43,14 +43,14 @@ export function ProvenanceSection(props: { readonly asset: Asset }): ReactElemen
   const cited = referenceCounts(asset);
   const sources = sourceCounts(asset);
   return (
-    <section aria-labelledby="detail-provenance" className="flex flex-col gap-double" data-section="provenance">
-      <h2 id="detail-provenance" className="m-0 font-serif text-lg">{t("detail.provenance.title")}</h2>
-      <dl className="m-0 grid gap-x-4 sm:grid-cols-3">
+    <Section aria-labelledby="detail-provenance" data-section="provenance">
+      <SectionTitle id="detail-provenance">{t("detail.provenance.title")}</SectionTitle>
+      <FactList>
         <Fact term={t("detail.provenance.author")}>{provenance.author}</Fact>
         <Fact term={t("detail.provenance.method")}>{t(`detail.provenance.method.${provenance.method}`)}</Fact>
         <Fact term={t("detail.provenance.created")}>{provenance.created}</Fact>
-      </dl>
-      {provenance.notes === undefined ? null : <p className="m-0 max-w-[70ch] text-sm leading-normal">{provenance.notes[language]}</p>}
+      </FactList>
+      {provenance.notes === undefined ? null : <Note tone="plain">{provenance.notes[language]}</Note>}
       <DataTable caption={t("detail.provenance.references")} head={[t("detail.provenance.reference"), t("detail.provenance.citation"), t("detail.provenance.cited")]}>
         {provenance.references.map((reference) => (
           <Row
@@ -71,9 +71,9 @@ export function ProvenanceSection(props: { readonly asset: Asset }): ReactElemen
           />
         ))}
       </DataTable>
-      <p className="m-0 text-xs text-muted-foreground" data-sources="">
-        {t("detail.provenance.sources")}: {SOURCES.map((source) => `${t(`detail.source.${source}`)} ${sources[source]}`).join(" · ")}
-      </p>
-    </section>
+      <Note>
+        <span data-sources="">{t("detail.provenance.sources")}: {SOURCES.map((source) => `${t(`detail.source.${source}`)} ${sources[source]}`).join(" · ")}</span>
+      </Note>
+    </Section>
   );
 }

@@ -23,7 +23,7 @@ import { useId, type ReactElement, type ReactNode } from "react";
 import { CROWD_SCORE_BINS, challengeRules, placeBin, scoreBin, thinkingCrowd, valueKey, type Answer, type CrowdItem, type CrowdView, type Icon, type RunView, type SheetTask, type Slug, type TaskKind, type TaskResult, type ThinkingItem, type ThinkingState } from "@semio-tech/course";
 import { localized, type CourseLocale, type CourseText } from "../🌐️i18n/🟦️.ts";
 import { formatNumber, formatQuantity, formatScore, withUnit } from "../📏️quantity/🟦️.ts";
-import { BodyButton, IconLabel, Missing, Records, TABLE } from "../🪟️chrome/🟦️.tsx";
+import { BodyButton, CELL, GROUP, IconLabel, Missing, Records, TABLE } from "../🪟️chrome/🟦️.tsx";
 import { Column, columnShare, formatShare, peakOf } from "../📊️plot/🟦️.tsx";
 import { paintStyle, usePresenceView } from "../👥️presence/🟦️.tsx";
 
@@ -60,18 +60,20 @@ export function crowdShown(gate: CrowdGate): boolean {
 
 /** 🚪️ The door of a gate that an ask opens: locked, the button that shows the others now and why they do not show
  * yet; asked, the same button to hide them again — one button in one place, first in its row, so it keeps the focus
- * and stays under the pointer through both. Nothing for a gate that is open by itself or off. */
+ * and stays under the pointer through both. It is a row of a flush card: the button is a cell as wide as the card, so
+ * its edges are the card's and the only line between it and the explanation is their shared divider. Nothing for a gate
+ * that is open by itself or off. */
 export function CrowdDoor(props: { readonly gate: CrowdGate; readonly onAsk: () => void; readonly onUnask: () => void; readonly text: CourseText }): ReactElement | null {
   const { gate, text } = props;
   const id = useId();
   if (gate !== "locked" && gate !== "asked") return null;
   return (
-    <div data-crowd-gate={gate} className="flex flex-wrap items-center gap-x-double gap-y-single border-t border-normal pt-double text-xs text-muted-foreground">
-      <BodyButton onClick={gate === "locked" ? props.onAsk : props.onUnask} describedBy={gate === "locked" ? id : undefined}>
+    <div data-crowd-gate={gate} {...CELL} {...GROUP} className="flex flex-col text-xs text-muted-foreground">
+      <BodyButton row onClick={gate === "locked" ? props.onAsk : props.onUnask} describedBy={gate === "locked" ? id : undefined}>
         {text(gate === "locked" ? "course.crowd.ask" : "course.crowd.unask")}
       </BodyButton>
       {gate === "locked" ? (
-        <p id={id} className="m-0 min-w-0 flex-1 basis-[16em]">
+        <p id={id} {...CELL} className="m-0 p-double">
           {text("course.crowd.locked")}
         </p>
       ) : null}
@@ -332,7 +334,7 @@ export function AnswerFigure(props: AnswerFigureInput & { readonly name: string;
     ...(marked((cell) => cell.tags.length > 0) ? [["live", <span className="course-online !m-0" />, text("course.crowd.live")] as const] : []),
   ];
   return (
-    <figure data-crowd-figure="answers" data-task={props.task.id} data-dimension={props.dimension} data-runs={figure.runs} data-thinkers={figure.thinkers} className="course-figure m-0 flex min-w-0 flex-col gap-single">
+    <figure data-border-probe-art="" data-crowd-figure="answers" data-task={props.task.id} data-dimension={props.dimension} data-runs={figure.runs} data-thinkers={figure.thinkers} className="course-figure m-0 flex min-w-0 flex-col gap-single">
       <Caption title={`${props.title ?? text("course.crowd.title")}${figure.unit === undefined ? "" : ` (${figure.unit})`}`} facts={[text("course.crowd.runs", { count: figure.runs }), ...(figure.thinkers > 0 ? [text("course.crowd.thinking", { count: figure.thinkers })] : [])]} />
       <Records fold={plotFold(tracks)}>
         <table {...TABLE.table} className="course-plot" data-sparse={figure.kind === "matching" ? "" : undefined} aria-label={props.name} style={{ ["--course-plot-columns" as string]: String(tracks) }}>
@@ -416,7 +418,7 @@ export function ScoreFigure(props: { readonly name: string; readonly title?: str
   const figure = scoreFigure(props.bins, own);
   const edge = (bin: number): string => formatScore(bin / figure.bins.length, locale);
   return (
-    <figure data-crowd-figure="scores" data-runs={figure.runs} className="course-figure course-scores m-0 flex min-w-0 flex-col gap-single">
+    <figure data-border-probe-art="" data-crowd-figure="scores" data-runs={figure.runs} className="course-figure course-scores m-0 flex min-w-0 flex-col gap-single">
       <Caption
         title={props.title ?? text("course.crowd.scores")}
         facts={[
@@ -459,12 +461,12 @@ export function TaskFigures(props: Omit<AnswerFigureInput, "dimension"> & { read
   const { task, title, crowd, result, text, locale } = props;
   const parts = task.kind === "matching" ? task.dimensions.map((dimension) => ({ dimension: dimension.id, heading: localized(dimension.quantity.label, locale) })) : [{ dimension: undefined, heading: undefined }];
   return (
-    <div data-crowd-task={task.id} className="flex min-w-0 flex-col gap-double">
+    <div data-crowd-task={task.id} {...GROUP} {...CELL} className="flex min-w-0 flex-col">
       {parts.map(({ dimension, heading }) => {
         const subject = heading === undefined ? title : `${title} – ${heading}`;
         const own = result === undefined ? undefined : result.kind === "matching" ? result.dimensions.find((candidate) => candidate.dimension === dimension)?.score : result.score;
         return (
-          <div key={dimension ?? task.id} className="course-figures">
+          <div key={dimension ?? task.id} {...CELL} className="course-figures p-double">
             <AnswerFigure {...props} dimension={dimension} name={text("course.crowd.figure", { subject })} title={heading} />
             {result === undefined ? null : <ScoreFigure name={text("course.crowd.scoresFigure", { subject })} bins={crowd?.tasks.find((candidate) => candidate.task === task.id && candidate.dimension === dimension)?.scores} own={own} text={text} locale={locale} />}
           </div>

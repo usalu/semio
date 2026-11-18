@@ -39,10 +39,11 @@ DOMAIN=gui/$(id -u)
 
 say() { printf '[switch %s] %s\n' "$(date +%H:%M:%S)" "$*" | tee -a "$LOG"; }
 fail() { say "ERROR: $*"; exit 1; }
-holders() { lsof -n -F pn 2>/dev/null | awk -v root="$LIVE/" '/^p/{pid=substr($0,2)} /^n/{if(index(substr($0,2),root)==1) seen[pid]=1} END{for(pid in seen) print pid}' | sort -n; }
+holders() { lsof -n -F pn 2>/dev/null | awk -v root="$LIVE/" -v base="$LIVE" '/^p/{pid=substr($0,2)} /^n/{name=substr($0,2); if(name==base||index(name,root)==1) seen[pid]=1} END{for(pid in seen) print pid}' | sort -n; }
 restart_old() {
   say "restarting the old services at $LIVE"
   for label in $LABELS; do sudo launchctl bootstrap system "/Library/LaunchDaemons/tech.semio.fleet.$label.plist" 2>/dev/null || true; done
+  printf '\n**switch aborted at %s, not switched**: the tree is still at `/Users/Shared/semio`, the old services were restarted\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$NOTE"
 }
 cache_lines() { grep -n 'SEMIO_REMOTE_CACHE_' "$1" 2>/dev/null | sed 's/=.*//' | tr '\n' ' ' || true; }
 

@@ -8,6 +8,7 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
+import { borderNormalBottomClass } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
 import { TableAvatar } from "../📻️TableAvatar/🟦️.tsx";
 import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️.ts";
 // #endregion 🔌️Adapters
@@ -131,7 +132,7 @@ function HistoryGraphSvg({ columns, graphWidth, rowHeight }: { readonly columns:
 }
 
 function HistoryRowAuthors({ column }: { readonly column: HistoryColumn }): React.ReactElement {
-  return <div className="flex shrink-0 -space-x-2">{column.authors.length > 0 ? column.authors.map((author) => <TableAvatar key={author.id} id={author.id} name={author.name} icon={author.avatar} />) : <TableAvatar id="unknown" name="?" />}</div>;
+  return <div className="flex shrink-0 -space-x-2">{column.authors.length > 0 ? column.authors.map((author) => <TableAvatar key={author.id} id={author.id} name={author.name} icon={author.avatar} className="border-0 ring-2 ring-background" />) : <TableAvatar id="unknown" name="?" className="border-0 ring-2 ring-background" />}</div>;
 }
 
 const HISTORY_LEVEL_BADGE_CLASS: Record<HistoryMutationLevel, string> = {
@@ -208,7 +209,7 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({ id, columns, classNa
               <React.Fragment key={column.checkpointId}>
                 <div
                   ref={index === 0 ? rowProbeRef : undefined}
-                  className={cn(HISTORY_ROW_SHELL_CLASS, "grid items-center border-b border-[var(--border)]", onSelectCheckpoint && "cursor-pointer")}
+                  className={cn(HISTORY_ROW_SHELL_CLASS, "grid items-center", onSelectCheckpoint && "cursor-pointer")}
                   style={{ gridColumn: "1 / 3", gridRow: index + 1, gridTemplateColumns: `auto ${graphColumnWidth}px` }}
                   role={onSelectCheckpoint ? "button" : undefined}
                   aria-label={onSelectCheckpoint ? historyCheckpointAccessibleName(column) : undefined}
@@ -235,12 +236,13 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({ id, columns, classNa
                     </div>
                   </div>
                 </div>
-                <div className={cn(HISTORY_ROW_SHELL_CLASS, "flex items-center gap-1 border-b border-[var(--border)] px-single")} style={{ gridColumn: 3, gridRow: index + 1 }}>
+                <div className={cn(HISTORY_ROW_SHELL_CLASS, "flex items-center gap-1 px-single")} style={{ gridColumn: 3, gridRow: index + 1 }}>
                   {column.mutationLevel ? <HistoryLevelBadge level={column.mutationLevel} /> : null}
                   <span className="min-w-0 truncate text-muted-foreground" title={column.description ?? ""}>
                     {column.description ?? ""}
                   </span>
                 </div>
+                {index < sorted.length - 1 ? <div data-slot="history-row-divider" aria-hidden className={cn("pointer-events-none z-10", borderNormalBottomClass)} style={{ gridColumn: "1 / -1", gridRow: index + 1 }} /> : null}
               </React.Fragment>
             );
           })}

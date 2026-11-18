@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import{requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{fleetFetchContextV1,pinnedFetchV1}from"../../🛰️fleet-fetch/🟦️.ts";
 import {createHash} from "node:crypto";
@@ -40,7 +41,7 @@ export async function prepareBazel(workspace:string,store:RepositoryToolingStore
   if(dirname(current)===current)break;
  }
  await mkdir(base,{recursive:true});checkResourceLeaseControl(phaseControl);await progress({phase:"waiting",bytes:0,total:row.bytes});
- return withResourceLeases({directory:join(workspace,".cache/b/l/m/data"),signal,control:phaseControl,resources:[{resource:`bazel-${row.sha256}`,mode:"exclusive"}]},async()=>{
+ return withResourceLeases({directory:machinePathV1(workspace,".cache/b/l/m/data"),signal,control:phaseControl,resources:[{resource:`bazel-${row.sha256}`,mode:"exclusive"}]},async()=>{
   checkResourceLeaseControl(phaseControl);await progress({phase:"verifying",bytes:0,total:row.bytes});
   try{const stat=await lstat(executable),parent=await lstat(directory);if(!stat.isFile()||stat.isSymbolicLink()||parent.isSymbolicLink()||stat.size!==row.bytes||await executableHash(executable,phaseControl)!==row.sha256)throw new Error("Bazel executable checksum mismatch");checkResourceLeaseControl(phaseControl);await progress({phase:"ready",bytes:row.bytes,total:row.bytes});checkResourceLeaseControl(phaseControl);return executable;}
   catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}

@@ -10,7 +10,7 @@
 
 import { Button, ContextMenu, ContextMenuController, uiDataLabel, type ContextMenuItem } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "../../../🧪️tests/📚️storybook-types/🟦️.ts";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // 🖱️#region 🖱️ContextMenu
 const meta = {
@@ -51,7 +51,7 @@ const sampleItems: ContextMenuItem[] = [
 export const Default: Story = {
   args: {
     items: sampleItems,
-    children: <div className="flex size-40 items-center justify-center border text-sm text-muted-foreground">Right-click me</div>,
+    children: <div className="flex size-40 items-center justify-center bg-muted/10 text-sm text-muted-foreground">Right-click me</div>,
   },
 };
 
@@ -95,7 +95,7 @@ export const Grouped: Story = {
   name: "Grouped (Header + Submenus + Destructive)",
   args: {
     items: groupedItems,
-    children: <div className="flex size-40 items-center justify-center border text-sm text-muted-foreground">Right-click me</div>,
+    children: <div className="flex size-40 items-center justify-center bg-muted/10 text-sm text-muted-foreground">Right-click me</div>,
   },
 };
 
@@ -103,7 +103,7 @@ export const NoItems: Story = {
   name: "No Items (Native Menu Suppressed)",
   args: {
     items: [],
-    children: <div className="flex size-40 items-center justify-center border text-sm text-muted-foreground">Right-click does nothing</div>,
+    children: <div className="flex size-40 items-center justify-center bg-muted/10 text-sm text-muted-foreground">Right-click does nothing</div>,
   },
 };
 
@@ -112,7 +112,7 @@ export const TextSelection: Story = {
   args: {
     items: [],
     children: (
-      <div className="flex size-48 select-text items-center justify-center border p-single text-sm text-element">
+      <div className="flex size-48 select-text items-center justify-center bg-muted/10 p-single text-sm text-element">
         Select this sentence, then right-click for Copy / Select all.
       </div>
     ),
@@ -141,7 +141,7 @@ const ControlledContextMenuDemo = () => {
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
   return (
-    <div className="relative flex size-40 items-center justify-center border text-sm text-muted-foreground">
+    <div className="relative flex size-40 items-center justify-center bg-muted/10 text-sm text-muted-foreground">
       <Button
         id="context-menu-controller-story-open"
         icon="mouse-pointer"
@@ -180,10 +180,16 @@ const NumberedPreviewContextMenuDemo = () => {
     onHover: item.id.startsWith("suggestion-") ? () => setCheckedId(item.id) : undefined,
     onSelect: item.id.startsWith("suggestion-") ? () => setOpen(false) : undefined,
   }));
+  const host = useRef<HTMLDivElement>(null);
+  const [anchor, setAnchor] = useState({ x: 120, y: 120 });
+  useEffect(() => {
+    const rect = host.current?.getBoundingClientRect();
+    if (rect) setAnchor({ x: rect.left, y: rect.bottom });
+  }, []);
   return (
-    <div className="relative flex size-40 items-center justify-center border text-sm text-muted-foreground">
+    <div ref={host} className="relative flex size-40 items-center justify-center bg-muted/10 text-sm text-muted-foreground">
       <Button id="context-menu-numbered-story-open" icon="list-ordered" text="Open numbered menu" onClick={() => setOpen(true)} />
-      <ContextMenuController open={open} closeOnSelect={false} position={{ x: 120, y: 120 }} items={items} onOpenChange={setOpen} title={uiDataLabel("Suggest")} />
+      <ContextMenuController open={open} closeOnSelect={false} position={anchor} items={items} onOpenChange={setOpen} title={uiDataLabel("Suggest")} />
     </div>
   );
 };

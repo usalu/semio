@@ -4,6 +4,7 @@
 import { policyReadFileSafe } from "../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { policyWalkRelFiles } from "../../../🔍️discovery/🚶️file-walk/🟦️.ts";
 import { dirname } from "node:path";
+import { typescriptCompilerV1 } from "../../../🏗️build/🚀️bootstrap/🔷️typescript-compiler/🟨️.mjs";
 import type { ToolJobStaticRow } from "../../🎯️tool-job-coverage/📋️inventory/🟦️.ts";
 
 //#region 🧭️AllAppDiscovery
@@ -340,7 +341,7 @@ export function interactivityAllAppDiscovery(repoRoot: string): InteractivityAll
 
 /** 🔮️Returns canonical JSON through the test-only TypeScript parser behind an owned string boundary. */
 export async function interactivityAllAppOracleJson(source: string): Promise<string> {
-  const typescript = await import("typescript");
+  const typescript = typescriptCompilerV1();
   const parsed = typescript.parseConfigFileTextToJson("interactivity-all-app-oracle.json", source);
   if (parsed.error) throw new Error("[verify interactivity apps] TypeScript oracle rejected the fixture");
   return JSON.stringify(parsed.config);

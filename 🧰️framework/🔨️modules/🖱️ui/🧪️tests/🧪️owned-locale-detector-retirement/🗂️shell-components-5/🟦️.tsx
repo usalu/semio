@@ -72,7 +72,7 @@ describe("Shell components", () => {
       });
     });
 
-    it("Mode close removes a tab and collapses an emptied stack", () => {
+    it("Mode close removes a tab and collapses an emptied stack", async () => {
       const { container } = render(
         <div className="h-layout-story w-layout-story-md">
           <Mode
@@ -95,7 +95,7 @@ describe("Shell components", () => {
       const soloClose = container.querySelector("[data-stack-path='0'] [data-slot='mode-dock-tab-close']");
       expect(soloClose).toBeTruthy();
       fireEvent.click(soloClose!);
-      expect(screen.queryByText("Solo Body")).toBeNull();
+      await waitFor(() => expect(screen.queryByText("Solo Body")).toBeNull());
       expect(screen.getByText("Peer Body")).toBeTruthy();
     });
 

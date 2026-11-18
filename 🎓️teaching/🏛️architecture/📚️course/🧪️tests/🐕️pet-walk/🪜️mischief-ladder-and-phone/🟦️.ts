@@ -5,7 +5,7 @@
 import type { Page } from "@playwright/test";
 import { HANG_ROD, LADDER_LEAN } from "@semio-tech/pets";
 import {QUIZZES, enter, expect, pane, playQuiz, swipeTo, test, type Device, activeOverview} from "../../../🎭️e2e/🚶️learner/🟦️.ts";
-import { ANSWER_MS, APPEAR_MS, bodies, eventually, type Body, CARD_PARTS, carry, castOf, choosePets, CONTROLS, enterWithPets, expectCast, expectPerched, floorSpot, HASTE, hasten, HOME, hoverOf, instrumented, type Instruments, KINDS, LANDING_MS, layer, MISCHIEF_HASTE, MISCHIEF_QUIZ, misplaced, pets, reachable, RECAST_MS, ROPE_MS, ROPE_REACH, ROPE_ROUND_MS, stagePasses, standing, TEMPO, trailOf, WALK_MS } from "../🧰️pet-kit/🟦️.ts";
+import { ANSWER_MS, APPEAR_MS, bodies, eventually, type Body, CARD_PARTS, carry, castOf, choosePets, CONTROLS, enterWithPets, expectCast, expectPerched, floorSpot, HASTE, ledgeAdded, hasten, hoverOf, instrumented, type Instruments, KINDS, LANDING_MS, layer, MISCHIEF_HASTE, MISCHIEF_QUIZ, misplaced, pets, reachable, RECAST_MS, ROPE_MS, ROPE_LEDGE, ROPE_REACH, ROPE_ROUND_MS, stagePasses, standing, TEMPO, trailOf, WALK_MS } from "../🧰️pet-kit/🟦️.ts";
 
 for (const reclaim of ["hover", "focus"] as const) test(`a pet lifts a copy of a task of a quiz's page out of its place, beside its transparent original; the original is back at once on ${reclaim}, and the pet is thrown off`, async ({ device }) => {
   const learner = await device("en");
@@ -68,6 +68,9 @@ function ladderFoot(question: { readonly parts: string; readonly lean: number })
   return lowest === null ? null : lowest.right + question.lean * (line - lowest.top);
 }
 
+/** 📏️ How far from the middle of the ledge, in pixels, a grappler still counts as standing under it: the ledge is 200 px wide and the pet 30 to 50, so it stands within a rope's shot of its end. */
+const LEDGE_SLACK = 80;
+
 /** 🧗️ The pets that have stood on `footing` (a ladder, a rope) since the instruments were put in. */
 function carriedOn(page: Page, footing: string): Promise<readonly string[]> {
   return page.evaluate((wanted) => Object.entries((window as unknown as { petWalk: Instruments }).petWalk.trails).flatMap(([id, trail]) => (trail.some((line) => line.split("/")[1] === wanted) ? [id] : [])), footing);
@@ -114,41 +117,41 @@ test("a pet that cannot hop to a perch above raises its ladder: on a quiz's page
   expect(laddered.every((id) => KINDS[id]!.gear.some((gear) => gear !== "parachute")), `only pets with gear are on a ladder: ${laddered.join(", ")}`).toBe(true);
 });
 
-test("a pet that cannot hop to a perch above shoots its grapple there: on the home screen a grappler on the footer line reels itself up a rope to a card", async ({ device }) => {
+test("a pet that cannot hop to a perch above shoots its grapple there: on a quiz's page a grappler on the footer line reels itself up a rope to a ledge in the gutter beside the column", async ({ device }) => {
   test.setTimeout(30 * 60_000);
   const learner = await device("en");
   const page = learner.page;
   await lively(learner);
-  const visited = QUIZZES[0]!.id;
-  await page.evaluate((id) => (window.location.hash = id), visited);
-  await expect(pane(page, visited)).toHaveAttribute("data-opened", "");
-  await expectCast(learner, visited, true);
-  await page.keyboard.press("Escape");
-  await expect(pane(page, visited)).not.toHaveAttribute("data-opened", "");
-  await expectCast(learner, HOME, true);
-  await instrumented(page);
   const grappling = (body: Body): boolean => KINDS[body.id]?.gear.includes("grapple") === true;
+  const shooters = QUIZZES.find((quiz) => castOf(quiz.id).core.some((id) => KINDS[id]?.gear.includes("grapple") === true));
+  expect(shooters, "a quiz whose cast has a grappler in its core").toBeDefined();
+  await page.evaluate((id) => (window.location.hash = id), shooters!.id);
+  await expect(pane(page, shooters!.id)).toHaveAttribute("data-opened", "");
+  await expectCast(learner, shooters!.id, true);
+  const under = await page.evaluate(ledgeAdded, ROPE_LEDGE);
+  await instrumented(page);
   const moved: string[] = [];
   const held: string[] = [];
   const ropeRound = async (): Promise<void> => {
     if ((await carriedOn(page, "rope")).length > 0) return;
     const footer = (await page.locator(".course-app > footer").boundingBox())!;
     const raised = (body: Body): number => footer.y - body.bottom - hoverOf(body.id);
-    for (const body of (await bodies(page)).filter((candidate) => grappling(candidate) && candidate.footing === "perch" && raised(candidate) > 2)) {
+    const placed = (body: Body): boolean => raised(body) <= 2 && Math.abs((body.left + body.right) / 2 - under) <= LEDGE_SLACK;
+    for (const body of (await bodies(page)).filter((candidate) => grappling(candidate) && candidate.footing === "perch" && !placed(candidate))) {
       const pet = await reachable(page, (candidate) => candidate.id === body.id).catch(() => undefined);
       if (pet === undefined) continue;
       const height = pet.bottom - pet.top;
       const hover = hoverOf(pet.id);
-      const spot = await page.evaluate(floorSpot, { parts: CARD_PARTS, controls: CONTROLS, reach: (pet.right - pet.left) / 2 + 12, room: height + hover + 12 });
+      const spot = await page.evaluate(floorSpot, { parts: CARD_PARTS, controls: CONTROLS, reach: (pet.right - pet.left) / 2 + 12, room: height + hover + 12, near: under });
       if (spot === null) continue;
       await carry(page, pet, { x: spot.x, y: spot.top - HANG_ROD * height - hover - 8 });
       await page.mouse.up();
       moved.push(pet.id);
       await expectPerched(page, pet.id, LANDING_MS).catch(() => undefined);
-      if ((await bodies(page)).some((landed) => landed.id === pet.id && landed.footing === "perch" && raised(landed) <= 2)) break;
+      if ((await bodies(page)).some((landed) => landed.id === pet.id && landed.footing === "perch" && placed(landed))) break;
     }
-    const groundedNow = async (): Promise<readonly Body[]> => (await bodies(page)).filter((body) => body.opacity > 0.99 && grappling(body) && body.footing === "perch" && raised(body) <= 2);
-    const grounded = await eventually(page, groundedNow, (seen) => seen.length > 0, { stageMs: ROPE_ROUND_MS * HASTE, message: "a grappler on the footer line" });
+    const groundedNow = async (): Promise<readonly Body[]> => (await bodies(page)).filter((body) => body.opacity > 0.99 && grappling(body) && body.footing === "perch" && placed(body));
+    const grounded = await eventually(page, groundedNow, (seen) => seen.length > 0, { stageMs: ROPE_ROUND_MS * HASTE, message: "a grappler on the footer line under the ledge" });
     const reach = Math.max(...grounded.map((body) => ROPE_REACH * KINDS[body.id]!.size.height));
     const sitting = (body: Body): boolean => !grappling(body) && raised(body) > 2 && raised(body) <= reach;
     let round = 0;

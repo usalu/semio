@@ -148,6 +148,15 @@ pub fn ui_node_from_record(document: &UiDocumentTree, record: &UiNodeRecord, sur
             ui_contract::ContainerRole::Group => {
                 UiNode::Group(UiGroupNode { id: record.key.as_str().to_string(), label: optional_contract_label(props.label.as_ref()).unwrap_or_else(|| Label::data("")), default_open: props.default_open, presence, menu, children: Vec::new() })
             }
+            ui_contract::ContainerRole::CardStack => UiNode::CardStack(UiCardStackNode { id: record.key.as_str().to_string(), presence, menu, children: Vec::new() }),
+            ui_contract::ContainerRole::Card => UiNode::OverviewCard(UiOverviewCardNode {
+                id: record.key.as_str().to_string(),
+                title: optional_contract_label(props.label.as_ref()).unwrap_or_else(|| Label::data("")),
+                footer: props.description.as_ref().map(|value| value.as_str().to_string()),
+                presence,
+                menu,
+                children: Vec::new(),
+            }),
             ui_contract::ContainerRole::Field => UiNode::Field(UiFieldNode {
                 id: record.key.as_str().to_string(),
                 label: optional_contract_label(props.label.as_ref()).unwrap_or_else(|| Label::data("")),

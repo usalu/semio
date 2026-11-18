@@ -17,7 +17,7 @@ import { useArchive } from "../../🧭️context/🟦️.tsx";
 import { VIEW_NAMES } from "../../🗣️labels/🟦️.ts";
 import { VIEWPOINT_PHRASES, isDrawn, type ViewpointKey } from "../../🔭️viewpoints/🟦️.ts";
 import { namedPoses } from "../../🔎️search/🟦️.ts";
-import { Button, Notice, NumberField, ProgressNotice, SelectField, Tag } from "../../🪟️chrome/🟦️.tsx";
+import { Bar, Button, Cell, Column, Note, Notice, NumberField, ProgressNotice, SelectField, Section, SectionTitle, SharedBorderRow, Tag } from "../../🪟️chrome/🟦️.tsx";
 
 const FORMATS: readonly ExportFormat[] = EXPORT_FORMATS.filter((format): format is ExportFormat => format !== "component");
 const FRAMED: readonly ExportFormat[] = ["png-sequence", "mp4", "webm"];
@@ -103,11 +103,11 @@ export function ExportPanel(props: ExportPanelProps): ReactElement {
   const snippet = `<staffage-figure asset="${asset.id}" view="${request.view}" viewpoint="${viewpoint}" scale="${request.scale.denominator}" lang="${language}"></staffage-figure>`;
   const needsClip = query.kind === "pose";
   return (
-    <section aria-labelledby="detail-export" className="flex flex-col gap-double" data-section="export">
-      <h2 id="detail-export" className="m-0 font-serif text-lg">{t("detail.export.title")}</h2>
-      <p className="m-0 max-w-[70ch] text-xs leading-normal text-muted-foreground">{t("detail.export.lede", { representation: VIEW_NAMES[request.view][language], viewpoint: VIEWPOINT_PHRASES[viewpoint][language], scale: request.scale.denominator })}</p>
+    <Section aria-labelledby="detail-export" data-section="export">
+      <SectionTitle id="detail-export">{t("detail.export.title")}</SectionTitle>
+      <Note>{t("detail.export.lede", { representation: VIEW_NAMES[request.view][language], viewpoint: VIEWPOINT_PHRASES[viewpoint][language], scale: request.scale.denominator })}</Note>
       {probed === null ? <Notice kind="loading" compact title={t("detail.export.probing")} /> : (
-        <ul className="m-0 grid list-none gap-double p-0 md:grid-cols-2" data-formats="">
+        <SharedBorderRow as="ul" orientation="vertical" data-formats="">
           {offered.map((format) => {
             const spatial = isSpatialExport(format);
             const missing = spatial && !producible.has(format === "model-zip" ? "model" : format);
@@ -116,12 +116,12 @@ export function ExportPanel(props: ExportPanelProps): ReactElement {
             const wrongViewpoint = !spatial && !drawing;
             const blocked = capability.available && !wrongViewpoint && FRAMED.includes(format) && needsClip;
             return (
-              <li key={format} data-format={format} data-state={kind ?? (wrongViewpoint ? "needs-drawing" : blocked ? "needs-clip" : "available")} className="flex min-w-0 flex-col gap-single border border-border bg-panel p-double">
-                <div className="flex flex-wrap items-center justify-between gap-single">
+              <SharedBorderRow as="li" orientation="vertical" key={format} data-format={format} data-state={kind ?? (wrongViewpoint ? "needs-drawing" : blocked ? "needs-clip" : "available")} className="bg-panel">
+                <Cell className="justify-between">
                   <h3 className="m-0 text-sm font-semibold">{t(`detail.format.${format}`)}</h3>
                   <Tag>{t(capability.available ? "detail.export.available" : kind === "unavailable" ? "detail.export.unavailable" : "detail.export.unsupported")}</Tag>
-                </div>
-                <p className="m-0 text-xs leading-normal text-muted-foreground">{t(`detail.format.${format}.body`)}</p>
+                </Cell>
+                <Note>{t(`detail.format.${format}.body`)}</Note>
                 {kind === null ? null : <Notice kind={kind} compact title={t(kind === "unavailable" ? "detail.export.unavailableTitle" : "detail.export.unsupportedTitle")}>{capability.reason?.[language]}</Notice>}
                 {blocked ? <Notice kind="info" compact title={t("detail.export.needsClip")} /> : null}
                 {wrongViewpoint ? <Notice kind="info" compact title={t("model.exports.drawingBlocked")}>{t("model.exports.drawingOnly")}</Notice> : null}
@@ -130,45 +130,46 @@ export function ExportPanel(props: ExportPanelProps): ReactElement {
                 {capability.available && format === "model" ? <SelectField label={t("model.exports.source")} value={model} onChange={(next) => setSource({ ...source, model: next })} options={[...asset.clips.map((candidate) => ({ value: `clip:${candidate.id}`, label: `${t("model.exports.clip")}: ${candidate.title[language]}` })), ...poses.map((candidate) => ({ value: `pose:${candidate.id}`, label: `${t("model.exports.pose")}: ${candidate.title[language]}` }))]} /> : null}
                 {capability.available && format === "pdf" ? <SelectField label={t("detail.export.sheet")} value={sheet} onChange={setSheet} options={[{ value: "single", label: t("detail.export.sheetSingle") }, { value: "all-views", label: t("detail.export.sheetAll") }]} /> : null}
                 {capability.available && FRAMED.includes(format) && !needsClip ? (
-                  <div className="flex gap-double">
+                  <Bar>
                     <NumberField label={t("detail.export.fps")} value={fps} min={12} max={60} step={1} onChange={setFps} />
                     <NumberField label={t("detail.export.duration")} unit="s" value={duration ?? Number(formatNumber(clipDuration, 2, "en"))} min={0.1} step={0.1} onChange={setDuration} />
-                  </div>
+                  </Bar>
                 ) : null}
-                {capability.available && capability.codec !== undefined ? <p className="m-0 font-mono text-[0.65rem] text-muted-foreground">{t("detail.export.codec", { codec: capability.codec, alpha: t(capability.alpha === true ? "detail.yes" : "detail.no") })}</p> : null}
-                <div className="mt-auto pt-single">
-                  <Button variant="primary" icon="file-archive" disabled={!capability.available || blocked || wrongViewpoint || running !== null} onClick={() => void run(format)}>
+                {capability.available && capability.codec !== undefined ? <Note className="font-mono text-[0.65rem]">{t("detail.export.codec", { codec: capability.codec, alpha: t(capability.alpha === true ? "detail.yes" : "detail.no") })}</Note> : null}
+                <Bar className="mt-auto">
+                  <Button grouped variant="primary" className="flex-1" icon="file-archive" disabled={!capability.available || blocked || wrongViewpoint || running !== null} onClick={() => void run(format)}>
                     {t("detail.export.run", { format: t(`detail.format.${format}`) })}
                   </Button>
-                </div>
-              </li>
+                </Bar>
+              </SharedBorderRow>
             );
           })}
-        </ul>
+        </SharedBorderRow>
       )}
       {asset.exports.includes("component") ? (
-        <div className="flex flex-col gap-single border border-border bg-panel p-double" data-format="component">
-          <h3 className="m-0 text-sm font-semibold">{t("detail.format.component")}</h3>
-          <p className="m-0 text-xs text-muted-foreground">{t("detail.format.component.body")}</p>
-          <code className="block overflow-x-auto whitespace-pre border border-border bg-background p-double font-mono text-xs">{snippet}</code>
-          <div className="flex flex-wrap items-center gap-double"><Button icon="copy" onClick={() => void (navigator.clipboard?.writeText(snippet).then(() => setCopied("done"), () => setCopied("blocked")) ?? setCopied("blocked"))}>{t("detail.export.copy")}</Button><span role="status" aria-live="polite" className="text-xs">{copied === "done" ? t("detail.export.copied") : copied === "blocked" ? t("detail.export.copyBlocked") : ""}</span></div>
-        </div>
+        <Column data-format="component" className="bg-panel">
+          <SectionTitle level={3}>{t("detail.format.component")}</SectionTitle>
+          <Note>{t("detail.format.component.body")}</Note>
+          <Cell className="overflow-x-auto"><code className="block whitespace-pre font-mono text-xs">{snippet}</code></Cell>
+          <Bar>
+            <Button grouped icon="copy" onClick={() => void (navigator.clipboard?.writeText(snippet).then(() => setCopied("done"), () => setCopied("blocked")) ?? setCopied("blocked"))}>{t("detail.export.copy")}</Button>
+            <Cell className="flex-1"><span role="status" aria-live="polite" className="text-xs">{copied === "done" ? t("detail.export.copied") : copied === "blocked" ? t("detail.export.copyBlocked") : ""}</span></Cell>
+          </Bar>
+        </Column>
       ) : null}
       {running === null ? null : <ProgressNotice label={t("detail.export.running", { format: t(`detail.format.${running.format}`) })} done={running.done} total={running.total} cancelLabel={t("action.cancel")} onCancel={() => controller.current?.abort()} />}
-      <div role="status" aria-live="polite" data-result="">
         {outcome === null ? null : outcome.kind === "done" ? (
-          <Notice kind="info" compact title={t("detail.export.done", { name: outcome.result.filename })}>
+          <Notice data={{ "data-result": "" }} kind="info" compact title={t("detail.export.done", { name: outcome.result.filename })}>
             <p className="m-0 font-mono">{t("detail.export.size", { kb: formatNumber(outcome.result.bytes.length / 1024, 1, language) })}{outcome.result.details.codec === undefined ? "" : ` · ${outcome.result.details.codec}`}{outcome.result.details.frames === undefined ? "" : ` · ${t("detail.export.frames", { frames: outcome.result.details.frames })}`}{outcome.result.details.pages === undefined ? "" : ` · ${t("detail.export.pages", { pages: outcome.result.details.pages })}`}{outcome.result.details.alpha === undefined ? "" : ` · ${t("detail.export.alpha", { alpha: t(outcome.result.details.alpha ? "detail.yes" : "detail.no") })}`}</p>
             {outcome.result.details.notes.map((note, index) => <p key={index} className="m-0">{note[language]}</p>)}
           </Notice>
         ) : outcome.kind === "cancelled" ? (
-          <Notice kind="info" compact title={t("detail.export.cancelled")} />
+          <Notice data={{ "data-result": "" }} kind="info" compact title={t("detail.export.cancelled")} />
         ) : outcome.kind === "unavailable" ? (
-          <Notice kind="unavailable" compact title={t("detail.export.unavailableTitle")}>{outcome.reason[language]}</Notice>
+          <Notice data={{ "data-result": "" }} kind="unavailable" compact title={t("detail.export.unavailableTitle")}>{outcome.reason[language]}</Notice>
         ) : (
-          <Notice kind="error" compact title={t("detail.export.failed")}>{t("detail.export.failedBody")}</Notice>
+          <Notice data={{ "data-result": "" }} kind="error" compact title={t("detail.export.failed")}>{t("detail.export.failedBody")}</Notice>
         )}
-      </div>
-    </section>
+    </Section>
   );
 }

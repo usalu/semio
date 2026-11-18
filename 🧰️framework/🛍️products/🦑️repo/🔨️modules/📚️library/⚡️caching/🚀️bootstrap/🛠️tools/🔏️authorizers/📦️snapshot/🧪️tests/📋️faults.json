@@ -262,48 +262,125 @@
    "error": "Original captured authorizer byte identity required"
   },
   {
-   "name": "six files of three and a half megabytes exceed the source maximum",
+   "name": "seventeen files of three point nine five megabytes exceed the source maximum",
    "sources": [
     {
      "path": "a.ts",
      "content": {
       "repeat": "ab",
-      "times": 1750000
+      "times": 1975000
      }
     },
     {
      "path": "b.ts",
      "content": {
       "repeat": "ab",
-      "times": 1750000
+      "times": 1975000
      }
     },
     {
      "path": "c.ts",
      "content": {
       "repeat": "ab",
-      "times": 1750000
+      "times": 1975000
      }
     },
     {
      "path": "d.ts",
      "content": {
       "repeat": "ab",
-      "times": 1750000
+      "times": 1975000
      }
     },
     {
      "path": "e.ts",
      "content": {
       "repeat": "ab",
-      "times": 1750000
+      "times": 1975000
      }
     },
     {
      "path": "f.ts",
      "content": {
       "repeat": "ab",
-      "times": 1750000
+      "times": 1975000
+     }
+    },
+    {
+     "path": "g.ts",
+     "content": {
+      "repeat": "ab",
+      "times": 1975000
+     }
+    },
+    {
+     "path": "h.ts",
+     "content": {
+      "repeat": "ab",
+      "times": 1975000
+     }
+    },
+    {
+     "path": "i.ts",
+     "content": {
+      "repeat": "ab",
+      "times": 1975000
+     }
+    },
+    {
+     "path": "j.ts",
+     "content": {
+      "repeat": "ab",
+      "times": 1975000
+     }
+    },
+    {
+     "path": "k.ts",
+     "content": {
+      "repeat": "ab",
+      "times": 1975000
+     }
+    },
+    {
+     "path": "l.ts",
+     "content": {
+      "repeat": "ab",
+      "times": 1975000
+     }
+    },
+    {
+     "path": "m.ts",
+     "content": {
+      "repeat": "ab",
+      "times": 1975000
+     }
+    },
+    {
+     "path": "n.ts",
+     "content": {
+      "repeat": "ab",
+      "times": 1975000
+     }
+    },
+    {
+     "path": "o.ts",
+     "content": {
+      "repeat": "ab",
+      "times": 1975000
+     }
+    },
+    {
+     "path": "p.ts",
+     "content": {
+      "repeat": "ab",
+      "times": 1975000
+     }
+    },
+    {
+     "path": "q.ts",
+     "content": {
+      "repeat": "ab",
+      "times": 1975000
      }
     }
    ],

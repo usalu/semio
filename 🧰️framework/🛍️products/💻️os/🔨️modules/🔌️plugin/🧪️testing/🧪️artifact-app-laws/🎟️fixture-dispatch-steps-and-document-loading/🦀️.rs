@@ -28,8 +28,12 @@ pub fn arm_host_lifetime(cx:&semio_framework_job::StepContext<'_>)->HostLifetime
 
 fn host_lifetime_refusal(message:&'static str)->semio_framework_value::ValueError{semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,message)}
 
+/// 🧾️ Ends the previous fixture call's turn the way the host does when it drops a turn's context: the open original receiving scope is settled against a semantic receipt equal to its accepted physical spend, so the next call opens a fresh scope that owes nothing.
+pub fn fixture_end_turn(cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_value::ValueError>{cx.settle_receiving_scope()}
+
 /// 🔁️ Renews one fixture turn like the host issues it: fuel and grant are restored per turn, but an armed [`arm_host_lifetime`] first refuses the turn once the lifetime stock is spent or the lifetime wall clock has run out.
 pub fn fixture_renew_turn(cx:&mut semio_framework_job::StepContext<'_>,fuel:u64,grant:RetainedCloneGrant)->Result<(),semio_framework_value::ValueError>{
+    fixture_end_turn(cx)?;
     HOST_LIFETIME.with(|slot|{
         let slot=slot.borrow();let Some(lifetime)=slot.as_ref() else{return Ok(())};
         if lifetime.started.elapsed()>HostLifetimeStock::ELAPSED{return Err(host_lifetime_refusal("host lifetime deadline exhausted: the native initiating event allows 30 s"))}
@@ -39,24 +43,21 @@ pub fn fixture_renew_turn(cx:&mut semio_framework_job::StepContext<'_>,fuel:u64,
         if delta.copied_items>HostLifetimeStock::ITEMS||delta.copied_bytes>HostLifetimeStock::COPY_BYTES||delta.retained_capacity_bytes>HostLifetimeStock::CAPACITY_BYTES||delta.released_bytes>HostLifetimeStock::RELEASE_BYTES{return Err(host_lifetime_refusal("host lifetime retained stock exhausted across fixture turns"))}
         Ok(())
     })?;
+    if semio_framework_job::testkit::return_source_pinned(cx).is_some(){semio_framework_job::testkit::renew_payload_page_grant(cx);return Ok(())}
     semio_framework_job::testkit::renew_turn(cx,fuel,grant)
 }
 
 /// 🪪️ Pays every birth the runtime performs while opening an instance through the SAME routine, `PluginApp::advance_instance_birth`: fixture constructors skip that opening, so a typed action could never obtain its cancellation lease.
 pub fn ensure_fixture_cancellation_issuer<P:PluginApp>(app:&mut P,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
+    fixture_end_turn(cx)?;
     let (instance_id,actor)=app.birth_identity().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original fixture app has no bound instance identity to be born under"))?;
     let mut birth=semio_plugin_reactor_app::InstanceBirth::default();
-    let (fresh_fuel,fresh_grant)=(OriginalFixtureCaller::turn_fuel(),cx.original_turn_ceiling().0);
     let mut paid=Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture cancellation issuer birth exceeded its authored turn bound").into());
-    for turn in 0..OriginalFixtureCaller::maximum_turns(){
-        if let Err(error)=fixture_renew_turn(cx,fresh_fuel,fresh_grant){paid=Err(error.into());break}
-        let r=app.advance_instance_birth(&mut birth,instance_id,&actor,cx);
-        if turn<4{let d=semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:1,capacity_bytes:0,release_bytes:0,depth:1};eprintln!("[DEBUG] birth turn {turn} ok={:?} bound={} ready={} empty={} fuel={} grant={:?} ceiling={:?} yield={} cancelled={} rty={} settle={:?}",r.as_ref().map_err(|e|format!("{e:?}")),birth.identity_bound,birth.issuer_ready,birth.construction.terminal_is_empty(),cx.fuel_remaining(),cx.retained_grant(),cx.original_turn_ceiling(),cx.should_yield(),cx.is_cancelled(),cx.retirement_should_yield(),semio_framework_job::original_construction_settled_quote::<()>(d,1).ok());}
-        match r{Ok(false)=>{}Ok(true)=>{paid=Ok(());break}Err(failure)=>{paid=Err(failure);break}}
+    for _ in 0..OriginalFixtureCaller::maximum_turns(){
+        match app.advance_instance_birth(&mut birth,instance_id,&actor,cx){Ok(false)=>{}Ok(true)=>{paid=Ok(());break}Err(failure)=>{paid=Err(failure);break}}
     }
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
         if birth.construction.terminal_is_empty(){return paid}
-        fixture_renew_turn(cx,fresh_fuel,fresh_grant)?;
         birth.construction.close_step(cx)?;
     }
     Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture birth admission exceeded its authored retirement bound").into())
@@ -275,11 +276,31 @@ pub fn fixture_step<J: semio_framework_job::InteractiveJob + ?Sized>(job: &mut J
     summary
 }
 
+/// 🎟️ The caller's Work every fixture identity hop commits under: each observed effect is admitted, bounded by the laws' grants and never by a job loan.
+struct FixtureWork;
+impl semio_framework_value::native_encoding::OriginalWorkRecipient for FixtureWork {
+    type Context<'t, 's> = () where 's: 't;
+    fn validate_context<'t, 's>(&self, _: &()) -> Result<(), semio_framework_value::ValueError> where 's: 't { Ok(()) }
+    fn source_turn<'t, 's>(&self, _: &()) -> Option<semio_framework_value::native_encoding::OriginalSourceTurnIdentity> where 's: 't { None }
+    fn admits<'r, 't, 's>(&mut self, _: &mut (), quote: semio_framework_value::native_encoding::OriginalWorkQuote<'r>, observed: u64, additional: u64) -> semio_framework_value::native_encoding::OriginalWorkQuoteComplete<'r> where 's: 't { quote.complete(Ok(observed.checked_add(additional).is_some())) }
+    fn settle_partial<'r, 't, 's>(&mut self, _: &mut (), check: semio_framework_value::native_encoding::OriginalWorkPartialCheck<'r>) -> semio_framework_value::native_encoding::OriginalWorkPartialCheckComplete<'r> where 's: 't { check.complete(Ok(())) }
+    fn recover_partial<'r, 't, 's>(&mut self, _: &mut (), check: semio_framework_value::native_encoding::OriginalWorkPartialCheck<'r>) -> semio_framework_value::native_encoding::OriginalWorkPartialCheckComplete<'r> where 's: 't { check.pending() }
+}
+
+/// 🪢️ Lends the fixture's one Work authority to every native hop of a fixture identity.
+struct FixtureIdentityWork(semio_framework_value::native_encoding::OriginalWorkAuthority<FixtureWork>);
+impl semio_os_kernel::os_vcs::io::binary::entity_identity::control::IdentityWorkLender for FixtureIdentityWork {
+    fn lend(&mut self, control: &mut semio_framework_value::NativeEncodeControl<'_>, operation: &mut dyn FnMut(&mut semio_framework_value::NativeEncodeControl<'_>) -> Result<(), semio_framework_value::ValueError>) -> Result<(), semio_framework_value::ValueError> {
+        self.0.with_loan(&mut (), |loan| control.with_work_recipient(loan, |control| operation(control)))?
+    }
+}
+
 /// 🪪️ One local native authoring identity for a fixture call: `&mut fixture_identity()` lives for the whole statement, awaits included.
-/// Its no-op observer is a zero-sized closure, so leaking it allocates nothing.
+/// Its no-op observer is a zero-sized closure, so leaking it allocates nothing; every hop commits under the fixture's own Work loan.
 pub fn fixture_identity() -> semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'static> {
     let observer: &'static mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'static> = Box::leak(Box::new(|_: semio_framework_value::native_encoding::NativeEncodeProgress| true));
     semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1usize << 24, observer).expect("fixture authoring identity admission")
+        .with_work_lender(Box::new(FixtureIdentityWork(semio_framework_value::native_encoding::OriginalWorkAuthority::new(FixtureWork))))
 }
 
 /// 🛬️ The archive operation a law's whole-document load runs under: bit 61 alone, below the restore (62) and cold-pair

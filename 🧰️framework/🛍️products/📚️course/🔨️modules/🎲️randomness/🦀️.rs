@@ -91,3 +91,20 @@ pub fn shuffle<T: Clone>(random: &mut Mt19937, items: &[T]) -> Vec<T> {
     copy
 }
 
+
+/// ⚖️ `count` distinct indices of `weights` in pick order, each pick proportional to the weight of the
+/// indices left and located by `next_u32() / 2³²` of the remaining total, one draw per pick.
+pub fn weighted_sample(random: &mut Mt19937, weights: &[f64], count: usize) -> Vec<usize> {
+    let mut remaining: Vec<usize> = (0..weights.len()).collect();
+    let mut picked = Vec::new();
+    while picked.len() < count && !remaining.is_empty() {
+        let mut target = f64::from(random.next_u32()) / 4_294_967_296.0 * remaining.iter().map(|&index| weights[index]).sum::<f64>();
+        let mut position = 0;
+        while position < remaining.len() - 1 && target >= weights[remaining[position]] {
+            target -= weights[remaining[position]];
+            position += 1;
+        }
+        picked.push(remaining.remove(position));
+    }
+    picked
+}

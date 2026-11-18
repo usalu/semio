@@ -165,8 +165,8 @@ describe("📇️ badges", () => {
       expect(mark?.querySelector("svg")?.getAttribute("fill")).toBe("none");
       expect(tile.className).not.toMatch(/opacity-/u);
     }
-    expect(tiles[0]?.className).toContain("border-solid");
-    expect(tiles[1]?.className).toContain("border-dashed");
+    for (const tile of tiles) expect(tile.hasAttribute("data-shared-border-cell")).toBe(true);
+    expect(tiles[0]?.parentElement?.hasAttribute("data-shared-border-group")).toBe(true);
   });
 
   it("shows the same state on the badges page beside the words", () => {

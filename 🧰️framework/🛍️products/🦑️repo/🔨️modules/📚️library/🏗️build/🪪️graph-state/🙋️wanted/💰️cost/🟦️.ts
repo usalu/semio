@@ -1,3 +1,5 @@
+import{refuseBuildV1}from"../../../📖️texts/🟦️.ts";
+import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import{createHash}from"node:crypto";
 import{mkdirSync,readFileSync,renameSync,writeFileSync}from"node:fs";
 import{totalmem}from"node:os";
@@ -75,8 +77,14 @@ export function estimateOwnerCostV1(table:OwnerCostTableV1|undefined,name:string
 /** 🎁️ What one project may take on a machine admitted `admittedMegabytes` (half its memory, or the explicit budget): the physical footprint is the admitted memory less the base the parent holds before any project (the wanted policy's `baseMegabytes`), the managed megabytes are that footprint divided by the footprint factor and the margin. A serving machine (admitted at least `serveHeadroomMegabytes`) has no limit. The base is the larger of the wanted policy's `baseMegabytes` and the measured `floorMegabytes` of the parent. */
 export function ownerGrantV1(admittedMegabytes:number,base:Readonly<{baseMegabytes:number;serveHeadroomMegabytes:number}>,policy:OwnerCostPolicyV1=ownerCostPolicyV1):OwnerGrantV1{
  if(!Number.isFinite(admittedMegabytes)||admittedMegabytes>=base.serveHeadroomMegabytes)return{footprintMegabytes:Number.POSITIVE_INFINITY,managedMegabytes:Number.POSITIVE_INFINITY};
- return grantOfFootprintV1(Math.max(0,Math.floor(admittedMegabytes-Math.max(base.baseMegabytes,policy.floorMegabytes))),policy);
+ return grantOfFootprintV1(Math.max(0,Math.floor(admittedMegabytes-Math.max(base.baseMegabytes,ownerParentFootprintV1(admittedMegabytes*2,policy)))),policy);
 }
+
+/** 🧱️ The physical memory the parent of a read holds before any project on a host of `hostMegabytes`: the booking of a read parent, lowered to a share of a small host. */
+export const ownerParentFootprintV1=(hostMegabytes:number,policy:OwnerCostPolicyV1=ownerCostPolicyV1):number=>Math.max(0,Math.min(policy.floorMegabytes,Math.floor(hostMegabytes*policy.floorShareBasisPoints/10000)));
+
+/** 🛟️ The memory a host of `hostMegabytes` keeps for the system while one heavy owner runs alone: a share of the host between the declared minimum and maximum. */
+export const ownerSystemReserveV1=(hostMegabytes:number,policy:OwnerCostPolicyV1=ownerCostPolicyV1):number=>Math.max(policy.soloReserveMinimumMegabytes,Math.min(policy.soloReserveMegabytes,Math.floor(hostMegabytes*policy.soloReserveShareBasisPoints/10000)));
 
 /** 🧮️ The grant of a physical footprint: the managed megabytes that fit it by the footprint factor and the margin. */
 export function grantOfFootprintV1(footprintMegabytes:number,policy:OwnerCostPolicyV1=ownerCostPolicyV1):OwnerGrantV1{
@@ -85,7 +93,7 @@ export function grantOfFootprintV1(footprintMegabytes:number,policy:OwnerCostPol
 
 /** 🏋️ What ONE owner may take on this machine while nothing else of the read runs (the solo wave): the physical footprint left after the parent's `floorMegabytes` and the `soloReserveMegabytes` kept for the system out of the host's memory, and after `availableFloorMegabytes` out of what is available right now (the parent already holds its own memory, so the available memory is all an owner can grow into); never a serving machine's unlimited grant, a machine too small for any owner has a grant of 0. Where {@link ownerGrantV1} is the share of the machine every one of many parallel owners gets, this is what one owner alone can be given, so an owner heavier than the share still runs here when it fits this. */
 export function soloGrantV1(reading:Readonly<{hostMegabytes:number;availableMegabytes?:number}>,base:Readonly<{availableFloorMegabytes:number}>,policy:OwnerCostPolicyV1=ownerCostPolicyV1):OwnerGrantV1{
- const byHost=reading.hostMegabytes-policy.soloReserveMegabytes-policy.floorMegabytes,byAvailable=reading.availableMegabytes===undefined||!Number.isFinite(reading.availableMegabytes)?Number.POSITIVE_INFINITY:reading.availableMegabytes-base.availableFloorMegabytes;
+ const reserve=ownerSystemReserveV1(reading.hostMegabytes,policy),byHost=reading.hostMegabytes-reserve-ownerParentFootprintV1(reading.hostMegabytes,policy),byAvailable=reading.availableMegabytes===undefined||!Number.isFinite(reading.availableMegabytes)?Number.POSITIVE_INFINITY:reading.availableMegabytes-Math.min(base.availableFloorMegabytes,reserve);
  return grantOfFootprintV1(Math.max(0,Math.floor(Math.min(byHost,byAvailable))),policy);
 }
 
@@ -116,6 +124,9 @@ export function estimateRemainingMillisecondsV1(input:Readonly<{table:OwnerCostT
  return Math.round(total*1000/Math.max(1,input.parallel));
 }
 
+/** 🐋️ The refusal of a graph read that stopped an owner too heavy for this machine, built in this one place: the owner(s) with their need (`named`), the cap of one project in megabytes (`limit`) and the number of machines of the fleet that delivered records for the read (`producers`; 0 means nobody can serve it, so a hand-off is doomed). */
+export const refuseHeavyOwnerV1=(values:Readonly<{named:string;limit:number;producers:number}>,options?:ErrorOptions)=>refuseBuildV1("unserved","graph.owner-too-heavy",values,options);
+
 /** 🗒️ Words the heavy projects in the language of the machine: the heaviest few with their cost, then how many more. */
 export function describeHeavyV1(heavy:readonly HeavyOwnerV1[],language:"en"|"de",policy:OwnerCostPolicyV1=ownerCostPolicyV1):string{
  const shown=heavy.slice(0,policy.maximumNamed).map(row=>ownerCostTextV1("list",language,{name:row.name,megabytes:row.megabytes*policy.footprintFactor}));
@@ -130,7 +141,7 @@ export function waveEvidenceV1(row:Readonly<{peakMegabytes:number;managedMegabyt
 }
 
 /** 📍️ Where the table of a worktree lives: beside the other state of the machine's graph work, never in a selection directory, so every read of the machine sees it. */
-export const ownerCostPathV1=(root:string,policy:OwnerCostPolicyV1=ownerCostPolicyV1):string=>join(root,policy.directory,policy.file);
+export const ownerCostPathV1=(root:string,policy:OwnerCostPolicyV1=ownerCostPolicyV1):string=>machinePathV1(root,policy.directory,policy.file);
 
 /** 📖️ The table in a file, lowered to `ceilingMegabytes` (what a poisoned file heals by at every read); a missing, damaged or foreign file reads as an empty table. */
 export function readOwnerCostFileV1(path:string,ceilingMegabytes:number=Number.POSITIVE_INFINITY):OwnerCostTableV1{
@@ -169,12 +180,18 @@ export function createOwnerCostRecorderV1(input:Readonly<{path:string;rowsOf?(ke
 
 /** 🔑️ The exchange state the fleet's table lives under, one slot for every platform: the cost of inferring a project is a property of the project, measured by the serving machine and read by every worker. */
 export function ownerCostStateV1():GraphStateV1{
- return Object.freeze({version:1,frame:Object.freeze({kind:"project-inference" as const,tooling:sha("project-costs"),implementation:sha("fleet"),platform:"neutral",extra:Object.freeze({costs:"2"})}),names:ZERO,content:ZERO,files:0,contentFiles:0,digest:sha(JSON.stringify(["project-costs"]))}) as GraphStateV1;
+ return Object.freeze({version:1,frame:Object.freeze({kind:"project-inference" as const,tooling:sha("project-costs"),implementation:sha("fleet"),platform:"neutral",extra:Object.freeze({costs:"3"})}),names:ZERO,content:ZERO,files:0,contentFiles:0,digest:sha(JSON.stringify(["project-costs"]))}) as GraphStateV1;
 }
 
 /** 📣️ Publishes the table of a serving machine, the one that measured the heavy owners, so every reader plans with it. False when the fleet cannot take it. */
 export async function publishOwnerCostsV1(input:Readonly<{client:GraphFleetClientV1;server:string;table:OwnerCostTableV1}>):Promise<boolean>{
- return publishGraphEntryV1({client:input.client,state:ownerCostStateV1(),owner:input.server,documents:[{name:"costs",bytes:Buffer.from(JSON.stringify(input.table))}]});
+ return publishGraphEntryV1({client:input.client,state:ownerCostStateV1(),owner:input.server,head:true,documents:[{name:"costs",bytes:Buffer.from(JSON.stringify(input.table))}]});
+}
+
+/** 📣️ Whether a serving machine advertised itself to the fleet within `withinMilliseconds`: it keeps its table of owner costs in the fleet, so a table that is absent, older than that or unreadable means that nobody builds graphs for the fleet and a reader must not wait for it. */
+export async function fleetBuilderAdvertisedV1(input:Readonly<{client:GraphFleetClientV1;withinMilliseconds:number;now?:()=>number}>):Promise<boolean>{
+ const found=await fetchGraphEntryV1(input.client,ownerCostStateV1()).catch(()=>undefined);
+ return found!==undefined&&found!=="fault"&&(input.now??Date.now)()-found.note.createdMs<=input.withinMilliseconds;
 }
 
 /** 👂️ The fleet's table lowered to `ceilingMegabytes` of the reader (another machine may have measured more than this one has), or undefined when there is none, it is damaged or the fleet cannot answer. */

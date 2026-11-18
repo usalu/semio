@@ -1,0 +1,100 @@
+import{expect,test}from"bun:test";
+import{spawn}from"node:child_process";
+import{PLAN_STAGE_POLICY_V1,farmReservationsV1,planFarmWorkersV1,reserveFarmV1}from"../../🟨️.mjs";
+import{HOST_POLICY_V1}from"../../../../🏡️resident/🟨️.mjs";
+import{WALK_FARM_V1,reserveWalkFarmV1}from"../../../../🕸️graph/🧮️derived-nodes/🧩️closure-kinds/🏭️walk-farm/🟨️.mjs";
+import{observeHostTreeMegabytesV1}from"../../../../🌡️host-capacity/🟦️.ts";
+
+/** 🧮️ Contract: one memory plan for the whole process tree. The share of the host that the parent and all child processes of a plan (project farm, walk farm) may add up to is the plan limit of the slice guard; every farm draws from it after what the parent holds (at least `parentMegabytes`, the size the slice worker measured) and what the farms of the same or a higher priority reserved, at the cost a worker really has (`farmWorkerPeakMegabytes`); the project farm takes the memory back from the walk farm when it needs it; and a real process tree of the farms never exceeds the share, where the independent sizing did.
+ * @see ../../🧬️schema/🔣️.json */
+const MB=1048576,P=PLAN_STAGE_POLICY_V1,share=P.treeShare,PARENT=P.parentMegabytes,PROJECT=P.farmWorkerPeakMegabytes["project-farm"],OLD_PROJECT=1536,WALK=WALK_FARM_V1.childBytes/MB;
+const held=(kind:string)=>farmReservationsV1().filter(row=>row.kind===kind).reduce((sum,row)=>sum+row.megabytes,0);
+const base=(host:number,resident:number)=>({hostMegabytes:host,residentMegabytes:resident,environment:{} as Record<string,string|undefined>});
+
+test("the share of the tree is the plan limit of the slice guard, so a farm never plans the tree above the point where the guard settles; a project worker costs more than the grant it books",()=>{
+ expect(Math.round(share*10000)).toBe(HOST_POLICY_V1.sliceHostElasticity.hostCapBasisPoints);
+ expect(share).toBeLessThan(HOST_POLICY_V1.slicePlanGuard.ceilingBasisPoints/10000);
+ expect(PROJECT).toBeGreaterThan(OLD_PROJECT);
+});
+
+test("16 GB worker that holds 3133 MB (the measured size when the inference started): the old independent sizing planned 2 + 4 children on top of the parent, the one plan leaves the tree inside the share",()=>{
+ const input=base(16384,3133),old={project:planFarmWorkersV1({...input,workerMegabytes:OLD_PROJECT}),walk:planFarmWorkersV1({...input,workerMegabytes:WALK})};
+ expect(3133+old.project*OLD_PROJECT+old.walk*WALK,"control: each farm sized alone, parent and workers at their old figures").toBeGreaterThan(16384*share);
+ const project=reserveFarmV1({...input,kind:"project-farm",workerMegabytes:OLD_PROJECT,wanted:8}),walk=reserveFarmV1({...input,kind:"walk-farm",workerMegabytes:WALK,wanted:8});
+ expect(project.workers).toBe(Math.floor((16384*share-PARENT)/PROJECT));
+ expect(PARENT+held("project-farm")+held("walk-farm")).toBeLessThanOrEqual(16384*share);
+ expect(walk.workers,"what the project farm left").toBe(Math.floor((16384*share-PARENT-project.workers*PROJECT)/WALK));
+ project.release();walk.release();
+ expect(farmReservationsV1()).toEqual([]);
+});
+
+test("8 GB worker: the parent alone fills the share, no farm gets a child and the work stays in the process; a 12 GB worker leaves one walk child and no project worker",()=>{
+ for(const resident of[1500,2300,3300]){
+  const input=base(8192,resident),project=reserveFarmV1({...input,kind:"project-farm",workerMegabytes:OLD_PROJECT,wanted:3}),walk=reserveWalkFarmV1(4,input);
+  expect(project.workers).toBe(0);expect(walk.workers).toBe(0);expect(farmReservationsV1()).toEqual([]);
+ }
+ const mid=base(12288,2000),project=reserveFarmV1({...mid,kind:"project-farm",workerMegabytes:OLD_PROJECT,wanted:3}),walk=reserveWalkFarmV1(4,mid);
+ expect(project.workers).toBe(0);expect(walk.workers).toBe(Math.floor((12288*share-PARENT)/WALK));
+ project.release();walk.release();
+});
+
+test("the project farm has priority: it asks the walk farm to give its children back and takes their memory; the walk farm cannot take the project farm's",()=>{
+ const input=base(20000,2000);let yielded=0;
+ const walk=reserveFarmV1({...input,kind:"walk-farm",workerMegabytes:WALK,wanted:5,yield:()=>{yielded++;}});
+ expect(walk.workers).toBe(5);
+ const project=reserveFarmV1({...input,kind:"project-farm",workerMegabytes:OLD_PROJECT,wanted:2});
+ expect(yielded).toBe(1);expect(project.workers).toBe(2);expect(held("walk-farm")).toBe(0);
+ const again=reserveFarmV1({...input,kind:"walk-farm",workerMegabytes:WALK,wanted:9});
+ expect(again.workers).toBe(Math.floor((20000*share-PARENT-2*PROJECT)/WALK));
+ expect(PARENT+held("project-farm")+held("walk-farm")).toBeLessThanOrEqual(20000*share);
+ expect(yielded,"a walk farm never makes the project farm yield").toBe(1);
+ walk.release();project.release();again.release();
+});
+
+test("the cut caps every farm, a release is idempotent, a serving machine records nothing",()=>{
+ const cut={...base(20000,1000),environment:{SEMIO_GRAPH_CUT_CONCURRENCY:"1"}};
+ const project=reserveFarmV1({...cut,kind:"project-farm",workerMegabytes:OLD_PROJECT,wanted:8}),walk=reserveWalkFarmV1(8,cut);
+ expect(project.workers).toBe(1);expect(walk.workers).toBe(1);
+ project.release();project.release();walk.release();expect(farmReservationsV1()).toEqual([]);
+ const serve=reserveFarmV1({...base(65536,1000),kind:"project-farm",workerMegabytes:OLD_PROJECT,wanted:5});
+ expect(serve.workers).toBe(5);expect(farmReservationsV1()).toEqual([]);
+});
+
+test("random law: for any order of reservations and releases on 8, 12, 16 and 20 GB hosts the parent and all children of the same or a higher priority stay within the share at every grant",()=>{
+ let seed=20261115;const next=(n:number)=>{seed=(seed*1103515245+12345)&0x7fffffff;return seed%n;};
+ const priority=P.farmPriority as Record<string,number>;let granted=0;
+ for(const host of[8192,12288,16384,20000]){
+  const open:{release():void}[]=[];
+  for(let step=0;step<400;step++){
+   if(open.length&&next(3)===0){open.splice(next(open.length),1)[0].release();continue;}
+   const resident=500+next(5000),kind=next(2)?"project-farm":"walk-farm",size=kind==="project-farm"?OLD_PROJECT:WALK,lease=reserveFarmV1({...base(host,resident),kind,workerMegabytes:size,wanted:1+next(8)});
+   open.push(lease);
+   if(lease.workers>0){granted++;const counted=farmReservationsV1().filter(row=>priority[row.kind]>=priority[kind]).reduce((sum,row)=>sum+row.megabytes,0);expect(counted+Math.max(resident,PARENT)).toBeLessThanOrEqual(host*share);}
+  }
+  for(const lease of open)lease.release();
+  expect(farmReservationsV1()).toEqual([]);
+ }
+ expect(granted,"the law is not vacuous").toBeGreaterThan(20);
+});
+
+test("real processes: a declared small machine, both farms start real children that hold their budget, and the summed tree peak stays under the plan, where the independent sizing went over",async()=>{
+ const free={...P,parentMegabytes:0,farmWorkerPeakMegabytes:{}},resident=Math.ceil(process.memoryUsage().rss/MB)+150,host=Math.ceil((resident+1300)/share),limit=host*share,input={...base(host,resident),policy:free};
+ const worker={project:200,walk:100},ballast=(megabytes:number)=>megabytes-80;
+ const run=async(counts:{project:number;walk:number})=>{
+  const sizes=[...Array(counts.project).fill(worker.project),...Array(counts.walk).fill(worker.walk)] as number[];
+  const children=sizes.map(megabytes=>spawn(process.execPath,["-e",`const n=${ballast(megabytes)}*1048576,b=Buffer.allocUnsafe(n);const r=new Uint8Array(65536);crypto.getRandomValues(r);for(let o=0;o<n;o+=65536)b.set(r.subarray(0,Math.min(65536,n-o)),o);process.stdout.write("ready\\n");setInterval(()=>{b[0]=1},100);`],{stdio:["ignore","pipe","ignore"]}));
+  await Promise.all(children.map(child=>new Promise<void>(done=>{child.stdout!.once("data",()=>done());child.once("exit",()=>done());setTimeout(done,60000);})));
+  let peak=0;
+  for(let sample=0;sample<3;sample++){peak=Math.max(peak,await observeHostTreeMegabytesV1(process.pid));await new Promise(done=>setTimeout(done,300));}
+  for(const child of children)child.kill("SIGKILL");
+  return peak;
+ };
+ const alone={project:planFarmWorkersV1({...input,workerMegabytes:worker.project}),walk:planFarmWorkersV1({...input,workerMegabytes:worker.walk})};
+ const project=reserveFarmV1({...input,kind:"project-farm",workerMegabytes:worker.project,wanted:alone.project}),walk=reserveFarmV1({...input,kind:"walk-farm",workerMegabytes:worker.walk,wanted:alone.walk});
+ const planned=await run({project:project.workers,walk:walk.workers}),over=await run(alone);
+ project.release();walk.release();
+ expect(project.workers+walk.workers).toBeGreaterThan(1);
+ expect(planned,"summed tree RSS of the planned children and the test process").toBeLessThanOrEqual(limit);
+ expect(resident+alone.project*worker.project+alone.walk*worker.walk,"control: the budgets of the farms sized alone").toBeGreaterThan(limit);
+ expect(over,"control: the real tree of the farms sized alone is the larger one").toBeGreaterThan(planned);
+},120000);

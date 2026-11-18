@@ -5,3 +5,12 @@ try 4: start 2026-11-15T13:20:07Z end 2026-11-15T13:25:10Z native_rc=7 ended at 
 try 5: start 2026-11-15T13:31:10Z end 2026-11-15T13:36:14Z native_rc=7 ended at 2026-11-15T13:37:14Z peak_rss_kib=9410420 slice_peak_mb=9170 stop=process of the run above 8 GB resident (9408240 KiB)
 try 6: start 2026-11-15T13:42:14Z end 2026-11-15T13:47:17Z native_rc=7 ended at 2026-11-15T13:48:17Z peak_rss_kib=9257208 slice_peak_mb=9041 stop=process of the run above 8 GB resident (9256632 KiB)
 try 7: start 2026-11-15T13:53:17Z end 2026-11-15T13:58:20Z native_rc=7 ended at 2026-11-15T13:59:20Z peak_rss_kib=9282668 slice_peak_mb=9066 stop=process of the run above 8 GB resident (9277536 KiB)
+try 8: start 2026-11-15T14:04:20Z end 2026-11-15T14:09:50Z native_rc=1 ended at 2026-11-15T14:09:54Z peak_rss_kib=7189980 slice_peak_mb=9188 stop=none
+try 9: start 2026-11-15T14:14:54Z end 2026-11-15T14:19:57Z native_rc=7 ended at 2026-11-15T14:20:57Z peak_rss_kib=8995392 slice_peak_mb=8733 stop=process of the run above 8 GB resident (9059312 KiB)
+try 10: start 2026-11-15T14:25:57Z end 2026-11-15T14:31:00Z native_rc=7 ended at 2026-11-15T14:32:00Z peak_rss_kib=8855132 slice_peak_mb=8647 stop=process of the run above 8 GB resident (8854924 KiB)
+try 11: start 2026-11-15T14:37:00Z end 2026-11-15T14:43:34Z native_rc=7 ended at 2026-11-15T14:44:34Z peak_rss_kib=9152248 slice_peak_mb=8935 stop=process of the run above 8 GB resident (9150832 KiB)
+try 12: start 2026-11-15T14:49:34Z end 2026-11-15T15:00:34Z native_rc=75 ended at 2026-11-15T15:00:36Z peak_rss_kib=8060720 slice_peak_mb=8506 stop=none
+try 13: start 2026-11-15T15:05:37Z end 2026-11-15T15:10:40Z native_rc=7 ended at 2026-11-15T15:11:40Z peak_rss_kib=9268500 slice_peak_mb=9051 stop=process of the run above 8 GB resident (9255652 KiB)
+try 14: start 2026-11-15T15:16:40Z end 2026-11-15T15:21:12Z native_rc=7 ended at 2026-11-15T15:22:12Z peak_rss_kib=8414840 slice_peak_mb=8217 stop=process of the run above 8 GB resident (8393248 KiB)
+ROUND.md names round 29
+round 28 finished at 2026-11-15T15:22:13Z

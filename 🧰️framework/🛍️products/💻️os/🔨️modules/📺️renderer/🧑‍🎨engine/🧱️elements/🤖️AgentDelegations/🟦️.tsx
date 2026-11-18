@@ -15,7 +15,7 @@
 
 // #region 🔌️Adapters
 import { useId, useState, type FormEvent, type ReactElement } from "../⚛️react-port/🟦️.ts";
-import { Button, useLabel } from "@semio-tech/ui-react";
+import { Button, Input, SharedBorderRow, SharedBorderRowCell, cn, useLabel } from "@semio-tech/ui-react";
 import {
   AGENT_DELEGATION_TTL_CHOICES_SECS_V1,
   agentDelegationRevocableV1,
@@ -25,6 +25,7 @@ import {
   type AgentDelegationPhaseV1,
   type AgentDelegationRowV1
 } from "@semio-tech/framework/directory/delegations";
+import { HubFieldRow, HubRowItem, HubRowList, HubSelectField } from "../🔗️HubConnection/🪢️hub-rows/🟦️.tsx";
 import { hubUiLabel } from "../🔗️HubConnection/🌐️ui-labels/🟦️.ts";
 import { type HubAgentCredentialV1, type HubAgentMcpClientV1 } from "../🔗️HubConnection/🔌️connection-contract/🟦️.ts";
 // #endregion 🔌️Adapters
@@ -90,31 +91,15 @@ function CreateDelegationForm({ disabled, onCreate }: { readonly disabled: boole
   };
 
   return (
-    <form aria-label={createTitleLabel} onSubmit={submit} className="flex flex-col gap-2">
-      <h3 className="text-sm font-medium">{createTitleLabel}</h3>
-      <div className="flex flex-col gap-1">
-        <label htmlFor={`${id}-name`} className="text-xs text-muted-foreground">{nameLabel}</label>
-        <input id={`${id}-name`} data-element-alias="os.hub.agent.name" name="agentName" required value={name} disabled={disabled} onChange={(event) => setName(event.target.value)} className="w-full min-w-0 rounded-sm border px-single py-1 text-sm" />
-      </div>
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <label htmlFor={`${id}-audience`} className="text-xs text-muted-foreground">{audienceLabel}</label>
-          <select id={`${id}-audience`} data-element-alias="os.hub.agent.audience" value={audience} disabled={disabled} onChange={(event) => setAudience(isAgentAudienceV1(event.target.value) ? event.target.value : "read")} className="w-full min-w-0 rounded-sm border px-single py-1 text-sm">
-            <option value="read">{readLabel}</option>
-            <option value="edit">{editLabel}</option>
-          </select>
-        </div>
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <label htmlFor={`${id}-ttl`} className="text-xs text-muted-foreground">{expiryLabel}</label>
-          <select id={`${id}-ttl`} data-element-alias="os.hub.agent.expiry" value={String(ttlSecs)} disabled={disabled} onChange={(event) => setTtlSecs(Number.parseInt(event.target.value, 10))} className="w-full min-w-0 rounded-sm border px-single py-1 text-sm">
-            <option value={String(AGENT_DELEGATION_TTL_CHOICES_SECS_V1[0])}>{dayLabel}</option>
-            <option value={String(AGENT_DELEGATION_TTL_CHOICES_SECS_V1[1])}>{weekLabel}</option>
-            <option value={String(AGENT_DELEGATION_TTL_CHOICES_SECS_V1[2])}>{monthLabel}</option>
-          </select>
-        </div>
-      </div>
-      <Button id="os.hub.agent.create" icon="cpu" type="submit" variant="outline" aria-label={createLabel} disabled={disabled || !valid}>{createLabel}</Button>
-    </form>
+    <SharedBorderRow as="form" orientation="vertical" aria-label={createTitleLabel} onSubmit={submit}>
+      <SharedBorderRowCell><h3 className="text-sm font-medium">{createTitleLabel}</h3></SharedBorderRowCell>
+        <HubFieldRow htmlFor={`${id}-name`} label={nameLabel}>
+          <Input id={`${id}-name`} data-element-alias="os.hub.agent.name" name="agentName" required value={name} disabled={disabled} onChange={(event) => setName(event.target.value)} />
+        </HubFieldRow>
+        <HubSelectField id={`${id}-audience`} alias="os.hub.agent.audience" label={audienceLabel} value={audience} disabled={disabled} options={[{ value: "read", label: readLabel }, { value: "edit", label: editLabel }]} onValueChange={(next) => setAudience(isAgentAudienceV1(next) ? next : "read")} />
+        <HubSelectField id={`${id}-ttl`} alias="os.hub.agent.expiry" label={expiryLabel} value={String(ttlSecs)} disabled={disabled} options={[{ value: String(AGENT_DELEGATION_TTL_CHOICES_SECS_V1[0]), label: dayLabel }, { value: String(AGENT_DELEGATION_TTL_CHOICES_SECS_V1[1]), label: weekLabel }, { value: String(AGENT_DELEGATION_TTL_CHOICES_SECS_V1[2]), label: monthLabel }]} onValueChange={(next) => setTtlSecs(Number.parseInt(next, 10))} />
+        <Button id="os.hub.agent.create" icon="cpu" type="submit" variant="outline" aria-label={createLabel} disabled={disabled || !valid}>{createLabel}</Button>
+    </SharedBorderRow>
   );
 }
 //#endregion 🔖️Create
@@ -138,25 +123,25 @@ function CredentialBlock({ credential, onDownload, onDismiss, onInstallMcpClient
   const commandLabel = useLabel(hubUiLabel("os.hub.agent.command"));
   const principalLabel = useLabel(hubUiLabel("os.hub.agent.principal"), { principal: credential.receipt.agentPrincipalId });
   return (
-    <div role="status" aria-live="polite" data-semio-hub-agent-credential={credential.receipt.delegationId} className="flex flex-col gap-2 rounded-sm border px-single py-1">
-      <p className="text-xs text-muted-foreground">{readyLabel}</p>
-      <p data-semio-hub-agent-principal={credential.receipt.agentPrincipalId} className="break-all text-xs">{principalLabel}</p>
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <Button id="os.hub.agent.download" icon="download" type="button" variant="outline" aria-label={downloadLabel} onClick={onDownload}>{downloadLabel}</Button>
-        <Button icon="x" type="button" variant="outline" aria-label={dismissLabel} onClick={onDismiss}>{dismissLabel}</Button>
-      </div>
-      <p className="text-xs text-muted-foreground">{permissionLabel}</p>
-      <p className="text-xs text-muted-foreground">{commandLabel}</p>
-      <code data-semio-hub-agent-command className="block break-all rounded-sm bg-muted px-single py-1 text-xs">{credential.command}</code>
+    <SharedBorderRow orientation="vertical" role="status" aria-live="polite" data-semio-hub-agent-credential={credential.receipt.delegationId}>
+      <SharedBorderRowCell><p className="text-xs text-muted-foreground">{readyLabel}</p></SharedBorderRowCell>
+      <SharedBorderRowCell><p data-semio-hub-agent-principal={credential.receipt.agentPrincipalId} className="break-all text-xs">{principalLabel}</p></SharedBorderRowCell>
+      <SharedBorderRow>
+        <Button id="os.hub.agent.download" icon="download" type="button" variant="outline" aria-label={downloadLabel} className="flex-1 min-w-0" onClick={onDownload}>{downloadLabel}</Button>
+        <Button icon="x" type="button" variant="outline" aria-label={dismissLabel} className="flex-1 min-w-0" onClick={onDismiss}>{dismissLabel}</Button>
+      </SharedBorderRow>
+      <SharedBorderRowCell><p className="text-xs text-muted-foreground">{permissionLabel}</p></SharedBorderRowCell>
+      <SharedBorderRowCell><p className="text-xs text-muted-foreground">{commandLabel}</p></SharedBorderRowCell>
+      <SharedBorderRowCell><code data-semio-hub-agent-command className="block min-w-0 break-all bg-muted text-xs">{credential.command}</code></SharedBorderRowCell>
       <McpClientBlock mcpClient={credential.mcpClient} onInstall={onInstallMcpClient} onCopy={onCopyMcpClientConfig} />
-      {credential.save === "saved" ? <p className="text-xs">{downloadedLabel}</p> : null}
+      {credential.save === "saved" ? <SharedBorderRowCell><p className="text-xs">{downloadedLabel}</p></SharedBorderRowCell> : null}
       {credential.save === "failed" ? (
         <>
-          <p role="alert" className="text-xs text-destructive">{downloadFailedLabel}</p>
-          <code data-semio-hub-agent-credential-file={credential.file.fileName} className="block max-h-48 overflow-auto break-all rounded-sm bg-muted px-single py-1 text-xs">{credential.file.contents}</code>
+          <SharedBorderRowCell><p role="alert" className="text-xs text-destructive">{downloadFailedLabel}</p></SharedBorderRowCell>
+          <SharedBorderRowCell><code data-semio-hub-agent-credential-file={credential.file.fileName} className="block max-h-48 min-w-0 overflow-auto break-all bg-muted text-xs">{credential.file.contents}</code></SharedBorderRowCell>
         </>
       ) : null}
-    </div>
+    </SharedBorderRow>
   );
 }
 
@@ -181,23 +166,23 @@ function McpClientBlock({ mcpClient, onInstall, onCopy }: {
   const revocableLabel = useLabel(hubUiLabel("os.hub.agent.mcpRevocable"));
   const statusText = mcpClient.phase === "installing" ? installingLabel : mcpClient.phase === "copied" ? copiedLabel : "";
   return (
-    <div role="group" aria-labelledby={`${id}-title`} data-semio-hub-agent-mcp={mcpClient.phase} className="flex flex-col gap-2 rounded-sm border px-single py-1">
-      <p id={`${id}-title`} className="text-sm font-medium">{titleLabel}</p>
+    <SharedBorderRow orientation="vertical" role="group" aria-labelledby={`${id}-title`} data-semio-hub-agent-mcp={mcpClient.phase}>
+      <SharedBorderRowCell><p id={`${id}-title`} className="text-sm font-medium">{titleLabel}</p></SharedBorderRowCell>
       {mcpClient.phase === "idle" || mcpClient.phase === "installing" ? (
         <Button id="os.hub.agent.mcpInstall" icon="link" type="button" variant="outline" aria-label={installLabel} disabled={mcpClient.phase === "installing"} onClick={onInstall}>{installLabel}</Button>
       ) : null}
-      <p role="status" aria-live="polite" className="text-xs text-muted-foreground">{statusText}</p>
-      {mcpClient.phase === "unavailable" ? <p className="text-xs text-muted-foreground">{unavailableLabel}</p> : null}
-      {mcpClient.phase === "failed" ? <p role="alert" className="text-xs text-destructive">{failedLabel}</p> : null}
+      <p role="status" aria-live="polite" data-shared-border-cell={statusText === "" ? undefined : ""} className={cn("text-xs text-muted-foreground", statusText === "" ? "sr-only" : "px-single py-1")}>{statusText}</p>
+      {mcpClient.phase === "unavailable" ? <SharedBorderRowCell><p className="text-xs text-muted-foreground">{unavailableLabel}</p></SharedBorderRowCell> : null}
+      {mcpClient.phase === "failed" ? <SharedBorderRowCell><p role="alert" className="text-xs text-destructive">{failedLabel}</p></SharedBorderRowCell> : null}
       {mcpClient.config === null ? null : (
         <>
-          <p className="text-xs text-muted-foreground">{readyLabel}</p>
-          <pre data-semio-hub-agent-mcp-config className="max-h-64 overflow-auto whitespace-pre-wrap break-all rounded-sm bg-muted px-single py-1 text-xs">{mcpClient.config}</pre>
+          <SharedBorderRowCell><p className="text-xs text-muted-foreground">{readyLabel}</p></SharedBorderRowCell>
+          <SharedBorderRowCell><pre data-semio-hub-agent-mcp-config className="max-h-64 min-w-0 overflow-auto whitespace-pre-wrap break-all bg-muted text-xs">{mcpClient.config}</pre></SharedBorderRowCell>
           <Button id="os.hub.agent.mcpCopy" icon="copy" type="button" variant="outline" aria-label={copyLabel} onClick={onCopy}>{copyLabel}</Button>
-          <p className="text-xs text-muted-foreground">{revocableLabel}</p>
+          <SharedBorderRowCell><p className="text-xs text-muted-foreground">{revocableLabel}</p></SharedBorderRowCell>
         </>
       )}
-    </div>
+    </SharedBorderRow>
   );
 }
 //#endregion 🔖️Credential
@@ -231,28 +216,29 @@ function DelegationRow({ row, busy, onRevoke }: {
   const usageText = row.lastUsedAtMs === null ? neverUsedLabel : lastUsedLabel;
 
   return (
-    <li data-delegation-id={row.delegationId} data-delegation-state={row.state} data-delegation-audience={row.audience} className="flex flex-col gap-1 rounded-sm border px-single py-1">
-      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex min-w-0 flex-col">
-          <span id={`${id}-name`} className="truncate text-sm font-medium">{row.agentLabel}</span>
+    <HubRowItem orientation="vertical" data-delegation-id={row.delegationId} data-delegation-state={row.state} data-delegation-audience={row.audience}>
+      <SharedBorderRow>
+        <SharedBorderRowCell className="min-w-0 flex-1 flex-col items-start justify-center">
+          <span id={`${id}-name`} className="max-w-full truncate text-sm font-medium">{row.agentLabel}</span>
           <span className="text-xs text-muted-foreground">{`${stateText} · ${row.audience === "edit" ? editLabel : readLabel} · ${usageText}`}</span>
           <span data-delegation-principal={row.agentPrincipalId} className="break-all text-xs text-muted-foreground">{row.agentPrincipalId}</span>
           <span className="text-xs text-muted-foreground">{`${createdLabel} · ${expiresLabel}`}</span>
-        </div>
+        </SharedBorderRowCell>
         {agentDelegationRevocableV1(row) && !confirming ? (
           <Button icon="lock" type="button" variant="outline" disabled={busy} aria-label={revokeLabel} onClick={() => setConfirming(true)}>{revokeLabel}</Button>
         ) : null}
-      </div>
+      </SharedBorderRow>
       {confirming ? (
-        <div role="group" aria-labelledby={`${id}-confirm-title`} aria-describedby={`${id}-confirm-body`} data-semio-hub-agent-revoke-confirm={row.delegationId} className="flex flex-col gap-2 rounded-sm border border-destructive px-single py-1">
-          <p id={`${id}-confirm-title`} className="text-sm font-medium">{confirmTitleLabel}</p>
-          <p id={`${id}-confirm-body`} className="text-xs text-muted-foreground">{confirmBodyLabel}</p>
-          <div className="flex flex-col gap-2 sm:flex-row">
+        <SharedBorderRow orientation="vertical" tone="destructive" role="group" aria-labelledby={`${id}-confirm-title`} aria-describedby={`${id}-confirm-body`} data-semio-hub-agent-revoke-confirm={row.delegationId}>
+          <SharedBorderRowCell><p id={`${id}-confirm-title`} className="text-sm font-medium">{confirmTitleLabel}</p></SharedBorderRowCell>
+          <SharedBorderRowCell><p id={`${id}-confirm-body`} className="text-xs text-muted-foreground">{confirmBodyLabel}</p></SharedBorderRowCell>
+          <SharedBorderRow>
             <Button
               icon="lock"
               type="button"
               variant="outline"
               disabled={busy}
+              className="flex-1 min-w-0"
               aria-label={`${confirmLabel} — ${confirmTitleLabel}`}
               onClick={() => {
                 setConfirming(false);
@@ -261,11 +247,11 @@ function DelegationRow({ row, busy, onRevoke }: {
             >
               {confirmLabel}
             </Button>
-            <Button icon="x" type="button" variant="outline" aria-label={cancelLabel} onClick={() => setConfirming(false)}>{cancelLabel}</Button>
-          </div>
-        </div>
+            <Button icon="x" type="button" variant="outline" aria-label={cancelLabel} className="flex-1 min-w-0" onClick={() => setConfirming(false)}>{cancelLabel}</Button>
+          </SharedBorderRow>
+        </SharedBorderRow>
       ) : null}
-    </li>
+    </HubRowItem>
   );
 }
 //#endregion 🔖️Row
@@ -320,33 +306,33 @@ export function AgentDelegations({
           : errorRefused;
 
   return (
-    <section aria-labelledby={`${id}-title`} data-semio-hub-agent-phase={phase} data-semio-hub-agent-space={spaceId ?? ""} className="flex w-full min-w-0 flex-col gap-3 border-t p-4">
-      <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <h2 id={`${id}-title`} className="text-base font-medium">{title}</h2>
+    <SharedBorderRow as="section" orientation="vertical" aria-labelledby={`${id}-title`} data-semio-hub-agent-phase={phase} data-semio-hub-agent-space={spaceId ?? ""} className="w-full">
+      <SharedBorderRow as="header">
+        <SharedBorderRowCell className="flex-1"><h2 id={`${id}-title`} className="text-base font-medium">{title}</h2></SharedBorderRowCell>
         <Button icon="rotate-cw" type="button" variant="outline" aria-label={refreshLabel} disabled={busy || spaceId === null} onClick={onRefresh}>{refreshLabel}</Button>
-      </header>
-      <p className="text-xs text-muted-foreground">{description}</p>
-      <p role="status" aria-live="polite" data-semio-hub-agent-status={phase} className="text-xs text-muted-foreground">{statusText}</p>
-      {errorText === null ? null : <p role="alert" data-semio-hub-agent-error={error ?? ""} className="text-xs text-destructive">{errorText}</p>}
+      </SharedBorderRow>
+      <SharedBorderRowCell><p className="text-xs text-muted-foreground">{description}</p></SharedBorderRowCell>
+      <p role="status" aria-live="polite" data-semio-hub-agent-status={phase} data-shared-border-cell={statusText === "" ? undefined : ""} className={cn("text-xs text-muted-foreground", statusText === "" ? "sr-only" : "px-single py-1")}>{statusText}</p>
+      {errorText === null ? null : <SharedBorderRowCell tone="destructive"><p role="alert" data-semio-hub-agent-error={error ?? ""} className="text-xs text-destructive">{errorText}</p></SharedBorderRowCell>}
 
-      {!signedIn ? <p className="text-sm text-muted-foreground">{signedOutLabel}</p> : spaceId === null ? <p className="text-sm text-muted-foreground">{noSpaceLabel}</p> : null}
+      {!signedIn ? <SharedBorderRowCell><p className="text-sm text-muted-foreground">{signedOutLabel}</p></SharedBorderRowCell> : spaceId === null ? <SharedBorderRowCell><p className="text-sm text-muted-foreground">{noSpaceLabel}</p></SharedBorderRowCell> : null}
 
       {credential === null ? null : <CredentialBlock credential={credential} onDownload={onDownloadCredential} onDismiss={onDismissCredential} onInstallMcpClient={onInstallMcpClient} onCopyMcpClientConfig={onCopyMcpClientConfig} />}
 
-      {signedIn && spaceId !== null ? (canDelegate ? <CreateDelegationForm disabled={busy} onCreate={onCreate} /> : <p className="text-sm text-muted-foreground">{notAuthorLabel}</p>) : null}
+      {signedIn && spaceId !== null ? (canDelegate ? <CreateDelegationForm disabled={busy} onCreate={onCreate} /> : <SharedBorderRowCell><p className="text-sm text-muted-foreground">{notAuthorLabel}</p></SharedBorderRowCell>) : null}
 
       {signedIn && spaceId !== null ? (
         rows.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{emptyLabel}</p>
+          <SharedBorderRowCell><p className="text-sm text-muted-foreground">{emptyLabel}</p></SharedBorderRowCell>
         ) : (
-          <ul role="list" data-element-alias="os.hub.agent.list" aria-label={listLabel} className="flex flex-col gap-1">
+          <HubRowList data-element-alias="os.hub.agent.list" aria-label={listLabel}>
             {rows.map((row) => (
               <DelegationRow key={row.delegationId} row={row} busy={busy} onRevoke={onRevoke} />
             ))}
-          </ul>
+          </HubRowList>
         )
       ) : null}
-    </section>
+    </SharedBorderRow>
   );
 }
 //#endregion 🔖️Pane

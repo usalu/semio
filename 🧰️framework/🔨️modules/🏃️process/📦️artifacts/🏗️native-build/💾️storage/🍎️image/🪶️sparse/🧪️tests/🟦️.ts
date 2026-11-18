@@ -16,7 +16,7 @@ import{nativeImageBackingAllocatedBytesV1}from"../../../🪶️extent/🟦️.ts
 import catalog from"../../../../../../📖️texts/🔣️.json"with{type:"json"};
 import{refuseProcessV1}from"../../../../../../📖️texts/🟦️.ts";
 const initialLimit=134217728;
-import{nativeImageSparseAdmissionBytesV1,nativeImageSparseGrowArgumentsV1,nativeImageSparseInitialBytesV1}from"../🟦️.ts";
+import{nativeImageGrowRetryV1,nativeImageSparseAdmissionBytesV1,nativeImageSparseGrowArgumentsV1,nativeImageSparseInitialBytesV1}from"../🟦️.ts";
 const protocol=schema.definitions.Protocol.const,unit=imageSchema.definitions.ImageProtocol.const.unitBytes,MiB=1048576,GiB=1073741824;
 const env={PATH:"/usr/bin:/bin:/usr/sbin:/sbin",LANG:"C",LC_ALL:"C"};
 const run=(program:string,args:readonly string[])=>{const row=spawnSync(program,[...args],{encoding:"utf8",env});if(row.status!==0)throw Error(program+" "+args.join(" ")+": "+row.stderr);return row.stdout;};
@@ -92,3 +92,13 @@ test.skipIf(process.platform!=="darwin")("blocks freed inside a raw fixed image 
   expect(allocated(second)).toBeLessThan(initialLimit);
  }finally{seed.dispose();spawnSync(nativeImageHdiutilProgramV1,["detach",mount],{env});rmSync(directory,{recursive:true,force:true});}
 },180000);
+
+test("retry grow: status 35 is retried 0.5, 1, 2 and 4 s apart and then given up, any other failure is thrown at once, success stops",async()=>{
+ const failure=(status:number)=>Error("/usr/bin/hdiutil resize -size 1m x.dmg exited with status "+status+" signal null");
+ const run=async(failures:readonly number[])=>{const pauses:number[]=[];let calls=0;const outcome=await nativeImageGrowRetryV1(async()=>{const status=failures[calls++];if(status!==undefined)throw failure(status);},async milliseconds=>{pauses.push(milliseconds);}).then(()=>"ok",error=>String(error.message));return{calls,pauses,outcome};};
+ expect(await run([])).toEqual({calls:1,pauses:[],outcome:"ok"});
+ expect(await run([35,35])).toEqual({calls:3,pauses:[500,1000],outcome:"ok"});
+ expect(await run([35,35,35,35])).toEqual({calls:5,pauses:[500,1000,2000,4000],outcome:"ok"});
+ const spent=await run([35,35,35,35,35,35]);expect(spent.calls).toBe(5);expect(spent.pauses).toEqual([500,1000,2000,4000]);expect(spent.outcome).toContain("status 35");
+ const other=await run([35,22,35]);expect(other.calls).toBe(2);expect(other.outcome).toContain("status 22");
+});

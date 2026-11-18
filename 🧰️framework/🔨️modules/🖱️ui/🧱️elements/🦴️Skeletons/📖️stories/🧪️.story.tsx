@@ -9,7 +9,8 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { CanvasSkeleton, DiagramSkeleton, elementSkeleton, SceneSkeleton, TableSkeleton, WindowBodySkeleton, type TableColumn } from "@semio-tech/ui-react";
+import * as React from "react";
+import { CanvasSkeleton, DiagramSkeleton, elementSkeleton, SceneSkeleton, SharedBorderRow, SharedBorderRowCell, TableSkeleton, WindowBodySkeleton, type TableColumn } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "../../../🧪️tests/📚️storybook-types/🟦️.ts";
 // #endregion 🔌️Adapters
 
@@ -74,7 +75,7 @@ export const Canvas: Story = {
 export const WindowBody: Story = {
   name: "WindowBodySkeleton",
   render: () => (
-    <div className="h-64 w-full border border-normal">
+    <div className="h-64 w-full">
       <WindowBodySkeleton />
     </div>
   ),
@@ -83,13 +84,17 @@ export const WindowBody: Story = {
 export const ElementMatrix: Story = {
   name: "ElementSkeletonKinds",
   render: () => (
-    <div className="grid w-full max-w-md grid-cols-2 gap-double">
-      {(["text", "button", "input", "tree"] as const).map((kind) => (
-        <div key={kind} className="p-single border border-normal">
-          {elementSkeleton(kind)}
-        </div>
-      ))}
-    </div>
+    <SharedBorderRow orientation="vertical" className="w-full max-w-md">
+      {(["text", "button", "input", "tree"] as const).map((kind) =>
+        kind === "tree" ? (
+          <React.Fragment key={kind}>{elementSkeleton(kind)}</React.Fragment>
+        ) : (
+          <SharedBorderRowCell key={kind} className="flex-col items-stretch">
+            {elementSkeleton(kind)}
+          </SharedBorderRowCell>
+        ),
+      )}
+    </SharedBorderRow>
   ),
 };
 // #endregion 💀️Skeletons

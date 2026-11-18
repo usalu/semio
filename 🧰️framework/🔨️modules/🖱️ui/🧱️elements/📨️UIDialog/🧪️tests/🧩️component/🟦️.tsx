@@ -8,6 +8,7 @@ import { describe, expect, it, vi } from "vitest";
 import { uiI18n, type UiLocale } from "../../../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 import { UiKeybindingsProvider } from "../../../../🔨️modules/🕹️control-keybinding-context/🟦️.tsx";
 import { UIDialog, type UIDialogProps } from "../../🟦️.tsx";
+import { Input } from "../../../✏️Input/🟦️.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../🔽️Select/🟦️.tsx";
 import { Popover, PopoverContent, PopoverTrigger } from "../../../🗨️Popover/🟦️.tsx";
 import { createShellScope, ShellScopeProvider } from "../../../🐚️ShellScope/🟦️.tsx";
@@ -280,5 +281,33 @@ describe("UIDialog accessibility", () => {
       expect(choose).toHaveBeenCalledTimes(fixtureCase.dispatches.filter((dispatch) => dispatch.button.startsWith("choice:")).length);
       view.unmount();
     }
+  });
+
+  it("stacks arguments and footer buttons as shared-border cells with no padding, margin or gap between framed siblings", async () => {
+    await uiI18n.changeLanguage("en");
+    const dialog = dialogChoices.dialog as unknown as UIDialogProps["dialog"];
+    const framedField: UIDialogProps["renderField"] = (def, value, change, field) => <Input id={field.id} aria-labelledby={field.labelledBy} value={String(value ?? "")} onChange={event => change(event.target.value)} />;
+    const view = render(<UIDialog dialog={dialog} seedArgs={dialogChoices.seed} renderField={framedField} onSubmit={vi.fn()} onChoose={vi.fn()} onCancel={vi.fn()} />);
+    const content = view.getByRole("dialog");
+    expect(content.className).toMatch(/(^|\s)p-0(\s|$)/);
+    expect(content.className).toMatch(/(^|\s)gap-0(\s|$)/);
+    const args = content.querySelector<HTMLElement>('[data-slot="ui-dialog-arguments"]')!;
+    expect(args.hasAttribute("data-shared-border-cells")).toBe(true);
+    expect(args.dataset.orientation).toBe("vertical");
+    expect(args.className).not.toMatch(/\b(gap|mb|mt|my|p|px|py)-/);
+    const groups = [...args.querySelectorAll<HTMLElement>(':scope > [role="group"]')];
+    expect(groups).toHaveLength(dialog.args.length);
+    for (const group of groups) {
+      expect(group.hasAttribute("data-shared-border-cells")).toBe(true);
+      expect(group.className).not.toMatch(/\bgap-/);
+      expect(group.querySelector(':scope > [data-shared-border-cell]')).not.toBeNull();
+      expect(group.querySelector(':scope > [data-shared-border-frame]')).not.toBeNull();
+    }
+    const footer = content.querySelector<HTMLElement>('[data-slot="ui-dialog-footer"]')!;
+    expect(footer.hasAttribute("data-shared-border-cells")).toBe(true);
+    expect(footer.className).not.toMatch(/\b(gap|mb|mt|my)-/);
+    expect(footer.querySelectorAll(':scope > [data-shared-border-frame], :scope > [data-shared-border-cells]').length).toBeGreaterThanOrEqual(2);
+    expect(footer.previousElementSibling).toBe(args);
+    view.unmount();
   });
 });

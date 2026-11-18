@@ -4,7 +4,7 @@ use super::*;
 
 #[path = "📝️text-and-structure-nodes/🦀️.rs"]
 mod text_and_structure_nodes;
-use text_and_structure_nodes::{paint_text_node_step, paint_stack_node_step, paint_separator_node_step, paint_key_value_node_step, paint_field_node_step, paint_section_node_step, paint_group_node_step};
+use text_and_structure_nodes::{paint_text_node_step, paint_stack_node_step, paint_separator_node_step, paint_key_value_node_step, paint_field_node_step, paint_section_node_step, paint_group_node_step, paint_card_stack_node_step};
 
 #[path = "🎛️control-nodes/🦀️.rs"]
 mod control_nodes;
@@ -88,6 +88,8 @@ pub fn paint_node_step_with_driver(
             UiNode::IconSelect(select) => paint_icon_select_node_step(select, atlas, draw, cursor, node, theme, bounds, presence),
             UiNode::Field(field) => paint_field_node_step(field, tree, id, atlas, draw, cursor, theme, bounds, presence),
             UiNode::Section(section) => paint_section_node_step(section, tree, id, atlas, draw, cursor, theme, bounds, presence),
+            UiNode::CardStack(_) => paint_card_stack_node_step(tree, id, atlas, draw, cursor, theme, bounds, presence),
+            UiNode::OverviewCard(_) => retained_presence_step(draw, bounds, theme, presence),
             UiNode::Group(_) if semio_ui_wgpu_mounted_layout::owning_tree_spec(tree, id).is_some() => retained_presence_step(draw, bounds, theme, presence),
             UiNode::Group(group) => paint_group_node_step(group, atlas, icons, draw, cursor, theme, bounds, presence),
             UiNode::Tree(tree_node) => retained_tree_node_step(tree, id, tree_node, bounds, theme, driver_drag, block_reversed, inline, atlas, icons, draw, cursor),

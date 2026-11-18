@@ -42,6 +42,8 @@ pub(super) enum ChromeTextRanges {
     SliderUnit {
         label: GlyphRange,
     },
+    /// 🃏️ Bands fixed at admission (a card's cap and footer rows): no glyph range, the node's own `Section` bands stand.
+    Banded,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -289,11 +291,15 @@ pub(super) fn composite_chrome(node: &LayoutInputNode, glyphs: &ui_contract::UiF
             Some((metrics.top, metrics.bottom))
         }
         ChromeTextRanges::Field { description, error, .. } => {
-            let detail_height = |range: GlyphRange| measure_glyph_range(glyphs, previews, range, FIELD_DETAIL_FONT_SIZE, MeasureConstraint::Definite(width), false).1.max(semio_ui_text::line_height(FIELD_DETAIL_FONT_SIZE));
+            let detail_height = |range: GlyphRange| measure_glyph_range(glyphs, previews, range, FIELD_DETAIL_FONT_SIZE, MeasureConstraint::Definite((width - gap * 2.0).max(1.0)), false).1.max(semio_ui_text::line_height(FIELD_DETAIL_FONT_SIZE));
             let metrics = field_chrome_metrics(description.map(detail_height), 0.0, error.map(detail_height), gap);
             Some((metrics.top, metrics.bottom))
         }
         ChromeTextRanges::SliderUnit { .. } => None,
+        ChromeTextRanges::Banded => match node.kind {
+            LayoutNodeKind::Section { top, bottom, .. } => Some((top, bottom)),
+            _ => None,
+        },
     }
 }
 //#endregion 🧵️MountedLayoutText

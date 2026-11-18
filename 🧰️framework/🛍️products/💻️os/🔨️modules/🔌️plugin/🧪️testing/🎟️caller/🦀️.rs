@@ -8,17 +8,17 @@ struct CallerPolicy{source_kind:String,operation:u64,generation:u64,fuel:u64,tur
 
 fn fixture_now_us()->Option<u64>{Some(1000)}
 
-/// 🪙️ One original ledger, cancellation root, cursor and cumulative recipient own the fixture's whole financed body; its roots are born and closed through the production effect-threaded admissions of the framework fixture caller.
+/// 🪙️ One original ledger, cancellation root, cursor and cumulative recipient own the fixture's whole financed body; its roots are born and closed through the production effect-threaded admissions of the framework fixture caller. Its Source return table and publisher are born up front, as the production host births them before a turn that requested them: a lent long-lived context has no host to serve them between turns, so a body that needs them would otherwise wait on its own request forever.
 pub struct OriginalFixtureCaller{policy:CallerPolicy,caller:OriginalJobFixtureCaller,decoder:semio_framework_job::OriginalJobDecodeOwner,lent:bool}
 impl OriginalFixtureCaller{
  /// 🚪️ Creates original authority from closed test input before semantic work begins.
  pub fn admit()->Result<Self,ValueError>{
   let policy:CallerPolicy=serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🎟️caller.json")).expect("closed original fixture caller policy");assert_eq!(policy.source_kind,"original-parent");assert_eq!(policy.clock_us,fixture_now_us().unwrap());
-  let caller=OriginalJobFixtureCaller::admit(OperationId(policy.operation),Generation(policy.generation),policy.grant,fixture_now_us,policy.deadline_us,policy.fuel);
+  let mut caller=OriginalJobFixtureCaller::admit(OperationId(policy.operation),Generation(policy.generation),policy.grant,fixture_now_us,policy.deadline_us,policy.fuel);caller.birth_returns(policy.grant);
   Ok(Self{policy,caller,decoder:semio_framework_job::OriginalJobDecodeOwner::empty(),lent:false})
  }
  /// 🪢️ Lends one original context; another call cannot recreate its original fuel or ceiling.
- pub fn context(&mut self)->StepContext<'_>{assert!(!self.lent,"original fixture context can only be issued once");self.lent=true;self.caller.lend_context().with_original_decoder(&mut self.decoder)}
+ pub fn context(&mut self)->StepContext<'_>{assert!(!self.lent,"original fixture context can only be issued once");self.lent=true;self.caller.lend_refreshed_context().with_original_decoder(&mut self.decoder)}
  /// ⛽️ The fuel one host Interactive turn is granted: every fixture turn starts from it, never from what an earlier call left on the long-lived context.
  pub fn turn_fuel()->u64{serde_json::from_str::<CallerPolicy>(include_str!("🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap().turn_fuel}
  /// 💤️ Consecutive turns that may settle nothing before a loop fails typed.
@@ -38,13 +38,27 @@ impl OriginalFixtureCaller{
   Err(OriginalTurnFailure::from(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture caller retirement exceeded its supplied turn bound")))
  }
 }
+thread_local!{static UI_ARENA:std::cell::RefCell<(usize,Option<semio_ui_contract_values::testkit::UiArenaFixture>)>=const{std::cell::RefCell::new((0,None))};}
+
+/// 🏟️ Holds the process-wide UI value arena for this thread while a fixture renders: the first holder opens the real arena Source and serializes against every other test thread, nested holders on the same thread share it, and the last one returns it. See [`semio_ui_contract_values::testkit::UiArenaFixture`].
+pub struct FixtureUiArena(());
+impl FixtureUiArena{
+ /// 🚪️ Opens the arena for this thread, or joins the one this thread already holds.
+ pub fn admit()->Self{
+  let held=UI_ARENA.with(|slot|{let mut slot=slot.borrow_mut();slot.0+=1;slot.0>1});
+  if !held{let arena=semio_ui_contract_values::testkit::UiArenaFixture::new();UI_ARENA.with(|slot|slot.borrow_mut().1=Some(arena))}
+  Self(())
+ }
+}
+impl Drop for FixtureUiArena{fn drop(&mut self){let last=UI_ARENA.with(|slot|{let mut slot=slot.borrow_mut();slot.0-=1;if slot.0==0{slot.1.take()}else{None}});drop(last)}}
+
 /// 🪙️ One fixture-lifetime original caller: owns the caller and its single lent context so a fixture app threads the same `cx` through every call and pays the caller's terminal retirement once, at an explicit [`OriginalFixtureScope::retire`] or else when the scope drops (a scope dropped while panicking pays nothing).
 pub struct OriginalFixtureScope{context:Option<StepContext<'static>>,caller:*mut OriginalFixtureCaller}
 impl OriginalFixtureScope{
  /// 🚪️ Admits one original caller and lends its sole context for the whole life of the scope.
  pub fn admit()->Self{let caller=Box::into_raw(Box::new(OriginalFixtureCaller::admit().expect("closed original fixture scope caller")));let context=unsafe{(*caller).context()};Self{context:Some(context),caller}}
- /// 🪢️ The one original context every call of the fixture's financed body shares.
- pub fn cx(&mut self)->&mut StepContext<'static>{self.context.as_mut().expect("original fixture scope context is lent until its retirement")}
+ /// 🪢️ The one original context every call of the fixture's financed body shares; every call begins a new host turn, so the receiving scope the previous call left open is settled first.
+ pub fn cx(&mut self)->&mut StepContext<'static>{let cx=self.context.as_mut().expect("original fixture scope context is lent until its retirement");cx.settle_receiving_scope().expect("the previous fixture call settles its original receiving scope");cx}
  /// 🧹️ Returns the context, then pays the caller's terminal retirement from the fuel the body left.
  pub fn retire(&mut self)->RetainedCloneProgress{
   let context=self.context.take().expect("original fixture scope retires once");let fuel=context.fuel_remaining();drop(context);
@@ -64,7 +78,7 @@ mod original_physical_laws{
  fn original_plugin_fixture_caller_charges_root_finance_before_body_and_closes_same_stock(){
   let policy:CallerPolicy=serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap();
   let mut caller=OriginalFixtureCaller::admit().unwrap();let roots=caller.caller.cumulative_receipt();let birth_fuel=caller.caller.fuel_remaining();assert!(roots.copied_items>0&&birth_fuel<policy.fuel);assert!(roots.fits(policy.grant));
-  let mut cx=caller.context();assert_eq!(cx.fuel_remaining(),birth_fuel);assert_eq!(cx.retained_progress(),roots);assert_eq!(cx.retained_grant(),fixture_remaining(policy.grant,roots));
+  let mut cx=caller.context();let refreshed=cx.retained_progress();assert!(cx.fuel_remaining()<=birth_fuel);assert!(refreshed.copied_items>=roots.copied_items&&refreshed.copied_bytes>=roots.copied_bytes&&refreshed.fits(policy.grant));assert_eq!(cx.retained_grant(),fixture_remaining(policy.grant,refreshed));
   let original=cx.original_recipient_identity();let before=cx.retained_progress();let fuel=cx.fuel_remaining();
   let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_original_work_loan(0,policy.deadline_us,|same|{assert!(same.should_yield());assert_eq!(same.original_recipient_identity(),original);Ok(())}));
   assert!(result.is_ok());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(cx.retained_progress(),before);assert_eq!(cx.fuel_remaining(),fuel);

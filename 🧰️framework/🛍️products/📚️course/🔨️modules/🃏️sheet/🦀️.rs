@@ -17,8 +17,8 @@
 //! @see ../🃏️sheet/🟦️.ts — the TypeScript twin
 
 use crate::challenge::{challenge_rules, task_seconds, ChallengeRules};
-use crate::randomness::{fnv1a32, shuffle, Mt19937};
-use crate::schema::{Axis, Category, Challenge, Icon, Mockup, MatchingTask, Quiz, Sheet, SheetAxis, SheetClassificationTask, SheetDimension, SheetItem, SheetMatchingTask, SheetSortingTask, SheetTask, SortingItem, Task, TaskKind, Text};
+use crate::randomness::{fnv1a32, shuffle, weighted_sample, Mt19937};
+use crate::schema::{Axis, Category, Challenge, Distribution, Icon, Mockup, MatchingTask, Quiz, Sheet, SheetAxis, SheetClassificationTask, SheetDimension, SheetItem, SheetMatchingTask, SheetSortingTask, SheetTask, SortingItem, Task, TaskKind, Text};
 use std::cmp::Ordering;
 
 /// 🎰️ Present `quiz` for `seed` at `challenge`. Expects a quiz free of
@@ -48,7 +48,7 @@ fn present(random: &mut Mt19937, task: &Task, rules: ChallengeRules, seed: u32) 
     let seconds = |kind: TaskKind, items: usize, dimensions: usize| rules.timed.then(|| task.pool().map_or_else(|| task_seconds(kind, items, dimensions), |pool| u64::from(pool.seconds)));
     match task {
         Task::Classification(task) => {
-            let items = pooled(random, &task.id, task.items.iter().map(|item| item.id.as_str()).collect(), task.draw, task.pool.as_ref(), seed);
+            let items = pooled(random, &task.id, task.items.iter().map(|item| item.id.as_str()).collect(), task.draw, task.pool.as_ref(), &magnitudes(task.items.len(), |_| None), seed);
             let axes = task.axes.as_deref().unwrap_or_default();
             SheetTask::Classification(SheetClassificationTask {
                 id: task.id.clone(),
@@ -62,7 +62,7 @@ fn present(random: &mut Mt19937, task: &Task, rules: ChallengeRules, seed: u32) 
             })
         }
         Task::Sorting(task) => {
-            let mut items = pooled(random, &task.id, task.items.iter().map(|item| item.id.as_str()).collect(), task.draw, task.pool.as_ref(), seed);
+            let mut items = pooled(random, &task.id, task.items.iter().map(|item| item.id.as_str()).collect(), task.draw, task.pool.as_ref(), &magnitudes(task.items.len(), |index| Some(task.items[index].value)), seed);
             let keys = rules.keys.then(|| ladder(&task.items, &items));
             if items.len() >= 2 && ascending(&task.items, &items) {
                 items.rotate_left(1);
@@ -79,7 +79,7 @@ fn present(random: &mut Mt19937, task: &Task, rules: ChallengeRules, seed: u32) 
             })
         }
         Task::Matching(task) => {
-            let items = pooled(random, &task.id, task.items.iter().map(|item| item.id.as_str()).collect(), task.draw, task.pool.as_ref(), seed);
+            let items = pooled(random, &task.id, task.items.iter().map(|item| item.id.as_str()).collect(), task.draw, task.pool.as_ref(), &magnitudes(task.items.len(), |index| task.items[index].values.get(&task.dimensions[0].id).copied()), seed);
             SheetTask::Matching(SheetMatchingTask {
                 id: task.id.clone(),
                 title: task.title.clone(),
@@ -118,9 +118,24 @@ fn ladder(items: &[SortingItem], order: &[usize]) -> Vec<f64> {
     sorted.into_iter().map(|index| items[index].value).collect()
 }
 
-fn pooled(random: &mut Mt19937, id: &str, items: Vec<&str>, draw: Option<usize>, pool: Option<&crate::schema::QuestionPool>, seed: u32) -> Vec<usize> {
+fn magnitudes(count: usize, value: impl Fn(usize) -> Option<f64>) -> Vec<f64> {
+    (0..count).map(|index| value(index).map_or(index as f64, f64::abs)).collect()
+}
+
+fn drawn_slots(id: &str, items: &[&str], draw: Option<usize>, pool: &crate::schema::QuestionPool, magnitudes: &[f64], seed: u32) -> Vec<usize> {
+    let Some(Distribution::Zipf { exponent }) = pool.distribution else { return (0..pool.slots.len()).collect() };
+    let smallest: Vec<f64> = pool.slots.iter().map(|slot| slot.iter().filter_map(|entry| items.iter().position(|item| *item == entry.as_str())).map(|position| magnitudes[position]).fold(f64::INFINITY, f64::min)).collect();
+    let mut ranked: Vec<usize> = (0..pool.slots.len()).collect();
+    ranked.sort_by(|&left, &right| smallest[left].partial_cmp(&smallest[right]).unwrap_or(Ordering::Equal).then(left.cmp(&right)));
+    let weights: Vec<f64> = (0..ranked.len()).map(|rank| ((rank + 1) as f64).powf(-exponent)).collect();
+    let mut stream = Mt19937::new(seed ^ fnv1a32(&format!("{id}:zipf")));
+    weighted_sample(&mut stream, &weights, draw.unwrap_or(0)).into_iter().map(|rank| ranked[rank]).collect()
+}
+
+fn pooled(random: &mut Mt19937, id: &str, items: Vec<&str>, draw: Option<usize>, pool: Option<&crate::schema::QuestionPool>, magnitudes: &[f64], seed: u32) -> Vec<usize> {
     let Some(pool) = pool else { return drawn(random, items.len(), draw) };
-    let selected: std::collections::BTreeSet<&str> = pool.slots.iter().enumerate().map(|(index, slot)| {
+    let selected: std::collections::BTreeSet<&str> = drawn_slots(id, &items, draw, pool, magnitudes, seed).into_iter().map(|index| {
+        let slot = &pool.slots[index];
         let mut deck_random = Mt19937::new((seed >> 16) ^ fnv1a32(&format!("{id}:{index}")));
         let deck = shuffle(&mut deck_random, slot);
         let chosen = &deck[(seed as usize & 65535) % deck.len()];

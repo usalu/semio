@@ -1,0 +1,200 @@
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:3040","mode":"shared","elapsedMs":6593.310084}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:3072","mode":"shared","elapsedMs":6595.842959}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:3104","mode":"shared","elapsedMs":6598.668624999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:3136","mode":"shared","elapsedMs":6600.558916999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:3168","mode":"shared","elapsedMs":6602.709916999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:3200","mode":"shared","elapsedMs":6605.408208999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:3232","mode":"shared","elapsedMs":6609.175708999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:3264","mode":"shared","elapsedMs":6611.521084}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:3296","mode":"shared","elapsedMs":6613.933666999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:3328","mode":"shared","elapsedMs":6615.968167}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:3360","mode":"shared","elapsedMs":6617.101834}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:3392","mode":"shared","elapsedMs":6619.000209}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:3424","mode":"shared","elapsedMs":6620.509709}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:3456","mode":"shared","elapsedMs":6622.344749999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:3488","mode":"shared","elapsedMs":6623.404208999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:3520","mode":"shared","elapsedMs":6625.079167}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:3552","mode":"shared","elapsedMs":6626.422167}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:3584","mode":"shared","elapsedMs":6629.108584}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:3616","mode":"shared","elapsedMs":6631.381708999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:3648","mode":"shared","elapsedMs":6633.240917}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:3680","mode":"shared","elapsedMs":6636.469959}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:3712","mode":"shared","elapsedMs":6637.658625}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:3744","mode":"shared","elapsedMs":6639.880249999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:3776","mode":"shared","elapsedMs":6642.22125}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:3808","mode":"shared","elapsedMs":6644.818749999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:3840","mode":"shared","elapsedMs":6649.54875}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:3872","mode":"shared","elapsedMs":6651.783208999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:3904","mode":"shared","elapsedMs":6654.077875}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:3936","mode":"shared","elapsedMs":6657.618958999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:3968","mode":"shared","elapsedMs":6660.279125}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4000","mode":"shared","elapsedMs":6662.528958999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4032","mode":"shared","elapsedMs":6663.7309589999995}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4064","mode":"shared","elapsedMs":6665.491999999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4096","mode":"shared","elapsedMs":6667.925749999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4128","mode":"shared","elapsedMs":6670.0660419999995}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4160","mode":"shared","elapsedMs":6672.997249999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4192","mode":"shared","elapsedMs":6676.199874999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4224","mode":"shared","elapsedMs":6678.350584}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4256","mode":"shared","elapsedMs":6680.39675}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4288","mode":"shared","elapsedMs":6684.7844589999995}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4320","mode":"shared","elapsedMs":6688.839749999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4352","mode":"shared","elapsedMs":6695.210292}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4384","mode":"shared","elapsedMs":6698.515917}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4416","mode":"shared","elapsedMs":6700.039124999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4448","mode":"shared","elapsedMs":6701.063542}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4480","mode":"shared","elapsedMs":6702.972833999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4512","mode":"shared","elapsedMs":6706.081584}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4544","mode":"shared","elapsedMs":6708.433709}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4576","mode":"shared","elapsedMs":6711.497834}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4608","mode":"shared","elapsedMs":6716.036042}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4640","mode":"shared","elapsedMs":6720.5840419999995}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4672","mode":"shared","elapsedMs":6724.868874999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4704","mode":"shared","elapsedMs":6728.150709}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4736","mode":"shared","elapsedMs":6731.948541999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4768","mode":"shared","elapsedMs":6734.4775}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4800","mode":"shared","elapsedMs":6736.2330839999995}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4832","mode":"shared","elapsedMs":6740.569584}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4864","mode":"shared","elapsedMs":6743.704833999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4896","mode":"shared","elapsedMs":6746.887833999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4928","mode":"shared","elapsedMs":6753.945584}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4960","mode":"shared","elapsedMs":6757.055667}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:4992","mode":"shared","elapsedMs":6760.213792}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5024","mode":"shared","elapsedMs":6762.123624999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5056","mode":"shared","elapsedMs":6765.7352089999995}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5088","mode":"shared","elapsedMs":6768.324124999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5120","mode":"shared","elapsedMs":6770.4677919999995}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5152","mode":"shared","elapsedMs":6772.4340839999995}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5184","mode":"shared","elapsedMs":6774.292958999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5216","mode":"shared","elapsedMs":6776.807334}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5248","mode":"shared","elapsedMs":6778.732709}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5280","mode":"shared","elapsedMs":6781.68575}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5312","mode":"shared","elapsedMs":6783.440791999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5344","mode":"shared","elapsedMs":6785.716791999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5376","mode":"shared","elapsedMs":6788.008}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5408","mode":"shared","elapsedMs":6790.745792}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5440","mode":"shared","elapsedMs":6792.118334}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5472","mode":"shared","elapsedMs":6794.176708999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5504","mode":"shared","elapsedMs":6795.424666999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5536","mode":"shared","elapsedMs":6797.3252919999995}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5568","mode":"shared","elapsedMs":6798.905417}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5600","mode":"shared","elapsedMs":6800.350042}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5632","mode":"shared","elapsedMs":6801.991709}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5664","mode":"shared","elapsedMs":6805.381334}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5696","mode":"shared","elapsedMs":6807.400208999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5728","mode":"shared","elapsedMs":6810.2649169999995}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5760","mode":"shared","elapsedMs":6812.758916999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5792","mode":"shared","elapsedMs":6814.62025}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5824","mode":"shared","elapsedMs":6816.703208999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5856","mode":"shared","elapsedMs":6818.415709}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5888","mode":"shared","elapsedMs":6820.263083999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5920","mode":"shared","elapsedMs":6823.443875}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5952","mode":"shared","elapsedMs":6826.2844589999995}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:5984","mode":"shared","elapsedMs":6828.6002499999995}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6016","mode":"shared","elapsedMs":6832.020624999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6048","mode":"shared","elapsedMs":6835.450916999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6080","mode":"shared","elapsedMs":6836.838041999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6112","mode":"shared","elapsedMs":6838.646667}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6144","mode":"shared","elapsedMs":6842.199167}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6176","mode":"shared","elapsedMs":6844.12325}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6208","mode":"shared","elapsedMs":6846.545}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6240","mode":"shared","elapsedMs":6847.931917}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6272","mode":"shared","elapsedMs":6850.346208999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6304","mode":"shared","elapsedMs":6862.309125}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6336","mode":"shared","elapsedMs":6864.6995}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6368","mode":"shared","elapsedMs":6866.806667}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6400","mode":"shared","elapsedMs":6868.583124999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6432","mode":"shared","elapsedMs":6870.2490419999995}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6464","mode":"shared","elapsedMs":6872.890375}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6496","mode":"shared","elapsedMs":6874.923041999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6528","mode":"shared","elapsedMs":6878.116333999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6560","mode":"shared","elapsedMs":6879.592}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6592","mode":"shared","elapsedMs":6880.136417}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6624","mode":"shared","elapsedMs":6880.876292}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6656","mode":"shared","elapsedMs":6881.361083999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6688","mode":"shared","elapsedMs":6881.862666999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6720","mode":"shared","elapsedMs":6882.3382919999995}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6752","mode":"shared","elapsedMs":6884.824374999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6784","mode":"shared","elapsedMs":6886.900291999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6816","mode":"shared","elapsedMs":6888.404791999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6848","mode":"shared","elapsedMs":6889.333208999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6880","mode":"shared","elapsedMs":6889.829}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6912","mode":"shared","elapsedMs":6890.315584}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6944","mode":"shared","elapsedMs":6891.677624999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6976","mode":"shared","elapsedMs":6892.305834}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7008","mode":"shared","elapsedMs":6892.806874999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7040","mode":"shared","elapsedMs":6893.268749999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7072","mode":"shared","elapsedMs":6895.002167}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7104","mode":"shared","elapsedMs":6896.8520419999995}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7136","mode":"shared","elapsedMs":6899.77575}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7168","mode":"shared","elapsedMs":6900.487625}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7200","mode":"shared","elapsedMs":6902.433499999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7232","mode":"shared","elapsedMs":6903.388916999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7264","mode":"shared","elapsedMs":6903.894625}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7296","mode":"shared","elapsedMs":6904.577917}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7328","mode":"shared","elapsedMs":6905.078125}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7360","mode":"shared","elapsedMs":6905.577584}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7392","mode":"shared","elapsedMs":6906.084542}}
+[DATA] Store dependency sync current {"version":1,"purpose":"current-store-dependency-sync-current","scopes":6}
+[script] {"owner":"repository:build","command":"repo","stage":"complete"}
+[semio] workspace:setup…
+[capacity] run: sized at 102% of the default from 7 earlier run(s) of its class
+[capacity] admitted run: 1 job(s), 512 MB reserved (10794 MB available, 2048 MB floor)
+[script] {"owner":"repository:build","command":"repo","stage":"loading"}
+[script] {"owner":"repository:build","command":"repo","stage":"running"}
+Planning 1 targets.
+Reading the project graph slice (2 s).
+Reading the project graph slice (4 s).
+[repo] still working after 5 s; last phase started: door.script
+Reading the project graph slice (6 s).
+Reading the project graph slice (8 s): files 0 of 0.
+[repo] still working after 10 s; last phase started: door.script
+Reading the project graph slice (10 s): doubt 468533 of 468533.
+Reading the project graph slice (12 s): facts 49152 of 290201.
+Reading the project graph slice (14 s): facts 86016 of 290201.
+Reading the project graph slice (16 s): facts 94208 of 290201.
+Reading the project graph slice (18 s): facts 135168 of 290201.
+[repo] still working after 20 s; last phase started: door.script
+Reading the project graph slice (20 s): facts 208896 of 290201.
+Reading the project graph slice (22 s): facts 266240 of 290201.
+Reading the project graph slice (24 s): verification 1 of 3575.
+Reading the project graph slice (26 s): verification 5 of 3575.
+Reading the project graph slice (28 s): flush 1 of 1.
+Reading the project graph slice (30 s): parts 8318 of 8318.
+Reading the project graph slice (32 s): flush 1 of 1.
+Reading the project graph slice (34 s): flush 1 of 1.
+Reading the project graph slice (36 s): flush 1 of 1.
+Reading the project graph slice (38 s): verification 1805 of 3575.
+Reading the project graph slice (40 s): flush 1 of 1.
+Reading the project graph slice (42 s): flush 1 of 1.
+Reading the project graph slice (44 s): flush 1 of 1.
+Reading the project graph slice (46 s): flush 1 of 1.
+Reading the project graph slice (48 s): flush 1 of 1.
+[repo] still working after 50 s; last phase started: door.script
+Reading the project graph slice (50 s): flush 1 of 1.
+Reading the project graph slice (52 s): flush 1 of 1.
+Reading the project graph slice (54 s): rederivation 255 of 255.
+Reading the project graph slice (56 s): flush 1 of 1.
+Reading the project graph slice (58 s): flush 1 of 1.
+Reading the project graph slice (60 s): flush 1 of 1.
+Reading the project graph slice (62 s): flush 1 of 1.
+Reading the project graph slice (64 s): flush 1 of 1.
+Reading the project graph slice (66 s): flush 1 of 1.
+Reading the project graph slice (68 s): flush 1 of 1.
+Reading the project graph slice (70 s): flush 1 of 1.
+Reading the project graph slice (72 s): flush 1 of 1.
+Reading the project graph slice (74 s): flush 1 of 1.
+Reading the project graph slice (76 s): flush 1 of 1.
+Reading the project graph slice (78 s): flush 1 of 1.
+[repo] still working after 80 s; last phase started: door.script
+Reading the project graph slice (80 s): flush 1 of 1.
+Reading the project graph slice (82 s): flush 1 of 1.
+Reading the project graph slice (84 s): flush 1 of 1.
+Reading the project graph slice (86 s): flush 1 of 1.
+Reading the project graph slice (88 s): flush 1 of 1.
+Reading the project graph slice (90 s): flush 1 of 1.
+Reading the project graph slice (92 s): flush 1 of 1.
+Reading the project graph slice (94 s): flush 1 of 1.
+The project graph could not be read on this machine yet: the plan stage inference (during inference) grew to 9966 MB, more than the 6553 MB this machine gives a plan, and only 4313 MB of memory were available (at least 2048 MB are kept in reserve) after it gave back what it could. It was stopped before the host ran short of memory. Nothing is wrong with your tree; run the command again when a machine with free memory serves the graph, or read the graph on a larger machine.
+end 2026-11-15T11:55:29Z
+native_rc=75

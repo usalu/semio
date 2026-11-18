@@ -1,0 +1,338 @@
+{
+ "cases": [
+  {
+   "label": "plain function body",
+   "old": "pub fn f(x: u32) -> u32 { x + 1 }\n",
+   "new": "pub fn f(x: u32) -> u32 { let y = x * 3; y + 7 }\n",
+   "equal": true,
+   "consumer": "pub fn run() -> u32 { a::f(5) }\n",
+   "observable": "none",
+   "rustc": true
+  },
+  {
+   "label": "inherent method of a non-generic impl",
+   "old": "pub struct S { pub f: u32 }\nimpl S { pub fn m(&self) -> u32 { self.f } }\npub fn f(x: u32) -> u32 { S { f: x }.m() }\n",
+   "new": "pub struct S { pub f: u32 }\nimpl S { pub fn m(&self) -> u32 { self.f + 100 } }\npub fn f(x: u32) -> u32 { S { f: x }.m() }\n",
+   "equal": true,
+   "consumer": "pub fn run() -> u32 { a::f(5) }\n",
+   "observable": "none",
+   "rustc": true
+  },
+  {
+   "label": "trait impl method for a concrete type",
+   "old": "pub trait T { fn t(&self) -> u32; }\npub struct S;\nimpl T for S { fn t(&self) -> u32 { 1 } }\npub fn f(_x: u32) -> u32 { S.t() }\n",
+   "new": "pub trait T { fn t(&self) -> u32; }\npub struct S;\nimpl T for S { fn t(&self) -> u32 { 2 } }\npub fn f(_x: u32) -> u32 { S.t() }\n",
+   "equal": true,
+   "consumer": "pub fn run() -> u32 { a::f(5) }\n",
+   "observable": "none",
+   "rustc": true
+  },
+  {
+   "label": "function in an inline module",
+   "old": "pub mod m { pub fn g() -> u32 { 1 } }\npub fn f(_x: u32) -> u32 { m::g() }\n",
+   "new": "pub mod m { pub fn g() -> u32 { 9 } }\npub fn f(_x: u32) -> u32 { m::g() }\n",
+   "equal": true,
+   "consumer": "pub fn run() -> u32 { a::f(5) }\n",
+   "observable": "none",
+   "rustc": true
+  },
+  {
+   "label": "unsafe function",
+   "old": "pub unsafe fn f(x: u32) -> u32 { x + 1 }\n",
+   "new": "pub unsafe fn f(x: u32) -> u32 { x + 5 }\n",
+   "equal": true,
+   "consumer": "pub fn run() -> u32 { unsafe { a::f(5) } }\n",
+   "observable": "none",
+   "rustc": true
+  },
+  {
+   "label": "must_use and cfg attributes",
+   "old": "#[must_use]\n#[cfg(not(any()))]\npub fn f(x: u32) -> u32 { x }\n",
+   "new": "#[must_use]\n#[cfg(not(any()))]\npub fn f(x: u32) -> u32 { x + 2 }\n",
+   "equal": true,
+   "consumer": "pub fn run() -> u32 { a::f(5) }\n",
+   "observable": "none",
+   "rustc": true
+  },
+  {
+   "label": "Drop impl body",
+   "old": "pub struct D;\nimpl Drop for D { fn drop(&mut self) { } }\npub fn f(_x: u32) -> u32 { let _d = D; 1 }\n",
+   "new": "pub struct D;\nimpl Drop for D { fn drop(&mut self) { let _ = 1 + 1; } }\npub fn f(_x: u32) -> u32 { let _d = D; 1 }\n",
+   "equal": true,
+   "consumer": "pub fn run() -> u32 { a::f(5) }\n",
+   "observable": "none",
+   "rustc": true
+  },
+  {
+   "label": "nested function inside a body",
+   "old": "pub fn f(x: u32) -> u32 { fn h(y: u32) -> u32 { y } h(x) }\n",
+   "new": "pub fn f(x: u32) -> u32 { fn h(y: u32) -> u32 { y + 3 } h(x) }\n",
+   "equal": true,
+   "consumer": "pub fn run() -> u32 { a::f(5) }\n",
+   "observable": "none",
+   "rustc": true
+  },
+  {
+   "label": "closure and boxed trait object",
+   "old": "pub fn f(x: u32) -> u32 { let b: Box<dyn Fn(u32) -> u32> = Box::new(|v| v + 1); b(x) }\n",
+   "new": "pub fn f(x: u32) -> u32 { let b: Box<dyn Fn(u32) -> u32> = Box::new(|v| v + 2); b(x) }\n",
+   "equal": true,
+   "consumer": "pub fn run() -> u32 { a::f(5) }\n",
+   "observable": "none",
+   "rustc": true
+  },
+  {
+   "label": "braces in strings, raw strings, characters and lifetimes",
+   "old": "pub fn f(x: u32) -> u32 { let s: &'static str = \"}{\"; let r = r#\"}\"#; let c = '}'; x + s.len() as u32 + r.len() as u32 + c as u32 }\n",
+   "new": "pub fn f(x: u32) -> u32 { let s: &'static str = \"}}{{\"; let r = r#\"}}\"#; let c = '{'; x + s.len() as u32 + r.len() as u32 + c as u32 }\n",
+   "equal": true,
+   "consumer": "pub fn run() -> u32 { a::f(5) }\n",
+   "observable": "none",
+   "rustc": true
+  },
+  {
+   "label": "comments with braces inside a body",
+   "old": "pub fn f(x: u32) -> u32 { /* { /* nested } */ */ x // }\n}\n",
+   "new": "pub fn f(x: u32) -> u32 { /* } */ x + 1 // {\n}\n",
+   "equal": true,
+   "consumer": "pub fn run() -> u32 { a::f(5) }\n",
+   "observable": "none",
+   "rustc": true
+  },
+  {
+   "label": "known expression macros in a body",
+   "old": "pub fn f(x: u32) -> u32 { let v = vec![x, 1]; assert!(v.len() == 2); v[0] + v[1] }\n",
+   "new": "pub fn f(x: u32) -> u32 { let v = vec![x, 2]; assert!(v.len() == 2); v[0] + v[1] }\n",
+   "equal": true,
+   "consumer": "pub fn run() -> u32 { a::f(5) }\n",
+   "observable": "none",
+   "rustc": true
+  },
+  {
+   "label": "shared generic instance used only in a body",
+   "old": "pub struct S;\npub fn f(_x: u32) -> u32 { let mut v: Vec<S> = Vec::new(); v.push(S); v.len() as u32 }\n",
+   "new": "pub struct S;\npub fn f(_x: u32) -> u32 { 0 }\n",
+   "equal": true,
+   "consumer": "pub fn run() -> u32 { let mut v: Vec<a::S> = Vec::new(); v.push(a::S); v.len() as u32 + a::f(0) }\n",
+   "observable": "none",
+   "rustc": false,
+   "sharedGenerics": true
+  },
+  {
+   "label": "generic function body",
+   "old": "pub fn f<T: Into<u32>>(t: T) -> u32 { t.into() + 1 }\n",
+   "new": "pub fn f<T: Into<u32>>(t: T) -> u32 { t.into() + 2 }\n",
+   "equal": false,
+   "consumer": "pub fn run() -> u32 { a::f(5u8) }\n",
+   "observable": "code",
+   "rustc": true
+  },
+  {
+   "label": "inline function body",
+   "old": "#[inline]\npub fn f(x: u32) -> u32 { x + 1 }\n",
+   "new": "#[inline]\npub fn f(x: u32) -> u32 { x + 2 }\n",
+   "equal": false,
+   "consumer": "pub fn run() -> u32 { a::f(5) }\n",
+   "observable": "code",
+   "rustc": true
+  },
+  {
+   "label": "inline(always) function body",
+   "old": "#[inline(always)]\npub fn f(x: u32) -> u32 { x + 1 }\n",
+   "new": "#[inline(always)]\npub fn f(x: u32) -> u32 { x + 2 }\n",
+   "equal": false,
+   "consumer": "pub fn run() -> u32 { a::f(5) }\n",
+   "observable": "code",
+   "rustc": true
+  },
+  {
+   "label": "const function body",
+   "old": "pub const fn f(x: u32) -> u32 { x + 1 }\n",
+   "new": "pub const fn f(x: u32) -> u32 { x - 10 }\n",
+   "equal": false,
+   "consumer": "pub fn run() -> u32 { const V: u32 = a::f(5); V }\n",
+   "observable": "check",
+   "rustc": true
+  },
+  {
+   "label": "return position impl Trait",
+   "old": "pub fn f(x: u32) -> impl Fn() -> u32 { move || x + 1 }\n",
+   "new": "pub fn f(x: u32) -> impl Fn() -> u32 { let r = std::rc::Rc::new(x); move || *r + 1 }\n",
+   "equal": false,
+   "consumer": "fn need<T: Send>(_t: T) {}\npub fn run() -> u32 { need(a::f(5)); 0 }\n",
+   "observable": "check",
+   "rustc": true
+  },
+  {
+   "label": "async function body",
+   "old": "pub async fn f(x: u32) -> u32 { x + 1 }\n",
+   "new": "pub async fn f(x: u32) -> u32 { x + 2 }\n",
+   "equal": false,
+   "consumer": "pub fn run() -> u32 { 0 }\n",
+   "observable": "none",
+   "rustc": true
+  },
+  {
+   "label": "method of a generic impl",
+   "old": "pub struct W<T>(pub T);\nimpl<T: Copy + Into<u32>> W<T> { pub fn m(&self) -> u32 { self.0.into() + 1 } }\n",
+   "new": "pub struct W<T>(pub T);\nimpl<T: Copy + Into<u32>> W<T> { pub fn m(&self) -> u32 { self.0.into() + 2 } }\n",
+   "equal": false,
+   "consumer": "pub fn run() -> u32 { a::W(5u8).m() }\n",
+   "observable": "code",
+   "rustc": true
+  },
+  {
+   "label": "trait default method body",
+   "old": "pub trait T { fn d(&self) -> u32 { 1 } }\npub struct S;\nimpl T for S {}\n",
+   "new": "pub trait T { fn d(&self) -> u32 { 2 } }\npub struct S;\nimpl T for S {}\n",
+   "equal": false,
+   "consumer": "pub fn run() -> u32 { use a::T; a::S.d() }\n",
+   "observable": "code",
+   "rustc": true
+  },
+  {
+   "label": "impl Trait argument",
+   "old": "pub fn f(x: impl Into<u32>) -> u32 { x.into() + 1 }\n",
+   "new": "pub fn f(x: impl Into<u32>) -> u32 { x.into() + 2 }\n",
+   "equal": false,
+   "consumer": "pub fn run() -> u32 { a::f(5u8) }\n",
+   "observable": "code",
+   "rustc": true
+  },
+  {
+   "label": "where clause",
+   "old": "pub fn f(x: u32) -> u32 where u32: Copy { x + 1 }\n",
+   "new": "pub fn f(x: u32) -> u32 where u32: Copy { x + 2 }\n",
+   "equal": false,
+   "consumer": "pub fn run() -> u32 { a::f(5) }\n",
+   "observable": "none",
+   "rustc": true
+  },
+  {
+   "label": "extern C function",
+   "old": "pub extern \"C\" fn f(x: u32) -> u32 { x + 1 }\n",
+   "new": "pub extern \"C\" fn f(x: u32) -> u32 { x + 2 }\n",
+   "equal": false,
+   "consumer": "pub fn run() -> u32 { a::f(5) }\n",
+   "observable": "none",
+   "rustc": true
+  },
+  {
+   "label": "no_mangle function",
+   "old": "#[no_mangle]\npub fn f(x: u32) -> u32 { x + 1 }\n",
+   "new": "#[no_mangle]\npub fn f(x: u32) -> u32 { x + 2 }\n",
+   "equal": false,
+   "consumer": "pub fn run() -> u32 { a::f(5) }\n",
+   "observable": "none",
+   "rustc": true
+  },
+  {
+   "label": "a body that declares an impl",
+   "old": "pub struct S;\npub trait T { fn t(&self) -> u32; }\npub fn f(_x: u32) -> u32 { impl T for S { fn t(&self) -> u32 { 1 } } 0 }\n",
+   "new": "pub struct S;\npub trait T { fn t(&self) -> u32; }\npub fn f(_x: u32) -> u32 { impl T for S { fn t(&self) -> u32 { 2 } } 0 }\n",
+   "equal": false,
+   "consumer": "pub fn run() -> u32 { use a::T; a::f(0); a::S.t() }\n",
+   "observable": "code",
+   "rustc": true
+  },
+  {
+   "label": "a body that calls a user macro",
+   "old": "macro_rules! m { ($e:expr) => { $e + 1 }; }\npub fn f(x: u32) -> u32 { m!(x) }\n",
+   "new": "macro_rules! m { ($e:expr) => { $e + 1 }; }\npub fn f(x: u32) -> u32 { m!(x + 1) }\n",
+   "equal": false,
+   "consumer": "pub fn run() -> u32 { a::f(5) }\n",
+   "observable": "none",
+   "rustc": true
+  },
+  {
+   "label": "macro_rules definition body",
+   "old": "#[macro_export]\nmacro_rules! k { () => { 1 }; }\npub fn f(_x: u32) -> u32 { 0 }\n",
+   "new": "#[macro_export]\nmacro_rules! k { () => { 2 }; }\npub fn f(_x: u32) -> u32 { 0 }\n",
+   "equal": false,
+   "consumer": "pub fn run() -> u32 { a::k!() }\n",
+   "observable": "code",
+   "rustc": true
+  },
+  {
+   "label": "signature",
+   "old": "pub fn f(x: u32) -> u32 { x + 1 }\n",
+   "new": "pub fn f(x: u64) -> u64 { x + 1 }\n",
+   "equal": false,
+   "consumer": "pub fn run() -> u32 { a::f(5) }\n",
+   "observable": "none",
+   "rustc": false
+  },
+  {
+   "label": "visibility",
+   "old": "pub fn f(x: u32) -> u32 { x + 1 }\n",
+   "new": "pub(crate) fn f(x: u32) -> u32 { x + 1 }\n",
+   "equal": false,
+   "consumer": "pub fn run() -> u32 { a::f(5) }\n",
+   "observable": "none",
+   "rustc": false
+  },
+  {
+   "label": "constant initializer",
+   "old": "pub const K: u32 = 1;\npub fn f(_x: u32) -> u32 { K }\n",
+   "new": "pub const K: u32 = 2;\npub fn f(_x: u32) -> u32 { K }\n",
+   "equal": false,
+   "consumer": "const _: () = assert!(a::K == 1);\npub fn run() -> u32 { a::f(0) }\n",
+   "observable": "check",
+   "rustc": true
+  },
+  {
+   "label": "static initializer",
+   "old": "pub static K: u32 = 1;\npub fn f(_x: u32) -> u32 { 0 }\n",
+   "new": "pub static K: u32 = 2;\npub fn f(_x: u32) -> u32 { 0 }\n",
+   "equal": false,
+   "consumer": "pub fn run() -> u32 { a::K + a::f(0) }\n",
+   "observable": "none",
+   "rustc": true
+  },
+  {
+   "label": "field added to a struct",
+   "old": "pub struct S { pub f: u32 }\npub fn f(x: u32) -> u32 { x }\n",
+   "new": "pub struct S { pub f: u32, g: u8 }\npub fn f(x: u32) -> u32 { x }\n",
+   "equal": false,
+   "consumer": "pub fn run() -> u32 { a::f(5) }\n",
+   "observable": "none",
+   "rustc": false
+  },
+  {
+   "label": "comment outside a body (conservative)",
+   "old": "// one\npub fn f(x: u32) -> u32 { x }\n",
+   "new": "// two\npub fn f(x: u32) -> u32 { x }\n",
+   "equal": false,
+   "consumer": "pub fn run() -> u32 { a::f(5) }\n",
+   "observable": "none",
+   "rustc": false
+  },
+  {
+   "label": "type alias impl Trait voids masking",
+   "old": "#![feature(type_alias_impl_trait)]\npub type X = impl Fn() -> u32;\npub fn mk() -> X { || 1 }\npub fn f(x: u32) -> u32 { x + 1 }\n",
+   "new": "#![feature(type_alias_impl_trait)]\npub type X = impl Fn() -> u32;\npub fn mk() -> X { || 1 }\npub fn f(x: u32) -> u32 { x + 2 }\n",
+   "equal": false,
+   "consumer": "pub fn run() -> u32 { a::f(5) }\n",
+   "observable": "none",
+   "rustc": false
+  },
+  {
+   "label": "include! splice voids masking",
+   "old": "include!(\"x.rs\");\npub fn f(x: u32) -> u32 { x + 1 }\n",
+   "new": "include!(\"x.rs\");\npub fn f(x: u32) -> u32 { x + 2 }\n",
+   "equal": false,
+   "consumer": "pub fn run() -> u32 { a::f(5) }\n",
+   "observable": "none",
+   "rustc": false
+  },
+  {
+   "label": "unterminated literal voids masking",
+   "old": "pub fn f(x: u32) -> u32 { x + 1 } /* never ends\n",
+   "new": "pub fn f(x: u32) -> u32 { x + 2 } /* never ends\n",
+   "equal": false,
+   "consumer": "pub fn run() -> u32 { a::f(5) }\n",
+   "observable": "none",
+   "rustc": false
+  }
+ ]
+}

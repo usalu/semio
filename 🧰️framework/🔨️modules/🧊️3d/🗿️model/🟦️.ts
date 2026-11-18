@@ -9,7 +9,8 @@ export { meshIntegrity, outwardNormals, outwardOrientation, solidIntegrity, type
 export { revolveClosure, revolveOutline, type RevolveClosure } from "./🔺️tessellation/🌀️revolved/🟦️.ts";
 export { taperFault } from "./🔺️tessellation/🏗️extrude/🟦️.ts";
 export { loftFault, loftFrames } from "./🔺️tessellation/🧵️loft/🟦️.ts";
-export { tessellate, tessellateSolid, restWorldMatrices, ModelInvalidError } from "./🔺️tessellation/🟦️.ts";
+export { tessellate, ModelInvalidError } from "./🔺️tessellation/🟦️.ts";
+export { tessellateSolid, restWorldMatrices } from "./🔺️tessellation/🧱️solid/🟦️.ts";
 export { poseModel, sampleMaterials, type PoseSelector, type PoseResult, type LocalTransform } from "./🦴️mechanism/🟦️.ts";
 export { featureEdges } from "./📏️edges/🟦️.ts";
 export { encodeGlb, type GlbOptions } from "./📤️export/🧊️glb/🟦️.ts";

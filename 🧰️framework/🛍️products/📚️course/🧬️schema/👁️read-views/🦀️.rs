@@ -46,6 +46,8 @@ pub struct CourseView {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub assignments: Option<Vec<super::Assignment>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub clips: Option<Vec<super::Clip>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub unlocks: Option<Unlocks>,
     pub id: Slug,
     pub title: Text,

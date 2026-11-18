@@ -210,6 +210,7 @@
           "chunkBytes": 1048576,
           "bindingPrefix": "cargo-target-binding-",
           "scanMaximumEntries": 2000000,
+          "scanMaximumDirectories": 65536,
           "destinationPrefix": "cargo-target-destination-"
         }
       }

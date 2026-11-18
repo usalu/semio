@@ -1,6 +1,6 @@
 import {freeSpaceSyncV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🆓️free-space/🟦️.ts";
 import {volumeMountOfV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🆓️free-space/💽️disk-full/🟦️.ts";
-import type {CasPolicyV1} from "../🧬️schema/🟦️.ts";
+import {CAS_BUDGET_V1,CAS_RESERVE_FACTOR_V1,type CasBudgetV1,type CasPolicyV1} from "../🧬️schema/🟦️.ts";
 
 /** 🌡️ The partition that holds a path: its mount point, size and the bytes a writer may still use. */
 export type CasPartitionV1=Readonly<{partition:string;totalBytes:number;freeBytes:number}>;
@@ -44,4 +44,22 @@ export function decideCasEnforcementV1(input:CasEnforcementInputV1):CasEnforceme
  if(held>input.policy.capBytes&&!input.collected)return verdict("collect-now","cap-exceeded");
  if(held>input.policy.capBytes*input.policy.highWatermark&&!input.collected)return verdict("collect-background","cap-high");
  return verdict("allow","fits");
+}
+
+/** 📐️ The disk budget of one partition in bytes: the cushion that must stay free after a command starts, the reserve below which a collection starts, the hysteresis a collection frees beyond it, and whether the partition is large enough to derive them (`derivable`). */
+export type CasPartitionBudgetV1=Readonly<{derivable:boolean;cushionBytes:number;reserveBytes:number;hysteresisBytes:number}>;
+
+/** 📐️ Derives the disk budget from the size of the partition instead of a fixed used share, so a 256 GB disk and a 4 TB disk both keep what a stage needs free: cushion = largest need / divisor, reserve = largest need x the safety factor of the scale family, hysteresis = largest need; derivable only from `minimumTotalFactor` x (reserve + hysteresis) bytes. @see ../🧬️schema/🔣️.json */
+export function casPartitionBudgetV1(totalBytes:number,budget:CasBudgetV1=CAS_BUDGET_V1,factor:number=CAS_RESERVE_FACTOR_V1):CasPartitionBudgetV1{
+ const reserveBytes=budget.largestNeedBytes*factor,hysteresisBytes=budget.largestNeedBytes;
+ return Object.freeze({derivable:totalBytes>=(reserveBytes+hysteresisBytes)*budget.minimumTotalFactor,cushionBytes:Math.ceil(budget.largestNeedBytes/budget.cushionDivisor),reserveBytes,hysteresisBytes});
+}
+
+/** 🌡️ The policy a partition is judged by: the declared policy with the used shares replaced by the shares its derived budget gives (critical = 1 - cushion / size, high = 1 - reserve / size, low = 1 - (reserve + hysteresis) / size); a partition that cannot derive them, or an unmeasured one, keeps the declared shares. */
+export function casPartitionPolicyForV1(policy:CasPolicyV1,partition:Pick<CasPartitionV1,"totalBytes"> | undefined,budget:CasBudgetV1=CAS_BUDGET_V1,factor:number=CAS_RESERVE_FACTOR_V1):CasPolicyV1{
+ if(partition===undefined)return policy;
+ const derived=casPartitionBudgetV1(partition.totalBytes,budget,factor);
+ if(!derived.derivable)return policy;
+ const total=partition.totalBytes;
+ return Object.freeze({...policy,partition:Object.freeze({criticalUsedFraction:1-derived.cushionBytes/total,highUsedFraction:1-derived.reserveBytes/total,lowUsedFraction:1-(derived.reserveBytes+derived.hysteresisBytes)/total})});
 }

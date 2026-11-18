@@ -15,6 +15,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
+import { Button, SharedBorderRow } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useCallback, useMemo, useState, type ReactElement } from "react";
 
@@ -84,21 +85,21 @@ function Fem2dResultsStoryHost({ initialExampleId, locale, initialMode }: { read
 
   return (
     <div style={{ display: "flex", height: "100%", width: "100%", flexDirection: "column" }}>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 4, padding: 4 }}>
+      <SharedBorderRow wrap>
         {FEM2D_RESULT_MODES.map((mode) => (
-          <button key={mode} type="button" data-testid={`fem2d-result-mode-${mode}`} aria-pressed={state.resultDisplay.mode === mode} onClick={() => dispatch("setResultDisplay", { sourceId: caseId ?? undefined, mode, modeIndex: 0 })}>
+          <Button variant="outline" icon="arrow-right" key={mode} type="button" data-testid={`fem2d-result-mode-${mode}`} aria-pressed={state.resultDisplay.mode === mode} onClick={() => dispatch("setResultDisplay", { sourceId: caseId ?? undefined, mode, modeIndex: 0 })}>
             {mode}
-          </button>
+          </Button>
         ))}
         {state.snapshot.loadCases.map((loadCase) => (
-          <button key={loadCase.id} type="button" data-testid={`fem2d-result-case-${loadCase.id}`} onClick={() => dispatch("setResultDisplay", { sourceId: loadCase.id, mode: state.resultDisplay.mode, modeIndex: state.resultDisplay.modeIndex })}>
+          <Button variant="outline" icon="arrow-right" key={loadCase.id} type="button" data-testid={`fem2d-result-case-${loadCase.id}`} onClick={() => dispatch("setResultDisplay", { sourceId: loadCase.id, mode: state.resultDisplay.mode, modeIndex: state.resultDisplay.modeIndex })}>
             {loadCase.name}
-          </button>
+          </Button>
         ))}
-        <button type="button" data-testid="fem2d-results-clear-example" onClick={() => dispatch("setActiveExample", { exampleId: FEM2D_CLEARED_EXAMPLE_ID })}>
+        <Button variant="outline" icon="arrow-right" type="button" data-testid="fem2d-results-clear-example" onClick={() => dispatch("setActiveExample", { exampleId: FEM2D_CLEARED_EXAMPLE_ID })}>
           {femStoryLabel("clearExample", state.locale)}
-        </button>
-      </div>
+        </Button>
+      </SharedBorderRow>
       <pre data-testid="fem2d-results-caption" style={{ margin: 0, padding: 4, fontSize: 11 }}>
         {femResultCaptionLine(caseId, state.resultDisplay, state.locale)}
       </pre>

@@ -384,6 +384,17 @@ fn bounded_argfiles(args: &[OsString], tokens: Option<usize>) -> Result<(Vec<OsS
     match result { Ok(result) => Ok((result, copies)), Err(error) => { for copy in copies { let _ = std::fs::remove_file(copy); } Err(error) } }
 }
 
+/// 🪶️ The front-end thread grant of one compile: a `cdylib` final (a plugin component) has a front end of one entry point whose work is the codegen and the link-time optimisation of its whole dependency closure, so extra front-end threads add arenas that hold the closure's metadata without adding speed (the 1438-unit demonstrator final measured 4 to 5 GB resident and was killed by the host's memory pressure); it gets one thread whatever the run was admitted. Every other compile keeps the admitted grant.
+/// @see ./🧪️tests/🧵️frontend-threads/🟦️.ts
+fn frontend_tokens(args: &[OsString], tokens: Option<usize>) -> Option<usize> {
+    let final_cdylib = args.iter().enumerate().any(|(index, arg)| match arg.to_str() {
+        Some("--crate-type") => args.get(index + 1).and_then(|value| value.to_str()) == Some("cdylib"),
+        Some(text) => text == "--crate-type=cdylib",
+        None => false,
+    });
+    tokens.filter(|count| *count >= 1).map(|count| if final_cdylib { 1 } else { count })
+}
+
 /// 🎟️ The admitted parallelism of this run, from the variable the launcher sets for every child of its jobserver.
 fn admitted_tokens() -> Option<usize> {
     env::var("SEMIO_COMPILER_PARALLELISM").ok().and_then(|value| value.parse().ok())
@@ -486,7 +497,7 @@ fn main() -> ExitCode {
     let text = match expand_admission_arguments(&args) { Ok(text) => text, Err(error) => { eprintln!("semio-build-scheduler: {error}"); return ExitCode::from(1); } };
     let unit = parse_unit(&text, &|name| env::var(name).ok()).map(|unit| Unit { source: absolute(&unit.source), out_dir: absolute(&unit.out_dir), externs: unit.externs.iter().map(|path| absolute(path)).collect(), ..unit });
     let tokens = admitted_tokens();
-    let (args, copies) = match bounded_argfiles(&args, tokens) { Ok(result) => result, Err(error) => { eprintln!("semio-build-scheduler: {error}"); return ExitCode::from(1); } };
+    let (args, copies) = match bounded_argfiles(&args, frontend_tokens(&args, tokens)) { Ok(result) => result, Err(error) => { eprintln!("semio-build-scheduler: {error}"); return ExitCode::from(1); } };
     let code = match (unit, env::var("SEMIO_BUILD_BROKER").ok(), env::var("SEMIO_BUILD_PASS").ok()) {
         (Some(unit), Some(endpoint), Some(pass)) => scheduled(&rustc, &args, &unit, &endpoint, &pass).unwrap_or_else(|error| {
             eprintln!("semio-build-scheduler: {error}");
@@ -604,6 +615,17 @@ mod tests {
         for (args, tokens, expected) in cases {
             assert_eq!(bounded_threads(&os(args), tokens), os(expected), "{args:?} with {tokens:?}");
         }
+    }
+
+    /// 🪶️ A `cdylib` final gets one front-end thread, in both spellings of its crate type; every other compile and every missing grant is unchanged.
+    #[test]
+    fn grants_one_front_end_thread_to_a_cdylib_final() {
+        let os = |items: &[&str]| items.iter().map(OsString::from).collect::<Vec<_>>();
+        assert_eq!(frontend_tokens(&os(&["--crate-type", "cdylib", "a.rs"]), Some(8)), Some(1));
+        assert_eq!(frontend_tokens(&os(&["--crate-type=cdylib"]), Some(8)), Some(1));
+        assert_eq!(frontend_tokens(&os(&["--crate-type", "lib"]), Some(8)), Some(8));
+        assert_eq!(frontend_tokens(&os(&["--crate-type", "cdylib"]), None), None);
+        assert_eq!(frontend_tokens(&os(&["--crate-type", "cdylib"]), Some(0)), None);
     }
 
     /// 📎️ Changed response files use owned bounded copies and unreadable files fail closed.

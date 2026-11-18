@@ -425,7 +425,7 @@ describe("🚶️ several tabs, cancellation and other devices", () => {
   it("lets long texts wrap at phone widths instead of clipping them", () => {
     expect(stylesheet).toMatch(/\.course-app \{[^}]*overflow-wrap: break-word;[^}]*\}/u);
     expect(stylesheet).toMatch(/\.course-app :where\(p, h1, h2, h3, h4, li, label, legend, summary, figcaption, dd, dt\) \{\s*overflow-wrap: anywhere;/u);
-    expect(stylesheet).toMatch(/\.course-home-entry \{[^}]*inline-size: min\(100%, 36rem\);/u);
+    expect(stylesheet).toMatch(/\.course-home-entry \{[^}]*inline-size: 100%;/u);
   });
 
   it("closes a cached run another device submitted as soon as the learner view says so, dropping its stale answers", { timeout: 30_000 }, async () => {

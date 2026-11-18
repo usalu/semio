@@ -1,0 +1,23 @@
+{
+  "title": "Mit-Bestand Demonstrator CDN Redeploy Readiness",
+  "emoji": "🧺",
+  "status": "open",
+  "description": "Get the mit-bestand demonstrator ready to be redeployed on a CDN as fast as possible: the static release build must succeed and every app (all eight panes) must run from the static bundle. Bugs are acceptable for this redeploy. Fall back to native tools if the shared work fleet mechanism does not work.",
+  "goal": "runningdemonstrator",
+  "sessions": [
+    "058433d9-45c4-4cd3-a90e-f80054e511e4"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-17 06:02:38",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Get the mit-bestand demonstrator ready to be redeployed on a CDN as fast as possible: the static release build must succeed and every app (all eight panes) must run from the static bundle. Bugs are acceptable for this redeploy. Fall back to native tools if the shared work fleet mechanism does not work.",
+      "llm": "opus-5-5",
+      "effort": "medium"
+    }
+  ]
+}

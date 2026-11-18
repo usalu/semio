@@ -16,6 +16,8 @@ export { VOLUME_LIMITS, VOLUME_RULES, authoredVolumes, checkVolumes, compareSoli
 export type { SolidSimilarity, VolumeFinding, VolumeMeasurement, VolumeOptions, VolumeRule } from "../../🔨️modules/🗂️catalog/🧊️volumes/🟦️.ts";
 export { canonicalJson, castProvenance, presetRevision, revisionOfText, sha256Hex } from "../../🔨️modules/🏷️revision/🟦️.ts";
 export { QUANTITY_SPECS, areaWeighted as areaWeightedThermal, environmentAt, operativeTemperatureC, penmanMonteith, radiationSplit, simulateBody, solveThermal, solveThermalAt, thermalSession, uValue } from "../../🔨️modules/🌡️thermal/🟦️.ts";
+export { POWER_TOLERANCE_W, powerOf, totalPowerW } from "../../🔨️modules/🌡️thermal/⚡️power/🟦️.ts";
+export type { AssetPower, PowerElement } from "../../🔨️modules/🌡️thermal/⚡️power/🟦️.ts";
 export { freeBody, solveStructure, structuralLegend } from "../../🔨️modules/🏗️structure/🟦️.ts";
 export type { FreeBodyForce, StructuralQuantity } from "../../🔨️modules/🏗️structure/🟦️.ts";
 export { AxonometricNotLoadedError, defaultDepictionOptions, depict, depictAll, depictAsync, loadAxonometric, modelScene, modelSceneAsync, resolveDepiction, textlessDepictionOptions } from "../../🔨️modules/🎨️depiction/🟦️.ts";

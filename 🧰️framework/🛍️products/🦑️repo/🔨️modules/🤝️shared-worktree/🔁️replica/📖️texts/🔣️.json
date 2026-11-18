@@ -198,6 +198,21 @@
       "en": "  {origin} {platform} {age} {lag} {basis} {sync} {code} {view} {latency} {verdict}",
       "de": "  {origin} {platform} {age} {lag} {basis} {sync} {code} {view} {latency} {verdict}"
     },
+    "fleet.ready.header": {
+      "en": "Readiness of the workers (each worker writes it itself): origin state ready stage attempts exit peak (MB) age digest reason",
+      "de": "Bereitschaft der Worker (jeder Worker schreibt sie selbst): Ursprung Zustand bereit Stufe Versuche Exit Spitze (MB) Alter Digest Grund"
+    },
+    "fleet.ready.row": {
+      "en": "  {origin} {state} {ready} {stage} {attempts} {exit} {peak} {age} {digest} {reason}",
+      "de": "  {origin} {state} {ready} {stage} {attempts} {exit} {peak} {age} {digest} {reason}"
+    },
+    "fleet.ready.summary": {
+      "en": "Ready: {ready} of {workers} workers, {silent} without a readiness status.",
+      "de": "Bereit: {ready} von {workers} Workern, {silent} ohne Bereitschaftsstatus."
+    },
+    "fleet.ready.yes": {"en": "yes", "de": "ja"},
+    "fleet.ready.no": {"en": "no", "de": "nein"},
+    "fleet.ready.none": {"en": "no-status", "de": "kein-Status"},
     "fleet.on": {
       "en": "on",
       "de": "an"
@@ -269,6 +284,10 @@
     "fleet.warning.git-broken": {
       "en": "  warning: {origin} cannot resolve HEAD of its repository while the fleet has one ({detail}); its daemon repairs the shared git files from the store, a git client shows nothing until it has",
       "de": "  Warnung: {origin} kann HEAD seines Repositorys nicht auflösen, obwohl die Flotte eines hat ({detail}); sein Daemon stellt die geteilten Git-Dateien aus dem Store wieder her, ein Git-Client zeigt bis dahin nichts"
+    },
+    "fleet.warning.stage": {
+      "en": "  warning: {origin} does not have the stage of the archivist yet ({detail}): it waits or is blocked for that reason and keeps its own stage meanwhile, so its index tree differs until it is resolved",
+      "de": "  Warnung: {origin} hat die Stage des Archivars noch nicht ({detail}): sie wartet oder ist aus diesem Grund blockiert und behält solange ihre eigene Stage, deshalb weicht ihr Index-Baum ab, bis es gelöst ist"
     },
     "fleet.warning.never-attested": {
       "en": "  warning: {origin} is registered in the store ({detail}) but has never attested: start the replica on that machine (run the provisioning script there, then `status`), or take it out of the fleet with `retire {origin}`",
@@ -455,8 +474,8 @@
       "de": "Diese Maschine weicht vom abgeglichenen Fleet in {fields} ab (Prüfung {attempt}); sie repariert ihren Zustand aus dem Store."
     },
     "status.git.shared": {
-      "en": "Git state: shared (stage and commits replicate); stage tree {tree}.",
-      "de": "Git-Zustand: geteilt (Stage und Commits werden repliziert); Stage-Baum {tree}."
+      "en": "Git state: shared (the stage of the group server and commits replicate; a stage made here is replaced by the group server's); stage tree {tree}.",
+      "de": "Git-Zustand: geteilt (die Stage des Gruppenservers und Commits werden repliziert; eine hier gemachte Stage wird durch die des Gruppenservers ersetzt); Stage-Baum {tree}."
     },
     "status.git.no-git": {
       "en": "Git state: not shared on this machine, because no git executable was found. Install git (on Windows Git for Windows) so that stage and commit state replicates.",
@@ -491,8 +510,8 @@
       "de": "Git-Zustand: wartet, weil .git/index.lock von einem anderen git-Prozess gehalten wird; es wird mit wachsendem Abstand wiederholt."
     },
     "status.git.index-lock-stale": {
-      "en": "Git state: degraded, because .git/index.lock has been held for more than ten minutes. Close the program holding it or remove the file if no git process runs.",
-      "de": "Git-Zustand: beeinträchtigt, weil .git/index.lock seit mehr als zehn Minuten gehalten wird. Schließe das Programm, das es hält, oder entferne die Datei, wenn kein git-Prozess läuft."
+      "en": "Git state: degraded, because .git/index.lock has been held for more than ten minutes. Close the program holding it or remove the file if no git process runs (a member removes such a lock by itself).",
+      "de": "Git-Zustand: beeinträchtigt, weil .git/index.lock seit mehr als zehn Minuten gehalten wird. Schließe das Programm, das es hält, oder entferne die Datei, wenn kein git-Prozess läuft (ein Mitglied entfernt eine solche Sperre selbst)."
     },
     "status.git.backup-failed": {
       "en": "Git state: degraded, because the old stage could not be copied to .cache/f/lost before it would be replaced; it is not replaced.",
@@ -501,6 +520,14 @@
     "status.refused": {
       "en": "{refused} paths are refused by the path policy and not shared (verify lists them).",
       "de": "{refused} Pfade lehnt die Pfadregel ab, sie werden nicht geteilt (verify listet sie auf)."
+    },
+    "status.refusals": {
+      "en": "Refused paths that this machine does not carry to the others: {count} on record ({reasons}; {total} refusals counted; the last 200 are kept in .cache/f/refused-paths.json). The newest:",
+      "de": "Abgelehnte Pfade, die diese Maschine nicht an die anderen weitergibt: {count} im Protokoll ({reasons}; {total} Ablehnungen gezählt; die letzten 200 stehen in .cache/f/refused-paths.json). Die neuesten:"
+    },
+    "status.refusals.item": {
+      "en": "  {reason}: {path}",
+      "de": "  {reason}: {path}"
     },
     "status.origin": {
       "en": "{origin}: {events} events ({bytes}) behind, last event {age} ago",

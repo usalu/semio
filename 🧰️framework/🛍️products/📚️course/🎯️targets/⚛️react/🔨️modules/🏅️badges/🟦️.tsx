@@ -11,7 +11,7 @@ import { Icon } from "@semio-tech/ui-react/chrome";
 import { roomScope, type BadgeAward, type CourseBadgeView, type Slug } from "@semio-tech/course";
 import { localized, type CourseLocale, type CourseText } from "../🌐️i18n/🟦️.ts";
 import { formatDate } from "../📏️quantity/🟦️.ts";
-import { CardAction, CardIcon, Glyph, PageFrame, CourseCard, cn, type PaneView } from "../🪟️chrome/🟦️.tsx";
+import { CELL, CardAction, CardIcon, CardSection, Glyph, PageFrame, CourseCard, RowList, cn, type PaneView } from "../🪟️chrome/🟦️.tsx";
 import { HOME_PAGES, type CourseState } from "../🧭️session/🧮️state/🟦️.ts";
 import { PanePeers } from "../👥️presence/🟦️.tsx";
 import { PRESENCE_ANCHORS } from "../👥️presence/👁️view/🟦️.ts";
@@ -48,6 +48,7 @@ export function BadgesCard(props: { readonly state: CourseState; readonly text: 
   const earned = badges.filter((badge) => awardOf(state, badge.id) !== undefined).length;
   return (
     <CourseCard
+      flush
       id={id}
       card="badges"
       anchor={PRESENCE_ANCHORS.home("badges")}
@@ -62,17 +63,19 @@ export function BadgesCard(props: { readonly state: CourseState; readonly text: 
         </CardAction>
       }
     >
-      <ul role="list" className="m-0 flex list-none flex-wrap gap-single p-0">
+      <div {...CELL}>
+      <ul role="list" data-shared-border-group="" className="course-badge-strip m-0 list-none p-0">
         {badges.map((badge) => {
           const held = awardOf(state, badge.id) !== undefined;
           const standing = held ? text("course.home.earned") : text("course.home.locked");
           return (
             <li
               key={badge.id}
+              data-shared-border-cell=""
               data-earned={held ? "" : undefined}
               data-state={held ? "earned" : "locked"}
               title={`${localized(badge.label, locale)}: ${standing}`}
-              className={cn("relative flex size-workbench items-center justify-center border border-normal text-lg", held ? "border-solid text-foreground" : "border-dashed text-muted-foreground")}
+              className={cn("relative flex h-workbench min-w-0 items-center justify-center text-lg", held ? "text-foreground" : "text-muted-foreground")}
             >
               <Glyph emoji={badge.emoji} />
               <BadgeMark earned={held} size="tiny" className="pointer-events-none absolute bottom-0 end-0" />
@@ -83,7 +86,10 @@ export function BadgesCard(props: { readonly state: CourseState; readonly text: 
           );
         })}
       </ul>
-      <p className="m-0 text-xs text-muted-foreground">{text("course.home.badgesEarned", { earned, total: badges.length })}</p>
+      </div>
+      <CardSection>
+        <p className="m-0 text-xs text-muted-foreground">{text("course.home.badgesEarned", { earned, total: badges.length })}</p>
+      </CardSection>
     </CourseCard>
   );
 }
@@ -95,8 +101,8 @@ export function BadgesPage(props: { readonly state: CourseState; readonly text: 
   const badges = state.course?.badges ?? [];
   return (
     <PageFrame page={HOME_PAGES.badges} wide overlay={<PanePeers scope={state.course === undefined ? undefined : roomScope(state.course.id, { screen: "badges" })} opened={view.opened} />}>
-      <CourseCard id={id} card="all-badges" anchor={PRESENCE_ANCHORS.badges} icon={<CardIcon icon="award" />} title={text("course.home.badges")}>
-        <ul role="list" className="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-double p-0">
+      <CourseCard flush id={id} card="all-badges" anchor={PRESENCE_ANCHORS.badges} icon={<CardIcon icon="award" />} title={text("course.home.badges")}>
+        <RowList>
           {badges.map((badge) => {
             const award = awardOf(state, badge.id);
             return (
@@ -104,7 +110,8 @@ export function BadgesPage(props: { readonly state: CourseState; readonly text: 
                 key={badge.id}
                 data-earned={award === undefined ? undefined : ""}
                 data-state={award === undefined ? "locked" : "earned"}
-                className={cn("flex gap-double border border-normal p-double", award === undefined ? "border-dashed text-muted-foreground" : "border-solid")}
+                {...CELL}
+                className={cn("flex gap-double p-double", award === undefined && "text-muted-foreground")}
               >
                 <Glyph emoji={badge.emoji} className="text-2xl leading-none" />
                 <div className="flex min-w-0 flex-col gap-single">
@@ -118,7 +125,7 @@ export function BadgesPage(props: { readonly state: CourseState; readonly text: 
               </li>
             );
           })}
-        </ul>
+        </RowList>
       </CourseCard>
     </PageFrame>
   );

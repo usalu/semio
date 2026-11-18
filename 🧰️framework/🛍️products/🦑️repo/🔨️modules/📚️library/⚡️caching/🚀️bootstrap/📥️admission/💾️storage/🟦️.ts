@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import{createRequestedIssuedResourceControlV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {lstat,mkdir} from "node:fs/promises";
 import {posix,win32,resolve} from "node:path";
@@ -15,7 +16,7 @@ export const NX_COLLECTION_ADMISSION_MAXIMUM_BYTES_V1=protocol.maximumSnapshotBy
 /** 🧭️ Names only the independently serialized admission directory inside graph4. */
 export function nxCollectionAdmissionPlanV1(value:unknown):{directory:string;resource:string;maximumSnapshotBytes:number}{
  if(validateJsonSchemaSubset(schema,value).length)throw Error("Closed collection admission scope required");const row=value as {version:1;platform:"posix"|"windows";workspace:string;storage:string},paths=row.platform==="windows"?win32:posix;
- if(!paths.isAbsolute(row.workspace)||paths.resolve(row.workspace)!==row.workspace||row.workspace.includes("\0")||row.storage!==paths.join(row.workspace,".cache","b","g","m"))throw Error("Original canonical collection graph backing required");const directory=paths.join(row.storage,protocol.namespace);if(directory.length>256||[...directory].length>256)throw Error("Collection admission path capacity exceeded");return {directory,resource:protocol.writerPrefix+row.workspace,maximumSnapshotBytes:protocol.maximumSnapshotBytes};
+ if(!paths.isAbsolute(row.workspace)||paths.resolve(row.workspace)!==row.workspace||row.workspace.includes("\0")||row.storage!==machinePathV1(row.workspace,".cache","b","g","m"))throw Error("Original canonical collection graph backing required");const directory=paths.join(row.storage,protocol.namespace);if(directory.length>256||[...directory].length>256)throw Error("Collection admission path capacity exceeded");return {directory,resource:protocol.writerPrefix+row.workspace,maximumSnapshotBytes:protocol.maximumSnapshotBytes};
 }
 /** 🔒️ Retains real graph funding and independent Original collection writer custody beneath the caller's actual phase, so a nested caller inside an enclosing cache store refines that store's restricted controls instead of a fresh root control. */
 export async function withNxCollectionAdmissionStoreV1<T>(workspace:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,body:(directory:string)=>Promise<T>):Promise<T>{

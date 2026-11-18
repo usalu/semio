@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { Asset } from "@teaching/staffage";
 
-const staffage = resolve(process.cwd(), "../../../..");
+const staffage = resolve(import.meta.dirname, "../../../..");
 
 /** 🚶️ The reference walker, loaded from the language-agnostic fixture. */
 export const walker: Asset = JSON.parse(readFileSync(resolve(staffage, "🧫️fixtures/🚶️reference-walker/🔣️.json"), "utf8"));

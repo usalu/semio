@@ -1,0 +1,506 @@
+service log: /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-b79757bed7da.log
+closure entries before: 4661
+2026-11-15T18:35:54Z no slice worker
+2026-11-15T18:36:00Z no slice worker
+2026-11-15T18:36:05Z no slice worker
+2026-11-15T18:36:11Z no slice worker
+2026-11-15T18:36:16Z no slice worker
+2026-11-15T18:36:22Z no slice worker
+2026-11-15T18:36:27Z no slice worker
+2026-11-15T18:36:33Z no slice worker
+2026-11-15T18:36:41Z no slice worker
+2026-11-15T18:36:46Z no slice worker
+2026-11-15T18:36:51Z no slice worker
+2026-11-15T18:36:57Z no slice worker
+2026-11-15T18:37:06Z no slice worker
+2026-11-15T18:37:12Z no slice worker
+2026-11-15T18:37:17Z no slice worker
+2026-11-15T18:37:22Z no slice worker
+2026-11-15T18:37:31Z no slice worker
+2026-11-15T18:37:36Z no slice worker
+2026-11-15T18:37:41Z no slice worker
+2026-11-15T18:37:46Z no slice worker
+2026-11-15T18:37:51Z no slice worker
+2026-11-15T18:37:57Z no slice worker
+2026-11-15T18:38:02Z no slice worker
+2026-11-15T18:38:07Z no slice worker
+2026-11-15T18:38:12Z no slice worker
+2026-11-15T18:38:17Z no slice worker
+2026-11-15T18:38:22Z no slice worker
+2026-11-15T18:38:28Z no slice worker
+2026-11-15T18:38:33Z no slice worker
+2026-11-15T18:38:39Z no slice worker
+2026-11-15T18:38:45Z no slice worker
+2026-11-15T18:38:50Z no slice worker
+2026-11-15T18:38:55Z no slice worker
+2026-11-15T18:39:02Z no slice worker
+2026-11-15T18:39:07Z no slice worker
+2026-11-15T18:39:13Z no slice worker
+2026-11-15T18:39:18Z no slice worker
+2026-11-15T18:39:23Z no slice worker
+2026-11-15T18:39:28Z no slice worker
+2026-11-15T18:39:33Z no slice worker
+2026-11-15T18:39:38Z no slice worker
+2026-11-15T18:39:45Z no slice worker
+2026-11-15T18:39:50Z no slice worker
+2026-11-15T18:39:55Z no slice worker
+2026-11-15T18:40:00Z no slice worker
+2026-11-15T18:40:05Z no slice worker
+2026-11-15T18:40:10Z no slice worker
+2026-11-15T18:40:18Z no slice worker
+2026-11-15T18:40:27Z no slice worker
+2026-11-15T18:40:32Z no slice worker
+2026-11-15T18:40:37Z no slice worker
+2026-11-15T18:40:43Z no slice worker
+2026-11-15T18:40:50Z no slice worker
+2026-11-15T18:40:56Z no slice worker
+2026-11-15T18:41:01Z no slice worker
+2026-11-15T18:41:06Z no slice worker
+2026-11-15T18:41:11Z no slice worker
+2026-11-15T18:41:16Z no slice worker
+2026-11-15T18:41:21Z no slice worker
+2026-11-15T18:41:26Z no slice worker
+2026-11-15T18:41:31Z no slice worker
+2026-11-15T18:41:37Z no slice worker
+2026-11-15T18:41:42Z no slice worker
+2026-11-15T18:41:49Z no slice worker
+2026-11-15T18:41:54Z no slice worker
+2026-11-15T18:41:59Z no slice worker
+2026-11-15T18:42:05Z no slice worker
+2026-11-15T18:42:10Z no slice worker
+2026-11-15T18:42:15Z no slice worker
+2026-11-15T18:42:20Z no slice worker
+2026-11-15T18:42:25Z no slice worker
+2026-11-15T18:42:30Z no slice worker
+2026-11-15T18:42:36Z no slice worker
+2026-11-15T18:42:41Z no slice worker
+2026-11-15T18:42:46Z no slice worker
+2026-11-15T18:42:51Z no slice worker
+2026-11-15T18:42:56Z no slice worker
+2026-11-15T18:43:01Z no slice worker
+2026-11-15T18:43:07Z no slice worker
+2026-11-15T18:43:12Z no slice worker
+2026-11-15T18:43:17Z no slice worker
+2026-11-15T18:43:22Z no slice worker
+2026-11-15T18:43:27Z no slice worker
+2026-11-15T18:43:34Z no slice worker
+2026-11-15T18:43:39Z no slice worker
+2026-11-15T18:43:45Z no slice worker
+2026-11-15T18:43:51Z no slice worker
+2026-11-15T18:43:57Z no slice worker
+2026-11-15T18:44:02Z no slice worker
+2026-11-15T18:44:07Z no slice worker
+2026-11-15T18:44:14Z no slice worker
+2026-11-15T18:44:19Z no slice worker
+2026-11-15T18:44:24Z no slice worker
+2026-11-15T18:44:29Z no slice worker
+2026-11-15T18:44:34Z no slice worker
+2026-11-15T18:44:39Z no slice worker
+2026-11-15T18:44:44Z no slice worker
+2026-11-15T18:44:50Z no slice worker
+2026-11-15T18:44:55Z no slice worker
+2026-11-15T18:45:00Z no slice worker
+2026-11-15T18:45:06Z no slice worker
+2026-11-15T18:45:15Z no slice worker
+2026-11-15T18:45:21Z no slice worker
+2026-11-15T18:45:26Z no slice worker
+2026-11-15T18:45:31Z no slice worker
+2026-11-15T18:45:36Z no slice worker
+2026-11-15T18:45:41Z no slice worker
+2026-11-15T18:45:47Z no slice worker
+2026-11-15T18:45:52Z no slice worker
+2026-11-15T18:45:57Z no slice worker
+2026-11-15T18:46:02Z no slice worker
+2026-11-15T18:46:07Z no slice worker
+2026-11-15T18:46:12Z no slice worker
+2026-11-15T18:46:17Z no slice worker
+2026-11-15T18:46:22Z no slice worker
+2026-11-15T18:46:28Z no slice worker
+2026-11-15T18:46:33Z no slice worker
+2026-11-15T18:46:39Z no slice worker
+2026-11-15T18:46:46Z no slice worker
+2026-11-15T18:46:51Z no slice worker
+2026-11-15T18:46:56Z no slice worker
+2026-11-15T18:47:01Z no slice worker
+2026-11-15T18:47:06Z no slice worker
+2026-11-15T18:47:11Z no slice worker
+2026-11-15T18:47:16Z no slice worker
+2026-11-15T18:47:21Z no slice worker
+2026-11-15T18:47:26Z no slice worker
+2026-11-15T18:47:32Z no slice worker
+2026-11-15T18:47:37Z no slice worker
+2026-11-15T18:47:42Z no slice worker
+2026-11-15T18:47:47Z no slice worker
+2026-11-15T18:47:53Z no slice worker
+2026-11-15T18:47:58Z no slice worker
+2026-11-15T18:48:03Z no slice worker
+2026-11-15T18:48:08Z no slice worker
+2026-11-15T18:48:13Z no slice worker
+2026-11-15T18:48:18Z no slice worker
+2026-11-15T18:48:24Z no slice worker
+2026-11-15T18:48:29Z no slice worker
+2026-11-15T18:48:34Z no slice worker
+2026-11-15T18:48:39Z no slice worker
+2026-11-15T18:48:44Z no slice worker
+2026-11-15T18:48:49Z no slice worker
+2026-11-15T18:48:54Z no slice worker
+2026-11-15T18:48:59Z no slice worker
+2026-11-15T18:49:05Z no slice worker
+2026-11-15T18:49:10Z no slice worker
+2026-11-15T18:49:15Z no slice worker
+2026-11-15T18:49:20Z no slice worker
+2026-11-15T18:49:25Z no slice worker
+2026-11-15T18:49:30Z no slice worker
+2026-11-15T18:49:35Z no slice worker
+2026-11-15T18:49:40Z no slice worker
+2026-11-15T18:49:45Z no slice worker
+2026-11-15T18:49:50Z no slice worker
+2026-11-15T18:49:56Z no slice worker
+2026-11-15T18:50:01Z no slice worker
+2026-11-15T18:50:06Z no slice worker
+2026-11-15T18:50:11Z no slice worker
+2026-11-15T18:50:16Z no slice worker
+2026-11-15T18:50:21Z no slice worker
+2026-11-15T18:50:26Z no slice worker
+2026-11-15T18:50:31Z no slice worker
+2026-11-15T18:50:36Z no slice worker
+2026-11-15T18:50:42Z no slice worker
+2026-11-15T18:50:47Z no slice worker
+2026-11-15T18:50:52Z no slice worker
+2026-11-15T18:50:57Z no slice worker
+2026-11-15T18:51:02Z no slice worker
+2026-11-15T18:51:07Z no slice worker
+2026-11-15T18:51:12Z no slice worker
+2026-11-15T18:51:17Z no slice worker
+2026-11-15T18:51:22Z no slice worker
+2026-11-15T18:51:28Z no slice worker
+2026-11-15T18:51:33Z no slice worker
+2026-11-15T18:51:38Z no slice worker
+2026-11-15T18:51:43Z no slice worker
+2026-11-15T18:51:48Z no slice worker
+2026-11-15T18:51:53Z no slice worker
+2026-11-15T18:51:58Z no slice worker
+2026-11-15T18:52:03Z no slice worker
+2026-11-15T18:52:08Z no slice worker
+2026-11-15T18:52:14Z no slice worker
+2026-11-15T18:52:19Z no slice worker
+2026-11-15T18:52:24Z no slice worker
+2026-11-15T18:52:29Z no slice worker
+2026-11-15T18:52:34Z no slice worker
+2026-11-15T18:52:39Z no slice worker
+2026-11-15T18:52:44Z no slice worker
+2026-11-15T18:52:50Z no slice worker
+2026-11-15T18:52:55Z no slice worker
+2026-11-15T18:53:00Z no slice worker
+2026-11-15T18:53:05Z no slice worker
+2026-11-15T18:53:11Z no slice worker
+2026-11-15T18:53:16Z no slice worker
+2026-11-15T18:53:21Z no slice worker
+2026-11-15T18:53:26Z no slice worker
+2026-11-15T18:53:31Z no slice worker
+2026-11-15T18:53:36Z no slice worker
+2026-11-15T18:53:41Z no slice worker
+2026-11-15T18:53:46Z no slice worker
+2026-11-15T18:53:52Z no slice worker
+2026-11-15T18:53:57Z no slice worker
+2026-11-15T18:54:02Z no slice worker
+2026-11-15T18:54:07Z no slice worker
+2026-11-15T18:54:12Z no slice worker
+2026-11-15T18:54:17Z no slice worker
+2026-11-15T18:54:22Z no slice worker
+2026-11-15T18:54:28Z no slice worker
+2026-11-15T18:54:33Z no slice worker
+2026-11-15T18:54:38Z no slice worker
+2026-11-15T18:54:43Z no slice worker
+2026-11-15T18:54:48Z no slice worker
+2026-11-15T18:54:53Z no slice worker
+2026-11-15T18:54:58Z no slice worker
+2026-11-15T18:55:03Z no slice worker
+2026-11-15T18:55:08Z no slice worker
+2026-11-15T18:55:14Z no slice worker
+2026-11-15T18:55:19Z no slice worker
+2026-11-15T18:55:24Z no slice worker
+2026-11-15T18:55:29Z no slice worker
+2026-11-15T18:55:34Z no slice worker
+2026-11-15T18:55:39Z no slice worker
+2026-11-15T18:55:44Z no slice worker
+2026-11-15T18:55:49Z no slice worker
+2026-11-15T18:55:54Z no slice worker
+2026-11-15T18:56:00Z no slice worker
+2026-11-15T18:56:05Z no slice worker
+2026-11-15T18:56:10Z no slice worker
+2026-11-15T18:56:15Z no slice worker
+2026-11-15T18:56:20Z no slice worker
+2026-11-15T18:56:25Z no slice worker
+2026-11-15T18:56:30Z no slice worker
+2026-11-15T18:56:35Z no slice worker
+2026-11-15T18:56:41Z no slice worker
+2026-11-15T18:56:46Z no slice worker
+2026-11-15T18:56:51Z no slice worker
+2026-11-15T18:56:56Z no slice worker
+2026-11-15T18:57:01Z no slice worker
+2026-11-15T18:57:08Z no slice worker
+2026-11-15T18:57:13Z no slice worker
+2026-11-15T18:57:19Z no slice worker
+2026-11-15T18:57:24Z no slice worker
+2026-11-15T18:57:29Z no slice worker
+2026-11-15T18:57:34Z no slice worker
+2026-11-15T18:57:40Z no slice worker
+2026-11-15T18:57:45Z no slice worker
+2026-11-15T18:57:52Z no slice worker
+2026-11-15T18:57:57Z no slice worker
+2026-11-15T18:58:02Z no slice worker
+2026-11-15T18:58:07Z no slice worker
+2026-11-15T18:58:12Z no slice worker
+2026-11-15T18:58:19Z no slice worker
+2026-11-15T18:58:24Z no slice worker
+2026-11-15T18:58:29Z no slice worker
+2026-11-15T18:58:34Z no slice worker
+2026-11-15T18:58:39Z no slice worker
+2026-11-15T18:58:45Z no slice worker
+2026-11-15T18:58:50Z no slice worker
+2026-11-15T18:58:55Z no slice worker
+2026-11-15T18:59:00Z no slice worker
+2026-11-15T18:59:05Z no slice worker
+2026-11-15T18:59:10Z no slice worker
+2026-11-15T18:59:15Z no slice worker
+2026-11-15T18:59:20Z no slice worker
+2026-11-15T18:59:26Z no slice worker
+2026-11-15T18:59:31Z no slice worker
+2026-11-15T18:59:36Z no slice worker
+2026-11-15T18:59:41Z no slice worker
+2026-11-15T18:59:46Z no slice worker
+2026-11-15T18:59:52Z no slice worker
+2026-11-15T18:59:57Z no slice worker
+2026-11-15T19:00:02Z no slice worker
+2026-11-15T19:00:07Z no slice worker
+2026-11-15T19:00:12Z no slice worker
+2026-11-15T19:00:17Z no slice worker
+2026-11-15T19:00:22Z no slice worker
+2026-11-15T19:00:28Z no slice worker
+2026-11-15T19:00:33Z no slice worker
+2026-11-15T19:00:38Z no slice worker
+2026-11-15T19:00:43Z no slice worker
+2026-11-15T19:00:48Z no slice worker
+2026-11-15T19:00:53Z no slice worker
+2026-11-15T19:00:58Z no slice worker
+2026-11-15T19:01:03Z no slice worker
+2026-11-15T19:01:09Z no slice worker
+2026-11-15T19:01:14Z no slice worker
+2026-11-15T19:01:19Z no slice worker
+2026-11-15T19:01:24Z no slice worker
+2026-11-15T19:01:29Z no slice worker
+2026-11-15T19:01:34Z no slice worker
+2026-11-15T19:01:39Z no slice worker
+2026-11-15T19:01:44Z no slice worker
+2026-11-15T19:01:50Z no slice worker
+2026-11-15T19:01:55Z no slice worker
+2026-11-15T19:02:00Z no slice worker
+2026-11-15T19:02:05Z no slice worker
+2026-11-15T19:02:10Z no slice worker
+2026-11-15T19:02:15Z no slice worker
+2026-11-15T19:02:21Z no slice worker
+2026-11-15T19:02:26Z no slice worker
+2026-11-15T19:02:31Z no slice worker
+2026-11-15T19:02:37Z no slice worker
+2026-11-15T19:02:42Z no slice worker
+2026-11-15T19:02:47Z no slice worker
+2026-11-15T19:02:52Z no slice worker
+2026-11-15T19:02:57Z no slice worker
+2026-11-15T19:03:02Z no slice worker
+2026-11-15T19:03:07Z no slice worker
+2026-11-15T19:03:12Z no slice worker
+2026-11-15T19:03:17Z no slice worker
+2026-11-15T19:03:23Z no slice worker
+2026-11-15T19:03:28Z no slice worker
+2026-11-15T19:03:33Z no slice worker
+2026-11-15T19:03:38Z no slice worker
+2026-11-15T19:03:43Z no slice worker
+2026-11-15T19:03:48Z no slice worker
+2026-11-15T19:03:53Z no slice worker
+2026-11-15T19:03:58Z no slice worker
+2026-11-15T19:04:03Z no slice worker
+2026-11-15T19:04:09Z no slice worker
+2026-11-15T19:04:14Z no slice worker
+2026-11-15T19:04:19Z no slice worker
+2026-11-15T19:04:24Z no slice worker
+2026-11-15T19:04:29Z no slice worker
+2026-11-15T19:04:34Z no slice worker
+2026-11-15T19:04:39Z no slice worker
+2026-11-15T19:04:44Z no slice worker
+2026-11-15T19:04:50Z no slice worker
+2026-11-15T19:04:55Z no slice worker
+2026-11-15T19:05:00Z no slice worker
+2026-11-15T19:05:05Z no slice worker
+2026-11-15T19:05:10Z no slice worker
+2026-11-15T19:05:15Z no slice worker
+2026-11-15T19:05:20Z no slice worker
+2026-11-15T19:05:26Z no slice worker
+2026-11-15T19:05:31Z no slice worker
+2026-11-15T19:05:36Z no slice worker
+2026-11-15T19:05:41Z no slice worker
+2026-11-15T19:05:46Z no slice worker
+2026-11-15T19:05:52Z no slice worker
+2026-11-15T19:05:57Z no slice worker
+2026-11-15T19:06:02Z no slice worker
+2026-11-15T19:06:07Z no slice worker
+2026-11-15T19:06:12Z no slice worker
+2026-11-15T19:06:17Z no slice worker
+2026-11-15T19:06:22Z no slice worker
+2026-11-15T19:06:28Z no slice worker
+2026-11-15T19:06:33Z no slice worker
+2026-11-15T19:06:38Z no slice worker
+2026-11-15T19:06:43Z no slice worker
+2026-11-15T19:06:48Z no slice worker
+2026-11-15T19:06:53Z no slice worker
+2026-11-15T19:06:58Z no slice worker
+2026-11-15T19:07:03Z pid=25171 rss=263MB footprint=[bun [25171]: 64-bit    Footprint: 88 MB (16384 bytes per page)] last=[]
+2026-11-15T19:07:08Z pid=25171 rss=320MB footprint=[bun [25171]: 64-bit    Footprint: 86 MB (16384 bytes per page)] last=[]
+2026-11-15T19:07:14Z pid=25171 rss=566MB footprint=[bun [25171]: 64-bit    Footprint: 298 MB (16384 bytes per page)] last=[graph: plan answered, managed 109 MB, resident 115 MB (released 0 MB)]
+2026-11-15T19:07:19Z pid=25171 rss=828MB footprint=[bun [25171]: 64-bit    Footprint: 322 MB (16384 bytes per page)] last=[]
+2026-11-15T19:07:24Z pid=25171 rss=654MB footprint=[bun [25171]: 64-bit    Footprint: 361 MB (16384 bytes per page)] last=[graph: plan answered, managed 109 MB, resident 115 MB (released 0 MB)]
+2026-11-15T19:07:29Z pid=25171 rss=684MB footprint=[bun [25171]: 64-bit    Footprint: 536 MB (16384 bytes per page)] last=[]
+2026-11-15T19:07:34Z pid=25171 rss=642MB footprint=[bun [25171]: 64-bit    Footprint: 519 MB (16384 bytes per page)] last=[graph: asking the host for up to 4 worker processes for 4774 projects; the projects wait for them]
+2026-11-15T19:07:39Z pid=25171 rss=700MB footprint=[bun [25171]: 64-bit    Footprint: 548 MB (16384 bytes per page)] last=[graph: asking the host for up to 4 worker processes for 4774 projects; the projects wait for them]
+2026-11-15T19:07:44Z pid=25171 rss=712MB footprint=[bun [25171]: 64-bit    Footprint: 548 MB (16384 bytes per page)] last=[graph: asking the host for up to 4 worker processes for 4774 projects; the projects wait for them]
+2026-11-15T19:07:49Z pid=25171 rss=991MB footprint=[bun [25171]: 64-bit    Footprint: 813 MB (16384 bytes per page)] last=[graph: asking the host for up to 4 worker processes for 4774 projects; the projects wait for them]
+2026-11-15T19:07:55Z pid=25171 rss=901MB footprint=[bun [25171]: 64-bit    Footprint: 775 MB (16384 bytes per page)] last=[graph: asking the host for up to 4 worker processes for 4774 projects; the projects wait for them]
+2026-11-15T19:08:00Z pid=25171 rss=832MB footprint=[bun [25171]: 64-bit    Footprint: 751 MB (16384 bytes per page)] last=[graph: plan answered, managed 109 MB, resident 115 MB (released 0 MB)]
+2026-11-15T19:08:05Z pid=25171 rss=872MB footprint=[bun [25171]: 64-bit    Footprint: 758 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (1505 of 748 MB reserved, 1 projects running): @semio-tech/mit-bestand-bericht needs 1505 MB and has waited 0 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, ]
+2026-11-15T19:08:10Z pid=25171 rss=1712MB footprint=[bun [25171]: 64-bit    Footprint: 3363 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (1505 of 748 MB reserved, 1 projects running): @semio-tech/mit-bestand-bericht needs 1505 MB and has waited 0 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, ]
+2026-11-15T19:08:16Z pid=25171 rss=241MB footprint=[bun [25171]: 64-bit    Footprint: 6755 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (1505 of 748 MB reserved, 1 projects running): @semio-tech/mit-bestand-bericht needs 1505 MB and has waited 0 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, ]
+2026-11-15T19:08:21Z pid=25171 rss=18MB footprint=[bun [25171]: 64-bit    Footprint: 6854 MB (16384 bytes per page)] last=[]
+2026-11-15T19:08:26Z no slice worker
+2026-11-15T19:08:31Z no slice worker
+2026-11-15T19:08:36Z no slice worker
+2026-11-15T19:08:41Z no slice worker
+2026-11-15T19:08:46Z no slice worker
+2026-11-15T19:08:51Z no slice worker
+2026-11-15T19:08:56Z no slice worker
+2026-11-15T19:09:02Z no slice worker
+2026-11-15T19:09:07Z no slice worker
+2026-11-15T19:09:12Z no slice worker
+2026-11-15T19:09:17Z no slice worker
+2026-11-15T19:09:22Z no slice worker
+2026-11-15T19:09:27Z no slice worker
+2026-11-15T19:09:32Z no slice worker
+2026-11-15T19:09:37Z no slice worker
+2026-11-15T19:09:42Z no slice worker
+2026-11-15T19:09:47Z no slice worker
+2026-11-15T19:09:52Z no slice worker
+2026-11-15T19:09:58Z no slice worker
+2026-11-15T19:10:03Z no slice worker
+2026-11-15T19:10:08Z no slice worker
+2026-11-15T19:10:13Z no slice worker
+2026-11-15T19:10:18Z no slice worker
+2026-11-15T19:10:23Z no slice worker
+2026-11-15T19:10:28Z no slice worker
+2026-11-15T19:10:33Z no slice worker
+2026-11-15T19:10:38Z no slice worker
+2026-11-15T19:10:43Z no slice worker
+2026-11-15T19:10:49Z no slice worker
+2026-11-15T19:10:54Z no slice worker
+2026-11-15T19:10:59Z no slice worker
+2026-11-15T19:11:04Z no slice worker
+2026-11-15T19:11:09Z no slice worker
+2026-11-15T19:11:14Z no slice worker
+2026-11-15T19:11:19Z no slice worker
+2026-11-15T19:11:25Z no slice worker
+2026-11-15T19:11:30Z no slice worker
+2026-11-15T19:11:35Z no slice worker
+2026-11-15T19:11:40Z no slice worker
+2026-11-15T19:11:46Z no slice worker
+2026-11-15T19:11:51Z no slice worker
+2026-11-15T19:11:56Z no slice worker
+2026-11-15T19:12:01Z no slice worker
+2026-11-15T19:12:06Z no slice worker
+2026-11-15T19:12:12Z no slice worker
+2026-11-15T19:12:17Z no slice worker
+2026-11-15T19:12:22Z no slice worker
+2026-11-15T19:12:27Z no slice worker
+2026-11-15T19:12:33Z no slice worker
+2026-11-15T19:12:38Z no slice worker
+2026-11-15T19:12:43Z no slice worker
+2026-11-15T19:12:48Z no slice worker
+2026-11-15T19:12:53Z no slice worker
+2026-11-15T19:12:58Z no slice worker
+2026-11-15T19:13:04Z no slice worker
+2026-11-15T19:13:09Z no slice worker
+2026-11-15T19:13:14Z no slice worker
+2026-11-15T19:13:19Z no slice worker
+2026-11-15T19:13:24Z no slice worker
+2026-11-15T19:13:29Z no slice worker
+2026-11-15T19:13:34Z no slice worker
+2026-11-15T19:13:40Z no slice worker
+2026-11-15T19:13:45Z no slice worker
+2026-11-15T19:13:50Z no slice worker
+2026-11-15T19:13:55Z no slice worker
+2026-11-15T19:14:00Z no slice worker
+2026-11-15T19:14:05Z no slice worker
+2026-11-15T19:14:10Z no slice worker
+2026-11-15T19:14:15Z no slice worker
+2026-11-15T19:14:21Z pid=33442 rss=289MB footprint=[bun [33442]: 64-bit    Footprint: 95 MB (16384 bytes per page)] last=[Graph: Plan-Stufe inference beruhigt von 6591 auf 6852 MB]
+2026-11-15T19:14:26Z pid=33442 rss=348MB footprint=[bun [33442]: 64-bit    Footprint: 100 MB (16384 bytes per page)] last=[]
+2026-11-15T19:14:31Z pid=33442 rss=1003MB footprint=[bun [33442]: 64-bit    Footprint: 136 MB (16384 bytes per page)] last=[Graph: Plan-Stufe inference beruhigt von 6591 auf 6852 MB]
+2026-11-15T19:14:36Z pid=33442 rss=1015MB footprint=[bun [33442]: 64-bit    Footprint: 137 MB (16384 bytes per page)] last=[graph: plan stage inference starts (managed 208 MB, resident 1011 MB)]
+2026-11-15T19:14:41Z pid=33442 rss=1020MB footprint=[bun [33442]: 64-bit    Footprint: 139 MB (16384 bytes per page)] last=[]
+2026-11-15T19:14:46Z pid=33442 rss=1023MB footprint=[bun [33442]: 64-bit    Footprint: 140 MB (16384 bytes per page)] last=[graph: plan stage inference starts (managed 208 MB, resident 1011 MB)]
+2026-11-15T19:14:52Z pid=33442 rss=1027MB footprint=[bun [33442]: 64-bit    Footprint: 144 MB (16384 bytes per page)] last=[graph: plan stage inference starts (managed 208 MB, resident 1011 MB)]
+2026-11-15T19:14:57Z pid=33442 rss=1084MB footprint=[bun [33442]: 64-bit    Footprint: 159 MB (16384 bytes per page)] last=[graph: plan stage inference starts (managed 208 MB, resident 1011 MB)]
+2026-11-15T19:15:02Z pid=33442 rss=1115MB footprint=[bun [33442]: 64-bit    Footprint: 160 MB (16384 bytes per page)] last=[]
+2026-11-15T19:15:07Z pid=33442 rss=1120MB footprint=[bun [33442]: 64-bit    Footprint: 143 MB (16384 bytes per page)] last=[]
+2026-11-15T19:15:13Z pid=33442 rss=1123MB footprint=[bun [33442]: 64-bit    Footprint: 137 MB (16384 bytes per page)] last=[graph: asking the host for up to 2 worker processes for 4774 projects; the projects wait for them]
+2026-11-15T19:15:18Z pid=33442 rss=1140MB footprint=[bun [33442]: 64-bit    Footprint: 137 MB (16384 bytes per page)] last=[graph: asking the host for up to 2 worker processes for 4774 projects; the projects wait for them]
+2026-11-15T19:15:23Z pid=33442 rss=1141MB footprint=[bun [33442]: 64-bit    Footprint: 136 MB (16384 bytes per page)] last=[graph: asking the host for up to 2 worker processes for 4774 projects; the projects wait for them]
+2026-11-15T19:15:28Z pid=33442 rss=1141MB footprint=[bun [33442]: 64-bit    Footprint: 136 MB (16384 bytes per page)] last=[graph: asking the host for up to 2 worker processes for 4774 projects; the projects wait for them]
+2026-11-15T19:15:34Z pid=33442 rss=2526MB footprint=[bun [33442]: 64-bit    Footprint: 1188 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (1505 of 732 MB reserved, 1 projects running): @semio-tech/mit-bestand-bericht needs 1505 MB and has waited 0 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, ]
+2026-11-15T19:15:39Z pid=33442 rss=2120MB footprint=[bun [33442]: 64-bit    Footprint: 7618 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (1505 of 732 MB reserved, 1 projects running): @semio-tech/mit-bestand-bericht needs 1505 MB and has waited 0 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, ]
+2026-11-15T19:15:44Z pid=33442 rss=1600MB footprint=[bun [33442]: 64-bit    Footprint: 8812 MB (16384 bytes per page)] last=[]
+2026-11-15T19:15:50Z no slice worker
+2026-11-15T19:15:55Z pid=35392 rss=271MB footprint=[bun [35392]: 64-bit    Footprint: 89 MB (16384 bytes per page)] last=[Graph: Plan-Stufe inference beruhigt von 7053 auf 8750 MB]
+2026-11-15T19:16:00Z pid=35392 rss=608MB footprint=[bun [35392]: 64-bit    Footprint: 337 MB (16384 bytes per page)] last=[Graph: Plan-Stufe inference beruhigt von 7053 auf 8750 MB]
+2026-11-15T19:16:06Z pid=35392 rss=1011MB footprint=[bun [35392]: 64-bit    Footprint: 130 MB (16384 bytes per page)] last=[]
+2026-11-15T19:16:11Z pid=35392 rss=1018MB footprint=[bun [35392]: 64-bit    Footprint: 130 MB (16384 bytes per page)] last=[graph: plan stage inference starts (managed 202 MB, resident 1013 MB)]
+2026-11-15T19:16:16Z pid=35392 rss=1023MB footprint=[bun [35392]: 64-bit    Footprint: 134 MB (16384 bytes per page)] last=[graph: plan stage inference starts (managed 202 MB, resident 1013 MB)]
+2026-11-15T19:16:21Z pid=35392 rss=1032MB footprint=[bun [35392]: 64-bit    Footprint: 138 MB (16384 bytes per page)] last=[]
+2026-11-15T19:16:26Z pid=35392 rss=1137MB footprint=[bun [35392]: 64-bit    Footprint: 160 MB (16384 bytes per page)] last=[graph: plan stage inference starts (managed 202 MB, resident 1013 MB)]
+2026-11-15T19:16:31Z pid=35392 rss=1148MB footprint=[bun [35392]: 64-bit    Footprint: 137 MB (16384 bytes per page)] last=[]
+2026-11-15T19:16:36Z pid=35392 rss=1150MB footprint=[bun [35392]: 64-bit    Footprint: 135 MB (16384 bytes per page)] last=[graph: inferring 4774 projects in this process (memory)]
+2026-11-15T19:16:42Z pid=35392 rss=1180MB footprint=[bun [35392]: 64-bit    Footprint: 136 MB (16384 bytes per page)] last=[graph: inferring 4774 projects in this process (memory)]
+2026-11-15T19:16:47Z pid=35392 rss=1189MB footprint=[bun [35392]: 64-bit    Footprint: 135 MB (16384 bytes per page)] last=[graph: inferring 4774 projects in this process (memory)]
+2026-11-15T19:16:52Z pid=35392 rss=2965MB footprint=[bun [35392]: 64-bit    Footprint: 5325 MB (16384 bytes per page)] last=[]
+2026-11-15T19:16:57Z pid=35392 rss=1884MB footprint=[bun [35392]: 64-bit    Footprint: 9053 MB (16384 bytes per page)] last=[graph: headroom of 882 MB is below one project (1505 MB), inferring one project at a time]
+2026-11-15T19:17:03Z no slice worker
+2026-11-15T19:17:08Z pid=37027 rss=92MB footprint=[bun [37027]: 64-bit    Footprint: 34 MB (16384 bytes per page)] last=[Graph: Plan-Stufe inference beruhigt von 6983 auf 9344 MB]
+2026-11-15T19:17:13Z pid=37027 rss=315MB footprint=[bun [37027]: 64-bit    Footprint: 98 MB (16384 bytes per page)] last=[]
+2026-11-15T19:17:18Z pid=37027 rss=671MB footprint=[bun [37027]: 64-bit    Footprint: 235 MB (16384 bytes per page)] last=[Graph: Plan-Stufe inference beruhigt von 6983 auf 9344 MB]
+2026-11-15T19:17:23Z pid=37027 rss=844MB footprint=[bun [37027]: 64-bit    Footprint: 135 MB (16384 bytes per page)] last=[graph: plan stage inference starts (managed 209 MB, resident 841 MB)]
+2026-11-15T19:17:28Z pid=37027 rss=914MB footprint=[bun [37027]: 64-bit    Footprint: 153 MB (16384 bytes per page)] last=[graph: plan stage inference starts (managed 209 MB, resident 841 MB)]
+2026-11-15T19:17:34Z pid=37027 rss=999MB footprint=[bun [37027]: 64-bit    Footprint: 141 MB (16384 bytes per page)] last=[]
+2026-11-15T19:17:39Z pid=37027 rss=1103MB footprint=[bun [37027]: 64-bit    Footprint: 160 MB (16384 bytes per page)] last=[graph: inferring 4774 projects in this process (memory)]
+2026-11-15T19:17:44Z pid=37027 rss=2424MB footprint=[bun [37027]: 64-bit    Footprint: 1087 MB (16384 bytes per page)] last=[graph: headroom of 851 MB is below one project (1505 MB), inferring one project at a time]
+2026-11-15T19:17:49Z pid=37027 rss=7520MB footprint=[bun [37027]: 64-bit    Footprint: 6187 MB (16384 bytes per page)] last=[graph: headroom of 851 MB is below one project (1505 MB), inferring one project at a time]
+2026-11-15T19:17:55Z pid=37027 rss=3234MB footprint=[bun [37027]: 64-bit    Footprint: 9325 MB (16384 bytes per page)] last=[]
+2026-11-15T19:18:00Z no slice worker
+2026-11-15T19:18:05Z pid=38027 rss=314MB footprint=[bun [38027]: 64-bit    Footprint: 83 MB (16384 bytes per page)] last=[Graph: Plan-Stufe inference beruhigt von 8672 auf 9703 MB]
+2026-11-15T19:18:10Z pid=38027 rss=1023MB footprint=[bun [38027]: 64-bit    Footprint: 143 MB (16384 bytes per page)] last=[Graph: Plan-Stufe inference beruhigt von 8672 auf 9703 MB]
+2026-11-15T19:18:15Z pid=38027 rss=1034MB footprint=[bun [38027]: 64-bit    Footprint: 140 MB (16384 bytes per page)] last=[graph: plan stage inference starts (managed 203 MB, resident 1026 MB)]
+2026-11-15T19:18:20Z pid=38027 rss=1159MB footprint=[bun [38027]: 64-bit    Footprint: 164 MB (16384 bytes per page)] last=[graph: plan stage inference starts (managed 203 MB, resident 1026 MB)]
+2026-11-15T19:18:25Z pid=38027 rss=1167MB footprint=[bun [38027]: 64-bit    Footprint: 143 MB (16384 bytes per page)] last=[graph: inferring 4774 projects in this process (memory)]
+2026-11-15T19:18:30Z pid=38027 rss=1225MB footprint=[bun [38027]: 64-bit    Footprint: 139 MB (16384 bytes per page)] last=[graph: headroom of 828 MB is below one project (1505 MB), inferring one project at a time]
+2026-11-15T19:18:35Z pid=38027 rss=8336MB footprint=[bun [38027]: 64-bit    Footprint: 5540 MB (16384 bytes per page)] last=[]
+2026-11-15T19:18:40Z pid=38027 rss=2837MB footprint=[bun [38027]: 64-bit    Footprint: 9667 MB (16384 bytes per page)] last=[graph: headroom of 828 MB is below one project (1505 MB), inferring one project at a time]
+2026-11-15T19:18:45Z no slice worker
+2026-11-15T19:18:50Z pid=38825 rss=285MB footprint=[bun [38825]: 64-bit    Footprint: 89 MB (16384 bytes per page)] last=[Graph: Plan-Stufe inference beruhigt von 7338 auf 10179 MB]
+2026-11-15T19:18:55Z pid=38825 rss=649MB footprint=[bun [38825]: 64-bit    Footprint: 335 MB (16384 bytes per page)] last=[]
+2026-11-15T19:19:01Z pid=38825 rss=840MB footprint=[bun [38825]: 64-bit    Footprint: 111 MB (16384 bytes per page)] last=[]
+2026-11-15T19:19:06Z pid=38825 rss=848MB footprint=[bun [38825]: 64-bit    Footprint: 116 MB (16384 bytes per page)] last=[graph: plan stage inference starts (managed 202 MB, resident 843 MB)]
+2026-11-15T19:19:11Z pid=38825 rss=868MB footprint=[bun [38825]: 64-bit    Footprint: 123 MB (16384 bytes per page)] last=[graph: plan stage inference starts (managed 202 MB, resident 843 MB)]
+2026-11-15T19:19:16Z pid=38825 rss=996MB footprint=[bun [38825]: 64-bit    Footprint: 125 MB (16384 bytes per page)] last=[]
+2026-11-15T19:19:21Z pid=38825 rss=1081MB footprint=[bun [38825]: 64-bit    Footprint: 121 MB (16384 bytes per page)] last=[graph: inferring 4774 projects in this process (memory)]
+2026-11-15T19:19:26Z pid=38825 rss=1312MB footprint=[bun [38825]: 64-bit    Footprint: 315 MB (16384 bytes per page)] last=[graph: headroom of 723 MB is below one project (1505 MB), inferring one project at a time]
+2026-11-15T19:19:32Z pid=38825 rss=4253MB footprint=[bun [38825]: 64-bit    Footprint: 8381 MB (16384 bytes per page)] last=[]
+2026-11-15T19:19:37Z pid=38825 rss=2330MB footprint=[bun [38825]: 64-bit    Footprint: 9479 MB (16384 bytes per page)] last=[Graph: Plan-Stufe inference beruhigt von 6992 auf 9379 MB]
+2026-11-15T19:19:42Z no slice worker
+2026-11-15T19:19:47Z no slice worker
+closure entries after: 4661

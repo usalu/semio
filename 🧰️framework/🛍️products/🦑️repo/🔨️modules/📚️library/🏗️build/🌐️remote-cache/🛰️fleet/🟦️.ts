@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {readFileSync} from "node:fs";
 import {mkdir,readFile,rename,rm,writeFile} from "node:fs/promises";
 import {randomUUID} from "node:crypto";
@@ -38,7 +39,7 @@ export function requireFleetCacheShapeV1(definition:"Facts"|"LocalCopy",value:un
 export function fleetCacheFactsPathV1(storeRoot:string):string{return join(storeRoot,"v1","fleet","cache.json");}
 
 /** 📍️ Where a machine keeps its local copy: `<worktree>/.cache/f/cache-facts.json`. */
-export function fleetCacheLocalPathV1(root:string):string{return join(root,".cache","f","cache-facts.json");}
+export function fleetCacheLocalPathV1(root:string):string{return machinePathV1(root,".cache","f","cache-facts.json");}
 
 /** 📖️ Reads and validates the text of a facts file. */
 export function parseFleetCacheFactsV1(text:string):FleetCacheFactsV1{
@@ -53,7 +54,7 @@ export function fleetCacheRootV1(environment:Readonly<Record<string,string|undef
 
 /** 🗂️ The store root that `.cache/f/machine.json` of a worktree names, or `undefined`. */
 export function fleetStoreRootV1(root:string):string|undefined{
- try{const value=(JSON.parse(readFileSync(join(root,".cache","f","machine.json"),"utf8")) as {storeRoot?:unknown}).storeRoot;return typeof value==="string"&&value!==""?value:undefined;}catch{return undefined;}
+ try{const value=(JSON.parse(readFileSync(machinePathV1(root,".cache","f","machine.json"),"utf8")) as {storeRoot?:unknown}).storeRoot;return typeof value==="string"&&value!==""?value:undefined;}catch{return undefined;}
 }
 
 /** 🗃️ Reads the local copy synchronously and never touches the store; `undefined` when it is absent, invalid or older than seven days. */

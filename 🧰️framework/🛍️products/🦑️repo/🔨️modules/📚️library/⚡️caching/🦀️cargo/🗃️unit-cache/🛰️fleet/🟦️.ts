@@ -1,6 +1,6 @@
-import {randomBytes} from "node:crypto";
+import {createHash,randomBytes} from "node:crypto";
 import {hostname} from "node:os";
-import {mkdirSync,readFileSync,writeFileSync} from "node:fs";
+import {mkdirSync,readFileSync,realpathSync,writeFileSync} from "node:fs";
 import {dirname,join} from "node:path";
 import {type RustcUnitV1,type unitKeyV1} from "../🔏️key/🟦️.ts";
 import {type UnitEventV1} from "../💾️store/🟦️.ts";
@@ -9,8 +9,10 @@ import {fleetCacheRootV1,remoteCacheFetchV1} from "../../../../🏗️build/🌐
 import {compilerReleaseV1,type CompilerReleaseV1,FLEET_POLICY_V1,hostIndependentV1,neutralReleaseV1,platformOfV1,portableRootsV1,remoteKeyV1,slotIdV1,slotPartsV1,type PlatformV1,type PortableRootV1} from "./🪪️identity/🟦️.ts";
 import {enqueueUploadV1,markOfferedV1,offeredV1,startUploaderV1} from "./📤️uploader/🟦️.ts";
 import {installFleetUnitV1} from "./📥️adopt/🟦️.ts";
+import {decodeProtobufV1,encodeProtobufV1,REAPI_V1} from "../../../../🏗️build/🌐️remote-execution/📡️wire/📦️protobuf/🟦️.ts";
 
 const fleet=FLEET_POLICY_V1;
+const pause=(milliseconds:number):Promise<void>=>new Promise(done=>{setTimeout(done,milliseconds);});
 type Environment=Readonly<Record<string,string|undefined>>;
 
 /** 🛰️ One unit as the fleet tier sees it: its key and slot, the platform it needs and the roots that make its paths portable. */
@@ -84,11 +86,69 @@ function hold(unit:FleetUnitV1):FleetHoldV1{
  return Object.freeze({stop,lost:()=>gone,async release(){stop();if(!gone)await Promise.race([unit.client.release(unit.key,unit.owner),new Promise<void>(done=>{const wait=setTimeout(done,600);wait.unref?.();})]);}});
 }
 
+/** 🌳️ The directories of a machine a compiled unit can hold although its source never names them: the kinds a unit is keyed on when it does (`lane` is no kind: a lane directory belongs to one lane of one machine, a unit holding it is not shared). */
+export const ROOT_KINDS_V1=Object.freeze(["cargo-home","cwd","manifest","rustup-home","workspace"] as const);
+export type RootKindV1=typeof ROOT_KINDS_V1[number];
+
+/** 🌳️ Where the root hint of a unit lives: an action result beside the neutral key of the unit, so a machine that finds it knows the unit is keyed on its directories. */
+export const rootHintKeyV1=(neutralKey:string):string=>createHash("sha256").update(JSON.stringify(["semio.cargo.unit-cache.root-hint/v1",neutralKey])).digest("hex");
+
+/** 🌳️ The root hint: an action result whose inline standard output names the kinds of directory the unit holds. */
+export const rootHintBytesV1=(kinds:readonly string[]):Uint8Array=>encodeProtobufV1(REAPI_V1.actionResult,{stdout_raw:Buffer.from(JSON.stringify({version:1,roots:[...new Set(kinds)].sort()})),exit_code:0});
+
+/** 🌳️ The kinds a root hint names (sorted, without duplicates); `undefined` for anything that is not a hint of the closed shape. */
+export function parseRootHintV1(bytes:Uint8Array):readonly RootKindV1[]|undefined{
+ try{
+  const result=decodeProtobufV1(REAPI_V1.actionResult,bytes),value=JSON.parse(Buffer.from(result.stdout_raw as Uint8Array).toString("utf8")) as {version:unknown;roots:unknown};
+  if(value.version!==1||!Array.isArray(value.roots)||value.roots.length===0||!value.roots.every(kind=>(ROOT_KINDS_V1 as readonly unknown[]).includes(kind)))return undefined;
+  return [...new Set(value.roots as RootKindV1[])].sort();
+ }catch{return undefined;}
+}
+
+/** 🌳️ The directories a unit is keyed on for the given kinds, as sorted `kind=path` texts; `undefined` when this machine lacks one of them. */
+export function rootPathsV1(kinds:readonly string[],named:Readonly<Record<string,string|undefined>>):readonly string[]|undefined{
+ const rows=[...new Set(kinds)].sort().map(kind=>{const value=named[kind];return value===undefined||value===""?undefined:kind+"="+value;});
+ return rows.every(row=>row!==undefined)?rows as string[]:undefined;
+}
+
+/** 🌳️ Which of the named directories (and their resolved spellings) the compiled outputs hold, with the first output that does (dependency files are not scanned); `undefined` when none. */
+export function leakedRootKindsV1(outputs:readonly string[],named:Readonly<Record<string,string|undefined>>):Readonly<{file:string;kinds:readonly string[]}>|undefined{
+ const resolved=(value:string)=>{try{return realpathSync(value);}catch{return value;}};
+ const roots=Object.entries(named).filter((row):row is [string,string]=>typeof row[1]==="string"&&row[1].length>=4).map(([kind,value])=>[kind,[...new Set([value,resolved(value)])]] as const),kinds=new Set<string>();
+ let file:string|undefined;
+ for(const path of outputs){
+  if(path.endsWith(".d"))continue;
+  let bytes:Buffer;try{bytes=readFileSync(path);}catch{continue;}
+  for(const [kind,spellings] of roots)if(spellings.some(spelling=>bytes.includes(spelling))){kinds.add(kind);file??=path.split("/").at(-1)+": "+spellings[0];}
+ }
+ return kinds.size===0||file===undefined?undefined:Object.freeze({file,kinds:[...kinds].sort()});
+}
+
+/** 🌳️ The kinds the root hint of a unit names, `undefined` when there is none or the fleet cannot say. Takes the unit under its NEUTRAL key. */
+export async function rootHintV1(neutral:FleetUnitV1):Promise<readonly RootKindV1[]|undefined>{
+ try{if(!neutral.client.usable())return undefined;const answer=await neutral.client.getResult(rootHintKeyV1(neutral.key));return typeof answer==="string"?undefined:parseRootHintV1(answer);}catch{return undefined;}
+}
+
+/** 🌳️ Publishes the root hint of a unit (taking the unit under its neutral key) and answers the kinds in force: the ones given, or those of a hint that was there first. `undefined` when the fleet refused or cannot say. */
+export async function publishRootHintV1(neutral:FleetUnitV1,kinds:readonly string[]):Promise<readonly RootKindV1[]|undefined>{
+ try{
+  if(!neutral.client.settings.upload||!neutral.client.usable())return undefined;
+  const key=rootHintKeyV1(neutral.key),stored=await neutral.client.putResult(key,rootHintBytesV1(kinds),key);
+  if(stored===true)return parseRootHintV1(rootHintBytesV1(kinds));
+  return stored==="diverged"?await rootHintV1(neutral):undefined;
+ }catch{return undefined;}
+}
+
+/** 🫀️ Claims the key of a unit for this process and keeps the claim alive; `undefined` when another machine holds it or the fleet cannot say. */
+export async function holdFleetKeyV1(unit:FleetUnitV1):Promise<FleetHoldV1|undefined>{
+ try{const claim=await unit.client.claim(unit.key,unit.owner,fleet.claim.ttlMilliseconds);return claim.state==="granted"?hold(unit):undefined;}catch{return undefined;}
+}
+
 /** 🧭️ What the fleet tier decided for one unit: it was installed (`hit`), or the caller compiles — holding the fleet claim when it was granted. `waitedMs` is the time spent waiting for another machine. */
 export type FleetDecisionV1=Readonly<{outcome:"hit";waitedMs:number;via:"cache"|"wait"}>|Readonly<{outcome:"compile";hold:FleetHoldV1|undefined;waitedMs:number;reason:string}>;
 
-/** 🧭️ The protocol for one missing unit. Look it up; on a miss claim it; if another machine holds the claim wait (long-polling, bounded by twice the holder's expected cost) for the upload and fetch it; when the holder lapses claim it ourselves. Anything unreachable, denied or too slow ends in "compile locally": correctness never depends on the fleet. */
-export async function obtainFleetUnitV1(unit:FleetUnitV1,event:(kind:UnitEventV1["kind"],milliseconds:number,waitedMs:number,reason?:string)=>void,overrides:Partial<typeof fleet.claim>={}):Promise<FleetDecisionV1>{
+/** 🧭️ The protocol for one missing unit. Look it up; on a miss claim it; if another machine holds the claim wait (long-polling, bounded by twice the holder's expected cost) for the upload and fetch it; when the holder lapses claim it ourselves (`redirect`, asked before every further round, may answer the same unit under another key, which the protocol then follows: the root-keyed key of a unit that turned out to hold a directory). A claim, wait or fetch that fails because the server is momentarily unreachable (`down`) is tried again up to `retries` times with a growing pause before the unit compiles locally; a refused credential or an unsupported server is not retried. Anything unreachable, denied or too slow ends in "compile locally" with its reason (the caller counts it): correctness never depends on the fleet. */
+export async function obtainFleetUnitV1(unit:FleetUnitV1,event:(kind:UnitEventV1["kind"],milliseconds:number,waitedMs:number,reason?:string)=>void,overrides:Partial<typeof fleet.claim>={},redirect?:()=>Promise<FleetUnitV1|undefined>):Promise<FleetDecisionV1>{
  const policy={...fleet.claim,...overrides},started=Date.now(),compile=(reason:string,held?:FleetHoldV1):FleetDecisionV1=>({outcome:"compile",hold:held,waitedMs:Date.now()-started,reason});
  try{
   const first=await fetchFleetUnitV1(unit);
@@ -96,21 +156,23 @@ export async function obtainFleetUnitV1(unit:FleetUnitV1,event:(kind:UnitEventV1
   if(first==="fault"){event("remote-skip",Date.now()-started,0,"fault");return compile("fault");}
   event("remote-miss",Date.now()-started,0);
   if(!unit.client.claimsUsable())return compile("no-claims");
-  const expected=knownCostV1(unit);let limit:number|undefined,deadline=Infinity;
+  const expected=knownCostV1(unit);let limit:number|undefined,deadline=Infinity,transient=0;
   for(let round=0;round<policy.maximumRounds;round++){
+   if(round>0&&redirect!==undefined){const moved=await redirect();if(moved!==undefined)return obtainFleetUnitV1(moved,event,overrides);}
    const claim=await unit.client.claim(unit.key,unit.owner,policy.ttlMilliseconds,expected);
    if(claim.state==="granted"){event("remote-claim",Date.now()-started,Date.now()-started,"granted");return compile("granted",hold(unit));}
    if(claim.state==="stored"){const again=await fetchFleetUnitV1(unit);if(again==="hit"){event("remote-hit",Date.now()-started,Date.now()-started,"stored");return {outcome:"hit",waitedMs:Date.now()-started,via:"wait"};}return compile("stored-unreadable");}
+   if(claim.state==="unavailable"&&claim.fault==="down"&&transient<policy.retries){transient++;await pause(policy.retryBackoffMilliseconds*transient);continue;}
    if(claim.state!=="held")return compile(claim.state==="full"?"claims-full":"claims-"+claim.fault);
    if(limit===undefined){limit=Math.min(policy.maximumWaitMilliseconds,Math.max(policy.minimumWaitMilliseconds,policy.waitFactor*(claim.expectedMilliseconds??policy.defaultExpectedMilliseconds)));deadline=Date.now()+limit;}
    const remaining=deadline-Date.now();
    if(remaining<=0){event("remote-wait",0,Date.now()-started,"timeout");return compile("holder-slow");}
    const waited=await unit.client.await(unit.key,remaining);
-   if(waited==="fault")return compile("await-fault");
+   if(waited==="fault"){if(transient<policy.retries){transient++;await pause(policy.retryBackoffMilliseconds*transient);continue;}return compile("await-fault");}
    if(waited==="stored"){
     const again=await fetchFleetUnitV1(unit);
     if(again==="hit"){event("remote-hit",Date.now()-started,Date.now()-started,"awaited");return {outcome:"hit",waitedMs:Date.now()-started,via:"wait"};}
-    if(again==="fault")return compile("fault");
+    if(again==="fault"){if(transient<policy.retries){transient++;await pause(policy.retryBackoffMilliseconds*transient);continue;}return compile("fault");}
    }
   }
   return compile("rounds");

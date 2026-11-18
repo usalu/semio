@@ -1,5 +1,5 @@
 /** 📱️ Settings chrome panel, Default apps and Conflicts tabs: the default app row codec and tree, and the conflict resolution tree. */
-import { Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, type TreePanelConfig } from "@semio-tech/ui-react";
+import { Button, SharedBorderRow, SharedBorderRowCell, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, type TreePanelConfig } from "@semio-tech/ui-react";
 import { type AppRef, type AppRole, type ArtifactDialect, dialectCoordinate, type Conflict, type ConflictResolution } from "@semio-tech/framework";
 import { ConflictDiffPreview, conflictDiffText } from "../../🔺️DiffViewHost/🟦️.tsx";
 import { defaultAppsSettingsTabText, noneOptionText, shellLabel, surfaceRoleChipText } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
@@ -122,17 +122,17 @@ export function buildConflictsTree(host: ConflictsHostApi): TreePanelConfig {
             label: `${host.kindLabel(conflict)} — ${host.messageText(conflict)}`,
             onClick: () => host.onSelect(conflict.id),
             control: (
-              <div className="flex flex-col gap-single">
-                <div className="flex items-center gap-single">
+              <SharedBorderRow orientation="vertical" className="max-w-96">
+                <SharedBorderRow framed={false}>
                   <Button icon="check" id={`${rowId}.accept`} text={shellLabel("ui.conflict.accept")} onClick={() => host.onResolve(conflict.id, "accept")} />
                   <Button icon="x" id={`${rowId}.discard`} text={shellLabel("ui.conflict.discard")} onClick={() => host.onResolve(conflict.id, "discard")} />
-                </div>
+                </SharedBorderRow>
                 {diff ? (
-                  <div className="max-h-40 max-w-96 overflow-auto rounded-sm border border-border">
+                  <SharedBorderRowCell className="max-h-40 items-stretch overflow-auto p-0">
                     <ConflictDiffPreview before={diff.before} after={diff.after} />
-                  </div>
+                  </SharedBorderRowCell>
                 ) : null}
-              </div>
+              </SharedBorderRow>
             ),
           };
         }),

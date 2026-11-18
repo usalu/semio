@@ -19,6 +19,7 @@
         ]
       },
       "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🌐️site/🟦️.ts",
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🌐️site/🛟️recovery/**/*",
       "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🌐️site/🌐️.html",
       "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🌐️site/🎨️.css",
       "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🌐️site/🏗️builder/🌐️vite/🟦️.ts",
@@ -73,7 +74,8 @@
       "executor": "repo:script",
       "dependsOn": [
         "@semio-tech/assets:build",
-        "@semio-tech/ui-styling-tokens:generate"
+        "@semio-tech/ui-styling-tokens:generate",
+        "@teaching/staffage-dwg-rs:wasm"
       ],
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/🧍️staffage/🌐️site/📦️packages/🟦️typescript",
@@ -112,7 +114,8 @@
       "executor": "repo:script",
       "dependsOn": [
         "@semio-tech/assets:build",
-        "@semio-tech/ui-styling-tokens:generate"
+        "@semio-tech/ui-styling-tokens:generate",
+        "@teaching/staffage-dwg-rs:wasm"
       ],
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/🧍️staffage/🌐️site/📦️packages/🟦️typescript",
@@ -132,7 +135,8 @@
       "executor": "repo:script",
       "dependsOn": [
         "@semio-tech/assets:build",
-        "@semio-tech/ui-styling-tokens:generate"
+        "@semio-tech/ui-styling-tokens:generate",
+        "@teaching/staffage-dwg-rs:wasm"
       ],
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/🧍️staffage/🌐️site/📦️packages/🟦️typescript",
@@ -175,7 +179,8 @@
       "executor": "repo:script",
       "dependsOn": [
         "@semio-tech/assets:build",
-        "@semio-tech/ui-styling-tokens:generate"
+        "@semio-tech/ui-styling-tokens:generate",
+        "@teaching/staffage-dwg-rs:wasm"
       ],
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/🧍️staffage/🌐️site/📦️packages/🟦️typescript",
@@ -193,7 +198,8 @@
       "executor": "repo:script",
       "dependsOn": [
         "@semio-tech/assets:build",
-        "@semio-tech/ui-styling-tokens:generate"
+        "@semio-tech/ui-styling-tokens:generate",
+        "@teaching/staffage-dwg-rs:wasm"
       ],
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/🧍️staffage/🌐️site/📦️packages/🟦️typescript",

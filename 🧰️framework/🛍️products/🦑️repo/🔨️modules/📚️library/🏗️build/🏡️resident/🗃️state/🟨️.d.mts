@@ -19,4 +19,4 @@ export interface WorkspaceStateV1{
  ownerOf(path:string):string|undefined;topological(ids:readonly string[]):string[];
 }
 export function createWorkspaceStateV1(options:{root:string;instance:string;policy:any;filter:FilterV1;fence?:string;now?:()=>number}):WorkspaceStateV1;
-export function outputSignatureV1(root:string,outputs:readonly string[],maximumEntries:number):Promise<string|undefined>;
+export function outputSignatureV1(root:string,outputs:readonly string[]):Promise<string>;

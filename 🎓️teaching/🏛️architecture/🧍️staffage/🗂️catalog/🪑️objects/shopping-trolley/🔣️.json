@@ -2011,24 +2011,7 @@
               "region": "basket-wire",
               "material": "zinc-wire",
               "kind": "poly",
-              "points": [
-                [
-                  -0.285,
-                  0.88
-                ],
-                [
-                  0.285,
-                  0.88
-                ],
-                [
-                  0.2,
-                  0.38
-                ],
-                [
-                  -0.2,
-                  0.38
-                ]
-              ],
+              "points": [[-0.2895, 0.88], [0.2895, 0.88], [0.2045, 0.38], [-0.2045, 0.38]],
               "closed": true
             },
             {
@@ -2216,7 +2199,7 @@
               "tone": 0.3,
               "region": "frame-tube",
               "material": "zinc-tube",
-              "penMm": 0.25,
+              "penMm": 0.15,
               "kind": "poly",
               "points": [
                 [
@@ -2239,7 +2222,7 @@
               "tone": 0.3,
               "region": "frame-tube",
               "material": "zinc-tube",
-              "penMm": 0.25,
+              "penMm": 0.15,
               "kind": "poly",
               "points": [
                 [
@@ -2266,7 +2249,7 @@
               "tone": 0.3,
               "region": "frame-tube",
               "material": "zinc-tube",
-              "penMm": 0.25,
+              "penMm": 0.15,
               "kind": "poly",
               "points": [
                 [
@@ -2356,7 +2339,7 @@
               "region": "wheels",
               "material": "pu-tyre",
               "kind": "rect",
-              "x": 0.19,
+              "x": 0.2,
               "y": 0.0,
               "w": 0.04,
               "h": 0.125,
@@ -2372,7 +2355,7 @@
               "region": "wheels",
               "material": "pu-tyre",
               "kind": "rect",
-              "x": -0.23,
+              "x": -0.24,
               "y": 0.0,
               "w": 0.04,
               "h": 0.125,
@@ -2387,10 +2370,10 @@
               "tone": 0.7,
               "region": "wheels",
               "kind": "rect",
-              "x": 0.195,
-              "y": 0.045,
-              "w": 0.03,
-              "h": 0.035
+              "x": 0.198,
+              "y": 0.0405,
+              "w": 0.044,
+              "h": 0.044
             },
             {
               "id": "hub-front-r",
@@ -2401,10 +2384,10 @@
               "tone": 0.7,
               "region": "wheels",
               "kind": "rect",
-              "x": -0.225,
-              "y": 0.045,
-              "w": 0.03,
-              "h": 0.035
+              "x": -0.242,
+              "y": 0.0405,
+              "w": 0.044,
+              "h": 0.044
             },
             {
               "id": "gate",

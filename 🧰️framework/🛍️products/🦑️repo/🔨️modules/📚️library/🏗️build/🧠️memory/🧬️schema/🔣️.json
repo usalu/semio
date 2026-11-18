@@ -27,6 +27,7 @@
         "serviceHostShare": 0.6,
         "serviceMinimumMegabytes": 2048,
         "initialOwnerMegabytes": 256,
+        "floorOwnerMegabytes": 64,
         "peakSamples": 8,
         "peakCeilingMegabytes": 4608,
         "safetyMarginBasisPoints": 1000,
@@ -38,11 +39,13 @@
         "collectAboveMegabytes": 768,
         "collectGrowthMegabytes": 384,
         "collectMinimumIntervalMilliseconds": 3000,
+        "collectDutyPercent": 10,
         "hostAvailableFloorMegabytes": 1536,
         "budgetEnvironment": "SEMIO_GRAPH_MEMORY_MB",
         "heapEnvironment": "BUN_JSC_forceRAMSize",
         "planEnvironment": "SEMIO_HOST_CAPACITY_PLAN",
         "limitEnvironment": "SEMIO_GRAPH_MEMORY_LIMIT_MB",
+        "planCeilingEnvironment": "SEMIO_GRAPH_PLAN_CEILING_MB",
         "waitBoundMilliseconds": 60000,
         "fleetFallbackMilliseconds": 180000,
         "fleetAskMilliseconds": 10000,
@@ -54,7 +57,7 @@
     "Messages": {
       "const": {
         "en": {
-          "waiting": "graph: waiting for memory headroom ({used} of {budget} MB reserved, {running} projects running): {key} needs {need} MB and has waited {seconds} s; after {limit} s it runs alone if it fits the {available} MB one project is granted, otherwise the run is refused with exit 75",
+          "waiting": "graph: waiting for memory headroom ({used} of {budget} MB reserved, {running} projects running): {key} needs {need} MB and has waited {seconds} s; after {limit} s it runs beside the others as soon as it fits the memory that is really free and the {available} MB one project is granted, otherwise the run is refused with exit 75",
           "admittedAlone": "graph: {key} waited {seconds} s for {need} MB of headroom ({budget} MB free, {running} project(s) running) and now runs because it fits the {available} MB one project is granted",
           "refused": "graph: {key} needs {need} MB but one project is granted {available} MB here and {budget} MB are free after {seconds} s: refused with exit 75 (try again later or let the fleet infer it)",
           "fleet": "graph: waited {seconds} s for memory headroom, asking the fleet to infer the remaining {count} project(s)",
@@ -64,7 +67,7 @@
           "stopped": "graph: project {key} ({kind}) grew by {used} MB, more than the {budget} MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here"
         },
         "de": {
-          "waiting": "Graph: wartet auf Speicherreserve ({used} von {budget} MB reserviert, {running} Projekte laufen): {key} braucht {need} MB und wartet seit {seconds} s; nach {limit} s läuft es allein, wenn es in die {available} MB passt, die ein Projekt bekommt, sonst wird der Lauf mit Exit 75 abgewiesen",
+          "waiting": "Graph: wartet auf Speicherreserve ({used} von {budget} MB reserviert, {running} Projekte laufen): {key} braucht {need} MB und wartet seit {seconds} s; nach {limit} s läuft es neben den anderen, sobald es in den wirklich freien Speicher und in die {available} MB passt, die ein Projekt bekommt, sonst wird der Lauf mit Exit 75 abgewiesen",
           "admittedAlone": "Graph: {key} hat {seconds} s auf {need} MB Reserve gewartet ({budget} MB frei, {running} Projekt(e) laufen) und läuft jetzt, weil es in die {available} MB passt, die ein Projekt bekommt",
           "refused": "Graph: {key} braucht {need} MB, ein Projekt bekommt hier aber {available} MB und nach {seconds} s sind {budget} MB frei: abgewiesen mit Exit 75 (später erneut versuchen oder von der Flotte ableiten lassen)",
           "fleet": "Graph: nach {seconds} s Warten auf Speicherreserve wird die Flotte gebeten, die übrigen {count} Projekt(e) abzuleiten",

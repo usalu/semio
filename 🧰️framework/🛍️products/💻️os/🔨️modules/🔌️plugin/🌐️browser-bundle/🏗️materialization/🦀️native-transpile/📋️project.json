@@ -1,0 +1,46 @@
+{
+  "name": "@semio-tech/os-plugin-native-transpile-rs",
+  "$schema": "../../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🦀️native-transpile",
+  "targets": {
+    "build": {
+      "executor": "repo:script",
+      "inputs": [
+        "production",
+        "^production",
+        "cargoToolchain"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🦀️native-transpile",
+        "command": "repo ./📜️stage.ts",
+        "forwardAllArgs": false
+      },
+      "cache": true,
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "hostPlatformOutputsV1": {
+            "version": 1,
+            "outputs": {
+              "darwin": [
+                "{workspaceRoot}/.cache/b/p/m/browser/{options.env.SEMIO_BUILD_MODE}/tools/native-transpile/darwin"
+              ],
+              "linux": [
+                "{workspaceRoot}/.cache/b/p/m/browser/{options.env.SEMIO_BUILD_MODE}/tools/native-transpile/linux"
+              ],
+              "win32": [
+                "{workspaceRoot}/.cache/b/p/m/browser/{options.env.SEMIO_BUILD_MODE}/tools/native-transpile/win32"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "sharedGlobals"
+    ]
+  }
+}

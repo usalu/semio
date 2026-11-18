@@ -16,9 +16,9 @@ export interface TypeScriptDeclarationFacts { readonly completeness: "complete" 
 /** 🔤️ Owned tokens keep semantic identifier values separate from physical source spans. */
 interface TypeScriptDeclarationToken { readonly kind: "identifier" | "string" | "number" | "template" | "regex" | "jsx" | "punctuation"; readonly text: string; readonly value: string; readonly start: number; readonly end: number; readonly lineBreakBefore: boolean; readonly interpolated?: boolean; }
 /** 📜️ A lexical boundary which cannot be proven from the supported grammar. */
-class TypeScriptDeclarationRecovery extends Error { constructor(readonly start: number) { super("TypeScript declaration syntax has an unproven recovery suffix"); } }
+class TypeScriptDeclarationRecovery extends Error { readonly start:number; constructor(start: number) { super("TypeScript declaration syntax has an unproven recovery suffix");this.start=start; } }
 /** 🛑️ A proven missing required type at a declaration grammar boundary. */
-class TypeScriptDeclarationSyntaxError extends Error { constructor(readonly span: TypeScriptDeclarationSpan) { super("TypeScript declaration syntax has an invalid token boundary"); } }
+class TypeScriptDeclarationSyntaxError extends Error { readonly span:TypeScriptDeclarationSpan; constructor(span: TypeScriptDeclarationSpan) { super("TypeScript declaration syntax has an invalid token boundary");this.span=span; } }
 /** 🔬️ Scans literals atomically and tracks lexical goals independently of physical path analysis. */
 class TypeScriptDeclarationScanner {
   readonly tokens: TypeScriptDeclarationToken[] = [];
@@ -31,7 +31,7 @@ class TypeScriptDeclarationScanner {
   private block = false;
   private statement = true;
   private readonly groups: { index: number; close: string; goal: "operand" | "operator" | "ambiguous"; control: boolean }[] = [];
-  constructor(readonly source: string, readonly language: "ts" | "tsx", start = 0) { this.cursor = start; }
+  readonly source:string; readonly language:"ts" | "tsx"; constructor(source: string, language: "ts" | "tsx", start = 0) {this.source=source;this.language=language; this.cursor = start; }
 
   private point(index: number): string { const value = this.source.codePointAt(index); if (value === undefined) throw new TypeScriptDeclarationRecovery(index); return String.fromCodePoint(value); }
 
@@ -234,7 +234,7 @@ class TypeScriptDeclarationParser {
   readonly aliases: TypeScriptDeclarationAliasFact[] = [];
   readonly diagnostics: TypeScriptDeclarationDiagnostic[] = [];
   readonly parseErrors: TypeScriptDeclarationDiagnostic[] = [];
-  constructor(readonly source: string, readonly tokens: readonly TypeScriptDeclarationToken[], readonly pairs: ReadonlyMap<number, number>) {}
+  readonly source:string; readonly tokens:readonly TypeScriptDeclarationToken[]; readonly pairs:ReadonlyMap<number, number>; constructor(source: string, tokens: readonly TypeScriptDeclarationToken[], pairs: ReadonlyMap<number, number>) {this.source=source;this.tokens=tokens;this.pairs=pairs;}
 
   private token(index: number): TypeScriptDeclarationToken { const token = this.tokens[index]; if (!token) throw new TypeScriptDeclarationRecovery(this.source.length); return token; }
 

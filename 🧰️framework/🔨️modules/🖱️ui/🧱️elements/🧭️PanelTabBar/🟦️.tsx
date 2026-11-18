@@ -15,6 +15,7 @@ import { type UiLabel } from "../🎗️UiLabel/🟦️.tsx";
 import { Icon, type ControlIcon, renderControlIcon } from "../🔣️Icons/🟦️.tsx";
 import { DragHandle } from "../🧱️DragHandle/🟦️.tsx";
 import { Ribbon, type RibbonRow } from "../🎀️Ribbon/🟦️.tsx";
+import { useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
 import { type FlowBlock, FlowProvider, useFlow } from "../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
 import { useLabel, useControlInlineText } from "../🏷️Label/🟦️.tsx";
 import { useLevel, useSurfaceActive } from "../🌈️Surface/🟦️.tsx";
@@ -26,7 +27,7 @@ import { type UiStatus } from "@semio-tech/ui-styling";
 import { type TreePanelSource } from "../🖼️Panel/🌲️tree-source/🟦️.ts";
 import { usePanelDockContext, PANEL_TREE_UNIT_MIME, beginPanelTreeUnitDrag, endPanelTreeUnitDrag, readActivePanelTreeUnitDrag, usePanelTreeUnitDragActive, type PanelDockContextValue } from "../../🔨️modules/🧲️panel-dock/🟦️.tsx";
 import { type Anchor, flowFromAnchor, ANCHORS } from "../../🔨️modules/⚓️panel-anchor/🟦️.ts";
-import { panelTabIconSlotClass, panelTabLabelClass, panelTabButtonClass, panelTabBarClass, panelTabButtonDividerClass, panelWindowInactiveTabClass, modeDockInactiveTabBeforeGapClass, modeDockInactiveTabClass, modeDockActiveTabClass, modeDockActiveTabFillClass, modeDockTabLabelClassName, dropZoneReadyClass, panelAnchorTabBarClass, mobilePanelTabBarClass, mobilePanelTabButtonClass, panelAnchorTabButtonClass } from "../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
+import { panelTabIconSlotClass, panelTabLabelClass, panelTabButtonClass, panelTabBarClass, panelTabBarScrollRowClass, panelTabBarEdge, panelTabButtonDividerClass, panelWindowInactiveTabClass, modeDockInactiveTabBeforeGapClass, modeDockInactiveTabClass, modeDockActiveTabClass, modeDockActiveTabFillClass, modeDockTabLabelClassName, dropZoneReadyClass, panelAnchorTabBarClass, mobilePanelTabBarClass, mobilePanelTabButtonClass, panelAnchorTabButtonClass } from "../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 📑️PanelTabBar
@@ -466,7 +467,7 @@ const PanelTabButton: React.FC<{
           !windowTabChrome && isActive && showActiveColor && modeDockActiveTabFillClass,
           windowTabChrome && panelTabButtonDividerClass,
           isDragSource && "opacity-40",
-          isChildDropTarget && "ring-2 ring-accent",
+          isChildDropTarget && "bg-accent/20 !border-accent",
           isUnitDropReady && dropZoneReadyClass,
         )}
       >
@@ -519,6 +520,7 @@ interface PanelTabRowProps {
 /** 🗂️ One row of sibling tabs; stacked by {@link PanelTabBar} into a {@link Ribbon}. Tab rows keep declared left-to-right order independently of a right anchor's spatially mirrored panel flow, so folding and unfolding never reverses visual or keyboard progression. */
 const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath = [], tabs, activeId, onSelect, showActiveColor = true, direction = "down", fullWidth = false, compactLabels = false }) => {
   const barRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const frameRef = useSharedBorderFrameRef<HTMLDivElement>();
   const dock = usePanelDockContext();
   const tabSlot = variant === "mobile" ? "mobile-panel" : "panel";
   const sortedTabs = reactHostPort.useMemo(() => [...tabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)), [tabs]);
@@ -546,7 +548,8 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath =
   if (sortedTabs.length === 0) return null;
 
   const resolvedVariant = variant === "chrome" ? "panel" : variant;
-  const barClass = resolvedVariant === "panel" ? panelAnchorTabBarClass(direction, showActiveColor) : mobilePanelTabBarClass;
+  const frameClass = resolvedVariant === "panel" ? panelAnchorTabBarClass : mobilePanelTabBarClass;
+  const edge = panelTabBarEdge(resolvedVariant, direction, showActiveColor);
   const buttonClass = resolvedVariant === "mobile" ? mobilePanelTabButtonClass : panelAnchorTabButtonClass;
   const dropTarget = dock?.dropTarget;
   const isDropRow = Boolean(anchor && dropTarget?.kind === "insert" && dropTarget.anchor === anchor && dropTarget.parentPath.length === parentPath.length && dropTarget.parentPath.every((id, index) => id === parentPath[index]));
@@ -557,7 +560,8 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath =
   const ghostDim = true;
 
   return (
-    <div ref={setRowRef} {...(ghostDim ? { "data-dim": true } : {})} dir="ltr" data-slot={`${tabSlot}-tabs`} data-shared-border-group="" data-orientation="horizontal" className={cn(barClass, fullWidth && "w-full", rowDropReady && dropZoneReadyClass)}>
+    <div ref={frameRef} data-slot={`${tabSlot}-tab-frame`} {...(edge ? { "data-shared-border-frame": "", "data-shared-border-edges": edge } : {})} className={cn(frameClass, fullWidth && "w-full")}>
+    <div ref={setRowRef} {...(ghostDim ? { "data-dim": true } : {})} dir="ltr" data-slot={`${tabSlot}-tabs`} data-shared-border-group="" data-orientation="horizontal" className={cn(panelTabBarScrollRowClass, rowDropReady && dropZoneReadyClass)}>
       {sortedTabs.map((tab, index) => {
         const isActive = tab.id === resolvedActiveId;
         const isDragSource = Boolean(anchor && dock?.dragTabId === tab.id);
@@ -587,6 +591,7 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath =
         );
       })}
       {dropInsertIndex === sortedTabs.length ? <div data-slot="panel-tab-insert-preview" aria-hidden className={panelTabInsertPreviewClass} /> : null}
+    </div>
     </div>
   );
 };

@@ -1025,6 +1025,36 @@
               "penMm": 0.186
             },
             {
+              "id": "bottom-bracket",
+              "bone": "panel-1",
+              "role": "detail",
+              "z": 4,
+              "filled": true,
+              "tone": 0.2,
+              "region": "hardware-steel",
+              "material": "steel",
+              "kind": "poly",
+              "closed": true,
+              "points": [
+                [
+                  -0.012,
+                  -0.03
+                ],
+                [
+                  -0.012,
+                  -0.02
+                ],
+                [
+                  0.1,
+                  -0.02
+                ],
+                [
+                  0.1,
+                  -0.03
+                ]
+              ]
+            },
+            {
               "id": "roller-1",
               "bone": "panel-1",
               "role": "detail",
@@ -1053,23 +1083,39 @@
               "points": [
                 [
                   -0.05,
-                  -0.025
+                  -0.02
                 ],
                 [
                   -0.05,
+                  -0.028
+                ],
+                [
+                  -0.0115,
+                  -0.028
+                ],
+                [
+                  -0.0115,
                   -0.045
                 ],
                 [
-                  0.05,
+                  0.0115,
                   -0.045
                 ],
                 [
+                  0.0115,
+                  -0.028
+                ],
+                [
                   0.05,
-                  -0.025
+                  -0.028
+                ],
+                [
+                  0.05,
+                  -0.02
                 ]
               ],
               "closed": true,
-              "penMm": 0.286
+              "penMm": 0.1
             },
             {
               "id": "roller-2",
@@ -1100,23 +1146,39 @@
               "points": [
                 [
                   -0.05,
-                  -0.025
+                  -0.02
                 ],
                 [
                   -0.05,
+                  -0.028
+                ],
+                [
+                  -0.0115,
+                  -0.028
+                ],
+                [
+                  -0.0115,
                   -0.045
                 ],
                 [
-                  0.05,
+                  0.0115,
                   -0.045
                 ],
                 [
+                  0.0115,
+                  -0.028
+                ],
+                [
                   0.05,
-                  -0.025
+                  -0.028
+                ],
+                [
+                  0.05,
+                  -0.02
                 ]
               ],
               "closed": true,
-              "penMm": 0.4
+              "penMm": 0.1
             },
             {
               "id": "roller-3",
@@ -1147,23 +1209,39 @@
               "points": [
                 [
                   -0.05,
-                  -0.025
+                  -0.02
                 ],
                 [
                   -0.05,
+                  -0.028
+                ],
+                [
+                  -0.0115,
+                  -0.028
+                ],
+                [
+                  -0.0115,
                   -0.045
                 ],
                 [
-                  0.05,
+                  0.0115,
                   -0.045
                 ],
                 [
+                  0.0115,
+                  -0.028
+                ],
+                [
                   0.05,
-                  -0.025
+                  -0.028
+                ],
+                [
+                  0.05,
+                  -0.02
                 ]
               ],
               "closed": true,
-              "penMm": 0.286
+              "penMm": 0.1
             },
             {
               "id": "roller-4",
@@ -1640,7 +1718,7 @@
               "x": 1.21,
               "y": 0,
               "w": 0.04,
-              "h": 2.5
+              "h": 2.52
             },
             {
               "id": "track-right",
@@ -1655,7 +1733,7 @@
               "x": -1.25,
               "y": 0,
               "w": 0.04,
-              "h": 2.5
+              "h": 2.52
             },
             {
               "id": "hanger-left",
@@ -1772,7 +1850,7 @@
               "material": "steel",
               "id": "bearing-flag-left",
               "kind": "rect",
-              "x": 1.25,
+              "x": 1.24,
               "y": 2.3,
               "w": 0.01,
               "h": 0.545
@@ -1787,7 +1865,7 @@
               "material": "steel",
               "id": "bearing-flag-right",
               "kind": "rect",
-              "x": -1.26,
+              "x": -1.25,
               "y": 2.3,
               "w": 0.01,
               "h": 0.545
@@ -1804,7 +1882,7 @@
               "kind": "rect",
               "x": 1.2,
               "y": 2.7375,
-              "w": 0.06,
+              "w": 0.05,
               "h": 0.025
             },
             {
@@ -1817,9 +1895,9 @@
               "material": "steel",
               "id": "shaft-end-right",
               "kind": "rect",
-              "x": -1.26,
+              "x": -1.25,
               "y": 2.7375,
-              "w": 0.06,
+              "w": 0.05,
               "h": 0.025
             },
             {
@@ -1937,6 +2015,216 @@
               "y": 1.21,
               "w": 2.62,
               "h": 0.04
+            },
+            {
+              "id": "hinge-block-1",
+              "bone": "track",
+              "role": "detail",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.02,
+              "y": -1.21,
+              "w": 0.01,
+              "h": 0.12
+            },
+            {
+              "id": "hinge-block-2",
+              "bone": "track",
+              "role": "detail",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.02,
+              "y": -0.443333,
+              "w": 0.01,
+              "h": 0.12
+            },
+            {
+              "id": "hinge-block-3",
+              "bone": "track",
+              "role": "detail",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.02,
+              "y": 0.323333,
+              "w": 0.01,
+              "h": 0.12
+            },
+            {
+              "id": "hinge-block-4",
+              "bone": "track",
+              "role": "detail",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.02,
+              "y": 1.09,
+              "w": 0.01,
+              "h": 0.12
+            },
+            {
+              "id": "hinge-knuckle-a-1",
+              "bone": "track",
+              "role": "detail",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.03,
+              "y": -1.21,
+              "w": 0.015,
+              "h": 0.01
+            },
+            {
+              "id": "hinge-knuckle-a-2",
+              "bone": "track",
+              "role": "detail",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.03,
+              "y": -0.443333,
+              "w": 0.015,
+              "h": 0.01
+            },
+            {
+              "id": "hinge-knuckle-a-3",
+              "bone": "track",
+              "role": "detail",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.03,
+              "y": 0.323333,
+              "w": 0.015,
+              "h": 0.01
+            },
+            {
+              "id": "hinge-knuckle-a-4",
+              "bone": "track",
+              "role": "detail",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.03,
+              "y": 1.09,
+              "w": 0.015,
+              "h": 0.01
+            },
+            {
+              "id": "hinge-knuckle-b-1",
+              "bone": "track",
+              "role": "detail",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.03,
+              "y": -1.1,
+              "w": 0.015,
+              "h": 0.01
+            },
+            {
+              "id": "hinge-knuckle-b-2",
+              "bone": "track",
+              "role": "detail",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.03,
+              "y": -0.333333,
+              "w": 0.015,
+              "h": 0.01
+            },
+            {
+              "id": "hinge-knuckle-b-3",
+              "bone": "track",
+              "role": "detail",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.03,
+              "y": 0.433333,
+              "w": 0.015,
+              "h": 0.01
+            },
+            {
+              "id": "hinge-knuckle-b-4",
+              "bone": "track",
+              "role": "detail",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.03,
+              "y": 1.2,
+              "w": 0.015,
+              "h": 0.01
+            },
+            {
+              "id": "shaft-end-left",
+              "bone": "track",
+              "role": "detail",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.1075,
+              "y": 1.2,
+              "w": 0.025,
+              "h": 0.05
+            },
+            {
+              "id": "shaft-end-right",
+              "bone": "track",
+              "role": "detail",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.1075,
+              "y": -1.25,
+              "w": 0.025,
+              "h": 0.05
             },
             {
               "id": "track-right",
@@ -2114,7 +2402,7 @@
               "id": "bearing-flag-left",
               "kind": "rect",
               "x": 0.025,
-              "y": 1.25,
+              "y": 1.24,
               "w": 0.19,
               "h": 0.01
             },
@@ -2129,7 +2417,7 @@
               "id": "bearing-flag-right",
               "kind": "rect",
               "x": 0.025,
-              "y": -1.26,
+              "y": -1.25,
               "w": 0.19,
               "h": 0.01
             }
@@ -3242,7 +3530,7 @@
               "material": "steel",
               "id": "bearing-flag-left",
               "kind": "rect",
-              "x": 1.25,
+              "x": 1.235,
               "y": 2.3,
               "w": 0.015,
               "h": 0.545
@@ -3257,7 +3545,7 @@
               "material": "steel",
               "id": "bearing-flag-right",
               "kind": "rect",
-              "x": -1.265,
+              "x": -1.25,
               "y": 2.3,
               "w": 0.015,
               "h": 0.545
@@ -3274,7 +3562,7 @@
               "kind": "rect",
               "x": 1.2,
               "y": 2.7375,
-              "w": 0.06,
+              "w": 0.05,
               "h": 0.025
             },
             {
@@ -3287,9 +3575,9 @@
               "material": "steel",
               "id": "shaft-end-right",
               "kind": "rect",
-              "x": -1.26,
+              "x": -1.25,
               "y": 2.7375,
-              "w": 0.06,
+              "w": 0.05,
               "h": 0.025
             }
           ],
@@ -3392,6 +3680,96 @@
               "y": 1.21,
               "w": 2.62,
               "h": 0.04
+            },
+            {
+              "id": "shaft-end-left",
+              "bone": "track",
+              "role": "detail",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.1075,
+              "y": 1.2,
+              "w": 0.025,
+              "h": 0.05
+            },
+            {
+              "id": "shaft-end-right",
+              "bone": "track",
+              "role": "detail",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.1075,
+              "y": -1.25,
+              "w": 0.025,
+              "h": 0.05
+            },
+            {
+              "id": "hinge-block-1",
+              "bone": "track",
+              "role": "detail",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.02,
+              "y": -1.21,
+              "w": 0.025,
+              "h": 0.12
+            },
+            {
+              "id": "hinge-block-2",
+              "bone": "track",
+              "role": "detail",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.02,
+              "y": -0.443333,
+              "w": 0.025,
+              "h": 0.12
+            },
+            {
+              "id": "hinge-block-3",
+              "bone": "track",
+              "role": "detail",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.02,
+              "y": 0.323333,
+              "w": 0.025,
+              "h": 0.12
+            },
+            {
+              "id": "hinge-block-4",
+              "bone": "track",
+              "role": "detail",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.02,
+              "y": 1.09,
+              "w": 0.025,
+              "h": 0.12
             },
             {
               "id": "track-right",
@@ -3547,7 +3925,7 @@
               "id": "bearing-flag-left",
               "kind": "rect",
               "x": 0.025,
-              "y": 1.25,
+              "y": 1.235,
               "w": 0.19,
               "h": 0.015
             },
@@ -3562,7 +3940,7 @@
               "id": "bearing-flag-right",
               "kind": "rect",
               "x": 0.025,
-              "y": -1.265,
+              "y": -1.25,
               "w": 0.19,
               "h": 0.015
             }
@@ -3661,7 +4039,7 @@
                 "hardware-steel"
               ],
               "material": "sandwich-skin",
-              "penMm": 0.18,
+              "penMm": 0.2,
               "kind": "poly",
               "points": [
                 [
@@ -3687,7 +4065,7 @@
                 "hardware-steel"
               ],
               "material": "sandwich-skin",
-              "penMm": 0.18,
+              "penMm": 0.2,
               "kind": "poly",
               "points": [
                 [
@@ -3713,7 +4091,7 @@
                 "hardware-steel"
               ],
               "material": "sandwich-skin",
-              "penMm": 0.18,
+              "penMm": 0.2,
               "kind": "poly",
               "points": [
                 [
@@ -3739,7 +4117,7 @@
                 "hardware-steel"
               ],
               "material": "sandwich-skin",
-              "penMm": 0.33,
+              "penMm": 0.2,
               "kind": "poly",
               "points": [
                 [
@@ -3946,7 +4324,7 @@
                 ]
               ],
               "closed": false,
-              "penMm": 0.25
+              "penMm": 0.2
             },
             {
               "id": "drum",
@@ -4396,7 +4774,7 @@
               "material": "steel",
               "id": "bearing-flag-left",
               "kind": "rect",
-              "x": 1.25,
+              "x": 1.22,
               "y": 2.3,
               "w": 0.03,
               "h": 0.545
@@ -4411,7 +4789,7 @@
               "material": "steel",
               "id": "bearing-flag-right",
               "kind": "rect",
-              "x": -1.28,
+              "x": -1.25,
               "y": 2.3,
               "w": 0.03,
               "h": 0.545
@@ -4596,7 +4974,7 @@
               "id": "bearing-flag-left",
               "kind": "rect",
               "x": 0.025,
-              "y": 1.25,
+              "y": 1.22,
               "w": 0.19,
               "h": 0.03
             },
@@ -4611,7 +4989,7 @@
               "id": "bearing-flag-right",
               "kind": "rect",
               "x": 0.025,
-              "y": -1.28,
+              "y": -1.25,
               "w": 0.19,
               "h": 0.03
             }
@@ -7214,8 +7592,8 @@
               [0.08, 2.3]
             ],
             "plane": "xy",
-            "from": 1.25,
-            "to": 1.26
+            "from": 1.24,
+            "to": 1.25
           },
           {
             "id": "bearing-plate-r",
@@ -7254,8 +7632,8 @@
               [0.08, 2.3]
             ],
             "plane": "xy",
-            "from": -1.26,
-            "to": -1.25
+            "from": -1.25,
+            "to": -1.24
           },
           {
             "id": "panel-1",
@@ -7669,9 +8047,9 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.2,
-            "profile": [[0.0, 0.0], [0.0, 0.0125], [2.51, 0.0125], [2.51, 0.0]],
+            "profile": [[0.0, 0.0], [0.0, 0.0125], [2.5, 0.0125], [2.5, 0.0]],
             "axis": [0.0, 0.0, 1.0],
-            "origin": [0.0, 0.0, -1.255]
+            "origin": [0.0, 0.0, -1.25]
           },
           {
             "id": "drum-l",
@@ -8459,8 +8837,8 @@
               [0.08, 2.3]
             ],
             "plane": "xy",
-            "from": 1.25,
-            "to": 1.2652
+            "from": 1.235,
+            "to": 1.25
           },
           {
             "id": "bearing-plate-r",
@@ -8487,8 +8865,8 @@
               [0.08, 2.3]
             ],
             "plane": "xy",
-            "from": -1.2652,
-            "to": -1.25
+            "from": -1.25,
+            "to": -1.235
           },
           {
             "id": "panel-1",
@@ -8731,9 +9109,9 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.2,
-            "profile": [[0.0, 0.0], [0.0, 0.0125], [2.51, 0.0125], [2.51, 0.0]],
+            "profile": [[0.0, 0.0], [0.0, 0.0125], [2.5, 0.0125], [2.5, 0.0]],
             "axis": [0.0, 0.0, 1.0],
-            "origin": [0.0, 0.0, -1.255]
+            "origin": [0.0, 0.0, -1.25]
           },
           {
             "id": "drum-l",
@@ -9539,8 +9917,8 @@
               [0.08, 2.3]
             ],
             "plane": "xy",
-            "from": 1.235,
-            "to": 1.2652
+            "from": 1.22,
+            "to": 1.25
           },
           {
             "id": "bearing-plate-r",
@@ -9563,8 +9941,8 @@
               [0.08, 2.3]
             ],
             "plane": "xy",
-            "from": -1.2652,
-            "to": -1.235
+            "from": -1.25,
+            "to": -1.22
           },
           {
             "id": "panel-1",
@@ -9621,9 +9999,9 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.2,
-            "profile": [[0.0, 0.0], [0.0, 0.01], [2.54, 0.01], [2.54, 0.0]],
+            "profile": [[0.0, 0.0], [0.0, 0.01], [2.5, 0.01], [2.5, 0.0]],
             "axis": [0.0, 0.0, 1.0],
-            "origin": [0.0, 0.0, -1.27],
+            "origin": [0.0, 0.0, -1.25],
             "slender": true
           },
           {

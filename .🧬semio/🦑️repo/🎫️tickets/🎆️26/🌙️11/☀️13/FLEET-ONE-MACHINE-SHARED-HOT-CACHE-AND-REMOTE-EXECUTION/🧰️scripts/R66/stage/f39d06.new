@@ -1,0 +1,259 @@
+import{afterAll,expect,test}from"bun:test";
+import{mkdtempSync,readFileSync,rmSync,writeFileSync}from"node:fs";
+import{tmpdir}from"node:os";
+import{join}from"node:path";
+import{createHash}from"node:crypto";
+import{spawnSync}from"node:child_process";
+import{startRemoteCacheServerV1}from"../../../../../🌐️remote-cache/🖥️server/🟦️.ts";
+import{createProjectFleetPortV1,type ProjectClaimV1,type ProjectRecordInfoV1}from"../../../../../🪪️graph-state/📦️project-records/🟦️.ts";
+import{graphFleetClientV1}from"../../../../../🪪️graph-state/🛰️exchange/🟦️.ts";
+import{graphFleetSettingsV1}from"../../../../../🪪️graph-state/🧶️nx/🟦️.ts";
+import{remoteCacheFetchV1}from"../../../../../🌐️remote-cache/🛰️fleet/🟦️.ts";
+import{validateJsonSchemaSubset}from"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import schemaOfPool from"../🧬️schema/🔣️.json"with{type:"json"};
+import{createOwnerPoolStatusV1}from"../📊️status/🟦️.ts";
+import{acquireOwnerPoolGuardV1}from"../🔒️guard/🟦️.ts";
+import{runOwnerPoolV1}from"../🏃️runner/🟨️.mjs";
+import{OWNER_POOL_POLICY_V1 as P,ownerPoolChildLimitsV1,ownerPoolChildMegabytesV1,ownerPoolIdV1,ownerPoolOpenWavesV1,ownerPoolRandomV1,ownerPoolSeedV1,ownerPoolTargetV1,publishOwnerPoolFailureV1,publishOwnerPoolV1,pullOwnerPoolV1,readOwnerPoolFailureV1,readOwnerPoolPointerV1,readOwnerPoolV1,type OwnerPoolHostV1,type OwnerPoolManifestV1,type OwnerPoolStatsV1}from"../🟦️.ts";
+
+/** 🌐️ The owner pool: every machine runs as many child processes as its cores and free memory allow, each child walks the list from a start of its own and claims a window of owners per round trip, and the waves of the pointer only ever accumulate. */
+const scratch:string[]=[];
+const temp=(label:string)=>{const path=mkdtempSync(join(tmpdir(),`owner-pool-${label}-`));scratch.push(path);return path;};
+afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true});});
+const sha=(text:string)=>createHash("sha256").update(text).digest("hex");
+const fast={...P,sweepPollMilliseconds:5,heldRetryMilliseconds:60,faultRetryMilliseconds:60};
+const fixturePath=join(import.meta.dir,"🧫️fixtures","🔣️.json");
+type Fixture={policy:Record<string,number>;target:{name:string;host:OwnerPoolHostV1;children:number;childMegabytes:number}[];limits:{total:number}[];childMegabytes:{samples:number[]}[];walk:{puller:string;n:number;draws:number}[];expect:{target:{children:number;reason:string|null}[];limits:{recycleMegabytes:number;hardMegabytes:number}[];childMegabytes:number[];walk:number[][]}};
+const fixture=JSON.parse(readFileSync(fixturePath,"utf8")) as Fixture;
+
+test("sizing, limits, the child estimate and the walk of a puller equal an independent Python implementation and the authored fixture",()=>{
+ for(const [key,value] of Object.entries(fixture.policy))expect((P as Record<string,unknown>)[key]).toBe(value);
+ const ours={
+  target:fixture.target.map(row=>ownerPoolTargetV1({host:row.host,children:row.children,childMegabytes:row.childMegabytes})),
+  limits:fixture.limits.map(row=>ownerPoolChildLimitsV1(row.total)),
+  childMegabytes:fixture.childMegabytes.map(row=>ownerPoolChildMegabytesV1(row.samples)),
+  walk:fixture.walk.map(row=>{let state=ownerPoolSeedV1(row.puller);return Array.from({length:row.draws},()=>{const next=ownerPoolRandomV1(state);state=next.state;return Math.floor(next.value*row.n);});}),
+ };
+ expect(ours).toEqual(fixture.expect);
+ const python=spawnSync("python3",["-I",join(import.meta.dir,"🧫️fixtures","🐍️oracle.py"),fixturePath],{encoding:"utf8"});
+ if(python.status===0)expect(JSON.parse(python.stdout)).toEqual(ours);
+});
+
+const idle=(cores:number,available:number,extra:Partial<OwnerPoolHostV1>={}):OwnerPoolHostV1=>({cores,totalMegabytes:cores*2048,availableMegabytes:available,pressure:"normal",load:null,swapOutMegabytesPerSecond:null,foreground:{cpu:0,unrealizedMegabytes:0,waiters:0},...extra});
+test("admission law: idle headroom is used by one child per core, the machine's own work is respected, and the pool is never starved to zero by it",()=>{
+ expect(ownerPoolTargetV1({host:idle(10,24000),children:0,childMegabytes:800}).children).toBe(10);
+ for(let booked=0;booked<=10;booked++){
+  const target=ownerPoolTargetV1({host:idle(10,24000,{foreground:{cpu:booked,unrealizedMegabytes:0,waiters:0}}),children:0,childMegabytes:800}).children;
+  expect(target).toBe(Math.max(1,10-booked));
+ }
+ const waiting=ownerPoolTargetV1({host:idle(10,24000,{foreground:{cpu:0,unrealizedMegabytes:0,waiters:4}}),children:0,childMegabytes:800}).children;
+ expect(waiting).toBe(10-Math.ceil(10*P.foregroundCoreShareBasisPoints/10000));
+ expect(ownerPoolTargetV1({host:idle(10,24000,{foreground:{cpu:10,unrealizedMegabytes:0,waiters:9}}),children:0,childMegabytes:800}).children).toBe(1);
+ expect(ownerPoolTargetV1({host:idle(10,24000,{pressure:"critical"}),children:5,childMegabytes:800})).toEqual({children:0,reason:"pressure"});
+ const memory=[1500,3000,6000,12000].map(available=>ownerPoolTargetV1({host:idle(10,available),children:0,childMegabytes:800}).children);
+ expect(memory).toEqual([...memory].sort((a,b)=>a-b));expect(memory[0]).toBe(1);expect(memory[3]).toBeGreaterThanOrEqual(10);
+ const loud=ownerPoolTargetV1({host:idle(10,24000,{load:42.7}),children:3,childMegabytes:800});
+ expect(loud.children).toBe(1);expect(loud.reason).toBe("yielding");
+ const own=ownerPoolTargetV1({host:idle(10,24000,{load:8}),children:8,childMegabytes:800});
+ expect(own.children).toBe(10);
+});
+
+test("the schema, the pointer and the texts are closed and German twins exist for every English text",()=>{
+ const errors=validateJsonSchemaSubset({$ref:"#/definitions/Pointer"},{version:2,waves:[{id:"a".repeat(64),createdMs:1,units:2}]},schemaOfPool);
+ expect(errors).toEqual([]);
+ expect(validateJsonSchemaSubset({$ref:"#/definitions/Pointer"},{version:1,id:"a".repeat(64),createdMs:1,units:2},schemaOfPool).length).toBeGreaterThan(0);
+ const en=Object.keys(schemaOfPool.definitions.Texts.const.en).sort(),de=Object.keys(schemaOfPool.definitions.Texts.const.de).sort();
+ expect(de).toEqual(en);
+ const dir=temp("status"),status=createOwnerPoolStatusV1({store:dir,origin:"g1-test",role:"puller"});
+ status.update({state:"pulling",children:3,target:4,ownersPerMinute:12.5,claimAttempts:7,wave:"w"});status.flush();
+ const written=JSON.parse(readFileSync(join(dir,"v1","origins","g1-test","pool.json"),"utf8"));
+ expect(validateJsonSchemaSubset({$ref:"#/definitions/Status"},written,schemaOfPool)).toEqual([]);
+});
+
+async function world(){
+ const cache=temp("cache"),server=await startRemoteCacheServerV1({directory:cache,host:"127.0.0.1",port:0,maximumBytes:2**28,maximumEntryBytes:2**26,maximumAgeDays:30,defaultInstance:"main",tokens:{read:"r",write:"w"},validation:"off"});
+ const environment={SEMIO_REMOTE_CACHE_ENDPOINT:server.url,SEMIO_REMOTE_CACHE_ACCESS:"read-write",SEMIO_REMOTE_CACHE_TOKEN:"w",SEMIO_REMOTE_CACHE_INSTANCE:"main"};
+ return{server,environment};
+}
+type Unit={name:string;kind:string;expectedMilliseconds:number;json:Record<string,unknown>};
+const unitsOf=(count:number):Unit[]=>Array.from({length:count},(_all,index)=>({name:`owner-${String(index).padStart(4,"0")}`,kind:"k",expectedMilliseconds:60000,json:{name:`owner-${index}`}}));
+const keyTextOf=(unit:Unit)=>JSON.stringify(["rev",null,[unit.name]]);
+const portableOf=(root:string,unit:Unit)=>({digest:sha(unit.name),authority:[],observations:[{kind:"file",path:`${root}/${unit.name}/a.ts`,fact:{sha256:"x",size:1,mtimeMs:1,ctimeMs:1,ino:1}}],image:JSON.stringify({name:unit.name})});
+const infoOf=(root:string,unit:Unit,imported?:unknown[]):ProjectRecordInfoV1=>({cachePath:join(root,"np",unit.name+".json"),fleet:`libs/${unit.name}`,keyText:keyTextOf(unit),exportRecord:()=>portableOf(root,unit),async import(portable){imported?.push(portable);return true;}});
+const pause=(milliseconds:number)=>new Promise<void>(done=>setTimeout(done,milliseconds));
+
+type Table=Map<string,"held"|"stored">;
+const memoryClaim=(table:Table,counter:{asked:number;inflight:number;widest:number})=>async(unit:Unit):Promise<ProjectClaimV1>=>{
+ counter.asked++;counter.inflight++;counter.widest=Math.max(counter.widest,counter.inflight);await pause(1);counter.inflight--;
+ const held=table.get(unit.name);
+ if(held==="stored")return{state:"stored"};if(held==="held")return{state:"held",by:"x"};
+ table.set(unit.name,"held");
+ return{state:"granted",digest:sha(unit.name),why:()=>"",deterministic:()=>false,publish:async()=>{table.set(unit.name,"stored");return true;},abandon:async()=>{table.delete(unit.name);}};
+};
+const fleetOf=async(pullers:number,units:Unit[],options:{slots?:number;burn?:number}={})=>{
+ const table:Table=new Map(),counter={asked:0,inflight:0,widest:0},computed=new Map<string,number>(),started=Date.now();
+ const stats=await Promise.all(Array.from({length:pullers},(_all,index)=>pullOwnerPoolV1<Unit>({units:()=>units,puller:`machine-${index}:1`,policy:fast,slots:()=>options.slots??1,claim:memoryClaim(table,counter),run:async unit=>{computed.set(unit.name,(computed.get(unit.name)??0)+1);await pause(options.burn??1);return true;}})));
+ return{stats,table,counter,computed,seconds:(Date.now()-started)/1000};
+};
+const total=(stats:OwnerPoolStatsV1[])=>stats.reduce((sum,row)=>({claimed:sum.claimed+row.claimed,published:sum.published+row.published,stored:sum.stored+row.stored,held:sum.held+row.held,faulted:sum.faulted+row.faulted,failed:sum.failed+row.failed,refused:sum.refused+row.refused,attempts:sum.attempts+row.attempts}),{claimed:0,published:0,stored:0,held:0,faulted:0,failed:0,refused:0,attempts:0});
+
+test("ten pullers on one list never infer an owner twice and spend about one claim request per owner",async()=>{
+ const units=unitsOf(1500),fleet=await fleetOf(10,units),sum=total(fleet.stats);
+ expect(sum.published).toBe(1500);
+ for(const unit of units)expect(fleet.computed.get(unit.name)).toBe(1);
+ expect([...fleet.table.values()].every(value=>value==="stored")).toBe(true);
+ expect(sum.attempts/sum.published).toBeLessThan(1.25);
+ expect(fleet.stats.every(row=>row.published>0)).toBe(true);
+});
+
+test("ten pullers on a 4774 owner wave: attempts per success stay near 1 and nobody is left out",async()=>{
+ const units=unitsOf(4774),fleet=await fleetOf(10,units),sum=total(fleet.stats);
+ expect(sum.published).toBe(4774);
+ expect(Math.max(...fleet.computed.values())).toBe(1);
+ expect(sum.attempts/sum.published).toBeLessThan(1.08);
+ expect(Math.min(...fleet.stats.map(row=>row.published))).toBeGreaterThan(100);
+},60000);
+
+test("a puller claims a window of owners in one round trip and its throughput grows linearly with its slots up to the size of the list",async()=>{
+ const rows:{slots:number;seconds:number;widest:number}[]=[];
+ for(const slots of[1,2,4,8]){
+  const fleet=await fleetOf(1,unitsOf(64),{slots,burn:40});
+  expect(total(fleet.stats).published).toBe(64);rows.push({slots,seconds:fleet.seconds,widest:fleet.counter.widest});
+ }
+ const base=rows[0]!.seconds;
+ expect(base/rows[1]!.seconds).toBeGreaterThan(1.7);expect(base/rows[2]!.seconds).toBeGreaterThan(3.1);expect(base/rows[3]!.seconds).toBeGreaterThan(5);
+ expect(rows[3]!.widest).toBeGreaterThanOrEqual(P.claimWindow);
+});
+
+test("ten pullers with one slot each are ten times faster than one, and a puller that is given more slots later uses them at once",async()=>{
+ const units=unitsOf(200),one=await fleetOf(1,units,{burn:20}),ten=await fleetOf(10,units,{burn:20});
+ expect(one.seconds/ten.seconds).toBeGreaterThan(6);
+ const table:Table=new Map(),counter={asked:0,inflight:0,widest:0};let slots=1;const began=Date.now(),seen:number[]=[];
+ const run=pullOwnerPoolV1<Unit>({units:()=>units,puller:"grow:1",policy:fast,slots:()=>slots,claim:memoryClaim(table,counter),busy:count=>{seen.push(count);},run:async()=>{await pause(30);return true;}});
+ await pause(200);slots=6;const stats=await run;
+ expect(stats.published).toBe(200);expect(Math.max(...seen)).toBeGreaterThanOrEqual(5);expect(Date.now()-began).toBeLessThan(200*30/1);
+});
+
+test("a stopped puller takes nothing new, gives back what it claimed ahead and reports the owners in flight",async()=>{
+ const table:Table=new Map(),counter={asked:0,inflight:0,widest:0};let stop=false;const flights:number[]=[];
+ const stats=await pullOwnerPoolV1<Unit>({units:()=>unitsOf(40),puller:"stop:1",policy:fast,slots:()=>2,stop:()=>stop,claim:memoryClaim(table,counter),busy:count=>flights.push(count),run:async()=>{await pause(30);stop=true;return true;}});
+ expect(stats.published).toBeGreaterThanOrEqual(1);expect(stats.published).toBeLessThanOrEqual(2);
+ expect([...table.values()].filter(value=>value==="held").length).toBe(0);expect(flights.at(-1)).toBe(0);
+});
+
+test("a failed inference gives the claim back at once and says whether the cause is deterministic",async()=>{
+ const table:Table=new Map(),counter={asked:0,inflight:0,widest:0},failures:string[]=[];let first=true;
+ const stats=await pullOwnerPoolV1<Unit>({units:()=>unitsOf(3),puller:"fail:1",policy:fast,slots:()=>1,claim:memoryClaim(table,counter),fail:(name,message,deterministic)=>failures.push(`${name}:${deterministic}:${message.slice(0,12)}`),run:async()=>{if(first){first=false;throw new Error("boom");}return true;}});
+ expect(stats.failed).toBe(1);expect(stats.published).toBe(2);expect(failures.length).toBe(1);expect(failures[0]).toContain(":true:boom");
+});
+
+test("two machines pulling one pool through the real cache never both finish the same owner, and every owner ends stored",async()=>{
+ const {server,environment}=await world();
+ try{
+  const computed=new Map<string,string[]>(),units=unitsOf(36);
+  const machine=(name:string)=>{const root=temp(name),port=createProjectFleetPortV1({root,environment,owner:name+":1"})!;return pullOwnerPoolV1<Unit>({units:()=>units,puller:name,policy:fast,slots:()=>2,claim:unit=>port.claim(infoOf(root,unit)),run:async unit=>{computed.set(unit.name,[...(computed.get(unit.name)??[]),name]);await pause(15);return true;}});};
+  const [x,y]=await Promise.all([machine("a"),machine("b")]);
+  for(const unit of units)expect(computed.get(unit.name)?.length).toBe(1);
+  expect(x.published+y.published).toBe(36);expect(x.published).toBeGreaterThan(0);expect(y.published).toBeGreaterThan(0);
+  const reader=createProjectFleetPortV1({root:temp("r"),environment,owner:"r:1"})!;
+  for(const unit of units)expect((await reader.claim(infoOf("/r",unit))).state).toBe("stored");
+ }finally{await server.stop();}
+});
+
+test("the machine that runs the wave takes the record another machine stored and infers nothing for it",async()=>{
+ const {server,environment}=await world();
+ try{
+  const units=unitsOf(6),rootW=temp("w"),port=createProjectFleetPortV1({root:rootW,environment,owner:"w:1"})!;
+  await pullOwnerPoolV1<Unit>({units:()=>units,puller:"w",policy:fast,slots:()=>2,claim:unit=>port.claim(infoOf(rootW,unit)),run:async()=>true});
+  const rootS=temp("s"),imported:unknown[][]=units.map(()=>[]),consumer=createProjectFleetPortV1({root:rootS,environment,owner:"s:1"})!;
+  let inferred=0;
+  for(const [index,unit] of units.entries()){const gate=await consumer.gate(infoOf(rootS,unit,imported[index]));if(!gate.seeded)inferred++;}
+  expect(inferred).toBe(0);expect(consumer.producers()).toEqual({w:6});expect(consumer.stats().computed).toBe(0);
+ }finally{await server.stop();}
+});
+
+const manifestOf=(units:Unit[],tag:string,createdMs:number):OwnerPoolManifestV1=>{
+ const partial={version:1 as const,identity:"identity-"+tag,globals:{projectAuthority:"a",registryDigest:"r",commandRevision:"c",late:false},publisher:"p:"+tag};
+ return{head:{...partial,id:ownerPoolIdV1(partial,units),createdMs},session:Buffer.from(JSON.stringify({tag})),units};
+};
+test("waves accumulate in the pointer: a newer wave never replaces an open one, equal ids once, old ones and surplus ones leave",async()=>{
+ const {server,environment}=await world();
+ try{
+  const root=temp("p"),client=graphFleetClientV1(graphFleetSettingsV1(root,environment)!,{fetch:remoteCacheFetchV1(environment,{root})}),now=Date.now();
+  expect(await readOwnerPoolPointerV1(client)).toBeUndefined();
+  const a=manifestOf(unitsOf(5),"a",now-3000),b=manifestOf(unitsOf(9),"b",now-2000),c=manifestOf(unitsOf(7),"c",now-1000);
+  for(const manifest of[a,b,c,b])expect(await publishOwnerPoolV1({client,owner:"o",manifest})).toBe(true);
+  const pointer=await readOwnerPoolPointerV1(client);
+  expect(pointer?.waves.map(wave=>wave.id)).toEqual([a.head.id,b.head.id,c.head.id]);expect(pointer?.waves.map(wave=>wave.units)).toEqual([5,9,7]);
+  const read=await readOwnerPoolV1(client,b.head.id);
+  expect(read?.units.length).toBe(9);expect(Buffer.from(read!.session).toString()).toContain('"b"');
+  const old=manifestOf(unitsOf(2),"old",now-P.manifestMaximumAgeMilliseconds-5000);
+  await publishOwnerPoolV1({client,owner:"o",manifest:old});
+  expect((await readOwnerPoolPointerV1(client))?.waves.some(wave=>wave.id===old.head.id)).toBe(false);
+  const many=Array.from({length:P.wavesKept+3},(_all,index)=>({id:sha("w"+index),createdMs:now-index*10,units:1}));
+  const kept=ownerPoolOpenWavesV1(many,now);
+  expect(kept.length).toBe(P.wavesKept);expect(kept[kept.length-1]!.createdMs).toBe(now);
+ }finally{await server.stop();}
+});
+
+test("a pointer read that the cache did not answer is a fault and not 'no wave': the puller keeps its waves; a cache without a pointer is 'no wave'",async()=>{
+ const {server,environment}=await world();
+ try{
+  const root=temp("fault"),settings=graphFleetSettingsV1(root,environment)!;
+  const good=graphFleetClientV1(settings,{fetch:remoteCacheFetchV1(environment,{root})});
+  expect(await readOwnerPoolPointerV1(good)).toBeUndefined();
+  let calls=0;
+  const flaky=graphFleetClientV1(settings,{fetch:(async()=>{calls++;return new Response("busy",{status:503});}) as never});
+  expect(await readOwnerPoolPointerV1(flaky)).toBe("fault");expect(calls).toBeGreaterThan(0);
+  const down=graphFleetClientV1(settings,{fetch:(async()=>{throw new Error("socket closed");}) as never});
+  expect(await readOwnerPoolPointerV1(down)).toBe("fault");
+ }finally{await server.stop();}
+});
+
+test("a failure note keeps the other pullers away until it is old or the revision changes",async()=>{
+ const {server,environment}=await world();
+ try{
+  const root=temp("f"),client=graphFleetClientV1(graphFleetSettingsV1(root,environment)!,{fetch:remoteCacheFetchV1(environment,{root})}),digest=sha("x");
+  expect(await readOwnerPoolFailureV1(client,digest,"rev1")).toBeUndefined();
+  expect(await publishOwnerPoolFailureV1({client,owner:"o",origin:"g1",recordDigest:digest,revision:"rev1",cause:"deterministic"})).toBe(true);
+  expect((await readOwnerPoolFailureV1(client,digest,"rev1"))?.cause).toBe("deterministic");
+  expect(await readOwnerPoolFailureV1(client,digest,"rev2")).toBeUndefined();
+  expect(await readOwnerPoolFailureV1(client,digest,"rev1",()=>Date.now()+P.failureMaximumAgeMilliseconds+1000)).toBeUndefined();
+ }finally{await server.stop();}
+});
+
+test("one pool process per machine: a live sibling is waited for, a stale pid file is taken over",async()=>{
+ const root=temp("guard"),first=await acquireOwnerPoolGuardV1({root,pid:111,alive:()=>false,sleep:async()=>{}});
+ expect(first.acquired).toBe(true);
+ const second=await acquireOwnerPoolGuardV1({root,pid:222,alive:pid=>pid===111,sleep:async()=>{},waitMilliseconds:100,pollMilliseconds:50});
+ expect(second.acquired).toBe(false);expect(second.sibling).toBe(111);
+ const third=await acquireOwnerPoolGuardV1({root,pid:333,alive:()=>false,sleep:async()=>{}});
+ expect(third.acquired).toBe(true);third.release();
+ writeFileSync(join(root,".cache","f",P.guardFile),"garbage");
+ expect((await acquireOwnerPoolGuardV1({root,pid:444,alive:()=>true,sleep:async()=>{}})).acquired).toBe(true);
+});
+
+const driverPath=join(import.meta.dir,"🧫️fixtures","🧮️driver.mjs");
+async function fleetOfProcesses(children:number,count:number,burn:number){
+ const {server,environment}=await world();
+ try{
+  const root=temp("proc"),client=graphFleetClientV1(graphFleetSettingsV1(root,environment)!,{fetch:remoteCacheFetchV1(environment,{root})});
+  const units=unitsOf(count).map(unit=>({...unit,expectedMilliseconds:400})),manifest=manifestOf(units,"burn"+children,Date.now());
+  const withSession={...manifest,session:Buffer.from(JSON.stringify({burnMilliseconds:burn}))};
+  expect(await publishOwnerPoolV1({client,owner:"o",manifest:withSession})).toBe(true);
+  const controller=new AbortController(),began=Date.now();let first=0,last=0,done=0;
+  await runOwnerPoolV1({root,environment:{...process.env,...environment},signal:controller.signal,capacity:async()=>({children,reason:null}),once:true,driver:driverPath,priority:0,targetPollMilliseconds:100,pollMilliseconds:500,observe:(_id:number,line:{t:string;ok?:boolean},at:number)=>{if(line.t==='done'&&line.ok){if(first===0)first=at;last=at;done++;}}});
+  const seconds=(last-first)/1000+(last-first)/Math.max(1,done-1)/1000;
+  const reader=createProjectFleetPortV1({root:temp("rr"),environment,owner:"r:1"})!;
+  let stored=0;for(const unit of units)if((await reader.claim(infoOf("/r",unit))).state==="stored")stored++;
+  return{seconds,stored,perMinute:count/seconds*60};
+ }finally{await server.stop();}
+}
+test("real processes: tiny synthetic owners through the real supervisor, claim and publish scale with the number of children",async()=>{
+ const rows:Record<number,{seconds:number;stored:number;perMinute:number}>={};
+ for(const children of[1,4,8])rows[children]=await fleetOfProcesses(children,160,150);
+ for(const children of[1,4,8])expect(rows[children]!.stored).toBeGreaterThanOrEqual(144);
+ if(process.env.OWNER_POOL_REPORT)writeFileSync(process.env.OWNER_POOL_REPORT,JSON.stringify(rows,null,1));
+ expect(rows[4]!.perMinute/rows[1]!.perMinute).toBeGreaterThan(1.8);
+ expect(rows[8]!.perMinute/rows[1]!.perMinute).toBeGreaterThan(2.4);
+},180000);

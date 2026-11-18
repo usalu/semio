@@ -1,0 +1,12 @@
+{
+  "cases": [
+    { "host": 4096, "others": 0 },
+    { "host": 8192, "others": 0 },
+    { "host": 12288, "others": 0 },
+    { "host": 16384, "others": 0 },
+    { "host": 16384, "others": 900 },
+    { "host": 16384, "others": 1800 },
+    { "host": 20000, "others": 0 },
+    { "host": 23999, "others": 0 }
+  ]
+}

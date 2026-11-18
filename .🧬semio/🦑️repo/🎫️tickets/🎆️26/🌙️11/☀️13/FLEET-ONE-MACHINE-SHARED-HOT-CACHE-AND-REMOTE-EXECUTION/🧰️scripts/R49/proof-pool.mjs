@@ -1,0 +1,50 @@
+// R49 proof: one store (a cache server), a publisher that runs the wave, two independent puller processes, and the publisher consuming what they stored.
+import { mkdtempSync, readFileSync, realpathSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { serialize } from "node:v8";
+const root = process.env.R49_ROOT ?? "/Users/ueli/Documents/semio", L = root + "/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library", B = L + "/🏗️build", I = B + "/🕸️graph/📥️inference", P = I + "/📦️project-nodes";
+const bun = process.execPath, here = import.meta.dir, machines = Number(process.env.R49_MACHINES ?? 2);
+const owners = (process.env.R49_OWNERS ?? "🏗️build/📊️reporting,🎛️commands/🧬️schema,🏃️process/🔌️providers,🏗️build/📖️storybook").split(",").map(x => "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/" + x);
+const { libraryBootstrap } = await import(I + "/🟨️.mjs"); await libraryBootstrap;
+const pn = await import(P + "/🟨️.mjs"), obs = await import(B + "/👁️observation/🟨️.mjs"), service = await import(P + "/🏊️project-farm/👷️service/🟨️.mjs");
+const { startRemoteCacheServerV1 } = await import(B + "/🌐️remote-cache/🖥️server/🟦️.ts");
+const { graphFleetClientV1 } = await import(B + "/🪪️graph-state/🛰️exchange/🟦️.ts"), { graphFleetSettingsV1 } = await import(B + "/🪪️graph-state/🧶️nx/🟦️.ts"), { remoteCacheFetchV1 } = await import(B + "/🌐️remote-cache/🛰️fleet/🟦️.ts");
+const { withBuildGraphStagingV1 } = await import(B + "/📥️inputs/💾️storage/🟨️.mjs");
+const { createProjectFleetPortV1 } = await import(B + "/🪪️graph-state/📦️project-records/🟦️.ts");
+const pool = await import(P + "/🌐️owner-pool/🟦️.ts");
+const fleetRoot = mkdtempSync(join(realpathSync(tmpdir()), "r49-fleet-root-")), store = process.env.R49_STORE ?? mkdtempSync(join(realpathSync(tmpdir()), "r49-store-"));
+const server = await startRemoteCacheServerV1({ directory: store, host: "127.0.0.1", port: 0, maximumBytes: 2 ** 31, maximumEntryBytes: 2 ** 29, maximumAgeDays: 30, defaultInstance: "main", tokens: { read: "r49-read", write: "r49-write" }, validation: "off" });
+const environment = { ...process.env, SEMIO_REMOTE_CACHE_ENDPOINT: server.url, SEMIO_REMOTE_CACHE_ACCESS: "read-write", SEMIO_REMOTE_CACHE_TOKEN: "r49-write", SEMIO_REMOTE_CACHE_INSTANCE: "main" };
+const contracts = await obs.observeInferenceSnapshotV1(() => pn.projectGeneratorContractsV1(root));
+const session = { version: 3, workspaceRoot: root, closureStore: undefined, registry: null, contracts, commandInputs: null, lateClosures: false, projectsByRoot: [], componentRoots: [] };
+const globals = { projectAuthority: "r49", registryDigest: "r49", commandRevision: "r49", late: false };
+const units = owners.map(r => { const json = { ...JSON.parse(readFileSync(join(root, r, "📋️project.json"), "utf8")), root: r }; return { name: json.name, kind: "project", expectedMilliseconds: 60000, json }; });
+const partial = { version: 1, identity: obs.inferenceRecordIdentityV1(), globals, peaks: {}, publisher: "server:" + process.pid };
+const head = { ...partial, id: pool.ownerPoolIdV1(partial, units), createdMs: Date.now() };
+const client = graphFleetClientV1(graphFleetSettingsV1(fleetRoot, environment), { fetch: remoteCacheFetchV1(environment, { root: fleetRoot }) });
+console.log("cache used", graphFleetSettingsV1(fleetRoot, environment).endpoint === server.url ? "the proof server" : "WRONG: " + graphFleetSettingsV1(fleetRoot, environment).endpoint);
+if (graphFleetSettingsV1(fleetRoot, environment).endpoint !== server.url) process.exit(3);
+console.log("publish", await pool.publishOwnerPoolV1({ client, owner: head.publisher, manifest: { head, session: serialize(session), units } }), "owners", units.length, "machines", machines);
+const began = Date.now();
+const children = Array.from({ length: machines }, (_x, index) => Bun.spawn([bun, join(here, "proof-child.mjs"), root, B, "machine-" + index, fleetRoot], { env: environment, stdout: "pipe", stderr: "inherit" }));
+const logs = await Promise.all(children.map(async child => { const text = await new Response(child.stdout).text(); await child.exited; return text; }));
+console.log("pullers finished after", Math.round((Date.now() - began) / 1000), "s");
+for (const text of logs) for (const line of text.split("\n").filter(Boolean)) console.log(line.slice(0, 300));
+const rootS = mkdtempSync(join(realpathSync(tmpdir()), "r49-server-")), port = createProjectFleetPortV1({ root, environment, owner: "server:consumer", client });
+await service.open({ ...session, stagingBase: rootS }, { slot: 0, generation: 1 });
+const env = service.sessionEnvironmentV1(), staging = service.stagingDirectoryV1();
+const { mkdirSync } = await import("node:fs");
+for (const d of ["ce", "ip", "mr", "np", "rl", "rr"]) mkdirSync(join(staging, "inference", d), { recursive: true });
+let seeded = 0, inferred = 0;
+for (const unit of units) {
+  const job = pn.ownerJobV1(env, globals, unit), cachePath = join(staging, "inference", "np", job.cacheKey + ".json");
+  const gate = await withBuildGraphStagingV1({ root: staging, published() {} }, () => port.gate({ cachePath, fleet: job.root, keyText: obs.projectRecordKeyTextV1(pn.projectRecordKeyV1(job.head, job.root, job.json, undefined, job.selectedInputs)), exportRecord: () => obs.exportProjectRecordV1(cachePath), closures: obs.projectClosureTravelV1(), import: async portable => { await obs.importProjectRecordV1(cachePath, portable); return true; } }));
+  const back = obs.exportProjectRecordV1(cachePath);
+  console.log("consumer", unit.name, "seeded", gate.seeded, "imported rows", back?.observations.length ?? null);
+  if (gate.seeded) seeded++; else { inferred++; await gate.abandon(); }
+}
+console.log("consumer stats", JSON.stringify(port.stats()));
+console.log("RESULT owners", units.length, "taken from other machines", seeded, "would infer here", inferred, "claims left", JSON.stringify(server.claims.summary()));
+await server.stop(); if (process.env.R49_STORE === undefined) rmSync(store, { recursive: true, force: true }); rmSync(rootS, { recursive: true, force: true });
+process.exit(0);

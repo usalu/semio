@@ -29,7 +29,7 @@ import { localized } from "../🌐️i18n/🟦️.ts";
 import { formatQuantity } from "../📏️quantity/🟦️.ts";
 import { DragGrip, GuessField, HintNote, ICON_BUTTON_CLASS, LockedNote, SELECT_ANNOUNCEMENT_DELAY_MS, SELECT_CLASS, compareText, describedBy, elementId, hintName, useHintAnnouncement, type TaskViewProps } from "../🧩️task/🟦️.tsx";
 import { PRESENCE_ANCHORS } from "../👥️presence/👁️view/🟦️.ts";
-import { IconLabel, LiveRegion, useAnnouncement } from "../🪟️chrome/🟦️.tsx";
+import { CELL, CardSection, GROUP, IconLabel, LiveRegion, RowList, useAnnouncement } from "../🪟️chrome/🟦️.tsx";
 import { petProp, usePetTopic } from "../🐾️pets/🟦️.tsx";
 
 const SLOT_ZONE = "slot:";
@@ -88,9 +88,11 @@ export function MatchingTaskView(props: TaskViewProps<SheetMatchingTask, Matchin
   };
 
   return (
-    <div className="flex flex-col gap-double">
-      <p className="course-prose m-0 text-sm leading-normal">{text(shown ? "course.matching.hint" : "course.matching.guessHint")}</p>
-      {hidden.length === 0 ? null : <p className="m-0 text-xs text-muted-foreground tabular-nums">{text("course.matching.guessCount", { done: guessed, total: hidden.length * task.items.length })}</p>}
+    <>
+      <CardSection className="gap-single">
+        <p className="course-prose m-0 text-sm leading-normal">{text(shown ? "course.matching.hint" : "course.matching.guessHint")}</p>
+        {hidden.length === 0 ? null : <p className="m-0 text-xs text-muted-foreground tabular-nums">{text("course.matching.guessCount", { done: guessed, total: hidden.length * task.items.length })}</p>}
+      </CardSection>
       {task.dimensions.map((dimension) => {
         const cards = dimension.cards;
         const current = assignments[dimension.id] ?? {};
@@ -104,17 +106,18 @@ export function MatchingTaskView(props: TaskViewProps<SheetMatchingTask, Matchin
             if (zone.startsWith(SLOT_ZONE) && target === dimension.id && held !== undefined) set(dimension, held, card);
           };
         return (
-          <section key={dimension.id} className="course-match" data-keys={cards === undefined ? "hidden" : undefined} aria-labelledby={elementId(scope, dimension.id)}>
-            <h3 data-icon-host="" id={elementId(scope, dimension.id)} className="m-0 text-sm font-semibold">
+          <section key={dimension.id} {...GROUP} {...CELL} className="course-match" data-keys={cards === undefined ? "hidden" : undefined} aria-labelledby={elementId(scope, dimension.id)}>
+            <h3 data-icon-host="" id={elementId(scope, dimension.id)} {...CELL} className="m-0 p-double text-sm font-semibold">
               <IconLabel icon={dimension.icon}>{quantity}</IconLabel>
             </h3>
             {cards === undefined ? null : (
-              <ul role="list" className="course-cards m-0 list-none p-0" aria-label={text("course.matching.cards", { quantity })}>
+              <div {...GROUP} {...CELL} className="course-cards-cell">
+              <RowList className="course-cards" aria-label={text("course.matching.cards", { quantity })}>
                 {cards.map((_, index) => {
                   const holder = holders.get(index);
                   const state = holder === undefined ? text("course.matching.free") : text("course.matching.used", { item: itemLabel(holder) });
                   return (
-                    <li key={index} data-icon-host="" className="course-value border border-normal bg-background py-single pe-double ps-single data-[used]:border-dashed" data-course-drag="" data-used={holder === undefined ? undefined : ""}>
+                    <li key={index} data-icon-host="" {...CELL} className="course-value bg-background py-single pe-double ps-single data-[used]:bg-hover-interactive-fill" data-course-drag="" data-used={holder === undefined ? undefined : ""}>
                       <DragGrip title={text("course.matching.drag", { value: cardText(dimension, index) })} locked={locked} onDrop={drop(index)} />
                       <span className="min-w-0 text-sm font-semibold tabular-nums">
                         <IconLabel icon={dimension.icon}>
@@ -127,15 +130,16 @@ export function MatchingTaskView(props: TaskViewProps<SheetMatchingTask, Matchin
                   </li>
                   );
                 })}
-              </ul>
+              </RowList>
+              </div>
             )}
-            <ul role="list" className="course-rows course-slots m-0 list-none p-0 text-sm" aria-labelledby={elementId(scope, dimension.id)}>
+            <RowList className="course-rows course-slots text-sm" aria-labelledby={elementId(scope, dimension.id)}>
               {task.items.map((item) => {
                 const card = current[item.id];
                 const hint = far.get(`${dimension.id}:${item.id}`);
                 const hintId = hint === undefined ? undefined : elementId(scope, dimension.id, item.id, "hint");
                 return (
-                  <li key={item.id} data-icon-host="" className="course-slot" data-course-drop={cards === undefined ? undefined : `${SLOT_ZONE}${dimension.id}:${item.id}`} data-presence-anchor={PRESENCE_ANCHORS.item(item.id)} data-pet-prop={petProp(topic, item.id)}>
+                  <li key={item.id} data-icon-host="" {...CELL} className="course-slot" data-course-drop={cards === undefined ? undefined : `${SLOT_ZONE}${dimension.id}:${item.id}`} data-presence-anchor={PRESENCE_ANCHORS.item(item.id)} data-pet-prop={petProp(topic, item.id)}>
                     <span className="course-slot-label course-row-label min-w-0 font-semibold">
                       <IconLabel icon={item.icon}>
                         {itemLabel(item.id)}
@@ -189,13 +193,13 @@ export function MatchingTaskView(props: TaskViewProps<SheetMatchingTask, Matchin
                   </li>
                 );
               })}
-            </ul>
+            </RowList>
           </section>
         );
       })}
       {lockedId === undefined ? null : <LockedNote id={lockedId} text={text} />}
       <LiveRegion announcement={announcement} />
       <LiveRegion announcement={hinted} />
-    </div>
+    </>
   );
 }

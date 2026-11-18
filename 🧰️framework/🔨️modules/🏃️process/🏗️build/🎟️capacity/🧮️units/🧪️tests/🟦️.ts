@@ -49,7 +49,7 @@ test("the live host is read with free memory, pressure and the cores of the mach
  const live=await readCompileUnitsHostV1({environment:{}}),planned=await compileUnitsForHostV1({environment:{}});
  expect(live.cores).toBe(availableParallelism());expect(live.grantedJobs).toBeNull();expect(planned.request.kind).toBe("available");expect(planned.decision.preferred).toBeLessThanOrEqual(Math.max(1,Math.floor(live.cores/2)));
  const granted=await readCompileUnitsHostV1({environment:{SEMIO_HOST_CAPACITY_PLAN:JSON.stringify({version:1,id:"abcdefgh",jobs:3,cpu:3,memoryMegabytes:8192,fixedMegabytes:1536,floorMegabytes:4096})}});
- expect([granted.grantedJobs,granted.grantedMegabytes,granted.unitMegabytes]).toEqual([3,8192,2048]);
+ expect([granted.grantedJobs,granted.grantedMegabytes,granted.unitMegabytes]).toEqual([3,8192,512]);
  const aborted=AbortSignal.abort(Error("cancelled"));await expect(readCompileUnitsHostV1({environment:{},signal:aborted})).rejects.toThrow("cancelled");
 });
 test("the footprint of one compile unit is the measured quantile of the newest unit peaks, equal to the Python model and numpy",()=>{
@@ -58,7 +58,7 @@ test("the footprint of one compile unit is the measured quantile of the newest u
  const answers=python(cases.map(peaks=>({history:Object.fromEntries([...history(peaks)].map(([key,rows])=>[key,rows]))})));
  cases.forEach((peaks,index)=>expect(compileUnitMegabytesV1(history(peaks)),String(index)).toBe(answers[index] as number));
  expect(compileUnitMegabytesV1(),"no history: the authored footprint").toBe(schema.definitions.Policy.const.megabytesPerUnit);
- expect(compileUnitMegabytesV1(history(cases[2]!)),"fewer than the minimum samples: the authored footprint").toBe(2048);
+ expect(compileUnitMegabytesV1(history(cases[2]!)),"fewer than the minimum samples: the authored footprint").toBe(512);
  expect(compileUnitMegabytesV1(history(cases[3]!)),"the 75th percentile by nearest rank of 8 units is the 6th").toBe(1800);
  expect(compileUnitMegabytesV1(history(cases[5]!)),"never below the minimum").toBe(256);
 });

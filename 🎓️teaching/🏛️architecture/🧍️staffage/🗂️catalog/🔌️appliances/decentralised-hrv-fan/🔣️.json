@@ -2235,6 +2235,8 @@
             "key": "fan",
             "heatW": 3
           },
+          "ratedPowerW": 4,
+          "ratedPowerBasis": "electrical-input",
           "source": "authored-estimate",
           "reference": "incropera-2018"
         }

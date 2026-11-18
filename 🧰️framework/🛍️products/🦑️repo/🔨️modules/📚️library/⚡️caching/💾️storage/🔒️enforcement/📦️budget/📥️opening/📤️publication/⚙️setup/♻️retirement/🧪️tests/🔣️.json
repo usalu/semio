@@ -219,8 +219,8 @@
     },
     {
       "mode": "unready-with-ready",
-      "accepted": false,
-      "prefix": null
+      "accepted": true,
+      "prefix": "00000000000000000000"
     },
     {
       "mode": "capsule-with-references",
@@ -257,7 +257,8 @@
         "patches",
         "package.json",
         "bun.lock",
-        "bunfig.toml"
+        "bunfig.toml",
+        "bindings.json"
       ]
     },
     {
@@ -268,7 +269,8 @@
         "patches",
         "package.json",
         "package-lock.json",
-        ".npmrc"
+        ".npmrc",
+        "bindings.json"
       ]
     }
   ]

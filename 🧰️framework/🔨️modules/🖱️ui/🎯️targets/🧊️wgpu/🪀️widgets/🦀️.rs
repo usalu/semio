@@ -5,7 +5,8 @@ use semio_ui_declaration::ui::UiTreeWindow;
 use semio_ui_draw_contract::{DrawList, IconAtlas};
 use semio_ui_theme::geometry::Rect;
 use semio_ui_wgpu_input::{HitKind, HitTarget, InputState};
-use semio_ui_wgpu_layout::layout::{gap_for_token, layout_horizontal, layout_vertical, padding_for_token};
+use semio_ui_wgpu_layout::flex::{field_chrome_metrics, SectionFieldChromeMetrics};
+use semio_ui_wgpu_layout::layout::{layout_horizontal, layout_vertical, padding_for_token, stack_gap_for_token};
 use semio_ui_text::{FontAtlas, TextFace};
 use semio_ui_theme::{Rgba, Theme};
 use semio_ui_declaration::IconName;
@@ -25,7 +26,7 @@ pub const TREE_SECTION_GAP: f32 = 8.0;
 pub fn measure_widget<E>(atlas: &mut FontAtlas, theme: &Theme, node: &WidgetNode<E>) -> (f32, f32) {
     match node {
         WidgetNode::Stack { direction, gap, padding, children } => {
-            let gap = gap_for_token(theme, gap.as_deref());
+            let gap = stack_gap_for_token(theme, gap.as_deref(), children.iter().any(widget_is_bordered));
             let padding = padding_for_token(theme, padding.as_deref()) * 2.0;
             let vertical = direction != "horizontal";
             let mut total_main = 0.0f32;
@@ -58,7 +59,7 @@ pub fn measure_widget<E>(atlas: &mut FontAtlas, theme: &Theme, node: &WidgetNode
             let lines = wrap_text(atlas, value, w.max(120.0), size);
             (w.max(120.0), lines.len() as f32 * size * 1.35)
         }
-        WidgetNode::Separator => (theme.control_height.max(1.0), 1.0 + theme.gap_standard),
+        WidgetNode::Separator => (theme.control_height.max(1.0), 1.0),
         WidgetNode::Button { .. } | WidgetNode::Input { .. } | WidgetNode::Select { .. } | WidgetNode::Toggle { .. } | WidgetNode::Slider { .. } | WidgetNode::NumberStepper { .. } | WidgetNode::IconSelect { .. } => {
             (theme.control_height, theme.control_height)
         }
@@ -68,10 +69,9 @@ pub fn measure_widget<E>(atlas: &mut FontAtlas, theme: &Theme, node: &WidgetNode
         }
         WidgetNode::Ring { .. } => (80.0, 80.0),
         WidgetNode::Field { label, child, .. } => {
-            let label_h = theme.font_size_small;
-            let gap = gap_for_token(theme, Some("standard"));
             let (cw, ch) = measure_control(atlas, theme, child);
-            (cw.max(atlas.measure_text(label, theme.font_size_small).0), label_h + gap + ch)
+            let metrics = kit_field_metrics(theme, ch);
+            (cw.max(atlas.measure_text(label, theme.font_size_small).0 + theme.gap_standard * 2.0), metrics.total)
         }
         WidgetNode::Section { children, label, .. } => {
             let mut height = PANEL_HEADER;
@@ -82,7 +82,7 @@ pub fn measure_widget<E>(atlas: &mut FontAtlas, theme: &Theme, node: &WidgetNode
             for child in children {
                 let (w, h) = measure_widget(atlas, theme, child);
                 max_w = max_w.max(w);
-                height += h + theme.gap_standard;
+                height += h;
             }
             (max_w.max(120.0), height)
         }
@@ -105,7 +105,7 @@ pub fn measure_widget<E>(atlas: &mut FontAtlas, theme: &Theme, node: &WidgetNode
             for child in children {
                 let (w, h) = measure_widget(atlas, theme, child);
                 max_w = max_w.max(w);
-                height += h + theme.gap_standard;
+                height += h;
             }
             (max_w.max(120.0), height)
         }
@@ -129,7 +129,7 @@ fn measure_control<E>(atlas: &mut FontAtlas, theme: &Theme, control: &ControlNod
 pub fn render_widget<E: Clone>(node: &WidgetNode<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
     match node {
         WidgetNode::Stack { direction, gap, padding, children } => {
-            let gap = gap_for_token(ctx.theme, gap.as_deref());
+            let gap = stack_gap_for_token(ctx.theme, gap.as_deref(), children.iter().any(widget_is_bordered));
             let padding = padding_for_token(ctx.theme, padding.as_deref());
             let vertical = direction != "horizontal";
             let sizes: Vec<f32> = children
@@ -185,13 +185,7 @@ pub fn render_widget<E: Clone>(node: &WidgetNode<E>, bounds: Rect, ctx: &mut Wid
         WidgetNode::IconSelect { id, value, uniform, classifier_kind, on_change } => {
             render_icon_select(id, value, *uniform, classifier_kind, on_change.clone(), bounds, ctx);
         }
-        WidgetNode::Field { label, child, .. } => {
-            let label_h = ctx.theme.font_size_small;
-            let gap = gap_for_token(ctx.theme, Some("standard"));
-            draw_text(ctx, label, bounds.x, bounds.y + label_h, ctx.theme.font_size_small, ctx.theme.text_muted);
-            let child_bounds = Rect::new(bounds.x, bounds.y + label_h + gap, bounds.w, bounds.h - label_h - gap);
-            render_control(child, child_bounds, ctx);
-        }
+        WidgetNode::Field { label, child, .. } => render_field(label, child, bounds, ctx),
         WidgetNode::Section { label, children, id, default_open } => {
             let section_key = format!("section.{id}");
             if !ctx.collapsed_sections.contains_key(&section_key) {
@@ -214,7 +208,7 @@ pub fn render_widget<E: Clone>(node: &WidgetNode<E>, bounds: Rect, ctx: &mut Wid
                     let (_, h) = measure_widget(ctx.atlas, ctx.theme, child);
                     let child_bounds = Rect::new(bounds.x, y, bounds.w, h);
                     render_widget(child, child_bounds, ctx);
-                    y += h + ctx.theme.gap_standard;
+                    y += h;
                 }
             }
         }
@@ -240,6 +234,30 @@ pub fn render_widget<E: Clone>(node: &WidgetNode<E>, bounds: Rect, ctx: &mut Wid
 }
 
 //#region 🧩️KitCompositeParity
+/// 🔲️ Whether `node` paints its own hairline border, so a stack of such nodes has no gap between them (the kit twin of `layout::ui_node_is_bordered`).
+fn widget_is_bordered<E>(node: &WidgetNode<E>) -> bool {
+    matches!(node, WidgetNode::Button { .. } | WidgetNode::Input { .. } | WidgetNode::Select { .. } | WidgetNode::Toggle { .. } | WidgetNode::Slider { .. } | WidgetNode::NumberStepper { .. } | WidgetNode::IconSelect { .. } | WidgetNode::Field { .. } | WidgetNode::Section { .. } | WidgetNode::Group { .. })
+}
+
+/// 🪢️ The kit Field's cell model: the SAME [`field_chrome_metrics`] the retained Field resolves (label cell, hairline divider, control row, no gap), without description or error.
+/// @see `🧱️elements/📝️Field/🟦️.tsx`
+fn kit_field_metrics(theme: &Theme, control_height: f32) -> SectionFieldChromeMetrics {
+    field_chrome_metrics(None, control_height, None, theme.gap_standard)
+}
+
+/// 🏷️ A Field row: the label cell (block padding, one hairline divider below) and the control row directly under it.
+fn render_field<E: Clone>(label: &str, child: &ControlNode<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
+    let (_, control_h) = measure_control(ctx.atlas, ctx.theme, child);
+    let metrics = kit_field_metrics(ctx.theme, control_h);
+    let (label_band, control_band) = (metrics.label.unwrap_or_default(), metrics.control.unwrap_or_default());
+    let font = ctx.theme.font_size_small;
+    draw_text(ctx, label, bounds.x + label_band.inline, bounds.y + label_band.y + (label_band.height + font) * 0.5 - 2.0, font, ctx.theme.text_muted);
+    let label_cell = Rect::new(bounds.x, bounds.y, bounds.w, control_band.y);
+    let (hair, color) = (ctx.theme.stroke_hairline.max(1.0), ctx.theme.border_normal);
+    ctx.draw.push_shared_border_edges(label_cell, hair, color, semio_ui_draw_contract::SharedBorderState::Normal, [false, false, true, false]);
+    render_control(child, Rect::new(bounds.x, bounds.y + control_band.y, bounds.w, (bounds.h - control_band.y).max(0.0)), ctx);
+}
+
 /// 📶️ The kit's progress bar — the SAME track/fill rects `paint::progress_bar_rects` hands the
 /// retained ladder, so the two kits cannot drift on geometry, the indeterminate share, or the
 /// `muted`/`accent` token pair.
@@ -286,7 +304,7 @@ fn render_group<E: Clone>(id: &str, label: &str, default_open: bool, children: &
     for child in children {
         let (_, h) = measure_widget(ctx.atlas, ctx.theme, child);
         render_widget(child, Rect::new(bounds.x, y, bounds.w, h), ctx);
-        y += h + ctx.theme.gap_standard;
+        y += h;
     }
 }
 

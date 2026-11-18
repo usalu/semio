@@ -13,7 +13,7 @@ let labelWidth = 29;
 let resize: () => void;
 vi.stubGlobal("ResizeObserver", class {
   constructor(callback: () => void) { resize = callback; }
-  observe() {}
+  observe() {} unobserve() {}
   disconnect() {}
 });
 vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => { callback(0); return 1; });

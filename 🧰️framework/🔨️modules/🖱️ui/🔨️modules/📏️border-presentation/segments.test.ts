@@ -97,12 +97,12 @@ describe("shared-border language-neutral cases", () => {
     expect((css.nodes[1] as import("postcss").AtRule).params).toBe("shared-border-ownership, shared-border-priority");
     const rules: import("postcss").Rule[] = [];
     css.walkRules(rule => { rules.push(rule); });
-    const hover = rules.find(rule => rule.selector.includes(":has(+ :is(.shared-border-cell, [data-shared-border-cell]):hover:not(:disabled, [aria-disabled=\"true\"], [aria-disabled=\"true\"] *))"));
+    const hover = rules.find(rule => rule.selector.includes(":has(+ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):hover:not(:disabled, [aria-disabled=\"true\"], [aria-disabled=\"true\"] *))"));
     expect(hover?.nodes.some(n => n.type === "decl" && n.prop === "border-color" && n.important)).toBe(true);
     expect((hover?.parent as import("postcss").AtRule).params).toBe("shared-border-priority");
     expect(rules.some(rule => rule.selector.includes("shared-border-cell]):last-child"))).toBe(false);
-    expect(rules.some(rule => rule.selector.includes(":not(:has(~ :is(.shared-border-cell, [data-shared-border-cell])))"))).toBe(true);
-    expect(rules.some(rule => rule.selector.includes(":has(+ :is(.shared-border-cell, [data-shared-border-cell]):hover:not(:disabled, [aria-disabled=\"true\"], [aria-disabled=\"true\"] *))") && (rule.parent as import("postcss").AtRule).params === "(forced-colors: active)" && rule.nodes.some(n => n.type === "decl" && n.prop === "border-color" && n.value === "Highlight" && n.important))).toBe(true);
+    expect(rules.some(rule => rule.selector.includes(":not(:has(~ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame])))"))).toBe(true);
+    expect(rules.some(rule => rule.selector.includes(":has(+ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):hover:not(:disabled, [aria-disabled=\"true\"], [aria-disabled=\"true\"] *))") && (rule.parent as import("postcss").AtRule).params === "(forced-colors: active)" && rule.nodes.some(n => n.type === "decl" && n.prop === "border-color" && n.value === "Highlight" && n.important))).toBe(true);
     expect(rules.some(rule => rule.selector.includes('[data-window-silhouette-chip] > *'))).toBe(false);
     expect(rules.some(rule => rule.selector.includes(':is(.border-loading, .border-waiting, [data-celebrated="true"])::after') && rule.nodes.some(n => n.type === "decl" && n.prop === "content" && n.value === "none" && n.important))).toBe(true);
     expect(rules.some(rule => rule.selector.includes('[data-shared-border-attached~="left"][data-introduced="true"]') && rule.nodes.some(n => n.type === "decl" && n.prop === "box-shadow" && n.value === "none" && n.important))).toBe(true);
@@ -155,6 +155,10 @@ describe("shared-border language-neutral cases", () => {
         await page.setContent('<style>' + layers + '</style><div dir="' + fixture.dir + '" data-shared-border-group data-orientation="' + fixture.orientation + '" style="--active-base:red;--loading-border-color:blue;--introduced-border-color:green"><button data-shared-border-cell ' + fixture.first + '></button><button data-shared-border-cell ' + fixture.second + '>' + (fixture.secondContent ?? '') + '</button></div>');
         const color = await page.locator("[data-shared-border-cell]").first().evaluate(element => getComputedStyle(element).borderColor);
         expect(color, fixture.name).toBe(fixture.color);
+      }
+      for (const fixture of compositorCases.cellFrames.seams) {
+        await page.setContent('<style>' + layers + '</style><div dir="' + fixture.dir + '" data-shared-border-cells data-shared-border-group data-orientation="' + fixture.orientation + '" style="--active-base:red;--loading-border-color:blue;--introduced-border-color:green"><button data-shared-border-frame ' + fixture.first + '></button><button data-shared-border-frame ' + fixture.second + '></button></div>');
+        expect(await page.locator("button").first().evaluate(element => getComputedStyle(element).borderColor), fixture.name).toBe(fixture.color);
       }
       await page.setContent('<style>' + layers + '</style><div aria-disabled="true" style="--border-emphasized-color:red"><button data-shared-border-cell>one</button><button data-shared-border-cell>two</button></div>');
       await page.locator("[data-shared-border-cell]").last().hover();

@@ -50,6 +50,7 @@ import {
   DEFAULT_UI_DRIVER,
   elementsSurfaceDeviceIsMobile,
   type IconName,
+  type NavbarItem,
   type TutorialClock,
   UI_TERMINOLOGY_NATIVE,
   type UiLocale,
@@ -164,6 +165,7 @@ export type FrameworkOsShellInnerProps = {
   readonly defaults?: FrameworkOsDefaults;
   readonly brand?: ShellBrand;
   readonly suppressAutoIntroduction?: boolean;
+  readonly navbarTrailingItems?: readonly NavbarItem[];
 };
 
 export type ShellCoreAfterShellCoreState = ShellForwardSlots & ReturnType<typeof useShellCoreState>;
@@ -183,6 +185,7 @@ export function useShellCoreState({
   defaults: defaultsProp,
   brand,
   suppressAutoIntroduction = false,
+  navbarTrailingItems,
 }: FrameworkOsShellInnerProps, core: ShellForwardSlots) {
   const scope = useShellScope();
   const [localDocumentOwnerRegistry] = useState(() => new LocalDocumentOwnerRegistryV1());
@@ -644,7 +647,7 @@ export function useShellCoreState({
 
   return {
     catalog, pluginFilter, plugins, surfaceSessionFactories, backboneWorkerFactory, documentServices, hostPorts, appId, appRole,
-    brand, suppressAutoIntroduction, scope, localDocumentOwnerRegistry, shellContextMenuTitleLabel, hostConfig, hostMode,
+    brand, suppressAutoIntroduction, navbarTrailingItems, scope, localDocumentOwnerRegistry, shellContextMenuTitleLabel, hostConfig, hostMode,
     measuredDevice, mobile, locks, defaults, ephemeral, shellState, dispatch, localInteraction, localSourceRevisions, stagedActions, localSourceOwnerRef, localSourceRefreshRef, historyStore,
     historyOrderRef, historyOrderByProgramRef, exampleOptionsRef, lastDispatchedExampleIdRef, localHistoryOrderRef,
     loadedPlugins, pluginStatusById, pluginSupervisorById, session, error, sessionFault, instanceFault, localPrograms,

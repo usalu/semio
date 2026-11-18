@@ -1,0 +1,49 @@
+"""Independent oracle of the refresh rules: which rows of a record carry a digest, whether the record is fresh in a tree (a table path -> sha256), and the digest of the state a refresh is claimed under. Reads the schema (argv[1]) and the fixture (argv[2]) and prints {"digests": [...], "verdicts": [...], "states": [...]}."""
+import hashlib
+import json
+import sys
+
+schema = json.load(open(sys.argv[1], encoding="utf8"))["definitions"]["Policy"]["const"]
+fixture = json.load(open(sys.argv[2], encoding="utf8"))
+
+
+def digests(rows):
+    out = []
+    for row in rows:
+        fact = row.get("fact")
+        if row["kind"] == "file":
+            source = fact
+        elif row["kind"] == "analysis":
+            source = fact.get("source") if isinstance(fact, dict) else None
+        else:
+            source = None
+        if isinstance(source, dict) and isinstance(source.get("sha256"), str):
+            out.append([row["path"], source["sha256"]])
+    return out
+
+
+def verdict(case):
+    rows = case["rows"]
+    if case["now"] - case["createdMs"] < schema["minimumAgeMilliseconds"] or len(rows) > schema["maximumRows"]:
+        return {"fresh": True, "stale": 0, "checked": 0}
+    table = case["tree"]
+    pairs = digests(rows)
+    stale = sum(1 for path, sha in pairs if table.get(path) != sha)
+    checked = len(pairs)
+    if "closures" in case:
+        closure_rows = [row for row in rows if row["kind"] == "closure"]
+        checked += len(closure_rows)
+        stale += sum(1 for row in closure_rows if case["closures"].get(row["path"]) is not True)
+    if "holds" in case:
+        for row in rows:
+            if row["kind"] not in ("file", "analysis", "closure"):
+                checked += 1
+                stale += 0 if case["holds"].get(row["kind"] + ":" + row["path"]) is True else 1
+    return {"fresh": stale == 0, "stale": stale, "checked": checked}
+
+
+def state(case):
+    return hashlib.sha256(json.dumps([schema["domain"], case["digest"], case["noteHash"]], separators=(",", ":"), ensure_ascii=False).encode("utf8")).hexdigest()
+
+
+print(json.dumps({"digests": [digests(case["rows"]) for case in fixture["verdicts"]], "verdicts": [verdict(case) for case in fixture["verdicts"]], "states": [state(case) for case in fixture["states"]]}, ensure_ascii=False))

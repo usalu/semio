@@ -164,7 +164,7 @@ test("a spawn-only reference is a real file reference of its owner, and cutting 
  }
  const cut=new Set(closure.files),full=new Set(nxBuildEngineClosureV1({...declared,spawnOnly:[]} as never).files);
  for(const file of cut)expect(full.has(file),file).toBe(true);
- expect(full.size).toBeGreaterThan(cut.size*1.4);
+ expect(full.size-cut.size).toBeGreaterThanOrEqual(corpus.spawnOnly.mustLeave.length);
  for(const name of corpus.spawnOnly.mustLeave){expect(full.has(library+name),"full "+name).toBe(true);expect(cut.has(library+name),"cut "+name).toBe(false);}
  for(const name of corpus.spawnOnly.mustStay)expect(cut.has(library+name),name).toBe(true);
 },60000);

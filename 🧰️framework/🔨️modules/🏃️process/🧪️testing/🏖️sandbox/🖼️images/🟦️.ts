@@ -3,7 +3,7 @@ import { readdirSync, realpathSync } from "node:fs";
 import { join, resolve, sep } from "node:path";
 
 /** 🧲️ Lists the attached macOS disk images through the system tool, deepest backing file first. */
-export function attachedDiskImagesV1(): readonly Readonly<{ image: string; target: string }>[] {
+export function attachedDiskImagesV1(): readonly Readonly<{ image: string; target: string; device: string }>[] {
   if (process.platform !== "darwin") return [];
   const info = spawnSync("/usr/bin/hdiutil", ["info", "-plist"], { encoding: "utf8" });
   if (info.status !== 0) return [];
@@ -15,7 +15,8 @@ export function attachedDiskImagesV1(): readonly Readonly<{ image: string; targe
     if (!row["image-path"] || !target) return [];
     let image = row["image-path"];
     try { image = realpathSync(image); } catch {}
-    return [{ image, target }];
+    const device = (entities.find((entity) => entity["dev-entry"])?.["dev-entry"] ?? "").replace(/s[0-9]+$/u, "");
+    return [{ image, target, device }];
   }).sort((left, right) => right.image.length - left.image.length);
 }
 

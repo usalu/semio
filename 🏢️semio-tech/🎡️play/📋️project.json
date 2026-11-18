@@ -43,6 +43,8 @@
         "@semio-tech/framework-os-dev:prepare-energy-react-prototype",
         "@semio-tech/framework-os-dev:prepare-architect-react-prototype",
         "@semio-tech/framework-os-dev:prepare-din4108-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-en1990-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-en1992-react-prototype",
         "@semio-tech/framework-os-dev:prepare-note-react-prototype",
         "@semio-tech/framework-os-dev:prepare-writer-react-prototype",
         "@semio-tech/framework-os-dev:prepare-forms-react-prototype",
@@ -113,6 +115,8 @@
         "@semio-tech/framework-os-dev:activate-energy-react-prototype",
         "@semio-tech/framework-os-dev:activate-architect-react-prototype",
         "@semio-tech/framework-os-dev:activate-din4108-react-prototype",
+        "@semio-tech/framework-os-dev:activate-en1990-react-prototype",
+        "@semio-tech/framework-os-dev:activate-en1992-react-prototype",
         "@semio-tech/framework-os-dev:activate-note-react-prototype",
         "@semio-tech/framework-os-dev:activate-writer-react-prototype",
         "@semio-tech/framework-os-dev:activate-forms-react-prototype",
@@ -208,6 +212,45 @@
         "activate-prototype"
       ]
     },
+    "serve-standards": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6033,
+              "portEnv": "SEMIO_TECH_PLAY_PORT"
+            },
+            "title": {
+              "en": "Serve Standards Play",
+              "de": "Normen-Play Bereitstellen"
+            },
+            "description": {
+              "en": "Serve the play grid of the Standards apps (DIN, Eurocode, ISO, VDI) on port 6033 after activating only their lane.",
+              "de": "Das Play-Raster der Normen-Apps (DIN, Eurocode, ISO, VDI) auf Port 6033 bereitstellen, nachdem nur ihre Lane aktiviert wurde."
+            }
+          }
+        }
+      },
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "repo ./🔨️modules/🧩️runtime/📜️script.ts serve",
+        "forwardAllArgs": false,
+        "env": {
+          "SEMIO_TECH_PLAY_SCOPE": "standards",
+          "SEMIO_TECH_PLAY_PORT": "6033",
+          "SEMIO_BUILD_MODE": "prototype"
+        }
+      },
+      "cache": false,
+      "continuous": true,
+      "outputs": [],
+      "dependsOn": [
+        "@semio-tech/framework-os-dev:activate-din4108-react-prototype",
+        "@semio-tech/framework-os-dev:activate-en1990-react-prototype",
+        "@semio-tech/framework-os-dev:activate-en1992-react-prototype"
+      ]
+    },
     "build": {
       "executor": "repo:script",
       "metadata": {
@@ -248,7 +291,8 @@
                 "job:describe-tool"
               ],
               "browser": [
-                "job:support"
+                "job:support",
+                "job:native-transpile"
               ]
             },
             "jobs": [
@@ -258,7 +302,24 @@
                 "command": [
                   "repo",
                   "./📜️script.ts",
-                  "build"
+                  "build",
+                  "--host-platform={hostPlatform}"
+                ],
+                "after": [],
+                "profile": "release",
+                "target": "host",
+                "workerProtocol": "jobserver",
+                "policies": [
+                  "process",
+                  "cargo"
+                ]
+              },
+              {
+                "id": "native-transpile",
+                "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🦀️native-transpile",
+                "command": [
+                  "repo",
+                  "./📜️stage.ts"
                 ],
                 "after": [],
                 "profile": "release",
@@ -344,7 +405,7 @@
                 "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust",
                 "command": [
                   "repo",
-                  "./📜️script.ts",
+                  "../../🏗️build/📜️script.ts",
                   "wasm"
                 ],
                 "after": [],
@@ -353,9 +414,7 @@
                 "target": "wasm32-unknown-unknown",
                 "workerProtocol": "exclusive",
                 "policies": [
-                  "process",
-                  "cargo",
-                  "wasm"
+                  "process"
                 ]
               },
               {
@@ -465,27 +524,6 @@
                   "job:graph-wasm",
                   "job:puzzle-wasm",
                   "job:map-tiles"
-                ],
-                "profile": "release",
-                "target": "host",
-                "workerProtocol": "reserved",
-                "policies": [
-                  "process"
-                ]
-              },
-              {
-                "id": "pages",
-                "root": "🏢️semio-tech/🎡️play/🔨️modules/📦️site",
-                "command": [
-                  "repo",
-                  "./📜️script.ts",
-                  "pages"
-                ],
-                "after": [
-                  "job:bundle",
-                  "job:support",
-                  "job:canvas-runtime-assets",
-                  "components:complete"
                 ],
                 "profile": "release",
                 "target": "host",
@@ -682,10 +720,11 @@
       ],
       "options": {
         "cwd": "🏢️semio-tech/🎡️play",
-        "command": "repo ./🔨️modules/🧩️runtime/📜️script.ts prepare-forms-test",
+        "command": "repo ./🔨️modules/🧩️runtime/📜️script.ts prepare-test",
         "forwardAllArgs": false,
         "env": {
-          "SEMIO_BUILD_MODE": "prototype"
+          "SEMIO_BUILD_MODE": "prototype",
+          "SEMIO_TECH_PLAY_SCOPE": "forms"
         }
       },
       "metadata": {
@@ -712,10 +751,11 @@
       ],
       "options": {
         "cwd": "🏢️semio-tech/🎡️play",
-        "command": "repo ./🔨️modules/🧩️runtime/📜️script.ts serve-forms-test",
+        "command": "repo ./🔨️modules/🧩️runtime/📜️script.ts serve-test",
         "forwardAllArgs": false,
         "env": {
-          "SEMIO_BUILD_MODE": "prototype"
+          "SEMIO_BUILD_MODE": "prototype",
+          "SEMIO_TECH_PLAY_SCOPE": "forms"
         }
       },
       "continuous": true,
@@ -744,7 +784,10 @@
       "options": {
         "cwd": "🏢️semio-tech/🎡️play",
         "command": "repo ./🔨️modules/🧪️e2e/📜️script.ts test-forms",
-        "forwardAllArgs": false
+        "forwardAllArgs": false,
+        "env": {
+          "SEMIO_TECH_PLAY_SCOPE": "forms"
+        }
       },
       "metadata": {
         "semio": {
@@ -775,6 +818,115 @@
         "{workspaceRoot}/✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🧪️tests/🧫️fixtures/🌊️embedded-flow.json",
         "{workspaceRoot}/✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🧪️tests/🧫️fixtures/📝️answer*.json",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/✏️TextEditor/🧪️tests/🧫️fixtures/📄️value-source/🔣️.json"
+      ]
+    },
+    "prepare-standards-e2e": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "@semio-tech/framework-os-dev:activate-din4108-react-prototype",
+        "@semio-tech/framework-os-dev:activate-en1990-react-prototype",
+        "@semio-tech/framework-os-dev:activate-en1992-react-prototype",
+        "workspace:deps-browsers"
+      ],
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "repo ./🔨️modules/🧩️runtime/📜️script.ts prepare-test",
+        "forwardAllArgs": false,
+        "env": {
+          "SEMIO_BUILD_MODE": "prototype",
+          "SEMIO_TECH_PLAY_SCOPE": "standards"
+        }
+      },
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          },
+          "sourceInputObservation": "freshness"
+        }
+      },
+      "inputs": [
+        "default",
+        "^default"
+      ]
+    },
+    "serve-standards-e2e": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "prepare-standards-e2e"
+      ],
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "repo ./🔨️modules/🧩️runtime/📜️script.ts serve-test",
+        "forwardAllArgs": false,
+        "env": {
+          "SEMIO_BUILD_MODE": "prototype",
+          "SEMIO_TECH_PLAY_SCOPE": "standards"
+        }
+      },
+      "continuous": true,
+      "metadata": {
+        "semio": {
+          "continuousSharing": false,
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{projectRoot}/🟦️.tsx",
+            "{projectRoot}/🏗️builder/🌐️vite/🟦️.ts"
+          ]
+        }
+      },
+      "inputs": [
+        "default",
+        "^default"
+      ]
+    },
+    "test-e2e-standards": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "serve-standards-e2e"
+      ],
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "repo ./🔨️modules/🧪️e2e/📜️script.ts test-standards",
+        "forwardAllArgs": false,
+        "env": {
+          "SEMIO_TECH_PLAY_SCOPE": "standards"
+        }
+      },
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{projectRoot}/🧪️tests/🎭️acceptance/🟦️.ts"
+          ],
+          "dashboard": {
+            "title": {
+              "en": "Test Standards End to End",
+              "de": "Normen Durchgängig Testen"
+            },
+            "description": {
+              "en": "Boot every Standards app (DIN, Eurocode, ISO, VDI) in an isolated browser service.",
+              "de": "Jede Normen-App (DIN, Eurocode, ISO, VDI) in einem isolierten Browserdienst starten."
+            }
+          }
+        }
+      },
+      "inputs": [
+        "default",
+        "^default"
       ]
     }
   }

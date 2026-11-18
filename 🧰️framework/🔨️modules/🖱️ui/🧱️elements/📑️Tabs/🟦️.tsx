@@ -120,7 +120,7 @@ function Tabs({ className, value, defaultValue, onValueChange, orientation = "ho
 
   return (
     <TabsContext.Provider value={context}>
-      <div {...props} ref={ref} id={id} dir={dir} data-slot="tabs" data-orientation={orientation} className={cn("flex flex-col gap-single", className)}>
+      <div {...props} ref={ref} id={id} dir={dir} data-slot="tabs" data-orientation={orientation} className={cn("flex flex-col gap-0", className)}>
         {children}
       </div>
     </TabsContext.Provider>
@@ -154,7 +154,7 @@ function TabsList({ className, ref, children, ...props }: TabsListProps) {
       data-slot="tabs-list"
       data-shared-border-group=""
       data-orientation={context.orientation}
-      className={cn("text-muted-foreground inline-flex h-large w-fit items-center justify-center p-single bg-transparent", className)}
+      className={cn("text-muted-foreground inline-flex h-large w-fit items-stretch justify-center p-0 bg-transparent", className)}
     >
       {children}
     </div>
@@ -209,7 +209,7 @@ function TabsTrigger({ className, value, disabled = false, id, ref, onClick, onF
       data-state={selected ? "active" : "inactive"}
       data-disabled={disabled ? "" : undefined}
       className={cn(
-        "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring text-element relative inline-flex h-[calc(100%-var(--stroke-hairline))] flex-1 items-center justify-center gap-single border border-transparent p-single text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[length:var(--stroke-focus)] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring text-element relative inline-flex flex-1 items-center justify-center gap-single border border-transparent p-single text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[length:var(--stroke-focus)] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         interactiveTabActiveClass,
         interactiveHoverClass,
         className,

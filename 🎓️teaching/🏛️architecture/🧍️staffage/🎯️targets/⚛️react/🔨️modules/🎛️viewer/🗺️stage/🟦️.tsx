@@ -136,8 +136,10 @@ export function Stage(props: StageProps): ReactElement {
       onPointerCancel={up}
       onKeyDown={key}
       data-stage=""
+      data-shared-border-cell=""
+      data-border-probe-art=""
       data-zoom={effective.toFixed(3)}
-      className={cn("relative h-[clamp(22rem,64vh,42rem)] w-full touch-pan-y select-none overflow-hidden border border-border", ground === "transparent" && "staffage-checker", start.current === null ? "cursor-grab" : "cursor-grabbing", props.className)}
+      className={cn("relative h-[clamp(22rem,64vh,42rem)] w-full touch-pan-y select-none overflow-hidden", ground === "transparent" && "staffage-checker", start.current === null ? "cursor-grab" : "cursor-grabbing", props.className)}
       style={colour === undefined ? undefined : { backgroundColor: colour }}
     >
       <span id={helpId} className="sr-only">

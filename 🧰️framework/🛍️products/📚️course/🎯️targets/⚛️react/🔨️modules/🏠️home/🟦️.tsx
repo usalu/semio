@@ -4,10 +4,11 @@
  * @see ./🗺️pages/🟦️.ts — course-derived page hierarchy
  * @see ../🚏️navigation/🟦️.tsx — history and parent navigation
  */
-import { AssignmentDownloads } from "../📝️assignments/🟦️.tsx";
+import { AssignmentCardView, AssignmentPage } from "../📝️assignments/🟦️.tsx";
+import { ClipCardView, ClipPage } from "../🎬️clips/🟦️.tsx";
 import { AccessGate, clientAccess, useReleaseClock } from "../🔓️access/🟦️.tsx";
 import { createContext, useCallback, useContext, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactElement, type ReactNode } from "react";
-import { LayeredOverview, UI_MOBILE_MAX_WIDTH_PX, UI_TABLET_MAX_WIDTH_PX, stripGrid, useMediaQuery, type IconName, type LayeredCardState, type LayeredCell, type LayeredDirection, type LayeredMode, type LayeredPane } from "@semio-tech/ui-react/chrome";
+import { LayeredOverview, SharedBorderRow, SharedBorderRowCell, UI_MOBILE_MAX_WIDTH_PX, UI_TABLET_MAX_WIDTH_PX, stripGrid, useMediaQuery, type IconName, type LayeredCardState, type LayeredCell, type LayeredDirection, type LayeredMode, type LayeredPane } from "@semio-tech/ui-react/chrome";
 import { type CourseLocale, type CourseText } from "../🌐️i18n/🟦️.ts";
 import { failureProblem, thrownProblem } from "../🪪️identity/🟦️.tsx";
 import { LEADERBOARD_POLL_MS, LeaderboardCard, LeaderboardPage, usePolling } from "../🏆️leaderboard/🟦️.tsx";
@@ -16,8 +17,8 @@ import { PreferencesCard, PreferencesPage, challengeOf, textScale, withChallenge
 import { LearnerCard, LearnerPage } from "../📇️profile/🟦️.tsx";
 import { QuizCardView, QuizPage, type Act } from "../📖️quiz-page/🟦️.tsx";
 import { BodyButton, CardAction, CardIcon, Glyph, PageFrame, ProblemNote, CourseCard, type Problem } from "../🪟️chrome/🟦️.tsx";
-import { isHomeGrid, openedChild, pageLabel, pagesWithin, parentPage, previewCamera, type PreviewCamera } from "./🗺️pages/🟦️.ts";
-export { addressPages, homePages, isHomeGrid, openedChild, pageLabel, pagesWithin, parentPage, previewCamera } from "./🗺️pages/🟦️.ts";
+import { containerKey, isHomeGrid, openedChild, pageLabel, pagesWithin, parentPage, previewCamera, type PreviewCamera } from "./🗺️pages/🟦️.ts";
+export { addressPages, containerKey, homePages, isHomeGrid, openedChild, pageLabel, pagesWithin, parentPage, previewCamera } from "./🗺️pages/🟦️.ts";
 export type { PreviewCamera } from "./🗺️pages/🟦️.ts";
 import { CardPresence } from "../👥️presence/🟦️.tsx";
 import { PRESENCE_ANCHORS } from "../👥️presence/👁️view/🟦️.ts";
@@ -73,6 +74,9 @@ export function homeTrackTemplate(weights: readonly number[] | undefined, count:
 /** 🧱️ The height (px at the normal text size) a row of the grid needs so that the tallest card — in either language, in
  * the narrowest column of its layout — fits its cell. */
 export const HOME_GRID_ROW_HEIGHT_PX = 160;
+
+/** 🎞️ The height (px at the normal text size) a row of the clips grid needs for a clip's poster above its text. */
+export const HOME_CLIP_ROW_HEIGHT_PX = 360;
 
 /** 🎩️ The height (px at the normal text size) of what stands above the overview: the navigation bar. */
 export const HOME_CHROME_HEIGHT_PX = 56;
@@ -151,7 +155,7 @@ function useInheritedPreview(ignore: boolean): PreviewCamera | undefined {
   return ignore ? undefined : camera;
 }
 
-const ICONS: { readonly [page: string]: IconName } ={ [HOME_PAGES.learner]: "user", [HOME_PAGES.quizzes]: "layout-grid", [HOME_PAGES.leaderboard]: "list-ordered", [HOME_PAGES.badges]: "award", [HOME_PAGES.preferences]: "settings" };
+const ICONS: { readonly [page: string]: IconName } ={ [HOME_PAGES.learner]: "user", [HOME_PAGES.quizzes]: "layout-grid", [HOME_PAGES.assignments]: "file-text", [HOME_PAGES.clips]: "play", [HOME_PAGES.leaderboard]: "list-ordered", [HOME_PAGES.badges]: "award", [HOME_PAGES.preferences]: "settings" };
 
 
 
@@ -162,21 +166,22 @@ function CollectionCard(props: HomeProps & { readonly page: string; readonly rev
   const topic = state.course?.topics?.find((candidate) => candidate.id === page);
   const label = pageLabel(page, state, locale, text) ?? page;
   const count = topic?.quizzes.length ?? state.course?.quizzes.length ?? 0;
+  const key = containerKey(page);
   return (
     <CourseCard
       id={id}
-      card={placeholder ? `topic-page:${page}` : page === HOME_PAGES.quizzes ? "quizzes" : `topic:${page}`}
-      anchor={PRESENCE_ANCHORS.home(page === HOME_PAGES.quizzes ? "quizzes" : `topic:${page}`)}
+      card={placeholder ? `topic-page:${page}` : key}
+      anchor={PRESENCE_ANCHORS.home(key)}
       topic={topic?.id}
       href={onOpen === undefined ? undefined : `#${page}`}
       onOpen={onOpen}
       revealed={revealed}
-      icon={topic === undefined ? <CardIcon icon="layout-grid" /> : <Glyph emoji={topic.emoji} className="text-sm" />}
+      icon={topic === undefined ? <CardIcon icon={ICONS[page] ?? "layout-grid"} /> : <Glyph emoji={topic.emoji} className="text-sm" />}
       title={label}
       footerRight={onOpen === undefined ? undefined : <CardAction primary onClick={onOpen}>{text("course.home.explore")}</CardAction>}
     >
       <p className="m-0 text-xs leading-normal text-foreground">
-        {text(page === HOME_PAGES.quizzes ? "course.home.quizzesDescription" : count > 0 ? "course.home.topicQuizzes" : "course.home.comingSoon", { count })}
+        {text(page === HOME_PAGES.assignments ? "course.assignments.description" : page === HOME_PAGES.clips ? "course.clips.description" : page === HOME_PAGES.quizzes ? "course.home.quizzesDescription" : count > 0 ? "course.home.topicQuizzes" : "course.home.comingSoon", { count })}
       </p>
     </CourseCard>
   );
@@ -255,6 +260,10 @@ function HomeOverview(props: HomeOverviewProps): ReactElement | null {
           const view = { opened: enabled && pane.opened, revealed: pane.revealed };
           const quiz = course.quizzes.find((candidate) => candidate.id === page);
           if (quiz !== undefined) return <QuizPage {...common} quiz={quiz} busy={busy} act={act} view={view} others={preferences.others} challenge={challengeOf(preferences, quiz.id)} onChallenge={(challenge) => onPreferences(withChallenge(preferences, quiz.id, challenge))} />;
+          const assignment = course.assignments?.find((candidate) => candidate.id === page);
+          if (assignment !== undefined) return <AssignmentPage assignment={assignment} session={session} locale={locale} text={text} opened={view.opened} />;
+          const clip = course.clips?.find((candidate) => candidate.id === page);
+          if (clip !== undefined) return <ClipPage clip={clip} session={session} locale={locale} text={text} />;
           if (course.topics?.some((topic) => topic.id === page)) return <PageFrame page={page}><CollectionCard {...props} page={page} placeholder /></PageFrame>;
           switch (page) {
             case HOME_PAGES.learner:
@@ -279,7 +288,11 @@ function HomeOverview(props: HomeOverviewProps): ReactElement | null {
     const onOpen = clientAccess(course, pane.id, props.at) ? card.open : undefined;
     const quiz = course.quizzes.find((candidate) => candidate.id === pane.id);
     if (quiz !== undefined) return <QuizCardView {...common} {...shown} onOpen={onOpen} quiz={quiz} busy={busy} act={act} challenge={challengeOf(preferences, quiz.id)} />;
-    if (pane.id === HOME_PAGES.quizzes || course.topics?.some((topic) => topic.id === pane.id)) return <CollectionCard {...props} page={pane.id} {...shown} onOpen={onOpen} />;
+    const assignment = course.assignments?.find((candidate) => candidate.id === pane.id);
+    if (assignment !== undefined) return <AssignmentCardView {...shown} onOpen={onOpen} assignment={assignment} locale={locale} text={text} />;
+    const clip = course.clips?.find((candidate) => candidate.id === pane.id);
+    if (clip !== undefined) return <ClipCardView {...shown} onOpen={onOpen} clip={clip} locale={locale} text={text} />;
+    if (pane.id === HOME_PAGES.quizzes || pane.id === HOME_PAGES.assignments || pane.id === HOME_PAGES.clips || course.topics?.some((topic) => topic.id === pane.id)) return <CollectionCard {...props} page={pane.id} {...shown} onOpen={onOpen} />;
     switch (pane.id) {
       case HOME_PAGES.learner:
         return <LearnerCard {...common} {...shown} />;
@@ -296,12 +309,12 @@ function HomeOverview(props: HomeOverviewProps): ReactElement | null {
     const cell = cells[pane.id];
     const quiz = course.quizzes.some((candidate) => candidate.id === pane.id);
     const collection = isHomeGrid(pane.id, course);
-    const key = quiz ? `quiz:${pane.id}` : collection ? pane.id === HOME_PAGES.quizzes ? "quizzes" : `topic:${pane.id}` : pane.id === HOME_PAGES.preferences ? "preferences" : pane.id;
+    const key = quiz ? `quiz:${pane.id}` : collection ? containerKey(pane.id) : pane.id === HOME_PAGES.preferences ? "preferences" : pane.id;
     const contained = new Set(collection ? pagesWithin(pane.id, course).flatMap((page) => isHomeGrid(page, course) ? [page, ...pagesWithin(page, course)] : [page]) : []);
     const activity = <CardPresence anchor={PRESENCE_ANCHORS.home(key)} text={text} accepts={(place, presentation) => quiz ? place.quiz === pane.id : collection ? (place.quiz !== undefined && contained.has(place.quiz)) || (place.screen === "home" && presentation?.home !== undefined && (presentation.home === pane.id || contained.has(presentation.home))) : place.screen === (pane.id === HOME_PAGES.leaderboard ? "leaderboard" : pane.id === HOME_PAGES.preferences ? "preferences" : pane.id)} />;
     const alias = container === undefined ? `course.home.${pane.id}` : undefined;
     const gridCell = card.mode === "strip" && cell !== undefined;
-    return <div data-element-alias={alias} className={gridCell ? "course-home-cell" : "course-home-entry"} style={gridCell ? { gridColumn: cell.column + 1, gridRow: cell.row + 1 } : undefined}><div className="course-home-card">{gatedCard}{activity}</div></div>;
+    return <div data-element-alias={alias} data-card-grid-cell={gridCell ? "" : undefined} className={gridCell ? "course-home-cell" : "course-home-entry"} style={gridCell ? { gridColumn: cell.column + 1, gridRow: cell.row + 1 } : undefined}><div className="course-home-card">{gatedCard}{activity}</div></div>;
   };
   return (
     <div ref={root} data-page={container} data-course-grid={container ?? "root"} data-grid-active={activeGrid ? "" : undefined} className="relative h-full min-h-0 w-full">
@@ -310,7 +323,7 @@ function HomeOverview(props: HomeOverviewProps): ReactElement | null {
         cells={cells}
         renderCard={renderCard}
         overlayClassName="course-home-grid"
-        overlayStyle={{ "--course-home-columns": homeTrackTemplate(tracks?.columns, strip.columns), "--course-home-rows": homeTrackTemplate(tracks?.rows, strip.rows, `min(${HOME_GRID_ROW_HEIGHT_PX}px, 100%)`) } as CSSProperties}
+        overlayStyle={{ "--course-home-columns": homeTrackTemplate(tracks?.columns, strip.columns), "--course-home-rows": homeTrackTemplate(tracks?.rows, strip.rows, `min(${container === HOME_PAGES.clips ? HOME_CLIP_ROW_HEIGHT_PX : HOME_GRID_ROW_HEIGHT_PX}px, 100%)`) } as CSSProperties}
         mode={layout.mode}
         routing="none"
         interactive={interactive}
@@ -370,14 +383,15 @@ export function HomeScreen(props: HomeProps): ReactElement | null {
   return (
     <div className="course-home flex min-h-0 flex-1 flex-col">
       <h1 tabIndex={-1} className="sr-only">{heading}</h1>
-      {selected === undefined || state.course.topics?.some((topic) => topic.id === selected) ? <AssignmentDownloads assignments={state.course.assignments ?? []} locale={props.locale} topic={selected} /> : null}
-      {problem === undefined ? null : <ProblemNote problem={problem} text={text} className="m-double mb-0" />}
+      {problem === undefined ? null : <ProblemNote problem={problem} text={text} band />}
       {pending === undefined ? null : (
-        <div role="status" className="flex flex-wrap items-center gap-double px-double pt-double text-sm">
-          <progress aria-label={text("course.home.starting")} className="course-progress" />
-          <span>{text("course.home.starting")}</span>
-          <BodyButton onClick={() => pending.abort()}>{text("course.run.cancel")}</BodyButton>
-        </div>
+        <SharedBorderRow role="status" edges={["bottom"]} className="flex-wrap text-sm">
+          <SharedBorderRowCell className="min-w-0 flex-1 gap-double px-double py-single">
+            <progress aria-label={text("course.home.starting")} className="course-progress" />
+            <span>{text("course.home.starting")}</span>
+          </SharedBorderRowCell>
+          <BodyButton cell onClick={() => pending.abort()}>{text("course.run.cancel")}</BodyButton>
+        </SharedBorderRow>
       )}
       <div data-course-scrollport="" className="relative min-h-0 flex-1">
         <PreviewPointerContext.Provider value={previewPointer.current}>

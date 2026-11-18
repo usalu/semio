@@ -68,14 +68,14 @@ export function scopedPlanOfReplyV1(request:InvocationPlanRequestV1,tasks:PlanRe
  }
  const named=[...new Set(request.targets.filter(target=>target!=="*:*"))],needed=new Set(edges.map(edge=>edge.to.project+":"+edge.to.target)),roots=ids.filter(id=>!needed.has(id)),plan:ScopedPlanV1={version:1,scope:{version:1,targets:(named.length?named:roots.length?roots:ids).map(ref),includeToolClosure:true},projects:[...projects].sort(),tasks:ids.map(ref),edges,projectsRead:projects.size};
  const violations=validateJsonSchemaSubset({...scopeSchema,$ref:"#/definitions/ScopedPlan"},plan,scopeSchema);
- if(violations.length){const detail=violations.slice(0,4).map(rule=>rule.slice(0,300)).join("; ")+" ("+ids.length+" tasks, "+edges.length+" edges, "+projects.size+" projects, "+plan.scope.targets.length+" scope targets)";throw Error("Closed scoped plan required: "+detail+"\nGeschlossener Plan erforderlich: "+detail);}
+ if(violations.length){throw refuseBuildV1("refused","graph.plan-not-closed",{detail:violations.slice(0,4).map(rule=>rule.slice(0,300)).join("; "),tasks:String(ids.length),edges:String(edges.length),projects:String(projects.size),targets:String(plan.scope.targets.length)});}
  return plan;
 }
 
 /** 🚨️ A failed plan request as a localized refusal of the build catalog, so the command line reports it in the language it resolved and ends with a failing exit status: the service refusal carries its text in the language of the request, a service that could not answer names its reason; a graph read the fleet did not serve in time (`unserved`, retry later) keeps its own class and so ends with exit status 75, a service that macOS keeps from reading the checkout (`consent`) ends with exit status 4; any other failure is kept as it is. */
 export function refusalOfPlanV1(error:unknown,language:string,resident:Readonly<{PlanRefusedErrorV1:new(...rest:never[])=>Error;HostUnavailableErrorV1:new(...rest:never[])=>Error}>):unknown{
  if(error instanceof resident.PlanRefusedErrorV1){const refusal=error as Error&{message_:Readonly<Record<string,string>>};return refuseBuildV1(((error as Error&{code?:string;retry?:string}).code==="unserved"?"unserved":(error as Error&{code?:string}).code==="consent"?"consent":"refused"),"graph.plan-refused",{text:refusal.message_[language]??refusal.message},{cause:error});}
- if(error instanceof resident.HostUnavailableErrorV1)return refuseBuildV1("failed","graph.host-unavailable",{reason:(error as Error&{reason:string}).reason+((error as Error&{reason:string}).reason==="lost"?(error as Error).message.replace(/^[^:]*\):/u,""):"")},{cause:error});
+ if(error instanceof resident.HostUnavailableErrorV1)return refuseBuildV1("failed","graph.host-unavailable",{reason:(error as Error&{reason:string}).reason+(["lost","silent"].includes((error as Error&{reason:string}).reason)?(error as Error).message.replace(/^[^:]*\):/u,""):"")},{cause:error});
  return error;
 }
 
@@ -88,8 +88,14 @@ export async function requestInvocationPlanV1(options:Readonly<{root:string;requ
  const began=Date.now()-5000,probe=await probeOf(root);
  if(probe.state!=="unprotected")try{(options.ports?.writeAccessReceiptV1??resident.writeAccessReceiptV1)(resident.accessDirectoryV1(root),{version:1,role:"client",pid:process.pid,state:probe.state,root,folder:probe.folder,identity:resident.consentIdentityV1()?.path??"",at:Date.now(),...launcherSha()});}catch{}
  if(probe.state==="denied"||probe.state==="waiting"){const fields={folder:probe.folder,root,identity:resident.consentIdentityV1()?.path??"repo"};throw probe.state==="denied"?refuseBuildV1("consent","graph.consent-denied",{...fields,place:(probe as {place?:string}).place??root}):refuseBuildV1("consent","graph.consent-waiting",fields);}
- const askWith=(starting:NodeJS.ProcessEnv,ignorePids:readonly number[]=[])=>ask({root,implementation,targets:request.targets,agent,language,signal,environment,arguments:request.arguments,tool:request.tool,...request.graphPolicy?{graphPolicy:request.graphPolicy}:{},spawnService:spawn({command:[process.execPath,script,"repo","service","host","run"],environment:starting,cwd:root}),...ignorePids.length>0?{ignorePids}:{},onProgress:(frame:{message?:Record<string,string>})=>{const text=frame.message?.[language]??frame.message?.en;if(text)write(text);}});
- const result=await askWith(environment).catch(async(error:unknown)=>{
+ const askWith=(starting:NodeJS.ProcessEnv,ignorePids:readonly number[]=[])=>ask({root,implementation,identify:()=>hostImplementationV1(root,environment),targets:request.targets,agent,language,signal,environment,arguments:request.arguments,tool:request.tool,...request.graphPolicy?{graphPolicy:request.graphPolicy}:{},spawnService:spawn({command:[process.execPath,script,"repo","service","host","run"],environment:starting,cwd:root}),...ignorePids.length>0?{ignorePids}:{},onProgress:(frame:{message?:Record<string,string>})=>{const text=frame.message?.[language]??frame.message?.en;if(text)write(text);}});
+ const handovers=(await import("../../🕸️graph/🕰️generations/🔐️custody/🟨️.mjs")).CUSTODY_POLICY_V1.maximumHandovers;
+ const askHanded=async(attempt:number):Promise<any>=>askWith(environment).catch((error:unknown)=>{
+  if(!(error instanceof resident.PlanRefusedErrorV1&&(error as Error&{code?:string}).code==="handover")||attempt>=handovers)throw error;
+  write("The graph read handed over to current code; asking again / Das Lesen des Graphen wurde an aktuellen Code übergeben; die Anfrage wird erneut gestellt");
+  return askHanded(attempt+1);
+ });
+ const result=await askHanded(0).catch(async(error:unknown)=>{
   if(!(error instanceof resident.PlanRefusedErrorV1&&(error as Error&{code?:string}).code==="consent"))throw refusalOfPlanV1(error,language,resident);
   const again=await probeOf(root);
   if(again.state!=="ok")throw refusalOfPlanV1(error,language,resident);

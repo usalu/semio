@@ -5,6 +5,8 @@ impl<A:ArtifactApp> MountedTypedCommandFullOperation<A>{
   if self.producer_source.is_some_and(|binding|!binding.matches(cx)){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original tool producer requires the same source roots, clock and deadline").into())}Ok(())
  }
  fn original_reserved_producer_pending(&self)->bool{(self.reserved_producer.is_some()||!self.reserved_construction.terminal_is_empty())&&!self.terminal_seen&&self.session.is_none()&&self.session_rejected.is_none()}
+ /// 🏗️ Whether this worker still owes its producer build, which only the operation's own publication turn funds: a one-item maintenance loan cannot carry it.
+ pub fn producer_build_pending(&self)->bool{(self.producer_request.is_some()||self.original_reserved_producer_pending())&&!self.user_cancel_requested&&!self.terminal_seen}
  fn original_producer_pending(&self)->bool{self.producer_request.is_some()||self.producer_request_retirement.is_some()||self.original_reserved_producer_pending()}
  fn original_producer_retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if self.original_reserved_producer_pending(){return Ok(RetirementDemand{depth:1,..Default::default()})}

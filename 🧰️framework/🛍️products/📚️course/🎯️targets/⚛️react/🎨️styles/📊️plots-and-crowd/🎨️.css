@@ -82,7 +82,7 @@
 }
 
 .course-plot thead th {
-  border-block-end: var(--stroke-default) solid var(--border-normal-color);
+  border-block-end: var(--stroke-hairline) solid var(--border-normal-color);
   color: var(--muted-foreground);
 }
 

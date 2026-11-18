@@ -924,6 +924,36 @@
               "h": 0.05
             },
             {
+              "id": "handle-base-cut",
+              "bone": "leaf",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.5,
+              "region": "leaf-frame",
+              "material": "steel",
+              "kind": "rect",
+              "x": 1.89,
+              "y": -0.013,
+              "w": 0.06,
+              "h": 0.026
+            },
+            {
+              "id": "handle-grip-cut",
+              "bone": "leaf",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.5,
+              "region": "leaf-frame",
+              "material": "steel",
+              "kind": "rect",
+              "x": 1.9,
+              "y": -0.033,
+              "w": 0.03,
+              "h": 0.066
+            },
+            {
               "id": "leaf-glass",
               "bone": "leaf",
               "role": "glazing",
@@ -937,6 +967,21 @@
               "y": -0.005,
               "w": 0.9,
               "h": 0.01
+            },
+            {
+              "id": "leaf-rail-below",
+              "bone": "leaf",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.92,
+              "region": "leaf-glass",
+              "material": "glass",
+              "kind": "rect",
+              "x": 1.05,
+              "y": -0.025,
+              "w": 0.9,
+              "h": 0.05
             },
             {
               "id": "jamb-west-seal",
@@ -1922,21 +1967,33 @@
           ],
           "plan": [
             {
-              "id": "portal",
+              "id": "jamb-west",
               "bone": "track",
               "role": "body",
               "z": 1,
               "filled": true,
               "tone": 0.45,
-              "regions": [
-                "track-steel",
-                "jamb-steel"
-              ],
+              "regions": ["jamb-steel"],
               "material": "steel",
               "kind": "rect",
               "x": -0.05,
               "y": -0.05,
-              "w": 3.1,
+              "w": 0.15,
+              "h": 0.1
+            },
+            {
+              "id": "jamb-east",
+              "bone": "track",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.45,
+              "regions": ["jamb-steel"],
+              "material": "steel",
+              "kind": "rect",
+              "x": 2.9,
+              "y": -0.05,
+              "w": 0.15,
               "h": 0.1
             },
             {
@@ -1953,13 +2010,21 @@
               "material": "glass",
               "kind": "rect",
               "x": 1,
-              "y": -0.025,
+              "y": -0.0375,
               "w": 1,
-              "h": 0.05
+              "h": 0.075
             }
           ]
         },
-        "sections": {},
+        "sections": {
+          "plan": {
+            "plane": 1,
+            "label": {
+              "en": "A-A",
+              "de": "A-A"
+            }
+          }
+        },
         "decisions": {
           "silhouette": {
             "en": "An inverted steel U (jambs and head track, 3.10 x 2.15 m, 6.2 x 4.3 mm) with a light leaf rectangle (2 x 3.9 mm) hanging in it; the leaf moves along the track. Front and plan: the front is the end view along the track, jamb and track as one outline (the leaf hides behind the jamb); the plan is the portal strip with the leaf as a lighter bar that slides along it.",
@@ -3065,8 +3130,7 @@
             "size": [0.009, 2.05, 0.08],
             "transform": {
               "translation": [0.035, -1.075, 0.0]
-            },
-            "slender": true
+            }
           },
           {
             "id": "jamb-east-seal",
@@ -3078,8 +3142,7 @@
             "size": [0.009, 2.05, 0.08],
             "transform": {
               "translation": [2.965, -1.075, 0.0]
-            },
-            "slender": true
+            }
           },
           {
             "id": "track",

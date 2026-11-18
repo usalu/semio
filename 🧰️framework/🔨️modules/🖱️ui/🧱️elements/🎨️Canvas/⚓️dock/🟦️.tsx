@@ -101,7 +101,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   };
 
   const renderGhostTab = (tab: { id: string; title: string; iconId: IconName }) => (
-    <div data-slot="mode-dock-tab-insert-preview" className={modeDockTabInsertPreviewClass} aria-hidden>
+    <div data-slot="mode-dock-tab-insert-preview" data-shared-border-cell="" data-shared-border-state="active" className={modeDockTabInsertPreviewClass} aria-hidden>
       <div className={modeDockTabLabelClassName}>
         <Icon icon={tab.iconId} size="small" className="shrink-0" />
         <span data-slot="inline-label" className="truncate">

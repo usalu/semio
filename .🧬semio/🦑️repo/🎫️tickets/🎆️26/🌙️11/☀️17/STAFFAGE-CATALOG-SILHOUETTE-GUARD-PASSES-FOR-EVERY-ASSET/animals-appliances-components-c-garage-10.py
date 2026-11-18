@@ -1,0 +1,10 @@
+from importlib import import_module
+L = import_module("animals-appliances-components-c-lib")
+d = L.D("🧱️components/sectional-garage-door")
+n = d.shape(50, "elevation", "roller-0"); o = d.obj(n)
+for k in ("cx", "cy", "rx", "ry", "penMm"): o.pop(k)
+o.update({"id": "bottom-bracket", "kind": "poly", "closed": True, "points": [[-0.012, -0.03], [-0.012, -0.02], [0.1, -0.02], [0.1, -0.03]]})
+d.insert_after(n, o)
+L.setf(d, 50, "front", "track-left", h=2.52)
+L.setf(d, 50, "front", "track-right", h=2.52)
+d.commit()

@@ -1,0 +1,161 @@
+import {spawn,spawnSync} from "node:child_process";
+import {mkdirSync,readFileSync,renameSync,rmSync,writeFileSync} from "node:fs";
+import {join} from "node:path";
+import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+
+/** 📐️ The numbers of the process-tree rules.
+ * @see ./🧬️schema/🔣️.json */
+export const READY_TREE_POLICY_V1=schema.definitions.Policy.const;
+const P=READY_TREE_POLICY_V1;
+
+/** 🧾️ One row of the process table: the pid, the pid of its parent and the start time in milliseconds since the epoch. */
+export type ReadyProcessV1=Readonly<{pid:number;ppid:number;startMs:number}>;
+/** 🪪️ A process named by pid and start time: a reused pid has another start time and is another process. */
+export type ReadyKnownV1=Readonly<{pid:number;startMs:number}>;
+
+const near=(left:number,right:number,tolerance:number)=>Math.abs(left-right)<=tolerance;
+
+/** 🧭️ Whether the process `known` named is still in the table as the same process, gone, or its pid belongs to another process now. A start time of 0 in the record means the start was not known and only the pid counts. */
+export function readyIdentityV1(known:ReadyKnownV1,table:readonly ReadyProcessV1[],tolerance:number=P.toleranceMilliseconds):"same"|"gone"|"reused"{
+ const row=table.find(each=>each.pid===known.pid);
+ if(row===undefined)return"gone";
+ return known.startMs===0||near(row.startMs,known.startMs,tolerance)?"same":"reused";
+}
+
+/** 🌲️ The processes to stop, leaf first: the root (if it is still the same process), everything below it in the table, and every process recorded in an earlier sample that is still there with its recorded start time (the orphans whose parent has already exited) with everything below those. A child counts as below its parent only when it did not start before the parent (a reused parent pid is not a parent). Never this process or its ancestors, never the system pids. A pure function.
+ * @see ./🧪️tests/🐍️.py */
+export function readyKillPlanV1(input:Readonly<{table:readonly ReadyProcessV1[];root:ReadyKnownV1;known:readonly ReadyKnownV1[];self:number;tolerance?:number}>):readonly number[]{
+ const tolerance=input.tolerance??P.toleranceMilliseconds,byPid=new Map(input.table.map(row=>[row.pid,row])),children=new Map<number,ReadyProcessV1[]>();
+ for(const row of input.table){const parent=byPid.get(row.ppid);if(parent!==undefined&&row.startMs>=parent.startMs-tolerance&&row.pid!==row.ppid){const list=children.get(row.ppid)??[];list.push(row);children.set(row.ppid,list);}}
+ const protectedPids=new Set<number>();
+ for(let at:number|undefined=input.self,depth=0;at!==undefined&&depth<256&&!protectedPids.has(at);at=byPid.get(at)?.ppid,depth++)protectedPids.add(at);
+ const depthOf=new Map<number,number>(),queue:{pid:number;depth:number}[]=[];
+ const seeds=[input.root,...input.known].filter(known=>readyIdentityV1(known,input.table,tolerance)==="same");
+ for(const seed of seeds)if(!depthOf.has(seed.pid)){depthOf.set(seed.pid,0);queue.push({pid:seed.pid,depth:0});}
+ while(queue.length>0){
+  const {pid,depth}=queue.shift()!;
+  for(const child of children.get(pid)??[])if(!depthOf.has(child.pid)){depthOf.set(child.pid,depth+1);queue.push({pid:child.pid,depth:depth+1});}
+ }
+ return[...depthOf].filter(([pid])=>pid>P.reservedPids&&!protectedPids.has(pid)).sort((a,b)=>b[1]-a[1]||a[0]-b[0]).map(([pid])=>pid);
+}
+
+/** 🌲️ The processes of the tree of `root` now (root included), as `{pid, startMs}` rows for the record of the next sample. */
+export function readyTreeMembersV1(table:readonly ReadyProcessV1[],root:ReadyKnownV1,known:readonly ReadyKnownV1[],tolerance:number=P.toleranceMilliseconds):readonly ReadyKnownV1[]{
+ const plan=new Set(readyKillPlanV1({table,root,known,self:0,tolerance}));
+ return table.filter(row=>plan.has(row.pid)).map(row=>({pid:row.pid,startMs:row.startMs}));
+}
+
+/** 🔒️ Whether a lease is held: no lease is free; an old one has expired; a lease whose process is gone or is another process now (the pid was reused) is free at once; anything else is held. `process` is what the caller found out about the recorded pid, `processStartMs` the start time it found. A pure function.
+ * @see ./🧪️tests/🐍️.py */
+export function readyLeaseVerdictV1(input:Readonly<{lease:Readonly<{pid:number;startMs?:number|null;wallMs:number}>|undefined|null;nowMs:number;staleMs:number;process:"alive"|"gone"|"unknown";processStartMs?:number|null;tolerance?:number}>):Readonly<{state:"free"|"held";reason:"none"|"expired"|"owner-gone"|"pid-reused"|"held"}>{
+ const lease=input.lease;
+ if(lease===undefined||lease===null)return{state:"free",reason:"none"};
+ if(input.nowMs-lease.wallMs>input.staleMs)return{state:"free",reason:"expired"};
+ if(input.process==="gone")return{state:"free",reason:"owner-gone"};
+ if(input.process==="alive"&&lease.startMs!==undefined&&lease.startMs!==null&&lease.startMs>0&&input.processStartMs!==undefined&&input.processStartMs!==null&&!near(lease.startMs,input.processStartMs,input.tolerance??P.toleranceMilliseconds))return{state:"free",reason:"pid-reused"};
+ return{state:"held",reason:"held"};
+}
+
+/** ⏳️ What to do with a stage past its soft cap: it runs while inside the cap; between the soft and the hard cap (`hardCapMultiplier` times the soft cap) it goes on, `extended`, as long as a counter of its log changed within the stall limit; otherwise it is stopped, `stalled` when the counters stood still, `timeout` at the hard cap. A pure function.
+ * @see ./🧪️tests/🐍️.py */
+export function readyDeadlineV1(input:Readonly<{elapsedMs:number;softMs:number;sinceProgressMs:number;policy?:typeof P}>):"run"|"extended"|"timeout"|"stalled"{
+ const policy=input.policy??P;
+ if(input.elapsedMs<=input.softMs)return"run";
+ if(input.elapsedMs>input.softMs*policy.hardCapMultiplier)return"timeout";
+ return input.sinceProgressMs<=policy.stallMilliseconds?"extended":"stalled";
+}
+
+/** 🔢️ The progress of a stage as the last line of its log that carries a counter (the matching text, so the same counter is the same key and a counter that moved is another): `null` when no line does. A pure function.
+ * @see ./🧪️tests/🐍️.py */
+export function readyProgressKeyV1(lines:readonly string[],patterns:readonly string[]=P.progressPatterns):string|null{
+ const expressions=patterns.map(pattern=>new RegExp(pattern,"u"));
+ for(let index=lines.length-1;index>=0;index--)for(const expression of expressions){const found=expression.exec(lines[index]!);if(found!==null)return found[0];}
+ return null;
+}
+
+/** 📜️ The process table from the text of `ps -A -o pid=,ppid=,etime=` (Linux and macOS): the start time is the moment of the call less the elapsed time (`[[dd-]hh:]mm:ss`), good to a second. */
+export function readyParseUnixTableV1(text:string,nowMs:number):readonly ReadyProcessV1[]{
+ const rows:ReadyProcessV1[]=[];
+ for(const line of text.split("\n")){
+  const found=/^\s*(\d+)\s+(\d+)\s+(?:(\d+)-)?(?:(\d+):)?(\d+):(\d+)\s*$/u.exec(line);
+  if(found===null)continue;
+  const seconds=((Number(found[3]??0)*24+Number(found[4]??0))*60+Number(found[5]))*60+Number(found[6]);
+  rows.push({pid:Number(found[1]),ppid:Number(found[2]),startMs:nowMs-seconds*1000});
+ }
+ return rows;
+}
+
+/** 📜️ The process table from the lines `pid,ppid,startMs` that the PowerShell command of {@link readyTableCommandV1} prints on Windows. */
+export function readyParseWindowsTableV1(text:string):readonly ReadyProcessV1[]{
+ const rows:ReadyProcessV1[]=[];
+ for(const line of text.split(/\r?\n/u)){const found=/^\s*(\d+),(\d+),(\d+)\s*$/u.exec(line);if(found!==null)rows.push({pid:Number(found[1]),ppid:Number(found[2]),startMs:Number(found[3])});}
+ return rows;
+}
+
+/** ⏱️ The elapsed time of `ps -o etime=` (`[[dd-]hh:]mm:ss`) in milliseconds, `null` when the text is not that. */
+export function readyElapsedMillisecondsV1(text:string):number|null{
+ const found=/^\s*(?:(\d+)-)?(?:(\d+):)?(\d+):(\d+)\s*$/u.exec(text);
+ return found===null?null:((((Number(found[1]??0)*24+Number(found[2]??0))*60+Number(found[3]))*60+Number(found[4]))*1000);
+}
+
+/** 🕰️ The start time of one process, synchronously (a lease check asks for one process only): `ps -o etime=` on Linux and macOS, the creation date of the Win32 process on Windows; `null` when the process is not there or the command fails. */
+export function readyProcessStartSyncV1(pid:number,platform:NodeJS.Platform=process.platform,now:()=>number=Date.now):number|null{
+ try{
+  const id=Math.trunc(pid);
+  if(!Number.isInteger(id)||id<1)return null;
+  if(platform==="win32"){
+   const run=spawnSync("powershell.exe",["-NoProfile","-NonInteractive","-Command",`([DateTimeOffset](Get-CimInstance Win32_Process -Filter 'ProcessId=${id}').CreationDate).ToUnixTimeMilliseconds()`],{encoding:"utf8",windowsHide:true,timeout:15000}),value=Number(run.stdout.trim());
+   return Number.isFinite(value)&&value>0?value:null;
+  }
+  const run=spawnSync("ps",["-o","etime=","-p",String(id)],{encoding:"utf8",timeout:5000}),elapsed=readyElapsedMillisecondsV1(run.stdout);
+  return elapsed===null?null:now()-elapsed;
+ }catch{return null;}
+}
+
+/** 🖥️ The command that prints the process table on this platform. */
+export function readyTableCommandV1(platform:NodeJS.Platform=process.platform):Readonly<{command:string;args:readonly string[]}>{
+ return platform==="win32"
+  ?{command:"powershell.exe",args:["-NoProfile","-NonInteractive","-Command","Get-CimInstance Win32_Process | ForEach-Object { '{0},{1},{2}' -f $_.ProcessId,$_.ParentProcessId,([DateTimeOffset]$_.CreationDate).ToUnixTimeMilliseconds() }"]}
+  :{command:"ps",args:["-A","-o","pid=,ppid=,etime="]};
+}
+
+/** 📜️ Reads the process table of this machine; an empty list when the command fails or takes longer than `timeoutMilliseconds`. */
+export function readyReadTableV1(timeoutMilliseconds:number=20000,platform:NodeJS.Platform=process.platform,now:()=>number=Date.now):Promise<readonly ReadyProcessV1[]>{
+ return new Promise(done=>{
+  const {command,args}=readyTableCommandV1(platform);
+  let out="",finished=false;
+  const end=(table:readonly ReadyProcessV1[])=>{if(!finished){finished=true;clearTimeout(timer);done(table);}};
+  let child:ReturnType<typeof spawn>;
+  try{child=spawn(command,[...args],{windowsHide:true,stdio:["ignore","pipe","ignore"]});}catch{return done([]);}
+  const timer=setTimeout(()=>{try{child.kill();}catch{}end([]);},timeoutMilliseconds);
+  child.stdout?.on("data",chunk=>{out+=String(chunk);});
+  child.on("error",()=>end([]));
+  child.on("close",()=>end(platform==="win32"?readyParseWindowsTableV1(out):readyParseUnixTableV1(out,now())));
+ });
+}
+
+/** 💾️ Writes the record of the processes seen below a stage (tmp + rename). */
+export function readyWriteTreeV1(directory:string,stage:string,root:ReadyKnownV1,processes:readonly ReadyKnownV1[],nowMs:number):void{
+ try{mkdirSync(directory,{recursive:true});const file=join(directory,`${stage}.${P.treeName}`),temporary=`${file}.${process.pid}.tmp`;writeFileSync(temporary,JSON.stringify({version:1,stage,root,sampledMs:nowMs,processes}));renameSync(temporary,file);}catch{}
+}
+
+/** 💾️ Reads the record of the processes seen below a stage, `undefined` when there is none or it is damaged. */
+export function readyReadTreeV1(directory:string,stage:string):Readonly<{root:ReadyKnownV1;processes:readonly ReadyKnownV1[]}>|undefined{
+ try{const row=JSON.parse(readFileSync(join(directory,`${stage}.${P.treeName}`),"utf8")) as {version:number;root:ReadyKnownV1;processes:ReadyKnownV1[]};return row.version===1?{root:row.root,processes:row.processes}:undefined;}catch{return undefined;}
+}
+
+/** 🗑️ Forgets the record of a stage. */
+export function readyForgetTreeV1(directory:string,stage:string):void{try{rmSync(join(directory,`${stage}.${P.treeName}`),{force:true});}catch{}}
+
+/** 🔪️ Stops the tree of a stage on every platform: the plan from the process table now and the processes recorded earlier, leaf first, each with `signal`; on Windows `taskkill /F` per process of the plan, because a tree walk by the system loses every child of an exited parent. Returns the pids it signalled. */
+export async function readyKillTreeV1(input:Readonly<{root:ReadyKnownV1;known:readonly ReadyKnownV1[];signal:"SIGTERM"|"SIGKILL";self?:number;table?:readonly ReadyProcessV1[];platform?:NodeJS.Platform;kill?:(pid:number,signal:"SIGTERM"|"SIGKILL")=>void}>):Promise<readonly number[]>{
+ const platform=input.platform??process.platform,table=input.table??await readyReadTableV1(20000,platform),plan=readyKillPlanV1({table,root:input.root,known:input.known,self:input.self??process.pid});
+ const kill=input.kill??((pid:number,signal:"SIGTERM"|"SIGKILL")=>{
+  try{
+   if(platform==="win32")spawn("taskkill",["/PID",String(pid),"/F"],{windowsHide:true,stdio:"ignore"}).on("error",()=>undefined);
+   else process.kill(pid,signal);
+  }catch{}
+ });
+ for(const pid of plan)kill(pid,input.signal);
+ return plan;
+}

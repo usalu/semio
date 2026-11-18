@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Fleet-shared native helpers",
+  "description": "The native helper executables that every machine of one platform needs and that one machine builds for all: the task name of the fleet setup record and the executables of the scheduler crate that it holds, relative to the profile directory of the compiler target directory.",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "task": "native-helper:semio-build-scheduler",
+        "binaries": ["semio-build-scheduler", "jobserver-oracle"]
+      }
+    }
+  }
+}

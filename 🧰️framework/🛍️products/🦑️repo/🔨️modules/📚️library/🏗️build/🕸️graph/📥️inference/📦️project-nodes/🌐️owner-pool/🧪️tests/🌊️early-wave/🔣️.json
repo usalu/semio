@@ -1,0 +1,30 @@
+{
+ "version": 1,
+ "why": [
+  {"name": "no wave at all", "waves": [], "open": 0, "children": 0, "targetChildren": 0, "targetReason": null, "expect": "no-wave"},
+  {"name": "every wave declined", "waves": [{"state": "declined", "backoffUntil": 0, "acceptable": true}, {"state": "declined", "backoffUntil": 0, "acceptable": true}], "open": 0, "children": 0, "targetChildren": 0, "targetReason": null, "expect": "no-current-wave"},
+  {"name": "every wave of another revision", "waves": [{"state": "done", "backoffUntil": 0, "acceptable": false}], "open": 0, "children": 0, "targetChildren": 0, "targetReason": null, "expect": "no-current-wave"},
+  {"name": "acceptable waves rest", "waves": [{"state": "done", "backoffUntil": 0, "acceptable": true}, {"state": "declined", "backoffUntil": 0, "acceptable": true}], "open": 0, "children": 0, "targetChildren": 0, "targetReason": null, "expect": "waves-done"},
+  {"name": "children could not open the wave", "waves": [{"state": "open", "backoffUntil": 99, "acceptable": true}], "open": 0, "children": 0, "targetChildren": 0, "targetReason": null, "expect": "waves-backoff"},
+  {"name": "open wave and a target of zero", "waves": [{"state": "open", "backoffUntil": 0, "acceptable": true}], "open": 1, "children": 0, "targetChildren": 0, "targetReason": null, "expect": "nothing-fits"},
+  {"name": "open wave and children wanted", "waves": [{"state": "open", "backoffUntil": 0, "acceptable": true}], "open": 1, "children": 0, "targetChildren": 3, "targetReason": null, "expect": null},
+  {"name": "children run", "waves": [{"state": "open", "backoffUntil": 0, "acceptable": true}], "open": 1, "children": 2, "targetChildren": 2, "targetReason": null, "expect": null},
+  {"name": "the gate says why", "waves": [{"state": "open", "backoffUntil": 0, "acceptable": true}], "open": 1, "children": 1, "targetChildren": 1, "targetReason": "yielding", "expect": "yielding"}
+ ],
+ "now": 50,
+ "accepts": [
+  {"wave": null, "mine": null, "expect": true},
+  {"wave": "a", "mine": null, "expect": true},
+  {"wave": null, "mine": "b", "expect": true},
+  {"wave": "a", "mine": "a", "expect": true},
+  {"wave": "a", "mine": "b", "expect": false}
+ ],
+ "republish": [
+  {"published": null, "count": 7, "sinceMs": 0, "expect": false},
+  {"published": null, "count": 8, "sinceMs": 0, "expect": true},
+  {"published": 1000, "count": 950, "sinceMs": 999999, "expect": false},
+  {"published": 1000, "count": 900, "sinceMs": 119999, "expect": false},
+  {"published": 1000, "count": 900, "sinceMs": 120000, "expect": true},
+  {"published": 1000, "count": 10, "sinceMs": 120000, "expect": true}
+ ]
+}

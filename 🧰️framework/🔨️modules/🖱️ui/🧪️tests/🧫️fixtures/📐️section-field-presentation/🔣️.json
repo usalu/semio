@@ -1,6 +1,6 @@
 {
   "provenance": {
-    "what": "React Section and Field compact-density text bands shared with the retained WGPU renderer — every line count is Chromium's own wrap of the Anta text at its box width.",
+    "what": "React Section and Field compact-density text bands shared with the retained WGPU renderer — every line count is Chromium's own wrap of the Anta text at its box width. The Field is a vertical shared-border row (round 2): label, description and error are cells with block padding and inline padding, one hairline divider to the next cell, no gap; the band numbers were re-measured in Chromium with the React Field mounted at 80px width.",
     "implementations": {
       "rust": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-mounted-layout-unit/🦀️.rs",
       "typescript": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⚙️puzzle3d-settings-document/🟦️.tsx"
@@ -8,6 +8,8 @@
   },
   "density": {
     "gap": 3.2,
+    "cellPaddingBlock": 4.0,
+    "cellDivider": 1.0,
     "fieldLabelFontSize": 12.8,
     "fieldLabelLineHeight": 19.2,
     "fieldDetailFontSize": 11.2,
@@ -15,6 +17,7 @@
     "sectionTitleFontSize": 21.6,
     "sectionTitleLineHeight": 30.4,
     "sectionTitleBodyGap": 16.0,
+    "sectionChildGap": 0.0,
     "sectionTrailingMargin": 32.0
   },
   "section": {
@@ -31,9 +34,17 @@
     "description": "Shown before control",
     "error": "Fix this value now",
     "detailLines": 2,
+    "textInline": 3.2,
+    "textWidth": 73.6,
+    "labelTop": 4.0,
+    "labelCellHeight": 28.2,
+    "descriptionTop": 32.2,
+    "descriptionCellHeight": 41.0,
     "controlHeight": 22.4,
-    "controlTop": 57.6,
-    "errorTop": 83.2,
-    "totalHeight": 115.2
+    "controlTop": 69.2,
+    "controlRowHeight": 23.4,
+    "errorTop": 96.6,
+    "errorCellHeight": 40.0,
+    "totalHeight": 132.6
   }
 }

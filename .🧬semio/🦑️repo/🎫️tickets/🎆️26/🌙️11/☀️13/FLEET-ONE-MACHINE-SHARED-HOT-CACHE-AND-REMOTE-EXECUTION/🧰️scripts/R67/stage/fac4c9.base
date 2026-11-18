@@ -1,0 +1,174 @@
+import {createHash} from "node:crypto";
+import {brotliCompressSync,brotliDecompressSync,constants} from "node:zlib";
+import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import {REAPI_V1,decodeProtobufV1,encodeProtobufV1} from "../../🌐️remote-execution/📡️wire/📦️protobuf/🟦️.ts";
+import {createGraphFleetClientV1,type GraphFleetClientV1,type GraphFleetSettingsV1} from "./📡️client/🟦️.ts";
+export type {GraphFleetClientV1,GraphFleetSettingsV1};
+import {slotIdV1} from "../../🪢️slots/🟦️.ts";
+import schema from "../🧬️schema/🔣️.json" with {type:"json"};
+import {GRAPH_STATE_POLICY_V1 as policy,graphStateSlotParts,type GraphStateV1} from "../🟦️.ts";
+
+
+const sha256=(bytes:Uint8Array|string):string=>createHash("sha256").update(bytes).digest("hex"),sleep=(milliseconds:number,signal?:AbortSignal):Promise<void>=>new Promise(done=>{const timer=setTimeout(done,milliseconds);signal?.addEventListener("abort",()=>{clearTimeout(timer);done();},{once:true});});
+
+/** 📄️ One document of an entry, in its neutral form: the bytes with the machine root replaced by the root token. */
+export type GraphDocumentV1=Readonly<{name:string;bytes:Uint8Array}>;
+/** 🏷️ The inline description of an entry: see the schema definition `Note`. */
+export type GraphEntryNoteV1=Readonly<{version:1;kind:GraphStateV1["frame"]["kind"];digest:string;platform:string;producer:string;createdMs:number;documents:readonly Readonly<{name:string;hash:string;size:number}>[]}>;
+/** 🔔️ A lifecycle message the caller may print (keys of the text catalogue). */
+export type GraphSayV1=(key:keyof typeof schema.definitions.TextCatalogue.const,fields:Readonly<Record<string,string|number>>)=>void;
+
+export {expandRootV1,neutralizeRootV1} from "../../🕸️graph/🕰️generations/🌐️remote-exchange/🧳️portable/🟦️.ts";
+
+/** 🗝️ The action key an entry is stored under: the state digest in the keyspace of the kind. */
+export function graphEntryKeyV1(state:GraphStateV1):string{return sha256(JSON.stringify([policy.domain,"entry",state.frame.kind,state.digest]));}
+
+/** 🪢️ The retention slot of an entry: a newer state of the same kind, platform and tooling supersedes older ones. */
+export function graphEntrySlotV1(state:GraphStateV1):string{return slotIdV1(policy.slotDomain as never,graphStateSlotParts(state.frame));}
+
+/** 🗜️ Compresses a neutral document into the blobs the cache stores (one per 32 MiB of compressed output), named `<name>.br` or `<name>.br.<n>`. */
+export function packGraphDocumentV1(document:GraphDocumentV1):readonly GraphDocumentV1[]{
+ const packed=brotliCompressSync(document.bytes,{params:{[constants.BROTLI_PARAM_QUALITY]:5,[constants.BROTLI_PARAM_LGWIN]:22,[constants.BROTLI_PARAM_SIZE_HINT]:document.bytes.length}}),part=32<<20;
+ if(packed.length<=part)return [{name:document.name+".br",bytes:packed}];
+ const parts:GraphDocumentV1[]=[];
+ for(let from=0,index=0;from<packed.length;from+=part,index++)parts.push({name:`${document.name}.br.${index}`,bytes:packed.subarray(from,Math.min(packed.length,from+part))});
+ return parts;
+}
+
+/** 📂️ The reverse of {@link packGraphDocumentV1} for the blobs of one entry: joins the parts of every document and decompresses it. */
+export function unpackGraphDocumentsV1(blobs:readonly GraphDocumentV1[]):readonly GraphDocumentV1[]{
+ const groups=new Map<string,{index:number;bytes:Uint8Array}[]>();
+ for(const blob of blobs){
+  const match=/^(.*)\.br(?:\.(\d+))?$/u.exec(blob.name);
+  if(!match)throw Error("Compressed graph document expected: "+blob.name);
+  const rows=groups.get(match[1]!)??[];rows.push({index:Number(match[2]??0),bytes:blob.bytes});groups.set(match[1]!,rows);
+ }
+ return [...groups].map(([name,rows])=>({name,bytes:new Uint8Array(brotliDecompressSync(Buffer.concat(rows.sort((a,b)=>a.index-b.index).map(row=>row.bytes)),{maxOutputLength:policy.documentMaximumBytes}))}));
+}
+
+/** 📡️ The client of the graph exchange; it keeps the unreachable-or-denied breaker next to the cache so a dead server costs one short probe. */
+export function graphFleetClientV1(settings:GraphFleetSettingsV1,world?:Readonly<{fetch?:typeof fetch}>):GraphFleetClientV1{return createGraphFleetClientV1(settings,world);}
+
+/** 🎫️ A claim this machine holds: renewed on a timer until released. */
+export type GraphHoldV1=Readonly<{release():Promise<void>;stop():void;lost():boolean}>;
+
+/** 🧭️ What the fleet decided for one state: an entry to install, or the permission (hold) or the need (no hold) to compute it here. */
+export type GraphDecisionV1=Readonly<{outcome:"hit";via:"cache"|"wait";documents:readonly GraphDocumentV1[];note:GraphEntryNoteV1;waitedMs:number}>|Readonly<{outcome:"compute";hold:GraphHoldV1|undefined;reason:string;waitedMs:number}>;
+
+function holdOf(client:GraphFleetClientV1,key:string,owner:string,ttl:number=policy.claimTtlMilliseconds):GraphHoldV1{
+ let stopped=false,gone=false;
+ const timer=setInterval(()=>{void client.renew(key,owner,ttl).then(state=>{if(state==="lost"){gone=true;stopped=true;clearInterval(timer);}});},policy.claimHeartbeatMilliseconds);timer.unref?.();
+ const stop=()=>{if(!stopped){stopped=true;clearInterval(timer);}};
+ return Object.freeze({stop,lost:()=>gone,async release(){stop();if(!gone)await Promise.race([client.release(key,owner),sleep(600)]);}});
+}
+
+function noteOf(bytes:Uint8Array):{note:GraphEntryNoteV1;entries:readonly {path:string;hash:string;size:number}[]}|undefined{
+ try{
+  const result=decodeProtobufV1(REAPI_V1.actionResult,bytes),files=(result.output_files??[]) as {path:string;digest:{hash:string;size_bytes:number|string}}[],text=Buffer.from(result.stdout_raw as Uint8Array).toString("utf8"),note=JSON.parse(text) as GraphEntryNoteV1;
+  if(validateJsonSchemaSubset({$ref:"#/definitions/Note"},note,schema).length)return undefined;
+  const entries=files.map(file=>({path:file.path,hash:file.digest.hash,size:Number(file.digest.size_bytes)}));
+  return {note,entries};
+ }catch{return undefined;}
+}
+
+async function each<T>(items:readonly T[],limit:number,visit:(item:T)=>Promise<void>):Promise<void>{
+ let next=0;await Promise.all(Array.from({length:Math.min(limit,items.length)},async()=>{while(next<items.length)await visit(items[next++]!);}));
+}
+
+/** 🧷️ Whether the caller already holds the blob of an entry document and does not want it downloaded: it is asked once per blob with the stored name (`<document>.br`), the digest and the size, and a blob it holds is not fetched and its document is not returned. */
+export type GraphHeldV1=(entry:Readonly<{path:string;hash:string;size:number}>)=>boolean|Promise<boolean>;
+
+/** ⚖️ Why the documents of an entry cannot be stored, in both languages, or undefined when they are within the declared limits: no document above `documentMaximumBytes` and no entry above `entryMaximumBytes`, counted before compression. */
+export function graphDocumentProblemV1(documents:readonly GraphDocumentV1[]):string|undefined{
+ const mebibytes=(bytes:number)=>Math.ceil(bytes/1048576),largest=documents.reduce((most,document)=>document.bytes.length>most.bytes.length?document:most,{name:"",bytes:new Uint8Array(0)}),total=documents.reduce((sum,document)=>sum+document.bytes.length,0);
+ if(largest.bytes.length>policy.documentMaximumBytes)return`the document ${largest.name} is ${mebibytes(largest.bytes.length)} MiB, above the limit of ${mebibytes(policy.documentMaximumBytes)} MiB / das Dokument ${largest.name} hat ${mebibytes(largest.bytes.length)} MiB, mehr als die Grenze von ${mebibytes(policy.documentMaximumBytes)} MiB`;
+ if(total>policy.entryMaximumBytes)return`the entry is ${mebibytes(total)} MiB in ${documents.length} documents, above the limit of ${mebibytes(policy.entryMaximumBytes)} MiB / der Eintrag hat ${mebibytes(total)} MiB in ${documents.length} Dokumenten, mehr als die Grenze von ${mebibytes(policy.entryMaximumBytes)} MiB`;
+ return undefined;
+}
+
+/** ⬇️ Looks the entry of a state up and downloads its documents, except the blobs `held` says the caller has. `undefined` is a miss; `"fault"` is an unreachable, denied or damaged entry (the caller computes). Every blob is verified against its name before it counts. */
+export async function fetchGraphEntryV1(client:GraphFleetClientV1,state:GraphStateV1,held?:GraphHeldV1):Promise<{note:GraphEntryNoteV1;documents:readonly GraphDocumentV1[]}|undefined|"fault"> {
+ if(!client.usable())return "fault";
+ const answer=await client.getResult(graphEntryKeyV1(state));
+ if(answer==="miss")return undefined;
+ if(typeof answer==="string")return "fault";
+ const described=noteOf(answer);
+ if(!described||described.note.digest!==state.digest||described.note.kind!==state.frame.kind||described.entries.length>policy.entryMaximumDocuments)return "fault";
+ const blobs:GraphDocumentV1[]=[];let broken=false;
+ await each(described.entries,4,async entry=>{if(broken)return;if(held!==undefined&&await held({path:entry.path,hash:entry.hash,size:entry.size}))return;const bytes=await client.getBlob(entry.hash,entry.size);if(bytes===undefined){broken=true;return;}blobs.push({name:entry.path,bytes});});
+ if(broken)return "fault";
+ try{return {note:described.note,documents:unpackGraphDocumentsV1(blobs)};}catch{return "fault";}
+}
+
+/** 🧭️ The protocol for one state: look it up; on a miss claim it; when another machine holds the claim wait for its upload (bounded) and fetch it; when the holder lapses take over. Anything unreachable, denied or too slow ends in `compute` without a hold, because correctness never depends on the fleet. */
+export async function decideGraphEntryV1(input:Readonly<{client:GraphFleetClientV1;state:GraphStateV1;owner:string;signal?:AbortSignal;say?:GraphSayV1;expectedMilliseconds?:number;waitLimitMilliseconds?:number;skip?:GraphHeldV1;now?:()=>number}>):Promise<GraphDecisionV1>{
+ const {client,state,owner,say}=input,now=input.now??Date.now,started=now(),key=graphEntryKeyV1(state),compute=(reason:string,hold?:GraphHoldV1):GraphDecisionV1=>({outcome:"compute",hold,reason,waitedMs:now()-started}),label=state.digest.slice(0,12);
+ const hit=(found:{note:GraphEntryNoteV1;documents:readonly GraphDocumentV1[]},via:"cache"|"wait"):GraphDecisionV1=>{say?.("hit",{kind:state.frame.kind,digest:label,files:found.documents.length,megabytes:Math.round(found.documents.reduce((sum,document)=>sum+document.bytes.length,0)/1048576),seconds:Math.round((now()-started)/1000)});return {outcome:"hit",via,documents:found.documents,note:found.note,waitedMs:now()-started};};
+ try{
+  const first=await fetchGraphEntryV1(client,state,input.skip);
+  if(first==="fault"){say?.("skipped",{kind:state.frame.kind,reason:"fault"});return compute("fault");}
+  if(first)return hit(first,"cache");
+  if(!client.claimsUsable())return compute("no-claims");
+  let deadline=Infinity;
+  for(let round=0;round<policy.claimRoundsMaximum;round++){
+   input.signal?.throwIfAborted();
+   const claim=await client.claim(key,owner,policy.claimTtlMilliseconds,input.expectedMilliseconds);
+   if(claim.state==="granted")return compute("granted",holdOf(client,key,owner));
+   if(claim.state==="stored"){const again=await fetchGraphEntryV1(client,state,input.skip);if(again&&again!=="fault")return hit(again,"wait");return compute("stored-unreadable");}
+   if(claim.state!=="held")return compute(claim.state==="full"?"claims-full":"claims-"+claim.fault);
+   if(deadline===Infinity){deadline=now()+Math.min(policy.claimWaitMaximumMilliseconds,input.waitLimitMilliseconds??policy.claimWaitMaximumMilliseconds);say?.("waited",{kind:state.frame.kind,digest:label,seconds:0});}
+   const remaining=deadline-now();
+   if(remaining<=0)return compute("holder-slow");
+   const waited=await client.await(key,remaining);
+   if(waited==="fault")return compute("await-fault");
+   if(waited==="stored"){const again=await fetchGraphEntryV1(client,state,input.skip);if(again&&again!=="fault")return hit(again,"wait");if(again==="fault")return compute("fault");}
+  }
+  return compute("rounds");
+ }catch{return compute("error");}
+}
+
+/** 🎯️ The answer of one look at a state that never waits: the entry is stored (nothing to compute), this machine holds the claim now, another machine holds it (look again later) or the fleet cannot say (the caller leaves the state alone). */
+export type GraphTryV1=Readonly<{outcome:"stored"}>|Readonly<{outcome:"granted";hold:GraphHoldV1}>|Readonly<{outcome:"held";by:string;untilMilliseconds:number}>|Readonly<{outcome:"fault";reason:string}>;
+
+/** 🎯️ Claims the computation of a state for a machine that pulls work: one request, no waiting. A claim answers `stored` for an entry that exists, so a pulled state is never claimed twice and never computed after it was published; a claim whose holder lapsed is granted to the next machine that asks. Anything unreachable or denied is a `fault`, never a grant. */
+export async function tryGraphEntryV1(input:Readonly<{client:GraphFleetClientV1;state:GraphStateV1;owner:string;expectedMilliseconds?:number;ttlMilliseconds?:number}>):Promise<GraphTryV1>{
+ const {client,state,owner}=input;
+ try{
+  if(!client.usable())return{outcome:"fault",reason:"down"};
+  if(!client.claimsUsable())return{outcome:"fault",reason:"no-claims"};
+  const ttl=input.ttlMilliseconds??policy.claimTtlMilliseconds,claim=await client.claim(graphEntryKeyV1(state),owner,ttl,input.expectedMilliseconds);
+  if(claim.state==="granted")return{outcome:"granted",hold:holdOf(client,graphEntryKeyV1(state),owner,ttl)};
+  if(claim.state==="stored")return{outcome:"stored"};
+  if(claim.state==="held")return{outcome:"held",by:claim.by,untilMilliseconds:claim.untilMilliseconds};
+  return{outcome:"fault",reason:claim.state==="full"?"claims-full":"claims-"+claim.fault};
+ }catch{return{outcome:"fault",reason:"error"};}
+}
+
+/** 🔁️ Replaces a mutable head by compare-and-swap: the head is read, the new result is written with the digest of what was read (or `none`), the cache accepts it only while the held bytes still have that digest (whoever wrote them), and a lost race is read again and retried up to four times: the newest writer wins and nobody is refused as divergent. */
+async function swapHeadV1(client:GraphFleetClientV1,key:string,result:Uint8Array,slot:string):Promise<boolean>{
+ for(let attempt=0;attempt<4;attempt++){
+  const current=await client.getResult(key),expect=current==="miss"?"none":typeof current==="string"?undefined:sha256(current);
+  if(await client.putResult(key,result,slot,expect))return true;
+  if(expect===undefined)return false;
+ }
+ return false;
+}
+
+/** ⬆️ Uploads the documents of a computed state and the action result that names them (blobs first, so a reader never sees a result without its blobs), then drops the claim. Returns whether the entry is stored. A machine without upload rights, an unreachable server or an oversized entry only returns `false`. */
+export async function publishGraphEntryV1(input:Readonly<{client:GraphFleetClientV1;state:GraphStateV1;owner:string;documents:readonly GraphDocumentV1[];hold?:GraphHoldV1;head?:boolean;say?:GraphSayV1;producer?:string;now?:()=>number}>):Promise<boolean>{
+ const {client,state,hold,say}=input;
+ try{
+  if(!client.settings.upload||!client.usable()||hold?.lost()===true)return false;
+  if(graphDocumentProblemV1(input.documents)!==undefined)return false;
+  const blobs=input.documents.flatMap(document=>packGraphDocumentV1(document)).map(blob=>({name:blob.name,bytes:blob.bytes,hash:sha256(blob.bytes)}));
+  if(blobs.length>policy.entryMaximumDocuments)return false;
+  let failed=false;
+  await each(blobs,3,async blob=>{if(failed)return;if(await client.hasBlob(blob.hash)===true)return;if(!await client.putBlob(blob.hash,blob.bytes))failed=true;});
+  if(failed)return false;
+  const note:GraphEntryNoteV1={version:1,kind:state.frame.kind,digest:state.digest,platform:state.frame.platform,producer:(input.producer??input.owner).slice(0,160),createdMs:(input.now??Date.now)(),documents:blobs.map(blob=>({name:blob.name,hash:blob.hash,size:blob.bytes.length}))};
+  const result=encodeProtobufV1(REAPI_V1.actionResult,{output_files:blobs.map(blob=>({path:blob.name,digest:{hash:blob.hash,size_bytes:blob.bytes.length}})),stdout_raw:Buffer.from(JSON.stringify(note))});
+  const stored=input.head===true?await swapHeadV1(client,graphEntryKeyV1(state),result,graphEntrySlotV1(state)):await client.putResult(graphEntryKeyV1(state),result,graphEntrySlotV1(state));
+  if(stored)say?.("published",{kind:state.frame.kind,digest:state.digest.slice(0,12),files:blobs.length,megabytes:Math.round(blobs.reduce((sum,blob)=>sum+blob.bytes.length,0)/1048576)});
+  return stored;
+ }catch{return false;}finally{await hold?.release().catch(()=>undefined);}
+}

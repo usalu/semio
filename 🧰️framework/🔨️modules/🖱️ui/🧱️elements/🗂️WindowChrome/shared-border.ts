@@ -1,7 +1,7 @@
 import * as React from "react";
 import { flushSync } from "react-dom";
 import { resolveBorderSegments, type BorderState } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
-import { sharedBorderAxisScale, sharedOutlineSegments, clipSharedOutlineSegments, visibleSharedOutlineSegments, createSharedBorderJunctionResolver, type SharedOutlineSegment } from "../🔲️WindowSilhouette/shared-border.ts";
+import { createSharedBorderSnap, sharedBorderAxisScale, sharedOutlineSegments, clipSharedOutlineSegments, visibleSharedOutlineSegments, createSharedBorderJunctionResolver, type SharedOutlineSegment } from "../🔲️WindowSilhouette/shared-border.ts";
 import { windowSilhouetteOutline, type WindowSilhouetteGeometry } from "../🔲️WindowSilhouette/🟦️.tsx";
 import { useShellScopeOptional } from "../🐚️ShellScope/🟦️.tsx";
 
@@ -58,6 +58,30 @@ export function sharedBorderStroke(state: BorderState): string {
   return "var(--border-normal-color)";
 }
 
+/** 📌️ A client rect with every edge rounded to a whole device pixel, so silhouette strokes and the bars they meet land on the same physical pixel at fractional heights and zoom levels. */
+export function deviceSnappedRect(element: Element): DOMRect {
+  const rect = element.getBoundingClientRect();
+  const ratio = (typeof window !== "undefined" && window.devicePixelRatio) || 1;
+  const snap = (value: number) => Math.round(value * ratio) / ratio;
+  const left = snap(rect.left), top = snap(rect.top), right = snap(rect.left + rect.width), bottom = snap(rect.top + rect.height);
+  return { left, top, right, bottom, x: left, y: top, width: right - left, height: bottom - top, toJSON: () => ({}) } as DOMRect;
+}
+
+/** 🧩️ A framed control that is the direct child of a shared-border owner (`data-shared-border-cells`) is a cell of the owner: the owner alone paints the edges, the cell paints a divider natively, so it registers no frame of its own. */
+export function isSharedBorderCellFrame(element: Element): boolean {
+  return element.parentElement?.hasAttribute("data-shared-border-cells") ?? false;
+}
+
+/** 🫧️ A frame side lying exactly on a side its nearest ancestor frame does not draw (a navbar's top, a footer's bottom) is the parent's open edge: the child paints nothing there. */
+export function flushWithUndrawnParentEdge(element: HTMLElement, rect: DOMRect, side: string): boolean {
+  const parent = element.parentElement?.closest<HTMLElement>(selector);
+  if (!parent) return false;
+  if ((parent.getAttribute("data-shared-border-edges") ?? "top right bottom left").split(/\s+/).includes(side)) return false;
+  const outer = parent.getBoundingClientRect();
+  const key = side as "top" | "right" | "bottom" | "left";
+  return Math.abs(rect[key] - outer[key]) < 0.5;
+}
+
 /** 🪡️ Root-local resolver; original owners paint only winning portions of their unchanged outline. */
 export class BorderCompositor {
   readonly windows = new Map<string, Registration>();
@@ -75,7 +99,7 @@ export class BorderCompositor {
     this.observer = typeof MutationObserver === "undefined" ? null : new MutationObserver(records => {
       if (records.some(record => !(isElement(record.target) && record.target.closest("[data-shared-border-overlay], [data-window-silhouette-border]")) && (record.type !== "childList" || [...record.addedNodes, ...record.removedNodes].some(node => !(isElement(node) && node.hasAttribute("data-shared-border-overlay")))))) this.schedule();
     });
-    this.observer?.observe(root, { subtree: true, childList: true, attributes: true, attributeFilter: ["class", "style", "data-active", "data-state", "aria-selected", "aria-pressed", "data-shared-border-state", "data-shared-border-frame", "data-shared-border-edges", "data-introduced", "data-celebrated", "disabled", "aria-disabled"] });
+    this.observer?.observe(root, { subtree: true, childList: true, attributes: true, attributeFilter: ["class", "style", "data-active", "data-state", "aria-selected", "aria-pressed", "data-shared-border-state", "data-shared-border-frame", "data-shared-border-edges", "data-shared-border-cells", "data-introduced", "data-celebrated", "disabled", "aria-disabled"] });
     this.resize = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(this.schedule);
     this.resize?.observe(root);
     root.addEventListener("pointerover", this.pointer);
@@ -165,19 +189,27 @@ export class BorderCompositor {
   }
   private commit = () => {
     this.frame = 0;
+    if (this.disposed) return;
     let sources: SharedOutlineSegment[] = [];
     const updates = new Map<Registration, readonly SharedBorderPaintSegment[]>();
     const frameSources = new Map<string, { element: HTMLElement; frame: Frame; width: number; height: number; sides: string }>();
-    for (const [element, frame] of this.frames) if (!this.root.contains(element) || !element.matches(selector)) this.restore(element, frame);
+    for (const [element, frame] of this.frames) if (!this.root.contains(element) || !element.matches(selector) || isSharedBorderCellFrame(element)) this.restore(element, frame);
+    const xs: number[] = [], ys: number[] = [];
+    for (const element of [...[...this.windows.values()].map(entry => entry.element), ...this.root.querySelectorAll<HTMLElement>(selector)]) {
+      const box = deviceSnappedRect(element);
+      if (box.width > 0 && box.height > 0) { xs.push(box.left, box.right); ys.push(box.top, box.bottom); }
+    }
+    const snap = createSharedBorderSnap(xs, ys);
     for (const [id, entry] of this.windows) {
-      const rect = entry.element.getBoundingClientRect();
+      const rect = deviceSnappedRect(entry.element);
       if (rect.width <= 0 || rect.height <= 0 || entry.geometry.state !== "ready") { updates.set(entry, []); continue; }
       const metrics = entry.geometry.metrics;
-      sources.push(...this.visibleSources(entry.element, sharedOutlineSegments(id, entry.geometry.outline, windowSilhouetteOutline(metrics), this.state(entry.element, entry.state), { left: rect.left, top: rect.top, scaleX: sharedBorderAxisScale(rect.width, entry.element.offsetWidth), scaleY: sharedBorderAxisScale(rect.height, entry.element.offsetHeight) })));
+      sources.push(...this.visibleSources(entry.element, sharedOutlineSegments(id, entry.geometry.outline, windowSilhouetteOutline(metrics), this.state(entry.element, entry.state), { left: rect.left, top: rect.top, scaleX: sharedBorderAxisScale(rect.width, entry.element.offsetWidth), scaleY: sharedBorderAxisScale(rect.height, entry.element.offsetHeight) }, snap)));
     }
     for (const element of this.root.querySelectorAll<HTMLElement>(selector)) {
       if (element.hasAttribute("data-window-silhouette") || element.closest(".semio-scope") !== this.root.closest(".semio-scope")) continue;
-      const rect = element.getBoundingClientRect();
+      if (isSharedBorderCellFrame(element)) { const old = this.frames.get(element); if (old) this.restore(element, old); continue; }
+      const rect = deviceSnappedRect(element);
       const scaleX = sharedBorderAxisScale(rect.width, element.offsetWidth), scaleY = sharedBorderAxisScale(rect.height, element.offsetHeight);
       const width = rect.width / scaleX, height = rect.height / scaleY;
       if (rect.width <= 0 || rect.height <= 0 || width <= 2 || height <= 2) { const old = this.frames.get(element); if (old) this.restore(element, old); continue; }
@@ -200,8 +232,9 @@ export class BorderCompositor {
         element.append(svg);
         this.resize?.observe(element);
       }
-      const edges = sharedOutlineSegments(frame.id, logical, paint, this.state(element, "normal"), { left: rect.left, top: rect.top, scaleX, scaleY });
-      sources.push(...this.visibleSources(element, edges.filter((_, index) => sides.split(/\s+/).includes(["top", "right", "bottom", "left"][index]!))));
+      const edges = sharedOutlineSegments(frame.id, logical, paint, this.state(element, "normal"), { left: rect.left, top: rect.top, scaleX, scaleY }, snap);
+      const drawn = sides.split(/\s+/).filter(side => !flushWithUndrawnParentEdge(element, rect, side));
+      sources.push(...this.visibleSources(element, edges.filter((_, index) => drawn.includes(["top", "right", "bottom", "left"][index]!))));
       frameSources.set(frame.id, { element, frame, width, height, sides });
     }
     sources = visibleSharedOutlineSegments(sources);
@@ -214,6 +247,15 @@ export class BorderCompositor {
       const start = junction(source.logicalFrom), end = junction(source.logicalTo), t = source.transform;
       if (start.x !== t.left + source.paintFrom.x * t.scaleX || start.y !== t.top + source.paintFrom.y * t.scaleY || end.x !== t.left + source.paintTo.x * t.scaleX || end.y !== t.top + source.paintTo.y * t.scaleY) interacting.add(source.owner);
     }
+    const lineOf = new Map<string, number>();
+    const normalValue = (id: string, horizontal: boolean): number => { const edge = byId.get(id)!, t = edge.transform; return (horizontal ? t.top : t.left) + edge.paintFrom[horizontal ? "y" : "x"] * (horizontal ? t.scaleY : t.scaleX); };
+    for (const segment of resolved) {
+      if (segment.contributors.length < 2) continue;
+      const horizontal = segment.from.y === segment.to.y, values = segment.contributors.map(id => normalValue(id, horizontal));
+      const line = (Math.min(...values) + Math.max(...values)) / 2;
+      if (Math.abs(line - (horizontal ? segment.from.y : segment.from.x)) > 0.01) continue;
+      for (const id of segment.contributors) if (!lineOf.has(`${id}:${horizontal}`)) lineOf.set(`${id}:${horizontal}`, line);
+    }
     for (const segment of resolved) {
       const source = byId.get(segment.id)!;
       const local = (paint: { x: number; y: number }) => {
@@ -225,7 +267,7 @@ export class BorderCompositor {
         const edge = byId.get(id)!, t = edge.transform;
         return (horizontal ? t.top : t.left) + edge.paintFrom[normal] * (horizontal ? t.scaleY : t.scaleX);
       });
-      const centerline = (Math.min(...values) + Math.max(...values)) / 2;
+      const centerline = segment.contributors.length === 1 ? lineOf.get(`${segment.id}:${horizontal}`) ?? (Math.min(...values) + Math.max(...values)) / 2 : (Math.min(...values) + Math.max(...values)) / 2;
       const from = junction(segment.from), to = junction(segment.to);
       const originalNormal = (horizontal ? source.transform.top : source.transform.left) + source.paintFrom[normal] * (horizontal ? source.transform.scaleY : source.transform.scaleX);
       if (centerline !== originalNormal || from[normal] !== centerline || to[normal] !== centerline) interacting.add(segment.owner);

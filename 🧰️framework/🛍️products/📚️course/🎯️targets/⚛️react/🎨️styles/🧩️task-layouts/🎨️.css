@@ -1,23 +1,23 @@
 /* 🧩 The head of a run and the layouts of the classification, sorting and matching tasks, each taken for the room its card has. */
 
-/* ▶️ The head of a run: its tasks and how far the learner is. In a narrow card the tasks are a list, each with its
-   title on the left and its state on the right, and the progress fills the line below; from 40rem the tasks are chips
-   in a row; from 64rem the chips stand on the left and the progress on the right of one line. */
-.course-run-head {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-double);
-}
-
+/* ▶️ The head of a run: its tasks and how far the learner is, rows of a flush card that share the card's dividers. In
+   a narrow card the tasks are a list of rows, each with its title on the left and its state on the right; from 40rem
+   they are one row of equal cells, each with its title above its state, the dividers between them turned from the
+   lines between rows to the lines between cells (the same single hairline, the same last-cell rule as the design
+   system's shared-border group). The progress is a row of its own below. */
 .course-steps {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-single);
+}
+
+.course-steps > li {
+  display: flex;
 }
 
 .course-step {
   display: flex;
-  inline-size: 100%;
+  flex: 1 1 auto;
+  min-inline-size: 0;
   align-items: center;
   justify-content: space-between;
   gap: var(--spacing-double);
@@ -28,8 +28,6 @@
 }
 
 .course-run-progress {
-  display: flex;
-  align-items: center;
   gap: var(--spacing-double);
 }
 
@@ -42,70 +40,88 @@
 
 @container course-card (min-width: 40rem) {
   .course-steps {
-    flex-flow: row wrap;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
   }
 
   .course-steps > li {
     min-inline-size: 0;
   }
 
+  .course-steps[data-shared-border-group][data-orientation="vertical"] > [data-shared-border-cell] {
+    border-block-end-width: 0;
+    border-inline-end: var(--stroke-hairline) solid var(--border-normal-color);
+  }
+
+  .course-steps[data-shared-border-group][data-orientation="vertical"] > [data-shared-border-cell]:not(:has(~ [data-shared-border-cell])) {
+    border-inline-end-width: 0;
+  }
+
   .course-step {
-    inline-size: auto;
     flex-direction: column;
     align-items: flex-start;
+    justify-content: flex-start;
     gap: 0;
   }
 }
 
-@container course-card (min-width: 64rem) {
-  .course-run-head {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .course-run-progress {
-    flex: 0 1 24rem;
-    justify-content: flex-end;
-  }
-}
-
-/* 🗂️ Classification. An item is its grip, its label and its category select: on one line — the select on the right, as
-   wide as its neighbours' — where its list is at least 30rem wide, else the select below the label. The bins share the
-   width of the task in as many columns as fit. In a task of 84rem or more the pool stands beside the bins and stays in
-   view while they scroll, so no item is ever dragged across the whole page. */
+/* 🗂️ Classification. The pool and the categories are the two cells of one shared-border group that fills the task: the
+   pool above the categories with one divider between them, and in a task of 84rem or more the pool beside them — it
+   stays in view while they scroll, so no item is ever dragged across the whole page — with that one divider turned from
+   the line between them to the line between the columns. An item is a row of the shared list of its zone: its grip, its
+   label and its category select, which is the row's trailing cell (its edges are the row's, one divider to its left),
+   on one line where its list is at least 30rem wide, else below the label across the row. The bins are cells of one column group,
+   each a group of its own (heading, description, diagram, rows): no frame, gap or inset box lies between or inside them. */
 .course-classify {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-double);
 }
 
 .course-bins {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
-  gap: var(--spacing-double);
+  display: flex;
+  flex-direction: column;
+}
+
+.course-cell {
+  align-self: stretch;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  border-inline-start: var(--stroke-hairline) solid var(--border-normal-color);
 }
 
 .course-chip {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: var(--spacing-single);
+  align-items: stretch;
+}
+
+.course-chip > [data-course-grip] {
+  padding-inline: var(--spacing-single);
+}
+
+.course-chip > .course-row-label {
+  align-self: center;
+  padding: var(--spacing-single) var(--spacing-single) var(--spacing-single) 0;
 }
 
 .course-chip > select {
-  grid-column: 2;
+  grid-column: 1 / -1;
   inline-size: 100%;
+  border-inline-start: 0;
+  border-block-start: var(--stroke-hairline) solid var(--border-normal-color);
 }
 
 @container course-rows (min-width: 30rem) {
   .course-chip {
     grid-template-columns: auto minmax(0, 1fr) clamp(10rem, 36%, 18rem);
-    column-gap: var(--spacing-double);
   }
 
   .course-chip > select {
     grid-column: 3;
+    border-block-start: 0;
+    border-inline-start: var(--stroke-hairline) solid var(--border-normal-color);
   }
 }
 
@@ -120,6 +136,15 @@
     position: sticky;
     inset-block-start: 0;
   }
+
+  .course-classify[data-shared-border-group][data-orientation="vertical"] > .course-pool[data-shared-border-cell] {
+    border-block-end-width: 0;
+  }
+
+  .course-classify[data-shared-border-group][data-orientation="vertical"] > .course-categories[data-shared-border-cell] {
+    align-self: stretch;
+    border-inline-start: var(--stroke-hairline) solid var(--border-normal-color);
+  }
 }
 
 /* ↕️ Sorting. An item is its grip, its place, its label, its guess and its two move buttons: one line from 36rem — the
@@ -131,37 +156,47 @@
   grid-template-columns: auto 2em minmax(0, 1fr) auto auto;
   grid-template-areas:
     "grip place label label label"
-    "grip . guess up down";
-  align-items: center;
-  gap: var(--spacing-single);
+    "grip guess guess up down";
+  align-items: stretch;
 }
 
 .course-sort > [data-course-grip] {
   grid-area: grip;
+  padding-inline: var(--spacing-single);
 }
 
 .course-sort-place {
   grid-area: place;
+  align-self: center;
 }
 
 .course-sort-label {
   grid-area: label;
+  align-self: center;
+  padding: var(--spacing-single);
 }
 
 .course-sort-up {
   grid-area: up;
+  border-block-start: var(--stroke-hairline) solid var(--border-normal-color);
 }
 
 .course-sort-down {
   grid-area: down;
+  border-block-start: var(--stroke-hairline) solid var(--border-normal-color);
 }
 
 .course-guess {
   display: grid;
   grid-area: guess;
   grid-template-columns: minmax(0, 16rem);
-  align-items: center;
-  gap: var(--spacing-single) var(--spacing-double);
+  align-self: stretch;
+  align-content: stretch;
+  border-block-start: var(--stroke-hairline) solid var(--border-normal-color);
+}
+
+.course-guess > :not(.course-guess-entry) {
+  padding: var(--spacing-single);
 }
 
 .course-guess-entry {
@@ -170,17 +205,19 @@
   align-items: stretch;
 }
 
-.course-guess-entry > input {
+.course-guess-entry > input.course-input {
   min-width: 0;
   flex: 1 1 auto;
   inline-size: auto;
+  border: 0;
 }
 
-.course-guess-unit {
+.course-guess-entry > .course-guess-unit {
   flex: 0 1 auto;
   min-inline-size: 4.5rem;
   max-inline-size: 11rem;
-  border-inline-start: 0;
+  border: 0;
+  border-inline-start: var(--stroke-hairline) solid var(--border-normal-color);
   padding-inline: var(--spacing-single);
 }
 
@@ -188,15 +225,17 @@
   .course-sort {
     grid-template-columns: auto 2em minmax(0, 1fr) minmax(9rem, 13rem) auto auto;
     grid-template-areas: "grip place label guess up down";
-    column-gap: var(--spacing-double);
   }
 
-  .course-sort-up {
-    margin-inline-end: calc(var(--spacing-single) - var(--spacing-double));
+  .course-sort-up,
+  .course-sort-down {
+    border-block-start: 0;
   }
 
   .course-guess {
     grid-template-columns: minmax(0, 1fr);
+    border-inline-start: var(--stroke-hairline) solid var(--border-normal-color);
+    border-block-start: 0;
   }
 }
 
@@ -214,20 +253,15 @@
   }
 }
 
-/* 🃏️ Matching. The value cards of a quantity are a grid of equal chips — the value, and below it who uses it, on two
-   lines at most —, the items a list of rows: the label on the left, its select and its remove button on the right from
-   30rem, else below the label, the select as wide as the row. In a task of 64rem or more the cards stand in a column
-   beside the rows and stay in view while they scroll, so a card is never dragged far. */
+/* 🃏️ Matching. A quantity is one shared-border group of cells: its heading, its value cards — a list of rows, each the
+   value and below it who uses it on two lines at most — and its items, rows of a list of their own: the label on the
+   left, its select and its remove button on the right from 30rem, else below the label, the select as wide as the row.
+   In a task of 64rem or more the cards are a column beside the rows (their cell stretches over the height of the
+   rows, so the divider between them is one line; the list in it stays in view while the rows scroll, so a card is never
+   dragged far). */
 .course-match {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-single);
-}
-
-.course-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 9.5rem), 1fr));
-  gap: var(--spacing-single);
 }
 
 .course-value {
@@ -252,39 +286,41 @@
   grid-template-areas:
     "label label"
     "card clear";
-  align-items: center;
-  gap: var(--spacing-single);
-  padding-block: var(--spacing-single);
-  border-block-end: var(--stroke-hairline) solid var(--border-normal-color);
-}
-
-.course-slot:first-child {
-  border-block-start: var(--stroke-default) solid var(--border-normal-color);
+  align-items: stretch;
 }
 
 .course-slot-label {
   grid-area: label;
+  align-self: center;
+  padding: var(--spacing-single);
 }
 
 .course-slot > select {
   grid-area: card;
   inline-size: 100%;
   min-inline-size: 0;
+  border-inline-start: 0;
+  border-block-start: var(--stroke-hairline) solid var(--border-normal-color);
 }
 
 .course-slot > button {
   grid-area: clear;
+  border-block-start: var(--stroke-hairline) solid var(--border-normal-color);
 }
 
 @container course-rows (min-width: 30rem) {
   .course-slot {
     grid-template-columns: minmax(0, 1fr) clamp(10rem, 40%, 20rem) auto;
     grid-template-areas: "label card clear";
-    column-gap: var(--spacing-double);
+  }
+
+  .course-slot > select {
+    border-block-start: 0;
+    border-inline-start: var(--stroke-hairline) solid var(--border-normal-color);
   }
 
   .course-slot > button {
-    margin-inline-start: calc(var(--spacing-single) - var(--spacing-double));
+    border-block-start: 0;
   }
 }
 
@@ -295,22 +331,73 @@
     grid-template-areas:
       "title title"
       "cards slots";
-    align-items: start;
-    gap: var(--spacing-single) var(--spacing-double);
+  }
+
+  .course-match[data-keys="hidden"] {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "title"
+      "slots";
   }
 
   .course-match > h3 {
     grid-area: title;
   }
 
+  .course-cards-cell {
+    grid-area: cards;
+  }
+
+  .course-match[data-shared-border-group][data-orientation="vertical"] > .course-cards-cell[data-shared-border-cell] {
+    border-block-end-width: 0;
+    border-inline-end: var(--stroke-hairline) solid var(--border-normal-color);
+  }
+
   .course-cards {
     position: sticky;
     inset-block-start: 0;
-    grid-area: cards;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 8.5rem), 1fr));
   }
 
   .course-slots {
     grid-area: slots;
+  }
+}
+
+/* 🧱 Tiles: equal cells of a grid that share their dividers, a hairline to the right of every cell but the last of its
+   row and one below every cell but the last of its column; two columns in a narrow card, four from 28rem. The cells
+   are 2 × 4 or 4 × 2, so the last row and the last column are known. */
+.course-tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.course-tiles > * {
+  border-inline-end: var(--stroke-hairline) solid var(--border-normal-color);
+  border-block-end: var(--stroke-hairline) solid var(--border-normal-color);
+}
+
+.course-tiles > :nth-child(2n) {
+  border-inline-end-width: 0;
+}
+
+.course-tiles > :nth-child(n + 7) {
+  border-block-end-width: 0;
+}
+
+@container course-card (min-width: 28rem) {
+  .course-tiles {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .course-tiles > :nth-child(2n) {
+    border-inline-end-width: var(--stroke-hairline);
+  }
+
+  .course-tiles > :nth-child(4n) {
+    border-inline-end-width: 0;
+  }
+
+  .course-tiles > :nth-child(n + 5) {
+    border-block-end-width: 0;
   }
 }

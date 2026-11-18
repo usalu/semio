@@ -1,0 +1,11 @@
+{
+ "steps": [
+  {"name": "no line before the interval", "nowMs": 10000, "operation": "state", "count": 64, "report": false, "checkpoint": false},
+  {"name": "the first line after the interval", "nowMs": 30000, "operation": "readText", "count": 200000, "report": true, "checkpoint": false},
+  {"name": "no second line a moment later", "nowMs": 31000, "operation": "frontier", "count": 210000, "report": false, "checkpoint": false},
+  {"name": "the checkpoint at its interval", "nowMs": 120000, "operation": "frontier", "count": 400000, "report": true, "checkpoint": true},
+  {"name": "no checkpoint again at once", "nowMs": 150000, "operation": "frontier", "count": 410000, "report": true, "checkpoint": false},
+  {"name": "no checkpoint when too few steps are new", "nowMs": 245000, "operation": "frontier", "count": 410100, "report": true, "checkpoint": false},
+  {"name": "the next checkpoint when the steps are new", "nowMs": 250000, "operation": "frontier", "count": 600000, "report": false, "checkpoint": true}
+ ]
+}

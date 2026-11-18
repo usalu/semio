@@ -115,7 +115,7 @@ export const WithUndoRedo: Story = {
 export const MultipleZones: Story = {
   args: { children: null },
   render: () => (
-    <div className="flex gap-single items-stretch">
+    <div className="flex items-stretch">
       <RibbonZone>
         <RibbonGroup>
           <RibbonItem>

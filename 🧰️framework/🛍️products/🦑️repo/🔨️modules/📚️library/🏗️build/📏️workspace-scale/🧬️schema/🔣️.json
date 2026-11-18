@@ -1,0 +1,335 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Workspace scale family / Familie der Arbeitsbereichsgröße",
+  "description": "EN: Every ceiling on a collection that grows with the workspace is declared here with the workspace quantity it must hold and is checked against the declared size times the safety factor, so that a ceiling cannot fall below the workspace again (the 2048 schema ceiling stopped the fleet for seven hours). DE: Jede Obergrenze einer Sammlung, die mit dem Arbeitsbereich wächst, ist hier mit der Größe des Arbeitsbereichs deklariert, die sie fassen muss, und wird gegen die deklarierte Größe mal Sicherheitsfaktor geprüft, damit keine Grenze mehr unter den Arbeitsbereich fällt (die Schemagrenze 2048 hielt die Flotte sieben Stunden an).",
+  "definitions": {
+    "Family": {
+      "const": {
+        "version": 1,
+        "safetyFactor": 2,
+        "workspace": {
+          "owners": 4774,
+          "closureRows": 440000,
+          "facts": 330000,
+          "nativeInputs": 34000,
+          "trackedFiles": 280068,
+          "entriesPerOwner": 12,
+          "layersPerOwner": 48,
+          "documentsPerOwner": 2,
+          "tasksPerOwner": 16,
+          "closureRecordBytes": 32768
+        },
+        "measured": {
+          "owners": "project owners of the 2026-11-17 read",
+          "closureRows": "rows of the largest shared closure entry",
+          "facts": "facts of the fact index",
+          "nativeInputs": "native build inputs",
+          "trackedFiles": "git ls-files",
+          "entriesPerOwner": "closure entries per owner, measured (closure-store-limits law)",
+          "layersPerOwner": "closure layers per owner, measured (closure-store-limits law)",
+          "documentsPerOwner": "a generation holds a fragment and a facts document per owner (generationDocumentPathsV1)",
+          "tasksPerOwner": "declared estimate of tasks per owner, not measured",
+          "closureRecordBytes": "declared average size of one source closure record, not measured"
+        },
+        "members": [
+          {
+            "file": "🏗️build/🪪️graph-state/🧬️schema/🔣️.json",
+            "pointer": "definitions/Policy/const",
+            "key": "entryMaximumDocuments",
+            "scale": "owners*documentsPerOwner"
+          },
+          {
+            "file": "🏗️build/🪪️graph-state/🧬️schema/🔣️.json",
+            "pointer": "definitions/Note/properties/documents",
+            "key": "maxItems",
+            "scale": "owners*documentsPerOwner"
+          },
+          {
+            "file": "🏗️build/🕸️graph/🕰️generations/🌐️remote-exchange/🧬️schema/🔣️.json",
+            "pointer": "definitions/Policy/const",
+            "key": "maximumDocuments",
+            "scale": "owners*documentsPerOwner"
+          },
+          {
+            "file": "🏗️build/🪪️graph-state/🙋️wanted/🧬️schema/🔣️.json",
+            "pointer": "definitions/Policy/const",
+            "key": "maximumProjects",
+            "scale": "owners"
+          },
+          {
+            "file": "🏗️build/🪪️graph-state/🙋️wanted/🧬️schema/🔣️.json",
+            "pointer": "definitions/WantedRequest/properties/projects",
+            "key": "maxItems",
+            "scale": "owners"
+          },
+          {
+            "file": "🏗️build/🪪️graph-state/🙋️wanted/🧬️schema/🔣️.json",
+            "pointer": "definitions/Served/properties/projects",
+            "key": "maxItems",
+            "scale": "owners"
+          },
+          {
+            "file": "🏗️build/🪪️graph-state/📍️cursor/🧬️schema/🔣️.json",
+            "pointer": "definitions/Policy/const",
+            "key": "maximumRows",
+            "scale": "trackedFiles"
+          },
+          {
+            "file": "🏗️build/🪪️graph-state/📦️project-records/🌱️fresh/🧬️schema/🔣️.json",
+            "pointer": "definitions/Policy/const",
+            "key": "maximumRows",
+            "scale": "closureRows"
+          },
+          {
+            "file": "🏗️build/🕸️graph/🧮️derived-nodes/🧬️schema/🔣️.json",
+            "pointer": "definitions/Policy/const",
+            "key": "maximumNodes",
+            "scale": "facts"
+          },
+          {
+            "file": "🏗️build/🕸️graph/🕰️generations/✂️cutoff/🧬️schema/🔣️.json",
+            "pointer": "definitions/Policy/const",
+            "key": "maximumSuspects",
+            "scale": "owners*entriesPerOwner"
+          },
+          {
+            "file": "🏗️build/🕸️graph/📥️inference/🧬️schema/🔣️.json",
+            "pointer": "definitions/Limits/const",
+            "key": "closureStoreMaximumEntries",
+            "scale": "owners*entriesPerOwner"
+          },
+          {
+            "file": "🏗️build/🕸️graph/📥️inference/🧬️schema/🔣️.json",
+            "pointer": "definitions/Limits/const",
+            "key": "closureStoreMaximumLayers",
+            "scale": "owners*layersPerOwner"
+          },
+          {
+            "file": "🏗️build/🕸️graph/📥️inference/🧬️schema/🔣️.json",
+            "pointer": "definitions/Limits/const",
+            "key": "closureStoreMaximumValues",
+            "scale": "owners*entriesPerOwner"
+          },
+          {
+            "file": "🏗️build/🏡️resident/🧬️schema/🔣️.json",
+            "pointer": "definitions/Policy/const",
+            "key": "memoMaximumEntries",
+            "scale": "owners*tasksPerOwner"
+          },
+          {
+            "file": "🏗️build/🏡️resident/🧬️schema/🔣️.json",
+            "pointer": "definitions/Policy/const",
+            "key": "digestCacheMaximumFiles",
+            "scale": "trackedFiles"
+          },
+          {
+            "file": "🏗️build/🏡️resident/🧬️schema/🔣️.json",
+            "pointer": "definitions/Policy/const",
+            "key": "journalMaximumEvents",
+            "scale": "trackedFiles"
+          },
+          {
+            "file": "⚡️caching/🕸️graph/🔏️seal/🎯️selection/🧬️schema/🔣️.json",
+            "pointer": "$defs/SourceClosureReadPolicyV1/const",
+            "key": "maximumRecords",
+            "scale": "owners"
+          },
+          {
+            "file": "⚡️caching/🕸️graph/🔏️seal/🎯️selection/🧬️schema/🔣️.json",
+            "pointer": "$defs/SourceClosureReadPolicyV1/const",
+            "key": "maximumAggregateBytes",
+            "scale": "owners*closureRecordBytes"
+          },
+          {
+            "file": "🏗️build/🪪️graph-state/📦️project-records/🧬️schema/🔣️.json",
+            "pointer": "definitions/Publish/const/unsent",
+            "key": "maximumEntries",
+            "scale": "owners"
+          },
+          {
+            "file": "🏗️build/🧭️selection/🎯️scope/🧬️schema/🔣️.json",
+            "pointer": "definitions/TargetScope/properties/targets",
+            "key": "maxItems",
+            "scale": "owners*tasksPerOwner"
+          },
+          {
+            "file": "🏗️build/🏡️resident/🧬️schema/🔣️.json",
+            "pointer": "definitions/PlanRequest/properties/targets",
+            "key": "maxItems",
+            "scale": "owners*tasksPerOwner"
+          },
+          {
+            "file": "🏗️build/🏡️resident/🧬️schema/🔣️.json",
+            "pointer": "definitions/Plan/properties/tasks",
+            "key": "maxItems",
+            "scale": "owners*tasksPerOwner"
+          },
+          {
+            "file": "🏗️build/🧭️selection/📥️closure/🧬️schema/🔣️.json",
+            "pointer": "properties/tasks",
+            "key": "maxItems",
+            "scale": "owners*tasksPerOwner"
+          },
+          {
+            "file": "🏗️build/📥️inputs/🎯️selected/🦀️rust/🧬️schema/🔣️.json",
+            "pointer": "properties/tasks",
+            "key": "maxItems",
+            "scale": "owners*tasksPerOwner"
+          },
+          {
+            "file": "🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔣️.json",
+            "pointer": "definitions/Planner/properties/request/properties/tasks",
+            "key": "maxItems",
+            "scale": "owners*tasksPerOwner"
+          },
+          {
+            "file": "⚡️caching/🕸️graph/🔏️seal/🎯️selection/🧬️schema/🔣️.json",
+            "pointer": "$defs/ScopeV1/properties/tasks",
+            "key": "maxItems",
+            "scale": "owners*tasksPerOwner"
+          },
+          {
+            "file": "🏗️build/🕸️graph/🔁retry/🧬️schema/🔣️.json",
+            "pointer": "$defs/SealPolicy/const",
+            "key": "maximumOwners",
+            "scale": "owners"
+          },
+          {
+            "file": "🏗️build/🕸️graph/🔁retry/🧬️schema/🔣️.json",
+            "pointer": "$defs/Seal/properties/laterChangedOwners",
+            "key": "maxItems",
+            "scale": "owners"
+          },
+          {
+            "file": "🏗️build/🧬️schema/📥️authority.json",
+            "pointer": "properties/seal/properties/laterChangedOwners",
+            "key": "maxItems",
+            "scale": "owners"
+          }
+        ],
+        "equal": [
+          [
+            0,
+            1,
+            2
+          ],
+          [
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25
+          ],
+          [
+            26,
+            27,
+            28
+          ]
+        ],
+        "exempt": [
+          {
+            "file": "🏗️build/🧬️schema/🔣️.json",
+            "pointer": "properties/admission/properties/selection/oneOf/2/properties/projects",
+            "key": "maxItems",
+            "reason": {
+              "en": "The projects a person names on the command line (an explicit subset), not the workspace; a whole-workspace selection uses the 'all' form without a list.",
+              "de": "Die Projekte, die eine Person auf der Befehlszeile nennt (eine ausdrückliche Teilmenge), nicht der Arbeitsbereich; eine Auswahl des ganzen Arbeitsbereichs nutzt die Form 'all' ohne Liste."
+            }
+          },
+          {
+            "file": "🏗️build/🧬️schema/🚪️selection.json",
+            "pointer": "oneOf/2/properties/projects",
+            "key": "maxItems",
+            "reason": {
+              "en": "The projects a person names on the command line (an explicit subset), not the workspace; a whole-workspace selection uses the 'all' form without a list.",
+              "de": "Die Projekte, die eine Person auf der Befehlszeile nennt (eine ausdrückliche Teilmenge), nicht der Arbeitsbereich; eine Auswahl des ganzen Arbeitsbereichs nutzt die Form 'all' ohne Liste."
+            }
+          },
+          {
+            "file": "🏗️build/🧬️schema/🚪️admission.json",
+            "pointer": "$defs/execOwnerAdmissionCases/properties/cases/items/properties/projects",
+            "key": "maxItems",
+            "reason": {
+              "en": "The projects a person names on the command line (an explicit subset), not the workspace; a whole-workspace selection uses the 'all' form without a list.",
+              "de": "Die Projekte, die eine Person auf der Befehlszeile nennt (eine ausdrückliche Teilmenge), nicht der Arbeitsbereich; eine Auswahl des ganzen Arbeitsbereichs nutzt die Form 'all' ohne Liste."
+            }
+          },
+          {
+            "file": "🏗️build/🧬️schema/🚪️admission.json",
+            "pointer": "$defs/execOwnerAdmissionCases/properties/cases/items/properties/owners",
+            "key": "maxItems",
+            "reason": {
+              "en": "The projects a person names on the command line (an explicit subset), not the workspace; a whole-workspace selection uses the 'all' form without a list.",
+              "de": "Die Projekte, die eine Person auf der Befehlszeile nennt (eine ausdrückliche Teilmenge), nicht der Arbeitsbereich; eine Auswahl des ganzen Arbeitsbereichs nutzt die Form 'all' ohne Liste."
+            }
+          },
+          {
+            "file": "⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧬️schema/📥️install.json",
+            "pointer": "$defs/SourceOwnerStoreSelection/oneOf/2/properties/owners",
+            "key": "maxItems",
+            "reason": {
+              "en": "Dependency-installer protocol bound on packages of one installer plan, which grows with the lockfile, not with the number of project owners.",
+              "de": "Grenze des Abhängigkeitsinstallers für die Pakete eines Installationsplans; sie wächst mit der Lock-Datei, nicht mit der Zahl der Projekte."
+            }
+          },
+          {
+            "file": "⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧬️schema/📥️install.json",
+            "pointer": "$defs/SourceOwnerExportsProtocol/const",
+            "key": "maximumNodes",
+            "reason": {
+              "en": "Dependency-installer protocol bound on packages of one installer plan, which grows with the lockfile, not with the number of project owners.",
+              "de": "Grenze des Abhängigkeitsinstallers für die Pakete eines Installationsplans; sie wächst mit der Lock-Datei, nicht mit der Zahl der Projekte."
+            }
+          },
+          {
+            "file": "🏗️build/🎚️mode/🦀️profile/📋️constraints/🧬️schema/🔣️.json",
+            "pointer": "definitions/Protocol/const",
+            "key": "maximumOwners",
+            "reason": {
+              "en": "Owners of one Cargo feature constraint set (the crates that share a feature), not project owners.",
+              "de": "Eigentümer einer Cargo-Feature-Bedingung (die Crates, die ein Feature teilen), nicht Projekte des Arbeitsbereichs."
+            }
+          },
+          {
+            "file": "🏗️build/🧬️schema/🔣️.json",
+            "pointer": "properties/admission/properties/selection/oneOf/2/properties/targets",
+            "key": "maxItems",
+            "reason": {
+              "en": "Tasks or targets a person names on the command line (an explicit selection), not the workspace; a whole-workspace selection uses the 'all' form without a list.",
+              "de": "Aufgaben oder Ziele, die eine Person auf der Befehlszeile nennt (eine ausdrückliche Auswahl), nicht der Arbeitsbereich; eine Auswahl des ganzen Arbeitsbereichs nutzt die Form 'all' ohne Liste."
+            }
+          },
+          {
+            "file": "🏗️build/🧬️schema/🚪️selection.json",
+            "pointer": "oneOf/2/properties/targets",
+            "key": "maxItems",
+            "reason": {
+              "en": "Tasks or targets a person names on the command line (an explicit selection), not the workspace; a whole-workspace selection uses the 'all' form without a list.",
+              "de": "Aufgaben oder Ziele, die eine Person auf der Befehlszeile nennt (eine ausdrückliche Auswahl), nicht der Arbeitsbereich; eine Auswahl des ganzen Arbeitsbereichs nutzt die Form 'all' ohne Liste."
+            }
+          },
+          {
+            "file": "🏗️build/📥️caller/📤️orchestration/🧬️schema/🔣️.json",
+            "pointer": "definitions/Context/properties/targets",
+            "key": "maxItems",
+            "reason": {
+              "en": "The delegation chain of one orchestration context, not workspace targets.",
+              "de": "Die Delegationskette eines Orchestrierungskontexts, nicht Ziele des Arbeitsbereichs."
+            }
+          },
+          {
+            "file": "⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧬️schema/🔣️.json",
+            "pointer": "definitions/CurrentMaintenancePlan/properties/targets",
+            "key": "maxItems",
+            "reason": {
+              "en": "The fixed set of maintenance images of the Nx graph store, not workspace targets.",
+              "de": "Die feste Menge der Wartungsabbilder des Nx-Graphspeichers, nicht Ziele des Arbeitsbereichs."
+            }
+          }
+        ]
+      }
+    }
+  }
+}

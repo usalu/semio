@@ -3,12 +3,12 @@
 import type { ReactElement, ReactNode } from "react";
 import { formatNumber, decimalsFor } from "@teaching/staffage";
 import type { Language, ParameterSource } from "@teaching/staffage";
-import { cn } from "../../🪟️chrome/🟦️.tsx";
+import { SharedBorderRow, cn } from "../../🪟️chrome/🟦️.tsx";
 
 /** 📊️ A captioned table inside a scroll container; `head` is the column header cells. */
 export function DataTable(props: { readonly caption: ReactNode; readonly head: readonly ReactNode[]; readonly children: ReactNode; readonly className?: string }): ReactElement {
   return (
-    <div className={cn("max-w-full overflow-x-auto border border-border", props.className)} tabIndex={0} role="region" aria-label={typeof props.caption === "string" ? props.caption : undefined}>
+    <div data-shared-border-cell="" className={cn("max-w-full overflow-x-auto", props.className)} tabIndex={0} role="region" aria-label={typeof props.caption === "string" ? props.caption : undefined}>
       <table className="w-full border-collapse text-left text-xs">
         <caption className="border-b border-border bg-muted/40 p-double text-left text-xs font-semibold">{props.caption}</caption>
         <thead>
@@ -29,7 +29,7 @@ export function DataTable(props: { readonly caption: ReactNode; readonly head: r
 /** 📋️ A body row: the first cell is the row header. */
 export function Row(props: { readonly head: ReactNode; readonly cells: readonly ReactNode[] }): ReactElement {
   return (
-    <tr className="border-b border-border/60 align-top last:border-b-0">
+    <tr className="border-b border-border/60 align-top">
       <th scope="row" className="px-double py-single text-left font-medium">
         {props.head}
       </th>
@@ -42,14 +42,19 @@ export function Row(props: { readonly head: ReactNode; readonly cells: readonly 
   );
 }
 
-/** 🧾️ A term and its value in a definition list. */
+/** 🧾️ A term and its value in a definition list: a cell of the {@link FactList} column. */
 export function Fact(props: { readonly term: ReactNode; readonly children: ReactNode }): ReactElement {
   return (
-    <div className="flex min-w-0 flex-col gap-0.5 border-b border-border/60 py-single">
+    <div data-shared-border-cell="" className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-double gap-y-0.5 px-double py-single">
       <dt className="text-[0.65rem] uppercase tracking-wide text-muted-foreground">{props.term}</dt>
       <dd className="m-0 break-words font-mono text-xs">{props.children}</dd>
     </div>
   );
+}
+
+/** 🧾️ A definition list whose facts are the cells of one column. */
+export function FactList(props: { readonly children: ReactNode; readonly "data-totals"?: string }): ReactElement {
+  return <SharedBorderRow as="dl" orientation="vertical" {...(props["data-totals"] === undefined ? {} : { "data-totals": props["data-totals"] })}>{props.children}</SharedBorderRow>;
 }
 
 /** 🔢️ A number to three significant digits in the reader's number format. */

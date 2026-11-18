@@ -265,7 +265,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
       dropdownId,
       dropdownSide = "bottom",
       dropdownAlign = "start",
-      dropdownSideOffset = 4,
+      dropdownSideOffset = 0,
       dropdownAvoidCollisions = true,
       dropdownInstant = false,
       dropdownContentClassName,

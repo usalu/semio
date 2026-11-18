@@ -1,0 +1,1 @@
+export default (a) => { const g = a.representations["50"].geometry.plan; for (const id of ["toe-l","toe-r","foot-l","foot-r"]) g.splice(g.findIndex((s) => s.id === id), 1); const b = a.volumes["50"].body; for (const id of ["toe-l-boots-hi","toe-r-boots-hi","foot-l-boots-hi","foot-r-boots-hi"]) b.splice(b.findIndex((s) => s.id === id), 1); };

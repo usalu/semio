@@ -1,0 +1,41 @@
+## last 40 lines of /home/deck/native-bootstrap-round-29-try-5.log
+Loading the project graph of d09b06e73429.
+Planning 1 targets.
+[repo] still working after 5 s; last phase started: door.script
+[repo] still working after 10 s; last phase started: door.script
+[repo] still working after 20 s; last phase started: door.script
+[repo] still working after 50 s; last phase started: door.script
+[repo] still working after 80 s; last phase started: door.script
+[repo] still working after 110 s; last phase started: door.script
+[repo] still working after 140 s; last phase started: door.script
+[repo] still working after 170 s; last phase started: door.script
+[repo] still working after 200 s; last phase started: door.script
+[repo] still working after 230 s; last phase started: door.script
+[repo] still working after 260 s; last phase started: door.script
+[repo] still working after 290 s; last phase started: door.script
+[repo] still working after 320 s; last phase started: door.script
+[repo] still working after 350 s; last phase started: door.script
+[repo] still working after 380 s; last phase started: door.script
+[repo] still working after 410 s; last phase started: door.script
+[repo] still working after 440 s; last phase started: door.script
+[repo] still working after 470 s; last phase started: door.script
+[repo] still working after 500 s; last phase started: door.script
+[repo] still working after 530 s; last phase started: door.script
+[repo] still working after 560 s; last phase started: door.script
+[repo] still working after 590 s; last phase started: door.script
+[repo] still working after 620 s; last phase started: door.script
+[repo] still working after 650 s; last phase started: door.script
+[repo] still working after 680 s; last phase started: door.script
+[repo] still working after 710 s; last phase started: door.script
+[repo] still working after 740 s; last phase started: door.script
+[repo] still working after 770 s; last phase started: door.script
+[repo] still working after 800 s; last phase started: door.script
+[repo] still working after 830 s; last phase started: door.script
+[repo] still working after 860 s; last phase started: door.script
+[repo] still working after 890 s; last phase started: door.script
+[repo] still working after 920 s; last phase started: door.script
+[repo] still working after 950 s; last phase started: door.script
+[repo] still working after 980 s; last phase started: door.script
+The plan cannot continue: the service holds 9764 MB of its 9764 MB memory limit (safety margin 256 MB), so it was cancelled to keep the service up; try again later or ask for a smaller selection.
+end 2026-11-15T16:32:45Z
+native_rc=1

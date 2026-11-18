@@ -147,7 +147,7 @@ export function registerMountsListboxOptionsOnlyTests(): void {
       await waitFor(() => expect(content.style.visibility).not.toBe("hidden"));
       expect(content.style.position).toBe("absolute");
       expect(Number.parseFloat(content.style.left)).toBeCloseTo(846);
-      expect(Number.parseFloat(content.style.top)).toBeCloseTo(29);
+      expect(Number.parseFloat(content.style.top)).toBeCloseTo(25);
       expect(content.parentElement).toBe(layer);
     } finally {
       styled.mockRestore();

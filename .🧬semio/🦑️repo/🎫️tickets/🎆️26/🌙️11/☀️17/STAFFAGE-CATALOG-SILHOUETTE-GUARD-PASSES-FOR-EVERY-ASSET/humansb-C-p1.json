@@ -1,0 +1,1 @@
+[{"op":"shape-add","scale":"50","view":"plan","after":"rail-r","shape":{"kind":"capsule","x0":0.1805,"y0":-0.21,"x1":0.1805,"y1":0.21,"r0":0.02,"r1":0.02,"id":"handle","bone":"hand-truck","role":"body","z":6.52,"filled":true,"tone":0.5,"region":"hand-truck"}}]

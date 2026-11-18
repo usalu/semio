@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:graph:inference:project-nodes:present:v1",
+  "title": "Owner records present before a wave",
+  "description": "EN: Before the owners of a wave run, one directory listing tells how many of them already have a stored record, so that a read reports 'N of M present' in milliseconds instead of discovering it owner by owner. The key of a record is a pure function of the owner root (the first hex digits of its sha256), never of a session, a process, a machine or a generation; whether a present record is taken is decided later by its observations, against the tree of the reader. DE: Bevor die Projekte einer Welle laufen, sagt ein einziges Verzeichnislisting, wie viele schon einen gespeicherten Eintrag haben, damit ein Lauf 'N von M vorhanden' in Millisekunden meldet statt es Projekt für Projekt zu entdecken. Der Schlüssel eines Eintrags ist eine reine Funktion der Projektwurzel (die ersten Hexziffern ihres sha256), nie einer Sitzung, eines Prozesses, einer Maschine oder einer Generation; ob ein vorhandener Eintrag übernommen wird, entscheiden später seine Beobachtungen gegen den Baum des Lesers.",
+  "definitions": {
+    "Policy": {
+      "const": { "keyHexDigits": 24, "recordSuffix": ".json" }
+    },
+    "Texts": {
+      "const": {
+        "en": { "present": "owner records present: {present} of {total}, {missing} to infer or fetch" },
+        "de": { "present": "Projekteinträge vorhanden: {present} von {total}, {missing} abzuleiten oder zu holen" }
+      }
+    },
+    "Census": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["present", "total"],
+      "properties": {
+        "present": { "type": "integer", "minimum": 0 },
+        "total": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

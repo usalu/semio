@@ -140,6 +140,21 @@
       }
     },
     {
+      "id": "host-leaked-images",
+      "area": "host",
+      "rules": [
+        "host.images-many"
+      ],
+      "summary": {
+        "en": "Detach the disk images of dead test sandboxes, nested ones first, and remove the dead sandbox directories.",
+        "de": "Hängt die Disk-Images toter Test-Sandboxes aus, verschachtelte zuerst, und entfernt die toten Sandbox-Verzeichnisse."
+      },
+      "safety": {
+        "en": "Only images whose backing file lies in a sandbox directory .cache/test-sandbox/r<6 characters> whose owner process (pid and start time) does not exist; images of the checkout cache, of living sandboxes and foreign images are never touched, and a sandbox directory goes only when no image of it is still attached.",
+        "de": "Nur Images, deren Trägerdatei in einem Sandbox-Verzeichnis .cache/test-sandbox/r<6 Zeichen> liegt, dessen Besitzerprozess (pid und Startzeit) nicht existiert; Images des Checkout-Caches, lebender Sandboxes und fremde Images werden nie angetastet, und ein Sandbox-Verzeichnis verschwindet erst, wenn keines seiner Images mehr eingehängt ist."
+      }
+    },
+    {
       "id": "agent-sessions",
       "area": "sessions",
       "rules": [

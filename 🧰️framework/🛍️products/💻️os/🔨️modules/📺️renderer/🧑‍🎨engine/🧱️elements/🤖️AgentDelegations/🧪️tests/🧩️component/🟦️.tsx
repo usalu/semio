@@ -370,7 +370,7 @@ describe("agent delegation contract", () => {
 describe("agent delegation surface", () => {
   it("shows every delegation with its state, audience, principal and last use", () => {
     const view = render(<Pane rows={rows(summary(), summary({ delegationId: "dlg_never", agentPrincipalId: "agent:dlg_never", agentLabel: "Survey reader", audience: "read", lastUsedAtMs: null, createdAtMs: NOW - 200_000_000 }))} />);
-    const listed = view.container.querySelectorAll("li[data-delegation-id]");
+    const listed = view.container.querySelectorAll("[data-delegation-id]");
     expect(listed).toHaveLength(2);
     expect(listed[0]?.getAttribute("data-delegation-state")).toBe("live");
     expect(listed[0]?.getAttribute("data-delegation-audience")).toBe("edit");
@@ -390,7 +390,7 @@ describe("agent delegation surface", () => {
     cleanup();
     const noSpace = render(<Pane spaceId={null} rows={[]} />);
     expect(noSpace.container.textContent).toContain("Open a space to manage the agents that work in it.");
-    expect(noSpace.container.querySelector("li[data-delegation-id]")).toBeNull();
+    expect(noSpace.container.querySelector("[data-delegation-id]")).toBeNull();
     cleanup();
     const signedOut = render(<Pane signedIn={false} rows={[]} />);
     expect(signedOut.container.textContent).toContain("Sign in to the hub to give an agent access.");
@@ -417,6 +417,28 @@ describe("agent delegation surface", () => {
     expect(disclosed).toEqual(["download"]);
   });
 
+  it("consolidates the delegation list, the credential card and the withdrawal confirmation into shared-border owners without nested boxes", () => {
+    const view = render(<Pane credential={{ receipt: receipt(), file: agentCredentialFileV1(receipt(), ORIGIN), command: agentCredentialCommandV1(receipt(), ORIGIN), save: "saved", mcpClient: IDLE_MCP }} />);
+    const list = view.container.querySelector<HTMLElement>('[data-element-alias="os.hub.agent.list"]')!;
+    expect(list.getAttribute("data-shared-border-cells")).toBe("");
+    expect(list.getAttribute("data-orientation")).toBe("vertical");
+    expect(list.className).not.toMatch(/\bgap-/u);
+    const row = list.querySelector<HTMLElement>("[data-delegation-id]")!;
+    expect(row.parentElement).toBe(list);
+    expect(row.className).not.toMatch(/\bborder\b|\brounded|\bgap-/u);
+    const card = view.container.querySelector<HTMLElement>("[data-semio-hub-agent-credential]")!;
+    expect(card.getAttribute("data-shared-border-frame")).toBe("");
+    const mcp = card.querySelector<HTMLElement>("[data-semio-hub-agent-mcp]")!;
+    expect(mcp.parentElement).toBe(card);
+    expect(mcp.className).not.toMatch(/\bborder\b|\brounded/u);
+    fireEvent.click(screen.getByRole("button", { name: "Withdraw Drafting agent" }));
+    const confirmation = view.container.querySelector<HTMLElement>("[data-semio-hub-agent-revoke-confirm]")!;
+    expect(confirmation.parentElement).toBe(row);
+    expect(confirmation.className).not.toMatch(/\bborder\b|\brounded/u);
+    expect(view.container.querySelectorAll("select")).toHaveLength(0);
+    expect(view.container.querySelectorAll('[class~="rounded-sm"]')).toHaveLength(0);
+  });
+
   it("falls back to showing the file text only when the browser refused to save it", () => {
     const view = render(<Pane credential={{ receipt: receipt(), file: agentCredentialFileV1(receipt(), ORIGIN), command: agentCredentialCommandV1(receipt(), ORIGIN), save: "failed", mcpClient: IDLE_MCP }} />);
     expect(view.container.querySelector("[role='alert']")?.textContent).toContain("Could not save the file");
@@ -439,7 +461,7 @@ describe("agent delegation surface", () => {
 
   it("never offers withdrawal for an already-withdrawn delegation", () => {
     const view = render(<Pane rows={rows(summary({ revoked: true }))} />);
-    expect(view.container.querySelector("li[data-delegation-id]")?.getAttribute("data-delegation-state")).toBe("revoked");
+    expect(view.container.querySelector("[data-delegation-id]")?.getAttribute("data-delegation-state")).toBe("revoked");
     expect(namedButtons(view.container, "Withdraw Drafting agent")).toHaveLength(0);
   });
 
@@ -525,7 +547,7 @@ describe("agent delegation lane", () => {
     fireEvent.click(screen.getByRole("button", { name: "Withdraw Drafting agent" }));
     fireEvent.click(screen.getByRole("button", { name: "Withdraw access — Withdraw access from Drafting agent?" }));
     await waitFor(() => expect(port.revoked).toEqual(["dlg_one"]));
-    await waitFor(() => expect(view.container.querySelector("li[data-delegation-id]")?.getAttribute("data-delegation-state")).toBe("revoked"));
+    await waitFor(() => expect(view.container.querySelector("[data-delegation-id]")?.getAttribute("data-delegation-state")).toBe("revoked"));
     expect(namedButtons(view.container, "Withdraw Drafting agent")).toHaveLength(0);
   });
 

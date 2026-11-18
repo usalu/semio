@@ -1,0 +1,85 @@
+{
+ "options": {
+  "machines": 1,
+  "memoryMegabytes": 16384,
+  "cores": 8,
+  "slice": [
+   "repo-mcp"
+  ],
+  "target": "build",
+  "timeoutSeconds": 1500,
+  "language": "en",
+  "execute": true,
+  "frozenDirectory": "/tmp/slw-r155probe/r",
+  "out": "/private/tmp/claude-501/-Users-ueli-Documents-semio/9f6d3d77-cfd2-486b-942c-2101ee51a1fb/scratchpad/R159/run3"
+ },
+ "verdict": {
+  "outcome": "timeout",
+  "pass": false,
+  "readyAtSeconds": {},
+  "walls": [],
+  "phaseSeconds": {
+   "start": 94,
+   "taken": 40,
+   "owners done": 996
+  },
+  "stageSeconds": {},
+  "peakFootprintMegabytes": {
+   "slice-lab-4f7b-m1": 5503
+  },
+  "limitMegabytes": 6553,
+  "withinLimit": true,
+  "duplicateOwners": 0,
+  "liveFiles": [],
+  "lowered": 0,
+  "leftoverProcesses": 0,
+  "leftoverImages": 0,
+  "admitted": 53,
+  "elapsedSeconds": 1516.1,
+  "load": 38.28,
+  "activitySeconds": {
+   "-": 2,
+   "build:source-admission": 22,
+   "build:implementation-source": 24,
+   "tools": 86,
+   "capacity": 2,
+   "build:selected-compile-closure": 2,
+   "build:command-source-imports": 38,
+   "build:selected-normalization": 10,
+   "build:command-source-packages": 10,
+   "build:selected-compile-imports": 6,
+   "build:selected-source-inputs": 26,
+   "build:projects": 20,
+   "build:project-assembly": 6,
+   "build:modules": 4,
+   "build:graph": 34,
+   "build:portable-inputs": 962
+  },
+  "loopLagMaxMs": null,
+  "lagWithin": true,
+  "busyShare": 21,
+  "published": [
+   "197b3fa666cd486704afa6b2486e41d34937781dbf655c65569ad69a0940aa24.json"
+  ],
+  "readySeconds": {},
+  "ownersSeen": {
+   "slice-lab-4f7b-m1": {
+    "total": 53,
+    "present": 0,
+    "fetched": 0,
+    "here": 34
+   }
+  },
+  "detached": 6,
+  "churn": {
+   "count": 0,
+   "sample": []
+  },
+  "frozen": {
+   "files": 167696,
+   "megabytes": 1839,
+   "seconds": 339,
+   "drift": 19
+  }
+ }
+}

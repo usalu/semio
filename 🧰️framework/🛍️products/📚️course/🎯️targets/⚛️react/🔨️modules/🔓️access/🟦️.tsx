@@ -1,7 +1,7 @@
 /** 🪟️ Scheduled UI access, a hidden author-preview argument and visible inert previews. */
 import { useEffect, useState, type ReactNode } from "react";
 import { courseAccess, courseRelease, type CourseView } from "@semio-tech/course";
-import { Icon } from "@semio-tech/ui-react/chrome";
+import { Icon, SharedBorderRow, SharedBorderRowCell } from "@semio-tech/ui-react/chrome";
 import type { CourseLocale, CourseText } from "../🌐️i18n/🟦️.ts";
 
 /** 🗝️ Author preview is available only through the explicit URL argument. */
@@ -38,19 +38,21 @@ export function useReleaseClock(course: CourseView | undefined, now: () => numbe
   return at;
 }
 
-/** 🔒️ Keeps a locked preview rendered behind a theme-aware tint with no operable descendants. */
+/** 🔒️ Keeps a locked preview rendered behind a theme-aware tint with no operable descendants; the gate is its own stacking context, so the tint never covers the footer chips of a neighbouring card that share its seam. */
 export function AccessGate(props: { readonly course: CourseView | undefined; readonly page: string; readonly task?: string; readonly at: number; readonly locale: CourseLocale; readonly text: CourseText; readonly children: ReactNode }): ReactNode {
   if (clientAccess(props.course, props.page, props.at, props.task)) return props.children;
   const release = props.course === undefined ? undefined : courseRelease(props.course, props.page, props.task);
   const date = release == null || !Number.isFinite(new Date(release).getTime()) ? undefined : new Intl.DateTimeFormat(props.locale, { dateStyle: "medium", timeStyle: "short" }).format(release);
   return (
-    <div data-course-locked={props.task === undefined ? props.page : `${props.page}/${props.task}`} className="course-access-gate relative h-full min-h-0 w-full">
+    <div data-course-locked={props.task === undefined ? props.page : `${props.page}/${props.task}`} className="course-access-gate relative h-full min-h-0 w-full" style={{ isolation: "isolate" }}>
       <div inert aria-hidden="true" className="course-access-preview h-full pointer-events-none select-none" onClickCapture={(event) => { event.preventDefault(); event.stopPropagation(); }} onKeyDownCapture={(event) => { event.preventDefault(); event.stopPropagation(); }}>{props.children}</div>
       <div className="course-access-tint pointer-events-auto absolute inset-0 z-10 flex items-center justify-center bg-background/80 p-double text-foreground">
-        <p className="m-0 flex items-center gap-single border border-normal bg-background px-double py-single text-sm" role="status">
-          <Icon icon="lock" size="small" />
-          {date === undefined ? props.text("course.access.locked") : props.text("course.access.opens", { date })}
-        </p>
+        <SharedBorderRow role="status" className="bg-background">
+          <SharedBorderRowCell className="flex items-center gap-single px-double py-single text-sm">
+            <Icon icon="lock" size="small" />
+            {date === undefined ? props.text("course.access.locked") : props.text("course.access.opens", { date })}
+          </SharedBorderRowCell>
+        </SharedBorderRow>
       </div>
     </div>
   );

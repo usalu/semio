@@ -34,7 +34,7 @@ test("A run whose class is sized by the peaks its own runs measured takes no ram
 
 test("The project farm asks for its workers as an elastic request of the run's agent session, and its grant observes nothing of its own",async()=>{
  const directory=fresh(),environment={SEMIO_HOST_CAPACITY_DIRECTORY:directory,LANG:"en_US.UTF-8"};
- const waiting=requestBuildFarmCapacityV1({preferredJobs:2,environment,directory,policy,write:()=>undefined,sample:async()=>({host:host(3000),swappedOutMegabytes:0})});
+ const waiting=requestBuildFarmCapacityV1({preferredJobs:2,environment,directory,policy,write:()=>undefined,sample:async()=>({host:host(300),swappedOutMegabytes:0})});
  await sleep(80);
  const [waiter]=rows(directory,"queue");
  expect([waiter.request.elastic,/^[0-9a-f]{12}\.[a-z][a-z0-9]{0,11}$/u.test(waiter.session)]).toEqual([true,true]);

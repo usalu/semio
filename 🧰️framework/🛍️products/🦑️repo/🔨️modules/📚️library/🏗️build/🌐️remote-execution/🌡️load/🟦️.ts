@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {spawn} from "node:child_process";
 import {createHash} from "node:crypto";
 import {readFileSync} from "node:fs";
@@ -5,6 +6,7 @@ import {homedir,hostname} from "node:os";
 import {delimiter,join} from "node:path";
 import {evaluateHostCapacityV1,requireHostCapacityV1,withUnmanagedHostV1,type HostCapacityPolicyV1,type HostGrantV1,type HostSampleV1,type HostWaiterV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts";
 import {hostCapacityDirectoryV1,readHostCapacityStatusV1,type HostCapacityStatusV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/📖️status/🟦️.ts";
+import {readHostAsksV1,type HostAskV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🙋️asks/🟦️.ts";
 import {BUILD_HOST_CAPACITY_POLICY_V1} from "../../🌡️host-capacity/🎛️control/🟦️.ts";
 import {remoteExecutionWorkerWhyV1,type RemoteExecutionWorkerWhyV1} from "./🔎️why/🟦️.ts";
 import {requireRemoteExecutionShapeV1,type RemoteExecutionConfinementV1,type RemoteExecutionNetworkV1,type RemoteExecutionRefusalV1,type RemoteExecutionSandboxV1} from "../🟦️.ts";
@@ -27,7 +29,7 @@ export type RemoteExecutionLoadReportV1=Readonly<{version:1;origin:string;platfo
 export type RemoteExecutionAdmissionV1=Readonly<{admit:true}>|Readonly<{admit:false;reason:RemoteExecutionRefusalV1}>;
 
 /** 🔭️ What the admission looks at: the host sample, the local ledger and queue of the host capacity gate. */
-export type RemoteExecutionHostViewV1=Pick<HostCapacityStatusV1,"host"|"grants"|"waiters">;
+export type RemoteExecutionHostViewV1=Pick<HostCapacityStatusV1,"host"|"grants"|"waiters">&Readonly<{asks?:readonly HostAskV1[]}>;
 
 const sha256=(data:string):string=>createHash("sha256").update(data).digest("hex");
 
@@ -66,7 +68,7 @@ const ZERO:RemoteExecutionMachineCountersV1=Object.freeze({unit:Object.freeze({l
 /** 🧮️ Reads the counters of the wrapper from `.cache/f/build-counters.json` below the worktree (zeros when the file is absent or not of the closed shape). */
 export function readRemoteExecutionCountersV1(root:string):RemoteExecutionMachineCountersV1{
  try{
-  const value=JSON.parse(readFileSync(join(root,".cache","f","build-counters.json"),"utf8")) as {unit?:unknown;offload?:unknown};
+  const value=JSON.parse(readFileSync(machinePathV1(root,".cache","f","build-counters.json"),"utf8")) as {unit?:unknown;offload?:unknown};
   const counters={unit:value.unit,offload:value.offload};
   requireRemoteExecutionShapeV1("MachineCounters",counters,"Closed build counters required");
   return counters as RemoteExecutionMachineCountersV1;
@@ -77,7 +79,7 @@ export function readRemoteExecutionCountersV1(root:string):RemoteExecutionMachin
 export function remoteExecutionOriginV1(root:string,environment:Readonly<Record<string,string|undefined>>=process.env):string{
  const explicit=environment.SEMIO_FLEET_ORIGIN;
  if(explicit&&/^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/u.test(explicit))return explicit;
- try{const id=(JSON.parse(readFileSync(join(root,".cache","f","machine.json"),"utf8")) as {originId?:string}).originId;if(id&&/^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/u.test(id))return id;}catch{}
+ try{const id=(JSON.parse(readFileSync(machinePathV1(root,".cache","f","machine.json"),"utf8")) as {originId?:string}).originId;if(id&&/^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/u.test(id))return id;}catch{}
  const name=hostname().replace(/[^A-Za-z0-9._-]/gu,"-").replace(/^[^A-Za-z0-9]+/u,"").slice(0,64);
  return name===""?"machine":name;
 }
@@ -103,11 +105,11 @@ export async function readRemoteExecutionHostViewV1(environment:Readonly<Record<
  if(simulated!==undefined&&simulated!==""){
   const value=JSON.parse(readFileSync(simulated,"utf8")) as RemoteExecutionHostViewV1;
   requireHostCapacityV1<HostSampleV1>("Host",value.host);
-  return {host:value.host,grants:value.grants??[],waiters:value.waiters??[]};
+  return {host:value.host,grants:value.grants??[],waiters:value.waiters??[],asks:value.asks??[]};
  }
  const controller=new AbortController(),control={signal:controller.signal,remainingMilliseconds:()=>null,publish:()=>undefined,yieldContinuation:()=>new Promise<void>(done=>setImmediate(done))};
  const status=await readHostCapacityStatusV1({directory:hostCapacityDirectoryV1(environment),policy,control,environment});
- return {host:status.host,grants:status.grants,waiters:status.waiters};
+ return {host:status.host,grants:status.grants,waiters:status.waiters,asks:readHostAsksV1(hostCapacityDirectoryV1(environment))};
 }
 
 /** 📻️ Builds the load report of this machine from the host view: the pressure level and free memory are the sample's, `running` counts the local grants and the remote actions, `queued` the local waiters, and `headroom` is this machine's own admission verdict for one more remote action (slots are the scheduler's business, so a full worker still has headroom). */

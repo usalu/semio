@@ -115,7 +115,7 @@ export function Level(props: LevelProps): ReactElement {
   const bus = useContext(PointerContext);
   const inherited = useInheritedCamera(interactive || openedId !== null);
   const root = useRef<HTMLDivElement>(null);
-  const panes: readonly LayeredPane[] = pages.map((page) => ({ id: page.id, label: page.label, ...(page.shortLabel === undefined ? {} : { shortLabel: page.shortLabel }), ...(page.icon === undefined ? {} : { icon: page.icon }), render: (view) => page.render({ opened: view.opened, revealed: view.revealed }) }));
+  const panes: readonly LayeredPane[] = pages.map((page) => ({ id: page.id, label: page.label, ...(page.shortLabel === undefined ? {} : { shortLabel: page.shortLabel }), ...(page.icon === undefined ? {} : { icon: page.icon }), render: (view) => <div className="contents" {...(view.opened ? {} : { "data-border-probe-art": "" })}>{page.render({ opened: view.opened, revealed: view.revealed })}</div> }));
   const previous = useRef({ openedId, interactive });
   useLayoutEffect(() => {
     const before = previous.current;
@@ -144,8 +144,7 @@ export function Level(props: LevelProps): ReactElement {
           const page = pages.find((candidate) => candidate.id === pane.id);
           return page === undefined ? null : renderCard(page, card);
         }}
-        overlayClassName="staffage-grid"
-        overlayStyle={{ "--staffage-columns": columns, "--staffage-rows": rows } as CSSProperties}
+        {...(mode === "strip" ? { overlayClassName: "staffage-grid", overlayStyle: { "--staffage-columns": columns, "--staffage-rows": rows } as CSSProperties } : {})}
         mode={mode}
         routing="none"
         interactive={interactive}

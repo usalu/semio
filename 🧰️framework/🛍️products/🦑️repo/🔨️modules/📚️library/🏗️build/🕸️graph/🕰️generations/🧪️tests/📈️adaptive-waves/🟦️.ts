@@ -45,7 +45,7 @@ test("waves that report no inference grow, and the final generation holds every 
   const result=await world.refresh();
   expect(result.published).toBe(true);expect(result.computed).toBe(COUNT);
   expect(world.log.map(entry=>entry.full.length)).toEqual([BASE,BASE*4,COUNT-BASE*5]);
-  expect((await world.store.read())!.pointer.generation-before).toBe(3);
+  expect((await world.store.read())!.pointer.generation-before).toBe(1);
   expect(new Set(world.log.flatMap(entry=>entry.full)).size).toBe(COUNT);
  }finally{rmSync(dir,{recursive:true,force:true});}
 });
@@ -91,7 +91,7 @@ test("the elapsed time of a wave decides how far the next one grows",async()=>{
  }finally{rmSync(dir,{recursive:true,force:true});}
 });
 
-test("every published wave carries the seconds of its stages, the stages of the part included",async()=>{
+test("every wave carries the seconds of its stages, the stages of the part included, and the last one those of the publication",async()=>{
  const dir=scratch();
  try{
   await seed(dir,ringFiles(COUNT+3));
@@ -99,10 +99,10 @@ test("every published wave carries the seconds of its stages, the stages of the 
   await world.refresh();
   await edit(dir,COUNT);
   const told:{done:number;total:number;phases?:Record<string,number>}[]=[];
-  await world.refresh({published:(_generation:number,info:never)=>{told.push(info);}});
+  await world.refresh({published:(_generation:number,info:never)=>{told.push(info);},wave:info=>{told.push(info as never);}});
   expect(told.length).toBe(3);
   for(const[at,info]of told.entries()){
-   expect(Object.keys(info.phases!).sort()).toEqual([...(at===0?["plan.facts","plan.index","plan.settle"]:[]),"compute","compute.projects","compute.setup","compute.tail","fragments","pack","patch","plan","prime","publish"].sort());
+   expect(Object.keys(info.phases!).sort()).toEqual([...(at===0?["plan.facts","plan.index","plan.settle"]:[]),"compute","compute.projects","compute.setup","compute.tail","fragments","plan","prime",...(at===2?["pack","patch","publish"]:[])].sort());
    for(const value of Object.values(info.phases!))expect(Number.isFinite(value)&&value>=0).toBe(true);
    expect([info.phases!["compute.setup"],info.phases!["compute.projects"],info.phases!["compute.tail"]]).toEqual([7,11,3]);
   }

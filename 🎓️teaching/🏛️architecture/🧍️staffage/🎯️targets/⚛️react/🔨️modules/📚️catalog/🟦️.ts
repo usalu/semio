@@ -8,8 +8,9 @@
  * @see ../../../../🗂️catalog/🔣️.json — the manifest
  */
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { CATEGORIES, SCALE_DENOMINATORS, revisionOfText, validateAsset, validateManifest } from "@teaching/staffage";
-import type { Asset, AssetDocument, CategoryEntry, Revision, CategoryId, Issue, JobControl, Manifest, ManifestEntry, Slug, Text } from "@teaching/staffage";
+import { CATEGORIES, SCALE_DENOMINATORS, totalPowerW, validateAsset, validateManifest } from "@teaching/staffage";
+import type { Asset, CategoryEntry, Revision, CategoryId, Issue, JobControl, Manifest, ManifestEntry, Slug, Text } from "@teaching/staffage";
+import type { StaffageAssetPayload } from "../../🌐️vite/🟦️.ts";
 import manifestDocument from "../../../../🗂️catalog/🔣️.json";
 import { namedPoses, type Row } from "../🔎️search/🟦️.ts";
 
@@ -22,7 +23,7 @@ export interface CatalogSource {
   readonly category: (entry: CategoryEntry, signal?: AbortSignal) => Promise<CategoryDocument | null>;
 }
 
-const documents = import.meta.glob<string>("../../../../🗂️catalog/*/*/🔣️.json", { query: "?raw", import: "default" });
+const documents = import.meta.glob<StaffageAssetPayload>("../../../../🗂️catalog/*/*/🔣️.json", { query: "?staffage-asset", import: "default" });
 const stripSelectors = (path: string): string => path.replaceAll("️", "");
 
 /** 📦️ The catalog bundled with the site: the manifest inline, each asset file a chunk of its own, gathered per category folder; a category without asset files loads as `null`. */
@@ -33,10 +34,10 @@ export const bundledCatalog: CatalogSource = {
     const wanted = `/${stripSelectors(entry.folder)}/`;
     const keys = Object.keys(documents).filter((path) => stripSelectors(path).includes(wanted)).sort();
     if (keys.length === 0) return null;
-    const texts = await Promise.all(keys.map((key) => documents[key]!()));
+    const payloads = await Promise.all(keys.map((key) => documents[key]!()));
     signal?.throwIfAborted();
-    const assets = texts.map((text) => (JSON.parse(text) as AssetDocument).asset);
-    return { assets, revisions: Object.fromEntries(assets.map((asset, index) => [asset.id, revisionOfText(texts[index]!)])) };
+    const assets = payloads.map((payload) => JSON.parse(payload.json) as Asset);
+    return { assets, revisions: Object.fromEntries(assets.map((asset, index) => [asset.id, payloads[index]!.revision as Revision])) };
   },
 };
 
@@ -70,7 +71,7 @@ function cachedValidateAsset(asset: Asset): readonly Issue[] {
 }
 
 function entryOf(asset: Asset): ManifestEntry {
-  return { id: asset.id, category: asset.category, title: asset.title, heightM: asset.dimensions.heightM, widthM: asset.dimensions.widthM, poses: namedPoses(asset).map((pose) => pose.id), clips: asset.clips.map((clip) => clip.id), representations: Object.fromEntries(SCALE_DENOMINATORS.map((denominator) => [`${denominator}`, asset.representations[`${denominator}`]!.status])) as ManifestEntry["representations"], symbols: asset.symbols.map((symbol) => symbol.id), analytics: [asset.thermal.regions.length > 0 ? "thermal" : null, asset.thermal.emitters.length > 0 ? "transport" : null, "structural"].filter((item): item is "thermal" | "transport" | "structural" => item !== null), exports: asset.exports, distinction: asset.summary, completion: asset.completion };
+  return { id: asset.id, category: asset.category, title: asset.title, heightM: asset.dimensions.heightM, widthM: asset.dimensions.widthM, powerW: totalPowerW(asset), poses: namedPoses(asset).map((pose) => pose.id), clips: asset.clips.map((clip) => clip.id), representations: Object.fromEntries(SCALE_DENOMINATORS.map((denominator) => [`${denominator}`, asset.representations[`${denominator}`]!.status])) as ManifestEntry["representations"], symbols: asset.symbols.map((symbol) => symbol.id), analytics: [asset.thermal.regions.length > 0 ? "thermal" : null, asset.thermal.emitters.length > 0 ? "transport" : null, "structural"].filter((item): item is "thermal" | "transport" | "structural" => item !== null), exports: asset.exports, distinction: asset.summary, completion: asset.completion };
 }
 
 type Loaded = { readonly revisions: Readonly<Record<Slug, Revision>>; readonly assets: ReadonlyMap<Slug, Asset>; readonly allAssets: ReadonlyMap<Slug, Asset>; readonly invalid: ReadonlyMap<Slug, readonly Issue[]>; readonly extra: readonly Asset[] };

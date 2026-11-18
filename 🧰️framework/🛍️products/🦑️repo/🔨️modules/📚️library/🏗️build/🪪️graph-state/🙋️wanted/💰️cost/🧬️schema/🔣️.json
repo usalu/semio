@@ -2,14 +2,17 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "semio:build:graph-state:wanted:cost:v1",
   "title": "What inferring one project costs on a machine",
-  "description": "Projects are not equal: most owners need 100 to 800 MB of managed memory to infer, a few need gigabytes (measured on g1-server 2026-11-14: @semio-tech/s-dev-composition 14.0 GB above the surviving floor of its wave, @semio-tech/repo-lib 4.8 GB, @semio-tech/framework-rs 3.3 GB, the root owner `workspace` 3.1 GB of attributed growth; @semio-tech/framework-os-dev and @semio-tech/framework-os-kernel ran together in a wave that peaked 7.7 GB above its floor, seeded at half each). A reader therefore decides by the memory of each owner and not by their count: an owner whose recorded cost does not fit the admitted grant is never inferred on that machine, it is asked from the fleet and waited for. All costs in this file are MANAGED megabytes (JavaScript heap plus external buffers of the inferring process, the quantity the memory governor measures); the physical footprint is `footprintFactor` times that (measured 1.6 to 2.1 by the macOS footprint tool in package P4). The grant of a machine for one project is its admitted memory less `floorMegabytes`, the physical memory the parent holds before it infers anything (measured on g1-m02, 16 GB, in the four tries of round 5 that only waited for the fleet: the largest process was 3.14 to 3.74 GB resident). The costs are recorded per owner NAME, never per kind: a kind-wide window let one light owner after a heavy one erase the heavy one's cost.",
+  "description": "Projects are not equal: most owners need 100 to 800 MB of managed memory to infer, a few need gigabytes (measured on g1-server 2026-11-14: @semio-tech/s-dev-composition 14.0 GB above the surviving floor of its wave, @semio-tech/repo-lib 4.8 GB, @semio-tech/framework-rs 3.3 GB, the root owner `workspace` 3.1 GB of attributed growth; @semio-tech/framework-os-dev and @semio-tech/framework-os-kernel ran together in a wave that peaked 7.7 GB above its floor, seeded at half each). A reader therefore decides by the memory of each owner and not by their count: an owner whose recorded cost does not fit the admitted grant is never inferred on that machine, it is asked from the fleet and waited for. All costs in this file are MANAGED megabytes (JavaScript heap plus external buffers of the inferring process, the quantity the memory governor measures); the physical footprint is `footprintFactor` times that (measured 1.6 to 2.1 by the macOS footprint tool in package P4). The grant of a machine for one project is its admitted memory less the physical memory the parent holds before it infers anything: `floorMegabytes` (3072 MB, the booking of a read parent in the host capacity policy; measured on g1-m02, 16 GB, in the four tries of round 5: the largest process was 3.14 to 3.74 GB resident, before the parent was held to its booking) lowered to `floorShareBasisPoints` of a small host (3072 MB on 8 GB, 2250 MB on 6 GB); the solo grant of one owner also leaves `soloReserveShareBasisPoints` of the host to the system (1536 MB on 8 GB, 2048 MB from 11 GB), between `soloReserveMinimumMegabytes` and `soloReserveMegabytes`, so the whole plan of the machine that the parent and the system leave is what one heavy owner may take alone, on every host size. The costs are recorded per owner NAME, never per kind: a kind-wide window let one light owner after a heavy one erase the heavy one's cost.",
   "definitions": {
     "Policy": {
       "const": {
         "footprintFactor": 2,
         "marginPercent": 25,
-        "floorMegabytes": 3800,
+        "floorMegabytes": 3072,
+        "floorShareBasisPoints": 3750,
         "soloReserveMegabytes": 2048,
+        "soloReserveShareBasisPoints": 1875,
+        "soloReserveMinimumMegabytes": 1024,
         "samples": 5,
         "halfLifeMilliseconds": 259200000,
         "unknownMegabytes": 820,
@@ -33,7 +36,7 @@
           "workspace": 3100
         },
         "directory": ".cache/f/graph-costs",
-        "file": "owner-costs.json",
+        "file": "owner-costs.3.json",
         "flushMilliseconds": 2000,
         "heavySources": ["recorded", "seed"]
       }

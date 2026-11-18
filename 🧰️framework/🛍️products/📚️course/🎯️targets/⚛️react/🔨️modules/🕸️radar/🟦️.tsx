@@ -381,7 +381,7 @@ const FALLBACK_WIDTH_EM = 18;
 const FALLBACK_SPACE: RadarSpace = { width: FALLBACK_WIDTH_EM * 16, em: 16, family: "sans-serif", fonts: 0 };
 const RINGS = [0.25, 0.5, 0.75, 1];
 const VALUE_CELL = "course-nowrap border-b border-normal px-single py-single text-left align-top tabular-nums";
-const VALUE_HEAD = "course-nowrap border-b-2 border-normal px-single py-single text-left align-top font-semibold";
+const VALUE_HEAD = "course-nowrap border-b border-normal px-single py-single text-left align-top font-semibold";
 const VALUE_ROW_HEAD = "border-b border-normal px-single py-single text-left align-top font-semibold";
 
 function sameSpace(a: RadarSpace, b: RadarSpace): boolean {
@@ -461,7 +461,7 @@ export function RadarChart(props: { readonly name: string; readonly axes: readon
   const headings = normalised ? (["course.radar.axis", "course.radar.share"] as const) : (["course.radar.axis", "course.radar.value", "course.radar.minimum", "course.radar.maximum"] as const);
   const reading = text("course.radar.values", { values: axes.map((axis) => text("course.radar.entry", { axis: axis.label, value: shown(axis) })).join("; ") });
   return (
-    <figure ref={figure} className="course-radar m-0 flex flex-col gap-single">
+    <figure ref={figure} data-border-probe-art="" className="course-radar m-0 flex flex-col gap-single">
       <span ref={ruler} className="course-radar-ruler" style={{ width: `${RULER_EM}em` }} aria-hidden="true" />
       <svg className="course-radar-chart" viewBox={`0 0 ${fixed(layout.width)} ${fixed(layout.height)}`} width={fixed(layout.width)} height={fixed(layout.height)} role="img" aria-labelledby={titleId} aria-describedby={`${titleId}-values`}>
         <title id={titleId}>{text("course.radar.label", { name })}</title>

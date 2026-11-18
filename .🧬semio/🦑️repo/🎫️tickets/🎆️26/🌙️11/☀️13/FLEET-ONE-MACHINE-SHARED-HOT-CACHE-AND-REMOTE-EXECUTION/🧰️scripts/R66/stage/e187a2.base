@@ -1,0 +1,27 @@
+import json, sys
+
+def estimate(kind, peaks, p):
+    valid = [x for x in peaks.get(kind, []) if x > 0 and x != p["ceilingBytes"]][-p["peakSamples"]:]
+    if not valid:
+        return p["defaultOwnerMegabytes"] * 1048576, False
+    return max(valid), True
+
+def admit(est, learned, running, headroom, cores, p):
+    slots = max(1, min(p["maximumConcurrent"], int(cores) - p["reserveCores"]))
+    if len(running) >= slots:
+        return False
+    if est > headroom or (est >= p["heavyOwnerMegabytes"] * 1048576 and len(running) > 0):
+        return False
+    if len(running) == 0:
+        return True
+    if not learned:
+        return False
+    return headroom - sum(running) >= est
+
+doc = json.load(open(sys.argv[1], encoding="utf8"))
+out = []
+for case in doc["cases"]:
+    est, learned = estimate(case["kind"], case["peaks"], doc["policy"])
+    running = [int(x * 1048576) for x in case["runningMegabytes"]]
+    out.append({"name": case["name"], "learned": learned, "estimateMegabytes": round(est / 1048576), "admit": admit(est, learned, running, case["headroomMegabytes"] * 1048576, case["cores"], doc["policy"])})
+print(json.dumps(out, ensure_ascii=False))

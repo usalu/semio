@@ -95,6 +95,10 @@ mod block_on_entry;
 #[cfg(feature = "entrypoint")]
 pub use block_on_entry::block_on;
 
+#[path = "💤️lazy-slots/🦀️.rs"]
+mod lazy_slots;
+pub use lazy_slots::LazySlots;
+
 #[path = "🛣️lane/🦀️.rs"]
 mod lane;
 pub use lane::{Lane, PermitError, PermitGuard, PermitLedger, ProcessKind, worker_count_for};

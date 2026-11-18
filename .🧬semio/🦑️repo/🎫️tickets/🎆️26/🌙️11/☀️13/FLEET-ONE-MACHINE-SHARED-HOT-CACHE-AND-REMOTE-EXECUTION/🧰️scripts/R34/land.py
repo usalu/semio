@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""R34 landing: the fleet verdict stops flagging machine-local files the replica never carries (view without refused untracked paths and unsafe untracked links), the hot path notes unsafe links, and `status` shows the record of the 200 newest refused paths (.cache/f/refused-paths.json). Moves the replica code digest of every machine (11 files of the shared-worktree module).
+"""SUPERSEDED BY R46 (T/🧰️scripts/R46/land.py carries this bundle together with the git-state convergence): do not run both. Root re-pointed to /Users/ueli/Documents/semio on 2026-11-15.
+R34 landing: the fleet verdict stops flagging machine-local files the replica never carries (view without refused untracked paths and unsafe untracked links), the hot path notes unsafe links, and `status` shows the record of the 200 newest refused paths (.cache/f/refused-paths.json). Moves the replica code digest of every machine (11 files of the shared-worktree module).
 usage: land.py --dry-run | --rehearse | --land [--authorized] [--no-tests] | --rollback <backup-dir>      (--root <dir> uses another tree, for rehearsals)
   --dry-run   writes nothing: per file `copy` (live equals the baseline, the result is exactly the tested one), `merge` (live changed elsewhere, the diff still applies by context), `same` (already landed), REFUSED (does not apply: rebuild the bundle with build-bundle.py).
   --rehearse  copies the live version of every touched file into a scratch root, lands there, checks every `copy` file against the tested hash, rolls back, checks that the scratch root equals the copy again and that a dry run is clean; touches nothing live.
@@ -17,7 +18,7 @@ def arg(name):
 def root():
     if arg("--root"):
         return os.path.abspath(arg("--root"))
-    for candidate in ["/Users/Shared/semio", "/Users/ueli/Documents/semio"]:
+    for candidate in ["/Users/ueli/Documents/semio"]:
         if os.path.exists(candidate + "/AGENTS.md") and os.path.exists(candidate + "/.cache/f/machine.json"):
             return candidate
     sys.exit("no worktree root found")

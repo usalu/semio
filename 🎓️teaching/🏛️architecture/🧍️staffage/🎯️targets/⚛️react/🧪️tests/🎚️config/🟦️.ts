@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
+import { staffageAssetVitePlugin } from "../../🌐️vite/🟦️.ts";
 // #endregion 🔌️Adapters
 
 const target = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -12,7 +13,7 @@ const staffage = resolve(target, "../..");
 /** 🧪️ Vitest for `@teaching/staffage-react`: every case under `🧪️tests/<case>/🟦️.tsx`, run in jsdom. */
 export default defineConfig({
   root,
-  plugins: [react()],
+  plugins: [staffageAssetVitePlugin() as unknown as ReturnType<typeof react>[number], react()],
   resolve: {
     alias: [
       { find: /^@teaching\/staffage-react\/app$/u, replacement: resolve(root, "📚️app/🟦️.tsx") },

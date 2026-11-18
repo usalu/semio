@@ -6,22 +6,13 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { Button } from "@semio-tech/ui-react";
+import { Button, SharedBorderRow, SharedBorderRowCell } from "@semio-tech/ui-react";
 import type { AdminOperationStatusV1 } from "@semio-tech/framework-os";
+import { AdminPage } from "../📄️AdminPage/🟦️.tsx";
+import { StatTiles } from "../📊️StatTiles/🟦️.tsx";
 import { useAdminT } from "../📚️I18n/🟦️.tsx";
 import { useAdminSession, type AdminOverview } from "../🔑️AdminSession/🟦️.tsx";
 // #endregion 🔌️Adapters
-
-/** 📊️ One overview stat tile — plain markup (no framework stat-tile element exists yet outside the
- * shell's window chrome), reused across the tile grid below. */
-function StatTile({ label, value }: { readonly label: string; readonly value: React.ReactNode }): React.ReactElement {
-  return (
-    <div className="flex flex-col gap-single rounded border p-single">
-      <span className="text-sm text-muted-foreground">{label}</span>
-      <span className="text-lg font-semibold text-emphasized">{value}</span>
-    </div>
-  );
-}
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -96,7 +87,7 @@ export function OverviewPage(): React.ReactElement {
     };
   }, [client, load, rebuildOperationId, rebuilding, t]);
 
-  if (!overview) return <div className="p-single text-sm text-muted-foreground">{t("admin.session.probing")}</div>;
+  if (!overview) return <div className="px-single py-1 text-sm text-muted-foreground">{t("admin.session.probing")}</div>;
 
   const backends = Object.entries(overview.backends)
     .filter(([, enabled]) => enabled)
@@ -104,29 +95,28 @@ export function OverviewPage(): React.ReactElement {
     .join(", ");
 
   return (
-    <div className="flex h-full w-full flex-col gap-single overflow-auto p-single">
-      <h1 className="text-lg font-semibold text-emphasized">{t("admin.overview.title")}</h1>
-      <div className="grid grid-cols-2 gap-single md:grid-cols-3">
-        <StatTile label={t("admin.overview.spaces")} value={overview.counts.spaces} />
-        <StatTile label={t("admin.overview.users")} value={overview.counts.users} />
-        <StatTile label={t("admin.overview.connections")} value={overview.counts.connections} />
-        <StatTile label={t("admin.overview.openArtifacts")} value={overview.openArtifacts} />
-        <StatTile label={t("admin.overview.headSeq")} value={overview.headSeq} />
-        <StatTile label={t("admin.overview.dataDirBytes")} value={formatBytes(overview.dataDirBytes)} />
-        <StatTile label={t("admin.overview.backends")} value={backends || "—"} />
-      </div>
-      <div className="flex items-center gap-single">
-        <Button id="admin-overview-rebuild" icon="save" text={rebuilding ? t("admin.overview.rebuilding") : t("admin.overview.rebuild")} disabled={rebuilding} onClick={rebuild} />
-        {rebuilding && rebuildOperationId ? (
-          <Button id="admin-overview-rebuild-cancel" icon="x" text={t("admin.spaces.cancel")} variant="ghost" onClick={() => client.cancelOperation(rebuildOperationId)} />
-        ) : null}
+    <AdminPage title={t("admin.overview.title")} data-slot="admin-overview">
+      <StatTiles columns={3} tiles={[
+        { label: t("admin.overview.spaces"), value: overview.counts.spaces },
+        { label: t("admin.overview.users"), value: overview.counts.users },
+        { label: t("admin.overview.connections"), value: overview.counts.connections },
+        { label: t("admin.overview.openArtifacts"), value: overview.openArtifacts },
+        { label: t("admin.overview.headSeq"), value: overview.headSeq },
+        { label: t("admin.overview.dataDirBytes"), value: formatBytes(overview.dataDirBytes) },
+        { label: t("admin.overview.backends"), value: backends || "—" },
+      ]} />
+      <SharedBorderRow edges={["bottom"]} data-slot="admin-overview-rebuild-row">
+          <Button id="admin-overview-rebuild" icon="save" text={rebuilding ? t("admin.overview.rebuilding") : t("admin.overview.rebuild")} disabled={rebuilding} onClick={rebuild} />
+          {rebuilding && rebuildOperationId ? (
+            <Button id="admin-overview-rebuild-cancel" icon="x" text={t("admin.spaces.cancel")} variant="ghost" onClick={() => client.cancelOperation(rebuildOperationId)} />
+          ) : null}
         {rebuildStatus?.progress ? (
-          <span className="text-sm text-muted-foreground" role="status">
+          <SharedBorderRowCell className="text-sm text-muted-foreground" role="status">
             {rebuildStatus.progress.completedEvents}/{rebuildStatus.progress.totalEvents}
-          </span>
+          </SharedBorderRowCell>
         ) : null}
-        {message ? <span className="text-sm text-muted-foreground">{message}</span> : null}
-      </div>
-    </div>
+        {message ? <SharedBorderRowCell className="text-sm text-muted-foreground">{message}</SharedBorderRowCell> : null}
+      </SharedBorderRow>
+    </AdminPage>
   );
 }

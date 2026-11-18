@@ -30,7 +30,7 @@ it.each(corpus.cases)("keeps the WASM session exclusively borrowed: $name", asyn
     if (key === "then" || typeof key !== "string") return undefined;
     return () => { if (borrowed) { violations.push(key); throw Error("borrowed: " + key); } return key === "loadBoardSnapshotJson" ? true : key === "drainEventsJson" ? "[]" : key.endsWith("Json") ? "{}" : undefined; };
   } }) as unknown as Board2dWasmSession;
-  vi.stubGlobal("ResizeObserver", class { constructor(callback: () => void) { resized = callback; } observe() {} disconnect() {} });
+  vi.stubGlobal("ResizeObserver", class { constructor(callback: () => void) { resized = callback; } observe() {} unobserve() {} disconnect() {} });
   vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({ x: 0, y: 0, width: 800, height: 600, top: 0, left: 0, right: 800, bottom: 600, toJSON: () => ({}) });
   const factory = { pluginId: "test", appId: "test", instanceId: 1, create: async () => session, scope: createBoardPeerScope() };
   const scene = (x: number) => ({ type: "componentScene", controllerId: "controller", surfaceId: "surface", componentKind: "board-2d", board2d: { snapshotJson: JSON.stringify({ nodes: [], edges: [], camera: { x, y: 0, zoom: 1 } }), cameraJson: JSON.stringify({ x, y: 0, zoom: 1 }), glyphCatalogsJson: "{}", selectionJson: "[]", interactive: true, selectionMethod: row.selection.method, selectableNodes: row.selection.nodes, selectableEdges: row.selection.edges, selectableHandles: row.selection.handles, gridSnapEnabled: false, gridFactor: 1, suggestionOffset: 0, brushWeightsJson: "{}", placementCompatibilityJson: "{}", lodMode: "automatic" } }) as UiComponentSceneNode;

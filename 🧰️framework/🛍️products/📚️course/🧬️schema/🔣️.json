@@ -806,6 +806,8 @@
                   "badges",
                   "prefs",
                   "quizzes",
+                  "assignments",
+                  "clips",
                   "run",
                   "results"
                 ]
@@ -895,6 +897,12 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/Assignment"
+          }
+        },
+        "clips": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Clip"
           }
         }
       }
@@ -2295,6 +2303,12 @@
           "items": {
             "$ref": "#/$defs/Assignment"
           }
+        },
+        "clips": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Clip"
+          }
         }
       }
     },
@@ -3396,7 +3410,7 @@
     },
     "QuestionPool": {
       "type": "object",
-      "description": "A fixed distribution: one variant per semantic slot, rotated without repetition until that slot is exhausted. All task items belong to exactly one slot; draw equals the slot count. The high 16 seed bits shuffle each deck, the low 16 bits select its attempt. seconds is the per-question time budget.",
+      "description": "A fixed distribution: one variant per semantic slot, rotated without repetition until that slot is exhausted. All task items belong to exactly one slot; draw equals the slot count, or is smaller when a distribution is set. The high 16 seed bits shuffle each deck, the low 16 bits select its attempt. seconds is the per-question time budget. An optional distribution weights which slots a sheet draws instead of drawing every slot.",
       "required": [
         "seconds",
         "slots"
@@ -3419,6 +3433,32 @@
               "$ref": "#/$defs/Slug"
             }
           }
+        },
+        "distribution": {
+          "$ref": "#/$defs/Distribution"
+        }
+      }
+    },
+    "Distribution": {
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🦀️rust",
+        "🟦️typescript"
+      ],
+      "type": "object",
+      "description": "How a pool draws its slots, fewer than it has: zipf ranks the slots ascending by their smallest magnitude (a sorting item's absolute value, a matching item's absolute value on its first dimension, a classification item's definition position; ties by slot order) and draws draw slots without replacement, each pick proportional to 1 / rank^exponent among the slots left, so everyday small magnitudes dominate and the largest ones appear only occasionally. The picks consume one MT19937 stream seeded with the run seed XOR the FNV-1a hash of task:zipf, each pick reading next() / 2^32 as its unit interval position.",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "exponent"
+      ],
+      "properties": {
+        "kind": {
+          "const": "zipf"
+        },
+        "exponent": {
+          "type": "number",
+          "exclusiveMinimum": 0
         }
       }
     },
@@ -4386,6 +4426,94 @@
         },
         "documents": {
           "$ref": "#/$defs/AssignmentDocuments"
+        }
+      }
+    },
+    "ClipPoster": {
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🦀️rust",
+        "🟦️typescript"
+      ],
+      "description": "The still frame of a clip, a PNG the site builds into its content-hashed assets, identified by its file name.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "file"
+      ],
+      "properties": {
+        "file": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9]+(?:[_-][A-Za-z0-9]+)*\\.png$",
+          "maxLength": 128
+        }
+      }
+    },
+    "ClipUrls": {
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🦀️rust",
+        "🟦️typescript"
+      ],
+      "description": "Where a clip is hosted, per language; a language without an address has no hosted clip yet and no default language is assumed.",
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "en": {
+          "description": "The HTTPS address of a hosted clip, outside this site.",
+          "type": "string",
+          "maxLength": 2048,
+          "pattern": "^https://[^\\s/?#]+(?:[/?#]\\S*)?$"
+        },
+        "de": {
+          "description": "The HTTPS address of a hosted clip, outside this site.",
+          "type": "string",
+          "maxLength": 2048,
+          "pattern": "^https://[^\\s/?#]+(?:[/?#]\\S*)?$"
+        }
+      }
+    },
+    "Clip": {
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🦀️rust",
+        "🟦️typescript"
+      ],
+      "description": "A learning clip of one course topic: a poster to show now, and, once the clip is hosted elsewhere, its address per language.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "topic",
+        "emoji",
+        "title",
+        "description",
+        "poster"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "topic": {
+          "$ref": "#/$defs/Slug"
+        },
+        "emoji": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16
+        },
+        "title": {
+          "$ref": "#/$defs/Text"
+        },
+        "description": {
+          "$ref": "#/$defs/Text"
+        },
+        "poster": {
+          "$ref": "#/$defs/ClipPoster"
+        },
+        "urls": {
+          "$ref": "#/$defs/ClipUrls"
         }
       }
     },

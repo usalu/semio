@@ -3078,6 +3078,24 @@
               }
             },
             {
+              "id": "armrest-post-left",
+              "bone": "seat",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "path",
+              "d": "M 0.04 0.05 L 0.04 0.02 L 0.2 0.025 L 0.2 0.045 Z",
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.235,
+                "z1": 0.28
+              }
+            },
+            {
               "id": "armrest-pad-left",
               "bone": "seat",
               "role": "body",
@@ -3098,6 +3116,24 @@
                 "sweep": "w",
                 "z0": 0.25,
                 "z1": 0.29
+              }
+            },
+            {
+              "id": "armrest-post-right",
+              "bone": "seat",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "path",
+              "d": "M 0.04 0.05 L 0.04 0.02 L 0.2 0.025 L 0.2 0.045 Z",
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.28,
+                "z1": -0.235
               }
             },
             {
@@ -4889,6 +4925,25 @@
               }
             },
             {
+              "id": "armrest-bracket-left",
+              "bone": "seat",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "path",
+              "d": "M 0.033 0.05 L 0.033 0.02 L 0.053 0.02 L 0.053 0.05 Z",
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "penMm": 0.35,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.236,
+                "z1": 0.258
+              }
+            },
+            {
               "id": "armrest-post-right",
               "bone": "seat",
               "role": "body",
@@ -4905,6 +4960,25 @@
                 "sweep": "w",
                 "z0": -0.28,
                 "z1": -0.26
+              }
+            },
+            {
+              "id": "armrest-bracket-right",
+              "bone": "seat",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "path",
+              "d": "M 0.033 0.05 L 0.033 0.02 L 0.053 0.02 L 0.053 0.05 Z",
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "penMm": 0.35,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.258,
+                "z1": -0.236
               }
             },
             {

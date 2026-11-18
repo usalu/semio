@@ -1,0 +1,11 @@
+const OVERRUN_ASIDE_V1 = Object.freeze({ en: "owner {name} is set aside on this machine: it needed {megabytes} MB in a worker process even when it ran alone, above the {cap} MB this machine allows; a machine of the fleet with more memory infers it, this read goes on with every other owner and waits for it at the end", de: "Das Projekt {name} wird auf dieser Maschine zurückgestellt: es brauchte {megabytes} MB in einem Arbeitsprozess, auch als es allein lief, mehr als die {cap} MB, die diese Maschine erlaubt; eine Maschine der Flotte mit mehr Speicher leitet es ab, dieser Lauf macht mit allen anderen Projekten weiter und wartet am Ende darauf" });
+
+/** 🪂️ Sets one owner aside that outgrew the alone cap of a worker process: it joins the owners this machine never infers (`never`, `alone`), the cost it showed is recorded under its name (`recorder`, scaled back by `factor` so the cost table reads the measured megabytes) so the offer to the fleet and the next read know what it needs, and one line in each language says why; answers whether `error` was such an overrun, any other failure is left to the caller. @param {(text: (language: string) => string) => void} say */
+export function setAsideOverrunV1({ error, never, alone, recorder, factor, say }) {
+  if (error?.code !== "graph.farm-overrun") return false;
+  never.add(error.project); alone.add(error.project);
+  try { recorder?.record({ key: error.project, kind: "project", takenBytes: Math.round(error.megabytes * 1048576 / factor), seconds: 0, stopped: true }); } catch {}
+  say(language => OVERRUN_ASIDE_V1[language === "de" ? "de" : "en"].replace("{name}", error.project).replace("{megabytes}", error.megabytes).replace("{cap}", error.capMegabytes));
+  return true;
+}
+

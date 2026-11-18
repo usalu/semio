@@ -6,7 +6,7 @@ import { glassClass, surfaceClass } from "../../../🔨️modules/🌈️surface
 import { Icon } from "../../🔣️Icons/🟦️.tsx";
 import { windowCapFrameClass } from "../../🗂️WindowChrome/🟦️.tsx";
 
-export const modeDockTabInsertPreviewClass = "mx-half my-half flex h-[calc(100%-var(--spacing-single))] min-w-[5.5rem] max-w-[12rem] shrink-0 items-center rounded-sm border-2 border-accent bg-accent/20 px-single text-xs text-foreground/80 select-none";
+export const modeDockTabInsertPreviewClass = "flex h-full min-w-[5.5rem] max-w-[12rem] shrink-0 items-center bg-accent/20 px-single text-xs text-foreground/80 select-none";
 
 export const MODE_DRAG_CURSOR_OFFSET_X = 8;
 export const MODE_DRAG_CURSOR_OFFSET_Y = 10;

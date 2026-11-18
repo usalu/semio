@@ -1,7 +1,7 @@
 import{expect,test}from"bun:test";
 import Ajv from"ajv";
 import{readFileSync}from"node:fs";
-import{PLAN_STAGE_MESSAGES_V1,PLAN_STAGE_POLICY_V1,createPlanStageGuardV1,onPlanStageV1,planStageLimitBytesV1,renderPlanStageMessageV1}from"../🟨️.mjs";
+import{PLAN_STAGE_MESSAGES_V1,PLAN_STAGE_POLICY_V1,createPlanStageGuardV1,onPlanStageV1,planStageLimitBytesV1,farmAloneCapV1,renderPlanStageMessageV1}from"../🟨️.mjs";
 import{throwIfOwnerExceededV1}from"../../🎯️owner-scope/🟨️.mjs";
 
 /** 🪜️ Contract: the plan of a wave runs as one owner of the memory governor. Its stages are named and measured in the log in both languages, a plan that grows past what the machine gives a plan is stopped at its next yield point or stage boundary with the typed refusal that names the stage and the size, garbage a collection frees is no growth, a serving machine has no limit, and the declared numbers and the worker message agree with their JSON schema (checked with Ajv).
@@ -17,8 +17,9 @@ const harness=(limitMegabytes:number)=>{
 test("the numbers: a share of the physical memory between the minimum and the maximum, none on a serving machine, the environment may name another number or switch it off",()=>{
  const P=PLAN_STAGE_POLICY_V1;
  expect(planStageLimitBytesV1({},16384)).toBe(Math.floor(16384*0.3)*MB);
- expect(planStageLimitBytesV1({},8192)).toBe(Math.floor(8192*0.3)*MB);
- expect(planStageLimitBytesV1({},4096)).toBe(P.minimumMegabytes*MB);
+ expect(planStageLimitBytesV1({},8192)).toBe(3200*MB);
+ expect(planStageLimitBytesV1({},6144)).toBe(3200*MB);
+ expect(planStageLimitBytesV1({},4096)).toBe(Math.floor(4096*0.6)*MB);
  expect(planStageLimitBytesV1({},23999)).toBe(Math.floor(23999*0.3)*MB);
  expect(planStageLimitBytesV1({},24000)).toBe(Infinity);
  expect(planStageLimitBytesV1({},0)).toBe(Infinity);
@@ -28,7 +29,7 @@ test("the numbers: a share of the physical memory between the minimum and the ma
 });
 
 test("declared numbers, messages and the worker message agree with the schema file; both languages have the same lines and placeholders",()=>{
- const ajv=new Ajv({strict:false}),policy={type:"object",required:["version","hostShare","treeShare","minimumMegabytes","maximumMegabytes","serveHostMegabytes","limitEnvironment","off","owner","stages","stageMegabytes","sampleMilliseconds","recentSamples"],additionalProperties:false,properties:{version:{const:1},hostShare:{type:"number",exclusiveMinimum:0,maximum:1},treeShare:{type:"number",exclusiveMinimum:0,maximum:1},minimumMegabytes:{type:"integer",minimum:1},maximumMegabytes:{type:"integer",minimum:1},serveHostMegabytes:{type:"integer",minimum:1},limitEnvironment:{type:"string",pattern:"^SEMIO_[A-Z_]+$"},off:{type:"string"},owner:{type:"string"},stages:{type:"array",minItems:1,uniqueItems:true,items:{type:"string",pattern:"^[a-z-]+$"}},stageMegabytes:{type:"object",additionalProperties:{type:"integer",minimum:1}},sampleMilliseconds:{type:"integer",minimum:10},recentSamples:{type:"integer",minimum:1}}};
+ const ajv=new Ajv({strict:false}),policy={type:"object",required:["version","hostShare","treeShare","farmPriority","parentMegabytes","parentFootprintMegabytes","farmWorkerPeakMegabytes","farmChildFootprintMegabytes","minimumMegabytes","maximumMegabytes","serveHostMegabytes","limitEnvironment","off","owner","stages","stageMegabytes","sampleMilliseconds","recentSamples"],additionalProperties:false,properties:{version:{const:1},hostShare:{type:"number",exclusiveMinimum:0,maximum:1},treeShare:{type:"number",exclusiveMinimum:0,maximum:1},farmPriority:{type:"object",additionalProperties:{type:"integer"}},parentMegabytes:{type:"integer",minimum:1},parentFootprintMegabytes:{type:"integer",minimum:1},farmWorkerPeakMegabytes:{type:"object",additionalProperties:{type:"integer",minimum:1}},farmChildFootprintMegabytes:{type:"object",additionalProperties:{type:"object",additionalProperties:false,required:["typicalMegabytes","capMegabytes","aloneCapMegabytes"],properties:{typicalMegabytes:{type:"integer",minimum:1},capMegabytes:{type:"integer",minimum:1},aloneCapMegabytes:{type:"integer",minimum:1}}}},minimumMegabytes:{type:"integer",minimum:1},maximumMegabytes:{type:"integer",minimum:1},serveHostMegabytes:{type:"integer",minimum:1},limitEnvironment:{type:"string",pattern:"^SEMIO_[A-Z_]+$"},off:{type:"string"},owner:{type:"string"},stages:{type:"array",minItems:1,uniqueItems:true,items:{type:"string",pattern:"^[a-z-]+$"}},stageMegabytes:{type:"object",additionalProperties:{type:"integer",minimum:1}},sampleMilliseconds:{type:"integer",minimum:10},recentSamples:{type:"integer",minimum:1}}};
  expect(ajv.validate(policy,schema.definitions.Policy.const),JSON.stringify(ajv.errors)).toBe(true);
  expect(PLAN_STAGE_POLICY_V1.minimumMegabytes).toBeLessThanOrEqual(PLAN_STAGE_POLICY_V1.maximumMegabytes);
  const messages={type:"object",required:["en","de"],additionalProperties:false,properties:{en:{type:"object",required:["started","finished","stopped"],additionalProperties:{type:"string",minLength:10}},de:{type:"object",required:["started","finished","stopped"],additionalProperties:{type:"string",minLength:10}}}};
@@ -134,4 +135,11 @@ test("a stage without a budget is only held to the plan limit, and a stage budge
  await guard.run(async()=>{guard.mark("tests");guard.operation("x");state.bytes+=5000*MB;guard.mark("edges");});
  const free=createPlanStageGuardV1({limitBytes:Infinity,ports:{sample:()=>9e12,collect:()=>undefined},environment:{},report:()=>undefined,stageMegabytes:{environment:1}});
  await free.run(async()=>{free.mark("environment");free.operation("fields");free.mark("tests");});
+});
+
+test("a farm child that runs alone may reach the declared cap on a host with room for it and the plan ceiling less the parent on a small one",()=>{
+ const declared=PLAN_STAGE_POLICY_V1.farmChildFootprintMegabytes["project-farm"].aloneCapMegabytes;
+ expect(farmAloneCapV1(16384)).toBe(declared);expect(farmAloneCapV1(32768)).toBe(declared);expect(farmAloneCapV1(0)).toBe(declared);
+ expect(farmAloneCapV1(8192)).toBe(Math.floor(8192*0.6)-PLAN_STAGE_POLICY_V1.parentFootprintMegabytes);
+ expect(farmAloneCapV1(4096)).toBe(PLAN_STAGE_POLICY_V1.farmChildFootprintMegabytes["project-farm"].capMegabytes);
 });

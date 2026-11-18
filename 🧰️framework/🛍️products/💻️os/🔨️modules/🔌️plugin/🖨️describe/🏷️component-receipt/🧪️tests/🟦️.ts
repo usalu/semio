@@ -37,9 +37,9 @@ describe("ComponentReceiptV1", () => {
     expect(encodeComponentReceiptV1(valid as ComponentReceiptV1)).toBe(text(valid));
   });
 
-  it("owns the profile policy in the schema: one shipped profile at 256 MiB, a local-only iterate cap at 512 MiB", () => {
+  it("owns the profile policy in the schema: one shipped profile at 1 GiB, a local-only iterate cap at 512 MiB", () => {
     expect(SHIPPED_COMPONENT_PROFILE).toBe("release");
-    expect(SHIPPED_COMPONENT_MAX_BYTES).toBe(256 * 1024 * 1024);
+    expect(SHIPPED_COMPONENT_MAX_BYTES).toBe(1024 * 1024 * 1024);
     expect(ITERATE_COMPONENT_MAX_BYTES).toBe(512 * 1024 * 1024);
     expect(Object.entries(COMPONENT_PROFILE_POLICIES).filter(([, policy]) => policy.shipped).map(([profile]) => profile)).toEqual(["release"]);
     expect(schema.$defs.ComponentProfile.enum).toEqual(Object.keys(COMPONENT_PROFILE_POLICIES));

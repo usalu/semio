@@ -24,7 +24,7 @@
     { "id": "library", "root": "owner/📦️packages/🦀️rust", "kind": "library", "crateTypes": ["rlib"], "expect": null },
     { "id": "not-cdylib", "root": "owner/🧩️component/📦️packages/🦀️rust", "kind": "plugin", "crateTypes": ["rlib"], "expect": "refused" }
   ],
-  "dependsOn": ["@semio-tech/os-plugin-describe-rs:build", "@semio-tech/framework-plugin-web:support", "workspace:deps-wasm-opt"],
+  "dependsOn": ["@semio-tech/os-plugin-describe-rs:build", "@semio-tech/os-plugin-native-transpile-rs:build", "@semio-tech/framework-plugin-web:support", "workspace:deps-wasm-opt"],
   "named": ["nativeSources", "^nativeSources"],
   "externalDependencies": ["@bytecodealliance/jco", "@bytecodealliance/preview2-shim"],
   "binaryenManifest": "⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🧬️schema/🔣️.json",

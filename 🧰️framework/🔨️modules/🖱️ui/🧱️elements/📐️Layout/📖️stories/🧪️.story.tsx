@@ -8,7 +8,7 @@
 
 // #endregion 🧲️Header
 
-import { Canvas, Panel, PanelChromeTabBar, Footer, HorizontalWindows, Layout, Navbar, singleTreeLeaf, Window, navbarFillItem } from "@semio-tech/ui-react";
+import { Canvas, Input, Panel, PanelChromeTabBar, Footer, HorizontalWindows, Layout, Navbar, singleTreeLeaf, Window, navbarFillItem } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "../../../🧪️tests/📚️storybook-types/🟦️.ts";
 import { useState, type ComponentType } from "react";
@@ -75,7 +75,7 @@ export const Default: Story = {
     const [topLeftSize, setTopLeftSize] = useState(250);
     const [topMiddleSize, setTopMiddleSize] = useState(360);
     const [topRightSize, setTopRightSize] = useState(300);
-    const [topLeftVisible, setTopLeftVisible] = useState(true);
+    const [topLeftVisible, setTopLeftVisible] = useState(false);
     const [topLeftPath, setTopLeftPath] = useState<readonly string[]>(["workbench", "explorer"]);
     const [bottomRightVisible, setBottomRightVisible] = useState(false);
     const [bottomRightPath, setBottomRightPath] = useState<readonly string[]>(["settings"]);
@@ -85,15 +85,15 @@ export const Default: Story = {
         navbar={
           <Navbar
             items={[
-              { content: <Home size={20} />, key: "home" },
-              { content: <span className="font-bold">Application</span>, key: "title" },
-              { content: <input type="text" placeholder="Search..." className="px-2 py-1 bg-panel border rounded w-full" />, key: "search", className: "flex-1" },
               {
                 key: "topLeftPanelTabs",
                 content: (
                   <PanelChromeTabBar anchor="top-left" tabs={topLeftTabs} visible={topLeftVisible} onVisibleChange={setTopLeftVisible} activeTabPath={topLeftPath} onActiveTabPathChange={setTopLeftPath} />
                 ),
               },
+              { content: <Home size={20} />, key: "home" },
+              { content: <span className="font-bold">Application</span>, key: "title" },
+              { content: <Input id="layout-story-search" aria-label="Search" placeholder="Search..." />, key: "search", className: "flex-1" },
               { content: <User size={20} />, key: "user" },
             ]}
           />
@@ -175,10 +175,10 @@ export const Default: Story = {
         canvas={
           <Canvas>
             <HorizontalWindows>
-              <Window id="main" defaultSize={50}>
+              <Window id="main" fill defaultSize={50}>
                 <ExampleContent title="Main Window" />
               </Window>
-              <Window id="side" defaultSize={50}>
+              <Window id="side" fill defaultSize={50}>
                 <ExampleContent title="Side Window" />
               </Window>
             </HorizontalWindows>
@@ -199,7 +199,7 @@ export const Mobile: Story = {
     const mobileTabs = [...topLeftTabs, ...bottomRightTabs];
 
     return (
-      <div className="h-[50.75rem] w-[23.4375rem] border mx-auto">
+      <div className="h-[50.75rem] w-[23.4375rem] mx-auto">
         <Layout
           mobile
           mobilePanel={{ visible, tabs: mobileTabs, activeTabPath, onActiveTabPathChange: setActiveTabPath }}
@@ -218,7 +218,7 @@ export const Mobile: Story = {
           canvas={
             <Canvas>
               <HorizontalWindows>
-                <Window id="main" defaultSize={100}>
+                <Window id="main" fill defaultSize={100}>
                   <ExampleContent title="Main Window" />
                 </Window>
               </HorizontalWindows>
@@ -238,7 +238,7 @@ export const PanelDefault: Story = {
   render: () => {
     const [size, setSize] = useState(300);
     return (
-      <div className="relative h-[25rem] w-[37.5rem] border ui-surface" data-level="base">
+      <div className="relative h-[25rem] w-[37.5rem] ui-surface" data-level="base">
         <Panel
           anchor="top-left"
           size={size}

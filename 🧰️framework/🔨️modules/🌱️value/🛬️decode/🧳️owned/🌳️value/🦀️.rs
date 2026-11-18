@@ -242,3 +242,57 @@ impl<I:NativeValueSource+?Sized,T:NativeReceive<dyn NativeValueSource>,const N:u
 #[path="⚠️refusal/🦀️.rs"]
 #[doc(hidden)]
 pub mod refusal;
+
+
+/// 🧭️ Erases one field slot so the struct-independent plan phases are compiled once instead of once per record.
+pub trait NativeFieldPlanSlot{
+ fn plan_ready(&self)->bool;
+ fn plan_demands(&self,source:&Option<crate::retained_clone::RetainedOwnedProjection<dyn NativeValueSource>>,body:usize,maximum:u64)->Result<RetirementDemand,ValueError>;
+ fn plan_take_demand(&self)->Result<RetirementDemand,ValueError>;
+ fn plan_take_work_demand(&self)->Result<u64,ValueError>;
+ fn plan_terminal_is_empty(&self)->bool;
+ fn plan_is_closing(&self)->bool;
+ fn plan_begin_close_demand(&self)->Result<RetirementDemand,ValueError>;
+ fn plan_begin_close_work_demand(&self)->Result<u64,ValueError>;
+ fn plan_close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
+ fn plan_close_work_demand(&self,body:usize)->Result<u64,ValueError>;
+}
+impl<T:NativeReceive<dyn NativeValueSource>> NativeFieldPlanSlot for NativeReceiveSlot<dyn NativeValueSource,T>{
+ fn plan_ready(&self)->bool{self.ready()}
+ fn plan_demands(&self,source:&Option<crate::retained_clone::RetainedOwnedProjection<dyn NativeValueSource>>,body:usize,maximum:u64)->Result<RetirementDemand,ValueError>{self.demands(source.as_ref().ok_or_else(invalid)?.borrow()?,body,maximum)}
+ fn plan_take_demand(&self)->Result<RetirementDemand,ValueError>{self.take_demand()}
+ fn plan_take_work_demand(&self)->Result<u64,ValueError>{self.take_work_demand()}
+ fn plan_terminal_is_empty(&self)->bool{self.terminal_is_empty()}
+ fn plan_is_closing(&self)->bool{self.is_closing()}
+ fn plan_begin_close_demand(&self)->Result<RetirementDemand,ValueError>{self.begin_close_demand()}
+ fn plan_begin_close_work_demand(&self)->Result<u64,ValueError>{self.begin_close_work_demand()}
+ fn plan_close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.close_demands(body)}
+ fn plan_close_work_demand(&self,body:usize)->Result<u64,ValueError>{self.close_work_demand(body)}
+}
+impl<T:semio_framework_value_native_default::NativeDefault> NativeFieldPlanSlot for semio_framework_value_native_default::NativeDefaultSlot<T>{
+ fn plan_ready(&self)->bool{self.ready()}
+ fn plan_demands(&self,_:&Option<crate::retained_clone::RetainedOwnedProjection<dyn NativeValueSource>>,body:usize,maximum:u64)->Result<RetirementDemand,ValueError>{self.demands(body,maximum)}
+ fn plan_take_demand(&self)->Result<RetirementDemand,ValueError>{self.take_demand()}
+ fn plan_take_work_demand(&self)->Result<u64,ValueError>{self.take_work_demand()}
+ fn plan_terminal_is_empty(&self)->bool{self.terminal_is_empty()}
+ fn plan_is_closing(&self)->bool{self.is_closing()}
+ fn plan_begin_close_demand(&self)->Result<RetirementDemand,ValueError>{self.begin_close_demand()}
+ fn plan_begin_close_work_demand(&self)->Result<u64,ValueError>{self.begin_close_work_demand()}
+ fn plan_close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.close_demands(body)}
+ fn plan_close_work_demand(&self,body:usize)->Result<u64,ValueError>{self.close_work_demand(body)}
+}
+/// 🧭️ Plans every field stage except the projection of a present field (stage 0), which needs the typed input.
+pub fn plan_field_stage(stage:u8,present:bool,slot:&dyn NativeFieldPlanSlot,source:&Option<crate::retained_clone::RetainedOwnedProjection<dyn NativeValueSource>>,projection:&crate::retained_clone::RetainedOwnedProjectionAdmission<dyn NativeValueSource>,body:usize,maximum:u64,option_bytes:usize,field_demand:fn(usize)->Result<RetirementDemand,ValueError>)->Result<(RetirementDemand,u64,u8),ValueError>{
+ let one=||->Result<(RetirementDemand,u64,u8),ValueError>{Ok((fixed(size_of::<u8>()),1,13))};
+ match stage{
+  0=>if present{Err(invalid())}else{one()},
+  8=>if present{Ok((projection.take_demand()?,projection.take_work_demand()?,24))}else{Err(invalid())},
+  1=>if slot.plan_ready(){one()}else{Ok((slot.plan_demands(source,body,maximum)?,1,14))},
+  2=>{let mut d=slot.plan_take_demand()?;d.copy_bytes=d.copy_bytes.checked_add(option_bytes+size_of::<u8>()).ok_or_else(invalid)?;Ok((d,work_sum(slot.plan_take_work_demand()?,2)?,13))},
+  3=>{let mut d=field_demand(0)?;d.copy_bytes=d.copy_bytes.checked_add(size_of::<bool>()+size_of::<u8>()).ok_or_else(invalid)?;Ok((d,work_sum(1,2)?,13))},
+  4=>if slot.plan_terminal_is_empty()||slot.plan_is_closing(){one()}else{Ok((slot.plan_begin_close_demand()?,slot.plan_begin_close_work_demand()?,21))},
+  7=>if slot.plan_terminal_is_empty(){one()}else{Ok((slot.plan_close_demands(body)?,slot.plan_close_work_demand(body)?,15))},
+  5=>if present{match source.as_ref(){Some(source)=>if source.terminal_is_empty(){Ok((fixed(size_of::<Option<crate::retained_clone::RetainedOwnedProjection<dyn NativeValueSource>>>()),1,13))}else{Ok((source.close_demand(body)?,source.close_work_demand(body)?,16))},None=>one()}}else{one()},
+  6=>Ok((fixed(size_of::<usize>()+size_of::<u8>()),2,13)),
+  _=>Err(invalid())}
+}

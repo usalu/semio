@@ -3,9 +3,10 @@ import{createBoundedCacheV1}from"../🧊️bounded/🟨️.mjs";
 import{REVISION_POLICY_V1,captureBoundedSourceRevisionV1,implementationPinnedV1,physicalSourceOriginV1}from"../📥️inputs/🔏️revision/🟨️.mjs";
 import{declareFormatStampV1}from"../🧷️format-stamps/🟨️.mjs";
 import{renameOverBusyFileSyncV1,staleImplementationV1}from"../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
-import {withBuildGraphOptionalPublicationV1,registerBuildGraphOptionalHandleV1,requireRepositoryBuildGraphObservationPathV1} from "../📥️inputs/💾️storage/🟨️.mjs";
+import {withBuildGraphOptionalPublicationV1,registerBuildGraphOptionalHandleV1,requireRepositoryBuildGraphObservationPathV1 as requireManagedGraphObservationPathV1} from "../📥️inputs/💾️storage/🟨️.mjs";
 import * as fs from "node:fs";
 import{fieldFactV1,fieldValueV1,installedPackageFileV1,jsonPointerValueV1,registerFieldExtractorV1}from"./🧩️field/🟨️.mjs";
+import{noteObservedInReadParentV1}from"./🚧️read-parent/🟨️.mjs";
 
 const observedWorlds = new AsyncLocalStorage();
 const world = new Proxy({}, { get: (_target, key) => (observedWorlds.getStore() ?? fs)[key] });
@@ -16,13 +17,16 @@ export function importObservedModuleV1(path) { const port = observedWorlds.getSt
 import { readFile as readFileAsync, stat as statAsync } from "node:fs/promises";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { createHash } from "node:crypto";
+import { rebaseRowV1, rebaseRowsV1 } from "./🏚️relocation/🟨️.mjs";
 import { sha256HexV1, utf8TextV1 } from "../🧂️text-bytes/🟨️.mjs";
+import { sourceTreeFilterV1 } from "./📂️source-names/🟨️.mjs";
 
 /** 🔢️ A hex SHA-256 digest, compiled once. */
 const SHA256_HEX_V1 = /^[a-f0-9]{64}$/u;
 import { GRAPH_MEMORY_POLICY_V1, graphStringInternerV1, internJsonStringsV1 } from "../🧠️memory/🟨️.mjs";
 import { footprintPulseV1 } from "../🧠️memory/🦶️footprint/🟨️.mjs";
 import { createRowPoolV1, createRowTableV1, factKeyV1 } from "./🔢️row-table/🟨️.mjs";
+import { describeCollectionV1 } from "../🧠️memory/📋️slice-report/🟨️.mjs";
 import { brotliCompress, brotliCompressSync, brotliDecompressSync, constants as zlibConstants } from "node:zlib";
 
 /** 🗜️ Persisted inference records are brotli streams: their observation rows repeat across projects and shrink about 15 times. */
@@ -43,7 +47,7 @@ const inferenceStamps=new Map();
 let stampedFragments=[];
 export function registerInferenceStampsV1(entries,fragments=[]){for(const[path,stamp]of entries){if(typeof path!=="string"||!path||typeof stamp!=="string"||!stamp)throw Error("Inference stamp path and value required");inferenceStamps.set(path,stamp);}if(!Array.isArray(fragments)||fragments.some(fragment=>typeof fragment!=="string"||fragment.length<2))throw Error("Inference source fragments required");stampedFragments=[...fragments];}
 
-/** 🏷️ The declared stamp of the persisted project record format: a record written under another stamp is a miss. */
+/** 🏷️ The declared stamp of the persisted project record format and the only revision of the record rules: a record written under another stamp is a miss, an edit of this module that keeps the stamp moves no record key and no owner pool revision (bump the stamp in the schema when rows, digest or validation change for the same inputs). */
 const recordStampV1=()=>sourceAnalysisSchemaV1.$defs.record.const.stamp;
 declareFormatStampV1("graph.record",sourceAnalysisSchemaV1);
 
@@ -52,6 +56,9 @@ export function observedInferenceStampsV1(paths){for(const path of paths)record(
 
 /** 🧷️ Refuses a statically cached observation instance whose executing Source or privately captured schema changed. */
 export function requireCurrentObservationV1(){if(implementationPinnedV1())return;try{if(captureBoundedSourceRevisionV1(fileURLToPath(physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),REVISION_POLICY_V1.maximumSourceBytes).sha256===OBSERVATION_REVISION&&captureBoundedSourceRevisionV1(fileURLToPath(observationSchemaURLV1),REVISION_POLICY_V1.maximumTextBytes).sha256===observationSchemaRevisionV1)return;}catch(cause){throw Object.assign(staleImplementationV1("Stale loaded observation implementation; restart required"),{code:"BUILD_AUTHORITY_CHANGED",cause});}throw Object.assign(staleImplementationV1("Stale loaded observation implementation; restart required"),{code:"BUILD_AUTHORITY_CHANGED"});}
+
+/** 🧊️ The failure of an attempt whose source facts a repeated inference left as they were (a process that reads a pinned implementation file whose bytes changed on disk cannot refresh them): it ends as a stale implementation, so the outermost command starts again with the current code instead of repairing for ever. */
+export function staleSourceFactsErrorV1(rows){const named=rows.slice(0,4).map(row=>row.kind+":"+row.path).join(", ");return Object.assign(staleImplementationV1("Stale source facts that a repeated inference cannot refresh; restart required: "+named+" / Veraltete Quellfakten, die eine erneute Ableitung nicht erneuern kann; Neustart erforderlich: "+named),{code:"BUILD_AUTHORITY_CHANGED",paths:rows.slice(0,8).map(row=>row.path)});}
 
 /** 🚧️ The declared limits of the observation module; its schema file is their single source. */
 export const OBSERVATION_LIMITS_V1 = Object.freeze({...sourceAnalysisSchemaV1.$defs.limits.const});
@@ -63,6 +70,8 @@ const scopes = new AsyncLocalStorage();
 const inferenceValidationScopes = new AsyncLocalStorage();
 const sourceCaptures = new AsyncLocalStorage();
 const recordScopes = new AsyncLocalStorage();
+const plainRecordReads = new AsyncLocalStorage();
+const requireRepositoryBuildGraphObservationPathV1 = (path, mode) => mode === "read" && plainRecordReads.getStore() === true ? Object.freeze({ kind: "ordinary" }) : requireManagedGraphObservationPathV1(path, mode);
 const recordStores = new Map();
 const recordStoreHandles = new Map();
 const usedInference = new Map();
@@ -71,6 +80,8 @@ const loadObservations = new Map();
 const projectComputations = new Map();
 const projectImages = new Map();
 const projectChecks = new WeakMap();
+const trackedV1={projectChecks:new Set(),sharedChecks:new Set(),scopes:new Set()},trackedSeenV1=new WeakSet();
+const trackV1=(kind,map)=>{if(map!==null&&typeof map==="object"&&!trackedSeenV1.has(map)){trackedSeenV1.add(map);trackedV1[kind].add(new WeakRef(map));}};
 const sourceAnalyses = new Map();
 const activeSourceAnalyses = new Set();
 const sourceAnalysisImages = new Map();
@@ -130,12 +141,13 @@ function residentFactV1(fact){
 function residentRowsV1(rows){return rows.filter(row=>residentFactV1(row?.fact));}
 function projectObservationHoldsV1(row,parent){
  parent=inferenceValidationScopes.getStore()??parent;
+ const seen=rebaseRowV1(row);
  const factText=JSON.stringify(row.fact);
- if(factText.length>8192)return row.kind==="file"?fileFactHolds(row.path,row.fact)&&JSON.stringify(facts.file(row.path)?.sha256??null)===JSON.stringify(row.fact.sha256??null):current([row]);
- let checks=parent&&projectChecks.get(parent),rows=parent&&rowChecks.get(parent);if(parent&&!checks){checks=new Map();projectChecks.set(parent,checks);}if(parent&&!rows){rows=new WeakMap();rowChecks.set(parent,rows);}
+ if(factText.length>8192)return seen.kind==="file"?fileFactHolds(seen.path,seen.fact)&&JSON.stringify(facts.file(seen.path)?.sha256??null)===JSON.stringify(seen.fact.sha256??null):current([seen]);
+ let checks=parent&&projectChecks.get(parent),rows=parent&&rowChecks.get(parent);if(parent&&!checks){checks=new Map();projectChecks.set(parent,checks);trackV1("projectChecks",checks);}if(parent&&!rows){rows=new WeakMap();rowChecks.set(parent,rows);}
  const shared=rows?.get(row);if(shared!==undefined)return shared;
  const key=rowTableV1.id(row),previous=checks?.get(key);if(previous!==undefined){rows?.set(row,previous);return previous;}
- const holds=row.kind==="file"?fileFactHolds(row.path,row.fact)&&JSON.stringify(facts.file(row.path)?.sha256??null)===JSON.stringify(row.fact.sha256??null):current([row]);
+ const holds=seen.kind==="file"?fileFactHolds(seen.path,seen.fact)&&JSON.stringify(facts.file(seen.path)?.sha256??null)===JSON.stringify(seen.fact.sha256??null):current([seen]);
  checks?.set(key,holds);rows?.set(row,holds);return holds;
 }
 
@@ -162,7 +174,7 @@ export function adoptInferenceAuthorityV1(rows){
 }
 
 /** 🎟️ Admits one physical project's own input observations through its own computation, bound to the sealed authority digest. */
-export async function observeProjectInferenceV1({cachePath,key,owner,reusable,stamps=[],prepare,fleet},compute){
+export async function observeProjectInferenceV1({cachePath,key,owner,reusable,stamps=[],prepare,fleet,deferOffer=false,verdict,verdictFinal=false,prepareAttempts=1},compute){
  requireCurrentObservationV1();requireInferenceReuseV1(reusable);originalInferencePublications.delete(cachePath);usedInference.delete(cachePath);
  const parent=scopes.getStore(),identity=sha256HexV1(JSON.stringify([recordStampV1(),null,key])),previous=projectImages.get(cachePath);
  const inherit=rows=>{retainSourceFactsV1(rows);retainObservationsV1(parent,rows);};
@@ -170,9 +182,9 @@ export async function observeProjectInferenceV1({cachePath,key,owner,reusable,st
   const value=internJsonStringsV1(JSON.parse(previous.image.toString("utf8")),graphStringInternerV1);
   if(await inferenceReusableV1(reusable,value)&&(parent?consistentObservationsV1(previous.observations):current(previous.observations))){inherit(previous.observations);originalInferencePublications.set(cachePath,previous.publication);usedInference.set(cachePath,previous.headerDigest);return value;}
  }
- const value=await observeInferenceComputationV1({cachePath,key,reusable,prepare,fleet},async()=>{projectComputations.set(owner,(projectComputations.get(owner)??0)+1);observedInferenceStampsV1(stamps);const image=jsonImage(await compute());if(image===undefined)throw Error("Project inference requires a language-neutral JSON image");return JSON.parse(image);},Boolean(parent&&inferenceValidationScopes.getStore()));
- const publication=originalInferencePublications.get(cachePath);
- if(!publication)throw Error("Original project inference observations required");
+ let own;const value=await observeInferenceComputationV1({cachePath,key,reusable,prepare,fleet,deferOffer,verdict,verdictFinal,prepareAttempts,published:found=>{own=found;}},async()=>{projectComputations.set(owner,(projectComputations.get(owner)??0)+1);observedInferenceStampsV1(stamps);const image=jsonImage(await compute());if(image===undefined)throw Error("Project inference requires a language-neutral JSON image");return JSON.parse(image);},Boolean(parent&&inferenceValidationScopes.getStore()));
+ const publication=own??originalInferencePublications.get(cachePath);
+ if(!publication)throw Object.assign(Error("Original project inference observations required for "+String(owner)+" ("+cachePath+") / Ursprüngliche Beobachtungen der Projektableitung erforderlich für "+String(owner)+" ("+cachePath+")"),{code:"BUILD_INFERENCE_PUBLICATION_LOST",semioProject:typeof owner==="string"?owner:undefined});
  inherit(publication.observations);
  retainProjectImageV1(cachePath,{identity,image:Buffer.from(JSON.stringify(value)),observations:publication.observations,publication,headerDigest:usedInference.get(cachePath)??null});
  return internJsonStringsV1(value,graphStringInternerV1);
@@ -183,7 +195,7 @@ function retainSourceFactsV1(rows){retainObservationsV1(sourceCaptures.getStore(
 
 /** 🧾️ Preserves distinct consumed results for a path, including contradictory reads. */
 function retainObservationsV1(target,rows){
- if(!target)return;
+ if(!target)return;trackV1("scopes",target);
  if(Array.isArray(rows)&&rows.length>=DETACHED_LAYER_ROWS){
   if(target instanceof DetachedScopeV1){if(!target.layers.has(rows)){target.layers.add(rows);target.order.push(rows);}return;}
   let done=retainedArrays.get(target);if(done===undefined)retainedArrays.set(target,done=new WeakSet());
@@ -236,7 +248,7 @@ function recordRowV1(row){
 const sharedChecks=new WeakMap();
 function sharedObservationsHoldV1(rows,parent){
  parent=inferenceValidationScopes.getStore()??parent;if(!parent)return current(rows);
- let checks=sharedChecks.get(parent);if(!checks){checks=new Map();sharedChecks.set(parent,checks);}
+ let checks=sharedChecks.get(parent);if(!checks){checks=new Map();sharedChecks.set(parent,checks);trackV1("sharedChecks",checks);}
  return consistentObservationsV1(rows)&&rows.every(row=>{const key=rowTableV1.id(row),previous=checks.get(key);if(previous!==undefined)return previous;const holds=current([row]);checks.set(key,holds);return holds;});
 }
 
@@ -248,7 +260,7 @@ function memoRowsHoldV1(rows,parent){const known=memoRowsKnownV1(rows);if(known!
 
 /** 🧵️ Shares validated invocation work while replaying every consumed fact into each receiving project. */
 export function memoizedObservedComputationV1(cache,key,compute) {
- const parent=scopes.getStore(),previous=cache.get(key);
+ noteObservedInReadParentV1("computations");const parent=scopes.getStore(),previous=cache.get(key);
  if(previous&&memoRowsHoldV1(previous.observations,parent)){retainObservationsV1(parent,previous.observations);retainSourceFactsV1(previous.observations);return previous.value;}
  const nested=new DetachedScopeV1();let stored;
  try{const value=scopes.run(nested,compute);if(value&&typeof value.then==="function")throw Error("Synchronous observed computation required");stored=scopeRowsV1(nested);if(value!==null)cache.set(key,{value,observations:stored});return value;}
@@ -328,11 +340,20 @@ function nodeType(stat) {
   return stat.isSymbolicLink() ? "symlink" : stat.isFile() ? "file" : stat.isDirectory() ? "directory" : "other";
 }
 
+/** 🧂️ The content digest of a file of the live disk, remembered by its path and stamp (size, modification time, change time, inode) so that a file hashed once is not hashed again by every owner and every shared computation that verifies a row of it; a stamp younger than two seconds is never remembered (a write in the same clock tick of the same size would keep it), and any write moves the change time, which no process can set back. */
+const fileShaMemoV1=new Map();
+function fileShaV1(path,stat){
+ const live=observedWorlds.getStore()===undefined,stamp=stat.size+":"+stat.mtimeMs+":"+stat.ctimeMs+":"+stat.ino,known=live?fileShaMemoV1.get(path):undefined;
+ if(known!==undefined&&known.stamp===stamp)return known.sha256;
+ const sha256=sha256HexV1(world.readFileSync(path));
+ if(live&&Date.now()-Math.max(stat.mtimeMs,stat.ctimeMs)>2000){if(fileShaMemoV1.size>=200000)fileShaMemoV1.clear();fileShaMemoV1.set(path,{stamp,sha256});}
+ return sha256;
+}
 /** 🗝️ The identity of one file's bytes: stamp plus content digest, or the error code that replaced them. */
 function fileFact(path) {
   try {
     const stat = world.statSync(path);
-    return { size: stat.size, mtimeMs: stat.mtimeMs, ctimeMs: stat.ctimeMs, ino: stat.ino, sha256: sha256HexV1(world.readFileSync(path)) };
+    return { size: stat.size, mtimeMs: stat.mtimeMs, ctimeMs: stat.ctimeMs, ino: stat.ino, sha256: fileShaV1(path, stat) };
   } catch (error) { return { error: error.code ?? "EUNKNOWN" }; }
 }
 
@@ -416,8 +437,12 @@ function sourceAnalysisFactHoldsV1(path,fact){
  }catch{return false;}
 }
 
-/** 🆔️ Fingerprints exactly the names or typed entries a directory read returned. */
-function directoryFactV1(entries,typed=false){return sha256HexV1(JSON.stringify(entries.map(entry=>typed?[String(entry.name),nodeType(entry)]:String(entry)).sort()));}
+/** 🆔️ Fingerprints the names or typed entries of a directory read that belong to the source tree as the build sees it (`📂️source-names`): machine-local output and operating-system noise are not part of the fact, so a record made on one machine holds on every other and after a build. A name of the generated-directory list leaves only where the entry is a directory or a link (`directory` is where the untyped names were listed; none means every name is a directory). */
+function directoryFactV1(entries,typed=false,directory=null){
+ const kept=sourceTreeFilterV1(entries,entry=>String(typed?entry.name:entry),entry=>typed?entry.isDirectory()||entry.isSymbolicLink():directory===null||directoryLinkOrDirectoryV1(join(directory,String(entry))));
+ return sha256HexV1(JSON.stringify(kept.map(entry=>typed?[String(entry.name),nodeType(entry)]:String(entry)).sort()));
+}
+function directoryLinkOrDirectoryV1(path){try{const stat=world.lstatSync(path);return stat.isDirectory()||stat.isSymbolicLink();}catch{return false;}}
 
 /** 🔤️ Decodes the BOM forms accepted by the TypeScript host without another runtime dependency. */
 function typescriptTextV1(bytes){if(bytes.length>=2&&bytes[0]===254&&bytes[1]===255){const swapped=Buffer.from(bytes);for(let index=0;index+1<swapped.length;index+=2){const byte=swapped[index];swapped[index]=swapped[index+1];swapped[index+1]=byte;}return swapped.toString("utf16le",2);}if(bytes.length>=2&&bytes[0]===255&&bytes[1]===254)return bytes.toString("utf16le",2);return bytes.toString("utf8",bytes.length>=3&&bytes[0]===239&&bytes[1]===187&&bytes[2]===191?3:0);}
@@ -425,11 +450,23 @@ function typescriptTextV1(bytes){if(bytes.length>=2&&bytes[0]===254&&bytes[1]===
 /** 📂️ Replays the host's sorted immediate directories, following directory symlinks. */
 function typescriptDirectoriesV1(path){try{return world.readdirSync(path||".",{withFileTypes:true}).filter(entry=>{try{return(entry.isSymbolicLink()?world.statSync(join(path,entry.name)):entry).isDirectory();}catch{return false;}}).map(entry=>entry.name).sort();}catch{return[];}}
 
+/** 🔦️ The directory fact of `path` for one of the kinds that read a directory (`readdir`, `readdirNames`, `directories`), as a record row would hold it. */
+export function directoryFactOfV1(kind,path){if(kind!=="readdir"&&kind!=="readdirNames"&&kind!=="directories")throw Error("Directory fact kind required");return facts[kind](path);}
+
 /** 🔗️ The seam of the shared command closure entries: the inferrer of command sources registers how the answer of a `closure` fact is read now (`answer`, synchronous: an answer is only given while the rows the entry was computed from still hold) and how the entries named by facts are brought up to date (`settle`, asynchronous, called before facts are checked, with the value of the record the facts belong to, which carries the recipes they name). A `closure` fact is a question put to an entry of the closure of a command, never a copy of its rows. */
 let closureProviderV1;
 export function registerClosureProviderV1(provider){
  if(!provider||typeof provider.answer!=="function"||typeof provider.settle!=="function")throw refuseBuildV1("invalid","observation.closure-provider-incomplete");
  closureProviderV1=provider;
+}
+/** 🏁️ Whether the rows one inference observed still hold when it ends, so its record may be stored: the file, listing and analysis rows are probed as they stand; the closure rows are verified one closure at a time by the provider (`verify`: the entry is made current, every query of the rows is answered at once against it and compared with the recorded answer), because the entries of the bounded in-process cache are evicted while the owner runs (an owner with three entries of 40 MB in a cache of 96 MB found one missing at the end and left no record) and an entry the tree has touched since is derived again instead of voiding the record when the answers are unchanged. A provider without `verify` answers from the cache as before.
+ * @see ../🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs */
+export const projectRowsHoldAtEndV1=(rows,value,nested,parent)=>projectRowsHoldV1(rows,value,rest=>nested?rest.every(row=>projectObservationHoldsV1(row,parent)):current(rest));
+/** 🏁️ The same verdict for any probe of the rows that are not closure rows: `holdsRest` probes them, the closure rows are verified by the provider one closure at a time (see {@link projectRowsHoldAtEndV1}); a stored record found by a look is judged the same way, so a project that uses more closure entries than the cache holds is not refused for the entries it evicted itself. */
+export async function projectRowsHoldV1(rows,value,holdsRest){
+ const verify=closureProviderV1?.verify,closure=typeof verify==="function"?rows.filter(row=>row.kind==="closure"):[],others=closure.length===0?rows:rows.filter(row=>row.kind!=="closure");
+ if(!holdsRest(others))return false;
+ return closure.length===0||await verify.call(closureProviderV1,closure,value);
 }
 /** 🛎️ Brings the closure entries named by the `closure` facts among `rows` up to date, so the synchronous checks that follow can answer; the provider is asked even when no row is a closure fact, because it also readies what every stored fact is checked against (the registered source analyses of a fresh process). */
 export async function settleClosureRowsV1(rows,value){
@@ -437,9 +474,33 @@ export async function settleClosureRowsV1(rows,value){
  const paths=new Set();for(const row of rows)if(row.kind==="closure")paths.add(row.path);
  await closureProviderV1.settle([...paths],value);
 }
+/** 🤝️ The verdict of one process on one stored project record, the only verification the record gets: the record is read plainly (a farm child holds no custody of the graph store and only reads), its closure entries are settled and every observed row is verified, the closure rows through the provider and the others as they stand now. `headerDigest` names the record by the digest of its header line, which covers every observed row and every block digest the record names, so a reader that holds the same header and adopts a `holds` verdict verifies nothing itself; `other` is a record of another key, `missing` none, `stale` a row that no longer holds. A verdict is single use and never kept: a later verdict judges the files as they are then.
+ * @see ./🧪️tests/🤝️adopted-verdict */
+export async function verifyStoredProjectRecordV1({cachePath,key}){
+ requireCurrentObservationV1();
+ const record=plainRecordReads.run(true,()=>readInferenceRecordOrMissV1(cachePath,{say:()=>{}}));
+ if(!record)return{verdict:"missing",verifier:process.pid};
+ const{header,line,value}=record,headerDigest=sha256HexV1(line);
+ if(header.digest!==sha256HexV1(JSON.stringify([recordStampV1(),null,key])))return{verdict:"other",headerDigest,verifier:process.pid};
+ await settleClosureRowsV1(header.observations,value);
+ const holds=await projectRowsHoldV1(header.observations,value,rest=>current(rest));
+ return{verdict:holds?"holds":"stale",headerDigest,rows:header.observations.length,verifier:process.pid};
+}
 /** 🪡️ Records the answer one closure entry gave to the running inference. */
 export function recordClosureFactV1(path,answer){record("closure",path,answer);}
 /** 📏️ The entry counts of the in-process caches a graph construction fills (what {@link releaseInferenceMemoryV1} drops). */
+/** 🧮️ The collections this module holds across owners, for the slice memory report: its module maps, the verdict maps of the live validation rounds and the scopes the rows of every owner are retained into, each with its entries and a sample to estimate bytes from. */
+export function observationCollectionsV1(){
+ const out=[],add=(name,value)=>out.push(describeCollectionV1("observation:"+name,value));
+ add("inferenceStamps",inferenceStamps);add("recordStores",recordStores);add("recordStoreHandles",recordStoreHandles);add("usedInference",usedInference);add("originalInferencePublications",originalInferencePublications);add("loadObservations",loadObservations);add("projectComputations",projectComputations);add("projectImages",projectImages);add("sourceAnalyses",sourceAnalyses);add("sourceAnalysisImages",sourceAnalysisImages);add("retainedProjectImages",retainedProjectImages);add("fieldDigests",fieldDigests);add("settledReads",settledReads);add("fileRecordImages",fileRecordImages);add("inferenceRowCounts",inferenceRowCountsV1);add("verifiedBlocks",verifiedBlocks);
+ const table=rowTableV1.stats();out.push({name:"observation:rowTable",entries:table.rows,bytes:table.bytes});out.push({name:"observation:rowPool",entries:rowPoolV1.size(),bytes:rowPoolV1.size()*160});
+ for(const kind of Object.keys(trackedV1)){
+  const alive=[];for(const ref of trackedV1[kind]){const value=ref.deref();if(value===undefined)trackedV1[kind].delete(ref);else alive.push(value);}
+  if(alive.length===0)continue;const largest=alive.reduce((best,value)=>(value.size??0)>(best.size??0)?value:best,alive[0]),row=describeCollectionV1("observation:"+kind+" (largest of "+alive.length+")",largest);
+  out.push({...row,entries:alive.reduce((sum,value)=>sum+(value.size??0),0)});
+ }
+ return out;
+}
 export function inferenceCacheSizesV1(){return {interned:rowTableV1.size(),rowStore:rowTableV1.stats(),analysisImages:sourceAnalysisImages.size,analysisBytes:sourceAnalysisBytes,settledReadBytes,fileRecordImageBytes,verifiedBlockRows,settledReads:settledReads.size,projectImages:projectImages.size,publications:originalInferencePublications.size,registryFiles:registryOwnersV1.stats().entries};}
 /** 🕊️ Drops every in-process cache a graph construction filled (interned rows, verified blocks, project images and publications, settled reads, analysis images, registry rows): they only save recomputation, a process that keeps them while it idles (a loader through a long Bazel phase) pins gigabytes. Safe only when no inference runs; the next inference refills what it needs. */
 export function releaseProjectInferenceRetentionV1(cachePath){
@@ -511,6 +572,8 @@ export function retainDetachedFailureV1(error){
 }
 /** 🤔️ Whether the shared rows of one reused computation still hold, checked once per validation round however many detached computations share them. */
 export function observationLayerHoldsV1(layer){return memoRowsHoldV1(layer,scopes.getStore());}
+/** 🧪️ Whether one stored row still holds, probed against the tree now and remembered nowhere: for a caller that keeps its own verdict per distinct row (the row dictionary of the closure layers), which asks once per row and pass, so no per-round table of rows is filled beside it. */
+export function observationRowFreshV1(row){const seen=rebaseRowV1(row);return seen.kind==="file"?fileFactHolds(seen.path,seen.fact)&&JSON.stringify(facts.file(seen.path)?.sha256??null)===JSON.stringify(seen.fact.sha256??null):current([seen]);}
 
 /** 🫧️ The same verdict on the shared rows of one reused computation as {@link observationLayerHoldsV1}, row by row with `step` awaited between rows so a long layer gives the event loop its turns and stops at cancellation. */
 export async function observationLayerHoldsAsyncV1(layer,step){
@@ -523,7 +586,7 @@ export async function observationLayerHoldsAsyncV1(layer,step){
 export async function observationRowsHoldAsyncV1(rows,step){
  const parent=inferenceValidationScopes.getStore()??scopes.getStore();
  if(!consistentObservationsV1(rows))return false;
- let checks;if(parent){checks=sharedChecks.get(parent);if(!checks){checks=new Map();sharedChecks.set(parent,checks);}}
+ let checks;if(parent){checks=sharedChecks.get(parent);if(!checks){checks=new Map();sharedChecks.set(parent,checks);trackV1("sharedChecks",checks);}}
  for(const row of rows){
   const key=checks===undefined?undefined:rowTableV1.id(row),previous=key===undefined?undefined:checks.get(key);
   const holds=previous??current([row]);if(key!==undefined&&previous===undefined)checks.set(key,holds);
@@ -575,7 +638,7 @@ const facts = {
   stat: (path) => { try { return nodeType(world.statSync(path)); } catch (error) { return `!${error.code ?? "EUNKNOWN"}`; } },
   lstat: (path) => { try { return nodeType(world.lstatSync(path)); } catch (error) { return `!${error.code ?? "EUNKNOWN"}`; } },
   readdir: (path) => { probeCountsV1.readdir++; try { return directoryFactV1(world.readdirSync(path, { withFileTypes: true }),true); } catch (error) { return `!${error.code ?? "EUNKNOWN"}`; } },
-  readdirNames: (path) => {probeCountsV1.readdir++;try{return directoryFactV1(world.readdirSync(path));}catch(error){return `!${error.code??"EUNKNOWN"}`;}},
+  readdirNames: (path) => {probeCountsV1.readdir++;try{return directoryFactV1(world.readdirSync(path),false,path);}catch(error){return `!${error.code??"EUNKNOWN"}`;}},
   fileExists: (path) => {try{return world.statSync(path).isFile();}catch{return false;}},
   directoryExists: (path) => {try{return world.statSync(path).isDirectory();}catch{return false;}},
   directories: (path) => directoryFactV1(typescriptDirectoriesV1(path)),
@@ -590,7 +653,7 @@ const facts = {
 
 /** ✍️ Records one fact in the active inference scope, or — while modules evaluate before the first inference and outside every capture — in the module-load authority; captured reads outside a scope belong to their capture only. */
 function record(kind, path, fact) {
-  footprintPulseV1();
+  footprintPulseV1();noteObservedInReadParentV1("records");
   const capture=sourceCaptures.getStore(),target = scopes.getStore() ?? (loadSealed||capture ? undefined : loadObservations);
   if(!target&&!capture)return;
   const row=canonicalObservationV1(kind,path,fact===undefined?facts[kind](path):fact);
@@ -702,7 +765,7 @@ export const observedFs = Object.freeze({
     if (value.isDirectory()) directories.set(key, { value, row: canonicalObservationV1("lstat", key, "directory") });
     return value;
   },
-  readdirSync(path, options) {probeCountsV1.readdir++;const typed=options?.withFileTypes===true;return probe(typed?"readdir":"readdirNames",path,()=>world.readdirSync(path,options),value=>directoryFactV1(value,typed));},
+  readdirSync(path, options) {probeCountsV1.readdir++;const typed=options?.withFileTypes===true;return probe(typed?"readdir":"readdirNames",path,()=>world.readdirSync(path,options),value=>directoryFactV1(value,typed,path));},
   realpathSync: Object.assign((path, options) => probe("realpath", path, () => world.realpathSync(path, options), (value) => String(value)), { native: (path, options) => probe("realpathNative", path, () => world.realpathSync.native(path, options), (value) => String(value)) }),
   async readFile(path, options) {
     let stamp;
@@ -834,11 +897,12 @@ function fileFactHolds(path, fact) {
   try { current = world.statSync(path); } catch { return false; }
   if (current.size !== fact.size) return false;
   if (current.mtimeMs === fact.mtimeMs && current.ctimeMs === fact.ctimeMs && current.ino === fact.ino) return true;
-  try { return sha256HexV1(world.readFileSync(path)) === fact.sha256; } catch { return false; }
+  try { return fileShaV1(path, current) === fact.sha256; } catch { return false; }
 }
 
 /** ✅️ True when every recorded fact still holds; stops at the first stale fact. Synchronous probes beat the four-thread pool here: each is one cached-inode syscall. */
 function current(observations) {
+  observations = rebaseRowsV1(observations);
   return consistentObservationsV1(observations)&&observations.every(({ kind, path, fact }) => kind === "file" ? fileFactHolds(path, fact) : kind==="analysis"?sourceAnalysisFactHoldsV1(path,fact):typeof facts[kind] === "function" && recordedFactHoldsV1(kind, path, fact));
 }
 
@@ -891,7 +955,7 @@ export async function settleObservedComputationV1(compute,{signal,limit=OBSERVAT
   previousFailure=signature;
   if(consistent&&await observationsHold(rows,OBSERVATION_LIMITS_V1.holdNestingLimit,new Set(),new Set(),signal)){
    signal?.throwIfAborted();
-   const youngest=Math.max(0,...rows.map(({kind,fact})=>{const source=kind==="file"?fact:kind==="analysis"?fact.source:undefined;return source?Math.max(source.mtimeMs??0,source.ctimeMs??0):0;}));
+   const youngest=rows.reduce((most,{kind,fact})=>{const source=kind==="file"?fact:kind==="analysis"?fact.source:undefined;return source?Math.max(most,source.mtimeMs??0,source.ctimeMs??0):most;},0);
    if(youngest<started-RACY_MS){accept(rows,captured.values());throw failure;}
    await new Promise((resolve,reject)=>{const timer=setTimeout(resolve,Math.max(0,youngest+RACY_MS-Date.now()));signal?.addEventListener("abort",()=>{clearTimeout(timer);reject(signal.reason);},{once:true});});
   }
@@ -912,6 +976,10 @@ let projectFleetPort,projectClosureTravel;
 export function useProjectFleetV1(port){projectFleetPort=port;}
 /** 🚚️ Registers how the closure entries of a project record travel with it: `export(root, image)` answers the portable bundles of the recipes the record names, `import(root, bundles)` stores bundles of another machine; the closure owner registers itself when it loads. */
 export function registerProjectClosureTravelV1(travel){projectClosureTravel=travel;}
+/** 🔑️ The key text a project record is filed under in the fleet for a record key (the revision of this module, the record key): what a machine that pulls the inference of a project claims it by. */
+export function projectRecordKeyTextV1(key){return JSON.stringify([recordStampV1(),null,key]);}
+/** 🚚️ The closure travel registered by the closure owner, or undefined. */
+export function projectClosureTravelV1(){return projectClosureTravel;}
 
 /** 📤️ The record at `cachePath` in portable form (digest, authority rows, every observation row expanded, result text) or undefined. */
 export function exportProjectRecordV1(cachePath){let record;try{record=readInferencePhysicalRecordV1(cachePath,true);}catch{return undefined;}if(!record)return undefined;return{digest:record.header.digest,authority:record.header.authorityObservations,observations:record.header.observations,image:JSON.stringify(record.value)};}
@@ -924,9 +992,9 @@ export async function importProjectRecordV1(cachePath,portable){
  withBuildGraphOptionalPublicationV1(cachePath,{peakBytes:bytes,retainedDeltaBytes:bytes-previous},()=>{fs.writeFileSync(temporary,packed,{flag:"wx"});renameOverBusyFileSyncV1(temporary,cachePath);});
 }
 
-export async function observeInference({ cachePath, key, reusable }, compute) {
+export async function observeInference({ cachePath, key, reusable, verdict, verdictFinal = false, prepare, prepareAttempts = 1 }, compute) {
   requireCurrentObservationV1();requireInferenceReuseV1(reusable);
-  return observeInferenceComputationV1({cachePath,key,reusable},compute,false);
+  return observeInferenceComputationV1({cachePath,key,reusable,verdict,verdictFinal,prepare,prepareAttempts},compute,false);
 }
 
 /** 🛂️ Validates nested project records within one original inference; its outer publication still rechecks every source fact freshly. */
@@ -939,24 +1007,31 @@ export function observedInferenceRowsV1(cachePath){return inferenceRowCountsV1.g
 /** 🧹️ Forgets the row counter of a finished inference. */
 export function forgetObservedInferenceRowsV1(cachePath){inferenceRowCountsV1.delete(cachePath);}
 
-async function observeInferenceComputationV1({cachePath,key,reusable,prepare,fleet},compute,nestedProject) {
+/** ⏱️ Where the lookups of stored project records spend their time in this process (milliseconds summed over the looks, concurrent looks count each their own wall time): reading the record, settling its closure rows, probing its rows, the reuse predicate, the offer to the fleet and the gate that fetches a missing record. */
+const lookupClockV1={count:0,read:0,verdict:0,settle:0,hold:0,reusable:0,offer:0,gate:0};
+function lookupLapV1(key,work){const at=performance.now();try{return work();}finally{lookupClockV1[key]+=performance.now()-at;}}
+async function lookupLapAsyncV1(key,work){const at=performance.now();try{return await work();}finally{lookupClockV1[key]+=performance.now()-at;}}
+/** ⏱️ The lookup clock of this process, in whole milliseconds. */
+export function observationLookupClockV1(){return Object.fromEntries(Object.entries(lookupClockV1).map(([key,value])=>[key,Math.round(value)]));}
+/** 📤️ With `deferOffer` a record that is found stored here is not offered to the fleet cache by this look (the take pass of a machine that does not serve the fleet: every look would build the documents of the record, closure bundles with their layers inline, and queue up to 64 of them for upload before the next look may go on). */
+async function observeInferenceComputationV1({cachePath,key,reusable,prepare,fleet,deferOffer=false,verdict,verdictFinal=false,prepareAttempts=1,published},compute,nestedProject) {
   requireCurrentObservationV1();loadSealed = true;
   originalInferencePublications.delete(cachePath);usedInference.delete(cachePath);
   const parent=scopes.getStore();
-  const digest = sha256HexV1(JSON.stringify([nestedProject?recordStampV1():OBSERVATION_REVISION, null, key])), hints = new Map(), authority=nestedProject?[]:[...loadObservations.values()];
+  const digest = sha256HexV1(JSON.stringify([recordStampV1(), null, key])), hints = new Map(), authority=nestedProject?[]:[...loadObservations.values()];
   const lookup=async()=>{
-  let candidate;
-  const record=readInferenceRecordOrMissV1(cachePath);if(record){const{header,line}=record;if(header.digest===digest){await settleClosureRowsV1(header.observations,record.value);if(nestedProject?sharedObservationsHoldV1(header.observations,parent):current(header.observations))candidate={value:record.value,header,headerDigest:sha256HexV1(line)};}else{await settleClosureRowsV1(header.observations,record.value);}for(const{kind,path,fact}of header.observations)if(kind==="file"&&typeof fact?.sha256==="string")hints.set(path,fact);}
-  if(candidate&&await inferenceReusableV1(reusable,candidate.value)&&(nestedProject?sharedObservationsHoldV1(candidate.header.observations,parent):current(candidate.header.observations))){const{header,value,headerDigest}=candidate;retainSourceFactsV1(header.observations);retainObservationsV1(parent,header.observations);usedInference.set(cachePath,headerDigest);originalInferencePublications.set(cachePath,{path:cachePath,digest,authorityObservations:header.authorityObservations,observations:header.observations});return{value};}
+  let candidate;lookupClockV1.count++;
+  const record=lookupLapV1("read",()=>readInferenceRecordOrMissV1(cachePath));if(record){const{header,line}=record;if(header.digest===digest){const headerDigest=sha256HexV1(line),said=verdict===undefined?undefined:await lookupLapAsyncV1("verdict",()=>verdict({headerDigest})).catch(error=>{if(verdictFinal)throw error;return undefined;});if(said?.verdict==="holds"&&said.headerDigest===headerDigest)candidate={value:record.value,header,headerDigest,adopted:true};else if(verdictFinal&&(said?.verdict==="stale"||said?.verdict==="other"||said?.verdict==="missing")){}else{await lookupLapAsyncV1("settle",()=>settleClosureRowsV1(header.observations,record.value));if(await lookupLapAsyncV1("hold",()=>projectRowsHoldV1(header.observations,record.value,rest=>nestedProject?sharedObservationsHoldV1(rest,parent):current(rest))))candidate={value:record.value,header,headerDigest};}}for(const{kind,path,fact}of header.observations)if(kind==="file"&&typeof fact?.sha256==="string")hints.set(path,fact);}
+  if(candidate&&await lookupLapAsyncV1("reusable",()=>inferenceReusableV1(reusable,candidate.value))&&(candidate.adopted===true||await lookupLapAsyncV1("hold",()=>projectRowsHoldV1(candidate.header.observations,candidate.value,rest=>nestedProject?sharedObservationsHoldV1(rest,parent):current(rest))))){const{header,value,headerDigest}=candidate;retainSourceFactsV1(header.observations);retainObservationsV1(parent,header.observations);usedInference.set(cachePath,headerDigest);{const found={path:cachePath,digest,authorityObservations:header.authorityObservations,observations:header.observations};originalInferencePublications.set(cachePath,found);published?.(found);}return{value};}
   return undefined;
   };
   const port=fleet!==undefined?projectFleetPort:undefined;let gate,computedElsewhere=false;
-  const info=port?{cachePath,fleet,keyText:JSON.stringify([nestedProject?recordStampV1():OBSERVATION_REVISION,null,key]),exportRecord:()=>exportProjectRecordV1(cachePath),closures:projectClosureTravel,import:async portable=>{await importProjectRecordV1(cachePath,portable);return true;}}:undefined;
+  const info=port?{cachePath,fleet,keyText:JSON.stringify([recordStampV1(),null,key]),exportRecord:()=>exportProjectRecordV1(cachePath),closures:projectClosureTravel,import:async portable=>{await importProjectRecordV1(cachePath,portable);return true;}}:undefined;
   let reused=await lookup();
-  if(reused&&port)await port.offer(info);
-  if(!reused&&port){gate=await port.gate(info).catch(()=>undefined);if(gate?.seeded)reused=await lookup();}
+  if(reused&&port&&!deferOffer)await lookupLapAsyncV1("offer",()=>port.offer(info));
+  if(!reused&&port){gate=await lookupLapAsyncV1("gate",()=>port.gate(info)).catch(()=>undefined);if(gate?.deferred)throw Object.assign(Error("owner left to a live peer: this reader has other owners to infer / Owner einem aktiven Peer überlassen: dieser Leser hat andere Owner abzuleiten"),{code:"BUILD_OWNER_DEFERRED"});if(gate?.seeded)reused=await lookup();}
   try{
-   if(!reused&&prepare!==undefined&&await prepare()){computedElsewhere=true;reused=await lookup();}
+   for(let attempt=0;!reused&&prepare!==undefined&&attempt<prepareAttempts&&await prepare();attempt++){computedElsewhere=true;reused=await lookup();}
    if(reused){if(computedElsewhere&&gate&&!gate.seeded)gate.publish();return reused.value;}
   }catch(error){await gate?.abandon?.();throw error;}
   const observations = new Map(), started = Date.now();
@@ -971,10 +1046,10 @@ async function observeInferenceComputationV1({cachePath,key,reusable,prepare,fle
   const consistent=consistentObservationsV1(rows);
   if(!consistent&&!nestedProject)throw conflictingInferenceErrorV1(rows);
   originalInferencePublications.delete(cachePath);
-  if (jsonImage(result) !== undefined) originalInferencePublications.set(cachePath, {path:cachePath,digest,authorityObservations:authority,observations:rows});
+  if (jsonImage(result) !== undefined) { const found={path:cachePath,digest,authorityObservations:authority,observations:rows}; originalInferencePublications.set(cachePath, found); published?.(found); }
   const racy = rows.some(({ kind, fact }) => {const source=kind==="file"?fact:kind==="analysis"?fact.source:undefined;return source&&(source.mtimeMs>=started-RACY_MS||source.ctimeMs>=started-RACY_MS);});
   usedInference.set(cachePath, null);
-  if (consistent && !racy && jsonExact(result) && (nestedProject?rows.every(row=>projectObservationHoldsV1(row,parent)):current(rows))) {
+  if (consistent && !racy && jsonExact(result) && await projectRowsHoldAtEndV1(rows,result,nestedProject,parent)) {
     fs.mkdirSync(dirname(cachePath), { recursive: true });
     const image=JSON.stringify(result),temporary = `${cachePath}.${process.pid}.${started}.tmp`, header = inferenceHeaderTextV1(digest,sha256HexV1(image),authority,rows,dirname(cachePath));
     const packed=await packInferenceRecordV1(Buffer.from(`${header}\n${image}`)),bytes=packed.byteLength;let previous=0;try{previous=fs.lstatSync(cachePath).size;}catch(error){if(error.code!=="ENOENT")throw error;}
@@ -1183,6 +1258,7 @@ export function observationsHold(observations, limit = OBSERVATION_LIMITS_V1.hol
 }
 
 async function observationsHoldInRoundV1(observations, limit, stableDirectories, symlinks, signal, onStale) {
+  observations = rebaseRowsV1(observations);
   signal?.throwIfAborted();await settleClosureRowsV1(observations);if(!consistentObservationsV1(observations)){const seen=new Map();for(const row of observations){const key=observationIdentityV1(row),fact=observationMeaningV1(row);if(seen.has(key)&&seen.get(key)!==fact){onStale?.(row);break;}seen.set(key,fact);}return false;}
   let next = 0, stale = false;
   const check = async ({ kind, path, fact }) => {

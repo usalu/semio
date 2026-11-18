@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {hostname,networkInterfaces} from "node:os";
 import {join} from "node:path";
 import {fleetCacheEndpointsV1,fleetGroupViewV1,fleetNetworkV1,publishFleetCacheFactsV1} from "../../../🌐️remote-cache/🛰️fleet/📣️publication/🟦️.ts";
@@ -33,7 +34,7 @@ export async function runCache(context:RemoteExecutionSidecarContextV1):Promise<
   transports.push(link?.transport==="relayed"?relayedPeerTransportV1({group:peer,ownGroup:machine.group,ownStore:machine.storeRoot,peerStore:peerStores[peer]!,maximumBytes:policy.maximumEntryBytes}):directPeerTransportV1({group:peer,endpoints:()=>fleetPeerEndpointsV1(peerStores[peer],link?.endpoints),fetch:sealedPeer(peer,link?.serverKey),maximumBytes:policy.maximumEntryBytes}));
  }
  const pinned=Object.fromEntries(Object.entries(view?.links??{}).filter(([,link])=>link.serverKey!==undefined).map(([peer,link])=>[`${peer}-server`,link.serverKey!]));
- const directory=join(context.root,policy.fleetDirectory),{createCasStoreV1,casRootV1}=await import("../../../🗄️cas/🗃️store/🟦️.ts");
+ const directory=machinePathV1(context.root,policy.fleetDirectory),{createCasStoreV1,casRootV1}=await import("../../../🗄️cas/🗃️store/🟦️.ts");
  const server=await startRemoteCacheServerV1({hostStore:createCasStoreV1({root:casRootV1(environment)}),directory,host:address,port,maximumBytes:policy.maximumBytes,maximumEntryBytes:Math.min(policy.maximumEntryBytes,Math.floor(policy.maximumBytes/2)),maximumAgeDays:policy.maximumAgeDays,graceMilliseconds:policy.graceSeconds*1000,defaultInstance:all.defaults.instance,tokens:{},validation:policy.actionResults as "complete",maximumActionResultBytes:policy.maximumActionResultBytes,maintenanceSeconds:policy.maintenanceSeconds,mirror:{directory:join(directory,"mirror")},fleet:{storeRoot:machine.storeRoot,group:machine.group,root:context.root,inGroup,...(view?.enforceNetwork===true?{networks:[declared]}:{}),peerStores,pinned},peers:createFleetPeerReadThroughV1({transports}),signal:context.signal});
  const leaving=new AbortController(),exchange=servePeerExchangeV1({ownGroup:machine.group,ownStore:machine.storeRoot,peers:peerStores,pollMilliseconds:1000,signal:AbortSignal.any([context.signal,leaving.signal]),answer:async path=>{const response=await signedRead(server.url+path,{headers:{[FLEET_HOP_HEADER_V1]:"1"}});return response.status===200?{status:200,bytes:new Uint8Array(await response.arrayBuffer())}:(await response.body?.cancel(),{status:response.status});}});
  say(`serving the cache on ${server.url}, index ${directory}`);

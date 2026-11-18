@@ -357,6 +357,8 @@
           "required": ["count", "recent"],
           "properties": {
             "count": { "type": "integer", "minimum": 0 },
+            "since": { "type": "integer", "minimum": 0 },
+            "byClass": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
             "recent": {
               "type": "array",
               "maxItems": 20,
@@ -387,6 +389,25 @@
             "active": { "type": "integer", "minimum": 0 },
             "waiting": { "type": "integer", "minimum": 0 },
             "oldestSeconds": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "consumption": {
+          "description": "Which origin read the action results of which origin since the server first counted: the reads in all and per `producer>consumer` pair with the compiled units among them (see the identity schema, `Consumption`).",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["since", "total", "pairs"],
+          "properties": {
+            "since": { "type": "integer", "minimum": 0 },
+            "total": { "type": "integer", "minimum": 0 },
+            "pairs": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["hits", "units"],
+                "properties": { "hits": { "type": "integer", "minimum": 0 }, "units": { "type": "integer", "minimum": 0 } }
+              }
+            }
           }
         }
       }

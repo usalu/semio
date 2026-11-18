@@ -13,7 +13,7 @@ const directory=(label:string)=>{const path=realpathSync(mkdtempSync(join(tmpdir
 afterAll(()=>{if(!process.env.SEMIO_TEST_KEEP)for(const path of scratch)rmSync(path,{recursive:true,force:true});});
 function findRustc():string|undefined{
  if(process.env.SEMIO_TEST_RUSTC)return process.env.SEMIO_TEST_RUSTC;
- for(const root of[process.env.SEMIO_TEST_CHECKOUT,"/Users/Shared/semio"]){
+ for(const root of[process.env.SEMIO_TEST_CHECKOUT,"/Users/ueli/Documents/semio"]){
   if(root===undefined)continue;
   try{
    const channel=/^channel\s*=\s*"([^"]+)"/mu.exec(readFileSync(join(root,"rust-toolchain.toml"),"utf8"))?.[1],base=join(process.env.RUSTUP_HOME??join(homedir(),".rustup"),"toolchains"),name=readdirSync(base).find(entry=>entry.startsWith(channel+"-"));

@@ -214,6 +214,20 @@ interface PopoverPlacement {
   transformOrigin: string;
 }
 
+/** 🧲️ A trigger sitting inside its own shared-border frame (a button's frame wraps the button by its border) docks to that frame's outer rect, so the popover frame shares the trigger frame's line instead of overlapping it by the border width. */
+export function dockedAnchorRect(anchor: Element): DOMRect {
+  const rect = anchor.getBoundingClientRect();
+  let { left, top, right, bottom } = rect;
+  for (let frame = anchor.parentElement?.closest("[data-shared-border-frame]") ?? null; frame; frame = frame.parentElement?.closest("[data-shared-border-frame]") ?? null) {
+    const outer = frame.getBoundingClientRect();
+    if (left - outer.left >= 0 && left - outer.left <= 2) left = outer.left;
+    if (top - outer.top >= 0 && top - outer.top <= 2) top = outer.top;
+    if (outer.right - right >= 0 && outer.right - right <= 2) right = outer.right;
+    if (outer.bottom - bottom >= 0 && outer.bottom - bottom <= 2) bottom = outer.bottom;
+  }
+  return new DOMRect(left, top, right - left, bottom - top);
+}
+
 /** 📍️ Resolves measured fixed placement, flipping the main axis and clamping to the viewport. */
 export function resolvePopoverPlacement(
   anchor: Pick<DOMRect, "top" | "right" | "bottom" | "left" | "width" | "height">,
@@ -324,9 +338,9 @@ const PopoverContent = React.forwardRef<HTMLDivElement, PopoverContentProps>(fun
     const anchor = context.anchorRef.current ?? context.triggerRef.current;
     if (!context.open || !content || !anchor) return;
     const measure = () => {
-      const anchorRect = anchor.getBoundingClientRect();
+      const anchorRect = dockedAnchorRect(anchor);
       const contentRect = content.getBoundingClientRect();
-      const gap = sideOffset ?? (anchor.closest("[data-window-silhouette]") ? 0 : 4);
+      const gap = sideOffset ?? 0;
       const next = resolvePopoverPlacement(anchorRect, contentRect, { width: window.innerWidth, height: window.innerHeight }, side, align, gap, alignOffset, Math.max(0, collisionPadding), flow.inline === "rtl", avoidCollisions);
       setPlacement((previous) => previous?.side === next.side && previous.left === next.left && previous.top === next.top ? previous : next);
     };
@@ -421,8 +435,10 @@ const PopoverContent = React.forwardRef<HTMLDivElement, PopoverContentProps>(fun
       data-align={align}
       data-popover-boundary={context.boundary}
       data-shared-border-frame=""
+      data-shared-border-cells=""
+      data-orientation="vertical"
       className={cn(
-        "pointer-events-auto text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-menu w-72 origin-(--radix-popover-content-transform-origin) border p-1 outline-hidden",
+        "pointer-events-auto text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-menu flex w-72 flex-col origin-(--radix-popover-content-transform-origin) border p-0 outline-hidden",
         glassClass,
         className,
       )}

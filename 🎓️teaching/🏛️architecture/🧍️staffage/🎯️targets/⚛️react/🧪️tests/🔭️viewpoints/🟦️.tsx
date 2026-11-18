@@ -194,7 +194,8 @@ describe("🚫️ unavailability is explicit", () => {
     const { container } = render(wrap(<ThreeViewSheet asset={withoutPlan} view="dark-line" scale={{ denominator: 100 }} language="en" sheet={sheet} zoom={1} focus="elevation" />));
     const plan = container.querySelector("figure[data-viewpoint=plan]")!;
     expect(plan.getAttribute("data-available")).toBe("false");
-    expect(plan.querySelector("svg")).toBeNull();
+    expect(plan.querySelectorAll("svg")).toHaveLength(plan.querySelectorAll("[data-notice] svg").length);
+    expect(plan.querySelector("[data-notice=unavailable][data-shared-border-group]")).not.toBeNull();
     expect(plan.textContent).toContain("The plan (top view) is not available");
     expect(plan.textContent).toContain("This drawing has no plan (top view).");
     expect(plan.textContent).toContain("No other view is shown in its place.");
@@ -248,9 +249,9 @@ describe("🔗️ the address", () => {
     expect(decodeURIComponent(text)).toBe("p=a-one~thermal&p=a-one~thermal~~front&p=a-one~thermal~~plan&scale=50");
     expect(compareFromParams(new URLSearchParams(text))).toEqual(compare);
     expect(addressProblems(new URLSearchParams("p=a-one~thermal~~sideways"), "compare")).toHaveLength(1);
-    const playground = { scale: 50, view: "light-solid" as const, viewpoint: "plan" as const, background: "dark" as const, lengthM: 30, placements: [] };
+    const playground = { scale: 50, view: "light-solid" as const, viewpoint: "front" as const, camera: "perspective" as const, background: "dark" as const, lengthM: 30, depthM: 12, timelineS: null, placements: [] };
     const params = playgroundToParams(playground);
-    expect(params.get("vp")).toBe("plan");
+    expect(params.get("vp")).toBe("front");
     expect(playgroundFromParams(new URLSearchParams(params.toString()))).toEqual(playground);
     expect(addressProblems(new URLSearchParams("vp=sideways"), "playground")).toHaveLength(1);
   });
@@ -419,16 +420,19 @@ describe("🚨️ nothing is replaced silently", () => {
     expect(new ArchiveStore(memoryStorage(), ["dark-line"]).problems).toEqual([]);
   });
 
-  it("refuses to mirror outside the side elevation at input, in the store and in a link", () => {
-    const placement = { id: "p", asset: "a-b", xM: 1, zM: 0, yawDeg: 0, pick: null, offsetS: 0, mirrored: false };
+  it("keeps mirroring in the scene, draws it in the side elevation only and says so elsewhere", () => {
+    const placement = { id: "p", asset: "a-b", xM: 1, zM: 0, yawDeg: 0, pick: null, offsetS: 0, mirrored: false, startS: 0, durationS: null, speed: 1, loop: true, holdS: null };
     const base = { ...INITIAL_STATE, playground: { ...INITIAL_STATE.playground, placements: [placement] } };
     expect(reduce(base, { type: "placement-changed", id: "p", patch: { mirrored: true } }).playground.placements[0]!.mirrored).toBe(true);
     const front = { ...base, playground: { ...base.playground, viewpoint: "front" as const } };
-    expect(reduce(front, { type: "placement-changed", id: "p", patch: { mirrored: true } }).playground.placements[0]!.mirrored).toBe(false);
-    const link = new URLSearchParams("vp=plan&p=a-b~1~~~m");
-    expect(playgroundFromParams(link)!.placements[0]!.mirrored).toBe(false);
+    expect(reduce(front, { type: "placement-changed", id: "p", patch: { mirrored: true } }).playground.placements[0]!.mirrored).toBe(true);
+    const link = new URLSearchParams("vp=front&p=a-b~1~~~m");
+    expect(playgroundFromParams(link)!.placements[0]!.mirrored).toBe(true);
     expect(addressProblems(link, "playground")).toHaveLength(1);
-    expect(playgroundFromParams(new URLSearchParams("p=a-b~1~~~m"))!.placements[0]!.mirrored).toBe(true);
+    expect(addressProblems(new URLSearchParams("p=a-b~1~~~m"), "playground", "plan")).toHaveLength(1);
+    expect(addressProblems(new URLSearchParams("p=a-b~1~~~m"), "playground", "model")).toHaveLength(1);
+    expect(addressProblems(new URLSearchParams("p=a-b~1~~~m"), "playground")).toHaveLength(0);
+    expect(addressProblems(new URLSearchParams("vp=plan"), "playground")).toHaveLength(1);
   });
 
   it("keeps pose or clip and time in the link from the asset page to the comparison", () => {
@@ -441,7 +445,7 @@ describe("🚨️ nothing is replaced silently", () => {
 
 describe("🧍️ the frieze follows the preview viewpoint", () => {
   it("draws every figure in the reader's viewpoint, and the playground preview in its own", () => {
-    vi.stubGlobal("ResizeObserver", class { constructor(private readonly callback: (entries: unknown[]) => void) {} observe(): void { this.callback([{ contentRect: { width: 800, height: 300 } }]); } disconnect(): void {} });
+    vi.stubGlobal("ResizeObserver", class { constructor(private readonly callback: (entries: unknown[]) => void) {} observe(): void { this.callback([{ contentRect: { width: 800, height: 300 } }]); } unobserve(): void {} disconnect(): void {} });
     const row = { entry: { id: walker.id, category: "humans", title: walker.title }, status: "ready", asset: walker } as never;
     const store = new ArchiveStore(memoryStorage(), ["dark-line"]);
     store.dispatch({ type: "preferences-changed", patch: { previewViewpoint: "plan", motion: "reduced" } });

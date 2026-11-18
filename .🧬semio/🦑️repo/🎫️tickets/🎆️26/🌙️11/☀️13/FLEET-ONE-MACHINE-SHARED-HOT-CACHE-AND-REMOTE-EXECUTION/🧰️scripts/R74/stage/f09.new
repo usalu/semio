@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:remote-execution:sidecar:ready:process-tree:v1",
+  "title": "Which processes belong to a setup stage, whether a recorded process is still the one that was started, who may take over a lease, and when a stage that runs long enough to be stopped is stopped",
+  "description": "A stage runs as a detached process tree. When it is stopped (time cap, cancel, a restart that finds it vanished) the whole tree must end on every platform, including processes whose parent has already exited (on Windows a tree is only a chain of recorded parent ids and a child of an exited parent is no longer reachable from the root). So the supervisor samples the process table while the stage runs, keeps the `{pid, startMs}` of every process of the tree in `<stage>.tree.json`, and stops exactly those that are still there with the same start time (a reused pid has another start time and is never touched). A lease or an in-flight record names a process by `{pid, startMs}` for the same reason. The cap of a stage is a soft cap: past it the stage keeps running while the counters in its log keep changing (`progressPatterns`), up to `hardCapMultiplier` times the soft cap, and is stopped as stalled as soon as no counter changed for `stallMilliseconds`. Independent of the cap, a stage whose output shows nothing new for `stallStopMilliseconds` is stopped and tried again at once without counting as a failure: a line is new when it differs from every earlier line of the run after the elapsed-seconds counters, clocks and timestamps named by `normalisePatterns` are replaced by `#` (a counter such as `1957 of 2927` is not normalised away, so it counts as progress); at most `stallSeenMaximum` distinct lines are remembered.",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "toleranceMilliseconds": 15000,
+        "sampleMilliseconds": 30000,
+        "treeName": "tree.json",
+        "reservedPids": 4,
+        "hardCapMultiplier": 4,
+        "stallMilliseconds": 600000,
+        "stallStopMilliseconds": 600000,
+        "stallSeenMaximum": 4000,
+        "normalisePatterns": ["\\d{4}-\\d{2}-\\d{2}[T ]\\d{2}:\\d{2}:\\d{2}(?:[.,]\\d+)?Z?", "\\b\\d{1,2}:\\d{2}:\\d{2}\\b", "\\b\\d+(?:\\.\\d+)? ?(?:ms|s|sec|secs|seconds|min|minutes|Sekunden|Minuten)\\b"],
+        "progressPatterns": ["store-ownership:[a-zA-Z]+:\\d+", "Checking declared package providers: \\d+ edges", "\"completedOperations\":\\d+"]
+      }
+    },
+    "Process": {"type": "object", "additionalProperties": false, "required": ["pid", "ppid", "startMs"], "properties": {"pid": {"type": "integer", "minimum": 1}, "ppid": {"type": "integer", "minimum": 0}, "startMs": {"type": "integer", "minimum": 0}}},
+    "Known": {"type": "object", "additionalProperties": false, "required": ["pid", "startMs"], "properties": {"pid": {"type": "integer", "minimum": 1}, "startMs": {"type": "integer", "minimum": 0}}},
+    "Tree": {
+      "description": "`<directory>/<stage>.tree.json`: the root of the stage and every process seen below it, replaced atomically at each sample.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "stage", "root", "sampledMs", "processes"],
+      "properties": {"version": {"const": 1}, "stage": {"type": "string"}, "root": {"$ref": "#/definitions/Known"}, "sampledMs": {"type": "integer"}, "processes": {"type": "array", "items": {"$ref": "#/definitions/Known"}}}
+    },
+    "LeaseCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "nowMs", "staleMs", "expect"],
+      "properties": {
+        "name": {"type": "string"},
+        "lease": {"type": ["object", "null"], "properties": {"pid": {"type": "integer"}, "startMs": {"type": ["integer", "null"]}, "wallMs": {"type": "integer"}}},
+        "nowMs": {"type": "integer"},
+        "staleMs": {"type": "integer"},
+        "process": {"enum": ["alive", "gone", "unknown"]},
+        "processStartMs": {"type": ["integer", "null"]},
+        "expect": {"type": "object", "additionalProperties": false, "required": ["state", "reason"], "properties": {"state": {"enum": ["free", "held"]}, "reason": {"enum": ["none", "expired", "owner-gone", "pid-reused", "held"]}}}
+      }
+    },
+    "TreeCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "table", "root", "known", "self", "kill"],
+      "properties": {"name": {"type": "string"}, "table": {"type": "array", "items": {"$ref": "#/definitions/Process"}}, "root": {"$ref": "#/definitions/Known"}, "known": {"type": "array", "items": {"$ref": "#/definitions/Known"}}, "self": {"type": "integer"}, "kill": {"type": "array", "items": {"type": "integer"}}}
+    },
+    "DeadlineCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "elapsedMs", "softMs", "sinceProgressMs", "verdict"],
+      "properties": {"name": {"type": "string"}, "elapsedMs": {"type": "integer"}, "softMs": {"type": "integer"}, "sinceProgressMs": {"type": "integer"}, "verdict": {"enum": ["run", "extended", "timeout", "stalled"]}}
+    },
+    "ProgressCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "lines", "key"],
+      "properties": {"name": {"type": "string"}, "lines": {"type": "array", "items": {"type": "string"}}, "key": {"type": ["string", "null"]}}
+    },
+    "StallCase": {
+      "description": "Rounds of the last log lines of one stage run, in order, and whether each round showed anything new.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "rounds", "fresh"],
+      "properties": {"name": {"type": "string"}, "rounds": {"type": "array", "items": {"type": "array", "items": {"type": "string"}}}, "fresh": {"type": "array", "items": {"type": "boolean"}}}
+    },
+    "Fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lease", "tree", "deadline", "progress", "stall"],
+      "properties": {"stall": {"type": "array", "items": {"$ref": "#/definitions/StallCase"}}, "lease": {"type": "array", "items": {"$ref": "#/definitions/LeaseCase"}}, "tree": {"type": "array", "items": {"$ref": "#/definitions/TreeCase"}}, "deadline": {"type": "array", "items": {"$ref": "#/definitions/DeadlineCase"}}, "progress": {"type": "array", "items": {"$ref": "#/definitions/ProgressCase"}}}
+    }
+  },
+  "oneOf": [{"$ref": "#/definitions/Policy"}]
+}

@@ -8,6 +8,7 @@ export const DETAIL_EN = {
   "detail.dimensions.width": "Width",
   "detail.dimensions.depth": "Depth",
   "detail.dimensions.mass": "Mass",
+  "detail.dimensions.power": "Power (total of all elements)",
   "detail.dimensions.completion": "Completion",
   "detail.dimensions.category": "Category",
   "detail.dimensions.id": "Identifier",

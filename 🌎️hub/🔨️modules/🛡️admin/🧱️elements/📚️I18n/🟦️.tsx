@@ -6,6 +6,7 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
+import { LanguageChoice, type LanguageChoiceOption } from "@semio-tech/ui-react";
 // #endregion 🔌️Adapters
 
 // #region 🔖️Bundles
@@ -334,6 +335,8 @@ interface AdminLocaleState {
   setLocale: (locale: AdminLocale) => void;
 }
 
+const ADMIN_LANGUAGE_OPTIONS: readonly LanguageChoiceOption<AdminLocale>[] = [{ value: "en", endonym: "English" }, { value: "de", endonym: "Deutsch" }];
+
 const AdminLocaleContext = React.createContext<AdminLocaleState | null>(null);
 
 /** 🧭️ Accepts only an explicitly selected supported browser locale; unsupported or absent locale
@@ -356,10 +359,7 @@ export function AdminLocaleProvider({ children }: { readonly children: React.Rea
       <div className="flex h-full w-full items-center justify-center" role="dialog" aria-labelledby="admin-language-title">
         <div className="flex flex-col gap-single">
           <h1 id="admin-language-title" className="text-lg font-semibold">Language · Sprache</h1>
-          <div className="flex gap-single">
-            <button type="button" lang="en" onClick={() => setLocale("en")}>English</button>
-            <button type="button" lang="de" onClick={() => setLocale("de")}>Deutsch</button>
-          </div>
+          <LanguageChoice label="Language · Sprache" options={ADMIN_LANGUAGE_OPTIONS} onChoose={setLocale} />
         </div>
       </div>
     );

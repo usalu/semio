@@ -15,7 +15,7 @@ import { VIEWS } from "@teaching/staffage";
 import "../../../🎨️.css";
 import { ArchiveProvider, useArchive, useLocal } from "../../../🔨️modules/🧭️context/🟦️.tsx";
 import { LANGUAGE_NAMES, OFFERED, inEveryLanguage, resolveLanguage, translator } from "../../../🔨️modules/🌐️i18n/🟦️.ts";
-import { Button, ButtonLink, Segmented, cn } from "../../../🔨️modules/🪟️chrome/🟦️.tsx";
+import { Bar, Button, ButtonLink, Segmented, SharedBorderRow, SharedBorderRowCell, asCells, cn } from "../../../🔨️modules/🪟️chrome/🟦️.tsx";
 import { RootLevel } from "../../../🔨️modules/🏠️overview/🟦️.tsx";
 import { ArchiveStore, STORAGE_VERSION, browserStorage, useArchiveState, type StorageArea, type Theme } from "../../../🔨️modules/💾️persistence/🟦️.ts";
 import { CatalogStore, bundledCatalog, type CatalogSource } from "../../../🔨️modules/📚️catalog/🟦️.ts";
@@ -30,23 +30,23 @@ function LanguageGate(props: { readonly onChoose: (language: (typeof OFFERED)[nu
   return (
     <div className="staffage-app flex min-h-0 flex-col overflow-hidden bg-background text-foreground" style={{ height: UI_AVAILABLE_HEIGHT }}>
       <main id="staffage-main" className="relative flex min-h-0 flex-1 flex-col items-center justify-center gap-double overflow-auto p-4">
-        <div className="flex w-full max-w-xl flex-col gap-double border border-border bg-panel p-4">
-          {inEveryLanguage("brand.title").map(({ language, text }) => (
-            <h1 key={language} lang={language} className="m-0 font-serif text-3xl leading-tight">
-              {text}
-            </h1>
-          ))}
-          <ul role="list" className="m-0 flex list-none flex-col gap-double p-0">
-            {OFFERED.map((language) => (
-              <li key={language} lang={language} className="flex flex-wrap items-center gap-double">
-                <Button variant="primary" onClick={() => props.onChoose(language)}>
-                  {LANGUAGE_NAMES[language]}
-                </Button>
-                <span className="text-sm">{translator(language)("language.invite")}</span>
-              </li>
+        <SharedBorderRow orientation="vertical" className="w-full max-w-xl bg-panel">
+          <SharedBorderRowCell className="flex-col items-start gap-double p-4">
+            {inEveryLanguage("brand.title").map(({ language, text }) => (
+              <h1 key={language} lang={language} className="m-0 font-serif text-3xl leading-tight">
+                {text}
+              </h1>
             ))}
-          </ul>
-        </div>
+          </SharedBorderRowCell>
+          {OFFERED.map((language) => (
+            <SharedBorderRow key={language} lang={language}>
+              <Button grouped variant="primary" className="min-w-32 justify-start" onClick={() => props.onChoose(language)}>
+                {LANGUAGE_NAMES[language]}
+              </Button>
+              <SharedBorderRowCell className="flex-1 px-double py-single text-sm">{translator(language)("language.invite")}</SharedBorderRowCell>
+            </SharedBorderRow>
+          ))}
+        </SharedBorderRow>
       </main>
     </div>
   );
@@ -94,28 +94,28 @@ function SettingsMenu(): ReactElement {
         <span className="hidden lg:inline">{t("settings.title")}</span>
       </Button>
       {open ? createPortal(
-        <div id="staffage-settings" ref={panel} role="group" aria-label={t("settings.title")} className="staffage-app fixed right-double top-[calc(var(--size-workbench)+0.5rem)] z-50 flex max-h-[85vh] w-72 max-w-[90vw] flex-col gap-double overflow-auto border border-border bg-panel p-double text-foreground">
-          <nav aria-label={t("nav.label")} className="flex flex-col gap-single md:hidden">
+        <SharedBorderRow orientation="vertical" id="staffage-settings" ref={panel} role="group" aria-label={t("settings.title")} className="staffage-app fixed right-double top-[calc(var(--size-workbench)+0.5rem)] z-50 max-h-[85vh] w-72 max-w-[90vw] overflow-auto bg-panel text-foreground">
+          <SharedBorderRow as="nav" orientation="vertical" aria-label={t("nav.label")} className="md:hidden">
             {([{ page: "all", label: t("all.title") }, { page: "collections", label: t("collections.title") }, { page: "compare", label: t("compare.title") }, { page: "playground", label: t("playground.title") }] as const).map((link) => (
-              <ButtonLink key={link.page} href={formatAddress(link.page === "collections" ? { page: "collections", collection: null } : { page: link.page })} variant="quiet" aria-current={route.page === link.page ? "page" : undefined} className={cn("justify-start", route.page === link.page && "text-primary")}>{link.label}</ButtonLink>
+              <ButtonLink key={link.page} grouped href={formatAddress(link.page === "collections" ? { page: "collections", collection: null } : { page: link.page })} variant="quiet" aria-current={route.page === link.page ? "page" : undefined} className={cn("justify-start", route.page === link.page && "text-primary")}>{link.label}</ButtonLink>
             ))}
-          </nav>
+          </SharedBorderRow>
           <Segmented className="sm:hidden" label={t("settings.theme")} value={preferences.theme} onChange={(theme) => patch({ theme })} options={THEMES.map((theme) => ({ value: theme, label: t(`settings.theme.${theme}`) }))} />
           <Segmented label={t("settings.textSize")} value={preferences.textSize} onChange={(textSize) => patch({ textSize })} options={[{ value: "normal", label: t("settings.textSize.normal") }, { value: "large", label: t("settings.textSize.large") }]} />
           <Segmented label={t("settings.motion")} value={preferences.motion} onChange={(motion) => patch({ motion })} options={[{ value: "system", label: t("settings.motion.system") }, { value: "reduced", label: t("settings.motion.reduced") }, { value: "full", label: t("settings.motion.full") }]} />
           <Segmented label={t("settings.playful")} value={preferences.playful ? "on" : "off"} onChange={(value) => patch({ playful: value === "on" })} options={[{ value: "on", label: t("settings.on") }, { value: "off", label: t("settings.off") }]} />
-          <div className="flex flex-col gap-single border-t border-border pt-double">
-            <p className="m-0 text-xs text-muted-foreground">{t("settings.clearBody")}</p>
-            {confirm ? (
-              <div className="flex gap-single">
+          <SharedBorderRowCell className="px-double py-double"><p className="m-0 text-xs text-muted-foreground">{t("settings.clearBody")}</p></SharedBorderRowCell>
+          <Bar>
+            {asCells(confirm ? (
+              <>
                 <Button variant="primary" onClick={() => { store.dispatch({ type: "everything-cleared" }); setConfirm(false); }}>{t("settings.clearConfirm")}</Button>
                 <Button onClick={() => setConfirm(false)}>{t("action.cancel")}</Button>
-              </div>
+              </>
             ) : (
-              <Button icon="trash-2" onClick={() => setConfirm(true)}>{t("settings.clear")}</Button>
-            )}
-          </div>
-        </div>,
+              <Button icon="trash-2" className="flex-1" onClick={() => setConfirm(true)}>{t("settings.clear")}</Button>
+            ))}
+          </Bar>
+        </SharedBorderRow>,
         document.body,
       ) : null}
     </div>
@@ -162,10 +162,10 @@ function Navigation(): ReactElement {
       key: "search",
       className: "min-w-0 shrink",
       content: (
-        <form role="search" aria-label={t("nav.search")} className="flex min-w-0 items-center gap-single" onSubmit={(event) => { event.preventDefault(); navigate({ page: "all" }, new URLSearchParams(query === "" ? "" : { q: query })); }}>
-          <input ref={search} type="search" value={query} onChange={(event) => setQuery(event.target.value)} aria-label={t("nav.search")} placeholder={t("nav.searchPlaceholder")} className="min-h-6 w-28 min-w-0 border border-border bg-panel px-double py-single text-xs text-foreground sm:w-44" />
-          <Button type="submit" variant="quiet" icon="search" aria-label={t("nav.searchSubmit")} title={t("nav.searchSubmit")} />
-        </form>
+        <SharedBorderRow as="form" role="search" aria-label={t("nav.search")} className="min-w-0" onSubmit={(event) => { event.preventDefault(); navigate({ page: "all" }, new URLSearchParams(query === "" ? "" : { q: query })); }}>
+          <input ref={search} type="search" value={query} onChange={(event) => setQuery(event.target.value)} aria-label={t("nav.search")} placeholder={t("nav.searchPlaceholder")} data-shared-border-cell="" className="min-h-6 w-28 min-w-0 px-double py-single text-xs text-foreground sm:w-44" />
+          <Button grouped type="submit" variant="quiet" icon="search" aria-label={t("nav.searchSubmit")} title={t("nav.searchSubmit")} />
+        </SharedBorderRow>
       ),
     },
     { key: "language", content: <Segmented hideLabel label={t("settings.language")} value={language} onChange={(chosen) => store.dispatch({ type: "preferences-changed", patch: { language: chosen } })} options={OFFERED.map((option) => ({ value: option, label: option.toUpperCase(), title: LANGUAGE_NAMES[option], name: LANGUAGE_NAMES[option], lang: option }))} /> },
@@ -202,11 +202,11 @@ function Shell(): ReactElement {
           <RootLevel />
         </div>
       </main>
-      <footer className="flex shrink-0 flex-wrap items-center justify-between gap-double border-t border-border px-double py-single text-[0.65rem] text-muted-foreground">
+      <SharedBorderRow as="footer" edges={["top"]} className="shrink-0 flex-wrap items-center justify-between gap-double px-double py-single text-[0.65rem] text-muted-foreground">
         <span>{t("footer.text")}</span>
         {store.problems.length === 0 ? null : <span role="status">{store.problems.map((problem) => problem[language]).join(" ")}</span>}
         {store.mode === "volatile" ? <span role="status">{t("footer.volatile")}</span> : <span>{t("footer.local", { version: STORAGE_VERSION })}</span>}
-      </footer>
+      </SharedBorderRow>
     </div>
   );
 }

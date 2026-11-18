@@ -87,3 +87,14 @@ fn a_vertical_tablist_stacks_its_triggers_the_other_way() {
     let UiNode::Stack(list) = &root.children[0] else { panic!("the first child is the tablist") };
     assert_eq!(list.direction, "column");
 }
+
+/// 🪢️ React `Tabs` is `gap-0` with a `p-0` list: no stack of the tree separates two bordered triggers or the list from the panel.
+#[test]
+fn the_tablist_and_its_panel_have_no_gap() {
+    for orientation in [TabsOrientation::Horizontal, TabsOrientation::Vertical] {
+        let UiNode::Stack(root) = build_tabs("admin.tabs", &rows(), "a", orientation, None, action()) else { panic!("a tablist is a Stack") };
+        let UiNode::Stack(list) = &root.children[0] else { panic!("the first child is the tablist") };
+        assert_eq!((root.gap.as_deref(), list.gap.as_deref()), (Some("none"), Some("none")));
+        assert!(root.padding.is_none() && list.padding.is_none());
+    }
+}

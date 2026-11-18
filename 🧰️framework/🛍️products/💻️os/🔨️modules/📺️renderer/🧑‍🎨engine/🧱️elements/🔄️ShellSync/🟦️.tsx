@@ -16,7 +16,7 @@
 // #region 🔌️Adapters
 import { deriveSavedStateV1 } from "../🛠️ShellHelpers/💾️saved-state/🟦️.ts";
 import { type ReactElement } from "../⚛️react-port/🟦️.ts";
-import { Button, Icon, Input, Popover, PopoverAnchor, PopoverContent, useLabel, type IconName } from "@semio-tech/ui-react";
+import { Button, Icon, Input, Popover, PopoverAnchor, PopoverContent, SharedBorderRow, SharedBorderRowCell, useLabel, type IconName } from "@semio-tech/ui-react";
 import { type ActionDescriptor, type Conflict, type UtilityNode } from "@semio-tech/framework";
 import { absoluteBackbonePathV1, backbonePathDirectoryV1, type ArtifactSyncStatus, type FrameworkSyncUtilityLeaf } from "@semio-tech/framework/backbone";
 import { type SyncCardKind } from "../🐚️Shell/👥️peer-interaction/🟦️.ts";
@@ -147,39 +147,41 @@ export function SyncAttachCard({ activeUri, cardKind, draftPath, syncUtilities, 
         </div>
       </PopoverAnchor>
       {open ? (
-        <PopoverContent side="top" align="center" className="w-80 space-y-3 p-3">
-          <div className="space-y-1">
-            <p id={`framework.sync.${cardKind}.title`} className="text-sm font-medium">{cardKind ? backboneTitles[cardKind] : null}</p>
-            {activeUri ? <p className="break-all text-xs text-muted-foreground">{activeUri}</p> : null}
-            {activeUri && statusLine ? (
-              <p role="status" aria-live="polite" aria-label={statusAccessibleLabel} data-semio-sync-status="" className="text-xs text-muted-foreground">
-                {statusLine}
-              </p>
-            ) : null}
+        <PopoverContent side="top" align="center" className="w-80 p-0">
+          <SharedBorderRow framed={false} orientation="vertical">
+            <SharedBorderRowCell className="flex-col items-stretch gap-1">
+              <p id={`framework.sync.${cardKind}.title`} className="text-sm font-medium">{cardKind ? backboneTitles[cardKind] : null}</p>
+              {activeUri ? <p className="break-all text-xs text-muted-foreground">{activeUri}</p> : null}
+              {activeUri && statusLine ? (
+                <p role="status" aria-live="polite" aria-label={statusAccessibleLabel} data-semio-sync-status="" className="text-xs text-muted-foreground">
+                  {statusLine}
+                </p>
+              ) : null}
+            </SharedBorderRowCell>
             {quarantinedConflicts.length > 0 ? (
-              <p className="rounded-sm border border-warning bg-warning/10 px-single py-0.5 text-xs text-warning" role="status" data-semio-sync-quarantined="">
+              <SharedBorderRowCell tone="destructive" role="status" data-semio-sync-quarantined="" className="text-xs text-warning">
                 {quarantinedLabel} ({quarantinedConflicts.length})
-              </p>
+              </SharedBorderRowCell>
             ) : null}
-          </div>
-          {cardKind === "remote" ? (
-            <Input id={`framework.sync.${cardKind}.path`} aria-labelledby={`framework.sync.${cardKind}.title`} value={draftPath} placeholder={placeholder} onChange={(event) => onDraftPathChange(event.target.value)} />
-          ) : (
-            <div className="flex items-center gap-2">
-              <Input id={`framework.sync.${cardKind}.path`} aria-labelledby={`framework.sync.${cardKind}.title`} className="min-w-0 flex-1" value={draftPath} placeholder={placeholder} onChange={(event) => onDraftPathChange(event.target.value)} />
-              <Button icon="folder-open" type="button" data-semio-sync-browse="" aria-label={browseLabel} title={browseLabel} onClick={() => void onBrowsePath?.()} />
-            </div>
-          )}
-          <div className="flex items-center gap-2">
-            <Button icon="link" type="button" onClick={attachFromDraft}>
-              {attachLabel}
-            </Button>
-            {activeUri ? (
-              <Button icon="x" type="button" onClick={onDetach}>
-                {detachLabel}
+            {cardKind === "remote" ? (
+              <Input id={`framework.sync.${cardKind}.path`} aria-labelledby={`framework.sync.${cardKind}.title`} value={draftPath} placeholder={placeholder} onChange={(event) => onDraftPathChange(event.target.value)} />
+            ) : (
+              <SharedBorderRow framed={false}>
+                <Input id={`framework.sync.${cardKind}.path`} aria-labelledby={`framework.sync.${cardKind}.title`} className="min-w-0 flex-1" value={draftPath} placeholder={placeholder} onChange={(event) => onDraftPathChange(event.target.value)} />
+                <Button icon="folder-open" type="button" data-semio-sync-browse="" aria-label={browseLabel} title={browseLabel} onClick={() => void onBrowsePath?.()} />
+              </SharedBorderRow>
+            )}
+            <SharedBorderRow framed={false}>
+              <Button icon="link" type="button" className="flex-1" onClick={attachFromDraft}>
+                {attachLabel}
               </Button>
-            ) : null}
-          </div>
+              {activeUri ? (
+                <Button icon="x" type="button" className="flex-1" onClick={onDetach}>
+                  {detachLabel}
+                </Button>
+              ) : null}
+            </SharedBorderRow>
+          </SharedBorderRow>
         </PopoverContent>
       ) : null}
     </Popover>

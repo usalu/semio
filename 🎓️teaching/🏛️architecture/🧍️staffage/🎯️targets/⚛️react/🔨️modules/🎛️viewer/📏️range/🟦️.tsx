@@ -8,7 +8,7 @@
 import type { ReactElement } from "react";
 import type { DisplayRange } from "@teaching/staffage";
 import { useArchive } from "../../🧭️context/🟦️.tsx";
-import { NumberField, Segmented } from "../../🪟️chrome/🟦️.tsx";
+import { Bar, NumberField, Segmented } from "../../🪟️chrome/🟦️.tsx";
 
 /** 🌡️ The span of the course clips, in kelvin around the air temperature. */
 export const DEFAULT_SPAN_K = 25;
@@ -37,10 +37,10 @@ export function RangeControl(props: { readonly range: DisplayRange; readonly leg
         ]}
       />
       {range.mode === "fixed" ? (
-        <div className="flex gap-double">
+        <Bar>
           <NumberField label={t("viewer.range.min")} value={range.min} onChange={(min) => min !== null && min < range.max && onChange({ mode: "fixed", min, max: range.max })} />
           <NumberField label={t("viewer.range.max")} value={range.max} onChange={(max) => max !== null && max > range.min && onChange({ mode: "fixed", min: range.min, max })} />
-        </div>
+        </Bar>
       ) : null}
       {range.mode === "span" ? <NumberField label={t("viewer.range.spanK")} unit="K" min={0.1} max={200} value={range.spanK} onChange={(spanK) => spanK !== null && spanK > 0 && onChange({ mode: "span", spanK })} /> : null}
     </>

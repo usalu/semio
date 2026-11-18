@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Fleet Work Claim",
+  "description": "Closed contract of the claim a machine takes before it downloads or builds a tool the fleet may already hold: the authored timing policy, the kinds of work and the event it reports.",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "keyPrefix": "work-",
+        "ttlMilliseconds": 60000,
+        "renewMilliseconds": 20000,
+        "awaitMilliseconds": 25000,
+        "waitMaximumMilliseconds": 900000,
+        "maximumBeats": 90,
+        "maximumLapses": 2,
+        "claimTimeoutMilliseconds": 15000,
+        "kinds": ["blob", "crates", "uv"]
+      }
+    },
+    "Kind": { "enum": ["blob", "crates", "uv"] },
+    "Key": { "type": "string", "pattern": "^work-(blob|crates|uv)-[0-9a-f]{64}$" },
+    "Outcome": { "enum": ["ready", "granted", "alone"] },
+    "Event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stage", "key"],
+      "properties": {
+        "stage": { "enum": ["claim", "wait", "ready", "alone"] },
+        "key": { "$ref": "#/definitions/Key" },
+        "holder": { "type": "string" }
+      }
+    }
+  }
+}

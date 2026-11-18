@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import{retireBuildGraphOptionalGroupsHeadroomV1}from"../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🟦️.ts";
 import {repositoryCacheBudgetV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts";
 import {buildGraphWriterResourceV1} from "./🔒️writer/🟨️.mjs";
@@ -135,7 +136,7 @@ function graphDatasetWorkspaceV1(workspace){
 /** 🗂️ Names graph facts inside their sole authored finite backing. */
 export function repositoryBuildGraphDataDirectoryV1(workspace,namespace){
  if(!schema.enum.includes(namespace))throw Error("Declared bounded graph fact namespace required");const staged=stagings.getStore();if(staged)return join(staged.root,namespace);
- const owner=graphDatasetWorkspaceV1(workspace),fixture=backings.getStore(),root=fixture?join(fixture.root,namespace):join(owner,policy.partitions.graph.directory,"m",namespace),dataset=datasets.getStore(),selection=selections.getStore();if(namespace==="inference"&&selection){if(!selection.live||selection.workspace!==graphDatasetWorkspaceV1(workspace))throw Error("Original selected inference lifetime required");return join(root,"selections",selection.identity);}if(namespace!=="inference"||!dataset)return root;
+ const owner=graphDatasetWorkspaceV1(workspace),fixture=backings.getStore(),root=fixture?join(fixture.root,namespace):machinePathV1(owner,policy.partitions.graph.directory,"m",namespace),dataset=datasets.getStore(),selection=selections.getStore();if(namespace==="inference"&&selection){if(!selection.live||selection.workspace!==graphDatasetWorkspaceV1(workspace))throw Error("Original selected inference lifetime required");return join(root,"selections",selection.identity);}if(namespace!=="inference"||!dataset)return root;
  if(!dataset.live||dataset.workspace!==graphDatasetWorkspaceV1(workspace))throw Error("Original inference dataset lifetime required");return join(root,"contexts",dataset.identity);
 }
 

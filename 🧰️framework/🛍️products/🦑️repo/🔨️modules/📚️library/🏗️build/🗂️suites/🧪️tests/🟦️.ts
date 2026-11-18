@@ -20,6 +20,8 @@ import pythonResults from"./🧫️fixtures/🐍️python.json"with{type:"json"}
 import{readWorkspaceTestPythonOutputV1}from"../🐍️python/🟦️.ts";
 import pythonQuery from"../🐍️python/🔣️.json"with{type:"json"};
 import{declareLibraryBuildTestEnvelopeV1}from"../../../🧪️testing/🪪️native-birth/🟦️.ts";
+import{existsSync as existsRootV1}from"node:fs";import{dirname as dirnameRootV1,join as joinRootV1}from"node:path";
+const repositoryRootV1=(()=>{let directory=import.meta.dir;while(!existsRootV1(joinRootV1(directory,"MODULE.bazel"))&&dirnameRootV1(directory)!==directory)directory=dirnameRootV1(directory);return directory;})();
 declareLibraryBuildTestEnvelopeV1({suite:"build-route-table"});
 
 const library=resolve(buildTestRootV1,".."),processRoot=resolve(library,"../../../../🔨️modules/🏃️process"),cachingRoot=join(library,"⚡️caching"),processSuites=join(processRoot,"🧪️testing/🗂️suites"),coverageOracle=join(processSuites,"🧪️tests/🐍️oracle/🐍️.py"),schemaPath=join(processSuites,"🧬️schema/🔣️.json"),oracle=join(import.meta.dir,"🐍️oracle/🐍️.py"),fixturePath=join(import.meta.dir,"🧫️fixtures/🔣️.json"),project=join(cachingRoot,"📋️project.json"),suitesDirectory="🏗️build/🗂️suites";
@@ -131,6 +133,6 @@ test("every declared library test birth names the suite that routes its file, th
 test("a declared library test birth carries a genuine native build caller grant and an existing artifact directory",()=>withBuildTestInvocationV1(async original=>{
  const facts=original.capabilities as Record<string,unknown>,directory=process.env.SEMIO_TEST_ARTIFACT_DIR;
  expect(new Ajv({strict:true}).validate(callerSchema,facts)).toBe(true);
- expect(facts.workspaceRoot).toBe(realpathSync(process.cwd()));expect(["prototype","release"]).toContain(String(facts.buildMode));expect((facts.arguments as string[]).slice(0,2)).toEqual(["repo","run"]);expect(facts.launches).toContainEqual(facts.arguments);expect("artifacts" in facts).toBe(false);
+ expect(facts.workspaceRoot).toBe(realpathSync(repositoryRootV1));expect(["prototype","release"]).toContain(String(facts.buildMode));expect((facts.arguments as string[]).slice(0,2)).toEqual(["repo","run"]);expect(facts.launches).toContainEqual(facts.arguments);expect("artifacts" in facts).toBe(false);
  expect(directory!==undefined&&existsSync(directory)).toBe(true);
 }),60000);

@@ -18,7 +18,7 @@ use semio_plugin_reactor_app::PluginApp;
 use semio_plugin_instance_app::VcsArtifactApp;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use store::os_store::backbone::{Backbone, BackboneMessage, MemoryBackbone};
-pub use super::{OriginalFixtureCaller, OriginalFixtureScope, OriginalWorkFixture, receive_persistent_fixture, receive_view_fixture, typing_run, TypingRun};
+pub use super::{FixtureUiArena, OriginalFixtureCaller, OriginalFixtureScope, OriginalWorkFixture, receive_persistent_fixture, receive_view_fixture, typing_run, TypingRun};
     use semio_framework_value::ErasedSnapshotRetirement;
 
     /// 🧮️ Refuses a test binary whose allocator is not the heap witness: every heap-equality assertion of these laws would otherwise read `(0, 0)` and fail any non-zero retained page.  Linking the testing caller installs it.
@@ -116,7 +116,7 @@ pub use super::{OriginalFixtureCaller, OriginalFixtureScope, OriginalWorkFixture
 mod fixture_dispatch_steps_and_document_loading;
 pub use fixture_dispatch_steps_and_document_loading::{
     assert_editor_genesis_children_declared, assert_viewer_genesis_children_declared,
-    admit_document_archive_load, arm_host_lifetime, fixture_renew_turn, HostLifetimeGuard, HostLifetimeStock,
+    admit_document_archive_load, arm_host_lifetime, fixture_end_turn, fixture_renew_turn, HostLifetimeGuard, HostLifetimeStock,
     dispatch_fixture_action, dispatch_original_fixture_command, ensure_fixture_cancellation_issuer, FixtureOriginalJob, dispatch_fixture_command, dispatch_fixture_response_action, poll_fixture_media_export, produce_fixture_media, retain_fixture_media_export_result, submit_fixture_media_export, take_fixture_media_export_chunk, drain_maintenance_pressure, export_fixture_media,
     fixture_identity, fixture_job_outcome, fixture_mounted_policy, fixture_payload_bytes, fixture_pending_effects,
     fixture_progress, fixture_retained_turn, fixture_step, fixture_step_context,
@@ -140,7 +140,7 @@ mod registered_app_construction_and_typed_operation_settlement;
 pub use registered_app_construction_and_typed_operation_settlement::{
     capture_fixture_window_config, close_registered_fixture_app, consume_media, consume_media_refused_then_funded, drain_store_displaced_retirements, import_media,
     fixture_close_grant, meta, new_app, new_app_with_registry, new_app_with_registry_and_members,
-    new_registered_app, new_registered_app_with_members,
+    new_app_with_registry_boxed, new_app_with_registry_boxed_and_members, new_registered_app, new_registered_app_boxed_with_members, new_registered_app_with_members,
     publish_framework_schemas,
     register_framework_reserved_action_factories, retain_original_ownership_receipts,
     settle_extension_invocations, settle_registered_typed_operation, settle_store_constructor,
@@ -157,7 +157,7 @@ pub use paired_apps_history_and_convergence_laws::{
     assert_transaction_rollback_leaves_state_untouched, assert_two_instances_converge,
     assert_two_registered_instances_converge, assert_two_registered_instances_converge_with_members,
     assert_undo_redo_round_trip, paired_apps, paired_registered_apps,
-    paired_registered_apps_with_members, settle_history_verb, settle_history_verb_as,
+    paired_registered_apps_boxed_with_members, paired_registered_apps_with_members, settle_history_verb, settle_history_verb_as,
 };
 
 #[path = "👥️presence-round-trip-law/🦀️.rs"]

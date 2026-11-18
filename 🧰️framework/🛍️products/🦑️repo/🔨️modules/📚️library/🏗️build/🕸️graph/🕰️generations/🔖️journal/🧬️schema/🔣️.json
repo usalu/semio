@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Graph build journal",
+  "description": "The durable record of a build that is not published yet: the owners its finished waves derived, or the manifest it wrote.",
+  "definitions": {
+    "Hex": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "Names": {"type": "array", "items": {"type": "string"}},
+    "Step": {
+      "type": "object",
+      "required": ["step", "inputs", "output"],
+      "additionalProperties": false,
+      "properties": {"step": {"type": "string", "maxLength": 32}, "inputs": {"$ref": "#/definitions/Hex"}, "output": {"$ref": "#/definitions/Hex"}}
+    },
+    "RowsFile": {
+      "type": "object",
+      "required": ["file", "sha256", "bytes"],
+      "additionalProperties": false,
+      "properties": {"file": {"type": "string"}, "sha256": {"$ref": "#/definitions/Hex"}, "bytes": {"type": "integer", "minimum": 0}}
+    },
+    "Journal": {
+      "type": "object",
+      "required": ["version", "key", "state", "parent", "generation", "identity", "implementation", "steps"],
+      "additionalProperties": false,
+      "properties": {
+        "version": {"const": 1},
+        "key": {"$ref": "#/definitions/Hex"},
+        "state": {"enum": ["waves", "sealed"]},
+        "parent": {"anyOf": [{"$ref": "#/definitions/Hex"}, {"type": "null"}]},
+        "generation": {"type": "integer", "minimum": 0},
+        "identity": {"$ref": "#/definitions/Hex"},
+        "implementation": {"$ref": "#/definitions/Hex"},
+        "steps": {"type": "array", "maxItems": 16, "items": {"$ref": "#/definitions/Step"}},
+        "names": {"$ref": "#/definitions/Names"},
+        "done": {"type": "integer", "minimum": 0},
+        "owners": {"type": "object"},
+        "dropped": {"$ref": "#/definitions/Names"},
+        "returned": {"$ref": "#/definitions/Names"},
+        "derived": {"$ref": "#/definitions/Names"},
+        "rows": {"type": "array", "items": {"$ref": "#/definitions/RowsFile"}},
+        "manifest": {"$ref": "#/definitions/Hex"},
+        "env": {"type": "object", "required": ["digest"], "properties": {"digest": {"$ref": "#/definitions/Hex"}, "parts": {"type": "object"}}}
+      }
+    }
+  },
+  "$ref": "#/definitions/Journal"
+}

@@ -1,4 +1,5 @@
 import schema from "./🔣️.json" with {type: "json"};
+import family from "../../📏️workspace-scale/🧬️schema/🔣️.json" with {type: "json"};
 
 /** 🗄️ One declared loose-file area (a directory of independent cache files) whose bytes count against the host cap; its own cap and age bound the area itself. */
 export type CasAreaPolicyV1=Readonly<{id:string;capBytes:number|null;maxAgeMs:number|null}>;
@@ -33,3 +34,10 @@ export type CasPlaceV1=Readonly<{id:string;path:string;mode:"hardlink"|"reflink"
 export type CasAdoptionPolicyV1=Readonly<{minBytes:number;quietMs:number;clearWriteBits:boolean;skipPattern:string;places:readonly CasPlaceV1[]}>;
 /** 🧲️ The default adoption rules of the schema. */
 export const CAS_ADOPTION_V1:CasAdoptionPolicyV1=Object.freeze(JSON.parse(JSON.stringify(schema.definitions.Adoption.const)) as CasAdoptionPolicyV1);
+
+/** 📐️ The declared disk budget of the partition that holds the store: the largest need of any stage in bytes, the divisor that makes the cushion of it and the factor of the partition size from which the budget is derived (single source: the sibling schema document, definition `Budget`). */
+export type CasBudgetV1=Readonly<{version:1;largestNeedBytes:number;cushionDivisor:number;minimumTotalFactor:number}>;
+/** 📐️ The default disk budget of the schema. */
+export const CAS_BUDGET_V1:CasBudgetV1=Object.freeze(JSON.parse(JSON.stringify(schema.definitions.Budget.const)) as CasBudgetV1);
+/** 🛡️ The safety factor of the workspace scale family, the factor of the reserve (one number for every ceiling that must hold the workspace). @see ../../📏️workspace-scale/🧬️schema/🔣️.json */
+export const CAS_RESERVE_FACTOR_V1:number=family.definitions.Family.const.safetyFactor;

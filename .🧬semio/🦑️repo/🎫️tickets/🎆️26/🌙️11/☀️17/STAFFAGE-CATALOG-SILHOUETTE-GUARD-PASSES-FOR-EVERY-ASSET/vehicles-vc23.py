@@ -1,0 +1,10 @@
+import sys, importlib
+sys.path.insert(0, ".")
+m = importlib.import_module("vehicles-lib")
+d = m.V("🚜️vehicles/vintage-car-1929")
+print(d.rects_from_volume(100, "plan", "frame-r", "frame-r", ["body-mount-*", "running-bracket-*", "engine-bearer-*", "axle-*", "crossmember-*", "spare-mount", "radiator-mount"], role="detail"))
+d.drawn_array(d.shape(100, "plan", "tub"), "points", [[-1.991, -0.621], [0.601, -0.621], [0.601, 0.621], [-1.991, 0.621]])
+d.set(d.shape(100, "plan", "hood"), "r", 0.015)
+s = d.shape(100, "plan", "tail-pipe")
+print(d.obj(s))
+d.commit()

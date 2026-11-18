@@ -8,7 +8,7 @@
 
 // #endregion 🧲️Header
 
-import { Cursor, Icon, Spinner } from "@semio-tech/ui-react";
+import { Cursor, Icon, SharedBorderRow, SharedBorderRowCell, Spinner } from "@semio-tech/ui-react";
 import { ICON_NAMES, ICON_CONCEPT_ASSIGNMENTS, type IconName } from "@semio-tech/assets";
 import type { Meta, StoryObj } from "../../../🧪️tests/📚️storybook-types/🟦️.ts";
 
@@ -29,7 +29,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: { color: "#000000" },
   render: () => (
-    <div className="relative w-96 h-96 border bg-muted/10 p-4">
+    <div data-border-probe-art="" className="relative w-96 h-96 border bg-muted/10 p-4">
       <p className="text-sm font-medium mb-4">Collaborative Cursors</p>
       <div className="relative w-full h-full">
         <Cursor color="var(--accent)" x={120} y={80} />
@@ -59,7 +59,7 @@ const NON_CATALOG_KIND_TILES: { readonly label: string; readonly icon: React.Com
 export const IconAnimations: Story = {
   args: { color: "#000000" },
   render: () => (
-    <div className="max-w-4xl space-y-4">
+    <div data-border-probe-art="" className="max-w-4xl space-y-4">
       <p className="text-sm text-muted-foreground">Hover an icon, or its button, to trigger its closed micro animation once.</p>
       <div className="grid grid-cols-8 gap-2">
         {ICON_NAMES.map((name) => (
@@ -86,15 +86,15 @@ export const IconAnimations: Story = {
 export const Concepts: Story = {
   args: { color: "#000000" },
   render: () => (
-    <div className="grid max-w-5xl grid-cols-2 gap-2 text-2xs">
+    <SharedBorderRow orientation="vertical" className="max-w-5xl text-2xs">
       {Object.entries(ICON_CONCEPT_ASSIGNMENTS).map(([concept, iconId]) => (
-        <div key={concept} className="flex items-center gap-2 rounded-sm border px-2 py-1">
+        <SharedBorderRowCell key={concept} className="gap-2">
           <Icon icon={iconId} size="small" className="shrink-0" />
           <span className="font-mono text-muted-foreground">{concept}</span>
           <span className="ml-auto font-mono">{iconId}</span>
-        </div>
+        </SharedBorderRowCell>
       ))}
-    </div>
+    </SharedBorderRow>
   ),
 };
 

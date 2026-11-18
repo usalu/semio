@@ -13,7 +13,7 @@ import type { ShellCoreAfterDockAssembly } from "../../🏗️dock-assembly/🟦
 /** 🔷 Builds brand, localDocumentOwnerRegistry, hostMode, mobile of usePanelHosting. */
 export function useBrandState({ core }: { readonly core: ShellCoreAfterDockAssembly }) {
   const {
-    brand, localDocumentOwnerRegistry, hostMode, mobile, locks, defaults, dispatch, loadedPlugins, session,
+    brand, navbarTrailingItems, localDocumentOwnerRegistry, hostMode, mobile, locks, defaults, dispatch, loadedPlugins, session,
     instanceFault, localPrograms, uiLocale, uiTerminology, landingAppId, hostAppId, hostControllerId, spacePrograms,
     windowUiByWindowId, windowEngagementsByWindowId, windowMeasuresByWindowId, appLabelsOverlay,
     spawnedWindowActivityByWindowId, spawnedWindowFault, spawnedWindowEngagements, spawnedWindowMeasures,
@@ -130,6 +130,7 @@ export function useBrandState({ core }: { readonly core: ShellCoreAfterDockAssem
           key: "mobilePanelToggle",
           content: <Toggle id="ui.mobilePanel.toggle" pressed={mobilePanelVisible} onPressedChange={(value) => dispatch({ type: "SET_MOBILE_PANEL_VISIBLE", value })} icon="panel-left" />,
         },
+        ...(navbarTrailingItems ?? []),
       ];
     }
     const centerContent: ReactNode[] = [logoAndTitle];
@@ -150,7 +151,8 @@ export function useBrandState({ core }: { readonly core: ShellCoreAfterDockAssem
           </div>
         ),
       },
+      ...(navbarTrailingItems ?? []),
     ];
-  }, [brand, buildPanelSelectionProps, exampleOptions, exampleSelectElement, locks.exampleId, mobile, mobilePanelVisible, modeSwitcherElement, roleSwitcherElement, session, focusedApp?.id, uiLocale, uiTerminology, hostMode, landingAppId]);
+  }, [brand, navbarTrailingItems, buildPanelSelectionProps, exampleOptions, exampleSelectElement, locks.exampleId, mobile, mobilePanelVisible, modeSwitcherElement, roleSwitcherElement, session, focusedApp?.id, uiLocale, uiTerminology, hostMode, landingAppId]);
   return { session, appLabelsOverlay, uiTerminology, uiLocale, onAction, dispatch, resolvedCommands, mobile, onCommand, hostMode, panel, spacePrograms, loadedPlugins, spawnProgram, hostControllerId, activeWindowId, actionPaneExpandedByWindowId, actionPaneStagedArgsByKey, activeUtilityByWindowId, introductionActionWindowSegment, actionPaneFoldedByWindowId, introductionUtilityWindowId, introductionMeasureWindowId, activeSpawnedEntry, activeSpawnedApp, focusedSpawnedId, localDocumentOwnerRegistry, world3dWindowViewRegistry, spawnedWindowEngagements, spawnedWindowMeasures, onActionStable, utilityGenerationFor, spawnedWindowActivityByWindowId, builtNodeStoreCacheRef, windowIconsById, timeTravelIndicator, introductionUtilityId, localPrograms, selectedSpaceArtifactKinds, onIntentStable, spawnedWindowFault, currentBrowserActorUi, builtNodeStoreFor, windowMeasuresByWindowId, windowEngagementsByWindowId, windowTitlesById, windowUiByWindowId, primaryWorld3dOwner, world3dWindowViews, instanceFault, windowTreeContext, currentLocalDocumentOwner, currentDocumentRuntimeKey, onBrowserActorIntent, extraWindowInstances, registerRevision, browserActorUiVersion, shellLayout, effectiveModeLayoutRef, mountedWindowIdsRef, sessionRef, unmountedSkippedWindowBodiesRef, refreshUi, dropForRetiredInstance, noteShellCommand, mobilePanel, initialExampleReady, buildPanelSelectionProps, navbarItems };
 }

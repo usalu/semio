@@ -198,3 +198,7 @@ impl<'operation,'decode,'recipient> NativeOwnedDecodeControl<'operation,'decode,
 
 #[path="📦️backing/🦀️.rs"]mod backing;
 pub use backing::{NativeBackingTurn,allocate_empty_vec};
+impl<'a> NativeDecodeControl<'a>{
+ /// 🏭️ Installs the caller's original construction loan for the whole life of this control: the resident twin of [`NativeDecodeControl::with_construction_recipient`] for runs whose decoder and encoder must share one loan lifetime.
+ pub fn install_construction_recipient(&mut self,recipient:&'a mut OriginalConstructionLoan<'a>)->Result<(),ValueError>{if self.construction.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native construction cannot substitute its original receiving authority"))}self.construction=Some(recipient);Ok(())}
+}

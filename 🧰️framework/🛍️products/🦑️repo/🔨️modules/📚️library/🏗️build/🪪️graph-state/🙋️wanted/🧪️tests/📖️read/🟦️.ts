@@ -8,7 +8,7 @@ import{graphFleetClientV1}from"../../../🛰️exchange/🟦️.ts";
 import{graphFleetSettingsV1}from"../../../🧶️nx/🟦️.ts";
 import{publishServedV1,readServedV1,readWantedV1,wantedEstimateTextV1,wantedPolicyV1,wantedTextV1}from"../../🟦️.ts";
 import{fleetReadV1,wantedRefusalV1}from"../../📖️read/🟦️.ts";
-import{emptyOwnerCostTableV1,estimateOwnerCostV1,grantOfFootprintV1,ownerCostPolicyV1,ownerCostTextV1,recordOwnerCostV1,soloGrantV1}from"../../💰️cost/🟦️.ts";
+import{emptyOwnerCostTableV1,estimateOwnerCostV1,fleetBuilderAdvertisedV1,publishOwnerCostsV1,grantOfFootprintV1,ownerCostPolicyV1,ownerCostTextV1,recordOwnerCostV1,soloGrantV1}from"../../💰️cost/🟦️.ts";
 
 /** 📖️ Contract: a reader decides by its admitted memory before it reserves any for inference, takes what the fleet served, publishes the rest, waits with progress, a bound and cancellation, and says in plain text what it waited for when the bound passes. */
 const scratch:string[]=[];
@@ -100,7 +100,7 @@ test("a heavy workspace root is refused with the typed owner-too-heavy refusal, 
    const lines:string[]=[],time=clock(),reader=via==="wait"?client(`over-${language}`):dead,stale=["@semio-tech/light","workspace"];
    const error=await fleetReadV1({stale,admittedMegabytes:8192,soloGrant:NOTHING,client:reader,requester:"g1-m02",platform:PLATFORM,graphKey:KEY,language,estimate:estimator(),say:line=>lines.push(line),sleep:time.sleep,now:time.now}).then(()=>undefined,reason=>reason as Refusal);
    expect(error?.code).toBe("unserved");expect(error?.key).toBe("build.graph.owner-too-heavy");expect(wantedRefusalV1.key).toBe("build.graph.wanted-expired");
-   expect(error?.values).toEqual({named:"workspace (about 6200 MB)".replace("about",language==="en"?"about":"etwa"),limit:LIMIT(NOTHING)});
+   expect(error?.values).toEqual({named:"workspace (about 6200 MB)".replace("about",language==="en"?"about":"etwa"),limit:LIMIT(NOTHING),producers:0});
    expect(lines[0]).toContain("workspace");expect(lines[0]).toContain(language==="en"?"too heavy":"zu schwer");
    expect(lines.at(-1)).toBe(ownerCostTextV1("exceeds",language,{named:String(error?.values.named),grant:LIMIT(NOTHING)}));
    expect(lines.at(-1)).toContain(language==="en"?"even when nothing else":"auch dann");
@@ -255,7 +255,7 @@ async function cooperation(options:Readonly<{language:"en"|"de";serve:number;sta
 test("a slow fleet and this machine finish the read together in one run: lightest first here, heaviest first there, arrivals dropped mid-run, no project both inferred and taken, narrowed request, both counts told in English",async()=>{
  const run=await cooperation({language:"en",serve:3}),result=run.result as Awaited<ReturnType<typeof fleetReadV1>>,inferred=run.inferred;
  expect(result.outcome).toBe("served");expect(result.missing).toEqual([]);
- expect(run.calls).toBe(1);expect(run.runs[0]).not.toContain(run.heavy);expect(run.runs[0]![0]).toBe(run.stale[0]);
+ expect(run.calls).toBe(1);expect(run.runs[0]!.indexOf(run.heavy)).toBe(run.runs[0]!.length-1);expect(run.runs[0]![0]).toBe(run.stale[0]);
  expect(run.runs[0]).toEqual([...run.runs[0]!].sort());
  expect(inferred.length).toBeGreaterThan(0);expect(inferred).toEqual([...inferred].sort());expect(new Set(inferred).size).toBe(inferred.length);
  expect(run.dropped.length).toBeGreaterThan(0);for(const name of run.dropped)expect(inferred).not.toContain(name);
@@ -292,3 +292,27 @@ test("a failing local inference is told and the read goes on waiting for the fle
  const control=new AbortController(),cancelled=await cooperation({language:"en",serve:1,signal:control.signal,infer:async()=>{control.abort();}});
  expect((cancelled.result as {error?:Error}).error?.name).toBe("AbortError");
 });
+
+test("a reachable fleet that advertises no graph builder is neither asked nor waited for: all stale projects are inferred here at the full width of the machine, told in both languages",async()=>{
+ const {server,client}=await world();
+ try{
+  for(const language of["en","de"] as const){
+   const reader=client(`nobuilder-${language}`),lines:string[]=[],result=await fleetReadV1({stale:names(4700),admittedMegabytes:4096,client:reader,builder:async()=>false,requester:"g1-m07",platform:PLATFORM,graphKey:KEY,language,say:line=>lines.push(line),sleep:async()=>{throw new Error("waited");}});
+   expect(result.outcome).toBe("local");expect(result.plan.localProjects).toBe(4700);expect(result.waitedMilliseconds).toBe(0);
+   expect(lines.some(line=>line.includes(language==="en"?"advertises a graph builder":"Graph-Builder")||line.includes(language==="en"?"no fleet machine":"keine Flottenmaschine"))||lines.length===0).toBe(true);
+   expect(await readWantedV1({client:reader,requester:"g1-m07"})).toBeUndefined();
+  }
+ }finally{await server.stop(true);}
+},60000);
+
+test("a graph builder is advertised while its table of owner costs is fresh in the fleet, and not when it is absent or old",async()=>{
+ const {server,client}=await world();
+ try{
+  const reader=client("advert");
+  expect(await fleetBuilderAdvertisedV1({client:reader,withinMilliseconds:wantedPolicyV1.ttlMilliseconds})).toBe(false);
+  const table=recordOwnerCostV1(emptyOwnerCostTableV1(),{name:"p",kind:"project",megabytes:10,seconds:1,rows:1,stopped:false,atMs:1});
+  expect(await publishOwnerCostsV1({client:reader,server:"s1",table})).toBe(true);
+  expect(await fleetBuilderAdvertisedV1({client:reader,withinMilliseconds:wantedPolicyV1.ttlMilliseconds})).toBe(true);
+  expect(await fleetBuilderAdvertisedV1({client:reader,withinMilliseconds:wantedPolicyV1.ttlMilliseconds,now:()=>Date.now()+2*wantedPolicyV1.ttlMilliseconds})).toBe(false);
+ }finally{await server.stop(true);}
+},60000);

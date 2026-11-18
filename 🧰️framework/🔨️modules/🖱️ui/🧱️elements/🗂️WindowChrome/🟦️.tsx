@@ -7,7 +7,7 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { sharedBorderStroke, useSharedWindowBorder, sizeSharedBorderOverlay } from "./shared-border.ts";
+import { deviceSnappedRect, sharedBorderStroke, useSharedWindowBorder, sizeSharedBorderOverlay } from "./shared-border.ts";
 import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { SurfaceScope, type Level, type SurfaceActiveBindProps } from "../🌈️Surface/🟦️.tsx";
 import {
@@ -25,6 +25,8 @@ import { modeDockTabClassName } from "../../🔨️modules/🎛️chrome-control
 import { interactiveHoverClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️.ts";
 import { glassClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
 // #endregion 🔌️Adapters
+
+export { useSharedBorderFrameRef } from "./shared-border.ts";
 
 //#region 🗂️WindowSilhouetteBorder
 /** 🖌️ All border effects the silhouette SVG can paint. */
@@ -134,7 +136,7 @@ function measureContextMenuFusion(stack: HTMLElement, stackRect: DOMRect, base: 
 
 /** 📊️ Reads live silhouette metrics from painted chip spans grouped by `data-dock` (works for RTL caps and bottom-docked panels), in the stack's own pixels even while a host scales it on screen — see {@link windowSilhouetteScale}. Nested silhouette chips are ignored — see {@link windowSilhouetteOwnsElement}. */
 export function measureWindowSilhouetteMetrics(stack: HTMLElement): WindowSilhouetteMetrics | null {
-  const stackRect = stack.getBoundingClientRect();
+  const stackRect = deviceSnappedRect(stack);
   const scale = { x: windowSilhouetteScale(stackRect.width, stack.offsetWidth), y: windowSilhouetteScale(stackRect.height, stack.offsetHeight) };
   const width = stackRect.width / scale.x;
   const height = stackRect.height / scale.y;
@@ -144,19 +146,19 @@ export function measureWindowSilhouetteMetrics(stack: HTMLElement): WindowSilhou
     let depth = 0;
     for (const chip of stack.querySelectorAll<HTMLElement>(`[data-window-silhouette-chip][data-dock="${dock}"]`)) {
       if (!windowSilhouetteOwnsElement(stack, chip)) continue;
-      const rect = chip.getBoundingClientRect();
+      const rect = deviceSnappedRect(chip);
       if (rect.width <= WINDOW_SILHOUETTE_CHIP_EPSILON || rect.height <= WINDOW_SILHOUETTE_CHIP_EPSILON) continue;
       chips.push({ left: (rect.left - stackRect.left) / scale.x, right: (rect.right - stackRect.left) / scale.x });
       depth = Math.max(depth, rect.height / scale.y);
     }
     for (const gap of stack.querySelectorAll<HTMLElement>(WINDOW_CHROME_GAP_SELECTOR)) {
       if (!windowSilhouetteOwnsElement(stack, gap)) continue;
-      const gapRect = gap.getBoundingClientRect();
+      const gapRect = deviceSnappedRect(gap);
       if (gapRect.height > WINDOW_SILHOUETTE_CHIP_EPSILON && windowSilhouetteRectOnDock(stackRect, gapRect, dock)) depth = Math.max(depth, gapRect.height / scale.y);
     }
     for (const cap of stack.querySelectorAll<HTMLElement>(WINDOW_CHROME_CAP_SELECTOR)) {
       if (!windowSilhouetteOwnsElement(stack, cap)) continue;
-      const capRect = cap.getBoundingClientRect();
+      const capRect = deviceSnappedRect(cap);
       if (capRect.height > WINDOW_SILHOUETTE_CHIP_EPSILON && windowSilhouetteRectOnDock(stackRect, capRect, dock)) depth = Math.max(depth, capRect.height / scale.y);
     }
     return { depth, chips: normalizeWindowSilhouetteChips(chips, 0, width) };
@@ -258,7 +260,7 @@ export interface WindowChromeControlAction {
 
 /** 🔤️ Title chip in the window-chrome cap row (name + optional drag) — transparent and
  * borderless so the painted chip-cap cell shows through and the silhouette remains the sole outline. */
-export const windowChromeTitleChipClass = cn(modeDockTabClassName, "relative z-30 box-border min-h-medium shrink-0 border-0 bg-transparent");
+export const windowChromeTitleChipClass = cn(modeDockTabClassName, "relative z-30 box-border min-h-chip-row shrink-0 border-0 bg-transparent");
 
 export interface WindowChromeProps {
   readonly active?: boolean;
@@ -485,7 +487,7 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
         <div ref={setStackRef} data-slot={stackSlot} data-window-silhouette data-level={level} className={cn("relative inline-flex min-w-0 bg-transparent", className, stackClassName)} style={style} {...stackDataAttrs}>
           <WindowChromeSilhouetteBorder stack={stackEl} geometry={geometry} active={active} borderKind={borderKind} silhouetteSlot={silhouetteSlot} />
           {titleChips ? (
-            <div data-slot={chipSlot} data-window-silhouette-chip data-dock={capDock} data-ui-reveal-region="window-cap" data-dim className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
+            <div data-slot={chipSlot} data-window-silhouette-chip data-dock={capDock} data-ui-reveal-region="window-cap" data-dim className={cn("relative flex min-h-chip-row min-w-0 shrink items-stretch", chipSurfaceClass)}>
               {titleChips}
             </div>
           ) : null}
@@ -498,7 +500,7 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
     const hasFooter = Boolean(footerLeftChips || footerCenterChips || footerRightChips);
     const hasFooterGap = Boolean(footerLeftChips && footerRightChips && !footerCenterChips);
     const footerGapClass = cn("pointer-events-none relative min-h-0 min-w-0 bg-transparent", windowGapFrameClass, footerGapClassName);
-    const footerChipClass = cn("relative flex min-h-medium min-w-0 shrink-0 items-stretch", chipSurfaceClass);
+    const footerChipClass = cn("relative flex min-h-chip-row min-w-0 shrink-0 items-stretch", chipSurfaceClass);
     return wrapLevel(
       <div
         ref={setStackRef}
@@ -521,11 +523,11 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
           style={{ ...capRowStyle, ...WINDOW_CHROME_CHIP_ROW_STYLE }}
         >
           {titleChips ? (
-            <div data-slot={chipSlot} data-window-silhouette-chip data-dock={capDock} className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
+            <div data-slot={chipSlot} data-window-silhouette-chip data-dock={capDock} className={cn("relative flex min-h-chip-row min-w-0 shrink items-stretch", chipSurfaceClass)}>
               {titleChips}
             </div>
           ) : null}
-          <div data-slot="window-chrome-gap" data-window-silhouette-gap aria-hidden {...gapRest} className={cn("pointer-events-none relative min-h-medium min-w-0 flex-1 bg-transparent", windowGapFrameClass, gapClassName)} />
+          <div data-slot="window-chrome-gap" data-window-silhouette-gap aria-hidden {...gapRest} className={cn("pointer-events-none relative min-h-chip-row min-w-0 flex-1 bg-transparent", windowGapFrameClass, gapClassName)} />
           {capRightChips || enlarge || close ? (
             <div data-slot={controlsSlot} data-window-silhouette-chip data-dock={capDock} className={cn("relative z-[2] flex shrink-0 items-stretch", controlsSurfaceClass)}>
               {capRightChips}
@@ -610,13 +612,13 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
               style={WINDOW_CHROME_CHIP_ROW_STYLE}
             >
               {footerLeftChips ? (
-                <div data-slot="window-chrome-footer-left" data-window-silhouette-chip data-dock="bottom" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
+                <div data-slot="window-chrome-footer-left" data-window-silhouette-chip data-dock="bottom" className={cn("relative flex min-h-chip-row min-w-0 shrink items-stretch", chipSurfaceClass)}>
                   {footerLeftChips}
                 </div>
               ) : null}
               {hasFooterGap ? <div data-slot="window-chrome-footer-gap" data-window-silhouette-gap aria-hidden {...footerGapRest} className={cn(footerGapClass, "flex-1")} /> : null}
               {footerRightChips ? (
-                <div data-slot="window-chrome-footer-right" data-window-silhouette-chip data-dock="bottom" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
+                <div data-slot="window-chrome-footer-right" data-window-silhouette-chip data-dock="bottom" className={cn("relative flex min-h-chip-row min-w-0 shrink items-stretch", chipSurfaceClass)}>
                   {footerRightChips}
                 </div>
               ) : null}

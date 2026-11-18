@@ -22,7 +22,7 @@ pub use semio_os_kernel as __kernel;
 #[doc(hidden)]
 pub use semio_framework_value as __value;
 
-pub use semio_plugin_testing_caller::{OriginalFixtureCaller, OriginalFixtureScope, OriginalWorkFixture, receive_persistent_fixture, receive_view_fixture, typing_run, TypingRun};
+pub use semio_plugin_testing_caller::{FixtureUiArena, OriginalFixtureCaller, OriginalFixtureScope, OriginalWorkFixture, receive_persistent_fixture, receive_view_fixture, typing_run, TypingRun};
 use semio_plugin_window_config::{WindowConfigOwner, WindowConfigOwnerRegistry};
 use semio_plugin_window_transient::window_transient::{WindowTransientOwner, WindowTransientOwnerRegistry};
 #[path="📨️host-event-observation/🦀️.rs"]

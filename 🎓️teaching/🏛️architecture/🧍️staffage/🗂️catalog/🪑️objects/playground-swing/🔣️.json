@@ -906,7 +906,8 @@
               ],
               "closed": false,
               "region": "frame-galv",
-              "material": "steel-galvanised"
+              "material": "steel-galvanised",
+              "penMm": 0.3
             },
             {
               "id": "leg-right",
@@ -928,7 +929,8 @@
               ],
               "closed": false,
               "region": "frame-galv",
-              "material": "steel-galvanised"
+              "material": "steel-galvanised",
+              "penMm": 0.3
             },
             {
               "id": "foot-left-plate",
@@ -2947,24 +2949,60 @@
               "bone": "beam",
               "role": "body",
               "z": 3.2,
-              "filled": false,
+              "filled": true,
               "tone": 0.2,
-              "kind": "path",
-              "d": "M 0.20500000000000002 2.255 C 0.2 2.21 0.26 2.21 0.255 2.255",
+              "kind": "rect",
               "region": "chain-steel",
-              "material": "steel-galvanised"
+              "material": "steel-galvanised",
+              "x": 0.224,
+              "y": 2.205,
+              "w": 0.012,
+              "h": 0.04
+            },
+            {
+              "id": "hanger-collar-left",
+              "bone": "beam",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "region": "chain-steel",
+              "material": "steel-galvanised",
+              "x": 0.205,
+              "y": 2.2425,
+              "w": 0.05,
+              "h": 0.115
             },
             {
               "id": "beam-hanger-right",
               "bone": "beam",
               "role": "body",
               "z": 3.2,
-              "filled": false,
+              "filled": true,
               "tone": 0.2,
-              "kind": "path",
-              "d": "M -0.255 2.255 C -0.26 2.21 -0.2 2.21 -0.20500000000000002 2.255",
+              "kind": "rect",
               "region": "chain-steel",
-              "material": "steel-galvanised"
+              "material": "steel-galvanised",
+              "x": -0.236,
+              "y": 2.205,
+              "w": 0.012,
+              "h": 0.04
+            },
+            {
+              "id": "hanger-collar-right",
+              "bone": "beam",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "region": "chain-steel",
+              "material": "steel-galvanised",
+              "x": -0.255,
+              "y": 2.2425,
+              "w": 0.05,
+              "h": 0.115
             },
             {
               "kind": "capsule",

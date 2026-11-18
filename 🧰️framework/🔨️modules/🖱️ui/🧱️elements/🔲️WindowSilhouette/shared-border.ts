@@ -112,10 +112,41 @@ export function projectSharedBorderPoint(point: BorderPoint, from: BorderPoint, 
   return { x: paintFrom.x + ratio * (paintTo.x - paintFrom.x), y: paintFrom.y + ratio * (paintTo.y - paintFrom.y) };
 }
 
+/** 🧲️ Maps a viewport coordinate to its edge cluster: the box edges of one commit lying within `tolerance` px of the cluster's first edge are one line (layout leftovers such as a scroller's rounded scroll range leave edges a fraction of a pixel apart that must still share one line). */
+export type SharedBorderSnap = (axis: "x" | "y", value: number) => number;
+
+/** 🧲️ Builds the {@link SharedBorderSnap} of the box edges `xs` and `ys`; pure, language-agnostic (see `snap.cases.json`). */
+export function createSharedBorderSnap(xs: readonly number[], ys: readonly number[], tolerance = 0.75): SharedBorderSnap {
+  const cluster = (values: readonly number[]) => {
+    const sorted = [...new Set(values.map(value => Math.round(value * 64) / 64))].sort((a, b) => a - b);
+    const heads: number[] = [], members: number[] = [];
+    for (const value of sorted) {
+      if (!heads.length || value - heads[heads.length - 1]! > tolerance) heads.push(value);
+      members.push(heads[heads.length - 1]!);
+    }
+    return { sorted, members };
+  };
+  const axes = { x: cluster(xs), y: cluster(ys) };
+  return (axis, value) => {
+    const { sorted, members } = axes[axis];
+    let low = 0, high = sorted.length - 1, best = -1;
+    while (low <= high) {
+      const mid = (low + high) >> 1;
+      if (Math.abs(sorted[mid]! - value) <= tolerance && (best < 0 || Math.abs(sorted[mid]! - value) < Math.abs(sorted[best]! - value))) best = mid;
+      if (sorted[mid]! < value) low = mid + 1; else high = mid - 1;
+    }
+    for (const index of [best - 1, best + 1]) if (index >= 0 && index < sorted.length && Math.abs(sorted[index]! - value) < Math.abs(sorted[best]! - value)) best = index;
+    return best < 0 ? value : members[best]!;
+  };
+}
+
 /** 🧩️ Registers every original rectilinear silhouette edge in snapped viewport coordinates. */
-export function sharedOutlineSegments(owner: string, logical: readonly BorderPoint[], paint: readonly BorderPoint[], state: BorderState, transform: SharedBorderTransform): SharedOutlineSegment[] {
+export function sharedOutlineSegments(owner: string, logical: readonly BorderPoint[], paint: readonly BorderPoint[], state: BorderState, transform: SharedBorderTransform, snap?: SharedBorderSnap): SharedOutlineSegment[] {
   if (logical.length !== paint.length) return [];
-  const screen = (point: BorderPoint): BorderPoint => ({ x: Math.round((transform.left + point.x * transform.scaleX) * 64) / 64, y: Math.round((transform.top + point.y * transform.scaleY) * 64) / 64 });
+  const screen = (point: BorderPoint): BorderPoint => {
+    const x = Math.round((transform.left + point.x * transform.scaleX) * 64) / 64, y = Math.round((transform.top + point.y * transform.scaleY) * 64) / 64;
+    return snap ? { x: snap("x", x), y: snap("y", y) } : { x, y };
+  };
   return logical.flatMap((point, index) => {
     const next = logical[(index + 1) % logical.length]!;
     const from = screen(point), end = screen(next);

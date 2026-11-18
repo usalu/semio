@@ -3032,6 +3032,8 @@
             "key": "controls",
             "heatW": 3
           },
+          "ratedPowerW": 3,
+          "ratedPowerBasis": "electrical-input",
           "source": "authored-estimate",
           "reference": "incropera-2018"
         },
@@ -3106,6 +3108,8 @@
             "key": "burner",
             "heatW": 3
           },
+          "ratedPowerW": 20000,
+          "ratedPowerBasis": "fuel-input",
           "source": "authored-estimate",
           "reference": "incropera-2018"
         },
@@ -4008,6 +4012,8 @@
                 "exponent": 10
               }
             ],
+            "capStart": true,
+            "capEnd": true,
             "region": "casing",
             "layer": "sheet"
           },
@@ -4038,6 +4044,8 @@
                 "exponent": 2
               }
             ],
+            "capStart": true,
+            "capEnd": true,
             "region": "sight-glass",
             "layer": "glass",
             "transform": {
@@ -4805,6 +4813,8 @@
                 "exponent": 10
               }
             ],
+            "capStart": true,
+            "capEnd": true,
             "region": "casing"
           },
           {
@@ -4828,6 +4838,8 @@
                 "exponent": 2
               }
             ],
+            "capStart": true,
+            "capEnd": true,
             "region": "sight-glass",
             "transform": {
               "translation": [0, 0.46, 0],
@@ -5440,6 +5452,8 @@
                 "exponent": 10
               }
             ],
+            "capStart": true,
+            "capEnd": true,
             "region": "casing"
           },
           {
@@ -5463,6 +5477,8 @@
                 "exponent": 2
               }
             ],
+            "capStart": true,
+            "capEnd": true,
             "region": "sight-glass",
             "transform": {
               "translation": [0, 0.46, 0],
@@ -5522,6 +5538,8 @@
                 "exponent": 10
               }
             ],
+            "capStart": true,
+            "capEnd": true,
             "region": "connections"
           },
           {

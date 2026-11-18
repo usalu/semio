@@ -460,7 +460,7 @@
     "RelativeCreateProtocol": {
       "const": {
         "version": 1,
-        "maximumWriteBytes": 65536,
+        "maximumWriteBytes": 8388608,
         "maximumFileBytes": 67108864,
         "minimumWriteBytes": 1,
         "positions": "contiguous-only",
@@ -864,6 +864,7 @@
         "maximumErrnoAttempts": 4,
         "maximumDirectoryRecordBytes": 1048,
         "maximumReadBytes": 65536,
+        "maximumFileReadBytes": 8388608,
         "numericDescriptor": "private",
         "receiver": "exact-live-object",
         "entryProof": "issued-live-parent-and-name",
@@ -1075,7 +1076,8 @@
           "kernel32.dll",
           "ntdll.dll",
           "advapi32.dll"
-        ]
+        ],
+        "rootReducedAccess": 1179777
       }
     },
     "RelativeWindowsCase": {
@@ -5259,6 +5261,41 @@
           ]
         }
       ]
+    },
+    "RelativeWindowsFailureNames": {
+      "const": {
+        "nt": {
+          "3221225506": "STATUS_ACCESS_DENIED",
+          "3221225539": "STATUS_SHARING_VIOLATION",
+          "3221225524": "STATUS_OBJECT_NAME_NOT_FOUND",
+          "3221225530": "STATUS_OBJECT_PATH_NOT_FOUND",
+          "3221225523": "STATUS_OBJECT_NAME_INVALID",
+          "3221225529": "STATUS_OBJECT_PATH_SYNTAX_BAD",
+          "3221225558": "STATUS_DELETE_PENDING",
+          "3221225729": "STATUS_DIRECTORY_NOT_EMPTY",
+          "3221225731": "STATUS_NOT_A_DIRECTORY",
+          "3221225525": "STATUS_OBJECT_NAME_COLLISION",
+          "3221225659": "STATUS_NOT_SUPPORTED",
+          "3221225626": "STATUS_INSUFFICIENT_RESOURCES",
+          "3221225658": "STATUS_FILE_IS_A_DIRECTORY",
+          "3221225927": "STATUS_PATH_NOT_COVERED"
+        },
+        "win32": {
+          "2": "ERROR_FILE_NOT_FOUND",
+          "3": "ERROR_PATH_NOT_FOUND",
+          "5": "ERROR_ACCESS_DENIED",
+          "21": "ERROR_NOT_READY",
+          "32": "ERROR_SHARING_VIOLATION",
+          "33": "ERROR_LOCK_VIOLATION",
+          "53": "ERROR_BAD_NETPATH",
+          "67": "ERROR_BAD_NET_NAME",
+          "123": "ERROR_INVALID_NAME",
+          "206": "ERROR_FILENAME_EXCED_RANGE",
+          "1314": "ERROR_PRIVILEGE_NOT_HELD",
+          "1920": "ERROR_CANT_ACCESS_FILE",
+          "1921": "ERROR_CANT_RESOLVE_FILENAME"
+        }
+      }
     }
   },
   "$ref": "#/definitions/Protocol"

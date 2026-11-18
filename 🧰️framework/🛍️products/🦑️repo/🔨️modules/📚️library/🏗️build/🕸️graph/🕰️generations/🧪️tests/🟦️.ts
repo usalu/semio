@@ -441,7 +441,7 @@ test("a shared file edited every few hundred milliseconds never restarts a 300 p
   expect(older.length).toBeGreaterThan(0);expect(new Set(Object.values(graph.projects).map((project:any)=>project.uses[0].sha256)).size).toBeGreaterThanOrEqual(3);
   for(const name of Object.keys(graph.projects))expect(Array.from({length:edits+2},(_,i)=>sha(String(i)))).toContain(graph.projects[name].uses[0].sha256);
   const waves=world.log.length,next=await world.refresh(),rounds=Math.ceil(older.length/GENERATION_POLICY_V1.ownerWave);
-  expect(next.built).toBe(true);expect(world.log.slice(waves).flatMap(entry=>entry.full).sort()).toEqual(older);expect(world.log.length-waves).toBe(rounds);expect(next.current.manifest!.generation).toBe(rounds);
+  expect(next.built).toBe(true);expect(world.log.slice(waves).flatMap(entry=>entry.full).sort()).toEqual(older);expect(world.log.length-waves).toBe(rounds);expect(next.current.manifest!.generation).toBe(1);
   const after=await world.refresh();expect(after.built).toBe(false);expect(after.served).toBe("verified");
   if(python)expect(normalized(await world.graph(after.current))).toEqual(pythonGraph(busy));
  }finally{clean(quiet);clean(busy);}

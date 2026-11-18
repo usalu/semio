@@ -89,7 +89,7 @@ export function componentBuildTargets(root, workspaceRoot) {
     cache: true,
     parallelism: false,
     metadata: { semio: { orchestrator: true, componentStoreV1: { version: 1 } } },
-    dependsOn: ["@semio-tech/os-plugin-describe-rs:build", "@semio-tech/framework-plugin-web:support", "workspace:deps-wasm-opt"],
+    dependsOn: ["@semio-tech/os-plugin-describe-rs:build", "@semio-tech/os-plugin-native-transpile-rs:build", "@semio-tech/framework-plugin-web:support", "workspace:deps-wasm-opt"],
     inputs: ["nativeSources", "^nativeSources", { dependentTasksOutputFiles: "**/*" }, `{workspaceRoot}/${owner}/🛂️.descriptor.semio`, `{workspaceRoot}/${owner}/🔣️.json`, `{workspaceRoot}/${binaryen}`, ...toolchain.files.map((file) => `{workspaceRoot}/${file}`), ...toolchain.environment.map((env) => ({ env })), ...toolchain.commands.map((runtime) => ({ runtime })), { externalDependencies: ["@bytecodealliance/jco", "@bytecodealliance/preview2-shim"] }, { runtime: 'node -p "process.platform.concat(process.arch)"' }],
     outputs: [storeReceiptOutputV1("component")],
     options: { cwd: ".", command: `repo ${JSON.stringify(script)} component --manifest ${JSON.stringify(buildPath(relative(workspaceRoot, path)))}`, forwardAllArgs: false },

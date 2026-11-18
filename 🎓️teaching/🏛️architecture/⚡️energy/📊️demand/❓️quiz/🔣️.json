@@ -1672,9 +1672,13 @@
           }
         }
       ],
-      "draw": 7,
+      "draw": 4,
       "pool": {
         "seconds": 300,
+        "distribution": {
+          "kind": "zipf",
+          "exponent": 1.5
+        },
         "slots": [
           [
             "kfw-40-heat-pump",

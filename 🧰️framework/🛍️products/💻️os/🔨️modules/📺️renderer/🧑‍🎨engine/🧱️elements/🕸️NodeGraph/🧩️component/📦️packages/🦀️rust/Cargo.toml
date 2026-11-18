@@ -12,6 +12,15 @@ workspace = true
 [package.metadata.semio]
 role = "product"
 
+[package.metadata.wasm-pack.profile.dev]
+wasm-opt = false
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
+[package.metadata.wasm-pack.profile.custom]
+wasm-opt = false
+
 [lib]
 crate-type = ["cdylib"]
 path = "../../🦀️.rs"

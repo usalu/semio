@@ -10,7 +10,7 @@
 
 // #region 🔌️Adapters
 import { Icon, LayeredOverview, OverviewCard, OverviewCardAction, type IconName, type LayeredCardState, type LayeredDirection, type LayeredPane } from "@semio-tech/ui-react";
-import type { ComponentProps } from "react";
+import type { ComponentProps, CSSProperties } from "react";
 import type { Meta, StoryObj } from "../../../🧪️tests/📚️storybook-types/🟦️.ts";
 // #endregion 🔌️Adapters
 
@@ -33,7 +33,7 @@ const PANES: readonly LayeredPane[] = SECTIONS.map(([id, label, icon, text], ind
   icon,
   render: () => (
     <div className="flex h-full w-full flex-col gap-double bg-background p-large text-foreground" style={{ backgroundImage: `linear-gradient(135deg, hsl(${index * 40} 60% 50% / 0.25), transparent 60%)` }}>
-      <h1 className="text-3xl font-semibold">{label}</h1>
+      <h1 className="w-fit text-3xl font-semibold">{label}</h1>
       <p className="max-w-2xl text-lg">{text}</p>
     </div>
   ),
@@ -50,7 +50,7 @@ function card(pane: LayeredPane, state: LayeredCardState) {
       slot="story-layered-card"
       headingId={`story-layered-${pane.id}`}
       headingLevel={3}
-      className={state.mode === "swipe" ? "pointer-events-auto w-full max-w-sm" : "pointer-events-auto w-full max-w-xs"}
+      className="pointer-events-auto size-full"
       icon={pane.icon ? <Icon icon={pane.icon} size="small" className="shrink-0 text-muted-foreground" /> : null}
       title={pane.label}
       footerRight={
@@ -69,7 +69,7 @@ const meta = {
   component: LayeredOverview,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],
-  args: { panes: PANES, cells: CELLS, renderCard: card, labels: LABELS, routing: "none", overlayClassName: "grid grid-cols-3 grid-rows-3 place-items-center gap-double p-double", lifecycle: { budget: 9, warmStartMs: 300, warmIntervalMs: 150 } },
+  args: { panes: PANES, cells: CELLS, renderCard: card, labels: LABELS, routing: "none", overlayStyle: { "--card-grid-columns": "repeat(3, 1fr)", "--card-grid-rows": "repeat(3, 1fr)" } as CSSProperties, lifecycle: { budget: 9, warmStartMs: 300, warmIntervalMs: 150 } },
   render: (props: ComponentProps<typeof LayeredOverview>) => (
     <div className="relative h-[36rem] w-full">
       <LayeredOverview {...props} />

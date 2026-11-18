@@ -171,3 +171,39 @@ fn select_wheel_scope_tracks_its_presented_registry_and_rejects_later_occlusion(
     accepted.clear_frame();
     assert!(!accepted.scroll_select_popup_at(&input, &mut offsets, 20.0, 33.0, 34.0));
 }
+
+/// 🪢️ The kit's `Field` is the retained Field's cell model: label cell + one hairline divider (the shared fixture's `labelCellHeight`), then the control row — no gap, no `gap_standard` between label and control.
+#[semio_framework_async_macros::async_test]
+async fn the_kit_field_measures_the_shared_fixture_label_cell_without_a_gap() {
+    use semio_ui_text::FontAtlas;
+    use semio_ui_wgpu_widget_kit::{ControlNode, WidgetNode};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📐️section-field-presentation/🔣️.json")).unwrap();
+    let label_cell = fixture["field"]["labelCellHeight"].as_f64().unwrap() as f32;
+    let theme = Theme::light();
+    let mut atlas = FontAtlas::builtin();
+    let field = WidgetNode::<()>::Field { id: "f".into(), label: "Threshold".into(), child: ControlNode::Button { id: None, icon_id: None, label: "Run".into(), event: None } };
+    let (_, height) = crate::measure_widget(&mut atlas, &theme, &field);
+    assert!((height - (label_cell + theme.control_height)).abs() < 0.1, "field height {height} = label cell {label_cell} + control {}", theme.control_height);
+}
+
+/// 🧱️ A kit `Section` and `Group` stack their children with zero gap (React's `Section` body is a plain block); a separator is one hairline tall.
+#[semio_framework_async_macros::async_test]
+async fn kit_sections_groups_and_separators_add_no_gap_between_bordered_children() {
+    use semio_ui_text::FontAtlas;
+    use semio_ui_wgpu_widget_kit::WidgetNode;
+    let theme = Theme::light();
+    let mut atlas = FontAtlas::builtin();
+    let button = || WidgetNode::<()>::Button { id: None, icon_id: None, label: "Run".into(), event: None };
+    let header = crate::measure_widget(&mut atlas, &theme, &WidgetNode::<()>::Section { id: "s".into(), label: None, default_open: true, children: Vec::new() }).1;
+    let section = WidgetNode::<()>::Section { id: "s".into(), label: None, default_open: true, children: vec![button(), button(), button()] };
+    assert!((crate::measure_widget(&mut atlas, &theme, &section).1 - (header + theme.control_height * 3.0)).abs() < 0.001);
+    let group = WidgetNode::<()>::Group { id: "g".into(), label: "G".into(), default_open: true, children: vec![button(), button()] };
+    assert!((crate::measure_widget(&mut atlas, &theme, &group).1 - (header + theme.control_height * 2.0)).abs() < 0.001);
+    assert!((crate::measure_widget(&mut atlas, &theme, &WidgetNode::<()>::Separator).1 - 1.0).abs() < f32::EPSILON);
+    let stack = |gap: Option<&str>, children| WidgetNode::<()>::Stack { direction: "vertical".into(), gap: gap.map(str::to_string), padding: Some("none".into()), children };
+    assert!((crate::measure_widget(&mut atlas, &theme, &stack(None, vec![button(), button()])).1 - theme.control_height * 2.0).abs() < 0.001, "an unspecified gap between bordered children is zero");
+    let text = || WidgetNode::<()>::Text { value: "a".into(), emphasize: false };
+    let spaced = crate::measure_widget(&mut atlas, &theme, &stack(None, vec![text(), text()])).1;
+    let single = crate::measure_widget(&mut atlas, &theme, &text()).1;
+    assert!((spaced - (single * 2.0 + theme.gap_standard)).abs() < 0.001, "text-only stacks keep the theme gap");
+}

@@ -10,6 +10,7 @@ import { AdminAccessGate, AdminClient, AdminSessionProvider } from "../../🧱�
 import { SpacesPage } from "../../🧱️elements/🏛️SpacesPage/🟦️.tsx";
 import { ConnectionsPage } from "../../🧱️elements/🔗️ConnectionsPage/🟦️.tsx";
 import { AdminApp } from "../../🧱️elements/🛡️AdminApp/🟦️.tsx";
+import { OverviewPage } from "../../🧱️elements/🏠️OverviewPage/🟦️.tsx";
 import { ObservabilityPage } from "../../🧱️elements/📊️ObservabilityPage/🟦️.tsx";
 import { observabilityV1Fixture as observabilityFixture } from "os-hub-ts/testing/fixtures/observability-v1";
 // #endregion 🔌️Adapters
@@ -34,8 +35,10 @@ describe("Admin locale selection", () => {
     );
     const chooser = screen.getByRole("dialog", { name: "Language · Sprache" });
     expect(chooser).toBeTruthy();
-    const english = screen.getByRole("button", { name: "English" });
-    const german = screen.getByRole("button", { name: "Deutsch" });
+    const english = screen.getByRole("radio", { name: "English" });
+    const german = screen.getByRole("radio", { name: "Deutsch" });
+    expect(screen.getAllByRole("radio").some((radio) => radio.getAttribute("aria-checked") === "true")).toBe(false);
+    expect(screen.getByRole("radiogroup", { name: "Language · Sprache" }).hasAttribute("data-shared-border-frame")).toBe(true);
     expect(english.getAttribute("lang")).toBe("en");
     expect(german.getAttribute("lang")).toBe("de");
     fireEvent.click(german);
@@ -285,6 +288,14 @@ describe("SpacesPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Load more members" }));
     await screen.findByText("second@example.test");
     expect(screen.getByText("first@example.test")).toBeTruthy();
+    const panel = document.querySelector('[data-slot="admin-space-members"]')!;
+    expect(panel.className).not.toMatch(/\bborder/);
+    const add = panel.querySelector('[data-slot="admin-space-member-add-row"]')!;
+    expect(add.hasAttribute("data-shared-border-cells")).toBe(true);
+    expect(add.className).not.toMatch(/gap-/);
+    expect([...add.children].map((child) => child.getAttribute("data-slot"))).toEqual(["input-root", "select-trigger", "button-group"]);
+    expect(add.querySelector("label")).toBeNull();
+    expect(document.querySelector('[data-row-id="space:sp-1"] [data-slot="shared-border-row"]')?.hasAttribute("data-shared-border-cells")).toBe(true);
     expect(requests.some((request) => new URL(request).searchParams.get("cursor") === spaceCursor)).toBe(true);
     expect(requests.some((request) => new URL(request).pathname === "/admin/api/spaces/sp-1" && new URL(request).searchParams.get("cursor") === memberCursor)).toBe(true);
   });
@@ -356,6 +367,11 @@ describe("ConnectionsPage", () => {
     await waitFor(() => expect(document.querySelector('[data-row-id="connection:sync-1"]')).not.toBeNull());
     expect(screen.getByText(/amara@semio.dev/)).toBeTruthy();
     expect(document.querySelector('[data-slot="admin-connections-freshness"]')?.textContent).toBe("Fresh snapshot");
+    const list = document.querySelector('[data-slot="admin-connections-list"]')!;
+    expect(list.hasAttribute("data-shared-border-frame")).toBe(true);
+    expect(ownFrames(list)).toHaveLength(0);
+    const kick = document.querySelector('[data-row-id="connection:sync-1"] [data-slot="button-group"]')!;
+    expect(kick.parentElement?.hasAttribute("data-shared-border-cells")).toBe(true);
   });
 
   it("aborts one pending poll on unmount and never schedules its successor", async () => {
@@ -431,6 +447,132 @@ describe("ConnectionsPage", () => {
 });
 
 //#region 🛡️AdminTabs
+/** 🪢️ Framed descendants that are not cells of an owner, i.e. would paint a second frame inside the owner `root`. */
+function ownFrames(root: Element): Element[] {
+  return [...root.querySelectorAll("[data-shared-border-frame]")].filter((frame) => !frame.parentElement?.hasAttribute("data-shared-border-cells"));
+}
+
+describe("Stat tiles", () => {
+  it("render Overview and Observability figures as one framed group, not one bordered box per tile", async () => {
+    const fetchMock = mockFetch({ "/admin/api/overview": { ...OVERVIEW_BODY, counts: { spaces: 4, users: 5, connections: 6 } }, "/admin/api/observability": observabilityFixture.body });
+    const overview = render(
+      <AdminLocaleProvider>
+        <AdminSessionProvider baseUrl="http://hub.test">
+          <OverviewPage />
+        </AdminSessionProvider>
+      </AdminLocaleProvider>,
+    );
+    await waitFor(() => expect(document.querySelector('[data-slot="admin-stat-tiles"]')).not.toBeNull());
+    const group = document.querySelector('[data-slot="admin-stat-tiles"]')!;
+    expect(group.querySelectorAll('[data-slot="admin-stat-tile"]')).toHaveLength(7);
+    expect(ownFrames(group)).toHaveLength(0);
+    expect(group.querySelector(".border, .rounded, [class*='gap-single'][class*='grid']")).toBeNull();
+    expect(fetchMock).toHaveBeenCalled();
+    overview.unmount();
+  });
+});
+
+describe("Flush pages", () => {
+  it("lay every page out as bands that start on the navbar line, with no padded or gapped wrapper between bordered things", async () => {
+    mockFetch({ "/admin/api/overview": { ...OVERVIEW_BODY, counts: { spaces: 4, users: 5, connections: 6 } } });
+    render(
+      <AdminLocaleProvider>
+        <AdminSessionProvider baseUrl="http://hub.test">
+          <AdminApp />
+        </AdminSessionProvider>
+      </AdminLocaleProvider>,
+    );
+    await waitFor(() => expect(document.querySelector('[data-slot="admin-overview"]')).not.toBeNull());
+    const navbar = document.querySelector('[data-slot="navbar"]')!;
+    expect(navbar.getAttribute("data-shared-border-edges")).toBe("bottom");
+    expect(document.querySelector("header")).toBeNull();
+    const page = document.querySelector('[data-slot="admin-overview"]')!;
+    expect(page.className).not.toMatch(/\b(p|px|py|gap)-single\b/u);
+    const head = page.querySelector('[data-slot="admin-page-head"]')!;
+    expect(head.getAttribute("data-shared-border-edges")).toBe("bottom");
+    expect(head.hasAttribute("data-shared-border-cells")).toBe(true);
+    expect(page.firstElementChild).toBe(head);
+    for (const band of page.children) {
+      expect(band.hasAttribute("data-shared-border-frame")).toBe(true);
+      expect(band.getAttribute("data-shared-border-edges")).toBe("bottom");
+    }
+  });
+
+  it("hands table action cells to flush groups instead of inset framed buttons", async () => {
+    mockFetch({
+      "/admin/api/overview": OVERVIEW_BODY,
+      "/admin/api/spaces": { rows: [{ id: "sp-1", name: "Test Space", kind: "studio", visibility: "private", ownerUserId: "u-1", memberCount: 1, documentCount: 0, activeConnections: 0, createdAtMs: 0, updatedAtMs: 0 }], observedAtMs: 0 },
+    });
+    render(
+      <AdminLocaleProvider>
+        <AdminSessionProvider baseUrl="http://hub.test">
+          <SpacesPage />
+        </AdminSessionProvider>
+      </AdminLocaleProvider>,
+    );
+    await waitFor(() => expect(document.querySelector('[data-row-id="space:sp-1"]')).not.toBeNull());
+    const actions = document.getElementById("admin-space-rename-sp-1")!.closest('[data-slot="shared-border-row"]')!;
+    expect(actions.hasAttribute("data-shared-border-group")).toBe(true);
+    expect(actions.hasAttribute("data-shared-border-frame")).toBe(false);
+    const cell = actions.closest("td")!;
+    expect(cell.className).toContain("p-0");
+    expect(cell.className).not.toContain("!");
+    expect(cell.firstElementChild!.className).toContain("items-stretch");
+    expect(cell.firstElementChild!.className).not.toContain("gap-1");
+    expect(ownFrames(document.querySelector("tbody")!)).toHaveLength(0);
+  });
+
+  it("scrolls the tab bar inside its navbar cell so no tab clips at the viewport edge", async () => {
+    mockFetch({ "/admin/api/overview": OVERVIEW_BODY });
+    render(
+      <AdminLocaleProvider>
+        <AdminSessionProvider baseUrl="http://hub.test">
+          <AdminApp />
+        </AdminSessionProvider>
+      </AdminLocaleProvider>,
+    );
+    await waitFor(() => expect(document.querySelector('[role="tablist"]')).not.toBeNull());
+    const cell = document.querySelector('[role="tablist"]')!.closest('[data-slot="navbar-item"]')!;
+    expect(cell.className).toContain("overflow-x-auto");
+    expect(cell.className).not.toContain("shrink-0");
+  });
+
+  it("collapses the tabs into one select cell on a narrow viewport so no tab clips", async () => {
+    vi.stubGlobal("matchMedia", (query: string) => ({ matches: true, media: query, onchange: null, addEventListener: () => {}, removeEventListener: () => {}, addListener: () => {}, removeListener: () => {}, dispatchEvent: () => false }));
+    mockFetch({ "/admin/api/overview": OVERVIEW_BODY });
+    render(
+      <AdminLocaleProvider>
+        <AdminSessionProvider baseUrl="http://hub.test">
+          <AdminApp />
+        </AdminSessionProvider>
+      </AdminLocaleProvider>,
+    );
+    await waitFor(() => expect(document.getElementById("admin-tab-switch")).not.toBeNull());
+    expect(document.querySelector('[role="tablist"]')).toBeNull();
+    vi.unstubAllGlobals();
+  });
+
+  it("stacks every space as shared cells on a narrow viewport instead of a table wider than the page", async () => {
+    vi.stubGlobal("matchMedia", (query: string) => ({ matches: true, media: query, onchange: null, addEventListener: () => {}, removeEventListener: () => {}, addListener: () => {}, removeListener: () => {}, dispatchEvent: () => false }));
+    mockFetch({
+      "/admin/api/overview": OVERVIEW_BODY,
+      "/admin/api/spaces": { rows: [{ id: "sp-1", name: "Test Space", kind: "studio", visibility: "private", ownerUserId: "u-1", memberCount: 1, documentCount: 0, activeConnections: 0, createdAtMs: 0, updatedAtMs: 0 }], observedAtMs: 0 },
+    });
+    render(
+      <AdminLocaleProvider>
+        <AdminSessionProvider baseUrl="http://hub.test">
+          <SpacesPage />
+        </AdminSessionProvider>
+      </AdminLocaleProvider>,
+    );
+    await waitFor(() => expect(document.querySelector('[data-slot="admin-space-row"]')).not.toBeNull());
+    expect(document.querySelector("table")).toBeNull();
+    const row = document.querySelector('[data-row-id="space:sp-1"]')!;
+    expect(row.getAttribute("data-orientation")).toBe("vertical");
+    expect(document.getElementById("admin-space-delete-sp-1")).not.toBeNull();
+  });
+});
+
 describe("ObservabilityPage", () => {
   const renderPage = () =>
     render(
@@ -447,6 +589,9 @@ describe("ObservabilityPage", () => {
     await waitFor(() => expect(document.querySelector('[data-row-id="package:gis"]')).not.toBeNull());
     expect(screen.getByRole("heading", { name: "Compiled guests" })).toBeTruthy();
     expect(screen.getByText("3 / 9 · 47.7 MiB")).toBeTruthy();
+    const tiles = [...document.querySelectorAll('[data-slot="admin-stat-tiles"]')];
+    expect(tiles).toHaveLength(2);
+    for (const tile of tiles) expect(ownFrames(tile)).toHaveLength(0);
     expect(screen.getByText(/1 of 3 packages ready, 0 refused · rows pinned 2, verified 1 of 6/)).toBeTruthy();
     expect(document.querySelector('[data-row-id="package:puzzle"]')?.textContent).toContain("Waiting for verification");
     const routes = [...document.querySelectorAll('[data-row-id^="route:"]')].map((row) => row.getAttribute("data-row-id"));

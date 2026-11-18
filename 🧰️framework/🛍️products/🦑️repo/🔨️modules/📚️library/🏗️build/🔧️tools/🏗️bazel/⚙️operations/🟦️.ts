@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import{sayBuildV1}from"../../../📖️texts/🟦️.ts";
 import {chmod,copyFile,lstat,mkdir,readdir,readFile,rename,rm,rmdir,stat,unlink,writeFile} from "node:fs/promises";
 import type {Dirent} from "node:fs";
@@ -188,7 +189,7 @@ export async function recordBazelBuildMetricsV1(root:string,layout:Layout,slot:s
   await rm(events,{force:true});
   const metrics=bazelBuildMetricsV1(text);
   if(metrics===undefined)return;
-  await withResourceLeases({directory:join(root,".cache/b/l/m/data"),signal:phaseControl.signal,control:phaseControl,resources:[{resource:"bazel-metrics",mode:"exclusive"}]},async()=>{
+  await withResourceLeases({directory:machinePathV1(root,".cache/b/l/m/data"),signal:phaseControl.signal,control:phaseControl,resources:[{resource:"bazel-metrics",mode:"exclusive"}]},async()=>{
    const before=await readBazelLedgerV1(layout),ledger={version:1,builds:before.builds+1,actions:before.actions+metrics.actions,executed:before.executed+metrics.executed,cacheHits:before.cacheHits+metrics.cacheHits};
    if(validateJsonSchemaSubset(schema.definitions.Ledger,ledger,schema).length)throw Error("Closed Bazel activity ledger required");
    const file=join(layout.server,policy.ledger),temporary=file+"."+process.pid+".tmp";

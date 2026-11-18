@@ -327,8 +327,7 @@
               "x": -0.25,
               "y": 0.0,
               "w": 0.5,
-              "h": 0.016,
-              "closed": true
+              "h": 0.016
             },
             {
               "id": "l-sleeve",
@@ -433,8 +432,7 @@
               "x": -0.25,
               "y": 0.0,
               "w": 0.5,
-              "h": 0.016,
-              "closed": true
+              "h": 0.016
             },
             {
               "id": "r-sleeve",
@@ -601,8 +599,7 @@
               "x": -0.3,
               "y": 0.0,
               "w": 0.6,
-              "h": 0.016,
-              "closed": true
+              "h": 0.016
             },
             {
               "id": "l-sleeve",
@@ -885,8 +882,7 @@
               "x": -0.25,
               "y": 0.0,
               "w": 0.5,
-              "h": 0.016,
-              "closed": true
+              "h": 0.016
             },
             {
               "id": "l-sleeve",
@@ -1021,8 +1017,7 @@
               "x": -0.25,
               "y": 0.0,
               "w": 0.5,
-              "h": 0.016,
-              "closed": true
+              "h": 0.016
             },
             {
               "id": "r-sleeve",
@@ -1249,8 +1244,7 @@
               "x": -0.3,
               "y": 0.0,
               "w": 0.6,
-              "h": 0.016,
-              "closed": true
+              "h": 0.016
             },
             {
               "id": "l-sleeve",
@@ -1578,8 +1572,7 @@
               "x": -0.25,
               "y": 0.0,
               "w": 0.5,
-              "h": 0.016,
-              "closed": true
+              "h": 0.016
             },
             {
               "id": "l-sleeve",
@@ -1718,8 +1711,7 @@
               "x": -0.25,
               "y": 0.0,
               "w": 0.5,
-              "h": 0.016,
-              "closed": true
+              "h": 0.016
             },
             {
               "id": "r-sleeve",
@@ -1877,11 +1869,26 @@
               "penMm": 0.25
             },
             {
+              "id": "top-rail-mount",
+              "bone": "top",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": 0.05,
+              "y": -0.025,
+              "w": 0.1,
+              "h": 0.025,
+              "region": "steel-desk",
+              "material": "steel-desk"
+            },
+            {
               "id": "top-cable-tray",
               "bone": "top",
               "role": "detail",
               "z": 3.4,
-              "filled": false,
+              "filled": true,
               "tone": 0.3,
               "kind": "poly",
               "points": [
@@ -1902,7 +1909,7 @@
                   -0.075
                 ]
               ],
-              "closed": false,
+              "closed": true,
               "region": "steel-desk",
               "material": "steel-desk"
             },
@@ -2005,8 +2012,7 @@
               "x": -0.3,
               "y": 0.0,
               "w": 0.6,
-              "h": 0.016,
-              "closed": true
+              "h": 0.016
             },
             {
               "id": "l-sleeve",
@@ -2166,6 +2172,21 @@
               "penMm": 0.25
             },
             {
+              "id": "top-rail-mount",
+              "bone": "top",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.35,
+              "region": "steel-desk",
+              "material": "steel-desk",
+              "kind": "rect",
+              "x": 0.25,
+              "y": 0.67,
+              "w": 0.05,
+              "h": 0.025
+            },
+            {
               "id": "top-cable-tray",
               "bone": "top",
               "role": "detail",
@@ -2271,6 +2292,36 @@
               "y": 0.7355,
               "w": 0.35,
               "h": 0.02
+            },
+            {
+              "id": "laptop-foot-a",
+              "bone": "top",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.4,
+              "region": "laptop-lid",
+              "material": "equipment-housing",
+              "kind": "rect",
+              "x": -0.1425,
+              "y": 0.72,
+              "w": 0.01506,
+              "h": 0.0155
+            },
+            {
+              "id": "laptop-foot-b",
+              "bone": "top",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.4,
+              "region": "laptop-lid",
+              "material": "equipment-housing",
+              "kind": "rect",
+              "x": 0.17,
+              "y": 0.72,
+              "w": 0.01506,
+              "h": 0.0155
             }
           ],
           "plan": [
@@ -3026,6 +3077,66 @@
               "penMm": 0.5
             },
             {
+              "id": "top-rail-mount-1",
+              "bone": "top",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": 0.07,
+              "y": -0.03,
+              "w": 0.06,
+              "h": 0.03,
+              "region": "steel-desk",
+              "material": "steel-desk"
+            },
+            {
+              "id": "top-rail-mount-2",
+              "bone": "top",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": 0.37,
+              "y": -0.03,
+              "w": 0.06,
+              "h": 0.03,
+              "region": "steel-desk",
+              "material": "steel-desk"
+            },
+            {
+              "id": "top-rail-mount-3",
+              "bone": "top",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": 0.67,
+              "y": -0.03,
+              "w": 0.06,
+              "h": 0.03,
+              "region": "steel-desk",
+              "material": "steel-desk"
+            },
+            {
+              "id": "top-rail-mount-4",
+              "bone": "top",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": 0.97,
+              "y": -0.03,
+              "w": 0.06,
+              "h": 0.03,
+              "region": "steel-desk",
+              "material": "steel-desk"
+            },
+            {
               "id": "top-rail-line",
               "bone": "top",
               "role": "detail",
@@ -3052,7 +3163,7 @@
               "bone": "top",
               "role": "detail",
               "z": 3.4,
-              "filled": false,
+              "filled": true,
               "tone": 0.3,
               "kind": "poly",
               "points": [
@@ -3073,7 +3184,7 @@
                   -0.075
                 ]
               ],
-              "closed": false,
+              "closed": true,
               "region": "steel-desk",
               "material": "steel-desk"
             },
@@ -3301,6 +3412,21 @@
               "penMm": 0.35
             },
             {
+              "id": "l-drive-mount",
+              "bone": "foot-left",
+              "role": "detail",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.22,
+              "region": "drive-left",
+              "material": "equipment-housing",
+              "kind": "rect",
+              "x": -0.05,
+              "y": 0.03,
+              "w": 0.018,
+              "h": 0.11
+            },
+            {
               "id": "r-drive",
               "bone": "foot-right",
               "role": "body",
@@ -3316,6 +3442,21 @@
               "h": 0.148,
               "r": 0.012,
               "penMm": 0.35
+            },
+            {
+              "id": "r-drive-mount",
+              "bone": "foot-right",
+              "role": "detail",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.22,
+              "region": "drive-right",
+              "material": "equipment-housing",
+              "kind": "rect",
+              "x": 0.032,
+              "y": 0.03,
+              "w": 0.018,
+              "h": 0.11
             },
             {
               "id": "l-drive-vent",
@@ -3573,6 +3714,21 @@
               "h": 0.05,
               "r": 0.003,
               "penMm": 0.5
+            },
+            {
+              "id": "top-rail-mount",
+              "bone": "top",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.35,
+              "region": "steel-desk",
+              "material": "steel-desk",
+              "kind": "rect",
+              "x": 0.25,
+              "y": 0.665,
+              "w": 0.05,
+              "h": 0.03
             },
             {
               "id": "top-cable-tray",
@@ -4575,6 +4731,8 @@
             "key": "lift-drive",
             "heatW": 35
           },
+          "ratedPowerW": 100,
+          "ratedPowerBasis": "electrical-input",
           "source": "authored-estimate"
         },
         {
@@ -4610,6 +4768,8 @@
             "key": "lift-drive",
             "heatW": 35
           },
+          "ratedPowerW": 100,
+          "ratedPowerBasis": "electrical-input",
           "source": "authored-estimate"
         },
         {
@@ -4645,6 +4805,8 @@
             "key": "monitor",
             "heatW": 25
           },
+          "ratedPowerW": 25,
+          "ratedPowerBasis": "electrical-input",
           "source": "authored-estimate"
         },
         {
@@ -5038,6 +5200,46 @@
             "size": [0.06, 0.03, 0.05],
             "transform": {
               "translation": [1.0, -0.015, 0.275]
+            }
+          },
+          {
+            "id": "top-rail-cap-1",
+            "kind": "box",
+            "bone": "top",
+            "material": "steel-desk",
+            "role": "body",
+            "tone": 0.3,
+            "size": [
+              0.004,
+              0.05,
+              0.05
+            ],
+            "transform": {
+              "translation": [
+                0.002,
+                -0.05,
+                0.275
+              ]
+            }
+          },
+          {
+            "id": "top-rail-cap-2",
+            "kind": "box",
+            "bone": "top",
+            "material": "steel-desk",
+            "role": "body",
+            "tone": 0.3,
+            "size": [
+              0.004,
+              0.05,
+              0.05
+            ],
+            "transform": {
+              "translation": [
+                1.098,
+                -0.05,
+                0.275
+              ]
             }
           },
           {

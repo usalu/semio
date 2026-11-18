@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import{wasmPackageCargoConsumptionV1}from"../../../🏗️build/🎚️mode/🦀️profile/🟦️.ts";
 import {requireIssuedResourceControlInvocationV1,scriptInvocationEnvironment,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {readNativeCallerAuthorityV1} from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
@@ -71,7 +72,7 @@ export function repositoryWasmBuildPolicyV1(cwd: string, compilerEnvironment: Re
   const bindgen = resolveWasmBindgenBin(root, compilerEnvironment), environment = wasmPackEnvironment(root, bindgen, compilerEnvironment), local = resolveWorkspaceBin("wasm-pack", cwd);
   const cargo = runtimeParseTomlV1(readFileSync(join(cwd, "Cargo.toml"), "utf8")) as { package?: { name?: string } };
   if (!cargo.package?.name) throw Error("WASM source owner requires an authored Cargo package name");
-  return { version: 1, workspaceRoot:root,sourceBoundary:repositoryStrictStorageV1(root).sourceBoundary,compilerConfiguration: join(root,".cargo/config.toml"), cwd: resolve(cwd), sourceOwner: relative(root,resolve(cwd)).replaceAll("\\","/"), mode, artifactDirectory: compilerEnvironment.SEMIO_TEST_ARTIFACT_DIR ? resolve(compilerEnvironment.SEMIO_TEST_ARTIFACT_DIR) : join(cwd, "dist"), buildDirectory: cargoDirectories(root, compilerEnvironment).build, leaseDirectory: join(root,".cache","b","l","m","data"), budgetMs: buildBudgetMs(), packageName: cargo.package.name, searchPath: environment.PATH ?? "", bindgen: { command: bindgen, args: [] }, wasmPack: local ? { command: process.execPath, args: [local] } : { command: "wasm-pack", args: [] } };
+  return { version: 1, workspaceRoot:root,sourceBoundary:repositoryStrictStorageV1(root).sourceBoundary,compilerConfiguration: join(root,".cargo/config.toml"), cwd: resolve(cwd), sourceOwner: relative(root,resolve(cwd)).replaceAll("\\","/"), mode, artifactDirectory: compilerEnvironment.SEMIO_TEST_ARTIFACT_DIR ? resolve(compilerEnvironment.SEMIO_TEST_ARTIFACT_DIR) : join(cwd, "dist"), buildDirectory: cargoDirectories(root, compilerEnvironment).build, leaseDirectory: machinePathV1(root,".cache","b","l","m","data"), budgetMs: buildBudgetMs(), packageName: cargo.package.name, searchPath: environment.PATH ?? "", bindgen: { command: bindgen, args: [] }, wasmPack: local ? { command: process.execPath, args: [local] } : { command: "wasm-pack", args: [] } };
 }
 
 export type RepositoryWasmBuildOptionsV1=Omit<WasmPackWebBuildOptions,"storage"|"environment"|"cargoConfigurationSelectors"|"withCargoInputs">&Readonly<{invocation:ScriptInvocation;producer:"browser-canvas"|"browser-module"}>;

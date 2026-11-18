@@ -24,7 +24,7 @@ async function run(options:Record<string,unknown>|undefined,contend:boolean){
    return{release:()=>{events.push({kind:"release"});}};
   },
   repositoryLeaseDirectoryV1:()=>"/workspace/.cache/b/l/m/data",buildGraphWriterResourceV1:(_workspace:string,kind:string,identity:string)=>"writer:"+kind+":"+identity,resolve:(value:string)=>value,randomBytes:()=>({toString:()=>"owner"}),
-  quotaSchema:{policy:{minimumAvailableBytes:1,maximumBytes:100}},nativeStatfsSyncV1:()=>({bavail:100,bsize:1}),maintainBuildGraphOptionalCachesV1:async()=>false,statSync:()=>({dev:1,ino:2}),
+  quotaSchema:{definitions:{DefaultPolicy:{const:{minimumAvailableBytes:1,maximumBytes:100}}}},nativeStatfsSyncV1:()=>({bavail:100,bsize:1}),maintainBuildGraphOptionalCachesV1:async()=>false,statSync:()=>({dev:1,ino:2}),
   openOriginalGraphLedgerV1:async()=>({observe:()=>({usedBytes:10}),close:()=>{}}),buildGraphOptionalRetirementDueV1:()=>false,createBuildGraphOptionalQuotaV1:()=>({})};
  const fn=evaluateExtractedFunctionV1(await source(),"withGraphFactWriterV1",ports) as (...args:unknown[])=>Promise<number>;
  const value=await fn("/workspace",original,phase,async()=>{events.push({kind:"body"});return 17;},"selection:"+"a".repeat(64),options);

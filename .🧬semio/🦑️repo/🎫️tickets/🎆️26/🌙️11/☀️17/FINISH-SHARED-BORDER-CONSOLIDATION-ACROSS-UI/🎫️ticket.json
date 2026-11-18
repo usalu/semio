@@ -1,0 +1,511 @@
+{
+  "title": "Finish Shared Border Consolidation Across UI",
+  "emoji": "🧱",
+  "status": "open",
+  "description": "Finish the migration from individual element borders to the consolidated shared border design system end to end (continues 26/11/05/CONSOLIDATE-NEIGHBORING-UI-BORDERS). Remove all remaining duplicated borders on both sides of a seam: navbar toggles bottom border shared with navbar bottom border; questions, steps, challenge choices and task lists in the Architecture and Technology course; and every other gap across products.",
+  "summary": "Finished the shared-border consolidation end to end (details in SUMMARY.md). Navbar/footer controls share the band edge (verified live). New nested-cells mechanism (`data-shared-border-cells`, `SharedBorderRow`/`Cell`/`Label`/`Field`, destructive tone, `as`, Input/Textarea root props, exported `useSharedBorderFrameRef`); OverviewCard `flush`. Fixed Layout mobile panel, PanelTabBar, Canvas mode nav, HistoryTable, Table, dead CSS. Course fully consolidated (quiz page, home, run, all task types, results) and verified live. Presentation, CAD REPL, OS hosts, teaching staffage, hub admin (StatTiles), new LanguageChoice (hub, semio-tech play, mit-bestand). Repaired unrelated stale tests and ResizeObserver mocks. Tests: UI 608/608, course 1123/1123, presentation 140/140, os rows 139/139. Not verified: Playwright-browser fixtures (Chromium missing), bun:test suites, visual check of OS/presentation/hub.",
+  "goal": "runningframework",
+  "sessions": [
+    "5a8e47cd-522a-4f77-8006-0f96c38024dc"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-17 00:00:00",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Finish shared border consolidation across UI (navbar toggles, course questions/steps, all remaining seams).",
+      "llm": "opus-5-5",
+      "effort": "medium"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-17 16:57:33",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "efff7f986f5231a088a66da7c5e33a32529cd3c0",
+      "summary": "Finished the shared-border consolidation end to end (details in SUMMARY.md). Navbar/footer controls share the band edge (verified live). New nested-cells mechanism (`data-shared-border-cells`, `SharedBorderRow`/`Cell`/`Label`/`Field`, destructive tone, `as`, Input/Textarea root props, exported `useSharedBorderFrameRef`); OverviewCard `flush`. Fixed Layout mobile panel, PanelTabBar, Canvas mode nav, HistoryTable, Table, dead CSS. Course fully consolidated (quiz page, home, run, all task types, results) and verified live. Presentation, CAD REPL, OS hosts, teaching staffage, hub admin (StatTiles), new LanguageChoice (hub, semio-tech play, mit-bestand). Repaired unrelated stale tests and ResizeObserver mocks. Tests: UI 608/608, course 1123/1123, presentation 140/140, os rows 139/139. Not verified: Playwright-browser fixtures (Chromium missing), bun:test suites, visual check of OS/presentation/hub.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui⚙️package"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🧪️tests🗃️🔎️searchfiltersort💾🥒️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🧪️tests🗃️🧷️companionsupport🗃️🧾️lifecycle💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🌐️i18n🗃️🔠️englishbundle💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🧬️schema🗃️👁️readviews💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🎨️styles🗃️🖥️mockups💻🎨️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🔨️modules🗃️👁️views💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🕸️nodegraph🗃️🧩️component🗃️📦️packages🛅🦀️rust⚙️cargo"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧪️tests🗃️🧩️blocklistpresentation💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧪️tests🗃️🪶️surfaceidleframes💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🎯️targets🗃️⚛️react🗃️📚️componentexports💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🌐️i18n🗃️🔡️germanbundle💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🌐️i18n🗃️🔡️german💻📖️detail"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🗂️windowchrome💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🎨️styles🗃️🎚️challengekeys💻🎨️"
+        },
+        {
+          "path": "🛅✏️s🗃️🔌️plugins🗃️📐️cad🗃️🗿️artifacts🛅📐️cad🗃️🏅️standards🗃️🔖️1🗃️🪆️subsets🗃️✳️any🗃️✏️editor🗃️⚙️engine🗃️📺️renderer💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🔨️modules🗃️👁️views💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🧪️tests🗃️🎚️config💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🌐️i18n🗃️🔠️english💻📖️detail"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🔨️modules🗃️🎲️randomness💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🔨️modules🗃️🃏️sheet🗃️🧪️tests🗃️🔬️unit💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🔨️modules🗃️🎲️randomness💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🧪️tests🗃️🎚️config💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🧪️tests🗃️🗺️addressroundtrip💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧪️tests🗃️🧪️ownedlocaledetectorretirement🗃️🎨️shellcomponents1💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🌳️tree🗃️🧪️tests🗃️🧩️component💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🎨️styles🗃️🏁️resultsandpreferences💻🎨️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️⏯️transport💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🎛️viewer💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🏁️results💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🕸️radar💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🧪️tests🗃️📖️detailsections💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🎨️canvas💻🟦️"
+        },
+        {
+          "path": "🛅♻️mitbestand🛅🧺️demonstrator💻⚛️localepicker"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️📚️catalog💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🗃️browse💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🪟️chrome💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🗂️windowchrome💻sharedborder"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🏅️badges💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🔨️modules🗃️✅️validation💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🧪️tests🗃️🧲️playgrounddrag💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🕰️historytable💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️🎤️presentation🗃️🎯️targets🗃️⚛️react🗃️🎨️styles🗃️🔲️interactionhandlesandcontrols💻🎨️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️📌️chromepanels🗃️🎨️settingstheme💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🏆️leaderboard💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️📝️assignments💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🧬️schema⚙️🔣️"
+        },
+        {
+          "path": "🛅✏️s🗃️🔌️plugins🗃️📐️cad🗃️🗿️artifacts🛅📐️cad🗃️🏅️standards🗃️🔖️1🗃️🪆️subsets🗃️✳️any🗃️✏️editor🗃️⚙️engine🗃️📺️renderer🗃️🎛️repl💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🗂️windowchrome⚙️compositorschema"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🧭️paneltabbar💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🎨️styles🗃️🗃️recordtables💻🎨️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🎨️styling🗃️🖌️ui💻🎨️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🏷️label🗃️🧪️tests🥼🟦️test"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🔐️hubsignin🗃️🧪️tests🗃️🧩️component💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🛂️spaceadministration💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🧩️blocklisthost💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🔨️modules🗃️✅️validation🗃️🧪️tests🗃️🔬️unit💻🦀️"
+        },
+        {
+          "path": "🛅✏️s🗃️🔌️plugins🗃️📐️cad🗃️🧩️extensions🛅📐️spatialshape🗃️🧩️component⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🗂️windowchrome🥼sharedbordertest"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🏛️shellhost💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️📖️quizpage💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🔎️search💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🧪️tests🗃️🔭️viewpoints💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🔐️hubsignin💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧪️tests🗃️🧪️ownedlocaledetectorretirement🗃️🗂️shellcomponents5💻🟦️"
+        },
+        {
+          "path": "🛅✏️s🗃️🔌️plugins🗃️📐️cad🗃️🧩️extensions🛅🏢️aecbuilding🗃️🧩️component⚙️🔣️"
+        },
+        {
+          "path": "🛅✏️s🗃️🔌️plugins🗃️📐️cad🗃️🧩️extensions🛅🔥️aecbuildingenergy🗃️🧩️component⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️⚖️compare💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🎯️targets🗃️⚛️react🗃️🪟️chrome💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️📇️profile💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🚏️navigation💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🎯️targets🗃️⚛️react🗃️🗿️frameworkexports💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧪️tests🗃️🪆️embeddedmount💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🕸️nodegraph🗃️🖼️dagoverlays💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🖌️paint2dhost🗃️✍️editing💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🧭️session🗃️🧮️state💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🧪️tests🗃️🧫️fixtures🗃️📐️adaptivelayout⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️📐️canvas2dhost🗃️🧪️tests🗃️🖱️inputcontract💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️✏️input💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🏘️spacebrowser🗃️🧪️tests🗃️🧩️component💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️⛰️challenge💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🗳️crowd💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🧪️playground💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧪️tests🗃️🧪️ownedlocaledetectorretirement🗃️🧰️harness💻🟦️"
+        },
+        {
+          "path": "🛅✏️s🗃️🧪️tests🗃️🏘️plugincomposition🗃️🛍️layoutcanvascatalogue💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧪️tests🗃️🧪️ownedlocaledetectorretirement🗃️📦️controlchrome1💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧪️tests🗃️🧪️ownedlocaledetectorretirement🗃️🌳️ownedlocaledetectorretirementandmore💻🟦️"
+        },
+        {
+          "path": "🛅🌎️hub🗃️🔨️modules🗃️🛡️admin🗃️🧱️elements🗃️📚️i18n💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🌐️i18n🗃️🔠️english💻🧱️core"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🧪️tests🗃️🎚️config💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️📐️layout💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧪️tests🗃️🧪️ownedlocaledetectorretirement🗃️🎯️treehelpers3💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🗂️windowchrome⚙️compositorcases"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🎨️styles🗃️🧩️tasklayouts💻🎨️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🧩️task💻🟦️"
+        },
+        {
+          "path": "🛅🌎️hub🗃️🔨️modules🗃️🛡️admin🗃️🧱️elements🗃️🏠️overviewpage💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🔬️detail🗃️📐️dimensions💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🧪️tests🗃️📚️catalogloading💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🖼️canvas🗃️🎨️reactrenderer🗃️🧪️tests🗃️🪶️demandframes💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🖥️board2dhost🗃️🧪️tests🗃️⏳️attachment💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🪪️identity💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🔨️modules🗃️✅️validation💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🧬️schema💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🧪️tests🗃️🗂️gridscroll💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧪️tests🗃️🧪️ownedlocaledetectorretirement🗃️🔗️uidriverandmore💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️🎤️presentation🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🫳️interaction🗃️🧲️interactivedisposition💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️↕️sorting💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🧪️tests🗃️🔎️searchfiltersort💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🔤️textarea💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🤖️agentdelegations💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🏘️spacebrowser💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🗂️classification💻🟦️"
+        },
+        {
+          "path": "🛅🏢️semiotech🛅🎡️play💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🎴️iconselector💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️✏️texteditor💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course📃readme"
+        },
+        {
+          "path": "🛅✏️s🗃️🔌️plugins🗃️📐️cad🗃️🧩️extensions🛅🏛️aecbuildingstructure🗃️🧩️component⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🧪️tests🗃️🧭️viewpointpages💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧪️tests🗃️🧪️ownedlocaledetectorretirement🗃️🪄️treehelpers1💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️💬️agentchatpanel💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🔨️modules🗃️🃏️sheet💻🦀️"
+        },
+        {
+          "path": "🛅🌎️hub🗃️🔨️modules🗃️🛡️admin🗃️🧱️elements🗃️📊️observabilitypage💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🏠️home💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🪟️chrome💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️⭐️collections💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🖌️paint2dhost🗃️✍️editing🗃️🧪️tests🗃️🖱️selectionfocus💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🤖️agentdelegations🗃️🧪️tests🗃️🧩️component💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️▶️run💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🧬️schema💻🦀️"
+        },
+        {
+          "path": "🛅🌎️hub🗃️🔨️modules🗃️🛡️admin🗃️🧱️elements🗃️🏛️spacespage💻🟦️"
+        },
+        {
+          "path": "🛅🌎️hub🗃️🔨️modules🗃️🛡️admin🗃️🧱️elements🗃️🔗️connectionspage💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🃏️matching💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️📚️app💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🎯️targets🗃️⚛️react🗃️🎨️chromeclasses💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🖋️inkcanvashost🗃️🪟️inkoverlays💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🃏️overviewcard🗃️🧪️tests🗃️🧩️component💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🔝️navbar💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️🎤️presentation🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🎭️morphviews💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🔨️modules🗃️🃏️sheet💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🧪️tests🗃️📇️learnerpages💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🌐️i18n🗃️🔡️german💻🧱️core"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🎯️targets🗃️⚛️react🗃️📦️packages🛅🟦️typescript🗃️📥️source💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🔨️modules🗃️🎨️chromeclassnames💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧪️tests🗃️🧪️ownedlocaledetectorretirement🗃️🧵️treehelpers2💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🃏️overviewcard💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🛠️shellhelpers🗃️🪟️windowpanes🗃️📝️stagedargs💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🎨️styles🗃️📊️plotsandcrowd💻🎨️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🏠️home🗃️🗺️pages💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🔨️modules🗃️📏️borderpresentation🥼segmentstest"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🖱️contextmenu🗃️🧪️tests🗃️🧩️component💻placement"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🧬️schema🗃️📚️quizdocuments💻🦀️"
+        },
+        {
+          "path": "🛅✏️s🗃️🔌️plugins🗃️📐️cad🗃️🗿️artifacts🛅📐️cad🗃️🏅️standards🗃️🔖️1🗃️🪆️subsets🗃️✳️any🗃️✏️editor🗃️⚙️engine🗃️📺️renderer🗃️📋️replpanes💻🟦️"
+        },
+        {
+          "path": "🛅🌎️hub🗃️🔨️modules🗃️🛡️admin🗃️🧪️tests🗃️🛡️admin💻🟦️"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-17 16:58:10",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Radical, rigorous pass: still many elements are individual with gaps instead of consolidated (cards on demonstrator, course, staffage; elements inside other elements; course classification categories as dashed boxes with gaps; stacked run cards with gaps between footer chip and next title chip). Rule: no bordered element may be separated by a gap or inset from another bordered element — every border run is one shared line. Enforce with a live gap probe across every app.",
+      "llm": "opus-5-5",
+      "effort": "medium"
+    }
+  ]
+}

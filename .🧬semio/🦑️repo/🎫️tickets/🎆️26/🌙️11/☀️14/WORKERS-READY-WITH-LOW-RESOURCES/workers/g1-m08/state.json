@@ -1,10 +1,1 @@
-{
-  "origin": "g1-m08",
-  "round": 18,
-  "native_rc": 75,
-  "ready": false,
-  "failed": [
-    "workspace:setup"
-  ],
-  "at": "2026-11-15T04:13:44Z"
-}
+{"origin":"g1-m08","round":31,"native_rc":null,"ready":false,"failed":["workspace:setup"],"at":"2026-11-18T00:37:27Z","note":"observation only; automatic runner: workspace stage at attempts 62, exit 1 (Closed scoped plan required: /scope/targets must contain at most 4096 items, 4443 scope targets)"}

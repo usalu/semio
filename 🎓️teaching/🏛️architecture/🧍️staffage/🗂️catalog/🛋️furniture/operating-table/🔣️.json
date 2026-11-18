@@ -914,80 +914,68 @@
               "material": "stainless-steel"
             },
             {
-              "id": "top-pad",
+              "id": "top-pad-head",
               "bone": "top",
               "role": "body",
               "z": 3.6,
               "filled": true,
               "tone": 0.3,
               "kind": "rect",
-              "x": -1,
+              "x": -1.0,
               "y": 0.04,
-              "w": 2,
+              "w": 0.378,
               "h": 0.08,
               "r": 0.03,
               "region": "table-pad",
               "material": "pad-foam"
             },
             {
-              "id": "pad-joint-1",
+              "id": "top-pad-back",
               "bone": "top",
-              "role": "detail",
-              "z": 3.7,
-              "filled": false,
-              "tone": 0.25,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.62,
-                  0.04
-                ],
-                [
-                  -0.62,
-                  0.12
-                ]
-              ],
-              "closed": false
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.618,
+              "y": 0.04,
+              "w": 0.566,
+              "h": 0.08,
+              "r": 0.03,
+              "region": "table-pad",
+              "material": "pad-foam"
             },
             {
-              "id": "pad-joint-2",
+              "id": "top-pad-leg",
               "bone": "top",
-              "role": "detail",
-              "z": 3.7,
-              "filled": false,
-              "tone": 0.25,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.05,
-                  0.04
-                ],
-                [
-                  -0.05,
-                  0.12
-                ]
-              ],
-              "closed": false
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.202,
+              "y": 0.04,
+              "w": 0.798,
+              "h": 0.08,
+              "r": 0.03,
+              "region": "table-pad",
+              "material": "pad-foam"
             },
             {
-              "id": "pad-joint-3",
+              "id": "top-pad-seat",
               "bone": "top",
-              "role": "detail",
-              "z": 3.7,
-              "filled": false,
-              "tone": 0.25,
-              "kind": "poly",
-              "points": [
-                [
-                  0.2,
-                  0.04
-                ],
-                [
-                  0.2,
-                  0.12
-                ]
-              ],
-              "closed": false
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.048,
+              "y": 0.04,
+              "w": 0.246,
+              "h": 0.08,
+              "r": 0.03,
+              "region": "table-pad",
+              "material": "pad-foam"
             }
           ],
           "front": [
@@ -1505,7 +1493,7 @@
           ],
           "plan": [
             {
-              "id": "top-pad",
+              "id": "top-pad-head",
               "bone": "top",
               "role": "body",
               "z": 3.6,
@@ -1514,17 +1502,59 @@
               "region": "table-pad",
               "material": "pad-foam",
               "kind": "rect",
-              "x": -1,
-              "y": 0.04,
-              "w": 2,
-              "h": 0.08,
-              "r": 0.03,
-              "solid": {
-                "kind": "extruded",
-                "sweep": "w",
-                "z0": -0.25,
-                "z1": 0.25
-              }
+              "x": -1.0,
+              "y": -0.25,
+              "w": 0.378,
+              "h": 0.5,
+              "r": 0.03
+            },
+            {
+              "id": "top-pad-back",
+              "bone": "top",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.3,
+              "region": "table-pad",
+              "material": "pad-foam",
+              "kind": "rect",
+              "x": -0.618,
+              "y": -0.25,
+              "w": 0.566,
+              "h": 0.5,
+              "r": 0.03
+            },
+            {
+              "id": "top-pad-leg",
+              "bone": "top",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.3,
+              "region": "table-pad",
+              "material": "pad-foam",
+              "kind": "rect",
+              "x": 0.202,
+              "y": -0.25,
+              "w": 0.798,
+              "h": 0.5,
+              "r": 0.03
+            },
+            {
+              "id": "top-pad-seat",
+              "bone": "top",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.3,
+              "region": "table-pad",
+              "material": "pad-foam",
+              "kind": "rect",
+              "x": -0.048,
+              "y": -0.25,
+              "w": 0.246,
+              "h": 0.5,
+              "r": 0.03
             },
             {
               "id": "top-carrier",
@@ -1650,84 +1680,6 @@
               "cy": 0,
               "rx": 0.012,
               "ry": 0.012
-            },
-            {
-              "id": "pad-joint-1",
-              "bone": "top",
-              "role": "detail",
-              "z": 3.7,
-              "filled": false,
-              "tone": 0.25,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.62,
-                  0.04
-                ],
-                [
-                  -0.62,
-                  0.12
-                ]
-              ],
-              "closed": false,
-              "solid": {
-                "kind": "extruded",
-                "sweep": "w",
-                "z0": -0.24,
-                "z1": 0.24
-              }
-            },
-            {
-              "id": "pad-joint-2",
-              "bone": "top",
-              "role": "detail",
-              "z": 3.7,
-              "filled": false,
-              "tone": 0.25,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.05,
-                  0.04
-                ],
-                [
-                  -0.05,
-                  0.12
-                ]
-              ],
-              "closed": false,
-              "solid": {
-                "kind": "extruded",
-                "sweep": "w",
-                "z0": -0.24,
-                "z1": 0.24
-              }
-            },
-            {
-              "id": "pad-joint-3",
-              "bone": "top",
-              "role": "detail",
-              "z": 3.7,
-              "filled": false,
-              "tone": 0.25,
-              "kind": "poly",
-              "points": [
-                [
-                  0.2,
-                  0.04
-                ],
-                [
-                  0.2,
-                  0.12
-                ]
-              ],
-              "closed": false,
-              "solid": {
-                "kind": "extruded",
-                "sweep": "w",
-                "z0": -0.24,
-                "z1": 0.24
-              }
             }
           ]
         },
@@ -2074,18 +2026,66 @@
               "material": "stainless-steel"
             },
             {
-              "id": "top-pad",
+              "id": "top-pad-head",
               "bone": "top",
               "role": "body",
               "z": 3.6,
               "filled": true,
               "tone": 0.3,
               "kind": "rect",
-              "x": -1,
+              "x": -1.0,
               "y": 0.04,
-              "w": 2,
+              "w": 0.378,
               "h": 0.08,
-              "r": 0.03,
+              "r": 0.02,
+              "region": "table-pad",
+              "material": "pad-foam"
+            },
+            {
+              "id": "top-pad-back",
+              "bone": "top",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.618,
+              "y": 0.04,
+              "w": 0.566,
+              "h": 0.08,
+              "r": 0.02,
+              "region": "table-pad",
+              "material": "pad-foam"
+            },
+            {
+              "id": "top-pad-leg",
+              "bone": "top",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.202,
+              "y": 0.04,
+              "w": 0.798,
+              "h": 0.08,
+              "r": 0.02,
+              "region": "table-pad",
+              "material": "pad-foam"
+            },
+            {
+              "id": "top-pad-seat",
+              "bone": "top",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.048,
+              "y": 0.04,
+              "w": 0.246,
+              "h": 0.08,
+              "r": 0.02,
               "region": "table-pad",
               "material": "pad-foam"
             }
@@ -2485,7 +2485,7 @@
           ],
           "plan": [
             {
-              "id": "top-pad",
+              "id": "top-pad-head",
               "bone": "top",
               "role": "body",
               "z": 3.6,
@@ -2494,17 +2494,59 @@
               "region": "table-pad",
               "material": "pad-foam",
               "kind": "rect",
-              "x": -1,
-              "y": 0.04,
-              "w": 2,
-              "h": 0.08,
-              "r": 0.03,
-              "solid": {
-                "kind": "extruded",
-                "sweep": "w",
-                "z0": -0.25,
-                "z1": 0.25
-              }
+              "x": -1.0,
+              "y": -0.25,
+              "w": 0.378,
+              "h": 0.5,
+              "r": 0.02
+            },
+            {
+              "id": "top-pad-back",
+              "bone": "top",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.3,
+              "region": "table-pad",
+              "material": "pad-foam",
+              "kind": "rect",
+              "x": -0.618,
+              "y": -0.25,
+              "w": 0.566,
+              "h": 0.5,
+              "r": 0.02
+            },
+            {
+              "id": "top-pad-leg",
+              "bone": "top",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.3,
+              "region": "table-pad",
+              "material": "pad-foam",
+              "kind": "rect",
+              "x": 0.202,
+              "y": -0.25,
+              "w": 0.798,
+              "h": 0.5,
+              "r": 0.02
+            },
+            {
+              "id": "top-pad-seat",
+              "bone": "top",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.3,
+              "region": "table-pad",
+              "material": "pad-foam",
+              "kind": "rect",
+              "x": -0.048,
+              "y": -0.25,
+              "w": 0.246,
+              "h": 0.5,
+              "r": 0.02
             },
             {
               "id": "top-carrier",
@@ -2586,90 +2628,6 @@
               "cy": 0,
               "rx": 0.03,
               "ry": 0.03
-            },
-            {
-              "id": "pad-joint-0",
-              "bone": "top",
-              "role": "body",
-              "z": 3.7,
-              "filled": false,
-              "tone": 0.5,
-              "region": "table-pad",
-              "material": "pad-foam",
-              "kind": "poly",
-              "points": [
-                [
-                  -0.62,
-                  0.04
-                ],
-                [
-                  -0.62,
-                  0.12
-                ]
-              ],
-              "closed": false,
-              "solid": {
-                "kind": "extruded",
-                "sweep": "w",
-                "z0": -0.24,
-                "z1": 0.24
-              }
-            },
-            {
-              "id": "pad-joint-1",
-              "bone": "top",
-              "role": "body",
-              "z": 3.7,
-              "filled": false,
-              "tone": 0.5,
-              "region": "table-pad",
-              "material": "pad-foam",
-              "kind": "poly",
-              "points": [
-                [
-                  -0.05,
-                  0.04
-                ],
-                [
-                  -0.05,
-                  0.12
-                ]
-              ],
-              "closed": false,
-              "solid": {
-                "kind": "extruded",
-                "sweep": "w",
-                "z0": -0.24,
-                "z1": 0.24
-              }
-            },
-            {
-              "id": "pad-joint-2",
-              "bone": "top",
-              "role": "body",
-              "z": 3.7,
-              "filled": false,
-              "tone": 0.5,
-              "region": "table-pad",
-              "material": "pad-foam",
-              "kind": "poly",
-              "points": [
-                [
-                  0.2,
-                  0.04
-                ],
-                [
-                  0.2,
-                  0.12
-                ]
-              ],
-              "closed": false,
-              "solid": {
-                "kind": "extruded",
-                "sweep": "w",
-                "z0": -0.24,
-                "z1": 0.24
-              }
             }
           ]
         },
@@ -4352,6 +4310,8 @@
             "key": "light",
             "heatW": 90
           },
+          "ratedPowerW": 120,
+          "ratedPowerBasis": "electrical-input",
           "source": "authored-estimate",
           "reference": "incropera-2018"
         },
@@ -4492,7 +4452,7 @@
             "tone": 0.2,
             "profile": [[-0.02, 0.03], [-0.016, 0.0376], [-0.008, 0.04], [0.008, 0.04], [0.016, 0.0376], [0.02, 0.03]],
             "axis": [0, 0, 1],
-            "origin": [-0.32, 0.04, 0.15],
+            "origin": [-0.32, 0.04, 0.17],
             "repeat": {
               "count": 2,
               "translation": [0, 0, -0.34]
@@ -4507,7 +4467,7 @@
             "tone": 0.2,
             "profile": [[-0.02, 0.03], [-0.016, 0.0376], [-0.008, 0.04], [0.008, 0.04], [0.016, 0.0376], [0.02, 0.03]],
             "axis": [0, 0, 1],
-            "origin": [0.32, 0.04, 0.15],
+            "origin": [0.32, 0.04, 0.17],
             "repeat": {
               "count": 2,
               "translation": [0, 0, -0.34]
@@ -4983,7 +4943,8 @@
               "translation": [0.0, 0.115, 0.0]
             },
             "region": "light-housing",
-            "layer": "housing"
+            "layer": "housing",
+            "tags": ["emitter", "light-plume"]
           }
         ],
         "structure": [
@@ -5317,16 +5278,63 @@
         "body": [
           {
             "id": "tb-plate",
-            "kind": "box",
+            "kind": "loft",
             "bone": "base",
             "material": "powder-coated-steel",
             "role": "body",
             "tone": 0.5,
-            "size": [0.8, 0.09, 0.4],
-            "cornerRadius": 0.01,
-            "transform": {
-              "translation": [0.0, 0.115, 0.0]
-            }
+            "sections": [
+              {
+                "at": [
+                  0,
+                  0.07,
+                  0
+                ],
+                "rx": 0.2,
+                "ry": 0.4,
+                "exponent": 12,
+                "rotation": [
+                  0.5,
+                  0.5,
+                  0.5,
+                  -0.5
+                ]
+              },
+              {
+                "at": [
+                  0,
+                  0.12,
+                  0
+                ],
+                "rx": 0.2,
+                "ry": 0.4,
+                "exponent": 12,
+                "rotation": [
+                  0.5,
+                  0.5,
+                  0.5,
+                  -0.5
+                ]
+              },
+              {
+                "at": [
+                  0,
+                  0.16,
+                  0
+                ],
+                "rx": 0.15,
+                "ry": 0.3,
+                "exponent": 12,
+                "rotation": [
+                  0.5,
+                  0.5,
+                  0.5,
+                  -0.5
+                ]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true
           },
           {
             "id": "tb-castor-a",
@@ -5702,7 +5710,8 @@
               "translation": [0.0, 0.115, 0.0]
             },
             "region": "light-housing",
-            "layer": "housing"
+            "layer": "housing",
+            "tags": ["emitter", "light-plume"]
           }
         ],
         "structure": [
@@ -6036,15 +6045,47 @@
           },
           {
             "id": "col",
-            "kind": "box",
+            "kind": "loft",
             "bone": "column",
             "material": "stainless-steel",
             "role": "body",
             "tone": 0.65,
-            "size": [0.32, 0.62, 0.32],
-            "transform": {
-              "translation": [0.0, 0.31, 0.0]
-            }
+            "sections": [
+              {
+                "at": [
+                  0,
+                  0.0,
+                  0
+                ],
+                "rx": 0.16,
+                "ry": 0.16,
+                "exponent": 12,
+                "rotation": [
+                  0.5,
+                  0.5,
+                  0.5,
+                  -0.5
+                ]
+              },
+              {
+                "at": [
+                  0,
+                  0.62,
+                  0
+                ],
+                "rx": 0.11,
+                "ry": 0.11,
+                "exponent": 12,
+                "rotation": [
+                  0.5,
+                  0.5,
+                  0.5,
+                  -0.5
+                ]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true
           },
           {
             "id": "top",
@@ -6206,7 +6247,8 @@
               "translation": [0.0, 0.115, 0.0]
             },
             "region": "light-housing",
-            "layer": "housing"
+            "layer": "housing",
+            "tags": ["emitter", "light-plume"]
           }
         ],
         "structure": [
@@ -6673,7 +6715,8 @@
               "translation": [0.0, 0.115, 0.0]
             },
             "region": "light-housing",
-            "layer": "housing"
+            "layer": "housing",
+            "tags": ["emitter", "light-plume"]
           }
         ],
         "structure": [

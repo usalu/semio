@@ -27,9 +27,9 @@ const law = JSON.parse(readFileSync(puzzle3dSettingsDocumentFixtureUrl, "utf8"))
 const stepperFixture = JSON.parse(readFileSync(stepperPointerCommitFixtureUrl, "utf8")) as { readonly cases: readonly { id: string; segment: "minus" | "value" | "plus"; terminal: "release-inside" | "release-outside" | "cancel"; pressActions: number; terminalActions: number; deltaSteps: number }[] };
 const pressInputFixture = JSON.parse(readFileSync(numericPressInputFixtureUrl, "utf8")) as { readonly lifecycle: { readonly offeredCommit: false; readonly releasedCommit: true; readonly releasedActions: number; readonly sequenceStep: number }; readonly cases: readonly { readonly name: string; readonly input: unknown; readonly accepted: boolean }[] };
 const sectionFieldFixture = JSON.parse(readFileSync(sectionFieldPresentationFixtureUrl, "utf8")) as {
-  readonly density: { readonly gap: number; readonly fieldLabelLineHeight: number; readonly fieldDetailLineHeight: number; readonly sectionTitleLineHeight: number; readonly sectionTitleBodyGap: number; readonly sectionTrailingMargin: number };
+  readonly density: { readonly gap: number; readonly cellPaddingBlock: number; readonly cellDivider: number; readonly fieldLabelLineHeight: number; readonly fieldDetailLineHeight: number; readonly sectionTitleLineHeight: number; readonly sectionTitleBodyGap: number; readonly sectionTrailingMargin: number };
   readonly section: { readonly width: number; readonly title: string; readonly titleLines: number; readonly titleHeight: number; readonly contentTop: number; readonly trailingMargin: number };
-  readonly field: { readonly width: number; readonly label: string; readonly description: string; readonly error: string; readonly detailLines: number; readonly controlHeight: number; readonly controlTop: number; readonly errorTop: number; readonly totalHeight: number };
+  readonly field: { readonly width: number; readonly label: string; readonly description: string; readonly error: string; readonly detailLines: number; readonly labelCellHeight: number; readonly descriptionTop: number; readonly descriptionCellHeight: number; readonly controlHeight: number; readonly controlTop: number; readonly controlRowHeight: number; readonly errorTop: number; readonly errorCellHeight: number; readonly totalHeight: number };
 };
 
 describe("Puzzle3D Settings Component document", () => {
@@ -84,14 +84,23 @@ describe("Puzzle3D Settings Component document", () => {
     expect(heading.closest("section")?.classList.contains("mb-8")).toBe(true);
     const field = document.querySelector('[data-slot="field"]')!;
     expect([...field.children].map((child) => child.querySelector("[data-slot]")?.getAttribute("data-slot") ?? child.getAttribute("data-slot"))).toEqual(["field-label", "field-description", "field-control", "field-error"]);
-    expect(field.classList.contains("gap-single")).toBe(true);
+    expect(field.getAttribute("data-orientation")).toBe("vertical");
+    expect(field.hasAttribute("data-shared-border-cells")).toBe(true);
+    expect([...field.classList].some((name) => name.startsWith("gap-"))).toBe(false);
+    expect(field.querySelector('[data-slot="field-control"]')?.hasAttribute("data-shared-border-cells")).toBe(true);
     expect(field.querySelector('[data-slot="field-label"]')?.classList.contains("truncate")).toBe(true);
     expect(field.querySelector('[data-slot="field-label"]')?.classList.contains("font-medium")).toBe(true);
     expect(sectionFieldFixture.section.titleHeight).toBeCloseTo(sectionFieldFixture.section.titleLines * sectionFieldFixture.density.sectionTitleLineHeight, 6);
     expect(sectionFieldFixture.section.contentTop).toBeCloseTo(sectionFieldFixture.section.titleHeight + sectionFieldFixture.density.sectionTitleBodyGap, 6);
-    expect(sectionFieldFixture.field.controlTop).toBeCloseTo(sectionFieldFixture.density.fieldLabelLineHeight + sectionFieldFixture.density.gap + sectionFieldFixture.field.detailLines * sectionFieldFixture.density.fieldDetailLineHeight + sectionFieldFixture.density.gap, 6);
-    expect(sectionFieldFixture.field.errorTop).toBeCloseTo(sectionFieldFixture.field.controlTop + sectionFieldFixture.field.controlHeight + sectionFieldFixture.density.gap, 6);
-    expect(sectionFieldFixture.field.totalHeight).toBeCloseTo(sectionFieldFixture.field.errorTop + sectionFieldFixture.field.detailLines * sectionFieldFixture.density.fieldDetailLineHeight, 6);
+    const detail = sectionFieldFixture.field.detailLines * sectionFieldFixture.density.fieldDetailLineHeight;
+    expect(sectionFieldFixture.field.labelCellHeight).toBeCloseTo(sectionFieldFixture.density.cellPaddingBlock * 2 + sectionFieldFixture.density.fieldLabelLineHeight + sectionFieldFixture.density.cellDivider, 6);
+    expect(sectionFieldFixture.field.descriptionTop).toBeCloseTo(sectionFieldFixture.field.labelCellHeight + sectionFieldFixture.density.cellPaddingBlock, 6);
+    expect(sectionFieldFixture.field.descriptionCellHeight).toBeCloseTo(sectionFieldFixture.density.cellPaddingBlock * 2 + detail + sectionFieldFixture.density.cellDivider, 6);
+    expect(sectionFieldFixture.field.controlTop).toBeCloseTo(sectionFieldFixture.field.labelCellHeight + sectionFieldFixture.field.descriptionCellHeight, 6);
+    expect(sectionFieldFixture.field.controlRowHeight).toBeCloseTo(sectionFieldFixture.field.controlHeight + sectionFieldFixture.density.cellDivider, 6);
+    expect(sectionFieldFixture.field.errorTop).toBeCloseTo(sectionFieldFixture.field.controlTop + sectionFieldFixture.field.controlRowHeight + sectionFieldFixture.density.cellPaddingBlock, 6);
+    expect(sectionFieldFixture.field.errorCellHeight).toBeCloseTo(sectionFieldFixture.density.cellPaddingBlock * 2 + detail, 6);
+    expect(sectionFieldFixture.field.totalHeight).toBeCloseTo(sectionFieldFixture.field.controlTop + sectionFieldFixture.field.controlRowHeight + sectionFieldFixture.field.errorCellHeight, 6);
   });
 
   for (const gesture of stepperFixture.cases) it(`commits ${gesture.id} at press and only cleans up at release`, () => {

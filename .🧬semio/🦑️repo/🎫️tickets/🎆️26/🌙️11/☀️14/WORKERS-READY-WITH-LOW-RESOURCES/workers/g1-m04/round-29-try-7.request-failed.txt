@@ -1,0 +1,9 @@
+2026-11-15T18:46:07.311Z request-failed 7e3ceb77 RepoError: invalid build.closure.provider-generated-import {"port":"typescript-package-index","targets":"@semio-tech/ui-rs:generate"}
+    at repoErrorV1 (/home/deck/semio/🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🚨️error/🟦️.ts:33:14)
+    at toolClosureGroupV1 (/home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs:1046:33)
+    at processTicksAndRejections (native:7:39)
+[repo] still working after 6530 s; last phase started: source.served
+graph: plan answered, managed 109 MB, resident 205 MB (released 16 MB)
+[repository:command] still running after 6530 s
+[repository:command] still running after 6540 s
+[repository:command] still running after 6550 s

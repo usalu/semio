@@ -4,7 +4,7 @@
  */
 
 // #region 🔌️Adapters
-import { Button, borderNormalClass, canvasHostRootClass, Checkbox, cn, CanvasPickMenu, editorShellRootClass, floatingFieldSurfaceClass, floatingMenuSurfaceClass, floatingPaneAsideClass, floatingTagClass, floatingTagOffClass, floatingTagOnClass, Input, LevelProvider, MenuItem, Select, SelectContent, SelectionMarquee, SelectItem, SelectTrigger, SelectValue, WINDOW_SEARCH_USER, type ReactNode } from "@semio-tech/ui-react";
+import { Button, canvasHostRootClass, cn, CanvasPickMenu, editorShellRootClass, floatingPaneAsideClass, Input, LevelProvider, MenuItem, Select, SelectContent, SelectionMarquee, SelectItem, SelectTrigger, SelectValue, SharedBorderRow, SharedBorderRowCell, SharedBorderRowField, SharedBorderRowLabel, ToggleGroup, WINDOW_SEARCH_USER, type ReactNode } from "@semio-tech/ui-react";
 // #endregion 🔌️Adapters
 import { canvasPickTargetKey } from "@semio-tech/framework";
 import { useCadReplLabels } from "../🗣️labels/🟦️.ts";
@@ -28,6 +28,30 @@ import { useReplCommandPalette, type ReplCoreAfter4 } from "./🧾️command-pal
 import { useReplEngagementAndKeys, type ReplCoreAfter5 } from "./🤝️engagement-keys/🟦️.ts";
 
 // #region 🪩️Repl
+/** 🧩️ One toggle section of the aside: a master checkbox cell over a wrapping multiple {@link ToggleGroup} of chips, merged into one vertical shared-border row so every seam is one hairline. */
+function ReplToggleSection({ id, title, ariaLabel, masterAriaLabel, masterState, onMasterChange, entries, onChange }: {
+  readonly id: string;
+  readonly title: string;
+  readonly ariaLabel: string;
+  readonly masterAriaLabel: string;
+  readonly masterState: Parameters<typeof SpatialChromeMasterToggle>[0]["state"];
+  readonly onMasterChange: (enabled: boolean) => void;
+  readonly entries: readonly { readonly key: string; readonly label: string; readonly enabled: boolean }[];
+  readonly onChange: (next: readonly string[], previous: readonly string[]) => void;
+}): ReactNode {
+  if (!entries.length) return null;
+  const value = entries.filter((entry) => entry.enabled).map((entry) => entry.key);
+  return (
+    <SharedBorderRow orientation="vertical">
+      <SharedBorderRowField className="text-foreground flex-none font-semibold">
+        <SpatialChromeMasterToggle state={masterState} ariaLabel={masterAriaLabel} onEnabledChange={onMasterChange} />
+        {title}
+      </SharedBorderRowField>
+      <ToggleGroup id={id} kind="multiple" wrap aria-label={ariaLabel} value={value} onValueChange={(next) => onChange(next, value)} items={entries.map((entry) => ({ value: entry.key, icon: entry.enabled ? "check" : "square", text: entry.label }))} />
+    </SharedBorderRow>
+  );
+}
+
 /** 🪩️ Full spatial REPL: canvas, interaction palette, history controls, last response. */
 export function InteractionRepl(props: InteractionReplProps): ReactNode {
   const labels = useCadReplLabels();
@@ -143,99 +167,101 @@ export function InteractionRepl(props: InteractionReplProps): ReactNode {
         ) : null}
       </div>
       {showAside ? (
-        <aside className={cn(floatingPaneAsideClass, fillHost ? "max-h-[45%] w-full shrink-0 border-l-0 border-t" : "w-layout-floating-menu-lg shrink-0")} style={asideStyle} data-level="pane">
+        <SharedBorderRow as="aside" orientation="vertical" data-level="pane" className={cn(floatingPaneAsideClass, fillHost ? "max-h-[45%] w-full" : "w-layout-floating-menu-lg")} style={asideStyle}>
         <LevelProvider level="pane">
-          <strong className="text-sm font-semibold">{labels.editor}</strong>
-          <div className="flex flex-wrap gap-half">
-            {transitionRows.map((row) => (
+          <SharedBorderRowCell className="shrink-0">
+            <strong className="text-sm font-semibold">{labels.editor}</strong>
+          </SharedBorderRowCell>
+          <SharedBorderRow orientation="vertical" className="min-h-0 flex-1 overflow-auto [&>*]:shrink-0">
+            {transitionRows.length ? (
+              <SharedBorderRow wrap>
+                {transitionRows.map((row) => (
+                  <Button
+                    key={`${row.key}-${row.eventKind}-${row.label}`}
+                    id={`cad.replTransition.${row.eventKind}.${row.key}`}
+                    type="button"
+                    variant="outline"
+                    icon="arrow-right"
+                    className="h-auto px-single py-half text-xs"
+                    onClick={() => runTransitionRow(row)}
+                  >
+                    <span className="font-bold underline">{row.key}</span> {row.label}
+                  </Button>
+                ))}
+              </SharedBorderRow>
+            ) : null}
+            <SharedBorderRow data-level="menu">
+              <Input
+                id="cad.replCommand"
+                ref={cmdRef}
+                type="text"
+                autoComplete="off"
+                spellCheck={false}
+                value={cmdLine}
+                onChange={(e) => {
+                  setCmdLine(replNormalizeActionText(e.target.value, engagementActionMode));
+                  if (interactionMenuOpen) setInteractionMenuOpen(true);
+                }}
+                onKeyDown={onInputKeyDown}
+                placeholder={WINDOW_SEARCH_USER.actionPlaceholder}
+                aria-label={WINDOW_SEARCH_USER.actionPlaceholder}
+                className="bg-transparent"
+              />
               <Button
-                key={`${row.key}-${row.eventKind}-${row.label}`}
-                id={`cad.replTransition.${row.eventKind}.${row.key}`}
+                id="cad.replSuggestionsToggle"
                 type="button"
                 variant="outline"
-                icon="arrow-right"
-                className="h-auto px-single py-half text-xs"
-                onClick={() => runTransitionRow(row)}
-              >
-                <span className="font-bold underline">{row.key}</span> {row.label}
-              </Button>
-            ))}
-          </div>
-          <div className={cn("relative grid overflow-visible", floatingFieldSurfaceClass)} data-level="menu">
-            <Input
-              id="cad.replCommand"
-              ref={cmdRef}
-              type="text"
-              autoComplete="off"
-              spellCheck={false}
-              value={cmdLine}
-              onChange={(e) => {
-                setCmdLine(replNormalizeActionText(e.target.value, engagementActionMode));
-                if (interactionMenuOpen) setInteractionMenuOpen(true);
-              }}
-              onKeyDown={onInputKeyDown}
-              placeholder={WINDOW_SEARCH_USER.actionPlaceholder}
-              aria-label={WINDOW_SEARCH_USER.actionPlaceholder}
-              className="col-start-1 row-start-1 border-0 bg-transparent pr-large shadow-none focus-visible:ring-0"
-            />
-            <Button
-              id="cad.replSuggestionsToggle"
-              type="button"
-              variant="outline"
-              icon={interactionMenuOpen ? "chevron-up" : "chevron-down"}
-              className={cn("col-start-1 row-start-1 z-[1] mr-single size-medium justify-self-end self-center p-0 text-2xs", interactionMenuOpen && "bg-accent text-accent-foreground")}
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => {
-                setInteractionMenuOpen((open) => !open);
-                cmdRef.current?.focus();
-              }}
-              aria-label={WINDOW_SEARCH_USER.suggestionsAria}
-            />
-            {completionSuffix ? (
-              <div aria-hidden className="text-element pointer-events-none col-start-1 row-start-1 overflow-hidden pr-large pl-double py-tiny text-sm leading-normal whitespace-pre">
-                <span className="text-transparent">{cmdLine}</span>
-                <span className="text-muted-foreground">{completionSuffix}</span>
-              </div>
-            ) : null}
-            {interactionMenuOpen ? (
-              <div
-                role="menu"
+                icon={interactionMenuOpen ? "chevron-up" : "chevron-down"}
+                className={cn("flex-none p-0 text-2xs", interactionMenuOpen && "bg-accent text-accent-foreground")}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  setInteractionMenuOpen((open) => !open);
+                  cmdRef.current?.focus();
+                }}
                 aria-label={WINDOW_SEARCH_USER.suggestionsAria}
-                onPointerDown={(e) => e.stopPropagation()}
-                className={cn("absolute top-[calc(100%+var(--spacing-double))] right-0 z-[3] max-h-layout-floating-menu-sm w-layout-floating-menu-md max-w-[calc(100vw-var(--size-xl))] overflow-y-auto p-single", floatingMenuSurfaceClass)}
-                data-level="menu"
-              >
-                {interactionMatches.length ? (
-                  interactionMatches.map((suggestion) => (
-                    <MenuItem key={`${suggestion.kind}:${suggestion.key}:${suggestion.detail}`} onClick={() => runSuggestion(suggestion)}>
-                      <div className="flex items-center gap-single">
-                        <span className={cn(floatingTagClass, floatingTagOffClass, "inline-flex min-w-6 items-center justify-center px-half py-0 text-2xs font-bold uppercase")}>{suggestion.key}</span>
-                        <span>{suggestion.label}</span>
-                      </div>
-                      {suggestion.detail ? <div className="text-muted-foreground text-2xs">{suggestion.detail}</div> : null}
-                    </MenuItem>
-                  ))
-                ) : (
-                  <div className="text-muted-foreground px-single py-half text-xs">{WINDOW_SEARCH_USER.noMatches}</div>
-                )}
-              </div>
+              />
+              {completionSuffix ? (
+                <div aria-hidden className="text-element pointer-events-none absolute inset-y-0 left-0 right-medium overflow-hidden px-single py-single text-sm leading-normal whitespace-pre">
+                  <span className="text-transparent">{cmdLine}</span>
+                  <span className="text-muted-foreground">{completionSuffix}</span>
+                </div>
+              ) : null}
+              {interactionMenuOpen ? (
+                <div className="absolute inset-x-0 top-full z-[3]" onPointerDown={(e) => e.stopPropagation()}>
+                  <SharedBorderRow role="menu" aria-label={WINDOW_SEARCH_USER.suggestionsAria} orientation="vertical" edges={["right", "bottom", "left"]} className={floatingPaneAsideClass} data-level="menu">
+                    <SharedBorderRow orientation="vertical" className="max-h-layout-floating-menu-sm overflow-y-auto [&>*]:shrink-0">
+                      {interactionMatches.length ? (
+                        interactionMatches.map((suggestion) => (
+                          <MenuItem key={`${suggestion.kind}:${suggestion.key}:${suggestion.detail}`} data-shared-border-cell="" className="rounded-none px-single py-single" onClick={() => runSuggestion(suggestion)}>
+                            <div className="flex items-center gap-single">
+                              <kbd className="text-muted-foreground inline-block min-w-6 text-center font-sans text-2xs font-bold uppercase">{suggestion.key}</kbd>
+                              <span>{suggestion.label}</span>
+                            </div>
+                            {suggestion.detail ? <div className="text-muted-foreground text-2xs">{suggestion.detail}</div> : null}
+                          </MenuItem>
+                        ))
+                      ) : (
+                        <SharedBorderRowCell className="text-muted-foreground text-xs">{WINDOW_SEARCH_USER.noMatches}</SharedBorderRowCell>
+                      )}
+                    </SharedBorderRow>
+                  </SharedBorderRow>
+                </div>
+              ) : null}
+            </SharedBorderRow>
+            {asideExtra ? <SharedBorderRowCell>{asideExtra}</SharedBorderRowCell> : null}
+            {onDocumentModelChange ? (
+              <SelectionAttributesPane
+                model={documentModel.model}
+                activeModelDefinitionId={activeModelDefinitionId ?? defaultModelDefinitionId()}
+                selection={displayedSelectionTargets}
+                selectionCount={displayedSelectionTargets.length}
+                onModelChange={onDocumentModelChange}
+              />
             ) : null}
-          </div>
-          {asideExtra}
-          {onDocumentModelChange ? (
-            <SelectionAttributesPane
-              model={documentModel.model}
-              activeModelDefinitionId={activeModelDefinitionId ?? defaultModelDefinitionId()}
-              selection={displayedSelectionTargets}
-              selectionCount={displayedSelectionTargets.length}
-              onModelChange={onDocumentModelChange}
-            />
-          ) : null}
-          <div className="flex flex-col gap-single text-xs">
             {hideModelDefinitionControls ? null : (
               <>
-                <label className="flex flex-col gap-half">
-                  <span>{labels.modelDefinition}</span>
+                <SharedBorderRow>
+                  <SharedBorderRowLabel htmlFor="cad.modelDefinitionPicker-trigger">{labels.modelDefinition}</SharedBorderRowLabel>
                   <Select
                     id="cad.modelDefinitionPicker"
                     value={activeModelDefinitionId ?? defaultModelDefinitionId()}
@@ -246,7 +272,7 @@ export function InteractionRepl(props: InteractionReplProps): ReactNode {
                       setHoveredPickKey(null);
                     }}
                   >
-                    <SelectTrigger className={cn(cadFieldClass, "rounded-md border px-single py-half", borderNormalClass)}>
+                    <SelectTrigger className={cn(cadFieldClass, "flex-1")}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -257,8 +283,8 @@ export function InteractionRepl(props: InteractionReplProps): ReactNode {
                       ))}
                     </SelectContent>
                   </Select>
-                </label>
-                <span className="text-muted-foreground">
+                </SharedBorderRow>
+                <SharedBorderRowCell className="text-muted-foreground block text-xs">
                   {modelDefinitionScope.typologies.length} kind{modelDefinitionScope.typologies.length === 1 ? "" : "s"}
                   {" · "}
                   {modelDefinitionScope.interactions.length} tool{modelDefinitionScope.interactions.length === 1 ? "" : "s"}
@@ -268,10 +294,10 @@ export function InteractionRepl(props: InteractionReplProps): ReactNode {
                   {modelDefinitionScope.propertyDefinitions.length} propert{modelDefinitionScope.propertyDefinitions.length === 1 ? "y" : "ies"}
                   {" · "}
                   {modelDefinitionScope.statDefinitions.length} stat{modelDefinitionScope.statDefinitions.length === 1 ? "" : "s"}
-                </span>
+                </SharedBorderRowCell>
                 {transfersFrom.length ? (
-                  <label className="flex flex-col gap-half">
-                    <span>{labels.transferFrom}</span>
+                  <SharedBorderRow>
+                    <SharedBorderRowLabel htmlFor="cad.transferFromPicker-trigger">{labels.transferFrom}</SharedBorderRowLabel>
                     <Select
                       id="cad.transferFromPicker"
                       key={transfersFromResetKey}
@@ -281,7 +307,7 @@ export function InteractionRepl(props: InteractionReplProps): ReactNode {
                         setTransfersFromResetKey((k) => k + 1);
                       }}
                     >
-                      <SelectTrigger className={cn(cadFieldClass, "rounded-md border px-single py-half", borderNormalClass)}>
+                      <SelectTrigger className={cn(cadFieldClass, "flex-1")}>
                         <SelectValue placeholder={labels.selectIncoming} />
                       </SelectTrigger>
                       <SelectContent>
@@ -292,11 +318,11 @@ export function InteractionRepl(props: InteractionReplProps): ReactNode {
                         ))}
                       </SelectContent>
                     </Select>
-                  </label>
+                  </SharedBorderRow>
                 ) : null}
                 {transfersTo.length ? (
-                  <label className="flex flex-col gap-half">
-                    <span>{labels.transferTo}</span>
+                  <SharedBorderRow>
+                    <SharedBorderRowLabel htmlFor="cad.transferToPicker-trigger">{labels.transferTo}</SharedBorderRowLabel>
                     <Select
                       id="cad.transferToPicker"
                       key={transfersToResetKey}
@@ -306,7 +332,7 @@ export function InteractionRepl(props: InteractionReplProps): ReactNode {
                         setTransfersToResetKey((k) => k + 1);
                       }}
                     >
-                      <SelectTrigger className={cn(cadFieldClass, "rounded-md border px-single py-half", borderNormalClass)}>
+                      <SelectTrigger className={cn(cadFieldClass, "flex-1")}>
                         <SelectValue placeholder={labels.selectOutgoing} />
                       </SelectTrigger>
                       <SelectContent>
@@ -317,162 +343,120 @@ export function InteractionRepl(props: InteractionReplProps): ReactNode {
                         ))}
                       </SelectContent>
                     </Select>
-                  </label>
+                  </SharedBorderRow>
                 ) : null}
               </>
             )}
             {!isShapeModelDefinition(activeModelDefinitionId) ? (
-              <span className="text-muted-foreground">
+              <SharedBorderRowCell className="text-muted-foreground text-xs">
                 {viewObjectCount} object{viewObjectCount === 1 ? "" : "s"}
-              </span>
+              </SharedBorderRowCell>
             ) : null}
-            <label className="text-foreground flex items-center gap-single text-xs font-semibold">
-              <SpatialChromeMasterToggle state={primitiveShowGroupState} ariaLabel="Show all primitives" onEnabledChange={(enabled) => setFilterPrimitiveToggles(spatialToggleGroupFill(SPATIAL_PRIMITIVE_KINDS, enabled))} />
-              Primitives · Show
-            </label>
-            <div role="group" aria-label={labels.showPrimitives} className="flex flex-wrap gap-half">
-              {SPATIAL_PRIMITIVE_KINDS.map((kind) => (
-                <label key={`show-primitive-${kind}`} className={cn(floatingTagClass, filterPrimitiveToggles[kind] !== false ? floatingTagOnClass : floatingTagOffClass)}>
-                  <Checkbox
-                    checked={filterPrimitiveToggles[kind] !== false}
-                    onChange={(e) => {
-                      setFilterPrimitiveToggles((prev) => ({ ...prev, [kind]: e.target.checked }));
-                    }}
-                  />
-                  {kind}
-                </label>
-              ))}
-            </div>
-            <label className="text-foreground flex items-center gap-single text-xs font-semibold">
-              <SpatialChromeMasterToggle
-                state={primitiveFilterGroupState}
-                ariaLabel="Filter all primitives"
-                onEnabledChange={(enabled) => {
-                  setSelectionPrimitiveToggles(spatialToggleGroupFill(SPATIAL_PRIMITIVE_KINDS, enabled));
-                  setSelectionMenu(null);
-                  setHoveredPickKey(null);
-                  if (!enabled) {
-                    applySelectionPrune((prev) => {
-                      let next = prev;
-                      for (const kind of SPATIAL_PRIMITIVE_KINDS) {
-                        next = replPruneSelectionByPrimitive(next, kind);
-                      }
-                      return next;
-                    });
-                  }
-                }}
-              />
-              Primitives · Filter
-            </label>
-            <div role="group" aria-label={labels.filterPrimitives} className="flex flex-wrap gap-half">
-              {SPATIAL_PRIMITIVE_KINDS.map((kind) => (
-                <label key={`filter-primitive-${kind}`} className={cn(floatingTagClass, selectionPrimitiveToggles[kind] !== false ? floatingTagOnClass : floatingTagOffClass)}>
-                  <Checkbox
-                    checked={selectionPrimitiveToggles[kind] !== false}
-                    onChange={(e) => {
-                      const checked = e.target.checked;
-                      setSelectionPrimitiveToggles((prev) => ({ ...prev, [kind]: checked }));
-                      setSelectionMenu(null);
-                      setHoveredPickKey(null);
-                      if (!checked) {
-                        applySelectionPrune((prev) => replPruneSelectionByPrimitive(prev, kind));
-                      }
-                    }}
-                  />
-                  {kind}
-                </label>
-              ))}
-            </div>
-            <label className="text-foreground flex items-center gap-single text-xs font-semibold">
-              <SpatialChromeMasterToggle state={typologyShowGroupState} ariaLabel="Show all typologies" onEnabledChange={(enabled) => setFilterTypologyToggles(spatialToggleGroupFill(scopeTypologyIds, enabled))} />
-              Typologies · Show
-            </label>
-            <div role="group" aria-label={labels.showTypologies} className="flex flex-wrap gap-half">
-              {modelDefinitionScope.typologies.map((typology) => {
-                const label = spatialTypologyToggleLabel(typology.id, typology.label);
-                return (
-                  <label key={`show-${typology.id}`} className={cn(floatingTagClass, filterTypologyToggles[typology.id] !== false ? floatingTagOnClass : floatingTagOffClass)}>
-                    <Checkbox
-                      checked={filterTypologyToggles[typology.id] !== false}
-                      onChange={(e) => {
-                        setFilterTypologyToggles((prev) => ({ ...prev, [typology.id]: e.target.checked }));
-                      }}
-                    />
-                    {label}
-                  </label>
-                );
-              })}
-            </div>
-            <label className="text-foreground flex items-center gap-single text-xs font-semibold">
-              <SpatialChromeMasterToggle
-                state={typologySelectionGroupState}
-                ariaLabel="Select all typologies"
-                onEnabledChange={(enabled) => {
-                  setSelectionTypologyToggles(spatialToggleGroupFill(scopeTypologyIds, enabled));
-                  setSelectionMenu(null);
-                  setHoveredPickKey(null);
-                  if (!enabled) {
-                    applySelectionPrune((prev) => {
-                      let next = prev;
-                      for (const typologyId of scopeTypologyIds) {
-                        next = replPruneSelectionByTypology(next, documentModel.model, activeModelDefinitionId, typologyId);
-                      }
-                      return next;
-                    });
-                  }
-                }}
-              />
-              Typologies · Selection
-            </label>
-            <div role="group" aria-label={labels.selectionTypologies} className="flex flex-wrap gap-half">
-              {modelDefinitionScope.typologies.map((typology) => {
-                const label = spatialTypologyToggleLabel(typology.id, typology.label);
-                return (
-                  <label key={`select-${typology.id}`} className={cn(floatingTagClass, selectionTypologyToggles[typology.id] !== false ? floatingTagOnClass : floatingTagOffClass)}>
-                    <Checkbox
-                      checked={selectionTypologyToggles[typology.id] !== false}
-                      onChange={(e) => {
-                        const checked = e.target.checked;
-                        setSelectionTypologyToggles((prev) => ({ ...prev, [typology.id]: checked }));
-                        setSelectionMenu(null);
-                        setHoveredPickKey(null);
-                        if (!checked) {
-                          applySelectionPrune((prev) => replPruneSelectionByTypology(prev, documentModel.model, activeModelDefinitionId, typology.id));
-                        }
-                      }}
-                    />
-                    {label}
-                  </label>
-                );
-              })}
-            </div>
-          </div>
-          <div className="text-muted-foreground text-xs">
-            {interactionId ? (
-              <>
-                Interaction <code className="text-foreground">{interactionId}</code> · state <code className="text-foreground">{snapshot.state}</code> · rev {snapshot.revision}
-              </>
-            ) : (
-              <>
-                No interaction selected · state <code className="text-foreground">{snapshot.state}</code> · rev {snapshot.revision}
-              </>
-            )}
-          </div>
-          <div className="border-border text-xs border-t pt-single">
-            <strong className="text-foreground">{labels.lastResponse}</strong>
-            <pre className="text-muted-foreground mt-half mb-0 max-h-layout-popover overflow-auto text-2xs">{lr ? JSON.stringify(lr, null, 2) : "—"}</pre>
-            {snapshot.diagnostics.length ? (
-              <ul className="text-muted-foreground m-0 list-inside list-disc text-2xs">
-                {snapshot.diagnostics.map((d, i) => (
-                  <li key={`${d.code}-${i}`}>
-                    [{d.severity}] {d.code}: {d.message}
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-          </div>
+            <ReplToggleSection
+              id="cad.replShowPrimitives"
+              title="Primitives · Show"
+              ariaLabel={labels.showPrimitives}
+              masterAriaLabel="Show all primitives"
+              masterState={primitiveShowGroupState}
+              onMasterChange={(enabled) => setFilterPrimitiveToggles(spatialToggleGroupFill(SPATIAL_PRIMITIVE_KINDS, enabled))}
+              entries={SPATIAL_PRIMITIVE_KINDS.map((kind) => ({ key: kind, label: kind, enabled: filterPrimitiveToggles[kind] !== false }))}
+              onChange={(next) => setFilterPrimitiveToggles((prev) => ({ ...prev, ...Object.fromEntries(SPATIAL_PRIMITIVE_KINDS.map((kind) => [kind, next.includes(kind)])) }))}
+            />
+            <ReplToggleSection
+              id="cad.replFilterPrimitives"
+              title="Primitives · Filter"
+              ariaLabel={labels.filterPrimitives}
+              masterAriaLabel="Filter all primitives"
+              masterState={primitiveFilterGroupState}
+              onMasterChange={(enabled) => {
+                setSelectionPrimitiveToggles(spatialToggleGroupFill(SPATIAL_PRIMITIVE_KINDS, enabled));
+                setSelectionMenu(null);
+                setHoveredPickKey(null);
+                if (!enabled) {
+                  applySelectionPrune((prev) => {
+                    let next = prev;
+                    for (const kind of SPATIAL_PRIMITIVE_KINDS) {
+                      next = replPruneSelectionByPrimitive(next, kind);
+                    }
+                    return next;
+                  });
+                }
+              }}
+              entries={SPATIAL_PRIMITIVE_KINDS.map((kind) => ({ key: kind, label: kind, enabled: selectionPrimitiveToggles[kind] !== false }))}
+              onChange={(next, previous) => {
+                setSelectionPrimitiveToggles((prev) => ({ ...prev, ...Object.fromEntries(SPATIAL_PRIMITIVE_KINDS.map((kind) => [kind, next.includes(kind)])) }));
+                setSelectionMenu(null);
+                setHoveredPickKey(null);
+                const removed = previous.filter((kind) => !next.includes(kind));
+                if (removed.length) applySelectionPrune((prev) => removed.reduce((acc, kind) => replPruneSelectionByPrimitive(acc, kind as (typeof SPATIAL_PRIMITIVE_KINDS)[number]), prev));
+              }}
+            />
+            <ReplToggleSection
+              id="cad.replShowTypologies"
+              title="Typologies · Show"
+              ariaLabel={labels.showTypologies}
+              masterAriaLabel="Show all typologies"
+              masterState={typologyShowGroupState}
+              onMasterChange={(enabled) => setFilterTypologyToggles(spatialToggleGroupFill(scopeTypologyIds, enabled))}
+              entries={modelDefinitionScope.typologies.map((typology) => ({ key: typology.id, label: spatialTypologyToggleLabel(typology.id, typology.label), enabled: filterTypologyToggles[typology.id] !== false }))}
+              onChange={(next) => setFilterTypologyToggles((prev) => ({ ...prev, ...Object.fromEntries(modelDefinitionScope.typologies.map((typology) => [typology.id, next.includes(typology.id)])) }))}
+            />
+            <ReplToggleSection
+              id="cad.replSelectTypologies"
+              title="Typologies · Selection"
+              ariaLabel={labels.selectionTypologies}
+              masterAriaLabel="Select all typologies"
+              masterState={typologySelectionGroupState}
+              onMasterChange={(enabled) => {
+                setSelectionTypologyToggles(spatialToggleGroupFill(scopeTypologyIds, enabled));
+                setSelectionMenu(null);
+                setHoveredPickKey(null);
+                if (!enabled) {
+                  applySelectionPrune((prev) => {
+                    let next = prev;
+                    for (const typologyId of scopeTypologyIds) {
+                      next = replPruneSelectionByTypology(next, documentModel.model, activeModelDefinitionId, typologyId);
+                    }
+                    return next;
+                  });
+                }
+              }}
+              entries={modelDefinitionScope.typologies.map((typology) => ({ key: typology.id, label: spatialTypologyToggleLabel(typology.id, typology.label), enabled: selectionTypologyToggles[typology.id] !== false }))}
+              onChange={(next, previous) => {
+                setSelectionTypologyToggles((prev) => ({ ...prev, ...Object.fromEntries(modelDefinitionScope.typologies.map((typology) => [typology.id, next.includes(typology.id)])) }));
+                setSelectionMenu(null);
+                setHoveredPickKey(null);
+                const removed = previous.filter((typologyId) => !next.includes(typologyId));
+                if (removed.length) applySelectionPrune((prev) => removed.reduce((acc, typologyId) => replPruneSelectionByTypology(acc, documentModel.model, activeModelDefinitionId, typologyId), prev));
+              }}
+            />
+            <SharedBorderRowCell className="text-muted-foreground block text-xs">
+              {interactionId ? (
+                <>
+                  Interaction <code className="text-foreground">{interactionId}</code> · state <code className="text-foreground">{snapshot.state}</code> · rev {snapshot.revision}
+                </>
+              ) : (
+                <>
+                  No interaction selected · state <code className="text-foreground">{snapshot.state}</code> · rev {snapshot.revision}
+                </>
+              )}
+            </SharedBorderRowCell>
+            <SharedBorderRowCell className="block text-xs">
+              <strong className="text-foreground">{labels.lastResponse}</strong>
+              <pre className="text-muted-foreground mt-half mb-0 max-h-layout-popover overflow-auto text-2xs">{lr ? JSON.stringify(lr, null, 2) : "—"}</pre>
+              {snapshot.diagnostics.length ? (
+                <ul className="text-muted-foreground m-0 list-inside list-disc text-2xs">
+                  {snapshot.diagnostics.map((d, i) => (
+                    <li key={`${d.code}-${i}`}>
+                      [{d.severity}] {d.code}: {d.message}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </SharedBorderRowCell>
+          </SharedBorderRow>
         </LevelProvider>
-        </aside>
+        </SharedBorderRow>
       ) : null}
     </div>
   );

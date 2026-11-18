@@ -171,8 +171,8 @@ fn quoted(demand:RetirementDemand,grant:RetainedCloneGrant)->RetirementDemand{Re
 fn funded<T>(control:&mut NativeDecodeControl<'_>,demand:RetirementDemand,grant:RetainedCloneGrant,last_work:&mut u128,run:impl FnOnce(&mut NativeDecodeControl<'_>,&mut RetainedAllocationEffect<'_>,&mut u128)->T)->Result<Option<T>,ValueError>{
  control.with_allocated_effect(quoted(demand,grant),RetainedHistorySourceDecode::work_demand(grant),|control,effect|{
   let start=effect.performed_work();
-  let output=run(control,effect,&mut *last_work);
-  *last_work=settle_since(effect,start,*last_work)?;
+  let output=run(control,effect,&mut *last_work);eprintln!("[DEBUG] funded start={} mid={} claimed={}",start,effect.performed_work(),*last_work);
+  *last_work=settle_since(effect,start,*last_work)?;eprintln!("[DEBUG] funded settled={} performed={}",*last_work,effect.performed_work());
   Ok::<_,ValueError>(output)
  })?.transpose()
 }
@@ -270,7 +270,7 @@ fn with_control<T>(
         };
         let before=control.actual_work();
         let result = control.with_work_recipient(work,|original|original.scoped_stage(|native|Ok::<_,ValueError>(run(native))))?;
-        *observed=control.actual_work().saturating_sub(before);
+        *observed=control.actual_work().saturating_sub(before);eprintln!("[DEBUG] with_control before={} after={} closing={}",before,control.actual_work(),closing);
         *receipt = Some(control.detach().unwrap_or_else(|_| panic!("original History decode continuation violated canonical control invariants")));
         Ok(result)
     })?
@@ -362,7 +362,7 @@ impl RetainedHistoryDecode {
         Ok(RetirementDemand { depth: if self.closed { 0 } else if !self.admitted && !self.closing { 2 } else { 1 }, ..Default::default() })
     }
 
-    pub fn step<S: RetainedWireByteSource + ?Sized>(&mut self, source: &S, turn: &dyn RetainedHistoryTurn, grant: RetainedCloneGrant, history: &mut Option<HistoryLog>, work: &mut semio_framework_value_native_owned::native_decoding::OriginalWorkLoan<'_>) -> semio_framework_value::RetainedWorkOutcome<RetainedHistorySourceStep, semio_framework_value::OriginalRetirementFailure> {self.last_work=0;self.last_native_work=0;let result=self.step_result(source,turn,grant, history,work);semio_framework_value::RetainedWorkOutcome{work:self.last_work,result}}
+    pub fn step<S: RetainedWireByteSource + ?Sized>(&mut self, source: &S, turn: &dyn RetainedHistoryTurn, grant: RetainedCloneGrant, history: &mut Option<HistoryLog>, work: &mut semio_framework_value_native_owned::native_decoding::OriginalWorkLoan<'_>) -> semio_framework_value::RetainedWorkOutcome<RetainedHistorySourceStep, semio_framework_value::OriginalRetirementFailure> {self.last_work=0;self.last_native_work=0;let pre=(self.admitted,self.decoder.is_some(),self.recipient.terminal_is_empty(),self.failure_storage_needed(),self.closing);let result=self.step_result(source,turn,grant, history,work);if self.last_work!=self.last_native_work{eprintln!("[DEBUG] history step work={} native={} pre(admitted,decoder,recipient_empty,failure_storage,closing)={:?} ok={:?}",self.last_work,self.last_native_work,pre,result.as_ref().map(|_|()).map_err(|_|()));}semio_framework_value::RetainedWorkOutcome{work:self.last_work,result}}
 
     fn step_result<S: RetainedWireByteSource + ?Sized>(&mut self, source: &S, turn: &dyn RetainedHistoryTurn, grant: RetainedCloneGrant, history: &mut Option<HistoryLog>, work: &mut OriginalWorkLoan<'_>) -> Result<RetainedHistorySourceStep, OriginalRetirementFailure> {
         self.last_work=0;
@@ -466,7 +466,7 @@ impl RetainedHistoryDecode {
         Ok(if progress.copied_items > 0 || step == RetainedHistorySourceStep::Closed { RetainedHistorySourceStep::Progress } else { step })
     }
 
-    pub fn close_step<S: RetainedWireByteSource + ?Sized>(&mut self, source: &S, turn: &dyn RetainedHistoryTurn, grant: RetainedCloneGrant, work: &mut semio_framework_value_native_owned::native_decoding::OriginalWorkLoan<'_>) -> semio_framework_value::RetainedWorkOutcome<RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> {self.last_work=0;self.last_native_work=0;let result=self.close_step_result(source,turn,grant,work);semio_framework_value::RetainedWorkOutcome{work:self.last_work,result}}
+    pub fn close_step<S: RetainedWireByteSource + ?Sized>(&mut self, source: &S, turn: &dyn RetainedHistoryTurn, grant: RetainedCloneGrant, work: &mut semio_framework_value_native_owned::native_decoding::OriginalWorkLoan<'_>) -> semio_framework_value::RetainedWorkOutcome<RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> {self.last_work=0;self.last_native_work=0;let pre=(self.active.is_some(),self.fault.is_some(),self.inner_fault.is_some(),self.decoder.is_some(),self.partial.is_some(),self.recipient.terminal_is_empty(),self.failure_storage_needed());let result=self.close_step_result(source,turn,grant,work);if self.last_work!=self.last_native_work{eprintln!("[DEBUG] history close work={} native={} pre(active,fault,inner_fault,decoder,partial,recipient_empty,failure_storage)={:?} ok={:?}",self.last_work,self.last_native_work,pre,result.as_ref().map(|_|()).map_err(|_|()));}semio_framework_value::RetainedWorkOutcome{work:self.last_work,result}}
 
     fn close_step_result<S: RetainedWireByteSource + ?Sized>(&mut self, source: &S, turn: &dyn RetainedHistoryTurn, grant: RetainedCloneGrant, work: &mut OriginalWorkLoan<'_>) -> Result<RetainedCloneStep, OriginalRetirementFailure> {
         self.last_work=0;

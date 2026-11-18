@@ -465,13 +465,13 @@
         "type": "object",
         "additionalProperties": false,
         "required": [
-          "rssMegabytes",
+          "heldMegabytes",
           "jobs",
           "baselineMegabytes",
           "megabytes"
         ],
         "properties": {
-          "rssMegabytes": {
+          "heldMegabytes": {
             "type": "number",
             "minimum": 0
           },

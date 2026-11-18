@@ -37,6 +37,7 @@ import {
 // #endregion 🔌️Adapters
 import { type PdfCanvasPage } from "../🔌️pdf-canvas-port/🟦️.ts";
 import { compileMarkdownToHtml } from "../🎚️deck-chrome/🟦️.ts";
+import { SHARED_BORDER_CELL, SharedBorderChipGroup } from "../🔗️shared-border-chips/🟦️.tsx";
 import { type RevealMorphCompanionKind, type RevealResolvedDisposition } from "../🔀️reveal-morph/🟦️.ts";
 import {
   emphasisClass,
@@ -618,7 +619,7 @@ function MarkdownMorphView({ morphId: anchorId, embodiment, emphasis }: { readon
   return (
     <div data-id={anchorId} className={[morphAnchorClass(emphasis), "presentation-markdown-morph", "h-full w-full min-h-0 min-w-0"].filter(Boolean).join(" ")} aria-label={embodiment.title}>
       <Scrollable orientation="both" className="h-full w-full p-small">
-        <div className="prose prose-sm max-w-none dark:prose-invert presentation-markdown-prose presentation-markdown-prose--top-left" dangerouslySetInnerHTML={{ __html: html }} />
+        <div className="prose prose-sm max-w-none dark:prose-invert presentation-markdown-prose presentation-markdown-prose--top-left" data-border-probe-art="" dangerouslySetInnerHTML={{ __html: html }} />
       </Scrollable>
     </div>
   );
@@ -738,9 +739,10 @@ function PdfMorphView({ morphId: anchorId, embodiment, emphasis, position }: { r
         </FigureScrollViewport>
       </MediaTeaserWrap>
       {showPageNav ? (
-        <div className="presentation-pdf-page-nav" role="group" aria-label="PDF pages">
+        <SharedBorderChipGroup className="presentation-pdf-page-nav" role="group" aria-label="PDF pages">
           <button
             type="button"
+            {...SHARED_BORDER_CELL}
             className="presentation-pdf-page-nav__button presentation-pdf-page-nav__button--prev"
             title="Previous page"
             disabled={!pdfCanGoToPreviousPage(currentPage, embodiment, numPages)}
@@ -756,6 +758,7 @@ function PdfMorphView({ morphId: anchorId, embodiment, emphasis, position }: { r
           </button>
           <button
             type="button"
+            {...SHARED_BORDER_CELL}
             className="presentation-pdf-page-nav__button presentation-pdf-page-nav__button--next"
             title="Next page"
             disabled={!pdfCanGoToNextPage(currentPage, embodiment, numPages)}
@@ -769,7 +772,7 @@ function PdfMorphView({ morphId: anchorId, embodiment, emphasis, position }: { r
           >
             ›
           </button>
-        </div>
+        </SharedBorderChipGroup>
       ) : null}
     </div>
   );

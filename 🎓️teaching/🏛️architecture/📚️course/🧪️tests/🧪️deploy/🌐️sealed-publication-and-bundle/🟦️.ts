@@ -22,7 +22,7 @@ import { COURSE_BUNDLE_DIRECTORY, COURSE_BUNDLE_IMAGE, COURSE_PAGES_DIRECTORY, C
 import { siteArtifactProblems, siteDocumentProblems } from "../../../🚀️deploy/🌐️site/🟦️.ts";
 import { stackBundleEnvironment, stackBundleReadme } from "../../../🚀️deploy/🎁️stack-bundle/🟦️.ts";
 import { deployCheckSteps } from "../../../🚀️deploy/⚖️readiness/🟦️.ts";
-import { BOOT, STYLE, compose, digest, read, released, sealed, site, tree } from "../🧰️deploy-fixtures/🟦️.ts";
+import { BOOT, PNG, STYLE, compose, digest, posterAsset, read, released, sealed, site, tree } from "../🧰️deploy-fixtures/🟦️.ts";
 import type { Service } from "../🧰️deploy-fixtures/🟦️.ts";
 
 type BundleTarHeader={name:string;size?:number;type?:"file"|"directory";mode?:number;pax?:Record<string,string>};
@@ -53,7 +53,29 @@ export function registerSealedPublicationAndBundleTests(): void {
     const meta = /\s*<meta http-equiv[^>]*>/u.exec(moved)![0];
     expect(siteDocumentProblems(moved.replace(meta, "").replace("<style>", `${meta.trim()}<style>`), COURSE_PROCTOR_ORIGIN)).toEqual(["the Content-Security-Policy comes after the first script"]);
     const loose = `default-src *; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline'; connect-src *; object-src 'self'`;
-    expect(siteDocumentProblems(sealed(COURSE_PROCTOR_ORIGIN, loose), COURSE_PROCTOR_ORIGIN)).toEqual(["default-src admits *", "script-src admits 'unsafe-inline'", "script-src admits 'unsafe-eval'", "script-src admits https:", "style-src admits 'unsafe-inline'", `script-src does not admit the inline script ${digest(BOOT)}`, `style-src does not admit the inline style ${digest(STYLE)}`, `connect-src admits *, not exactly ${COURSE_PROCTOR_ORIGIN} wss://${deployment.proctor.host}`, "object-src is not 'none'", "base-uri is not 'none'", "form-action is not restricted"]);
+    expect(siteDocumentProblems(sealed(COURSE_PROCTOR_ORIGIN, loose), COURSE_PROCTOR_ORIGIN)).toEqual(["default-src admits *", "script-src admits 'unsafe-inline'", "script-src admits 'unsafe-eval'", "script-src admits https:", "style-src admits 'unsafe-inline'", `script-src does not admit the inline script ${digest(BOOT)}`, `style-src does not admit the inline style ${digest(STYLE)}`, `connect-src admits *, not exactly ${COURSE_PROCTOR_ORIGIN} wss://${deployment.proctor.host}`, "frame-src admits *, not exactly 'self'", "object-src is not 'none'", "base-uri is not 'none'", "form-action is not restricted"]);
+  });
+  it("frames only the site's own origin, which is where the assignment PDFs are shown", () => {
+    const framing = (policy: string): string => sealed(COURSE_PROCTOR_ORIGIN, sealed(COURSE_PROCTOR_ORIGIN).match(/content="([^"]*)"/u)![1]!.replace(/frame-src [^;]*/u, policy));
+    expect(siteDocumentProblems(framing("frame-src 'self'"), COURSE_PROCTOR_ORIGIN)).toEqual([]);
+    expect(siteDocumentProblems(framing("frame-src https://foreign.example"), COURSE_PROCTOR_ORIGIN)).toEqual(["frame-src admits https://foreign.example, not exactly 'self'"]);
+    expect(siteDocumentProblems(framing("frame-src 'self' https://foreign.example"), COURSE_PROCTOR_ORIGIN)).toEqual(["frame-src admits 'self' https://foreign.example, not exactly 'self'"]);
+    expect(siteDocumentProblems(framing("frame-src *"), COURSE_PROCTOR_ORIGIN)).toEqual(["frame-src admits *, not exactly 'self'"]);
+    expect(siteDocumentProblems(framing("frame-src 'none'"), COURSE_PROCTOR_ORIGIN)).toEqual(["frame-src admits 'none', not exactly 'self'"]);
+    expect(siteDocumentProblems(sealed(COURSE_PROCTOR_ORIGIN).replace("frame-src 'self'; ", ""), COURSE_PROCTOR_ORIGIN)).toEqual([]);
+    expect(siteDocumentProblems(sealed(COURSE_PROCTOR_ORIGIN).replace("frame-src 'self'; ", "").replace("default-src 'self'", "default-src https:"), COURSE_PROCTOR_ORIGIN)).toEqual(["default-src admits https:", "frame-src admits https:, not exactly 'self'"]);
+  });
+  it("publishes exactly one hashed PNG poster per clip within the poster budget", () => {
+    const posters = architectureCourse.clips.map(clip => posterAsset(clip.poster.file));
+    expect(posters).toHaveLength(new Set(posters).size);
+    for (const path of posters) {
+      const missing = released(COURSE_PROCTOR_ORIGIN);
+      delete missing[path];
+      expect(siteArtifactProblems(tree(missing), COURSE_PROCTOR_ORIGIN)).toEqual([expect.stringMatching(/^the poster \S+\.png of the clip clip-[a-z-]+ is missing from the hashed assets$/u)]);
+      expect(siteArtifactProblems(tree({ ...released(COURSE_PROCTOR_ORIGIN), [path]: "<svg/>" }), COURSE_PROCTOR_ORIGIN)).toEqual([`${path} is not a PNG`]);
+    }
+    const heavy = Buffer.concat([Buffer.from(PNG), randomBytes(COURSE_SITE_BUDGET.posterBytes)]);
+    expect(siteArtifactProblems(tree({ ...released(COURSE_PROCTOR_ORIGIN), [posters[0]!]: heavy }), COURSE_PROCTOR_ORIGIN)).toEqual([expect.stringMatching(/^the clip posters weigh \d+ bytes, over the budget of \d+$/u)]);
   });
   it("publishes exactly a CDN artifact that bakes the proctor origin", () => {
     expect(siteArtifactProblems(tree(released(COURSE_PROCTOR_ORIGIN)), COURSE_PROCTOR_ORIGIN)).toEqual([]);
@@ -64,7 +86,7 @@ export function registerSealedPublicationAndBundleTests(): void {
     expect(siteArtifactProblems(tree({ ...released(COURSE_PROCTOR_ORIGIN), "assets/app-AbCd1234.js.map": "{}", "assets/chunk.js": "//# sourceMappingURL=chunk.js.map\nconsole.log('[DEBUG] x')" }), COURSE_PROCTOR_ORIGIN)).toEqual(["assets/app-AbCd1234.js.map carries no content hash, yet /assets/* is served as immutable", "assets/chunk.js carries no content hash, yet /assets/* is served as immutable", "assets/app-AbCd1234.js.map is a source map", "the site carries the development leftover sourceMappingURL=", "the site carries the development leftover [DEBUG]"]);
     const { "assets/app-EfGh5678.css": _stylesheet, "robots.txt": _robots, ...partial } = released(COURSE_PROCTOR_ORIGIN);
     expect(siteArtifactProblems(tree(partial), COURSE_PROCTOR_ORIGIN)).toEqual(["robots.txt is missing", "the document loads assets/app-EfGh5678.css, which the artifact lacks"]);
-    expect(siteArtifactProblems(tree({ "index.html": sealed(COURSE_PROCTOR_ORIGIN), CNAME: `${deployment.site.host}\n` }), COURSE_PROCTOR_ORIGIN)).toEqual(["404.html is missing", ".nojekyll is missing", "robots.txt is missing", "manifest.webmanifest is missing", "favicon.svg is missing", ...publication.assignmentFiles.map(path => path + " is missing"), "the document loads assets/app-AbCd1234.js, which the artifact lacks", "the document loads assets/app-EfGh5678.css, which the artifact lacks", `no script bakes the proctor origin ${COURSE_PROCTOR_ORIGIN}`]);
+    expect(siteArtifactProblems(tree({ "index.html": sealed(COURSE_PROCTOR_ORIGIN), CNAME: `${deployment.site.host}\n` }), COURSE_PROCTOR_ORIGIN)).toEqual(["404.html is missing", ".nojekyll is missing", "robots.txt is missing", "manifest.webmanifest is missing", "favicon.svg is missing", ...publication.assignmentFiles.map(path => path + " is missing"), ...architectureCourse.clips.map(clip => `the poster ${clip.poster.file} of the clip ${clip.id} is missing from the hashed assets`), "the document loads assets/app-AbCd1234.js, which the artifact lacks", "the document loads assets/app-EfGh5678.css, which the artifact lacks", `no script bakes the proctor origin ${COURSE_PROCTOR_ORIGIN}`]);
     const heavy = `${released(COURSE_PROCTOR_ORIGIN)["assets/app-AbCd1234.js"] as string}\n/* ${randomBytes(COURSE_SITE_BUDGET.scriptGzipBytes.publish * 2).toString("base64")} */`;
     expect(siteArtifactProblems(tree({ ...released(COURSE_PROCTOR_ORIGIN), "assets/app-AbCd1234.js": heavy }), COURSE_PROCTOR_ORIGIN)).toEqual([expect.stringMatching(/^the document's scripts weigh \d+ bytes compressed, over the budget of \d+$/u)]);
     expect(siteArtifactProblems(tree({ ...released(COURSE_PROCTOR_ORIGIN), "🖼️assets/font.woff2": randomBytes(COURSE_SITE_BUDGET.totalBytes) }), COURSE_PROCTOR_ORIGIN)).toEqual([expect.stringMatching(/^the artifact weighs \d+ bytes, over the budget of \d+$/u)]);
@@ -190,7 +212,7 @@ export function registerSealedPublicationAndBundleTests(): void {
     expect(COURSE_SITE_HEADERS.match(/Cache-Control: no-cache/gu)).toHaveLength(3);
     const everywhere = COURSE_SITE_HEADERS.slice(0, COURSE_SITE_HEADERS.indexOf("/assets/*"));
     expect(everywhere).not.toContain("Cache-Control");
-    for (const header of ["X-Content-Type-Options: nosniff", "X-Frame-Options: DENY", "Content-Security-Policy: frame-ancestors 'none'", "Referrer-Policy: no-referrer"]) expect(everywhere).toContain(`  ${header}\n`);
+    for (const header of ["X-Content-Type-Options: nosniff", "X-Frame-Options: SAMEORIGIN", "Content-Security-Policy: frame-ancestors 'self'", "Referrer-Policy: no-referrer"]) expect(everywhere).toContain(`  ${header}\n`);
   });
   it("exports the inspected immutable image identities with their offline tags even across a mutable-tag ABA", async () => {
     const fixture=bundleCases.imageExport,ajv=new Ajv({strict:true}),validate=ajv.compile(bundlePolicySchema.definitions.imageExportFixture),hash=(bytes:Uint8Array|string)=>Buffer.from(sha256(typeof bytes==="string"?Buffer.from(bytes):bytes)).toString("hex");

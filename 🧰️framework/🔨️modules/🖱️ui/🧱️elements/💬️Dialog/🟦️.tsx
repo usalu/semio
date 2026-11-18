@@ -8,6 +8,7 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
+import { SharedBorderRow } from "../🪢️SharedBorderRow/🟦️.tsx";
 import { createPortal } from "react-dom";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { Slot } from "../../🔨️modules/🏷️class-name-composition/🪆️slot/🟦️.tsx";
@@ -549,7 +550,7 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(funct
       data-state="open"
       dir={flow.inline === "rtl" ? "rtl" : undefined}
       className={cn(
-        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 top-[50%] left-[50%] z-dialog grid w-full max-w-[calc(100%-2*var(--ui-spacing)*var(--medium))] translate-x-[-50%] translate-y-[-50%] gap-medium border p-medium duration-200 sm:max-w-lg",
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 top-[50%] left-[50%] z-dialog grid w-full max-w-[calc(100%-2*var(--ui-spacing)*var(--medium))] translate-x-[-50%] translate-y-[-50%] gap-0 border p-0 duration-200 sm:max-w-lg",
         context.isolationRoot ? "absolute" : "fixed",
         glassClass,
         className,
@@ -588,12 +589,12 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(funct
 // #region 🏷️LabelsAndLayout
 /** 🧱️ Groups dialog heading content without changing semantics. */
 function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
-  return <div data-slot="dialog-header" className={cn("flex flex-col gap-single text-center sm:text-start", className)} {...props} />;
+  return <div data-slot="dialog-header" className={cn("flex flex-col gap-single p-medium text-center sm:text-start", className)} {...props} />;
 }
 
 /** 👥️ Groups dialog actions without changing semantics. */
 function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
-  return <div data-slot="dialog-footer" data-shared-border-group="" className={cn("flex flex-col-reverse sm:flex-row sm:justify-end", className)} {...props} />;
+  return <SharedBorderRow data-slot="dialog-footer" edges={["top"]} className={cn("sm:justify-end", className)} {...props} />;
 }
 
 /** 🏷️ Supplies the stable accessible name target owned by its dialog. */

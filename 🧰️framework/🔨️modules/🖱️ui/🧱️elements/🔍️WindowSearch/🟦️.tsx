@@ -14,6 +14,7 @@ import { Popover, PopoverAnchor, PopoverContent } from "../🗨️Popover/🟦�
 import { useLabel } from "../🏷️Label/🟦️.tsx";
 import { Action } from "../⚡️ActionGroup/🟦️.tsx";
 import { Input } from "../✏️Input/🟦️.tsx";
+import { SharedBorderRow } from "../🪢️SharedBorderRow/🟦️.tsx";
 
 /** 🏷️ i18n keys for the window search pane (`ui.windowSearch.*` in {@link uiChromeTranslationBundles}; distinct from the `ui.search.*` command palette). */
 export const UI_WINDOW_SEARCH = {
@@ -407,13 +408,15 @@ const Search: React.FC<SearchProps> = ({ sessionActive = false, input, possibles
 
   return (
     <LevelProvider level="pane">
-      <div
+      <SharedBorderRow
+        orientation="vertical"
         ref={searchRef}
         data-slot="search"
         data-active={active ? "true" : undefined}
+        data-shared-border-state={sessionActive ? "active" : undefined}
         data-session-active={sessionActive ? "true" : undefined}
         data-possibles-open={showPossiblesList ? "true" : undefined}
-        className={cn("pointer-events-auto flex w-full min-w-0 max-w-full flex-col gap-half", sessionActive && "bg-active-base ring-accent/35 rounded-sm ring-1 shadow-sm", className)}
+        className={cn("pointer-events-auto w-full max-w-full", sessionActive && "bg-active-base shadow-sm", className)}
       >
         <Popover
           open={showPossiblesList}
@@ -538,7 +541,7 @@ const Search: React.FC<SearchProps> = ({ sessionActive = false, input, possibles
             </PopoverContent>
           ) : null}
         </Popover>
-      </div>
+      </SharedBorderRow>
     </LevelProvider>
   );
 };

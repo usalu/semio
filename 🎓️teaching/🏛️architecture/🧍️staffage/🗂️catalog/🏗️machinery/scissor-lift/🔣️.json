@@ -1409,7 +1409,7 @@
        "tone": 0.3,
        "kind": "rect",
        "x": -0.05,
-       "y": 0.455,
+       "y": 0.45,
        "w": 0.1,
        "h": 0.1,
        "region": "arms",
@@ -2815,19 +2815,98 @@
      ],
      "plan": [
       {
-       "id": "chassis-body",
-       "bone": "chassis",
-       "role": "body",
-       "z": 2,
-       "filled": true,
-       "tone": 0.45,
-       "kind": "rect",
-       "x": -0.925,
-       "y": -0.405,
-       "w": 1.85,
-       "h": 0.81,
-       "region": "chassis",
-       "material": "chassis-paint"
+        "id": "chassis-body",
+        "bone": "chassis",
+        "role": "body",
+        "z": 2,
+        "filled": true,
+        "tone": 0.45,
+        "kind": "poly",
+        "points": [
+          [
+            -0.925,
+            -0.405
+          ],
+          [
+            -0.82,
+            -0.405
+          ],
+          [
+            -0.82,
+            -0.245
+          ],
+          [
+            -0.28,
+            -0.245
+          ],
+          [
+            -0.28,
+            -0.405
+          ],
+          [
+            0.28,
+            -0.405
+          ],
+          [
+            0.28,
+            -0.245
+          ],
+          [
+            0.82,
+            -0.245
+          ],
+          [
+            0.82,
+            -0.405
+          ],
+          [
+            0.925,
+            -0.405
+          ],
+          [
+            0.925,
+            0.405
+          ],
+          [
+            0.82,
+            0.405
+          ],
+          [
+            0.82,
+            0.245
+          ],
+          [
+            0.28,
+            0.245
+          ],
+          [
+            0.28,
+            0.405
+          ],
+          [
+            -0.28,
+            0.405
+          ],
+          [
+            -0.28,
+            0.245
+          ],
+          [
+            -0.82,
+            0.245
+          ],
+          [
+            -0.82,
+            0.405
+          ],
+          [
+            -0.925,
+            0.405
+          ]
+        ],
+        "closed": true,
+        "region": "chassis",
+        "material": "chassis-paint"
       },
       {
        "id": "tyre-f-l",
@@ -4296,7 +4375,7 @@
        "tone": 0.3,
        "kind": "rect",
        "x": -0.05,
-       "y": 0.455,
+       "y": 0.45,
        "w": 0.1,
        "h": 0.1,
        "region": "arms",
@@ -7123,7 +7202,7 @@
        "tone": 0.3,
        "kind": "rect",
        "x": -0.05,
-       "y": 0.455,
+       "y": 0.45,
        "w": 0.1,
        "h": 0.1,
        "region": "arms",
@@ -10760,6 +10839,8 @@
       "key": "power-draw",
       "heatW": 150
      },
+     "ratedPowerW": 0,
+     "ratedPowerBasis": "passive",
      "source": "authored-estimate"
     },
     {
@@ -10796,6 +10877,8 @@
       "key": "lift-pump",
       "heatW": 400
      },
+     "ratedPowerW": 3000,
+     "ratedPowerBasis": "electrical-input",
      "source": "authored-estimate"
     },
     {
@@ -10969,10 +11052,7 @@
           "role": "body",
           "tone": 0.45,
           "profile": [[-0.925, 0.14], [-0.9, 0.1], [0.9, 0.1], [0.925, 0.14], [0.925, 0.45], [-0.925, 0.45]],
-          "holes": [
-            [[-0.62, 0.17], [-0.17, 0.17], [-0.17, 0.43], [-0.62, 0.43]],
-            [[-0.08, 0.17], [0.32, 0.17], [0.32, 0.43], [-0.08, 0.43]]
-          ],
+          "holes": [[[-0.62, 0.17], [-0.17, 0.17], [-0.17, 0.4], [-0.62, 0.4]], [[-0.08, 0.17], [0.32, 0.17], [0.32, 0.4], [-0.08, 0.4]]],
           "plane": "xy",
           "from": -0.245,
           "to": 0.245
@@ -11042,9 +11122,45 @@
           "role": "body",
           "tone": 0.9,
           "tags": ["motor-vent"],
-          "profile": [[0.0, 0.05], [0.01, 0.05]],
+          "profile": [[0.0, 0.05], [0.0075, 0.05]],
           "axis": [1.0, 0.0, 0.0],
-          "origin": [0.925, 0.3, 0.0]
+          "origin": [0.9225, 0.3, 0.0]
+        },
+        {
+          "id": "lift-cylinder",
+          "kind": "box",
+          "bone": "chassis",
+          "material": "scissor-steel",
+          "role": "body",
+          "tone": 0.3,
+          "size": [
+            0.8,
+            0.1,
+            0.1
+          ],
+          "transform": {
+            "translation": [0.0, 0.5, 0.0]
+          }
+        },
+        {
+          "id": "lift-cylinder-eye",
+          "kind": "box",
+          "bone": "chassis",
+          "material": "scissor-steel",
+          "role": "body",
+          "tone": 0.3,
+          "size": [
+            0.04,
+            0.07,
+            0.44
+          ],
+          "transform": {
+            "translation": [
+              0.0,
+              0.513,
+              0.0
+            ]
+          }
         },
         {
           "id": "battery-plume-outlet",
@@ -11806,14 +11922,12 @@
         {
           "id": "th-motor-vent-outlet",
           "of": "motor-vent-outlet",
-          "region": "motor-pump",
-          "tags": ["motor-vent"]
+          "region": "motor-pump"
         },
         {
           "id": "th-battery-plume-outlet",
           "of": "battery-plume-outlet",
-          "region": "battery-box",
-          "tags": ["battery-plume"]
+          "region": "battery-box"
         },
         {
           "id": "th-tyre-f-l",
@@ -12491,6 +12605,66 @@
           }
         },
         {
+          "id": "support-contact-f-l",
+          "kind": "box",
+          "bone": "chassis",
+          "material": "rubber",
+          "role": "body",
+          "tone": 0.1,
+          "member": "chassis",
+          "part": "support",
+          "anchor": "contact-f-l",
+          "size": [0.1, 0.0075, 0.16],
+          "transform": {
+            "translation": [0.55, 0.00375, 0.325]
+          }
+        },
+        {
+          "id": "support-contact-f-r",
+          "kind": "box",
+          "bone": "chassis",
+          "material": "rubber",
+          "role": "body",
+          "tone": 0.1,
+          "member": "chassis",
+          "part": "support",
+          "anchor": "contact-f-r",
+          "size": [0.1, 0.0075, 0.16],
+          "transform": {
+            "translation": [0.55, 0.00375, -0.325]
+          }
+        },
+        {
+          "id": "support-contact-r-l",
+          "kind": "box",
+          "bone": "chassis",
+          "material": "rubber",
+          "role": "body",
+          "tone": 0.1,
+          "member": "chassis",
+          "part": "support",
+          "anchor": "contact-r-l",
+          "size": [0.1, 0.0075, 0.16],
+          "transform": {
+            "translation": [-0.55, 0.00375, 0.325]
+          }
+        },
+        {
+          "id": "support-contact-r-r",
+          "kind": "box",
+          "bone": "chassis",
+          "material": "rubber",
+          "role": "body",
+          "tone": 0.1,
+          "member": "chassis",
+          "part": "support",
+          "anchor": "contact-r-r",
+          "size": [0.1, 0.0075, 0.16],
+          "transform": {
+            "translation": [-0.55, 0.00375, -0.325]
+          }
+        },
+        {
           "id": "mass-platform",
           "kind": "box",
           "bone": "platform",
@@ -12528,10 +12702,7 @@
           "role": "body",
           "tone": 0.45,
           "profile": [[-0.925, 0.14], [-0.9, 0.1], [0.9, 0.1], [0.925, 0.14], [0.925, 0.45], [-0.925, 0.45]],
-          "holes": [
-            [[-0.62, 0.17], [-0.17, 0.17], [-0.17, 0.43], [-0.62, 0.43]],
-            [[-0.08, 0.17], [0.32, 0.17], [0.32, 0.43], [-0.08, 0.43]]
-          ],
+          "holes": [[[-0.62, 0.17], [-0.17, 0.17], [-0.17, 0.4], [-0.62, 0.4]], [[-0.08, 0.17], [0.32, 0.17], [0.32, 0.4], [-0.08, 0.4]]],
           "plane": "xy",
           "from": -0.245,
           "to": 0.245
@@ -12603,7 +12774,43 @@
           "tags": ["motor-vent"],
           "profile": [[0.0, 0.06], [0.015, 0.06]],
           "axis": [1.0, 0.0, 0.0],
-          "origin": [0.925, 0.3, 0.0]
+          "origin": [0.915, 0.3, 0.0]
+        },
+        {
+          "id": "lift-cylinder",
+          "kind": "box",
+          "bone": "chassis",
+          "material": "scissor-steel",
+          "role": "body",
+          "tone": 0.3,
+          "size": [
+            0.8,
+            0.1,
+            0.1
+          ],
+          "transform": {
+            "translation": [0.0, 0.5, 0.0]
+          }
+        },
+        {
+          "id": "lift-cylinder-eye",
+          "kind": "box",
+          "bone": "chassis",
+          "material": "scissor-steel",
+          "role": "body",
+          "tone": 0.3,
+          "size": [
+            0.04,
+            0.07,
+            0.44
+          ],
+          "transform": {
+            "translation": [
+              0.0,
+              0.513,
+              0.0
+            ]
+          }
         },
         {
           "id": "battery-plume-outlet",
@@ -13337,14 +13544,12 @@
         {
           "id": "th-motor-vent-outlet",
           "of": "motor-vent-outlet",
-          "region": "motor-pump",
-          "tags": ["motor-vent"]
+          "region": "motor-pump"
         },
         {
           "id": "th-battery-plume-outlet",
           "of": "battery-plume-outlet",
-          "region": "battery-box",
-          "tags": ["battery-plume"]
+          "region": "battery-box"
         },
         {
           "id": "th-tyre-f-l",
@@ -13940,6 +14145,66 @@
           }
         },
         {
+          "id": "support-contact-f-l",
+          "kind": "box",
+          "bone": "chassis",
+          "material": "rubber",
+          "role": "body",
+          "tone": 0.1,
+          "member": "chassis",
+          "part": "support",
+          "anchor": "contact-f-l",
+          "size": [0.1, 0.015, 0.16],
+          "transform": {
+            "translation": [0.55, 0.0075, 0.325]
+          }
+        },
+        {
+          "id": "support-contact-f-r",
+          "kind": "box",
+          "bone": "chassis",
+          "material": "rubber",
+          "role": "body",
+          "tone": 0.1,
+          "member": "chassis",
+          "part": "support",
+          "anchor": "contact-f-r",
+          "size": [0.1, 0.015, 0.16],
+          "transform": {
+            "translation": [0.55, 0.0075, -0.325]
+          }
+        },
+        {
+          "id": "support-contact-r-l",
+          "kind": "box",
+          "bone": "chassis",
+          "material": "rubber",
+          "role": "body",
+          "tone": 0.1,
+          "member": "chassis",
+          "part": "support",
+          "anchor": "contact-r-l",
+          "size": [0.1, 0.015, 0.16],
+          "transform": {
+            "translation": [-0.55, 0.0075, 0.325]
+          }
+        },
+        {
+          "id": "support-contact-r-r",
+          "kind": "box",
+          "bone": "chassis",
+          "material": "rubber",
+          "role": "body",
+          "tone": 0.1,
+          "member": "chassis",
+          "part": "support",
+          "anchor": "contact-r-r",
+          "size": [0.1, 0.015, 0.16],
+          "transform": {
+            "translation": [-0.55, 0.0075, -0.325]
+          }
+        },
+        {
           "id": "mass-platform",
           "kind": "box",
           "bone": "platform",
@@ -13977,10 +14242,7 @@
           "role": "body",
           "tone": 0.45,
           "profile": [[-0.925, 0.14], [-0.9, 0.1], [0.9, 0.1], [0.925, 0.14], [0.925, 0.45], [-0.925, 0.45]],
-          "holes": [
-            [[-0.62, 0.17], [-0.17, 0.17], [-0.17, 0.43], [-0.62, 0.43]],
-            [[-0.08, 0.17], [0.32, 0.17], [0.32, 0.43], [-0.08, 0.43]]
-          ],
+          "holes": [[[-0.62, 0.17], [-0.17, 0.17], [-0.17, 0.4], [-0.62, 0.4]], [[-0.08, 0.17], [0.32, 0.17], [0.32, 0.4], [-0.08, 0.4]]],
           "plane": "xy",
           "from": -0.245,
           "to": 0.245
@@ -14052,7 +14314,43 @@
           "tags": ["motor-vent"],
           "profile": [[0.0, 0.06], [0.03, 0.06]],
           "axis": [1.0, 0.0, 0.0],
-          "origin": [0.925, 0.3, 0.0]
+          "origin": [0.9, 0.3, 0.0]
+        },
+        {
+          "id": "lift-cylinder",
+          "kind": "box",
+          "bone": "chassis",
+          "material": "scissor-steel",
+          "role": "body",
+          "tone": 0.3,
+          "size": [
+            0.8,
+            0.1,
+            0.1
+          ],
+          "transform": {
+            "translation": [0.0, 0.5, 0.0]
+          }
+        },
+        {
+          "id": "lift-cylinder-eye",
+          "kind": "box",
+          "bone": "chassis",
+          "material": "scissor-steel",
+          "role": "body",
+          "tone": 0.3,
+          "size": [
+            0.04,
+            0.07,
+            0.44
+          ],
+          "transform": {
+            "translation": [
+              0.0,
+              0.513,
+              0.0
+            ]
+          }
         },
         {
           "id": "battery-plume-outlet",
@@ -14574,14 +14872,12 @@
         {
           "id": "th-motor-vent-outlet",
           "of": "motor-vent-outlet",
-          "region": "motor-pump",
-          "tags": ["motor-vent"]
+          "region": "motor-pump"
         },
         {
           "id": "th-battery-plume-outlet",
           "of": "battery-plume-outlet",
-          "region": "battery-box",
-          "tags": ["battery-plume"]
+          "region": "battery-box"
         },
         {
           "id": "th-tyre-f-l",
@@ -15092,6 +15388,66 @@
           "size": [0.66, 0.06, 0.3],
           "transform": {
             "translation": [0.0, 0.13, 0.0]
+          }
+        },
+        {
+          "id": "support-contact-f-l",
+          "kind": "box",
+          "bone": "chassis",
+          "material": "rubber",
+          "role": "body",
+          "tone": 0.1,
+          "member": "chassis",
+          "part": "support",
+          "anchor": "contact-f-l",
+          "size": [0.1, 0.03, 0.16],
+          "transform": {
+            "translation": [0.55, 0.015, 0.325]
+          }
+        },
+        {
+          "id": "support-contact-f-r",
+          "kind": "box",
+          "bone": "chassis",
+          "material": "rubber",
+          "role": "body",
+          "tone": 0.1,
+          "member": "chassis",
+          "part": "support",
+          "anchor": "contact-f-r",
+          "size": [0.1, 0.03, 0.16],
+          "transform": {
+            "translation": [0.55, 0.015, -0.325]
+          }
+        },
+        {
+          "id": "support-contact-r-l",
+          "kind": "box",
+          "bone": "chassis",
+          "material": "rubber",
+          "role": "body",
+          "tone": 0.1,
+          "member": "chassis",
+          "part": "support",
+          "anchor": "contact-r-l",
+          "size": [0.1, 0.03, 0.16],
+          "transform": {
+            "translation": [-0.55, 0.015, 0.325]
+          }
+        },
+        {
+          "id": "support-contact-r-r",
+          "kind": "box",
+          "bone": "chassis",
+          "material": "rubber",
+          "role": "body",
+          "tone": 0.1,
+          "member": "chassis",
+          "part": "support",
+          "anchor": "contact-r-r",
+          "size": [0.1, 0.03, 0.16],
+          "transform": {
+            "translation": [-0.55, 0.015, -0.325]
           }
         },
         {

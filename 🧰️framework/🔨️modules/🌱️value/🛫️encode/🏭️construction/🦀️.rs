@@ -41,3 +41,10 @@ impl NativeEncodeControl<'_>{
   let mut scope=Scope{control,maximum:&mut self.maximum_bytes,scope_maximum:&mut self.scope_maximum,ledger:&mut self.ledger,completed:&mut self.completed,total:&mut self.total,started:&mut self.started,stage:&mut self.stage,depth:&mut self.depth,work_state:&mut self.action.state};operation(&mut scope.control)
  }
 }
+impl<'a> NativeEncodeControl<'a>{
+ /// 🏭️ Installs the caller's original construction loan for the whole life of this control: the resident twin of [`NativeEncodeControl::with_construction_recipient`] for runs whose decoder and encoder must share one loan lifetime.
+ pub fn install_construction_recipient(&mut self,loan:&'a mut OriginalConstructionLoan<'a>)->Result<(),ValueError>{
+  if self.construction.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native encoder cannot replace its original construction recipient"))}
+  self.construction_identity=Some(loan.identity());self.construction=Some(loan);Ok(())
+ }
+}

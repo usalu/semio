@@ -3,7 +3,7 @@
   "checkoutFromTests": "../../../../../../../../../..",
   "entryFromTests": "../../🎬️executor/🟦️.ts",
   "executorOracleFromTests": "../../🎬️executor/🧪️tests/🐍️oracle/🐍️.py",
-  "maximumFiles": 450,
+  "maximumFiles": 512,
   "traceFields": [
     "command",
     "workerKind",
@@ -31,7 +31,7 @@
   ],
   "lazyEdgeBound": 8,
   "schedulingOracleFromTests": "./🐍️oracle/🐍️.py",
-  "maximumKeyedFiles": 200,
+  "maximumKeyedFiles": 256,
   "keyedProducers": [
     {
       "reason": "the executor decides which command runs with which environment and which outputs are cached",

@@ -1,0 +1,91 @@
+/** 🏊️ Contract: the pool puller restarts for new code within the pool numbers of the schema (90 s of quiet, at most 10 min of deferral, one handover per 10 min), never for an edit outside its closure, and never waits for an owner in flight: its children are detached and finish it. */
+import {afterAll,expect,test} from "bun:test";
+import {appendFileSync,existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync} from "node:fs";
+import {tmpdir} from "node:os";
+import {dirname,join} from "node:path";
+import {createSidecarClosureWatchV1} from "../../🧮️closure/🟦️.ts";
+import {createSidecarRestartV1,sidecarRestartPolicyV1} from "../../🟦️.ts";
+import {superviseGraphChildV1} from "../../👷️agent/🟦️.ts";
+
+const scratch:string[]=[];
+afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true});});
+const write=(root:string,name:string,text:string)=>{const path=join(root,name);mkdirSync(dirname(path),{recursive:true});writeFileSync(path,text);return path;};
+const pool={...sidecarRestartPolicyV1,...sidecarRestartPolicyV1.pool};
+const rig=(work?:{busy:boolean;restartPending:boolean;wake?:()=>void})=>{
+ const root=mkdtempSync(join(tmpdir(),"sidecar-pool-"));scratch.push(root);
+ write(root,"main.ts",'import {a} from "./a.ts";\nexport const run=a;\n');const inside=write(root,"a.ts","export const a=1;\n"),outside=write(root,"outside.ts","export const b=1;\n");
+ let clock=1_000_000;const events:string[]=[];
+ const restart=createSidecarRestartV1({role:"pool",watch:createSidecarClosureWatchV1([join(root,"main.ts")],[],root),...work===undefined?{}:{work},policy:pool,begin:()=>events.push(`begin@${clock}`),drain:()=>events.push("drain"),abort:()=>events.push("abort"),write:()=>{},now:()=>clock,after:()=>{}});
+ return{inside,outside,events,advance:(ms:number)=>{clock+=ms;restart.tick();},at:()=>clock};
+};
+
+test("the pool numbers are the declared ones: a 5 s look, 90 s quiet, 10 min at most, one handover per 10 min",()=>{
+ expect(pool.watchMilliseconds).toBe(5000);expect(pool.quietMilliseconds).toBe(90000);expect(pool.maximumDeferralMilliseconds).toBe(600000);expect(pool.minimumIntervalMilliseconds).toBe(600000);
+});
+
+test("a closure that is edited without a pause restarts within the maximum deferral, an edit elsewhere never",()=>{
+ const world=rig();appendFileSync(world.outside,"// elsewhere\n");
+ const began=world.at();
+ for(let step=0;step<200&&world.events.length===0;step++){appendFileSync(world.inside,`// ${step}\n`);world.advance(pool.watchMilliseconds);}
+ expect(world.events[0]).toMatch(/^begin@/);
+ expect(Number(world.events[0]!.slice(6))-began).toBeLessThanOrEqual(Math.max(pool.maximumDeferralMilliseconds,pool.minimumIntervalMilliseconds)+pool.watchMilliseconds);
+});
+
+test("an owner in flight is never waited for: the supervisor restarts when the quiet period is over and the children finish the owner on their own",()=>{
+ const work={busy:true,restartPending:false} as {busy:boolean;restartPending:boolean;wake?:()=>void},world=rig(work);
+ appendFileSync(world.inside,"// edit\n");
+ for(let step=0;step<130&&world.events.length===0;step++)world.advance(pool.watchMilliseconds);
+ expect(work.restartPending).toBe(false);expect(world.events[0]).toMatch(/^begin@/);
+});
+
+test("stopping the supervisor never leaves the pool child behind: a child that ignores SIGTERM is killed after the grace and stop waits for it",async()=>{
+ const root=mkdtempSync(join(tmpdir(),"sidecar-pool-orphan-"));scratch.push(root);
+ const pidFile=join(root,"pid"),entry=write(root,"entry.ts",`import {writeFileSync} from "node:fs";\nprocess.on("SIGTERM",()=>{});\nwriteFileSync(${JSON.stringify(pidFile)},String(process.pid));\nsetInterval(()=>{},1000);\n`);
+ const controller=new AbortController(),lines:string[]=[];
+ const supervisor=superviseGraphChildV1({root,environment:{},signal:controller.signal,write:line=>lines.push(line)},entry,"pool",{graceMilliseconds:400});
+ for(let wait=0;wait<100&&!existsSync(pidFile);wait++)await Bun.sleep(50);
+ const pid=Number(readFileSync(pidFile,"utf8"));expect(pid).toBeGreaterThan(0);
+ const alive=()=>{try{process.kill(pid,0);return true;}catch{return false;}};
+ expect(alive()).toBe(true);
+ const began=Date.now();controller.abort();await supervisor.stop();
+ expect(alive()).toBe(false);expect(Date.now()-began).toBeLessThan(5000);
+});
+
+test("the pool reads the host gate in its own words: the grants book the cores, their untouched reservations are kept free, a waiter shows that the machine's own work queues, and the pool's children are no grants",async()=>{
+ const {ownerPoolHostOfV1}=await import("../../🏊️pool/🟦️.ts");
+ const {ownerPoolTargetV1}=await import("../../../../🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🟦️.ts");
+ const host={version:1,atMs:1,platform:"darwin",cores:8,totalMegabytes:16384,availableMegabytes:12000,pressure:"normal",swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,load:2,openFiles:1,openFilesMaximum:100,attachedImages:0};
+ const grant=(id:string,cpu:number,reserved:number,observed:number,lent?:number)=>({id,operation:"exec",jobs:cpu,cpu,reservedMegabytes:reserved,admittedAtMs:1,observedMegabytes:observed,pid:1,bootAtMs:0,...lent===undefined?{}:{lentSinceMs:lent}});
+ const view={host,grants:[grant("a",2,1536,100),grant("b",1,1536,1536),grant("lent",4,9999,0,5)],waiters:[{request:{id:"w",operation:"exec",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:1,perJobMegabytes:0,cpuPerJob:1},arrivedAtMs:1,pid:2}]} as never;
+ const mapped=ownerPoolHostOfV1(view,31);
+ expect(mapped.foreground).toEqual({cpu:3,unrealizedMegabytes:1436,waiters:1,oldestWaitMilliseconds:30});expect(mapped.cores).toBe(8);expect(mapped.load).toBe(2);
+ const target=ownerPoolTargetV1({host:mapped,children:0,childMegabytes:800});
+ expect(target.children).toBe(3);expect(target.reason).toBe("yielding");
+});
+
+test("the pool tells how long the oldest request of the machine's own work has waited, never counting a farm worker or a lent request, and the pool yields to it after the declared time",async()=>{
+ const {ownerPoolHostOfV1}=await import("../../🏊️pool/🟦️.ts");
+ const {ownerPoolTargetV1,OWNER_POOL_POLICY_V1:P}=await import("../../../../🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🟦️.ts");
+ const host={version:1,atMs:1,platform:"darwin",cores:8,totalMegabytes:16384,availableMegabytes:12000,pressure:"normal",swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,load:2,openFiles:1,openFilesMaximum:100,attachedImages:0};
+ const waiter=(id:string,arrivedAtMs:number,extra:Record<string,unknown>={})=>({request:{id,operation:"exec",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:1,perJobMegabytes:0,cpuPerJob:1,...extra},arrivedAtMs,pid:2});
+ const view=(waiters:unknown[])=>({host,grants:[],waiters}) as never;
+ expect(ownerPoolHostOfV1(view([]),100_000).foreground.oldestWaitMilliseconds).toBe(0);
+ expect(ownerPoolHostOfV1(view([waiter("a",90_000),waiter("b",60_000)]),100_000).foreground.oldestWaitMilliseconds).toBe(40_000);
+ expect(ownerPoolHostOfV1(view([waiter("farm",1,{label:"graph-farm"}),waiter("lent",1,{priority:"lent"}),waiter("a",95_000)]),100_000).foreground.oldestWaitMilliseconds).toBe(5000);
+ const children=(waited:number)=>ownerPoolTargetV1({host:ownerPoolHostOfV1(view([waiter("plan",100_000-waited,{operation:"graph-plan",label:"graph-plan"})]),100_000),children:6,childMegabytes:800});
+ expect(children(4999).children).toBeGreaterThan(0);expect(children(5000)).toEqual({children:0,reason:"waiting"});
+ expect(children(599_999)).toEqual({children:0,reason:"waiting"});expect(children(600_000).children).toBeGreaterThan(0);
+});
+
+test("a farmed owner that holds a reservation nobody measures does not keep the pool from starting children: its untouched memory counts at the declared share, the machine's own work in full",async()=>{
+ const {ownerPoolHostOfV1}=await import("../../🏊️pool/🟦️.ts");
+ const {ownerPoolTargetV1}=await import("../../../../🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🟦️.ts");
+ const host={version:1,atMs:1,platform:"darwin",cores:10,totalMegabytes:16384,availableMegabytes:12000,pressure:"normal",swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,load:3,openFiles:1,openFilesMaximum:100,attachedImages:0};
+ const grant=(id:string,reserved:number,observed:number,label?:string)=>({id,operation:"exec",jobs:1,cpu:1,reservedMegabytes:reserved,admittedAtMs:1,observedMegabytes:observed,pid:1,bootAtMs:0,...label===undefined?{}:{label}});
+ const farm=Array.from({length:6},(_,index)=>grant("f"+index,1536,0,"graph-farm"));
+ const mapped=ownerPoolHostOfV1({host,grants:[...farm,grant("own",8000,5000)],waiters:[]} as never,1);
+ expect(mapped.foreground.unrealizedMegabytes).toBe(3000+Math.floor(6*1536*0.25));
+ expect(ownerPoolHostOfV1({host,grants:farm,waiters:[]} as never,1).foreground.unrealizedMegabytes).toBe(2304);
+ const target=ownerPoolTargetV1({host:ownerPoolHostOfV1({host,grants:farm,waiters:[]} as never,1),children:1,childMegabytes:1200});
+ expect(target.children).toBeGreaterThanOrEqual(3);
+});

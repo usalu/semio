@@ -10,7 +10,7 @@ import {HOST_POLICY_V1,renderBothV1,renderTextV1,validatorV1} from "../../📨�
 import {authorizeCapabilityV1,createRootKeyV1,verifyCapabilityV1} from "../../📨️protocol/🔑️capability/🟨️.mjs";
 import {workspaceIdV1} from "../../📨️protocol/📍️endpoint/🏠️host/🟨️.mjs";
 import {BusyErrorV1,createGovernorV1} from "../🚦️governor/🟨️.mjs";
-import {failureRefusalV1} from "../🧯️failure/🟨️.mjs";
+import {failureRefusalV1,serviceRouteV1} from "../🧯️failure/🟨️.mjs";
 import {createIndexPoolV1} from "./🧊️pool/🟨️.mjs";
 import {planRetentionV1} from "./🧹️retention/🟨️.mjs";
 import {boundedCacheStatsV1} from "../../../🧊️bounded/🟨️.mjs";
@@ -41,6 +41,9 @@ const MiB=1024*1024;
 /** 🔑 What makes two plan requests the same job: the digest of the index, the content scope (the digest of the captured inputs where the planner can bind a reply to each workspace, else the one workspace), revision, parent, tool, graph policy, arguments, targets and the dirty set. */
 const jobKeyV1=(indexKey,scope,frame)=>sha(JSON.stringify([indexKey,scope,frame.revision??null,frame.parent??null,frame.tool??null,frame.graphPolicy??null,frame.arguments??null,[...new Set(frame.targets)].sort(),frame.dirty??null]));
 const sha=text=>createHash("sha256").update(text).digest("hex");
+/** 💓 Whether a request that has been quiet for `intervalMilliseconds` is sent a keepalive frame: only while the service really holds it, that is before it is attached to a job and while a job holds it as a client, so that a request no job holds any more falls silent and its client's silence deadline ends the wait instead of a keepalive hiding the loss.
+ * @see ../../🧪️tests/💓️keepalive/🟦️.ts */
+export const keepaliveDueV1=({stage,held,sentAt,now,intervalMilliseconds})=>now-sentAt>=intervalMilliseconds&&(stage==="starting"||stage==="attached"&&held===true);
 const hangUp=socket=>{socket.end();setTimeout(()=>socket.destroy(),100).unref?.();};
 const alive=pid=>{try{process.kill(pid,0);return true;}catch(error){return error?.code==="EPERM";}};
 
@@ -69,9 +72,11 @@ export function makeRoomV1(directory,keep,bytes){
 
 /** 🌐 Creates the service; call `start()`, then wait for `closed`. `access` (`{root,platform,home}`, default the working directory and the running system) names the checkout whose refusal by macOS is the missing file access consent: after answering such a request the service closes itself with the reason `access-denied` instead of staying alive without the consent. `ports.planner` is `{identify?,load,plan,contentDigest?,bind?}` (`contentDigest` and `bind` together let workspaces with equal captured inputs share one job, `bind` answering each client's own pin, manifest and revision) (see `createGraphPlannerPortV1`); `ports.admission` defaults to the fair governor. */
 export function createHostServiceV1(options){
- const{runtime,ports,implementation,log=()=>{},now=()=>Date.now(),requireCapability=true,onExit=()=>{}}=options;
+ const{runtime,ports,implementation,log=()=>{},now=()=>Date.now(),requireCapability=true,onExit=()=>{},environment=process.env}=options;
  const policy=Object.freeze({...HOST_POLICY_V1,...(options.policy??{}),reload:Object.freeze({...HOST_POLICY_V1.reload,...(options.policy?.reload??{})})});
+ const failureStreak={cause:"",count:0};
  const posix=process.platform!=="win32",instance=randomBytes(8).toString("hex"),startedAt=now();
+ const route=serviceRouteV1(environment),idleLimit=route==="direct"?Math.min(policy.implicitIdleShutdownMilliseconds??policy.idleShutdownMilliseconds,policy.idleShutdownMilliseconds):policy.idleShutdownMilliseconds,owner={route,pid:process.ppid,idleSeconds:Math.ceil(idleLimit/1000)};
  const governor=ports.admission??createGovernorV1({maximumInFlight:policy.maximumInFlight,maximumQueued:policy.maximumQueued});
  const pool=createIndexPoolV1({maximumBytes:policy.maximumIndexBytes,maximumEntries:policy.maximumWorkspaces,now,onEvict:key=>{for(const memoKey of[...memo.keys()])if(memoKey.startsWith(key))memo.delete(memoKey);}});
  const memo=new Map(),workspaces=new Map(),connections=new Set(),spills=join(runtime.directory,"plans-"+runtime.tag);
@@ -82,6 +87,7 @@ export function createHostServiceV1(options){
 
  const send=(connection,frame)=>{
   const socket=connection.socket;
+  connection.sentAt=now();
   if(socket.destroyed||!socket.writable)return Promise.resolve();
   if(socket.write(encodeFrameV1(frame)))return Promise.resolve();
   return new Promise(resolve=>{const done=()=>{socket.off("drain",done);socket.off("close",done);resolve();};socket.once("drain",done);socket.once("close",done);});
@@ -151,17 +157,21 @@ export function createHostServiceV1(options){
   }
   const controller=new AbortController();connection.requests.set(frame.id,controller);
   const deadline=frame.deadlineMs?setTimeout(()=>controller.abort(Object.assign(new Error("deadline"),{code:"deadline"})),frame.deadlineMs):undefined;
-  const client={connection,frame,controller};
+  const client={connection,frame,controller,stage:"starting",job:undefined},began=now();
+  const alive=setInterval(()=>{if(keepaliveDueV1({stage:client.stage,held:client.job?.clients.has(client),sentAt:connection.sentAt??began,now:now(),intervalMilliseconds:policy.requestKeepaliveMilliseconds}))void send(connection,{t:"progress",id:frame.id,phase:"alive",done:0,total:0,message:text(connection,"host-alive",{seconds:Math.round((now()-began)/1000)})});},Math.max(10,Math.floor(policy.requestKeepaliveMilliseconds/2)));alive.unref?.();
   try{
    await send(connection,{t:"accepted",id:frame.id,queue:governor.queued});
    controller.signal.throwIfAborted();
    const workspace=openWorkspace(frame);
    if(!workspace){await refuse(connection,frame.id,"invalid","host-unknown-workspace",{workspace:frame.workspace},"never");return;}
-   const outcome=await attach(workspace,client,await indexKeyOf(workspace,controller.signal),await scopeOf(workspace,frame,controller.signal));
+   const indexKey=await indexKeyOf(workspace,controller.signal),scope=await scopeOf(workspace,frame,controller.signal);
+   let outcome;
+   do outcome=await attach(workspace,client,indexKey,scope);while(outcome.error?.code==="unanswered"&&!controller.signal.aborted);
    if(outcome.error)throw outcome.error;
   }catch(error){
    if(error instanceof BusyErrorV1)await refuse(connection,frame.id,"busy","busy",{inFlight:error.inFlight,queued:error.queued},"later");
    else if(error?.code==="memory-pressure"){planned.budgetRefusals++;await refuse(connection,frame.id,"memory","host-memory-pressure-"+error.kind,{value:error.value,limit:error.limit,seconds:error.seconds},"later");}
+   else if(error?.code==="slice-worker-failing"){await refuse(connection,frame.id,"failed","host-slice-worker-failing",{count:error.count,exit:error.exit,cause:error.cause},"never");}
    else if(error?.code==="slice-restarts"){await refuse(connection,frame.id,"stale","host-slice-restarts",{restarts:error.restarts,exit:error.exit},"later");}
    else if(error?.code==="memory-budget"){planned.budgetRefusals++;await refuse(connection,frame.id,"memory","host-memory-budget",{current:error.currentMegabytes,limit:error.limitMegabytes,margin:error.marginMegabytes},"later");}
    else if(error?.code==="plan-memory"){planned.budgetRefusals++;log("graph-plan-too-heavy",JSON.stringify({stage:error.stage,operation:error.operation,megabytes:error.currentMegabytes,limit:error.limitMegabytes,available:error.availableMegabytes,reserve:error.reserveMegabytes,reason:error.reason,worker:error.sample}));await refuse(connection,frame.id,"unserved","host-graph-plan-too-heavy",{stage:error.stage,operation:error.operation,megabytes:error.currentMegabytes,limit:error.limitMegabytes,available:error.availableMegabytes,reserve:error.reserveMegabytes},"later");}
@@ -172,11 +182,11 @@ export function createHostServiceV1(options){
     if(reason?.code==="deadline")await refuse(connection,frame.id,"deadline","deadline",{milliseconds:frame.deadlineMs},"never");
     else await refuse(connection,frame.id,"shutdown","shutdown",{},"never");
    }else{
-    const failure=failureRefusalV1(error,{log,logPath:runtime.log,root:options.access?.root??process.cwd(),platform:options.access?.platform,home:options.access?.home});
+    const failure=failureRefusalV1(error,{streak:failureStreak,sameCauseMaximum:policy.sliceRestartSameCauseMaximum,log,logPath:runtime.log,root:options.access?.root??process.cwd(),platform:options.access?.platform,home:options.access?.home});
     await refuse(connection,frame.id,failure.code,failure.key,failure.fields,failure.retry);
     if(failure.key==="access-denied")void drainAndExit("access-denied");
    }
-  }finally{clearTimeout(deadline);connection.requests.delete(frame.id);touch();}
+  }finally{clearTimeout(deadline);clearInterval(alive);connection.requests.delete(frame.id);touch();}
  }
 
  /** 🤝 Attaches a client to the running job of an identical request, or starts the job; resolves when the job answered this client, rejects-by-outcome when it failed, and detaches the client (cancelling the job with its last client) when the client goes away first. */
@@ -185,7 +195,7 @@ export function createHostServiceV1(options){
   client.workspace=workspace;
   let job=jobs.get(key);
   if(job)counters.coalesced++;else{job=startJob(key,workspace,client.frame,indexKey);}
-  job.clients.add(client);
+  job.clients.add(client);client.job=job;client.stage="attached";
   for(const replay of job.progress.values())void sendProgress(client,replay);
   return new Promise(resolve=>{
    client.resolve=resolve;
@@ -200,17 +210,17 @@ export function createHostServiceV1(options){
  }
 
  const ownerLine=row=>row.name+" ("+(row.kind??"-")+", "+Math.round(row.seconds)+", "+(row.rows??0)+")";
- const sendProgress=(client,{phase,done,total,key,fields})=>{lastProgressAt=now();const{running,decision,...rest}=fields,owners=running===undefined?undefined:running.slice(0,3).map(ownerLine).join(", ");return send(client.connection,{t:"progress",id:client.frame.id,phase,done,total,message:text(client.connection,owners===undefined?key:decision===undefined?"host-slice-owners":"host-slice-owners-"+decision.key,{...rest,...owners===undefined?{}:{owners},...decision===undefined?{}:{used:decision.used,budget:decision.budget,kind:decision.kind??"",minimum:decision.minimum??0,floor:decision.floor??0,limit:decision.limit??0}})});};
+ const sendProgress=(client,{phase,done,total,key,fields})=>{lastProgressAt=now();const{running,decision,...rest}=fields,owners=running===undefined?undefined:running.slice(0,3).map(ownerLine).join(", ");return send(client.connection,{t:"progress",id:client.frame.id,phase,done,total,message:text(client.connection,owners===undefined?key:decision===undefined?"host-slice-owners":"host-slice-owners-"+decision.key,{...rest,...owners===undefined?{}:{owners},...decision===undefined?{}:{used:decision.used,budget:decision.budget,kind:decision.kind??"",minimum:decision.minimum??0,floor:decision.floor??0,limit:decision.limit??0,cause:decision.cause??""}})});};
 
  const settleAfterJobV1=async()=>{if(jobs.size>0||governor.inFlight>0)return;try{await ports.settle?.();}catch{}};
  function startJob(key,workspace,frame,indexKey){
-  const controller=new AbortController(),job={key,controller,clients:new Set(),progress:new Map()};
+  const controller=new AbortController(),job={key,controller,clients:new Set(),answered:new Set(),progress:new Map()};
   jobs.set(key,job);counters.jobs++;
   const progress=(phase,done,total,messageKey,fields)=>{
    const row={phase,done,total,key:messageKey,fields};job.progress.set(phase,row);
    return Promise.all([...job.clients].map(client=>sendProgress(client,row)));
   };
-  const finish=outcome=>{for(const client of[...job.clients])client.resolve?.(outcome);job.clients.clear();if(jobs.get(key)===job)jobs.delete(key);};
+  const finish=outcome=>{for(const client of[...job.clients])client.resolve?.(outcome.error===undefined&&!job.answered.has(client)?{error:Object.assign(new Error("The graph job ended without an answer for this client"),{code:"unanswered"})}:outcome);job.clients.clear();if(jobs.get(key)===job)jobs.delete(key);};
   job.settled=run(job,workspace,frame,progress,indexKey).then(()=>finish({}),error=>finish({error})).then(settleAfterJobV1);
   return job;
  }
@@ -241,7 +251,8 @@ export function createHostServiceV1(options){
    const reply={t:"plan-reply",revision:plan.revision,...plan.manifest?{manifest:plan.manifest}:{},...plan.pin?{pin:plan.pin}:{},...plan.slice?{slice:plan.slice}:{},plan:plan.tasks.length>policy.maximumInlinePlanTasks?spill({tasks:plan.tasks}):{tasks:plan.tasks},progress:phases,cacheHits:hit&&planHit?1:0};
    if(validateReply({...reply,id:1}).length)throw new Error("planner produced an invalid reply: "+validateReply({...reply,id:1})[0]);
    const bound=client=>ports.planner.bind?ports.planner.bind({root:client.workspace.root,workspace:client.workspace.id,agent:client.frame.agent,reply,signal:job.controller.signal}):undefined;
-   await Promise.all([...job.clients].map(async client=>{
+   for(let pending=[...job.clients];pending.length>0;pending=[...job.clients].filter(client=>!job.answered.has(client)))await Promise.all(pending.map(async client=>{
+    job.answered.add(client);
     const own=await bound(client),full={...reply,...own,id:client.frame.id};
     if(own&&validateReply(full).length)throw new Error("planner bound an invalid reply: "+validateReply(full)[0]);
     return send(client.connection,full);
@@ -251,7 +262,7 @@ export function createHostServiceV1(options){
 
  const status=id=>{
   const stats=pool.stats();
-  return{t:"service-status",id,pid:process.pid,instance,implementation,startedAt,rssMb:Math.round(process.memoryUsage().rss/MiB*10)/10,indexBytes:stats.bytes,indexes:stats.indexes,
+  return{t:"service-status",id,pid:process.pid,instance,implementation,startedAt,...runtime.identity?{identity:{...runtime.identity,tag:runtime.tag,directory:runtime.directory,endpoint:runtime.endpoint,log:runtime.log}}:{},owner,rssMb:Math.round(process.memoryUsage().rss/MiB*10)/10,indexBytes:stats.bytes,indexes:stats.indexes,
    workspaces:[...workspaces.values()].map(w=>({id:w.id,root:w.root,indexKey:w.indexKey??"0".repeat(64),indexBytes:w.indexKey===undefined?0:pool.size(w.indexKey),lastUsedAt:w.lastUsedAt,plans:w.plans})),memory:memoryStatusV1(ports.workers?.memory?.()),plans:{total:counters.plans,hits:counters.hits,computed:planned.computed,lastMilliseconds:planned.lastMilliseconds,totalMilliseconds:planned.milliseconds,captureFiles:planned.captureFiles,captureProbes:planned.captureProbes,unstaged:planned.unstaged,budgetRefusals:planned.budgetRefusals,...planned.load===undefined?{}:{load:planned.load}},clients:connections.size,queue:governor.queued,inFlight:governor.inFlight,...reload?{reload:reload.state()}:{}};
  };
 
@@ -313,7 +324,7 @@ export function createHostServiceV1(options){
  }
 
  const writeDescriptor=(stopping=false)=>{
-  try{atomicWrite(runtime.descriptor,JSON.stringify({v:1,pid:process.pid,instance,startedAt,endpoint:runtime.endpoint,protocol:1,implementation,...(stopping?{stopping:true}:{})}));}catch(error){log("descriptor-failed",String(error));}
+  try{atomicWrite(runtime.descriptor,JSON.stringify({v:1,pid:process.pid,instance,startedAt,endpoint:runtime.endpoint,protocol:1,implementation,owner,...(stopping?{stopping:true}:{})}));}catch(error){log("descriptor-failed",String(error));}
  };
 
  const newerSibling=()=>{
@@ -330,7 +341,7 @@ export function createHostServiceV1(options){
  const sweep=()=>{
   const at=now();
   for(const workspace of[...workspaces.values()])if(at-workspace.lastUsedAt>policy.workspaceIdleMilliseconds)closeWorkspace(workspace.id);
-  const rss=(ports.resident?.rss??(()=>process.memoryUsage().rss))(),governed=(ports.workers?.active?.()??0)>0;
+  const rss=(ports.resident?.rss??(()=>process.memoryUsage().rss))(),governed=(ports.workers?.active?.()??0)>0||governor.inFlight>0||[...connections].some(connection=>connection.requests.size>0);
   if(!governed&&rss>policy.maximumResidentBytes){
    for(const id of[...workspaces.keys()])closeWorkspace(id);
    pool.clear();memo.clear();globalThis.Bun?.gc?.(true);
@@ -374,7 +385,7 @@ export function createHostServiceV1(options){
    else{rootKey=createRootKeyV1();try{writeFileSync(runtime.key,rootKey,{flag:"wx",mode:0o600});}catch{rootKey=readFileSync(runtime.key);}}
    await listen();writeDescriptor();
    sweepPlans();sweepTimer=setInterval(sweepPlans,Math.max(50,policy.planSweepMilliseconds));sweepTimer.unref?.();
-   idleTimer=setInterval(()=>{if(connections.size===0&&governor.inFlight===0&&now()-lastActivity>policy.idleShutdownMilliseconds)void (ports.runInFlight??runInFlightV1)().then(running=>{if(running)lastActivity=now();else if(connections.size===0&&governor.inFlight===0)void drainAndExit("idle");});},Math.max(250,Math.min(policy.idleShutdownMilliseconds/4,30000)));idleTimer.unref?.();
+   idleTimer=setInterval(()=>{if(connections.size===0&&governor.inFlight===0&&now()-lastActivity>idleLimit)void (ports.runInFlight??runInFlightV1)().then(running=>{if(running)lastActivity=now();else if(connections.size===0&&governor.inFlight===0)void drainAndExit("idle");});},Math.max(250,Math.min(idleLimit/4,30000)));idleTimer.unref?.();
    residentTimer=setInterval(sweep,Math.max(50,policy.residentCheckMilliseconds));residentTimer.unref?.();
    if(reload){reloadTimer=setInterval(()=>{void reload.tick(cacheStop.signal);},Math.max(50,policy.reload.checkMilliseconds));reloadTimer.unref?.();}
    if(ports.cache?.tick){cacheTimer=setInterval(cacheTick,Math.max(50,policy.cacheTickMilliseconds));cacheTimer.unref?.();cacheTick();}

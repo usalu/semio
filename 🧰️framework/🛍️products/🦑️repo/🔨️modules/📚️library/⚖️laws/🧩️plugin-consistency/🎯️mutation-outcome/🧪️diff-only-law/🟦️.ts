@@ -1,4 +1,5 @@
 import { createRequire } from "node:module";
+import { typescriptCompilerV1 } from "../../../../🏗️build/🚀️bootstrap/🔷️typescript-compiler/🟨️.mjs";
 import type { BreachRecord } from "../../../../🚨️policy/🔖️breach/🟦️.ts";
 import { POLICY_MUTATION_PLAN_DIR, POLICY_MUTATIONS_FACET, policyArtifactRootOfMutationsDir, POLICY_RS_COMPONENT_LEAF_NAME } from "../../../../🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts";
 import { policyMutationLawInventory, policyMutationLawRustFiles, policyMutationLawSourceFiles } from "../🟦️.ts";
@@ -435,7 +436,7 @@ function policyHostApplyTypescriptBreaches(relPath: string, content: string, add
     if (POLICY_HOST_APPLY_TS_LOCAL_APPLY_RE.test(rhs) || locals.has(rhs.replace(/\W.*$/s, ""))) add(match.index, `${match[1]}.current = ${rhs.slice(0, 40)}`, "The shell writes the snapshot ref from a local apply instead of replacing it with the store's central-apply projection.");
   }
   if (!/localDocumentArchive|encodeDocumentArchiveBytes|restore\w*Archive/.test(code)) return;
-  policyHostApplyTypescript ??= createRequire(import.meta.url)("typescript") as typeof import("typescript");
+  policyHostApplyTypescript ??= typescriptCompilerV1() as unknown as typeof import("typescript");
   const ts = policyHostApplyTypescript;
   const source = ts.createSourceFile(relPath, content, ts.ScriptTarget.Latest, true, relPath.endsWith("x") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
   const isFunction = (node: import("typescript").Node): node is import("typescript").FunctionLikeDeclaration => ts.isArrowFunction(node) || ts.isFunctionExpression(node) || ts.isFunctionDeclaration(node) || ts.isMethodDeclaration(node);

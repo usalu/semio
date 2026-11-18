@@ -1,0 +1,12 @@
+05:01 UTC
+g1-m01     None         ch  3 tgt  0 run 1 opm   1.8 pub   48 st  560 cm  1352 rec  11 age   4s 4783e0
+g1-m02     None         ch  3 tgt  0 run 2 opm   0.8 pub   32 st  729 cm  1531 rec  15 age   1s 4783e0
+g1-m03     nothing-fits ch  1 tgt  1 run 0 opm   0.0 pub    0 st    6 cm   800 rec   0 age   2s 4783e0
+g1-m04     None         ch  1 tgt  0 run 1 opm   0.0 pub    0 st   25 cm   800 rec   0 age   2s 4783e0
+g1-m05     None         ch  1 tgt  0 run 1 opm   0.0 pub    2 st   40 cm   763 rec   0 age   3s 4783e0
+g1-m06     nothing-fits ch  1 tgt  1 run 0 opm   0.0 pub    0 st   14 cm   800 rec   0 age   3s 04011a
+g1-m07     None         ch  3 tgt  0 run 1 opm   0.4 pub   54 st 1067 cm  1440 rec  19 age   1s 4783e0
+g1-m08     yielding     ch  7 tgt  7 run 0 opm   0.0 pub    0 st   28 cm   800 rec   0 age   2s 4783e0
+g1-m10     None         ch  5 tgt  0 run 0 opm   0.0 pub    0 st   20 cm   800 rec   0 age  15s 4783e0
+g1-server  yielding     ch  1 tgt  1 run 0 opm   0.0 pub    0 st    2 cm   800 rec   0 age   0s 4783e0
+fleet opm 3.0

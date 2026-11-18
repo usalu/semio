@@ -6,7 +6,6 @@
   "allocationUnitBytes": 65536,
   "metadataBytesPerEntry": 65536,
   "publicationEntries": 64,
-  "maximumPublicationBytes": 134217728,
   "maximumInputBytes": 16777216,
   "maximumInputFiles": 32,
   "maximumDerivativePatchBytes": 33554432,

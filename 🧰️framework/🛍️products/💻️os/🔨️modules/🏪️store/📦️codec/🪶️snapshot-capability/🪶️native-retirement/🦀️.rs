@@ -11,9 +11,9 @@ use crate::lifted_sqlite_snapshot_workspace::staged;
 
 struct CodecFrame<P:RetireOwned>{pub workspaces:[semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient;3],pub snapshot:Option<P>,pub database:Option<SqliteDatabase>,pub payload:Option<IoPayload>,pub validation:Option<IoResult<()>>}
 impl<P:RetireOwned> RetireOwned for CodecFrame<P>{
- type RetirementCursor=Box<dyn RetirementCursor>;
- fn retirement_seed(self)->Box<dyn RetirementCursor>{let Self{snapshot,database,payload,validation,workspaces}=self;use semio_framework_value::retirement::{sequence,deferred};sequence(vec![Box::new(deferred(snapshot)),Box::new(deferred(database)),Box::new(deferred(payload)),Box::new(deferred(validation)),Box::new(deferred(workspaces))])}
- fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.snapshot),deferred_birth_bytes_for(&self.database),deferred_birth_bytes_for(&self.payload),deferred_birth_bytes_for(&self.validation),deferred_birth_bytes_for(&self.workspaces)])}
+ type RetirementCursor=semio_framework_value::retirement_fields_type!(Option<P>,Option<SqliteDatabase>,Option<IoPayload>,Option<IoResult<()>>,[semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient;3]);
+ fn retirement_seed(self)->Self::RetirementCursor{let Self{snapshot,database,payload,validation,workspaces}=self;semio_framework_value::retirement_fields_seed!(snapshot,database,payload,validation,workspaces)}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<Self::RetirementCursor>())}
  fn controlled_retirement_supported()->bool{P::controlled_retirement_supported()&&SqliteDatabase::controlled_retirement_supported()&&IoPayload::controlled_retirement_supported()&&<IoResult<()>>::controlled_retirement_supported()&&<semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient>::controlled_retirement_supported()}
 }
 

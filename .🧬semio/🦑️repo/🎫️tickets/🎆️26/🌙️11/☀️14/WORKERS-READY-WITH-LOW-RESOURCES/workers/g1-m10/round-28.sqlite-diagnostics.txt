@@ -1,0 +1,32 @@
+## find
+/Users/ueli/Documents/semio/.cache/b/l/m/data/20f6e20c7921c319df990fd41f8a8cfeea31b906359fe0358c1e8000cc6bf173.sqlite
+## ls /Users/ueli/Documents/semio/.cache/b/l/m/data/20f6e20c7921c319df990fd41f8a8cfeea31b906359fe0358c1e8000cc6bf173.sqlite
+-rw-r--r--@ 1 ueli  staff  - 8192 Nov 15 16:25 /Users/ueli/Documents/semio/.cache/b/l/m/data/20f6e20c7921c319df990fd41f8a8cfeea31b906359fe0358c1e8000cc6bf173.sqlite
+	com.apple.macl	  72 
+	com.apple.provenance	  11 
+## lsof /Users/ueli/Documents/semio/.cache/b/l/m/data/20f6e20c7921c319df990fd41f8a8cfeea31b906359fe0358c1e8000cc6bf173.sqlite
+## sqlite dump head
+PRAGMA foreign_keys=OFF;
+BEGIN TRANSACTION;
+CREATE TABLE semio_resource_lease (id INTEGER PRIMARY KEY CHECK (id = 1), version INTEGER NOT NULL CHECK (version = 1), resource TEXT NOT NULL);
+INSERT INTO semio_resource_lease VALUES(1,1,'native-storage:[16777233,1112611,38653698048,16777255]');
+COMMIT;
+## ps
+  110     1 01-14:03:09 /System/Library/CoreServices/powerd.bundle/powerd
+  701     1 01-13:51:02 /usr/libexec/containermanagerd --runmode=agent --user-container-mode=current --bundle-container-mode=proxy --system-container-mode=none
+  885     1 01-13:51:00 /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
+ 1051     1 01-13:50:52 /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdbulkimport -s mdworker-bundle -c MDSImporterBundleFinder -m com.apple.metadata.mdbulkimport
+23100     1    05:57:09 /usr/libexec/containermanagerd --runmode=agent --user-container-mode=current --bundle-container-mode=proxy --system-container-mode=none
+23155     1    05:57:06 /usr/libexec/containermanagerd_system --runmode=privileged --user-container-mode=current --bundle-container-mode=global --system-container-mode=none
+27875     1    05:27:51 /usr/libexec/rtcreportingd
+36945 36935    01:25:33 /Applications/GitKraken.app/Contents/Frameworks/GitKraken Helper (Renderer).app/Contents/MacOS/GitKraken Helper (Renderer) /Applications/GitKraken.app/Contents/Resources/app.asar/src/sharedModules/cli/pty-host/pty-host.bundle.js
+39171 38683    11:30:27 repo mcp
+39689 39644    11:28:37 repo mcp
+50959 50943       34:08 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Library/Application Support/semio/fleet/entry/boot.mjs run
+50960 50959       34:08 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_
+51076 50960       33:36 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_
+51084 51076       33:36 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_
+51086 51084       33:36 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_
+57741     1       11:19 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_
+57772 57741       11:15 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval \012const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await impo
+63774 36935       00:08 /Applications/GitKraken.app/Contents/Resources/app.asar.unpacked/git/bin/git -c gpg.format=openpgp -c tag.gpgSign=0 -c commit.gpgSign=0 -c fetch.prune=1 -c gpg.program=gpg -c safe.directory=* -c maintenance.auto=0 -c gc.auto=0 -c gpg.ss

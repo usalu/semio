@@ -1,11 +1,11 @@
-/** 🧩️ Play release job order laws: the pages job follows the all-component success barrier and the bundle job follows every engine producer job the framework catalog declares. */
+/** 🧩️ Play release job order laws: every driver job depends only on jobs (the driver finishes them before any Cargo pass, so the pages follow the driver) and the bundle job follows every engine producer job the framework catalog declares. */
 import{test,expect}from"bun:test";
 import{readFileSync}from"node:fs";
 import{resolve}from"node:path";
 import catalog from"../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🕸️engines/📇️catalog.json"with{type:"json"};
 const jobs=():{id:string;root:string;command:readonly string[];after:readonly string[]}[]=>JSON.parse(readFileSync(resolve(import.meta.dir,"../../📋️project.json"),"utf8")).targets.build.metadata.semio.release.jobs;
-test("neutral Play pages job follows the all-component success barrier and never the publish stage",()=>{
- const job=jobs().find(row=>row.id==="pages");expect(job).toBeDefined();expect(job?.after).toContain("components:complete");expect(job?.after).not.toContain("components:publish");
+test("neutral Play driver jobs depend only on jobs and leave the pages to the driver's completion",()=>{
+ const all=jobs();expect(all.find(row=>row.id==="pages")).toBeUndefined();for(const row of all)for(const dependency of row.after)expect(dependency,row.id).toMatch(/^job:/u);
 });
 
 test("neutral Play bundle job reads after every engine producer job the framework catalog declares",()=>{

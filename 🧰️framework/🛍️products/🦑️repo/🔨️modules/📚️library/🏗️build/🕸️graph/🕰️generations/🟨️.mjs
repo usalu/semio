@@ -18,6 +18,7 @@ import{createClosureSettlerV1,sharedClosureSettlerV1,stampOfV1}from"../🧮️de
 import{createCasStoreV1}from"../../🗄️cas/🗃️store/🟦️.ts";
 import{createNodeStoreV1}from"../🧮️derived-nodes/💾️store/🟨️.mjs";
 import{selectDoubtfulRowsV1}from"./🔎️doubt/🟨️.mjs";
+import{adoptRecordedRootsV1}from"../../👁️observation/🏚️relocation/🟨️.mjs";
 import{profilePhaseV1}from"../../⏱️profile/🟨️.mjs";
 import{derivedOwnerNameV1,derivedUpsertsV1,holdersOfDerivedV1,isDerivedOwnerV1,orphanedDerivedOwnersV1,scopeWithDerivedV1,splitStaleConsumersV1,suspectRowsV1,suspectsWithinV1,unsupportedDerivedV1,verifiableRowIdsV1}from"./✂️cutoff/🟨️.mjs";
 import{GENERATION_POLICY_V1,P,HEX,sha256,isObject,unpack,aborted,fail,requireKeys,requireHex,requireCount,requireText}from"./🧱️guards/🟨️.mjs";
@@ -25,6 +26,10 @@ import{ROW_KEY_TEXT_LIMIT_V1,createFactIndexV1 as createFactIndexRowsV1,factCons
 export{GENERATION_POLICY_V1,ROW_KEY_TEXT_LIMIT_V1,factConsumersV1,patchFactIndexV1,refineFactIndexV1,rowKeyV1,selectFactClassesV1,staleConsumersV1,staleFactRowsV1};
 import{emptyFactIndexViewV1,patchFactIndexBytesV1}from"./🌊️stream-patch/🟨️.mjs";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
+import{BUILD_JOURNAL_V1,buildJournalKeyV1,createBuildJournalV1}from"./🔖️journal/🟨️.mjs";
+import{readGenerationPointerV1,readGenerationManifestV1,readGenerationFragmentV1}from"./📖️documents/🟨️.mjs";
+import{createNodeFilePortV1,createFileLeasePortV1,defaultSleep}from"./🗃️file-ports/🟨️.mjs";
+export{readGenerationPointerV1,readGenerationManifestV1,readGenerationFragmentV1,createNodeFilePortV1,createFileLeasePortV1};
 
 export{canonicalJsonV1,compareCodePointsV1,createFrontierV1,diffFrontiersV1,frontierFactHoldsV1,frontierHoldsV1,stableDirectoriesV1};
 let processStartedV1=false;
@@ -78,53 +83,6 @@ export function openPackedFactIndexV1(bytes,maximumBytes,name){return openRawFac
 /** 🪟️ Opens the binary document of a fact index (not brotli packed) as a view. */
 export function openRawFactIndexV1(raw,maximumBytes,name){return openFactIndexV1(raw,{maximumBytes,name,share:text=>graphStringInternerV1.share(text)});}
 
-/** 📌️ Admits the closed pointer to the newest generation: a manifest digest, or null after an explicit invalidation. */
-export function readGenerationPointerV1(bytes){
- const value=JSON.parse(Buffer.from(bytes).toString("utf8"));
- requireKeys(value,["version","generation","manifest","parent"],["reason","verified"],"generation pointer");
- if(value.version!==1)throw fail("Generation pointer version 1 required");
- requireCount(value.generation,"generation");
- if(value.manifest!==null)requireHex(value.manifest,"manifest");
- if(value.parent!==null)requireHex(value.parent,"parent");
- if(value.reason!==undefined)requireText(value.reason,"reason",P.reasonMaximumCharacters);
- if(value.verified!==undefined)readVerifiedStampV1(value.verified);
- return Object.freeze(value);
-}
-
-/** 📜️ Admits one closed immutable generation manifest. */
-export function readGenerationManifestV1(bytes){
- const value=JSON.parse(Buffer.from(bytes).toString("utf8"));
- requireKeys(value,["version","generation","parent","identity","implementation","env","membership","frontier","factIndex","global","owners","built"],["envParts"],"generation manifest");
- if(value.envParts!==undefined)readEnvironmentPartsV1(value.envParts);
- if(value.version!==1)throw fail("Generation manifest version 1 required");
- requireCount(value.generation,"generation");
- if(value.parent!==null)requireHex(value.parent,"parent");
- for(const key of["identity","implementation","env","membership","factIndex","global"])requireHex(value[key],key);
- if(value.frontier!==null)requireHex(value.frontier,"frontier");
- if(!isObject(value.owners)||Object.keys(value.owners).length>P.maximumOwners)throw fail("Bounded owner table required");
- for(const[name,row]of Object.entries(value.owners)){
-  requireText(name,"owner name");requireKeys(row,["root","kind","fragment","bytes","edgesEnv","targets"],["config","nativeRoot","tag","reads"],"generation owner");if(row.reads!==undefined)readEdgeReadsV1(row.reads);
-  requireText(row.root,"owner root");if(!["project","unavailable"].includes(row.kind))throw fail("Closed owner kind required");
-  requireHex(row.fragment,"fragment");requireHex(row.edgesEnv,"edgesEnv");requireCount(row.bytes,"fragment bytes",P.maximumFragmentBytes);
-  if(!Array.isArray(row.targets)||row.targets.some(target=>typeof target!=="string"))throw fail("Target name list required");
-  if(row.config!==undefined)requireText(row.config,"owner config");if(row.nativeRoot!==undefined)requireText(row.nativeRoot,"owner native root");if(row.tag!==undefined)requireText(row.tag,"owner tag",64);
- }
- requireKeys(value.built,["kind","base","dirty"],[],"generation provenance");
- if(!["cold","delta","refresh"].includes(value.built.kind))throw fail("Closed provenance kind required");
- if(value.built.base!==null)requireCount(value.built.base,"base generation");
- if(!Array.isArray(value.built.dirty)||value.built.dirty.some(name=>typeof name!=="string"))throw fail("Dirty owner list required");
- return Object.freeze(value);
-}
-
-/** 🧩️ Admits one closed owner fragment: the neutral node, its outgoing edges and the environment those edges were computed under. */
-export function readGenerationFragmentV1(value){
- requireKeys(value,["version","name","root","kind","node","edges","edgesEnv","targets"],["config","nativeRoot"],"generation fragment");
- if(value.version!==1)throw fail("Generation fragment version 1 required");
- requireText(value.name,"fragment name");requireText(value.root,"fragment root");requireHex(value.edgesEnv,"edgesEnv");
- if(!["project","unavailable"].includes(value.kind)||!Array.isArray(value.edges))throw fail("Closed fragment required");
- return value;
-}
-
 function readFactIndexV1(value){
  requireKeys(value,["version","owners","rows","classes"],[],"fact index");
  if(value.version!==1||!Array.isArray(value.owners)||!Array.isArray(value.rows)||!Array.isArray(value.classes))throw fail("Closed fact index required");
@@ -138,33 +96,6 @@ function readFactIndexV1(value){
 
 /** 🏛️ Builds the inverted fact index of whole owners in memory (`🧮️fact-rows`): the model the streaming patch (`./🌊️stream-patch`) is tested against; a build patches the empty index instead. */
 export function createFactIndexV1(ownerRows){return createFactIndexRowsV1(ownerRows);}
-/** 🗂️ The filesystem port on real files: a missing file reads undefined, writes are atomic by rename, a content addressed write that finds its file does nothing. */
-export function createNodeFilePortV1(){
- return Object.freeze({
-  async read(path){try{return await readFile(path);}catch(error){if(error?.code==="ENOENT"||error?.code==="ENOTDIR")return undefined;throw error;}},
-  async write(path,bytes,{ifAbsent=false}={}){
-   if(ifAbsent){try{await lstat(path);return false;}catch(error){if(error?.code!=="ENOENT")throw error;}}
-   await mkdir(dirname(path),{recursive:true});
-   const temporary=path+"."+randomBytes(8).toString("hex")+".tmp";
-   try{const file=await open(temporary,"wx");try{await file.writeFile(bytes);}finally{await file.close();}await rename(temporary,path);}finally{await rm(temporary,{force:true});}
-   return true;
-  },
-  async names(directory){try{return await readdir(directory);}catch(error){if(error?.code==="ENOENT")return[];throw error;}},
-  async list(directory){
-   let names;try{names=await readdir(directory);}catch(error){if(error?.code==="ENOENT")return[];throw error;}
-   const rows=await Promise.all(names.map(async name=>{try{const status=await lstat(join(directory,name));return status.isFile()?{name,modifiedMs:status.mtimeMs}:undefined;}catch(error){if(error?.code==="ENOENT")return undefined;throw error;}}));
-   return rows.filter(Boolean);
-  },
-  async remove(path){await rm(path,{force:true});},
- });
-}
-
-const defaultSleep=(milliseconds,signal)=>new Promise((resolve,reject)=>{
- if(signal?.aborted){reject(signal.reason);return;}
- const onAbort=()=>{clearTimeout(timer);reject(signal.reason);},timer=setTimeout(()=>{signal?.removeEventListener("abort",onAbort);resolve();},milliseconds);
- signal?.addEventListener("abort",onAbort,{once:true});
-});
-
 async function mapLimit(items,limit,visit,signal){
  const out=new Array(items.length);let next=0;
  await Promise.all(Array.from({length:Math.min(limit,items.length)},async()=>{while(next<items.length){aborted(signal);const at=next++;out[at]=await visit(items[at],at);}}));
@@ -206,7 +137,7 @@ export function createAnswersV1({root,fs=createNodeFilePortV1(),durable=true,wor
  * 🛠️ Creates the generation store over `root`: readers never take a lease; a builder publishes the next immutable generation with one compare-and-swap of the pointer under an exclusive hold that covers one small read and one rename.
  * `holds(rows, signal)` answers whether every observation row still holds; `membership(previous, signal)` answers `{digest, frontier, changes}` against the previous frontier (`changes` is meaningful only with a previous frontier); `compute(spec, signal)` refreshes exactly the dirty owners.
  */
-export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,holds,doubt,derive,answers=createAnswersV1({root,fs}),resources,now=()=>Date.now(),sleep=defaultSleep,stamp=P.stampVerification,workspaceRoot}){
+export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,holds,doubt,derive,answers=createAnswersV1({root,fs}),resources,now=()=>Date.now(),sleep=defaultSleep,stamp=P.stampVerification,workspaceRoot,say,stepped}){
  if(typeof root!=="string"||!root||typeof holds!=="function"||!resources?.facts)throw fail("Generation store root, fact check and facts resource required");
  const{nodes,settler}=answers;
  const stats={holdCalls:0,rowsChecked:0,computed:0,published:0,casConflicts:0,merged:0,mergeConflicts:0,publishHeldMs:[],indexLoads:0,fragmentReads:0,indexViews:0,plansReused:0};
@@ -238,14 +169,14 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   const cached=indexCache.get(digest);if(cached)return cached;
   const bytes=await fs.read(indexPath(digest));if(!bytes)return undefined;
   if(sha256(bytes)!==digest)throw fail("Fact index content differs from its name","GENERATION_CORRUPT");
-  const index=unpackFactIndexV1(bytes,P.maximumIndexBytes);stats.indexLoads++;
+  const index=unpackFactIndexV1(bytes,P.maximumIndexBytes);stats.indexLoads++;adoptRecordedRootsV1(index,workspaceRoot);
   indexCache.set(digest,index);return index;
  }
  async function readIndexView(digest){
   const key="view:"+digest,cached=indexCache.get(key)??indexCache.get(digest);if(cached)return cached;
   const bytes=await fs.read(indexPath(digest));if(!bytes)return undefined;
   if(sha256(bytes)!==digest)throw fail("Fact index content differs from its name","GENERATION_CORRUPT");
-  const index=openPackedFactIndexV1(bytes,P.maximumIndexBytes,"fact-index:"+digest.slice(0,12));stats.indexViews++;
+  const index=openPackedFactIndexV1(bytes,P.maximumIndexBytes,"fact-index:"+digest.slice(0,12));stats.indexViews++;adoptRecordedRootsV1(index,workspaceRoot);
   indexCache.set(key,index);return index;
  }
  /** 🏄️ Patches an opened index without decoding it (`./🌊️stream-patch`) and opens the result: the unit of every index change of a build, a merge and a refresh, so none of them holds the decoded index or the rows of all upserted owners. */
@@ -303,7 +234,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   const factsAt=now(),verifiable=verifiableRowIdsV1(index,selection.ids),candidates=doubt?await profilePhaseV1("graph.plan.doubt",()=>selectDoubtfulRowsV1(index,verifiable,doubt,{signal,progress,chunk:P.doubtChunkRows})):verifiable;
   const{stale}=await profilePhaseV1("graph.plan.facts",()=>staleFactRowsV1(index,candidates,hold,{signal,progress,...doubt?{budget:Infinity}:{}}));
   times.facts=now()-factsAt;await doubt?.settled?.({rows:index.rows,ids:verifiable,stale});
-  const settleAt=now();const{direct,suspects:reached}=splitStaleConsumersV1(index,selection.classes,stale),suspects=scope?suspectsWithinV1(index,reached,scope):reached,settled=await profilePhaseV1("graph.plan.settle",()=>settler.settle({pseudoRows:suspectRowsV1(index,suspects),derive,signal,progress,hold,...journalDirty?{dirty:journalDirty}:{staleFacts:[...stale].map(id=>index.rows[id])},...workspaceRoot!==undefined?{vouchStamp:name=>stampOfV1(join(workspaceRoot,name))}:{}})),changedHolders=holdersOfDerivedV1(index,settled.changed.keys());
+  const settleAt=now();const{direct,suspects:reached}=splitStaleConsumersV1(index,selection.classes,stale),suspects=scope?suspectsWithinV1(index,reached,scope):reached,settled=await profilePhaseV1("graph.plan.settle",()=>settler.settle({pseudoRows:suspectRowsV1(index,suspects),derive,signal,progress,hold,...journalDirty?{dirty:journalDirty}:{staleFacts:[...stale].map(id=>index.rows[id])},...workspaceRoot!==undefined?{vouchStamp:(name,cheap)=>stampOfV1(join(workspaceRoot,name),undefined,cheap)}:{}})),changedHolders=holdersOfDerivedV1(index,settled.changed.keys());
   await settler.release?.();times.settle=now()-settleAt;
   for(const name of direct){if(name===P.envOwner)envStale=true;else if(manifest.owners[name])dirty.add(name);}
   for(const name of staleConfigOwnersV1({rows:index.rows,stale,configs,workspaceRoot}))if(manifest.owners[name])dirty.add(name);
@@ -337,23 +268,30 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   return lease?lease.exclusive(resources.facts,body,{signal,timeoutMs:P.publishWaitMilliseconds}):body();
  }
 
+ const journal=createBuildJournalV1({fs,root,manifestPath,publish,settler,say,stepped});
  /** 🏗️ Builds and publishes the next generation from the newest one: the plan names the dirty owners, `compute` refreshes exactly those and unchanged fragments are carried over by digest. The verification view of the fact index (the rows the plan read stay materialized in it) is released before `compute` runs, so the inference never carries it; a later plan in this process opens it again. */
  async function build(request){
   let wave,total=0,last;
-  for(;;){
-   let computed;
-   try{last=await buildOnce(wave?{...request,hint:wave}:request,result=>{computed=result;});}finally{await computed?.dispose?.();}
-   total+=last.computed??0;
-   if(last.published&&last.current){try{await request.published?.(last.current.manifest.generation,{done:total,total:total+(last.deferred?.plan?.dirty?.size??0),...(last.phases?{phases:last.phases}:{})});}catch{}}
-   if(!last.more||!last.published)return{...last,computed:total};
-   wave=last.deferred;
-  }
+  const carry={owners:undefined,env:undefined,envParts:undefined,upserts:new Map(),append:new Map(),dropped:new Set(),returned:new Set(),derived:new Set(),disposers:[],journalKey:undefined,tried:false,done:0,waves:0,files:[],names:undefined,resumedFrom:false};
+  try{
+   for(;;){
+    let computed;
+    try{last=await buildOnce(wave?{...request,hint:wave}:request,result=>{computed=result;},carry);}finally{const dispose=computed?.dispose;computed=undefined;if(dispose)carry.disposers.push(dispose);}
+    total+=last.computed??0;
+    if(last.more){try{await request.wave?.({generation:(last.current?.pointer.generation??-1)+1,done:total,total:total+(last.deferred?.plan?.dirty?.size??0),...(last.phases?{phases:last.phases}:{})});}catch{}
+     const stop=await request.claim?.handover?.().catch(()=>undefined);
+     if(stop)throw request.claim.handoverError(stop,{done:total,total:total+(last.deferred?.plan?.dirty?.size??0)});}
+    else if(last.published&&last.current){try{await request.published?.(last.current.manifest.generation,{done:total,total:total+(last.deferred?.plan?.dirty?.size??0),...(last.phases?{phases:last.phases}:{})});}catch{}}
+    if(!last.more)return{...last,computed:total};
+    wave=last.deferred;
+   }
+  }finally{for(const dispose of carry.disposers)try{await dispose();}catch{}}
  }
- async function buildOnce({identity,implementation,membership,compute,prime,signal,progress,hint,only,observedAtMs=now(),coverage,claim},own){
+  async function buildOnce({identity,implementation,membership,compute,prime,signal,progress,hint,only,observedAtMs=now(),coverage,claim},own,carry){
   const marks={};if(!processStartedV1){processStartedV1=true;marks.start=Math.round(process.uptime()*1000);}Object.assign(marks,carriedStagesV1);for(const key of Object.keys(carriedStagesV1))delete carriedStagesV1[key];let markedAt=now();const mark=name=>{const at=now();marks[name]=(marks[name]??0)+at-markedAt;markedAt=at;};
   await profilePhaseV1("graph.build.prime",async()=>prime?.(signal));mark("prime");
   const current=await read(signal),usable=current?.manifest&&current.manifest.identity===identity?current.manifest:undefined;
-  const reuse=hint&&usable&&current.pointer.generation===hint.generation&&(hint.wave!==undefined||now()-hint.atMs<=P.hintMaximumAgeMilliseconds);
+  const reuse=hint&&usable&&current.pointer.generation===hint.generation&&(hint.wave!==undefined||(hint.holds?await hint.holds().catch(()=>false):now()-hint.atMs<=P.hintMaximumAgeMilliseconds));
   let previous=usable&&!reuse?{manifest:usable,frontier:await readFrontier(usable.frontier)}:undefined,live=reuse?hint.live:await profilePhaseV1("graph.build.membership",async()=>{const began=now();try{return await membership(previous?.frontier?previous:undefined,signal);}finally{marks.membership=now()-began;}});
   const found=reuse?hint.plan:await profilePhaseV1("graph.build.plan",()=>plan({current,identity,changes:previous?.frontier?live.changes:undefined,...previous?.frontier&&live.dirty?{journalDirty:live.dirty}:{},only,skipEnvironment:coverage!==undefined,signal,progress}));
   const priority=readPriorityV1();mark("plan");for(const[name,ms]of Object.entries(found.times??{}))marks["plan."+name]=ms;
@@ -362,12 +300,18 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
    if(usable.membership===live.digest&&!found.refresh?.size)return{current,built:false,published:false,plan:found,computed:0};
    return{...await refreshMetadata({current,live,signal,held:found.refresh}),built:false,plan:found,computed:0};
   }
-  const cold=found.kind==="cold",owners0=cold?{}:usable.owners,names=cold?[]:orderOwnersV1([...found.dirty].sort(compareCodePointsV1),priority),offset=hint?.wave?.done??0,wave=names.slice(0,hint?.wave?.size??scaledOwnerWaveV1(P.ownerWave,process.env.SEMIO_SLICE_WAVE_BASIS_POINTS)),rest=names.slice(wave.length),waveStartedMs=now();
+  const cold=found.kind==="cold",ordered=cold?[]:orderOwnersV1([...found.dirty].sort(compareCodePointsV1),priority);
+  const journalKey=carry.journalKey??=buildJournalKeyV1({parent:current?.pointer.manifest??null,identity,membership:live.digest,cold,names:[...ordered].sort(compareCodePointsV1),removed:[...found.removed].sort(compareCodePointsV1),added:[...found.added].sort(compareCodePointsV1)});
+  const resumed=!hint?.wave&&!carry.tried?await journal.resume({key:journalKey,current,identity,implementation,found,signal}):undefined;carry.tried=true;
+  if(resumed?.result)return resumed.result;
+  if(resumed?.carry)Object.assign(carry,resumed.carry);
+  const owners0=cold?{}:carry.owners??usable.owners,names=resumed?.names??ordered,offset=hint?.wave?.done??carry.done,wave=names.slice(0,hint?.wave?.size??scaledOwnerWaveV1(P.ownerWave,process.env.SEMIO_SLICE_WAVE_BASIS_POINTS)),rest=names.slice(wave.length),waveStartedMs=now(),steps=[];
+  const markStep=async(step,inputs,output,persist)=>{steps.push({step,inputs,output});await persist?.();await stepped?.(step);};
   if(!cold)writePendingV1(process.env,current?.pointer.generation??-1,names,priority);
   const want=claim&&await claim.extend({owners:[...names,...found.removed],structural:cold||found.envStale||found.added.length>0,signal});
   if(want&&!want.held)return{current,built:false,published:false,computed:0,plan:found,needsBuild:true,pending:{generation:current?.pointer.generation??-1,roots:{},...want.request}};
   aborted(signal);
-  const spec={cold,owners:wave,more:rest.length>0,total:offset+names.length,done:offset,discover:found.added,removed:found.removed,changed:cold?[]:(live.changes??[]).filter(change=>!change.directory).map(change=>change.path),previousEnv:cold?null:usable.env,previousParts:cold?undefined:usable.envParts,envStale:found.envStale,generation:(current?.pointer.generation??-1)+1,coldReason:cold?found.reason:undefined,reasons:found.reasons??[],staleRows:found.stale??0,staleKinds:found.staleKinds,
+  const spec={cold,owners:wave,more:rest.length>0,total:offset+names.length,done:offset,discover:found.added,removed:found.removed,changed:cold?[]:(live.changes??[]).filter(change=>!change.directory).map(change=>change.path),previousEnv:cold?null:carry.env??usable.env,previousParts:cold?undefined:carry.envParts??usable.envParts,envStale:found.envStale,generation:(current?.pointer.generation??-1)+1,coldReason:cold?found.reason:undefined,reasons:found.reasons??[],staleRows:found.stale??0,staleKinds:found.staleKinds,
    stubs:Object.fromEntries(Object.entries(owners0).map(([name,row])=>[name,{root:row.root,kind:row.kind,targets:row.targets,...(row.nativeRoot?{nativeRoot:row.nativeRoot}:{}),...(row.config?{config:row.config}:{}),...(row.tag?{tag:row.tag}:{}),...(row.reads?{reads:row.reads}:{})}]))};
   previous=undefined;indexCache.clear();
     const result=await profilePhaseV1("graph.build.compute",()=>compute(spec,signal));own(result);mark("compute");
@@ -390,7 +334,10 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
    });
    upserts.set(owner.name,owner.rows??[]);
   }
-    await profilePhaseV1("graph.build.fragments",()=>mapLimit(stored,P.readConcurrency,job=>job(),signal));mark("fragments");
+    const noisy=returned.size>P.ownerWave;if(noisy)say?.("storing",{count:returned.size});
+  let fragmentsDone=0;if(stored.length)await progress?.({phase:"fragments",done:0,total:stored.length});
+  await profilePhaseV1("graph.build.fragments",()=>mapLimit(stored,P.readConcurrency,async job=>{await job();if(stored.length)await progress?.({phase:"fragments",done:++fragmentsDone,total:stored.length});},signal));mark("fragments");
+  await markStep("storing",journalKey,sha256(Buffer.from(canonicalJsonV1([...returned].sort(compareCodePointsV1).map(name=>owners[name]?.fragment??null)))));
   for(const name of wave)if(!returned.has(name)&&!dropped.has(name)){delete owners[name];dropped.add(name);}
   for(const[name,row]of Object.entries(owners))if(row.tag&&result.replaceTags?.includes(row.tag)&&!returned.has(name)){delete owners[name];dropped.add(name);}
   for(const name of returned)dropped.delete(name);
@@ -401,12 +348,33 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   for(const[name,row]of Object.entries(owners))if(row.edgesEnv!==envDigest)throw fail("Every owner needs edges of the published environment: "+name+" ("+JSON.stringify({kind:row.kind,tag:row.tag??null,edges:String(row.edgesEnv??"none").slice(0,12),environment:String(envDigest).slice(0,12),root:row.root,dirty:wave.includes(name),returned:returned.has(name),dropped:dropped.has(name),carried:(result.carried??[]).includes(name),sameRootReturned:[...returned].filter(other=>owners[other]?.root===row.root)})+")","GENERATION_INCOMPLETE");
   upserts.set(P.envOwner,result.env.rows??[]);
   for(const[name,rows]of derivedUpsertsV1(result.derived??[],found.refresh))upserts.set(name,rows);
+  for(const fact of result.derived??[])carry.derived.add(derivedOwnerNameV1(fact.row));
+  if(rest.length){
+   const{owners:_table,...envParts}=result.env.parts??{};
+   carry.owners=owners;carry.env=envDigest;carry.envParts=result.env.parts?envParts:undefined;carry.names??=ordered;
+   for(const[name,rows]of upserts)if(name!==P.envOwner)carry.upserts.set(name,rows);
+   for(const[name,rows]of append)carry.append.set(name,rows);
+   for(const name of dropped)carry.dropped.add(name);
+   for(const name of returned)carry.returned.add(name);
+   carry.done=offset+wave.length;
+   await journal.wave({key:journalKey,current,identity,implementation,carry,steps,upserts,append,owners,env:{digest:envDigest,...result.env.parts?{parts:envParts}:{}}});carry.waves++;
+   if(claim&&typeof claim.settle==="function"){await claim.progress?.({phase:"owners",done:carry.done,total:offset+names.length}).catch(()=>{});await claim.settle(wave).catch(()=>false);}
+   writePendingV1(process.env,current?.pointer.generation??-1,rest,priority);
+   return{current,built:true,published:false,more:true,plan:found,computed:result.owners.length,phases:{...marks,...Object.fromEntries(Object.entries(result.phases??{}).map(([name,ms])=>["compute."+name,ms]))},carried:result.carried?.length??0,deferred:{generation:current?.pointer.generation??-1,live,atMs:now(),wave:{done:carry.done,size:nextOwnerWaveV1({size:wave.length,elapsedMilliseconds:now()-waveStartedMs,inferred:result.inferred,basisPoints:process.env.SEMIO_SLICE_WAVE_BASIS_POINTS})},plan:{...found,times:{},kind:"delta",dirty:new Set(rest),added:[],removed:[],pending:[],envStale:false,reasons:[],refresh:new Map(),stale:0,staleKinds:{}}}};
+  }
+  for(const[name,rows]of carry.upserts)if(!upserts.has(name))upserts.set(name,rows);
+  for(const[name,rows]of carry.append)if(!append.has(name))append.set(name,rows);
+  for(const name of carry.dropped)dropped.add(name);
+  for(const name of carry.returned)returned.add(name);
+  for(const name of returned)dropped.delete(name);
+    if(noisy)say?.("indexing",{count:Object.keys(owners).length});
     let index=await profilePhaseV1("graph.build.patch",async()=>patchView(cold?emptyFactIndexViewV1():await readIndexView(usable.factIndex),{drop:[...dropped],upserts,append},signal));
   
   const orphans=orphanedDerivedOwnersV1(index);if(orphans.length)index=await patchView(index,{drop:orphans},signal);
   const unsupported=unsupportedDerivedV1(index);if(unsupported.length)throw fail("Derived facts need a supporting computation: "+unsupported.slice(0,3).map(row=>row.path.slice(0,96)).join(", "),"GENERATION_INCOMPLETE");
 
   mark("patch");
+  if(noisy)say?.("sealing",{generation:(current?.pointer.generation??-1)+1});
   const packedIndex=await profilePhaseV1("graph.build.pack",()=>packFactIndexBytesV1(index.document.buffer,P.maximumIndexBytes)),indexStored=await profilePhaseV1("graph.build.keep",()=>keep(P.indexes,packedIndex.bytes,".facts.br"));
   
   mark("pack");
@@ -415,6 +383,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   const expectedGeneration=current?.pointer.generation??-1;
   const{owners:_table,...envParts}=result.env.parts??{},next={version:1,generation:expectedGeneration+1,parent:current?.pointer.manifest??null,identity,implementation,env:envDigest,membership:live.digest,frontier:frontierStored.digest,factIndex:indexStored.digest,global:globalStored.digest,...(result.env.parts?{envParts}:{}),owners,built:{kind:cold?"cold":"delta",base:cold?null:usable.generation,dirty:[...returned].sort(compareCodePointsV1)}};
   const manifestDigest=await writeManifest(next);aborted(signal);
+  await markStep("indexing",steps.at(-1).output,indexStored.digest,()=>journal.sealed({key:journalKey,current,identity,implementation,steps,manifest:manifestDigest,derived:[...carry.derived]}));
   const verified=stamp&&!rest.length?mergeVerifiedStampV1({owners:Object.keys(owners).sort(compareCodePointsV1),scope:cold?undefined:only,observedAtMs,carried:cold?undefined:coverage}):undefined;
   let outcome=await profilePhaseV1("graph.build.publish",()=>publish({manifestDigest,expectedGeneration,verified,signal})),done=outcome.published?{next,index,packed:packedIndex,kept:indexStored}:undefined;
   mark("publish");
@@ -422,12 +391,12 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   
   if(!done)return{current:await read(signal),built:true,published:false,plan:found,computed:result.owners.length};
   indexCache.set("view:"+done.kept.digest,done.index);
-  await profilePhaseV1("graph.build.indexed",()=>settler.markIndexed({held:found.refresh,dropped:(result.derived??[]).map(fact=>derivedOwnerNameV1(fact.row))}).catch(()=>undefined));
+  await journal.clear(journalKey);await markStep("sealing",indexStored.digest,manifestDigest);
+  await profilePhaseV1("graph.build.indexed",()=>settler.markIndexed({held:found.refresh,dropped:[...carry.derived]}).catch(()=>undefined));
   if(!done.theirs)writePendingV1(process.env,outcome.pointer.generation,rest,priority);
-  const deferred=!done.theirs?{generation:outcome.pointer.generation,live,atMs:now(),wave:{done:offset+wave.length,size:nextOwnerWaveV1({size:wave.length,elapsedMilliseconds:now()-waveStartedMs,inferred:result.inferred,basisPoints:process.env.SEMIO_SLICE_WAVE_BASIS_POINTS})},plan:{...found,times:{},kind:"delta",dirty:new Set(rest),added:[],removed:[],pending:[],envStale:false,reasons:[],refresh:new Map(),stale:0,staleKinds:{}}}:undefined;
   if(!rest.length)await profilePhaseV1("graph.build.stamps",async()=>doubt?.published?.({rows:done.index.rows,observedAt:observedAtMs}).catch(()=>false));
   if(!rest.length&&await(claim?claim.alone({signal}).catch(()=>false):true))await profilePhaseV1("graph.build.retire",()=>retire({signal}).catch(error=>{if(signal?.aborted)throw error;}));
-  return{current:{pointer:outcome.pointer,manifest:done.next},built:true,published:true,plan:found,computed:result.owners.length,phases:{...marks,...Object.fromEntries(Object.entries(result.phases??{}).map(([name,ms])=>["compute."+name,ms]))},...(rest.length?{more:true,...deferred?{deferred}:{}}:{}),carried:result.carried?.length??0,...(done.theirs?{merged:done.theirs.length}:{}),index:{rows:done.index.rows.length,owners:done.index.owners.filter(name=>!isDerivedOwnerV1(name)).length,expandedBytes:done.packed.expandedBytes,packedBytes:done.kept.bytes}};
+  return{current:{pointer:outcome.pointer,manifest:done.next},built:true,published:true,plan:found,computed:result.owners.length,phases:{...marks,...Object.fromEntries(Object.entries(result.phases??{}).map(([name,ms])=>["compute."+name,ms]))},carried:result.carried?.length??0,...(done.theirs?{merged:done.theirs.length}:{}),...(carry.resumedFrom?{resumed:true}:{}),index:{rows:done.index.rows.length,owners:done.index.owners.filter(name=>!isDerivedOwnerV1(name)).length,expandedBytes:done.packed.expandedBytes,packedBytes:done.kept.bytes}};
  }
 
  /** 🧷️ Publishes the same owners under a refreshed membership frontier, so the next verification is a stat pass again; losing the swap is harmless. */
@@ -443,7 +412,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
  }
 
  /** 🔁️ Brings the caller to a generation that holds. `current` serves the newest generation of this identity without verification or waiting; `fresh` verifies (only the closure `only` when given), serves a verified generation without any lease and builds otherwise, inside `builder` (which hands the build its slice claim; see `./🔐️custody`) or the builder lease, where a holder that finds the work done by a peer returns that generation untouched and a build whose swap a peer won merges onto the peer's generation (see `./🔀️merge`). */
- async function refresh({identity,implementation,policy="fresh",only,membership,compute,prime,signal,progress,builder,requestedAt,published,planned}){
+ async function refresh({identity,implementation,policy="fresh",only,membership,compute,prime,signal,progress,builder,requestedAt,published,wave,planned,unchanged}){
   if(!P.policies.includes(policy))throw fail("Closed graph policy required");
   const started=now(),first=await read(signal),usable=first?.manifest&&first.manifest.identity===identity;
   if(policy==="current"&&usable)return{current:first,served:"current",built:false,published:false,computed:0};
@@ -463,12 +432,14 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
     return{current:first,served:"verified",built:false,published:false,computed:0,plan:verdict};
    }
    if(verdict.kind==="delta")pending={structural:verdict.envStale||verdict.added.length>0||verdict.removed.length>0,generation:first.pointer.generation,dirty:[...verdict.dirty].sort(compareCodePointsV1),roots:Object.fromEntries([...verdict.dirty].filter(name=>first.manifest.owners[name]).map(name=>[name,first.manifest.owners[name].root]))};
-   if(verdict.kind==="delta"&&previous.frontier){hint={generation:first.pointer.generation,plan:verdict,live,atMs:now()};carried={key,plan:verdict,live};}
+   if(verdict.kind==="delta"&&previous.frontier){hint={generation:first.pointer.generation,plan:verdict,live,atMs:now(),...unchanged?{holds:()=>unchanged(live)}:{}};carried={key,plan:verdict,live};}
   }
-  const body=claim=>build({identity,implementation,membership,compute,prime,signal,progress,published,hint,only:scope,observedAtMs:started,coverage,claim});
+  const body=claim=>build({identity,implementation,membership,compute,prime,signal,progress,published,wave,hint,only:scope,observedAtMs:started,coverage,claim});
+  let resumedComputed;
   for(let attempt=0;attempt<8;attempt++){
    const result=await(builder?builder(body,pending):lease?lease.exclusive(resources.builder,body,{signal}):body());
-   if(result.published||!result.built)return{...result,served:"built",...result.needsBuild&&carried?{planned:carried}:{}};
+   if(result.resumed){resumedComputed=(resumedComputed??0)+(result.computed??0);continue;}
+   if(result.published||!result.built)return{...result,...resumedComputed===undefined?{}:{published:true,computed:(result.computed??0)+resumedComputed},served:"built",...result.needsBuild&&carried?{planned:carried}:{}};
   }
   throw fail("Generation keeps changing while it is built","GENERATION_CONFLICT");
  }
@@ -574,7 +545,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   for(const row of kept){live.add(row.digest);indexes.add(row.manifest.factIndex);fragments.add(row.manifest.global);if(row.manifest.frontier)frontiers.add(row.manifest.frontier);for(const owner of Object.values(row.manifest.owners))fragments.add(owner.fragment);}
   const cutoff=now()-P.graceMilliseconds;
   const sweep=async(directory,keep,extension)=>{for(const file of await fs.list(join(root,directory))){aborted(signal);if(file.name.endsWith(extension)&&!keep.has(file.name.slice(0,64))&&file.modifiedMs<cutoff)await fs.remove(join(root,directory,file.name));}};
-  await sweep(P.manifests,live,".json");await sweep(P.fragments,fragments,".json.br");await sweep(P.indexes,indexes,"");await sweep(P.frontiers,frontiers,".json.br");await nodes?.prune({now:now()});
+  await sweep(P.manifests,live,".json");await sweep(P.fragments,fragments,".json.br");await sweep(P.indexes,indexes,"");await sweep(P.frontiers,frontiers,".json.br");await sweep(BUILD_JOURNAL_V1.directory,new Set(),"");await nodes?.prune({now:now()});
  }
 
  /** ♻️ Marks the newest generation invalid without deleting anything; the next fresh reader builds. */
@@ -587,25 +558,3 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
  return Object.freeze({dropIndexes:()=>indexCache.clear(),read,readManifestAt,readIndex,readIndexView,readFrontier,readFragment,plan,build,refresh,refreshClosure,closureOf,assemble,assembleStream,snapshot,retire,invalidate,publish,stats,readGlobal,catalog});
 }
 
-/** 🔒️ A reference exclusive lease over lock files for tests and non repository runtimes: acquisition is `open(wx)`, a dead owner's lock is replaced, waiting polls with backoff and honours the abort signal. */
-export function createFileLeasePortV1(directory,{staleMilliseconds=P.leaseStaleMilliseconds,now=()=>Date.now(),sleep=defaultSleep,onHold}={}){
- const alive=pid=>{try{process.kill(pid,0);return true;}catch(error){return error?.code==="EPERM";}};
- return Object.freeze({
-  async exclusive(resource,body,{signal,timeoutMs}={}){
-   const path=join(directory,sha256(resource)+".lock"),token=randomBytes(12).toString("hex"),started=now();let delay=2;
-   await mkdir(directory,{recursive:true});
-   for(;;){
-    aborted(signal);
-    try{const file=await open(path,"wx");try{await file.writeFile(JSON.stringify({pid:process.pid,token,since:now()}));}finally{await file.close();}break;}
-    catch(error){
-     if(error?.code!=="EEXIST")throw error;
-     try{const held=JSON.parse(await readFile(path,"utf8"));if(!alive(held.pid)||now()-held.since>staleMilliseconds){const again=JSON.parse(await readFile(path,"utf8"));if(again.token===held.token)await rm(path,{force:true});continue;}}catch{}
-     if(timeoutMs!==undefined&&now()-started>timeoutMs)throw fail("Resource lease timed out: "+resource,"LEASE_TIMEOUT");
-     await sleep(delay,signal);delay=Math.min(delay*2,P.pollMaximumMilliseconds);
-    }
-   }
-   const acquired=now();
-   try{return await body();}finally{try{const held=JSON.parse(await readFile(path,"utf8"));if(held.token===token)await rm(path,{force:true});}catch{}onHold?.({resource,heldMs:now()-acquired,waitedMs:acquired-started});}
-  },
- });
-}

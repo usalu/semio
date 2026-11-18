@@ -1,6 +1,5 @@
-import { createRequire } from "node:module";
+import { typescriptCompilerV1 } from "../🔷️typescript-compiler/🟨️.mjs";
 
-const own = createRequire(import.meta.url);
-
-/** 📦️ Loads the TypeScript compiler API from the parser package: the node resolution starts in the parser package directory and, when its install is absent, continues in the checkout root install. */
-export const parserTypescriptV1 = () => own("typescript");
+/** 📦️ Loads the TypeScript compiler API of the tooling through its one interface: the exact version the parser package declares, from the install slot of the parser package or the direct dependency of the checkout root, never by the bare name; a wrong or incomplete install is the typed refusal `TypescriptCompilerRefusalV1`, retry never.
+ * @see ../🔷️typescript-compiler/🟨️.mjs */
+export const parserTypescriptV1 = () => typescriptCompilerV1();

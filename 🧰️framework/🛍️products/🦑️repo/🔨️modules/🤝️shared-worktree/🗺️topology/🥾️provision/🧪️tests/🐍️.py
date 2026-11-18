@@ -77,12 +77,24 @@ def kit(directory, snapshot):
     return "ok"
 
 
+def facts(path, platforms):
+    with open(path, encoding="utf-8-sig") as handle:
+        topology = json.load(handle)
+    lines = []
+    for group in topology["groups"]:
+        for platform in platforms:
+            lines.append("\t".join([group["id"], platform, topology["worktree"][platform], group["nfs"]["host"], group["nfs"]["export"], group["server"]["platform"], group["server"]["protocol"]]))
+    return "\n".join(sorted(lines))
+
+
 if __name__ == "__main__":
     command = sys.argv[1]
     if command == "verify":
         print(verify(sys.argv[2]))
     elif command == "overlay":
         print(overlay(sys.argv[2], sys.argv[3]))
+    elif command == "facts":
+        print(facts(sys.argv[2], sys.argv[3:]))
     elif command == "kit":
         print(kit(sys.argv[2], sys.argv[3]))
     else:

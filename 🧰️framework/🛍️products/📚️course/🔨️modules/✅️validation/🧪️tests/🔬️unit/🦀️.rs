@@ -4,11 +4,16 @@
 
 use super::*;
 use semio_framework_course_tests_support::sheet::{quantity, quiz, text};
-use course_schema::{BadgeRule, Challenge, ClassificationAnswer, Introduction, LeaderboardPeriod, MatchingAnswer, SheetClassificationTask, SheetDimension, SheetMatchingTask, SheetSortingTask, SortingAnswer, TaskKind, CHALLENGES};
+use course_schema::{BadgeRule, Challenge, Topic, ClassificationAnswer, Introduction, LeaderboardPeriod, MatchingAnswer, SheetClassificationTask, SheetDimension, SheetMatchingTask, SheetSortingTask, SortingAnswer, TaskKind, CHALLENGES};
 use unicode_normalization::{is_nfc, UnicodeNormalization};
 
 fn issue(path: &str, code: IssueCode) -> ValidationIssue {
     ValidationIssue { path: path.to_string(), code }
+}
+
+/// 🪞️ The fixture mockup decoded into the projected type and encoded again, so numeric spellings (`8` vs `8.0`) compare equal.
+fn projected(value: &serde_json::Value) -> serde_json::Value {
+    serde_json::to_value(serde_json::from_value::<course_schema::Mockup>(value.clone()).unwrap()).unwrap()
 }
 
 #[test]
@@ -31,7 +36,7 @@ fn software_mockup_vectors_agree_with_every_item_projection() {
             for item in sheet.tasks.iter().flat_map(|task| task.items()) {
                 if let Some(mockup) = &item.mockup {
                     count += 1;
-                    assert_eq!(serde_json::to_value(mockup).unwrap(), vector["mockup"]);
+                    assert_eq!(serde_json::to_value(mockup).unwrap(), projected(&vector["mockup"]));
                     let json = serde_json::to_value(item).unwrap();
                     for key in ["category", "value", "values", "explanation", "familiar"] { assert!(json.get(key).is_none(), "{key}"); }
                 }
@@ -48,6 +53,7 @@ fn badge(id: &str, rule: BadgeRule) -> Badge {
 fn course() -> Course {
     Course {
         assignments: None,
+        clips: None,
         unlocks: None,
         json_schema: None,
         schema: COURSE_SCHEMA.to_string(),
@@ -756,5 +762,46 @@ fn localized_printable_assignments_share_the_language_neutral_cases() {
     let mut unknown = assignment;
     unknown.topic = "unknown".to_string();
     document.assignments = Some(vec![unknown]);
+    assert!(!course_issues(&document, &[quiz()]).is_empty());
+}
+
+#[test]
+fn learning_clips_share_the_language_neutral_cases() {
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🎬️clips/🔣️.json")).unwrap();
+    let mut document = course();
+    document.topics = Some(vec![Topic { id: "sample-topic".to_string(), emoji: "🎬".to_string(), title: text("Sample Topic"), quizzes: vec!["energy".to_string()] }]);
+    let valid: Vec<crate::schema::Clip> = cases["valid"].as_array().unwrap().iter().map(|clip| serde_json::from_value(clip.clone()).unwrap()).collect();
+    assert!(valid[0].urls.is_none());
+    for clip in &valid {
+        document.clips = Some(vec![clip.clone()]);
+        assert!(course_issues(&document, &[quiz()]).is_empty(), "{}", clip.id);
+        let view = crate::views::course_view(&document, &[quiz()]);
+        assert_eq!(view.clips, document.clips);
+        assert!(course_view_issues(&view).is_empty());
+        assert_eq!(serde_json::to_value(clip).unwrap(), cases["valid"].as_array().unwrap().iter().find(|value| value["id"] == clip.id.as_str()).unwrap().clone());
+    }
+    for sample in cases["invalid"].as_array().unwrap() {
+        let mut value = cases["valid"][1].clone();
+        let pointer = sample.get("remove").unwrap_or(&sample["replace"]).as_str().unwrap();
+        let (parent, key) = pointer.rsplit_once('/').unwrap();
+        if sample.get("remove").is_some() { value.pointer_mut(parent).unwrap().as_object_mut().unwrap().remove(key); }
+        else { value.pointer_mut(parent).unwrap()[key] = sample["value"].clone(); }
+        let accepted = serde_json::from_value::<crate::schema::Clip>(value).is_ok_and(|clip| {
+            document.clips = Some(vec![clip]);
+            course_issues(&document, &[quiz()]).is_empty()
+        });
+        assert!(!accepted, "{}", sample["case"]);
+    }
+    document.clips = Some(vec![valid[0].clone(), valid[0].clone()]);
+    assert!(!course_issues(&document, &[quiz()]).is_empty());
+    for id in ["energy", "sample-topic", "clips", "assignments", "board"] {
+        let mut named = valid[0].clone();
+        named.id = id.to_string();
+        document.clips = Some(vec![named]);
+        assert!(!course_issues(&document, &[quiz()]).is_empty(), "{id}");
+    }
+    let mut unknown = valid[0].clone();
+    unknown.topic = "unknown".to_string();
+    document.clips = Some(vec![unknown]);
     assert!(!course_issues(&document, &[quiz()]).is_empty());
 }

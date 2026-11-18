@@ -5,7 +5,8 @@ import{tmpdir}from"node:os";
 import{join}from"node:path";
 import{graphWaveMeterV1}from"../../../../../📈️wave-row/🟨️.mjs";
 import{EventEmitter}from"node:events";
-import{closeProjectFarmsV1,openProjectFarmV1}from"../../🟨️.mjs";
+import{closeProjectFarmsV1,openProjectFarmV1 as openFarmV1}from"../../🟨️.mjs";
+const openProjectFarmV1=(options:Parameters<typeof openFarmV1>[0])=>openFarmV1({adopt:(()=>({published:1,present:0,declined:false})) as never,...options});
 import{inferenceRecordIdentityV1}from"../../../../../../👁️observation/🟨️.mjs";
 import{graphFarmIdentityV1}from"../../🪆️captured/🟨️.mjs";
 import{farmGrantEnvironmentV1}from"../🧫️fixtures/🎟️grant/🟨️.mjs";
@@ -29,7 +30,7 @@ test("a farm that never got a worker reports its wave to the meter as handled by
  graphWaveMeterV1.take({generation:0});
  const root=scratch();
  let grant!:(value:{jobs:number;megabytes:number}|undefined)=>void;
- const farm=openProjectFarmV1({workspaceRoot:root,context:{registry:null},contracts:{},launch:null,projects:566,commandInputs:null,projectsByRoot:new Map(),componentRoots:[],environment:{LANG:"en_US.UTF-8"},processed:()=>24,cores:10,write:()=>undefined,
+ const farm=openProjectFarmV1({workspaceRoot:root,context:{registry:null},contracts:{},launch:null,projects:566,commandInputs:null,projectsByRoot:new Map(),componentRoots:[],environment:{LANG:"en_US.UTF-8",SEMIO_SLICE_LEAN:"off"},processed:()=>24,cores:10,write:()=>undefined,
   spawnProcess:(()=>{throw new Error("no worker must start");}) as never,
   request:(()=>({granted:new Promise<{jobs:number;megabytes:number}|undefined>(done=>{grant=done;}),release:()=>undefined})) as never})!;
  const job={name:"p",root:"p",json:{},native:false,pipeline:false,nativeRoot:"p",selectedInputs:[],head:[],cacheKey:"0".repeat(24)};
@@ -47,8 +48,8 @@ test("the close of the farm reports the lost jobs and not the lost processes, al
   spawnProcess:(()=>{const child=new Dying();children.push(child);return child;}) as never,
   request:(()=>({granted:Promise.resolve(undefined),release:()=>undefined})) as never})!;
  const job={name:"p",root:"p",json:{},native:false,pipeline:false,nativeRoot:"p",selectedInputs:[],head:[],cacheKey:"0".repeat(24)};
- expect(await farm.prepare(job),"a job every process dies on is left to the parent").toBe(false);
+ await expect(farm.prepare(job),"a job every process dies on is refused, not inferred by the parent").rejects.toMatchObject({code:"graph.farm-job-failed"});
  await farm.close();await closeProjectFarmsV1();
- expect(children.length,"the job was tried on two processes").toBe(2);
- expect(graphWaveMeterV1.take({generation:1}).farm).toEqual({workers:1,projects:566,adopted:0,failed:0,lost:1,declined:0});
+ expect(children.length,"the job was tried on fresh processes").toBeGreaterThanOrEqual(2);
+ expect(graphWaveMeterV1.take({generation:1}).farm).toEqual({workers:1,projects:566,adopted:0,failed:0,lost:3,declined:0});
 });

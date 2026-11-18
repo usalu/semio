@@ -623,27 +623,6 @@
                 ]
               ],
               "closed": false
-            },
-            {
-              "id": "splice-mark",
-              "bone": "column",
-              "role": "detail",
-              "z": 1.6,
-              "filled": false,
-              "tone": 0.4,
-              "region": "column-web",
-              "kind": "poly",
-              "points": [
-                [
-                  1.5,
-                  0.14
-                ],
-                [
-                  1.5,
-                  -0.14
-                ]
-              ],
-              "closed": false
             }
           ],
           "front": [
@@ -724,27 +703,6 @@
                 ],
                 [
                   0.1,
-                  1.5
-                ]
-              ],
-              "closed": false
-            },
-            {
-              "id": "splice-mark",
-              "bone": "column",
-              "role": "detail",
-              "z": 1.6,
-              "filled": false,
-              "tone": 0.4,
-              "region": "column-flange",
-              "kind": "poly",
-              "points": [
-                [
-                  -0.12,
-                  1.5
-                ],
-                [
-                  0.12,
                   1.5
                 ]
               ],

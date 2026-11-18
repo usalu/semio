@@ -93,9 +93,9 @@ def choose(pools):
 def recycle(row):
     base = row.get("baselineMegabytes")
     ceiling = max(row["megabytes"], base * policy["recycleCeilingFactor"] if isinstance(base, (int, float)) and base > 0 else 0)
-    if row["rssMegabytes"] > ceiling or (
-        row["rssMegabytes"] > row["megabytes"] * policy["recycleMemoryRatio"]
-        and (row.get("baselineMegabytes") is None or row["rssMegabytes"] > row["baselineMegabytes"] * (1 + policy["recycleGrowthRatio"]))
+    if row["heldMegabytes"] > ceiling or (
+        row["heldMegabytes"] > row["megabytes"] * policy["recycleMemoryRatio"]
+        and (row.get("baselineMegabytes") is None or row["heldMegabytes"] > row["baselineMegabytes"] * (1 + policy["recycleGrowthRatio"]))
     ):
         return "memory"
     if row["jobs"] >= policy["recycleAfterProjects"]:

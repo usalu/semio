@@ -136,7 +136,7 @@ class Refusals extends Component<{ readonly language: Language; readonly viewpoi
     if (reason === null) throw error;
     const t = translator(this.props.language);
     return (
-      <div role="alert" lang={this.props.language} data-refusal={this.props.viewpoint} data-staffage-figure="" style={{ display: "block", border: "1px dashed currentColor", padding: "0.5em" }}>
+      <div role="alert" lang={this.props.language} data-refusal={this.props.viewpoint} data-staffage-figure="" style={{ display: "block", padding: "0.5em", background: "color-mix(in srgb, currentColor 8%, transparent)" }}>
         <b>{t("viewpoints.unavailable", { view: t(`viewpoints.phrase.${this.props.viewpoint}`) })}</b>
         <p style={{ margin: 0 }}>{reason[this.props.language]}</p>
         <p style={{ margin: 0 }}>{t("viewpoints.nothingInstead")}</p>

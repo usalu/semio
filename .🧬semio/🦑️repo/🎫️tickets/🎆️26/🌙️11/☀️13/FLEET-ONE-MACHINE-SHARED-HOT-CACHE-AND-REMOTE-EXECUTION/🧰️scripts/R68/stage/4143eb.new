@@ -1,0 +1,238 @@
+{
+ "verdicts": [
+  {
+   "name": "all hold",
+   "rows": [
+    {
+     "kind": "file",
+     "path": "/r/a.ts",
+     "fact": {
+      "sha256": "a1",
+      "size": 1
+     }
+    },
+    {
+     "kind": "file",
+     "path": "/r/b.ts",
+     "fact": {
+      "sha256": "b1",
+      "size": 1
+     }
+    },
+    {
+     "kind": "analysis",
+     "path": "/r/c.ts",
+     "fact": {
+      "source": {
+       "sha256": "c1"
+      }
+     }
+    },
+    {
+     "kind": "exists",
+     "path": "/r/d",
+     "fact": true
+    },
+    {
+     "kind": "lstat",
+     "path": "/r/e",
+     "fact": {
+      "x": 1
+     }
+    },
+    {
+     "kind": "analysis",
+     "path": "/r/f",
+     "fact": null
+    }
+   ],
+   "tree": {
+    "/r/a.ts": "a1",
+    "/r/b.ts": "b1",
+    "/r/c.ts": "c1"
+   },
+   "createdMs": 0,
+   "now": 1000000
+  },
+  {
+   "name": "one file changed",
+   "rows": [
+    {
+     "kind": "file",
+     "path": "/r/a.ts",
+     "fact": {
+      "sha256": "a1",
+      "size": 1
+     }
+    },
+    {
+     "kind": "file",
+     "path": "/r/b.ts",
+     "fact": {
+      "sha256": "b1",
+      "size": 1
+     }
+    },
+    {
+     "kind": "analysis",
+     "path": "/r/c.ts",
+     "fact": {
+      "source": {
+       "sha256": "c1"
+      }
+     }
+    },
+    {
+     "kind": "exists",
+     "path": "/r/d",
+     "fact": true
+    },
+    {
+     "kind": "lstat",
+     "path": "/r/e",
+     "fact": {
+      "x": 1
+     }
+    },
+    {
+     "kind": "analysis",
+     "path": "/r/f",
+     "fact": null
+    }
+   ],
+   "tree": {
+    "/r/a.ts": "a1",
+    "/r/b.ts": "b2",
+    "/r/c.ts": "c1"
+   },
+   "createdMs": 0,
+   "now": 1000000
+  },
+  {
+   "name": "a file is gone and an analysis changed",
+   "rows": [
+    {
+     "kind": "file",
+     "path": "/r/a.ts",
+     "fact": {
+      "sha256": "a1",
+      "size": 1
+     }
+    },
+    {
+     "kind": "file",
+     "path": "/r/b.ts",
+     "fact": {
+      "sha256": "b1",
+      "size": 1
+     }
+    },
+    {
+     "kind": "analysis",
+     "path": "/r/c.ts",
+     "fact": {
+      "source": {
+       "sha256": "c1"
+      }
+     }
+    },
+    {
+     "kind": "exists",
+     "path": "/r/d",
+     "fact": true
+    },
+    {
+     "kind": "lstat",
+     "path": "/r/e",
+     "fact": {
+      "x": 1
+     }
+    },
+    {
+     "kind": "analysis",
+     "path": "/r/f",
+     "fact": null
+    }
+   ],
+   "tree": {
+    "/r/a.ts": "a1",
+    "/r/c.ts": "zz"
+   },
+   "createdMs": 0,
+   "now": 1000000
+  },
+  {
+   "name": "too young to judge",
+   "rows": [
+    {
+     "kind": "file",
+     "path": "/r/a.ts",
+     "fact": {
+      "sha256": "a1",
+      "size": 1
+     }
+    },
+    {
+     "kind": "file",
+     "path": "/r/b.ts",
+     "fact": {
+      "sha256": "b1",
+      "size": 1
+     }
+    },
+    {
+     "kind": "analysis",
+     "path": "/r/c.ts",
+     "fact": {
+      "source": {
+       "sha256": "c1"
+      }
+     }
+    },
+    {
+     "kind": "exists",
+     "path": "/r/d",
+     "fact": true
+    },
+    {
+     "kind": "lstat",
+     "path": "/r/e",
+     "fact": {
+      "x": 1
+     }
+    },
+    {
+     "kind": "analysis",
+     "path": "/r/f",
+     "fact": null
+    }
+   ],
+   "tree": {},
+   "createdMs": 950000,
+   "now": 1000000
+  },
+  {
+   "name": "no digest rows",
+   "rows": [
+    {
+     "kind": "exists",
+     "path": "/x",
+     "fact": false
+    }
+   ],
+   "tree": {},
+   "createdMs": 0,
+   "now": 1000000
+  }
+ ],
+ "states": [
+  {
+   "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "noteHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  {
+   "digest": "0123012301230123012301230123012301230123012301230123012301230123",
+   "noteHash": "ü🧬cccccccc"
+  }
+ ]
+}

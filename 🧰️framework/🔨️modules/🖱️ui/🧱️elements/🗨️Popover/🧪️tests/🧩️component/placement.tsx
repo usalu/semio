@@ -35,6 +35,16 @@ describe("floating placement", () => {
     expect(result).toMatchObject({ side: "top", top: 130 });
   });
 
+  it("docks flush against a trigger outside a silhouette by default", () => {
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+      return (this.getAttribute("data-slot") === "popover-trigger"
+        ? { left: 100, right: 140, top: 100, bottom: 120, width: 40, height: 20 }
+        : { width: 80, height: 50 }) as DOMRect;
+    });
+    const { getByRole } = render(<Popover open><PopoverTrigger>Open</PopoverTrigger><PopoverContent side="bottom">Body</PopoverContent></Popover>);
+    expect(getByRole("dialog").style.top).toBe("120px");
+  });
+
   it("uses the shell portal rather than a clipped trigger ancestor or body", () => {
     const layer = document.createElement("div");
     document.body.append(layer);

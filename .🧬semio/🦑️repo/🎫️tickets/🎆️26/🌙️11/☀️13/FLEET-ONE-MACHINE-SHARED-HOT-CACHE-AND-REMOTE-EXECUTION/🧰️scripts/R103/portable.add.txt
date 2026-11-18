@@ -1,0 +1,22 @@
+const FALLBACK=Symbol("not plain JSON");
+const moveRest=(value:unknown,change:(text:string)=>string,seen:Map<string,string>):unknown=>{
+ if(typeof value==="string"){let moved=seen.get(value);if(moved===undefined){moved=change(value);seen.set(value,moved);}return moved;}
+ if(value===null||typeof value==="boolean")return value;
+ if(typeof value==="number"){if(!Number.isFinite(value))throw FALLBACK;return value;}
+ if(Array.isArray(value)){const moved=new Array<unknown>(value.length);for(let at=0;at<value.length;at++)moved[at]=moveRest(value[at],change,seen);return moved;}
+ const body=value as Record<string,unknown>;
+ if(typeof value!=="object"||typeof body.toJSON==="function"||Object.getPrototypeOf(value)!==Object.prototype)throw FALLBACK;
+ const moved:Record<string,unknown>={};
+ for(const key of Object.keys(body)){if(body[key]===undefined)throw FALLBACK;moved[moveRest(key,change,seen) as string]=moveRest(body[key],change,seen);}
+ return moved;
+};
+
+/** 🪶️ The members of a bundle besides its rows and layers (its value and its sidecar, which for the library closures hold hundreds of megabytes) in the neutral or the host's spelling: every distinct string is moved once and the structure is copied, where writing the whole member out as one JSON text and reading it back held the text, its copy and the parsed result beside the member (the 4.4 GB of one worker). A Windows host, an empty root and members that are no plain JSON take the text path, which gives the same result. @see ./🧪️tests/🪶️rest-walk */
+export function movedRestV1(rest:Readonly<Record<string,unknown>>,direction:"neutral"|"local",host:HostV1,policy:PortableRowsPolicyV1=portableRowsPolicyV1):Record<string,unknown>{
+ if(!host.windows&&host.root!==""){
+  const rewrite=indexTextRewriterV1(host.root,direction==="neutral"?"neutralize":"expand"),change=direction==="neutral"?rewrite:(text:string)=>{const moved=text.includes(policy.rootToken)?rewrite(text):text;if(moved.includes(policy.residue))throw new UnportableV1("root token of another spelling");return moved;};
+  try{return moveRest(rest,change,new Map()) as Record<string,unknown>;}catch(error){if(error!==FALLBACK)throw error;}
+ }
+ return JSON.parse((direction==="neutral"?neutralTextV1:localTextV1)(JSON.stringify(rest),host,policy)) as Record<string,unknown>;
+}
+

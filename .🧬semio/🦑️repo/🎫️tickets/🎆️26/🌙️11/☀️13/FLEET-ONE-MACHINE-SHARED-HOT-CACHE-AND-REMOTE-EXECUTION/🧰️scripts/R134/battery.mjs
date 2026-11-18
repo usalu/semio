@@ -1,0 +1,16 @@
+import {readdirSync,writeFileSync} from "node:fs";
+import {spawn} from "node:child_process";
+import {join,dirname,basename} from "node:path";
+const BUN="/Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun";
+const [mirror,out,jobs="3"]=process.argv.slice(2);
+const walk=d=>readdirSync(d,{withFileTypes:true}).flatMap(e=>e.isDirectory()?(e.name==="node_modules"?[]:walk(join(d,e.name))):[join(d,e.name)]);
+const files=walk(mirror).filter(f=>/\/🧪️tests\/(.*\/)?(🟦️\.ts|[^/]*\.test\.ts)$/u.test(f)).sort();
+const env={...process.env};for(const k of Object.keys(env))if(k.startsWith("SEMIO_FLEET_")||k.startsWith("SEMIO_REMOTE_CACHE_"))delete env[k];
+const results=[];let next=0;
+const one=()=>new Promise(done=>{const i=next++;if(i>=files.length)return done(false);const f=files[i];let text="";
+ const child=spawn(BUN,["test","./"+basename(f),"--timeout","120000"],{cwd:dirname(f),env});child.stdout.on("data",d=>text+=d);child.stderr.on("data",d=>text+=d);
+ const timer=setTimeout(()=>child.kill("SIGKILL"),300000);
+ child.on("close",rc=>{clearTimeout(timer);const sum=text.split("\n").filter(l=>/^ *\d+ (pass|fail)/u.test(l)).map(l=>l.trim()).join(" ");results[i]=f.slice(mirror.length)+"::rc="+rc+"::"+sum;done(true);});});
+const lane=async()=>{while(await one());};
+await Promise.all(Array.from({length:Number(jobs)},lane));
+writeFileSync(out,results.join("\n")+"\n");console.log(files.length,"files");

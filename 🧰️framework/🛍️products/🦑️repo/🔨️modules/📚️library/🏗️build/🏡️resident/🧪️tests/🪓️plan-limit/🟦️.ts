@@ -2,13 +2,14 @@
  * @see ../../🏗️composition/🌐️host/👷️slice-pool/🟨️.mjs */
 import {expect,test} from "bun:test";
 import {createSlicePoolV1} from "../../🏗️composition/🌐️host/👷️slice-pool/🟨️.mjs";
+import {GRAPH_CUT_POLICY_V1} from "../../../🧠️memory/✂️cut/🟨️.mjs";
 import {HOST_POLICY_V1} from "../../📨️protocol/🎚️policy/🟨️.mjs";
 
 const elasticity=HOST_POLICY_V1.sliceHostElasticity as {maximumMegabytes:number;hostCapBasisPoints:number;minimumMegabytes:number};
 const wait=(milliseconds:number)=>new Promise<void>(resolve=>setTimeout(resolve,milliseconds));
 const harness=(options:{hostMegabytes:number;observed:()=>number;planLimitMegabytes?:number}) => {
  const workers:{emit:(event:string,value:unknown)=>void}[]=[],state={terminated:0,released:0};
- const pool=createSlicePoolV1({workerUrl:new URL("file:///unused.mjs"),maximum:1,graceMilliseconds:50,sampleMilliseconds:10,hostMegabytes:options.hostMegabytes,elasticity,unlearnedMegabytes:2048,
+ const pool=createSlicePoolV1({workerUrl:new URL("file:///unused.mjs"),maximum:1,cutPolicy:{...GRAPH_CUT_POLICY_V1,levels:0},graceMilliseconds:50,sampleMilliseconds:10,hostMegabytes:options.hostMegabytes,elasticity,unlearnedMegabytes:2048,
   ...options.planLimitMegabytes===undefined?{}:{planLimitMegabytes:options.planLimitMegabytes},
   reserve:async({megabytes}:{megabytes:number})=>({megabytes,attach:()=>undefined,release:()=>{state.released++;}}),
   observe:async()=>options.observed(),

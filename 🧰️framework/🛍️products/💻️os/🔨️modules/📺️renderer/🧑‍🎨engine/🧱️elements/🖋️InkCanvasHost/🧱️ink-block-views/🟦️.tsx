@@ -87,6 +87,7 @@ export function InkItemView({
   const bounds = inkItemBounds(block);
   const common = {
     "data-ink-block-id": block.id,
+    "data-border-probe-art": "",
     className: cn("bg-background/90 absolute overflow-hidden rounded border shadow-sm", selected && "ring-primary ring-2", hovered && !selected && "ring-primary/60 ring-1", block.locked && "opacity-70", hidden && "pointer-events-none opacity-0"),
     style: {
       left: bounds.x,

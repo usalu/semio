@@ -17,8 +17,14 @@ it("publishes under staffage.semio-tech.com", () => {
   expect(staffageHostDocument.cnameHost).toBe(STAFFAGE_SITE_HOST);
   expect(STAFFAGE_SITE_HEADERS).toContain("Cache-Control: no-cache");
   const html = `<meta charset="UTF-8" />\n<title>t</title>\n<script>boot()</script>`;
-  expect(staffageContentSecurityPolicy(html)).toContain("script-src 'self' 'sha256-");
+  expect(staffageContentSecurityPolicy(html)).toContain("script-src 'self' 'wasm-unsafe-eval' 'sha256-");
   expect(staffageContentSecurityPolicy(html)).toContain("connect-src 'self'");
+});
+
+it("lets the DWG encoder compile WebAssembly without allowing eval", () => {
+  const scripts = staffageContentSecurityPolicy("<title>t</title>").split("; ").find((directive) => directive.startsWith("script-src "))!;
+  expect(scripts.split(" ")).toContain("'wasm-unsafe-eval'");
+  expect(scripts.split(" ")).not.toContain("'unsafe-eval'");
 });
 
 it("ships a source document without a lang attribute", () => {

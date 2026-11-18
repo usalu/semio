@@ -57,6 +57,7 @@ export function courseView(course: Course, quizzes: readonly Quiz[]): CourseView
   return {
     id: course.id,
     ...(course.assignments === undefined ? {} : { assignments: course.assignments }),
+    ...(course.clips === undefined ? {} : { clips: course.clips }),
     ...(course.unlocks === undefined ? {} : { unlocks: sortedRecord(course.unlocks) }),
     title: course.title,
     short: course.short,

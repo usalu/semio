@@ -7,6 +7,67 @@
         "maximumFactBytes": 65536
       }
     },
+    "SealPolicy": {
+      "const": {
+        "maximumStalePaths": 4096,
+        "maximumOwners": 9548
+      }
+    },
+    "Seal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "mode",
+        "rounds",
+        "sealedWithLaterChanges",
+        "laterChangedOwners",
+        "membershipMoved",
+        "admissionMoved",
+        "owners"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "mode": {
+          "enum": [
+            "quiet",
+            "repaired",
+            "sealed-with-later-changes"
+          ]
+        },
+        "rounds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sealedWithLaterChanges": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "laterChangedOwners": {
+          "type": "array",
+          "maxItems": 9548,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "membershipMoved": {
+          "type": "boolean"
+        },
+        "admissionMoved": {
+          "type": "boolean"
+        },
+        "owners": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      }
+    },
     "Diagnostic": {
       "type": "object",
       "required": [

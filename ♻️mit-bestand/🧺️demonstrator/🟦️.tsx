@@ -5,6 +5,9 @@
 
 import { mountUiRoot, useUiCallback as useCallback, useUiEffect as useEffect, useUiMemo as useMemo, useUiState as useState } from "@semio-tech/ui-react/runtime";
 import {
+  Button,
+  CardGridCell,
+  Footer,
   LayeredOverview,
   Navbar,
   ShellBrandLogo,
@@ -12,6 +15,7 @@ import {
   bootstrapElementsSurfaceChromeDocument,
   capturePosterFromCanvases,
   centeredLastRowCells,
+  navbarFillItem,
   nearSquareGrid,
   readStoredUiChromeAppearance,
   readStoredUiDriver,
@@ -62,25 +66,29 @@ const DEMONSTRATOR_CELLS = Object.fromEntries(centeredLastRowCells(DEMONSTRATOR_
 
 /** 🔢️ The card grid mirrors the strip. */
 const DEMONSTRATOR_GRID = nearSquareGrid(DEMONSTRATOR_PANES.length);
-const DEMONSTRATOR_OVERLAY_STYLE = { gridTemplateColumns: `repeat(${DEMONSTRATOR_GRID.columns}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${DEMONSTRATOR_GRID.rows}, minmax(min(10rem, 100%), 1fr))` } as const;
+const DEMONSTRATOR_OVERLAY_STYLE = { gridTemplateColumns: `repeat(${DEMONSTRATOR_GRID.columns}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${DEMONSTRATOR_GRID.rows}, minmax(0, 1fr))`, paddingBlock: "var(--navbar-band-height) var(--footer-band-height)" } as const;
 
 /** 🧮️ Every app may stay live; boots start 1.5 s after load, one per 35 s plugin-load budget. A pristine app is released to its poster after
  * 30 s offscreen while another is opened, 5 min idle on the overview or 60 s in a hidden tab — the unattended kiosk case. */
 const DEMONSTRATOR_LIFECYCLE = { budget: DEMONSTRATOR_PANES.length, warmStartMs: 1_500, warmIntervalMs: 35_000, suspendIdleMs: 5 * 60_000, suspendOffscreenMs: 30_000, suspendHiddenMs: 60_000 } as const;
 
 /** 📏️ When swiping, the cards and the neighbour hints stay between the navbar over the top of the overview and the partner credits over its
- * bottom (two rows of logos on a phone). */
-const DEMONSTRATOR_INSETS = { top: "calc(var(--size-workbench) * 1.5)", bottom: "5.5rem" } as const;
+ * bottom (one row of logos, icon-only on a phone). */
+const DEMONSTRATOR_INSETS = { top: "var(--navbar-band-height)", bottom: "var(--footer-band-height)" } as const;
 
 /** 🎪️ One app's live shell: the standalone module it runs, the branded app id its manifest declares, its tour only while opened. */
-function DemonstratorShell({ pane, locale, opened }: { readonly pane: DemonstratorPaneView; readonly locale: DemonstratorLocale; readonly opened: boolean }) {
+function DemonstratorShell({ pane, locale, opened, onOverview }: { readonly pane: DemonstratorPaneView; readonly locale: DemonstratorLocale; readonly opened: boolean; readonly onOverview: () => void }) {
+  const overviewLabel = useLabel(demonstratorUiLabel("demonstrator.landing.overview"));
   const variants = demonstratorPaneBootVariants(pane.variant);
+  const trailing = useMemo(() => (opened ? [{ key: "overview", content: <Button icon="layout-grid" text={overviewLabel} onClick={onOverview} aria-keyshortcuts="Escape" data-layered-overview-button="" /> }] : undefined), [opened, overviewLabel, onOverview]);
   const catalog = useMemo(() => composeSpecificOsCatalogV1(window.location.href, { maxBytes: 2097152, maxRows: 512, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => false, progress: () => {} }).catalog, []);
   const runtimeBoot = useMemo(() => resolvePlaygroundBoot(catalog, variants.runtime), [catalog, variants.runtime]);
   const manifestBoot = useMemo(() => resolvePlaygroundBoot(catalog, variants.manifest), [catalog, variants.manifest]);
   const locks = useMemo(() => resolveShellLocks(pane.brand.locks), [pane.brand.locks]);
   const defaults = useMemo(() => resolveShellDefaults(pane.brand, undefined), [pane.brand]);
   return (
+    <div className={opened ? "flex h-full w-full flex-col" : "contents"} data-border-probe-art={opened ? undefined : ""}>
+      <div className={opened ? "relative h-full min-h-0 flex-1" : "contents"}>
     <FrameworkOsShell catalog={catalog}
       pluginFilter={variants.runtime}
       plugins={runtimeBoot.plugins}
@@ -94,20 +102,23 @@ function DemonstratorShell({ pane, locale, opened }: { readonly pane: Demonstrat
       storageNamespace={pane.id}
       initialLocale={locale}
       suppressAutoIntroduction={!opened}
+      navbarTrailingItems={trailing}
     />
+      </div>
+    </div>
   );
 }
 
 const demonstratorPaneShortLabel = (pane: DemonstratorPaneView): string => pane.shortWindowTitle.split(" · ").at(-1) ?? pane.label;
 
 /** 📄️ The eight apps as pages of the overview, worded and branded for `locale`. */
-const demonstratorPages = (views: readonly DemonstratorPaneView[], locale: DemonstratorLocale): readonly LayeredPane[] =>
-  views.map((pane) => ({ id: pane.id, label: pane.label, shortLabel: demonstratorPaneShortLabel(pane), icon: pane.icon, capturePoster: capturePosterFromCanvases, render: ({ opened }) => <DemonstratorShell pane={pane} locale={locale} opened={opened} /> }));
+const demonstratorPages = (views: readonly DemonstratorPaneView[], locale: DemonstratorLocale, onOverview: () => void): readonly LayeredPane[] =>
+  views.map((pane) => ({ id: pane.id, label: pane.label, shortLabel: demonstratorPaneShortLabel(pane), icon: pane.icon, capturePoster: capturePosterFromCanvases, render: ({ opened }) => <DemonstratorShell pane={pane} locale={locale} opened={opened} onOverview={onOverview} /> }));
 
-/** 🃏️ An app's card, centred in its cell of the card grid (when swiping, the overview centres it on its page itself). */
+/** 🃏️ An app's card, filling its cell of the card grid edge to edge (when swiping, the overview centres it on its page itself). */
 const demonstratorCardRenderer = (views: readonly DemonstratorPaneView[]) => (page: LayeredPane, state: LayeredCardState) => {
   const card = <DemonstratorCard pane={views.find((view) => view.id === page.id)!} lifted={state.revealed} onClick={state.open} />;
-  return state.mode === "swipe" ? card : <div className="flex min-h-0 min-w-0 justify-center overflow-x-hidden overflow-y-auto px-double">{card}</div>;
+  return state.mode === "swipe" ? card : <CardGridCell className="overflow-y-auto">{card}</CardGridCell>;
 };
 //#endregion 🎪️DemonstratorPages
 
@@ -133,7 +144,9 @@ function DemonstratorLocaleLanding({ locale, onChooseLocale, focusHeading }: { r
     return () => cancelAnimationFrame(frame);
   }, [focusHeading]);
   const views = useMemo(() => demonstratorPaneViews(locale), [locale]);
-  const pages = useMemo(() => demonstratorPages(views, locale), [views, locale]);
+  const [openedId, setOpenedId] = useState<string | null>(() => window.location.hash.slice(1) || null);
+  const closeOpened = useCallback(() => setOpenedId(null), []);
+  const pages = useMemo(() => demonstratorPages(views, locale, closeOpened), [views, locale, closeOpened]);
   const renderCard = useMemo(() => demonstratorCardRenderer(views), [views]);
   const introduction = useMemo(() => demonstratorGeneralIntroduction(locale), [locale]);
   const viewportMobile = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
@@ -152,7 +165,6 @@ function DemonstratorLocaleLanding({ locale, onChooseLocale, focusHeading }: { r
   const [introductionStep, setIntroductionStep] = useState(0);
   const [introductionDismissed, setIntroductionDismissed] = useState(false);
   const gridLabel = useLabel(demonstratorUiLabel("demonstrator.landing.grid"));
-  const overviewLabel = useLabel(demonstratorUiLabel("demonstrator.landing.overview"));
   const waitingLabel = useLabelFormatter(demonstratorUiLabel("demonstrator.landing.paneWaiting"));
   const failedLabel = useLabelFormatter(demonstratorUiLabel("demonstrator.landing.paneFailed"));
   const up = useLabelFormatter(demonstratorUiLabel("demonstrator.landing.neighbourUp"));
@@ -162,22 +174,26 @@ function DemonstratorLocaleLanding({ locale, onChooseLocale, focusHeading }: { r
   const labels = useMemo(
     () => ({
       grid: gridLabel,
-      overview: overviewLabel,
       waiting: (page: LayeredPane) => waitingLabel({ label: page.label }),
       failed: (page: LayeredPane) => failedLabel({ label: page.label }),
       neighbour: (page: LayeredPane, direction: LayeredDirection) => ({ up, left, right, down })[direction]({ label: page.label }),
     }),
-    [gridLabel, overviewLabel, waitingLabel, failedLabel, up, left, right, down],
+    [gridLabel, waitingLabel, failedLabel, up, left, right, down],
   );
-  const dismissIntroduction = useCallback((id: string | null) => id !== null && setIntroductionDismissed(true), []);
+  const changeOpened = useCallback((id: string | null) => {
+    setOpenedId(id);
+    if (id !== null) setIntroductionDismissed(true);
+  }, []);
 
   const renderChrome = ({ revealed, opened }: LayeredChromeState) =>
     opened ? null : (
       <>
         {revealed ? null : (
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 flex flex-wrap items-end justify-between gap-single px-double py-single">
-            <div className="pointer-events-auto">{aProjectOfLuhUdkFooterItem("landingProjectOf", locale, viewportMobile).content}</div>
-            <div className="pointer-events-auto">{fundedByZukunftBauFooterItem("landingFundedBy", locale, viewportMobile).content}</div>
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40">
+            <Footer
+              items={[aProjectOfLuhUdkFooterItem("landingProjectOf", locale, viewportMobile), navbarFillItem(), fundedByZukunftBauFooterItem("landingFundedBy", locale, viewportMobile)]}
+              className="pointer-events-auto bg-transparent"
+            />
           </div>
         )}
         {introductionDismissed ? null : (
@@ -216,14 +232,15 @@ function DemonstratorLocaleLanding({ locale, onChooseLocale, focusHeading }: { r
         panes={pages}
         cells={DEMONSTRATOR_CELLS}
         renderCard={renderCard}
-        overlayClassName="grid items-center"
+        overlayClassName="grid items-stretch"
         overlayStyle={DEMONSTRATOR_OVERLAY_STYLE}
         renderChrome={renderChrome}
         mode={swipe ? "swipe" : "strip"}
         insets={DEMONSTRATOR_INSETS}
         lifecycle={DEMONSTRATOR_LIFECYCLE}
         labels={labels}
-        onOpenedIdChange={dismissIntroduction}
+        openedId={openedId}
+        onOpenedIdChange={changeOpened}
       />
     </main>
   );

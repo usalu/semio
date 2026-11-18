@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:graph-state:project-records:fresh:v1",
+  "title": "A stored record that no longer holds is refreshed",
+  "description": "EN: A project record is filed under a key that names the owner and its code, never its inputs; the record carries every file it read, and a taker accepts it only when those files still have the bytes the producer saw. A record that is stored in the fleet cache but whose files changed since is stale for every reader: it must not count as done. A machine that pulls owners therefore checks the file rows of a stored record against its own tree (the same digests the taker checks) and claims the refresh of a stale one under a claim of its own (named by the stale record), and the new record replaces the old one by compare-and-swap, so the newest writer wins instead of the first. A record younger than `minimumAgeMilliseconds` is never refreshed (two machines whose trees differ by a replication lag must not replace each other's record again and again); the closures of the tools are inputs of every record too: a `closure` row holds the answer a tool closure gave (the digest of exactly the files that closure reaches), and a record is stale when the closure answers differently now, so an edit of a file outside every closure of a record never makes it stale and an edit inside one makes stale exactly the records whose closure reaches it; freshness is decided by content digests only, never by a modification time. What cannot be decided (no answer, not decodable) counts as fresh. A record found fresh is written down as a marker in `directory` below the fleet folder of the machine and trusted by every process of the machine for `keptMilliseconds`, so the children of a pool look at a stored record once, not each of them. DE: Ein Projekteintrag liegt unter einem Schlüssel, der das Projekt und seinen Code nennt, nie seine Eingaben; der Eintrag trägt jede gelesene Datei, und ein Leser nimmt ihn nur, wenn diese Dateien noch die Bytes haben, die der Erzeuger sah. Ein Eintrag im Flottenspeicher, dessen Dateien sich seither geändert haben, ist für jeden Leser veraltet: Er darf nicht als erledigt zählen. Eine Maschine, die Projekte abholt, prüft deshalb die Dateizeilen eines gespeicherten Eintrags gegen ihren eigenen Baum (dieselben Digests wie der Leser) und beansprucht die Erneuerung eines veralteten unter einem eigenen Anspruch (benannt nach dem veralteten Eintrag); der neue Eintrag ersetzt den alten per Compare-and-Swap, sodass der neueste Schreiber gewinnt statt des ersten. Ein Eintrag, der jünger als `minimumAgeMilliseconds` ist, wird nie erneuert (zwei Maschinen, deren Bäume sich um eine Replikationsverzögerung unterscheiden, dürfen den Eintrag der anderen nicht immer wieder ersetzen); was sich nicht entscheiden lässt (keine Antwort, nicht lesbar), gilt als frisch.",
+  "definitions": {
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "minimumAgeMilliseconds",
+        "maximumRows",
+        "verdictsKept",
+        "domain",
+        "keptMilliseconds",
+        "directory"
+      ],
+      "properties": {
+        "minimumAgeMilliseconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumRows": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "verdictsKept": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "domain": {
+          "type": "string"
+        },
+        "keptMilliseconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "directory": {
+          "type": "string"
+        }
+      },
+      "const": {
+        "minimumAgeMilliseconds": 120000,
+        "maximumRows": 400000,
+        "verdictsKept": 4096,
+        "domain": "project-refresh",
+        "keptMilliseconds": 600000,
+        "directory": "owner-pool-fresh"
+      }
+    }
+  }
+}

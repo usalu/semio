@@ -33,9 +33,9 @@ export function focusFromCargoArgumentsV1(args:readonly string[]):string[]{
 /** 🏛️ Seals the module set the compiler wrapper runs (script and native entry, with every file they import) into the cache root and answers the sealed copies: every process of one build session runs this snapshot, so a concurrent edit of the live tooling reaches the next session only, and a tree that is mid-edit is retried and never sealed (see {@link sealModulesV1}). */
 export function sealedUnitCacheV1(cacheRoot:string,runtime:string=process.execPath):SealedModulesV1{return sealModulesV1(cacheRoot,[UNIT_CACHE_SCRIPT_V1,UNIT_CACHE_ENTRY_V1],{checked:[UNIT_CACHE_SCRIPT_V1],runtime});}
 
-/** 📜️ The sealed wrapper script for a process that names it in its environment (`SEMIO_UNIT_CACHE_SCRIPT`), or `undefined` after a bilingual notice when no snapshot could be sealed (the unit cache is then off for that process, never half-working). */
-export function sealedUnitCacheScriptV1(cacheRoot:string,report:(line:string)=>void=line=>{process.stderr.write(line+"\n");}):string|undefined{
- try{return sealedUnitCacheV1(cacheRoot).entries[0];}catch(error){report(unitCacheWrapperRefusalV1(String((error as Error)?.message??error).split("\n")[0]!));return undefined;}
+/** 📜️ The executable compiler wrapper of a process that names it in its environment (`SEMIO_UNIT_CACHE_WRAPPER`, the one `RUSTC_WRAPPER` convention of {@link unitCacheEnvironmentV1}), or `undefined` after a bilingual notice when no wrapper could be made (the unit cache is then off for that process, never half-working). `RUSTC` is never the wrapper. */
+export function unitCacheWrapperV1(cacheRoot:string,report:(line:string)=>void=line=>{process.stderr.write(line+"\n");}):string|undefined{
+ try{return ensureUnitCacheShimV1(cacheRoot);}catch(error){report(unitCacheWrapperRefusalV1(String((error as Error)?.message??error).split("\n")[0]!));return undefined;}
 }
 
 /** 🪞️ Where the executable stand-in for the compiler wrapper lives: Cargo runs it as `<wrapper> <rustc> <arguments>`. Its name carries the digest of the code it runs (`rustc-wrapper-<digest>`; on Windows a native executable `….exe`, see {@link ensureUnitCacheShimV1}, because Cargo passes arguments with quotes (`--cfg feature="std"`) and Rust refuses to hand those to a batch file), so sessions of different tooling never share a stand-in. */

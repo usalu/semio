@@ -2737,6 +2737,8 @@
             "key": "power",
             "heatW": 34
           },
+          "ratedPowerW": 60,
+          "ratedPowerBasis": "electrical-input",
           "source": "authored-estimate",
           "reference": "iec-60064"
         },
@@ -3073,6 +3075,8 @@
                 "exponent": 2
               }
             ],
+            "capStart": true,
+            "capEnd": true,
             "region": "rose",
             "layer": "rose-shell"
           },
@@ -3080,8 +3084,7 @@
             "id": "th-cord",
             "of": "cord",
             "region": "cord",
-            "layer": "sheath",
-            "slender": true
+            "layer": "sheath"
           },
           {
             "id": "th-collar",
@@ -3116,6 +3119,8 @@
                 "exponent": 2
               }
             ],
+            "capStart": true,
+            "capEnd": true,
             "region": "lampholder",
             "layer": "brass-shell"
           },
@@ -3140,6 +3145,8 @@
                 "exponent": 2
               }
             ],
+            "capStart": true,
+            "capEnd": true,
             "region": "lampholder",
             "layer": "brass-shell"
           },
@@ -3248,6 +3255,8 @@
                 "exponent": 2
               }
             ],
+            "capStart": true,
+            "capEnd": true,
             "region": "shade",
             "layer": "shade-steel"
           },
@@ -3669,13 +3678,14 @@
                 "exponent": 2
               }
             ],
+            "capStart": true,
+            "capEnd": true,
             "region": "rose"
           },
           {
             "id": "th-cord",
             "of": "cord",
-            "region": "cord",
-            "slender": true
+            "region": "cord"
           },
           {
             "id": "th-collar",
@@ -3755,6 +3765,8 @@
                 "exponent": 2
               }
             ],
+            "capStart": true,
+            "capEnd": true,
             "region": "shade"
           },
           {
@@ -4103,13 +4115,14 @@
                 "exponent": 2
               }
             ],
+            "capStart": true,
+            "capEnd": true,
             "region": "rose"
           },
           {
             "id": "th-cord",
             "of": "cord",
-            "region": "cord",
-            "slender": true
+            "region": "cord"
           },
           {
             "id": "th-bulb",
@@ -4173,6 +4186,8 @@
                 "exponent": 2
               }
             ],
+            "capStart": true,
+            "capEnd": true,
             "region": "shade"
           },
           {
@@ -4196,6 +4211,8 @@
                 "exponent": 2
               }
             ],
+            "capStart": true,
+            "capEnd": true,
             "region": "lampholder"
           },
           {

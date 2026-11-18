@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {mkdirSync,readdirSync} from "node:fs";
 import {readHostCapacityStatusV1,hostCapacityDirectoryV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
 import {readLeaseReportV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/📋️status/🟦️.ts";
@@ -40,7 +41,7 @@ const weightOf=(text:string|undefined):number|undefined=>{
 /** 🤖️ Counts what a session holds: leases of the checkout's lease store, capacity grants and live test sandboxes. A probe that fails leaves its count out of the answer. */
 export async function readAgentSessionUsageV1(root:string,session:AgentSessionV1,environment:NodeJS.ProcessEnv,parent?:string):Promise<AgentSessionUsageV1|undefined>{
  try{
-  const address=agentSessionAddressV1(session),report=readLeaseReportV1(`${root}/${REPOSITORY_LEASE_DIRECTORY_V1}`,environment,Date.now(),0),control=createCapacityControlV1();
+  const address=agentSessionAddressV1(session),report=readLeaseReportV1(machinePathV1(root,REPOSITORY_LEASE_DIRECTORY_V1),environment,Date.now(),0),control=createCapacityControlV1();
   try{
    const snapshot=await readHostCapacityStatusV1({directory:hostCapacityDirectoryV1(environment),policy:BUILD_HOST_CAPACITY_POLICY_V1,control:control.control});
    const sandboxes=listSessionSandboxesV1(agentSessionPathsV1(session,testSandboxParentV1(parent)).sandboxes).length;

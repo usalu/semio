@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {createHash,randomBytes} from "node:crypto";
 import {createReadStream,createWriteStream,readdirSync} from "node:fs";
 import {lstat,mkdir,readdir,readFile,readlink,rename,rm,stat,symlink,utimes,writeFile} from "node:fs/promises";
@@ -222,7 +223,7 @@ export async function packFleetUnitV1(request:Pick<FleetInstallRequestV1,"direct
  }finally{await rm(listing,{force:true}).catch(()=>{});await rm(temporary,{force:true}).catch(()=>{});}
 }
 
-export const unitCachePath=(root:string):string=>join(root,".cache","f","install-pack-units.json");
+export const unitCachePath=(root:string):string=>machinePathV1(root,".cache","f","install-pack-units.json");
 export const readUnitCache=async(root:string):Promise<Map<string,PackBlobV1>>=>{
  try{const value=JSON.parse(await readFile(unitCachePath(root),"utf8")) as {version?:number;rows?:Record<string,PackBlobV1>};return new Map(value.version===1?Object.entries(value.rows??{}):[]);}catch{return new Map();}
 };
@@ -362,7 +363,7 @@ export async function fleetInstallRestoreV1(request:FleetInstallRequestV1,manife
  const machine=context.root===undefined?undefined:readFleetMachineV1(context.root),currentLock=request.lock??await lockOf(request.directory,request.lockFile);
  if(machine===undefined||machine.storeRoot===undefined||currentLock===undefined)return false;
  if(found.lock.sha256!==currentLock.sha256||found.lock.packages!==currentLock.packages){request.event?.({stage:"skip",detail:"the pack was installed from other packages than this lockfile pins"});return false;}
- const registry=createFleetRegistryV1({storeRoot:machine.storeRoot,group:machine.group,pinsPath:join(context.root!,".cache","f","identity","pins-install.json")});
+ const registry=createFleetRegistryV1({storeRoot:machine.storeRoot,group:machine.group,pinsPath:machinePathV1(context.root!,".cache","f","identity","pins-install.json")});
  const {publisher,...bare}=found;
  if(!await verifyFleetDocumentV1(registry,publisher.origin,"cache-write","install-pack",signedText(bare,publisher.origin),publisher.signature)){request.event?.({stage:"skip",detail:"the pack is not signed by a registered fleet origin"});return false;}
  const index=await fleetInstallIndexV1(directory,found);

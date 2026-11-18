@@ -5,7 +5,7 @@
     "copyBytes": 1073741824,
     "capacityBytes": 1073741824,
     "releaseBytes": 1073741824,
-    "depth": 128,
+    "depth": 1024,
     "fuel": 1000000000
   }
 }

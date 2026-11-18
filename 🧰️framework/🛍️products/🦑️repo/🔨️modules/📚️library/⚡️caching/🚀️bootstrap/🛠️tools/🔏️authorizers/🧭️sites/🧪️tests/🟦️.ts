@@ -29,6 +29,16 @@ test("literal sites equal the TypeScript parser and the Python token oracle",()=
  }
 });
 
+/** 🧱️ The site bound is a member of the closure family: a file at the bound keeps every site, one more is refused loudly in the language of the process and never truncated, and the TypeScript parser agrees on the count. */
+test("a file of exactly the site bound keeps every site and one more is refused instead of truncated",()=>{
+ const bound=schema.$defs.Policy.const.maximumSitesPerFile,make=(count:number)=>Array.from({length:count},(_,index)=>"import \"./s"+index+".ts\";").join("\n");
+ const kept=closureLiteralSitesV1("big.ts",make(bound));expect(kept).toHaveLength(bound);expect(new Set(kept.map(site=>site.specifier)).size).toBe(bound);
+ expect(astSitesV1("big.ts",make(bound)).filter(site=>site.form==="literal")).toHaveLength(bound);expect(astSitesV1("big.ts",make(bound+1)).filter(site=>site.form==="literal")).toHaveLength(bound+1);
+ let failure:unknown;try{closureLiteralSitesV1("big.ts",make(bound+1));}catch(error){failure=error;}
+ const message=(failure as Error|undefined)?.message??"";expect(message).toContain("big.ts");expect(message).toContain("maximumSitesPerFile="+bound);expect(message).toMatch(/Fix:|Behebung:/u);expect(message).not.toMatch(/\{\w+\}/u);
+ for(const language of["en","de"])expect(closureRefusalTextV1(closureRefusalMessagesV1,"sites-bounded",{importer:"big.ts",detail:"maximumSitesPerFile="+bound},{SEMIO_LANGUAGE:language})).toContain("big.ts");
+});
+
 /** 🌐️ Every refusal code ships both languages and renders the named site. */
 test("refusal texts exist in English and German and name the site and the fix",()=>{
  const validate=new Ajv({strict:true}).compile({...schema.$defs.Message,$defs:schema.$defs});for(const[code,row]of Object.entries(closureRefusalMessagesV1))expect(validate(row),code).toBe(true);

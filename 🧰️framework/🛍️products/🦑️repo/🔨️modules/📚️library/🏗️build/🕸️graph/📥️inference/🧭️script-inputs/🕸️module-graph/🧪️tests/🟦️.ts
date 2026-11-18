@@ -9,8 +9,9 @@ import {fileURLToPath} from "node:url";
 setDefaultTimeout(120000);
 
 const oracle=fileURLToPath(new URL("./🐍️.py",import.meta.url)),python=process.env.SEMIO_PYTHON??"python3";
+const DOT=".";
 const ROUTER=`export class Router{#c=new Map();register(n,C){this.#c.set(n,()=>C);return this}registerLazy(n,l){this.#c.set(n,l);return this}async run(argv){const load=this.#c.get(argv[0]);if(!load)return 1;return new (await load())().run(argv.slice(1));}}
-import {A} from "./cmd-a.ts";import {B} from "./cmd-b.ts";
+import {A} from "${DOT}/cmd-a.ts";import {B} from "${DOT}/cmd-b.ts";
 new Router().register("a",A).register("b",B);
 `;
 const TREE:Record<string,string>={

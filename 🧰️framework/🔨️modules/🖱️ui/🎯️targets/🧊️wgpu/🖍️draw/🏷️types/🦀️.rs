@@ -5,8 +5,7 @@ use semio_ui_scene_pass::ScenePass3d;
 use semio_ui_theme::{GlassStyle, Rgba, Theme};
 use bytemuck::{Pod, Zeroable};
 
-#[path = "../../../../🔨️modules/📏️border-presentation/🦀️.rs"]
-mod shared_border;
+use semio_ui_border_presentation as shared_border;
 pub use shared_border::{resolve_shared_border_segments, ResolvedSharedBorderOwnership, ResolvedSharedBorderSegment, SharedBorderError, SharedBorderOwnershipCursor, SharedBorderOwnershipStep, SharedBorderResolutionCursor, SharedBorderResolutionStep, SharedBorderSegment, SharedBorderState};
 
 #[path = "🧱️instance-records-and-clip/🦀️.rs"]

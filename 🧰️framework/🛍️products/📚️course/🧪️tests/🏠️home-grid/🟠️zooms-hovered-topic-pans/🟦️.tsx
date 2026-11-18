@@ -163,11 +163,12 @@ export function registerZoomsHoveredTopicPansTests(): void {
     expect([...(glyph.textContent ?? "")].map((char) => char.codePointAt(0))).toEqual([0x2744, 0xfe0e]);
     expect(stylesheet).toMatch(/\.course-glyph \{[^}]*font-variant-emoji: text;/u);
   });
-  it("takes its breakpoints from the design system, shares the grid's tracks with no spacing between them and spaces the cards inside their cells", () => {
+  it("takes its breakpoints from the design system, shares the grid's tracks with no spacing between them and lets each card fill its cell", () => {
     expect(fixture.breakpoints).toEqual({ mobileMaxPx: UI_MOBILE_MAX_WIDTH_PX, tabletMaxPx: UI_TABLET_MAX_WIDTH_PX });
     const rules = layerRules(stylesheet);
     expect([...new Set(rules.filter((rule) => rule.selector === ".course-home-grid").map((rule) => rule.minWidth))]).toEqual([0]);
     expect(rules.filter((rule) => rule.selector.startsWith(".course-home-grid") && SPACING.includes(rule.property))).toEqual([]);
-    expect(rules.filter((rule) => rule.selector === ".course-home-cell").map((rule) => rule.property)).toEqual(expect.arrayContaining(["padding", "align-items", "justify-content", "min-width", "min-height"]));
+    expect(rules.filter((rule) => rule.selector === ".course-home-cell").map((rule) => rule.property)).not.toEqual(expect.arrayContaining(["padding"]));
+    expect(stylesheet).toMatch(/\.course-home-cell > \.course-home-card \{[^}]*display: flex;[^}]*flex-direction: column;/u);
   });
 }

@@ -35,8 +35,8 @@ export function flowFromAnchor(anchor: Anchor): Flow {
   return { inline: anchorHorizontal(anchor) === "right" ? "rtl" : "ltr", block: anchorVertical(anchor) === "bottom" ? "up" : "down" };
 }
 
-/** 📍️ Anchor positioning with matched bounds clamps: Panels use their floating inset; contained Panes pass zero to meet their host edges. Edge-middle anchors remain centered by a translate. */
-export function anchorPositionStyle(anchor: Anchor, inset = "var(--panel-inset)"): React.CSSProperties {
+/** 📍️ Anchor positioning with matched bounds clamps: Panels and contained Panes meet their host edges (zero inset) so their outline shares the host's line. Edge-middle anchors remain centered by a translate. */
+export function anchorPositionStyle(anchor: Anchor, inset = "0px"): React.CSSProperties {
   const horizontal = anchorHorizontal(anchor);
   const vertical = anchorVertical(anchor);
   const style: React.CSSProperties = {
@@ -61,25 +61,24 @@ export function anchorPositionStyle(anchor: Anchor, inset = "var(--panel-inset)"
 /**
  * 🔓️ Open chrome-hosted {@link Panel} position — pulls the window-chrome cap into the navbar/footer
  * band where {@link PanelChromeTabBar} parked the folded toggles, so opening unfolds in place instead of
- * jumping the chips into the canvas. Navbar/footer are `h-large` with centered `h-medium` items; the offset
- * aligns the panel's `min-h-medium` cap to that centered row. Max height grows by the same overhang so the
- * body still fills the canvas region.
+ * jumping the chips into the canvas. The cap is exactly as tall as the navbar/footer band (`--panel-header-height`
+ * is set to the band height) and starts on the band's outer edge, so its tab frame shares the band's lines. Max height
+ * grows by the same overhang so the body still fills the canvas region.
  * @see {@link anchorPositionStyle}
  */
 export function chromeHostedOpenPanelPositionStyle(anchor: Anchor): React.CSSProperties {
-  const style = anchorPositionStyle(anchor);
+  const style: Record<string, unknown> = { ...anchorPositionStyle(anchor) };
   const vertical = anchorVertical(anchor);
-  const shellHeight = vertical === "bottom" ? "var(--footer-height)" : "var(--navbar-height)";
-  const intoShellChrome = `calc(-1 * (${shellHeight} + var(--panel-header-height)) / 2)`;
-  const maxHeightWithChrome = `calc(100% + (${shellHeight} + var(--panel-header-height)) / 2)`;
+  const shellHeight = vertical === "bottom" ? "var(--footer-band-height)" : "var(--navbar-band-height)";
+  style["--panel-header-height"] = shellHeight;
   if (vertical === "top") {
-    style.top = intoShellChrome;
-    style.maxHeight = maxHeightWithChrome;
+    style.top = `calc(-1 * ${shellHeight})`;
+    style.maxHeight = `calc(100% + ${shellHeight})`;
   } else if (vertical === "bottom") {
-    style.bottom = intoShellChrome;
-    style.maxHeight = maxHeightWithChrome;
+    style.bottom = `calc(-1 * ${shellHeight})`;
+    style.maxHeight = `calc(100% + ${shellHeight})`;
   }
-  return style;
+  return style as React.CSSProperties;
 }
 
 // Window-level floating chrome (measures, engagement, search, utility bar, and any app-contributed floating

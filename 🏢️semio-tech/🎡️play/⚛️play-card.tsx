@@ -35,7 +35,7 @@ export function PlayCard({
       label={openAppLabel}
       lifted={lifted}
       onClick={onClick}
-      className={cn("max-w-xs", className)}
+      className={cn("size-full", className)}
       icon={<Icon icon={pane.icon} size="small" title={uiDataLabel(pane.label)} className="shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />}
       title={pane.label}
       footerRight={<OverviewCardOpenChip slot="play-pane-card">{openLabel}</OverviewCardOpenChip>}

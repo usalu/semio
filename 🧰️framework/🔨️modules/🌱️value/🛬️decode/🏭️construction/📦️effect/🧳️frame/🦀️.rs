@@ -21,6 +21,20 @@ impl NativeReceivingConstructionBinding{
  pub fn source(&self)->Option<OriginalSourceTurnIdentity>{self.source}
  pub fn matches_effect(&self,effect:&RetainedAllocationEffect<'_>)->bool{effect.construction_action()==Some(self.action)&&self.source.is_some()&&self.source==effect.work_source_turn()&&self.grant==effect.grant()&&self.work_action==effect.work_identity().action_identity()&&self.work.matches_effect(effect)}
 }
+/// 🪪️ Erases the typed authority and callback of one original producer so frame logic is not instantiated per producer.
+pub trait OriginalProducerDrive<H:?Sized,E>{
+ fn invoke(&mut self,control:&mut H,effect:&mut RetainedAllocationEffect<'_>,producer:&mut Option<OriginalEffectAction<RetainedCloneStep,E>>,binding:&NativeReceivingConstructionBinding)->Result<bool,ValueError>;
+ fn finish(&mut self,producer:&mut Option<OriginalEffectAction<RetainedCloneStep,E>>)->Result<(),ValueError>;
+}
+/// 🪪️ Pairs one typed authority with its single-use callback behind the erased drive.
+pub struct BoundProducerDrive<'a,H:?Sized,P:OriginalEffectProducer,F>{authority:&'a mut OriginalEffectAuthority<P>,invoke:Option<F>,host:std::marker::PhantomData<fn(&mut H)>}
+impl<'a,H:?Sized,P:OriginalEffectProducer,F> BoundProducerDrive<'a,H,P,F> where F:FnOnce(&mut H,&mut RetainedAllocationEffect<'_>,&mut OriginalEffectAuthority<P>,&mut Option<OriginalEffectAction<P::Output,P::Failure>>,&NativeReceivingConstructionBinding)->Result<bool,ValueError>{
+ pub fn new(authority:&'a mut OriginalEffectAuthority<P>,invoke:F)->Self{Self{authority,invoke:Some(invoke),host:std::marker::PhantomData}}
+}
+impl<H:?Sized,P:OriginalEffectProducer<Output=RetainedCloneStep>,F> OriginalProducerDrive<H,P::Failure> for BoundProducerDrive<'_,H,P,F> where F:FnOnce(&mut H,&mut RetainedAllocationEffect<'_>,&mut OriginalEffectAuthority<P>,&mut Option<OriginalEffectAction<RetainedCloneStep,P::Failure>>,&NativeReceivingConstructionBinding)->Result<bool,ValueError>{
+ fn invoke(&mut self,control:&mut H,effect:&mut RetainedAllocationEffect<'_>,producer:&mut Option<OriginalEffectAction<RetainedCloneStep,P::Failure>>,binding:&NativeReceivingConstructionBinding)->Result<bool,ValueError>{let invoke=self.invoke.take().ok_or_else(||ValueError::invariant("original producer callback already consumed"))?;invoke(control,effect,self.authority,producer,binding)}
+ fn finish(&mut self,producer:&mut Option<OriginalEffectAction<RetainedCloneStep,P::Failure>>)->Result<(),ValueError>{self.authority.finish(producer)}
+}
 /// 🧵️ Lends the same native receiving authorities without transferring their producers or budgets.
 pub trait NativeReceivingEffectHost{
  fn original_work(&mut self)->OriginalWorkBorrow<'_>;
@@ -255,19 +269,21 @@ impl<E:NativeReceivingEffectError> NativeReceivingEffect<E>{
  /// 🧳️ Recovers the same resident producer and transfers only its validated original reply.
  pub fn drive_original_producer<P,H:NativeReceivingEffectHost+?Sized>(&mut self,control:&mut H,authority:&mut OriginalEffectAuthority<P>,invoke:impl FnOnce(&mut H,&mut crate::RetainedAllocationEffect<'_>,&mut OriginalEffectAuthority<P>,&mut Option<OriginalEffectAction<RetainedCloneStep,E>>)->Result<bool,ValueError>)->Result<bool,ValueError>where P:OriginalEffectProducer<Output=RetainedCloneStep,Failure=E>{self.drive_original_producer_bound(control,authority,|control,effect,authority,action,_|invoke(control,effect,authority,action))}
  /// 🪪️ Lends frame-authenticated construction evidence to the same original producer callback.
- pub fn drive_original_producer_bound<P,H:NativeReceivingEffectHost+?Sized>(&mut self,control:&mut H,authority:&mut OriginalEffectAuthority<P>,invoke:impl FnOnce(&mut H,&mut crate::RetainedAllocationEffect<'_>,&mut OriginalEffectAuthority<P>,&mut Option<OriginalEffectAction<RetainedCloneStep,E>>,&NativeReceivingConstructionBinding)->Result<bool,ValueError>)->Result<bool,ValueError>where P:OriginalEffectProducer<Output=RetainedCloneStep,Failure=E>{
+ pub fn drive_original_producer_bound<P,H:NativeReceivingEffectHost+?Sized>(&mut self,control:&mut H,authority:&mut OriginalEffectAuthority<P>,invoke:impl FnOnce(&mut H,&mut crate::RetainedAllocationEffect<'_>,&mut OriginalEffectAuthority<P>,&mut Option<OriginalEffectAction<RetainedCloneStep,E>>,&NativeReceivingConstructionBinding)->Result<bool,ValueError>)->Result<bool,ValueError>where P:OriginalEffectProducer<Output=RetainedCloneStep,Failure=E>{self.drive_original_producer_dyn(control,&mut BoundProducerDrive::<H,P,_>::new(authority,invoke))}
+ /// 🪪️ Drives the same resident producer through one erased callback pair so the frame logic is compiled once per host and failure.
+ pub fn drive_original_producer_dyn<H:NativeReceivingEffectHost+?Sized>(&mut self,control:&mut H,drive:&mut dyn OriginalProducerDrive<H,E>)->Result<bool,ValueError>{
   if self.phase!=NativeReceivingEffectPhase::EffectStarted||self.child.is_some(){return Err(Self::invalid("the original producer runs only in the EffectStarted phase and before any child result is retained"))}
   if !self.settle_partial_work(control)?{return Ok(false)}
   let grant=self.effect_admitted(control)?;let construction=self.construction_binding(control)?;control.original_work().issue_performed(self.work_action,&mut self.performed)?;
   if let Some(state)=self.allocation.as_mut(){state.start_operation()?}else{self.unallocated_started=true}
   let remaining=u128::from(control.pending_work()).saturating_sub(self.recorded_work());let maximum=u64::try_from(remaining).map_err(|_|Self::invalid("remaining original work does not fit the 64-bit work quantum"))?;
   let scope=PerformedScope{control,receipt:&mut self.performed,claim:&mut self.work_claim,action:self.work_action};
-  let mut marker=ConstructionMarkerScope{action:self.action.as_mut().ok_or_else(||Self::invalid("the original producer requires the frame's construction action"))?,marker:&mut self.actual};if marker.action.identity()!=construction.action()||marker.action.actual()!=*marker.marker{return Err(Self::invalid("the original producer requires its construction marker to match the granted action identity and actual extent"))}let invoked={let sink=scope.receipt.as_mut().expect("original performed receipt issued");let recipient=scope.control.construction()?;let mut full_effect=recipient.effect_for_action(&mut *marker.action,maximum,sink)?;drop(recipient);let mut effect=full_effect.reborrow(grant,maximum)?;if effect.construction_action()!=Some(construction.action()){return Err(Self::invalid("the original producer requires its effect to carry the granted construction action"))}invoke(&mut *scope.control,&mut effect,authority,&mut self.producer,&construction)};drop(marker);drop(scope);
+  let mut marker=ConstructionMarkerScope{action:self.action.as_mut().ok_or_else(||Self::invalid("the original producer requires the frame's construction action"))?,marker:&mut self.actual};if marker.action.identity()!=construction.action()||marker.action.actual()!=*marker.marker{return Err(Self::invalid("the original producer requires its construction marker to match the granted action identity and actual extent"))}let invoked={let sink=scope.receipt.as_mut().expect("original performed receipt issued");let recipient=scope.control.construction()?;let mut full_effect=recipient.effect_for_action(&mut *marker.action,maximum,sink)?;drop(recipient);let mut effect=full_effect.reborrow(grant,maximum)?;if effect.construction_action()!=Some(construction.action()){return Err(Self::invalid("the original producer requires its effect to carry the granted construction action"))}drive.invoke(&mut *scope.control,&mut effect,&mut self.producer,&construction)};drop(marker);drop(scope);
   self.reconcile_performed(control)?;
   if let Err(error)=invoked{if self.producer_refusal.is_some(){return Err(error)}*self.producer_refusal=Some(error);return Ok(false)}
   if !self.settle_partial_work(control)?{return Ok(false)}
   if self.producer_reply.is_none(){if !self.producer.as_mut().ok_or_else(||Self::invalid("the original producer must stay resident until its reply is transferred"))?.transfer_reply(&mut self.producer_reply)?{return Ok(false)}}
-  authority.finish(&mut self.producer)?;
+  drive.finish(&mut self.producer)?;
   let result=self.producer_reply.take().ok_or_else(||Self::invalid("the original producer must have transferred its reply before the child result is retained"))?;self.retain_child(RetainedWorkOutcome{result,work:self.recorded_work()});Ok(true)
  }
 

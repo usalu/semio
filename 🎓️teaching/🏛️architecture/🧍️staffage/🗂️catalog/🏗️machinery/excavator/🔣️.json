@@ -914,9 +914,27 @@
        "solid": {
         "kind": "extruded",
         "sweep": "w",
-        "z0": -0.9,
-        "z1": 0.9
+        "z0": -1.27,
+        "z1": -1.25
        }
+      },
+      {
+        "id": "hood-grille-top",
+        "bone": "upper",
+        "role": "detail",
+        "z": 2.2,
+        "filled": true,
+        "tone": 0.15,
+        "kind": "path",
+        "d": "M -1.55,1.22 L -0.55,1.22 L -0.55,1.27 L -1.55,1.27 Z",
+        "region": "engine-compartment",
+        "material": "engine-metal",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.9,
+          "z1": 0.9
+        }
       },
       {
        "id": "hood-louvres",
@@ -943,24 +961,7 @@
        "filled": false,
        "tone": 0.3,
        "kind": "poly",
-       "points": [
-        [
-         -1.65,
-         1.25
-        ],
-        [
-         -1.65,
-         1.5
-        ],
-        [
-         -0.3,
-         1.5
-        ],
-        [
-         -0.3,
-         1.25
-        ]
-       ],
+       "points": [[-1.65, 1.12], [-1.65, 1.5], [-0.3, 1.5], [-0.3, 1.12]],
        "closed": false,
        "material": "paint-steel",
        "solid": {
@@ -981,7 +982,7 @@
        "x0": -1.2,
        "y0": 1.25,
        "x1": -1.2,
-       "y1": 1.8,
+       "y1": 1.76,
        "r0": 0.055,
        "r1": 0.055,
        "region": "exhaust-stack",
@@ -1553,142 +1554,154 @@
        }
       },
       {
-       "id": "boom-cyl-barrel",
-       "bone": "boom-cyl",
-       "role": "detail",
-       "z": 3.5,
-       "filled": true,
-       "tone": 0.35,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 1.45,
-       "y1": 0,
-       "r0": 0.1,
-       "r1": 0.1,
-       "region": "hydraulics",
-       "material": "paint-steel",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.85,
-        "z1": -0.65
-       }
+        "id": "boom-cyl-barrel",
+        "bone": "boom-cyl",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.35,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": 0.25
+        },
+        "to": {
+          "x": 1.45,
+          "y": 0,
+          "z": 0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.2
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
-       "id": "boom-cyl-rod",
-       "bone": "boom-rod",
-       "role": "detail",
-       "z": 3.45,
-       "filled": true,
-       "tone": 0.85,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 1.65,
-       "y1": 0,
-       "r0": 0.035,
-       "r1": 0.035,
-       "region": "hydraulics",
-       "material": "chrome",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.85,
-        "z1": -0.65
-       }
+        "id": "boom-cyl-rod",
+        "bone": "boom-rod",
+        "role": "detail",
+        "z": 3.45,
+        "filled": true,
+        "tone": 0.85,
+        "kind": "member",
+        "from": {
+          "x": -0.4,
+          "y": 0,
+          "z": 0.25
+        },
+        "to": {
+          "x": 1.65,
+          "y": 0,
+          "z": 0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.09
+        },
+        "region": "hydraulics",
+        "material": "chrome"
       },
       {
-       "id": "stick-cyl-barrel",
-       "bone": "stick-cyl",
-       "role": "detail",
-       "z": 3.5,
-       "filled": true,
-       "tone": 0.35,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 1.6,
-       "y1": 0,
-       "r0": 0.09,
-       "r1": 0.09,
-       "region": "hydraulics",
-       "material": "paint-steel",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.34,
-        "z1": -0.16
-       }
+        "id": "stick-cyl-barrel",
+        "bone": "stick-cyl",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.35,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 1.6,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.19
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
-       "id": "stick-cyl-rod",
-       "bone": "stick-rod",
-       "role": "detail",
-       "z": 3.45,
-       "filled": true,
-       "tone": 0.85,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 2.35,
-       "y1": 0,
-       "r0": 0.045,
-       "r1": 0.045,
-       "region": "hydraulics",
-       "material": "chrome",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.34,
-        "z1": -0.16
-       }
+        "id": "stick-cyl-rod",
+        "bone": "stick-rod",
+        "role": "detail",
+        "z": 3.45,
+        "filled": true,
+        "tone": 0.85,
+        "kind": "member",
+        "from": {
+          "x": -0.5,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 2.35,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.1
+        },
+        "region": "hydraulics",
+        "material": "chrome"
       },
       {
-       "id": "bucket-cyl-barrel",
-       "bone": "bucket-cyl",
-       "role": "detail",
-       "z": 3.5,
-       "filled": true,
-       "tone": 0.35,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 0.85,
-       "y1": 0,
-       "r0": 0.07,
-       "r1": 0.07,
-       "region": "hydraulics",
-       "material": "paint-steel",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.32,
-        "z1": -0.18
-       }
+        "id": "bucket-cyl-barrel",
+        "bone": "bucket-cyl",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.35,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 0.85,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.15
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
-       "id": "bucket-cyl-rod",
-       "bone": "bucket-rod",
-       "role": "detail",
-       "z": 3.45,
-       "filled": true,
-       "tone": 0.85,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 0.95,
-       "y1": 0,
-       "r0": 0.03,
-       "r1": 0.03,
-       "region": "hydraulics",
-       "material": "chrome",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.32,
-        "z1": -0.18
-       }
+        "id": "bucket-cyl-rod",
+        "bone": "bucket-rod",
+        "role": "detail",
+        "z": 3.45,
+        "filled": true,
+        "tone": 0.85,
+        "kind": "member",
+        "from": {
+          "x": -0.4,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 0.95,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.0756
+        },
+        "region": "hydraulics",
+        "material": "chrome"
       }
      ],
      "front": [
@@ -1925,27 +1938,385 @@
        }
       },
       {
-       "id": "boom-cyl-barrel-left",
-       "bone": "boom-cyl",
-       "role": "detail",
-       "z": 3.5,
-       "filled": true,
-       "tone": 0.4,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 1.45,
-       "y1": 0,
-       "r0": 0.1,
-       "r1": 0.1,
-       "region": "hydraulics",
-       "material": "paint-steel",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": 0.15,
-        "z1": 0.35
-       }
+        "id": "hood-grille",
+        "bone": "upper",
+        "role": "detail",
+        "z": 2.2,
+        "filled": true,
+        "tone": 0.15,
+        "kind": "path",
+        "d": "M -1.55,0.4 L -0.55,0.4 L -0.55,1.05 L -1.55,1.05 Z",
+        "region": "engine-compartment",
+        "material": "engine-metal",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -1.27,
+          "z1": -1.25
+        }
+      },
+      {
+        "id": "hood-grille-top",
+        "bone": "upper",
+        "role": "detail",
+        "z": 2.2,
+        "filled": true,
+        "tone": 0.15,
+        "kind": "path",
+        "d": "M -1.55,1.25 L -0.55,1.25 L -0.55,1.27 L -1.55,1.27 Z",
+        "region": "engine-compartment",
+        "material": "engine-metal",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.9,
+          "z1": 0.9
+        }
+      },
+      {
+        "id": "boom-cyl-rod-left",
+        "bone": "boom-rod",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.4,
+          "y": 0,
+          "z": 0.25
+        },
+        "to": {
+          "x": 1.65,
+          "y": 0,
+          "z": 0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.09
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
+        "id": "boom-cyl-rod-right",
+        "bone": "boom-rod",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.4,
+          "y": 0,
+          "z": -0.75
+        },
+        "to": {
+          "x": 1.65,
+          "y": 0,
+          "z": -0.75
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.09
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
+        "id": "bucket-cyl-rod",
+        "bone": "bucket-rod",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.4,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 0.95,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.0756
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
+        "id": "stick-cyl-rod",
+        "bone": "stick-rod",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.5,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 2.35,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.1
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
+        "id": "boom-cyl-foot",
+        "bone": "upper",
+        "role": "detail",
+        "z": 3.2,
+        "filled": true,
+        "tone": 0.12,
+        "kind": "ellipse",
+        "cx": 0.45,
+        "cy": 0.1,
+        "rx": 0.08,
+        "ry": 0.08,
+        "material": "track-steel",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.85,
+          "z1": 0.35
+        }
+      },
+      {
+        "id": "boom-pin",
+        "bone": "upper",
+        "role": "detail",
+        "z": 3.2,
+        "filled": true,
+        "tone": 0.12,
+        "kind": "ellipse",
+        "cx": 1,
+        "cy": 0.65,
+        "rx": 0.09,
+        "ry": 0.09,
+        "material": "track-steel",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.7,
+          "z1": 0.1
+        }
+      },
+      {
+        "id": "boom-rod-eye",
+        "bone": "boom",
+        "role": "detail",
+        "z": 3.4,
+        "filled": true,
+        "tone": 0.12,
+        "kind": "ellipse",
+        "cx": 1.8,
+        "cy": -0.45,
+        "rx": 0.07,
+        "ry": 0.07,
+        "material": "track-steel",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.85,
+          "z1": 0.35
+        }
+      },
+      {
+        "id": "boom-tip-boss",
+        "bone": "boom",
+        "role": "detail",
+        "z": 3.3,
+        "filled": true,
+        "tone": 0.35,
+        "kind": "ellipse",
+        "cx": 5.7,
+        "cy": 0,
+        "rx": 0.26,
+        "ry": 0.26,
+        "material": "paint-steel",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.55,
+          "z1": 0.05
+        }
+      },
+      {
+        "id": "bucket-cyl-foot",
+        "bone": "stick",
+        "role": "detail",
+        "z": 3.4,
+        "filled": true,
+        "tone": 0.12,
+        "kind": "ellipse",
+        "cx": 1.25,
+        "cy": 0.36,
+        "rx": 0.06,
+        "ry": 0.06,
+        "material": "track-steel",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.4,
+          "z1": -0.1
+        }
+      },
+      {
+        "id": "bucket-ear",
+        "bone": "bucket",
+        "role": "detail",
+        "z": 3.4,
+        "filled": true,
+        "tone": 0.12,
+        "kind": "ellipse",
+        "cx": 0.15,
+        "cy": 0.36,
+        "rx": 0.06,
+        "ry": 0.06,
+        "material": "track-steel",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.4,
+          "z1": -0.1
+        }
+      },
+      {
+        "id": "bucket-pin",
+        "bone": "bucket",
+        "role": "detail",
+        "z": 3.3,
+        "filled": true,
+        "tone": 0.12,
+        "kind": "ellipse",
+        "cx": 0,
+        "cy": 0,
+        "rx": 0.1,
+        "ry": 0.1,
+        "material": "track-steel",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.78,
+          "z1": 0.28
+        }
+      },
+      {
+        "id": "stick-cyl-foot",
+        "bone": "boom",
+        "role": "detail",
+        "z": 3.4,
+        "filled": true,
+        "tone": 0.12,
+        "kind": "ellipse",
+        "cx": 3,
+        "cy": 0.95,
+        "rx": 0.07,
+        "ry": 0.07,
+        "material": "track-steel",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.4,
+          "z1": -0.1
+        }
+      },
+      {
+        "id": "stick-rod-eye",
+        "bone": "stick",
+        "role": "detail",
+        "z": 3.4,
+        "filled": true,
+        "tone": 0.12,
+        "kind": "ellipse",
+        "cx": 0.9,
+        "cy": 0.38,
+        "rx": 0.07,
+        "ry": 0.07,
+        "material": "track-steel",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.4,
+          "z1": -0.1
+        }
+      },
+      {
+        "id": "stick-root-boss",
+        "bone": "stick",
+        "role": "detail",
+        "z": 3.3,
+        "filled": true,
+        "tone": 0.35,
+        "kind": "ellipse",
+        "cx": 0,
+        "cy": 0,
+        "rx": 0.28,
+        "ry": 0.28,
+        "material": "paint-steel",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.49,
+          "z1": -0.01
+        }
+      },
+      {
+        "id": "stick-tip-boss",
+        "bone": "stick",
+        "role": "detail",
+        "z": 3.3,
+        "filled": true,
+        "tone": 0.35,
+        "kind": "ellipse",
+        "cx": 2.9,
+        "cy": 0,
+        "rx": 0.22,
+        "ry": 0.22,
+        "material": "paint-steel",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.49,
+          "z1": -0.01
+        }
+      },
+      {
+        "id": "boom-cyl-barrel-left",
+        "bone": "boom-cyl",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": 0.25
+        },
+        "to": {
+          "x": 1.45,
+          "y": 0,
+          "z": 0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.2
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
        "id": "boom-rod-left",
@@ -1971,27 +2342,29 @@
        }
       },
       {
-       "id": "boom-cyl-barrel-right",
-       "bone": "boom-cyl",
-       "role": "detail",
-       "z": 3.5,
-       "filled": true,
-       "tone": 0.4,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 1.45,
-       "y1": 0,
-       "r0": 0.1,
-       "r1": 0.1,
-       "region": "hydraulics",
-       "material": "paint-steel",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.85,
-        "z1": -0.65
-       }
+        "id": "boom-cyl-barrel-right",
+        "bone": "boom-cyl",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": -0.75
+        },
+        "to": {
+          "x": 1.45,
+          "y": 0,
+          "z": -0.75
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.2
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
        "id": "boom-rod-right",
@@ -2017,27 +2390,29 @@
        }
       },
       {
-       "id": "stick-cyl-barrel",
-       "bone": "stick-cyl",
-       "role": "detail",
-       "z": 3.5,
-       "filled": true,
-       "tone": 0.4,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 1.6,
-       "y1": 0,
-       "r0": 0.09,
-       "r1": 0.09,
-       "region": "hydraulics",
-       "material": "paint-steel",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.33999999999999997,
-        "z1": -0.16
-       }
+        "id": "stick-cyl-barrel",
+        "bone": "stick-cyl",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 1.6,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.19
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
        "id": "stick-rod",
@@ -2063,27 +2438,29 @@
        }
       },
       {
-       "id": "bucket-cyl-barrel",
-       "bone": "bucket-cyl",
-       "role": "detail",
-       "z": 3.5,
-       "filled": true,
-       "tone": 0.4,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 0.85,
-       "y1": 0,
-       "r0": 0.07,
-       "r1": 0.07,
-       "region": "hydraulics",
-       "material": "paint-steel",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.32,
-        "z1": -0.18
-       }
+        "id": "bucket-cyl-barrel",
+        "bone": "bucket-cyl",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 0.85,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.15
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
        "id": "bucket-rod",
@@ -2182,27 +2559,27 @@
        }
       },
       {
-       "kind": "capsule",
-       "x0": -1.2,
-       "y0": 1.25,
-       "x1": -1.2,
-       "y1": 1.8,
-       "r0": 0.055,
-       "r1": 0.055,
-       "id": "stack",
-       "bone": "upper",
-       "role": "detail",
-       "z": 2.4,
-       "filled": true,
-       "tone": 0.3,
-       "region": "exhaust-stack",
-       "material": "exhaust-steel",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.955,
-        "z1": -0.845
-       }
+        "kind": "capsule",
+        "x0": -1.2,
+        "y0": 1.25,
+        "x1": -1.2,
+        "y1": 1.76,
+        "r0": 0.055,
+        "r1": 0.055,
+        "id": "stack",
+        "bone": "upper",
+        "role": "detail",
+        "z": 2.4,
+        "filled": true,
+        "tone": 0.3,
+        "region": "exhaust-stack",
+        "material": "exhaust-steel",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.955,
+          "z1": -0.845
+        }
       },
       {
        "kind": "rect",
@@ -2226,24 +2603,7 @@
       },
       {
        "kind": "poly",
-       "points": [
-        [
-         -1.65,
-         1.25
-        ],
-        [
-         -1.65,
-         1.5
-        ],
-        [
-         -0.3,
-         1.5
-        ],
-        [
-         -0.3,
-         1.25
-        ]
-       ],
+       "points": [[-1.65, 1.12], [-1.65, 1.5], [-0.3, 1.5], [-0.3, 1.12]],
        "closed": false,
        "id": "hood-rail",
        "bone": "upper",
@@ -2255,8 +2615,8 @@
        "solid": {
         "kind": "extruded",
         "sweep": "w",
-        "z0": -1.175,
-        "z1": -1.125
+        "z0": -1.151,
+        "z1": -1.149
        }
       },
       {
@@ -2313,7 +2673,7 @@
        "y": 0,
        "w": 0.6,
        "h": 0.86,
-       "r": 0.12,
+       "r": 0,
        "region": "tracks",
        "material": "track-steel"
       },
@@ -2329,7 +2689,7 @@
        "y": 0,
        "w": 0.6,
        "h": 0.86,
-       "r": 0.12,
+       "r": 0,
        "region": "tracks",
        "material": "track-steel"
       },
@@ -2342,9 +2702,9 @@
        "tone": 0.5,
        "kind": "rect",
        "x": -0.9,
-       "y": 0.25,
+       "y": 0.3,
        "w": 1.8,
-       "h": 0.61,
+       "h": 0.56,
        "region": "tracks",
        "material": "paint-steel"
       },
@@ -2789,27 +3149,367 @@
        }
       },
       {
-       "id": "boom-cyl-barrel-left",
-       "bone": "boom-cyl",
-       "role": "detail",
-       "z": 3.5,
-       "filled": true,
-       "tone": 0.4,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 1.45,
-       "y1": 0,
-       "r0": 0.1,
-       "r1": 0.1,
-       "region": "hydraulics",
-       "material": "paint-steel",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": 0.15,
-        "z1": 0.35
-       }
+        "id": "hood-grille-top",
+        "bone": "upper",
+        "role": "detail",
+        "z": 2.2,
+        "filled": true,
+        "tone": 0.15,
+        "kind": "path",
+        "d": "M -1.55,1.25 L -0.55,1.25 L -0.55,1.27 L -1.55,1.27 Z",
+        "region": "engine-compartment",
+        "material": "engine-metal",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.9,
+          "z1": 0.9
+        }
+      },
+      {
+        "id": "boom-cyl-rod-left",
+        "bone": "boom-rod",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.4,
+          "y": 0,
+          "z": 0.25
+        },
+        "to": {
+          "x": 1.65,
+          "y": 0,
+          "z": 0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.09
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
+        "id": "boom-cyl-rod-right",
+        "bone": "boom-rod",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.4,
+          "y": 0,
+          "z": -0.75
+        },
+        "to": {
+          "x": 1.65,
+          "y": 0,
+          "z": -0.75
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.09
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
+        "id": "bucket-cyl-rod",
+        "bone": "bucket-rod",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.4,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 0.95,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.0756
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
+        "id": "stick-cyl-rod",
+        "bone": "stick-rod",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.5,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 2.35,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.1
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
+        "id": "boom-cyl-foot",
+        "bone": "upper",
+        "role": "detail",
+        "z": 3.2,
+        "filled": true,
+        "tone": 0.12,
+        "kind": "ellipse",
+        "cx": 0.45,
+        "cy": 0.1,
+        "rx": 0.08,
+        "ry": 0.08,
+        "material": "track-steel",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.85,
+          "z1": 0.35
+        }
+      },
+      {
+        "id": "boom-pin",
+        "bone": "upper",
+        "role": "detail",
+        "z": 3.2,
+        "filled": true,
+        "tone": 0.12,
+        "kind": "ellipse",
+        "cx": 1,
+        "cy": 0.65,
+        "rx": 0.09,
+        "ry": 0.09,
+        "material": "track-steel",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.7,
+          "z1": 0.1
+        }
+      },
+      {
+        "id": "boom-rod-eye",
+        "bone": "boom",
+        "role": "detail",
+        "z": 3.4,
+        "filled": true,
+        "tone": 0.12,
+        "kind": "ellipse",
+        "cx": 1.8,
+        "cy": -0.45,
+        "rx": 0.07,
+        "ry": 0.07,
+        "material": "track-steel",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.85,
+          "z1": 0.35
+        }
+      },
+      {
+        "id": "boom-tip-boss",
+        "bone": "boom",
+        "role": "detail",
+        "z": 3.3,
+        "filled": true,
+        "tone": 0.35,
+        "kind": "ellipse",
+        "cx": 5.7,
+        "cy": 0,
+        "rx": 0.26,
+        "ry": 0.26,
+        "material": "paint-steel",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.55,
+          "z1": 0.05
+        }
+      },
+      {
+        "id": "bucket-cyl-foot",
+        "bone": "stick",
+        "role": "detail",
+        "z": 3.4,
+        "filled": true,
+        "tone": 0.12,
+        "kind": "ellipse",
+        "cx": 1.25,
+        "cy": 0.36,
+        "rx": 0.06,
+        "ry": 0.06,
+        "material": "track-steel",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.4,
+          "z1": -0.1
+        }
+      },
+      {
+        "id": "bucket-ear",
+        "bone": "bucket",
+        "role": "detail",
+        "z": 3.4,
+        "filled": true,
+        "tone": 0.12,
+        "kind": "ellipse",
+        "cx": 0.15,
+        "cy": 0.36,
+        "rx": 0.06,
+        "ry": 0.06,
+        "material": "track-steel",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.4,
+          "z1": -0.1
+        }
+      },
+      {
+        "id": "bucket-pin",
+        "bone": "bucket",
+        "role": "detail",
+        "z": 3.3,
+        "filled": true,
+        "tone": 0.12,
+        "kind": "ellipse",
+        "cx": 0,
+        "cy": 0,
+        "rx": 0.1,
+        "ry": 0.1,
+        "material": "track-steel",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.78,
+          "z1": 0.28
+        }
+      },
+      {
+        "id": "stick-cyl-foot",
+        "bone": "boom",
+        "role": "detail",
+        "z": 3.4,
+        "filled": true,
+        "tone": 0.12,
+        "kind": "ellipse",
+        "cx": 3,
+        "cy": 0.95,
+        "rx": 0.07,
+        "ry": 0.07,
+        "material": "track-steel",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.4,
+          "z1": -0.1
+        }
+      },
+      {
+        "id": "stick-rod-eye",
+        "bone": "stick",
+        "role": "detail",
+        "z": 3.4,
+        "filled": true,
+        "tone": 0.12,
+        "kind": "ellipse",
+        "cx": 0.9,
+        "cy": 0.38,
+        "rx": 0.07,
+        "ry": 0.07,
+        "material": "track-steel",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.4,
+          "z1": -0.1
+        }
+      },
+      {
+        "id": "stick-root-boss",
+        "bone": "stick",
+        "role": "detail",
+        "z": 3.3,
+        "filled": true,
+        "tone": 0.35,
+        "kind": "ellipse",
+        "cx": 0,
+        "cy": 0,
+        "rx": 0.28,
+        "ry": 0.28,
+        "material": "paint-steel",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.49,
+          "z1": -0.01
+        }
+      },
+      {
+        "id": "stick-tip-boss",
+        "bone": "stick",
+        "role": "detail",
+        "z": 3.3,
+        "filled": true,
+        "tone": 0.35,
+        "kind": "ellipse",
+        "cx": 2.9,
+        "cy": 0,
+        "rx": 0.22,
+        "ry": 0.22,
+        "material": "paint-steel",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.49,
+          "z1": -0.01
+        }
+      },
+      {
+        "id": "boom-cyl-barrel-left",
+        "bone": "boom-cyl",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": 0.25
+        },
+        "to": {
+          "x": 1.45,
+          "y": 0,
+          "z": 0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.2
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
        "id": "boom-rod-left",
@@ -2835,27 +3535,29 @@
        }
       },
       {
-       "id": "boom-cyl-barrel-right",
-       "bone": "boom-cyl",
-       "role": "detail",
-       "z": 3.5,
-       "filled": true,
-       "tone": 0.4,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 1.45,
-       "y1": 0,
-       "r0": 0.1,
-       "r1": 0.1,
-       "region": "hydraulics",
-       "material": "paint-steel",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.85,
-        "z1": -0.65
-       }
+        "id": "boom-cyl-barrel-right",
+        "bone": "boom-cyl",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": -0.75
+        },
+        "to": {
+          "x": 1.45,
+          "y": 0,
+          "z": -0.75
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.2
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
        "id": "boom-rod-right",
@@ -2881,27 +3583,29 @@
        }
       },
       {
-       "id": "stick-cyl-barrel",
-       "bone": "stick-cyl",
-       "role": "detail",
-       "z": 3.5,
-       "filled": true,
-       "tone": 0.4,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 1.6,
-       "y1": 0,
-       "r0": 0.09,
-       "r1": 0.09,
-       "region": "hydraulics",
-       "material": "paint-steel",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.33999999999999997,
-        "z1": -0.16
-       }
+        "id": "stick-cyl-barrel",
+        "bone": "stick-cyl",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 1.6,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.19
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
        "id": "stick-rod",
@@ -2927,27 +3631,29 @@
        }
       },
       {
-       "id": "bucket-cyl-barrel",
-       "bone": "bucket-cyl",
-       "role": "detail",
-       "z": 3.5,
-       "filled": true,
-       "tone": 0.4,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 0.85,
-       "y1": 0,
-       "r0": 0.07,
-       "r1": 0.07,
-       "region": "hydraulics",
-       "material": "paint-steel",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.32,
-        "z1": -0.18
-       }
+        "id": "bucket-cyl-barrel",
+        "bone": "bucket-cyl",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 0.85,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.15
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
        "id": "bucket-rod",
@@ -3034,7 +3740,7 @@
        "x0": -1.2,
        "y0": 1.25,
        "x1": -1.2,
-       "y1": 1.8,
+       "y1": 1.76,
        "r0": 0.055,
        "r1": 0.055,
        "id": "stack",
@@ -3280,7 +3986,7 @@
        "y": 0.895,
        "w": 4.16,
        "h": 0.6,
-       "r": 0.3,
+       "r": 0,
        "region": "tracks",
        "material": "track-steel"
       },
@@ -3311,7 +4017,7 @@
        "y": -1.495,
        "w": 4.16,
        "h": 0.6,
-       "r": 0.3,
+       "r": 0,
        "region": "tracks",
        "material": "track-steel"
       },
@@ -4299,11 +5005,29 @@
        }
       },
       {
+        "kind": "path",
+        "d": "M -1.55,1.22 L -0.55,1.22 L -0.55,1.27 L -1.55,1.27 Z",
+        "id": "hood-grille-top",
+        "bone": "upper",
+        "role": "detail",
+        "z": 2.2,
+        "filled": true,
+        "tone": 0.2,
+        "region": "engine-compartment",
+        "material": "engine-metal",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.9,
+          "z1": 0.9
+        }
+      },
+      {
        "kind": "capsule",
        "x0": -1.2,
        "y0": 1.25,
        "x1": -1.2,
-       "y1": 1.8,
+       "y1": 1.76,
        "r0": 0.055,
        "r1": 0.055,
        "id": "stack",
@@ -4358,6 +5082,81 @@
        }
       },
       {
+        "id": "boom-cyl-rod",
+        "bone": "boom-rod",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.4,
+          "y": 0,
+          "z": 0.25
+        },
+        "to": {
+          "x": 1.65,
+          "y": 0,
+          "z": 0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.09
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
+        "id": "bucket-cyl-rod",
+        "bone": "bucket-rod",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.4,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 0.95,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.0756
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
+        "id": "stick-cyl-rod",
+        "bone": "stick-rod",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.5,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 2.35,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.1
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
        "kind": "path",
        "d": "M 0,-0.38 C 0.9,-0.44 2.0,-0.32 2.9,-0.2 L 2.9,0.2 C 2.0,0.3 0.9,0.46 0,0.42 Z",
        "id": "stick-body",
@@ -4394,50 +5193,54 @@
        }
       },
       {
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 1.45,
-       "y1": 0,
-       "r0": 0.1,
-       "r1": 0.1,
-       "id": "boom-cyl-barrel",
-       "bone": "boom-cyl",
-       "role": "detail",
-       "z": 3.5,
-       "filled": true,
-       "tone": 0.4,
-       "region": "hydraulics",
-       "material": "paint-steel",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.85,
-        "z1": -0.65
-       }
+        "id": "boom-cyl-barrel",
+        "bone": "boom-cyl",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": 0.25
+        },
+        "to": {
+          "x": 1.45,
+          "y": 0,
+          "z": 0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.2
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 1.6,
-       "y1": 0,
-       "r0": 0.09,
-       "r1": 0.09,
-       "id": "stick-cyl-barrel",
-       "bone": "stick-cyl",
-       "role": "detail",
-       "z": 3.5,
-       "filled": true,
-       "tone": 0.4,
-       "region": "hydraulics",
-       "material": "paint-steel",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.34,
-        "z1": -0.16
-       }
+        "id": "stick-cyl-barrel",
+        "bone": "stick-cyl",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 1.6,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.19
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
        "kind": "capsule",
@@ -4504,27 +5307,29 @@
        }
       },
       {
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 0.85,
-       "y1": 0,
-       "r0": 0.07,
-       "r1": 0.07,
-       "id": "bucket-cyl-barrel",
-       "bone": "bucket-cyl",
-       "role": "detail",
-       "z": 3.5,
-       "filled": true,
-       "tone": 0.4,
-       "region": "hydraulics",
-       "material": "paint-steel",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.32,
-        "z1": -0.18
-       }
+        "id": "bucket-cyl-barrel",
+        "bone": "bucket-cyl",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 0.85,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.15
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
        "id": "sprocket",
@@ -4796,7 +5601,7 @@
        "filled": true,
        "tone": 0.2,
        "kind": "path",
-       "d": "M 1.3,0.07 L 1.5,-0.03 L 1.28,-0.09 Z",
+       "d": "M 1.28,0.07 L 1.35,0 L 1.5,-0.03 Z",
        "region": "attachment",
        "material": "wear-steel",
        "solid": {
@@ -4830,24 +5635,7 @@
        "filled": false,
        "tone": 0.3,
        "kind": "poly",
-       "points": [
-        [
-         -1.65,
-         1.25
-        ],
-        [
-         -1.65,
-         1.5
-        ],
-        [
-         -0.3,
-         1.5
-        ],
-        [
-         -0.3,
-         1.25
-        ]
-       ],
+       "points": [[-1.65, 1.12], [-1.65, 1.5], [-0.3, 1.5], [-0.3, 1.12]],
        "closed": false,
        "material": "paint-steel",
        "solid": {
@@ -4943,28 +5731,15 @@
        "filled": true,
        "tone": 0.2,
        "kind": "poly",
-       "points": [
-        [
-         1.3,
-         0.07
-        ],
-        [
-         1.5,
-         -0.03
-        ],
-        [
-         1.28,
-         -0.09
-        ]
-       ],
+       "points": [[1.28, 0.07], [1.35, 0.0], [1.5, -0.03]],
        "closed": true,
        "region": "attachment",
        "material": "wear-steel",
        "solid": {
         "kind": "extruded",
         "sweep": "w",
-        "z0": -0.72,
-        "z1": -0.6
+        "z0": -0.75,
+        "z1": 0.25
        }
       },
       {
@@ -4975,20 +5750,7 @@
        "filled": true,
        "tone": 0.2,
        "kind": "poly",
-       "points": [
-        [
-         1.3,
-         0.07
-        ],
-        [
-         1.5,
-         -0.03
-        ],
-        [
-         1.28,
-         -0.09
-        ]
-       ],
+       "points": [[1.28, 0.07], [1.35, 0.0], [1.5, -0.03]],
        "closed": true,
        "region": "attachment",
        "material": "wear-steel",
@@ -5007,20 +5769,7 @@
        "filled": true,
        "tone": 0.2,
        "kind": "poly",
-       "points": [
-        [
-         1.3,
-         0.07
-        ],
-        [
-         1.5,
-         -0.03
-        ],
-        [
-         1.28,
-         -0.09
-        ]
-       ],
+       "points": [[1.28, 0.07], [1.35, 0.0], [1.5, -0.03]],
        "closed": true,
        "region": "attachment",
        "material": "wear-steel",
@@ -5039,20 +5788,7 @@
        "filled": true,
        "tone": 0.2,
        "kind": "poly",
-       "points": [
-        [
-         1.3,
-         0.07
-        ],
-        [
-         1.5,
-         -0.03
-        ],
-        [
-         1.28,
-         -0.09
-        ]
-       ],
+       "points": [[1.28, 0.07], [1.35, 0.0], [1.5, -0.03]],
        "closed": true,
        "region": "attachment",
        "material": "wear-steel",
@@ -5071,20 +5807,7 @@
        "filled": true,
        "tone": 0.2,
        "kind": "poly",
-       "points": [
-        [
-         1.3,
-         0.07
-        ],
-        [
-         1.5,
-         -0.03
-        ],
-        [
-         1.28,
-         -0.09
-        ]
-       ],
+       "points": [[1.28, 0.07], [1.35, 0.0], [1.5, -0.03]],
        "closed": true,
        "region": "attachment",
        "material": "wear-steel",
@@ -5132,188 +5855,244 @@
        }
       },
       {
-       "id": "boom-cyl-barrel-left",
-       "bone": "boom-cyl",
-       "role": "detail",
-       "z": 3.5,
-       "filled": true,
-       "tone": 0.4,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 1.45,
-       "y1": 0,
-       "r0": 0.1,
-       "r1": 0.1,
-       "region": "hydraulics",
-       "material": "paint-steel",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": 0.15,
-        "z1": 0.35
-       }
+        "id": "boom-tip-boss",
+        "bone": "boom",
+        "role": "detail",
+        "z": 3.3,
+        "filled": true,
+        "tone": 0.35,
+        "kind": "ellipse",
+        "cx": 5.7,
+        "cy": 0,
+        "rx": 0.26,
+        "ry": 0.26,
+        "material": "paint-steel",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.55,
+          "z1": 0.05
+        }
       },
       {
-       "id": "boom-rod-left",
-       "bone": "boom-rod",
-       "role": "detail",
-       "z": 3.55,
-       "filled": true,
-       "tone": 0.8,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 1.65,
-       "y1": 0,
-       "r0": 0.035,
-       "r1": 0.035,
-       "region": "hydraulics",
-       "material": "chrome",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": 0.2,
-        "z1": 0.3
-       }
+        "id": "stick-tip-boss",
+        "bone": "stick",
+        "role": "detail",
+        "z": 3.3,
+        "filled": true,
+        "tone": 0.35,
+        "kind": "ellipse",
+        "cx": 2.9,
+        "cy": 0,
+        "rx": 0.22,
+        "ry": 0.22,
+        "material": "paint-steel",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.49,
+          "z1": -0.01
+        }
       },
       {
-       "id": "boom-cyl-barrel-right",
-       "bone": "boom-cyl",
-       "role": "detail",
-       "z": 3.5,
-       "filled": true,
-       "tone": 0.4,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 1.45,
-       "y1": 0,
-       "r0": 0.1,
-       "r1": 0.1,
-       "region": "hydraulics",
-       "material": "paint-steel",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.85,
-        "z1": -0.65
-       }
+        "id": "boom-cyl-rod-left",
+        "bone": "boom-rod",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.4,
+          "y": 0,
+          "z": 0.25
+        },
+        "to": {
+          "x": 1.65,
+          "y": 0,
+          "z": 0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.09
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
-       "id": "boom-rod-right",
-       "bone": "boom-rod",
-       "role": "detail",
-       "z": 3.55,
-       "filled": true,
-       "tone": 0.8,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 1.65,
-       "y1": 0,
-       "r0": 0.035,
-       "r1": 0.035,
-       "region": "hydraulics",
-       "material": "chrome",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.8,
-        "z1": -0.7
-       }
+        "id": "boom-cyl-rod-right",
+        "bone": "boom-rod",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.4,
+          "y": 0,
+          "z": -0.75
+        },
+        "to": {
+          "x": 1.65,
+          "y": 0,
+          "z": -0.75
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.09
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
-       "id": "stick-cyl-barrel",
-       "bone": "stick-cyl",
-       "role": "detail",
-       "z": 3.5,
-       "filled": true,
-       "tone": 0.4,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 1.6,
-       "y1": 0,
-       "r0": 0.09,
-       "r1": 0.09,
-       "region": "hydraulics",
-       "material": "paint-steel",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.33999999999999997,
-        "z1": -0.16
-       }
+        "id": "bucket-cyl-rod",
+        "bone": "bucket-rod",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.4,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 0.95,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.0756
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
-       "id": "stick-rod",
-       "bone": "stick-rod",
-       "role": "detail",
-       "z": 3.55,
-       "filled": true,
-       "tone": 0.8,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 2.35,
-       "y1": 0,
-       "r0": 0.045,
-       "r1": 0.045,
-       "region": "hydraulics",
-       "material": "chrome",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.295,
-        "z1": -0.20500000000000002
-       }
+        "id": "stick-cyl-rod",
+        "bone": "stick-rod",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.5,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 2.35,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.1
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
-       "id": "bucket-cyl-barrel",
-       "bone": "bucket-cyl",
-       "role": "detail",
-       "z": 3.5,
-       "filled": true,
-       "tone": 0.4,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 0.85,
-       "y1": 0,
-       "r0": 0.07,
-       "r1": 0.07,
-       "region": "hydraulics",
-       "material": "paint-steel",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.32,
-        "z1": -0.18
-       }
+        "id": "boom-cyl-barrel-left",
+        "bone": "boom-cyl",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": 0.25
+        },
+        "to": {
+          "x": 1.45,
+          "y": 0,
+          "z": 0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.2
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
-       "id": "bucket-rod",
-       "bone": "bucket-rod",
-       "role": "detail",
-       "z": 3.55,
-       "filled": true,
-       "tone": 0.8,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 0.95,
-       "y1": 0,
-       "r0": 0.03,
-       "r1": 0.03,
-       "region": "hydraulics",
-       "material": "chrome",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.28,
-        "z1": -0.22
-       }
+        "id": "boom-cyl-barrel-right",
+        "bone": "boom-cyl",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": -0.75
+        },
+        "to": {
+          "x": 1.45,
+          "y": 0,
+          "z": -0.75
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.2
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
+        "id": "stick-cyl-barrel",
+        "bone": "stick-cyl",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 1.6,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.19
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
+        "id": "bucket-cyl-barrel",
+        "bone": "bucket-cyl",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 0.85,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.15
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
        "kind": "path",
@@ -5356,7 +6135,7 @@
        "x0": -1.2,
        "y0": 1.25,
        "x1": -1.2,
-       "y1": 1.8,
+       "y1": 1.76,
        "r0": 0.055,
        "r1": 0.055,
        "id": "stack",
@@ -5373,6 +6152,41 @@
         "z0": -0.955,
         "z1": -0.845
        }
+      },
+      {
+        "kind": "poly",
+        "points": [
+          [
+            -1.65,
+            1.12
+          ],
+          [
+            -1.65,
+            1.5
+          ],
+          [
+            -0.3,
+            1.5
+          ],
+          [
+            -0.3,
+            1.12
+          ]
+        ],
+        "closed": false,
+        "id": "hood-rail",
+        "bone": "upper",
+        "role": "detail",
+        "z": 2.3,
+        "filled": false,
+        "tone": 0.3,
+        "material": "paint-steel",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -1.16,
+          "z1": -1.14
+        }
       },
       {
        "kind": "rect",
@@ -5428,7 +6242,7 @@
        "y": 0,
        "w": 0.6,
        "h": 0.86,
-       "r": 0.12,
+       "r": 0,
        "region": "tracks",
        "material": "track-steel"
       },
@@ -5444,7 +6258,7 @@
        "y": 0,
        "w": 0.6,
        "h": 0.86,
-       "r": 0.12,
+       "r": 0,
        "region": "tracks",
        "material": "track-steel"
       },
@@ -5457,9 +6271,9 @@
        "tone": 0.5,
        "kind": "rect",
        "x": -0.9,
-       "y": 0.25,
+       "y": 0.3,
        "w": 1.8,
-       "h": 0.61,
+       "h": 0.56,
        "region": "tracks",
        "material": "paint-steel"
       },
@@ -5505,28 +6319,15 @@
        "filled": true,
        "tone": 0.2,
        "kind": "poly",
-       "points": [
-        [
-         1.3,
-         0.07
-        ],
-        [
-         1.5,
-         -0.03
-        ],
-        [
-         1.28,
-         -0.09
-        ]
-       ],
+       "points": [[1.28, 0.07], [1.35, 0.0], [1.5, -0.03]],
        "closed": true,
        "region": "attachment",
        "material": "wear-steel",
        "solid": {
         "kind": "extruded",
         "sweep": "w",
-        "z0": -0.72,
-        "z1": -0.6
+        "z0": -0.75,
+        "z1": 0.25
        }
       },
       {
@@ -5537,20 +6338,7 @@
        "filled": true,
        "tone": 0.2,
        "kind": "poly",
-       "points": [
-        [
-         1.3,
-         0.07
-        ],
-        [
-         1.5,
-         -0.03
-        ],
-        [
-         1.28,
-         -0.09
-        ]
-       ],
+       "points": [[1.28, 0.07], [1.35, 0.0], [1.5, -0.03]],
        "closed": true,
        "region": "attachment",
        "material": "wear-steel",
@@ -5569,20 +6357,7 @@
        "filled": true,
        "tone": 0.2,
        "kind": "poly",
-       "points": [
-        [
-         1.3,
-         0.07
-        ],
-        [
-         1.5,
-         -0.03
-        ],
-        [
-         1.28,
-         -0.09
-        ]
-       ],
+       "points": [[1.28, 0.07], [1.35, 0.0], [1.5, -0.03]],
        "closed": true,
        "region": "attachment",
        "material": "wear-steel",
@@ -5601,20 +6376,7 @@
        "filled": true,
        "tone": 0.2,
        "kind": "poly",
-       "points": [
-        [
-         1.3,
-         0.07
-        ],
-        [
-         1.5,
-         -0.03
-        ],
-        [
-         1.28,
-         -0.09
-        ]
-       ],
+       "points": [[1.28, 0.07], [1.35, 0.0], [1.5, -0.03]],
        "closed": true,
        "region": "attachment",
        "material": "wear-steel",
@@ -5633,20 +6395,7 @@
        "filled": true,
        "tone": 0.2,
        "kind": "poly",
-       "points": [
-        [
-         1.3,
-         0.07
-        ],
-        [
-         1.5,
-         -0.03
-        ],
-        [
-         1.28,
-         -0.09
-        ]
-       ],
+       "points": [[1.28, 0.07], [1.35, 0.0], [1.5, -0.03]],
        "closed": true,
        "region": "attachment",
        "material": "wear-steel",
@@ -5694,188 +6443,244 @@
        }
       },
       {
-       "id": "boom-cyl-barrel-left",
-       "bone": "boom-cyl",
-       "role": "detail",
-       "z": 3.5,
-       "filled": true,
-       "tone": 0.4,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 1.45,
-       "y1": 0,
-       "r0": 0.1,
-       "r1": 0.1,
-       "region": "hydraulics",
-       "material": "paint-steel",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": 0.15,
-        "z1": 0.35
-       }
+        "id": "boom-tip-boss",
+        "bone": "boom",
+        "role": "detail",
+        "z": 3.3,
+        "filled": true,
+        "tone": 0.35,
+        "kind": "ellipse",
+        "cx": 5.7,
+        "cy": 0,
+        "rx": 0.26,
+        "ry": 0.26,
+        "material": "paint-steel",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.55,
+          "z1": 0.05
+        }
       },
       {
-       "id": "boom-rod-left",
-       "bone": "boom-rod",
-       "role": "detail",
-       "z": 3.55,
-       "filled": true,
-       "tone": 0.8,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 1.65,
-       "y1": 0,
-       "r0": 0.035,
-       "r1": 0.035,
-       "region": "hydraulics",
-       "material": "chrome",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": 0.2,
-        "z1": 0.3
-       }
+        "id": "stick-tip-boss",
+        "bone": "stick",
+        "role": "detail",
+        "z": 3.3,
+        "filled": true,
+        "tone": 0.35,
+        "kind": "ellipse",
+        "cx": 2.9,
+        "cy": 0,
+        "rx": 0.22,
+        "ry": 0.22,
+        "material": "paint-steel",
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.49,
+          "z1": -0.01
+        }
       },
       {
-       "id": "boom-cyl-barrel-right",
-       "bone": "boom-cyl",
-       "role": "detail",
-       "z": 3.5,
-       "filled": true,
-       "tone": 0.4,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 1.45,
-       "y1": 0,
-       "r0": 0.1,
-       "r1": 0.1,
-       "region": "hydraulics",
-       "material": "paint-steel",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.85,
-        "z1": -0.65
-       }
+        "id": "boom-cyl-rod-left",
+        "bone": "boom-rod",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.4,
+          "y": 0,
+          "z": 0.25
+        },
+        "to": {
+          "x": 1.65,
+          "y": 0,
+          "z": 0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.09
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
-       "id": "boom-rod-right",
-       "bone": "boom-rod",
-       "role": "detail",
-       "z": 3.55,
-       "filled": true,
-       "tone": 0.8,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 1.65,
-       "y1": 0,
-       "r0": 0.035,
-       "r1": 0.035,
-       "region": "hydraulics",
-       "material": "chrome",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.8,
-        "z1": -0.7
-       }
+        "id": "boom-cyl-rod-right",
+        "bone": "boom-rod",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.4,
+          "y": 0,
+          "z": -0.75
+        },
+        "to": {
+          "x": 1.65,
+          "y": 0,
+          "z": -0.75
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.09
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
-       "id": "stick-cyl-barrel",
-       "bone": "stick-cyl",
-       "role": "detail",
-       "z": 3.5,
-       "filled": true,
-       "tone": 0.4,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 1.6,
-       "y1": 0,
-       "r0": 0.09,
-       "r1": 0.09,
-       "region": "hydraulics",
-       "material": "paint-steel",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.33999999999999997,
-        "z1": -0.16
-       }
+        "id": "bucket-cyl-rod",
+        "bone": "bucket-rod",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.4,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 0.95,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.0756
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
-       "id": "stick-rod",
-       "bone": "stick-rod",
-       "role": "detail",
-       "z": 3.55,
-       "filled": true,
-       "tone": 0.8,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 2.35,
-       "y1": 0,
-       "r0": 0.045,
-       "r1": 0.045,
-       "region": "hydraulics",
-       "material": "chrome",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.295,
-        "z1": -0.20500000000000002
-       }
+        "id": "stick-cyl-rod",
+        "bone": "stick-rod",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.5,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 2.35,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.1
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
-       "id": "bucket-cyl-barrel",
-       "bone": "bucket-cyl",
-       "role": "detail",
-       "z": 3.5,
-       "filled": true,
-       "tone": 0.4,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 0.85,
-       "y1": 0,
-       "r0": 0.07,
-       "r1": 0.07,
-       "region": "hydraulics",
-       "material": "paint-steel",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.32,
-        "z1": -0.18
-       }
+        "id": "boom-cyl-barrel-left",
+        "bone": "boom-cyl",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": 0.25
+        },
+        "to": {
+          "x": 1.45,
+          "y": 0,
+          "z": 0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.2
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
-       "id": "bucket-rod",
-       "bone": "bucket-rod",
-       "role": "detail",
-       "z": 3.55,
-       "filled": true,
-       "tone": 0.8,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 0.95,
-       "y1": 0,
-       "r0": 0.03,
-       "r1": 0.03,
-       "region": "hydraulics",
-       "material": "chrome",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.28,
-        "z1": -0.22
-       }
+        "id": "boom-cyl-barrel-right",
+        "bone": "boom-cyl",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": -0.75
+        },
+        "to": {
+          "x": 1.45,
+          "y": 0,
+          "z": -0.75
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.2
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
+        "id": "stick-cyl-barrel",
+        "bone": "stick-cyl",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 1.6,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.19
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
+        "id": "bucket-cyl-barrel",
+        "bone": "bucket-cyl",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 0.85,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.15
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
        "kind": "path",
@@ -5939,7 +6744,7 @@
        "x0": -1.2,
        "y0": 1.25,
        "x1": -1.2,
-       "y1": 1.8,
+       "y1": 1.76,
        "r0": 0.055,
        "r1": 0.055,
        "id": "stack",
@@ -6023,7 +6828,7 @@
        "y": 0.895,
        "w": 4.16,
        "h": 0.6,
-       "r": 0.3,
+       "r": 0,
        "region": "tracks",
        "material": "track-steel"
       },
@@ -6054,7 +6859,7 @@
        "y": -1.495,
        "w": 4.16,
        "h": 0.6,
-       "r": 0.3,
+       "r": 0,
        "region": "tracks",
        "material": "track-steel"
       },
@@ -6309,6 +7114,106 @@
        }
       },
       {
+        "id": "boom-cyl-rod",
+        "bone": "boom-rod",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.4,
+          "y": 0,
+          "z": 0.25
+        },
+        "to": {
+          "x": 1.65,
+          "y": 0,
+          "z": 0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.09
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
+        "id": "bucket-cyl-barrel",
+        "bone": "bucket-cyl",
+        "role": "body",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 0.85,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.15
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
+        "id": "bucket-cyl-rod",
+        "bone": "bucket-rod",
+        "role": "body",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.4,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 0.95,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.0756
+        },
+        "region": "hydraulics",
+        "material": "chrome"
+      },
+      {
+        "id": "stick-cyl-rod",
+        "bone": "stick-rod",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.5,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 2.35,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.1
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
        "kind": "path",
        "d": "M 0,-0.38 C 0.9,-0.44 2.0,-0.32 2.9,-0.2 L 2.9,0.2 C 2.0,0.3 0.9,0.46 0,0.42 Z",
        "id": "stick-body",
@@ -6345,50 +7250,54 @@
        }
       },
       {
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 1.45,
-       "y1": 0,
-       "r0": 0.1,
-       "r1": 0.1,
-       "id": "boom-cyl-barrel",
-       "bone": "boom-cyl",
-       "role": "detail",
-       "z": 3.5,
-       "filled": true,
-       "tone": 0.4,
-       "region": "hydraulics",
-       "material": "paint-steel",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.85,
-        "z1": -0.65
-       }
+        "id": "boom-cyl-barrel",
+        "bone": "boom-cyl",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": 0.25
+        },
+        "to": {
+          "x": 1.45,
+          "y": 0,
+          "z": 0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.2
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 1.6,
-       "y1": 0,
-       "r0": 0.09,
-       "r1": 0.09,
-       "id": "stick-cyl-barrel",
-       "bone": "stick-cyl",
-       "role": "detail",
-       "z": 3.5,
-       "filled": true,
-       "tone": 0.4,
-       "region": "hydraulics",
-       "material": "paint-steel",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.34,
-        "z1": -0.16
-       }
+        "id": "stick-cyl-barrel",
+        "bone": "stick-cyl",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 1.6,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.19
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
        "kind": "capsule",
@@ -6525,27 +7434,129 @@
        }
       },
       {
-       "id": "boom-cyl-barrel-left",
-       "bone": "boom-cyl",
-       "role": "detail",
-       "z": 3.5,
-       "filled": true,
-       "tone": 0.4,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 1.45,
-       "y1": 0,
-       "r0": 0.1,
-       "r1": 0.1,
-       "region": "hydraulics",
-       "material": "paint-steel",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": 0.15,
-        "z1": 0.35
-       }
+        "id": "boom-cyl-rod-left",
+        "bone": "boom-rod",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.4,
+          "y": 0,
+          "z": 0.25
+        },
+        "to": {
+          "x": 1.65,
+          "y": 0,
+          "z": 0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.09
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
+        "id": "boom-cyl-rod-right",
+        "bone": "boom-rod",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.4,
+          "y": 0,
+          "z": -0.75
+        },
+        "to": {
+          "x": 1.65,
+          "y": 0,
+          "z": -0.75
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.09
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
+        "id": "bucket-cyl-rod",
+        "bone": "bucket-rod",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.4,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 0.95,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.0756
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
+        "id": "stick-cyl-rod",
+        "bone": "stick-rod",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.5,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 2.35,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.1
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
+        "id": "boom-cyl-barrel-left",
+        "bone": "boom-cyl",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": 0.25
+        },
+        "to": {
+          "x": 1.45,
+          "y": 0,
+          "z": 0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.2
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
        "id": "boom-rod-left",
@@ -6571,27 +7582,29 @@
        }
       },
       {
-       "id": "boom-cyl-barrel-right",
-       "bone": "boom-cyl",
-       "role": "detail",
-       "z": 3.5,
-       "filled": true,
-       "tone": 0.4,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 1.45,
-       "y1": 0,
-       "r0": 0.1,
-       "r1": 0.1,
-       "region": "hydraulics",
-       "material": "paint-steel",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.85,
-        "z1": -0.65
-       }
+        "id": "boom-cyl-barrel-right",
+        "bone": "boom-cyl",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": -0.75
+        },
+        "to": {
+          "x": 1.45,
+          "y": 0,
+          "z": -0.75
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.2
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
        "id": "boom-rod-right",
@@ -6617,27 +7630,29 @@
        }
       },
       {
-       "id": "stick-cyl-barrel",
-       "bone": "stick-cyl",
-       "role": "detail",
-       "z": 3.5,
-       "filled": true,
-       "tone": 0.4,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 1.6,
-       "y1": 0,
-       "r0": 0.09,
-       "r1": 0.09,
-       "region": "hydraulics",
-       "material": "paint-steel",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.33999999999999997,
-        "z1": -0.16
-       }
+        "id": "stick-cyl-barrel",
+        "bone": "stick-cyl",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 1.6,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.19
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
        "id": "stick-rod",
@@ -6663,27 +7678,29 @@
        }
       },
       {
-       "id": "bucket-cyl-barrel",
-       "bone": "bucket-cyl",
-       "role": "detail",
-       "z": 3.5,
-       "filled": true,
-       "tone": 0.4,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 0.85,
-       "y1": 0,
-       "r0": 0.07,
-       "r1": 0.07,
-       "region": "hydraulics",
-       "material": "paint-steel",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.32,
-        "z1": -0.18
-       }
+        "id": "bucket-cyl-barrel",
+        "bone": "bucket-cyl",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 0.85,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.15
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
        "kind": "path",
@@ -6870,27 +7887,129 @@
        }
       },
       {
-       "id": "boom-cyl-barrel-left",
-       "bone": "boom-cyl",
-       "role": "detail",
-       "z": 3.5,
-       "filled": true,
-       "tone": 0.4,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 1.45,
-       "y1": 0,
-       "r0": 0.1,
-       "r1": 0.1,
-       "region": "hydraulics",
-       "material": "paint-steel",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": 0.15,
-        "z1": 0.35
-       }
+        "id": "boom-cyl-rod-left",
+        "bone": "boom-rod",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.4,
+          "y": 0,
+          "z": 0.25
+        },
+        "to": {
+          "x": 1.65,
+          "y": 0,
+          "z": 0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.09
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
+        "id": "boom-cyl-rod-right",
+        "bone": "boom-rod",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.4,
+          "y": 0,
+          "z": -0.75
+        },
+        "to": {
+          "x": 1.65,
+          "y": 0,
+          "z": -0.75
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.09
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
+        "id": "bucket-cyl-rod",
+        "bone": "bucket-rod",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.4,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 0.95,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.0756
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
+        "id": "stick-cyl-rod",
+        "bone": "stick-rod",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.5,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 2.35,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.1
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
+        "id": "boom-cyl-barrel-left",
+        "bone": "boom-cyl",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": 0.25
+        },
+        "to": {
+          "x": 1.45,
+          "y": 0,
+          "z": 0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.2
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
        "id": "boom-rod-left",
@@ -6916,27 +8035,29 @@
        }
       },
       {
-       "id": "boom-cyl-barrel-right",
-       "bone": "boom-cyl",
-       "role": "detail",
-       "z": 3.5,
-       "filled": true,
-       "tone": 0.4,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 1.45,
-       "y1": 0,
-       "r0": 0.1,
-       "r1": 0.1,
-       "region": "hydraulics",
-       "material": "paint-steel",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.85,
-        "z1": -0.65
-       }
+        "id": "boom-cyl-barrel-right",
+        "bone": "boom-cyl",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": -0.75
+        },
+        "to": {
+          "x": 1.45,
+          "y": 0,
+          "z": -0.75
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.2
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
        "id": "boom-rod-right",
@@ -6962,27 +8083,29 @@
        }
       },
       {
-       "id": "stick-cyl-barrel",
-       "bone": "stick-cyl",
-       "role": "detail",
-       "z": 3.5,
-       "filled": true,
-       "tone": 0.4,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 1.6,
-       "y1": 0,
-       "r0": 0.09,
-       "r1": 0.09,
-       "region": "hydraulics",
-       "material": "paint-steel",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.33999999999999997,
-        "z1": -0.16
-       }
+        "id": "stick-cyl-barrel",
+        "bone": "stick-cyl",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 1.6,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.19
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
        "id": "stick-rod",
@@ -7008,27 +8131,29 @@
        }
       },
       {
-       "id": "bucket-cyl-barrel",
-       "bone": "bucket-cyl",
-       "role": "detail",
-       "z": 3.5,
-       "filled": true,
-       "tone": 0.4,
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0,
-       "x1": 0.85,
-       "y1": 0,
-       "r0": 0.07,
-       "r1": 0.07,
-       "region": "hydraulics",
-       "material": "paint-steel",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.32,
-        "z1": -0.18
-       }
+        "id": "bucket-cyl-barrel",
+        "bone": "bucket-cyl",
+        "role": "detail",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 0.85,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.15
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
       },
       {
        "kind": "path",
@@ -7233,7 +8358,7 @@
       {
        "id": "slew-ring",
        "bone": "undercarriage",
-       "role": "detail",
+       "role": "body",
        "z": 2.6,
        "filled": true,
        "tone": 0.3,
@@ -7319,6 +8444,156 @@
        }
       },
       {
+        "id": "boom-cyl-barrel",
+        "bone": "boom-cyl",
+        "role": "body",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": 0.25
+        },
+        "to": {
+          "x": 1.45,
+          "y": 0,
+          "z": 0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.2
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
+        "id": "boom-cyl-rod",
+        "bone": "boom-rod",
+        "role": "body",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.4,
+          "y": 0,
+          "z": 0.25
+        },
+        "to": {
+          "x": 1.65,
+          "y": 0,
+          "z": 0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.09
+        },
+        "region": "hydraulics",
+        "material": "chrome"
+      },
+      {
+        "id": "bucket-cyl-barrel",
+        "bone": "bucket-cyl",
+        "role": "body",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 0.85,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.15
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
+        "id": "bucket-cyl-rod",
+        "bone": "bucket-rod",
+        "role": "body",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.4,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 0.95,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.0756
+        },
+        "region": "hydraulics",
+        "material": "chrome"
+      },
+      {
+        "id": "stick-cyl-barrel",
+        "bone": "stick-cyl",
+        "role": "body",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 1.6,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.19
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
+        "id": "stick-cyl-rod",
+        "bone": "stick-rod",
+        "role": "body",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.5,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 2.35,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.1
+        },
+        "region": "hydraulics",
+        "material": "chrome"
+      },
+      {
        "kind": "path",
        "d": "M 0,-0.38 C 0.9,-0.44 2.0,-0.32 2.9,-0.2 L 2.9,0.2 C 2.0,0.3 0.9,0.46 0,0.42 Z",
        "id": "stick-body",
@@ -7359,7 +8634,7 @@
       {
        "id": "slew-ring",
        "bone": "undercarriage",
-       "role": "detail",
+       "role": "body",
        "z": 2.6,
        "filled": true,
        "tone": 0.3,
@@ -7426,6 +8701,206 @@
         "z0": -0.55,
         "z1": 0.04999999999999999
        }
+      },
+      {
+        "id": "boom-cyl-barrel-left",
+        "bone": "boom-cyl",
+        "role": "body",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": 0.25
+        },
+        "to": {
+          "x": 1.45,
+          "y": 0,
+          "z": 0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.2
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
+        "id": "boom-cyl-barrel-right",
+        "bone": "boom-cyl",
+        "role": "body",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": -0.75
+        },
+        "to": {
+          "x": 1.45,
+          "y": 0,
+          "z": -0.75
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.2
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
+        "id": "boom-cyl-rod-left",
+        "bone": "boom-rod",
+        "role": "body",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.4,
+          "y": 0,
+          "z": 0.25
+        },
+        "to": {
+          "x": 1.65,
+          "y": 0,
+          "z": 0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.09
+        },
+        "region": "hydraulics",
+        "material": "chrome"
+      },
+      {
+        "id": "boom-cyl-rod-right",
+        "bone": "boom-rod",
+        "role": "body",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.4,
+          "y": 0,
+          "z": -0.75
+        },
+        "to": {
+          "x": 1.65,
+          "y": 0,
+          "z": -0.75
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.09
+        },
+        "region": "hydraulics",
+        "material": "chrome"
+      },
+      {
+        "id": "bucket-cyl-barrel",
+        "bone": "bucket-cyl",
+        "role": "body",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 0.85,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.15
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
+        "id": "bucket-cyl-rod",
+        "bone": "bucket-rod",
+        "role": "body",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.4,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 0.95,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.0756
+        },
+        "region": "hydraulics",
+        "material": "chrome"
+      },
+      {
+        "id": "stick-cyl-barrel",
+        "bone": "stick-cyl",
+        "role": "body",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 1.6,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.19
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
+        "id": "stick-cyl-rod",
+        "bone": "stick-rod",
+        "role": "body",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.5,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 2.35,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.1
+        },
+        "region": "hydraulics",
+        "material": "chrome"
       },
       {
        "kind": "path",
@@ -7600,6 +9075,206 @@
         "z0": -0.55,
         "z1": 0.04999999999999999
        }
+      },
+      {
+        "id": "boom-cyl-barrel-left",
+        "bone": "boom-cyl",
+        "role": "body",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": 0.25
+        },
+        "to": {
+          "x": 1.45,
+          "y": 0,
+          "z": 0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.2
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
+        "id": "boom-cyl-barrel-right",
+        "bone": "boom-cyl",
+        "role": "body",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": -0.75
+        },
+        "to": {
+          "x": 1.45,
+          "y": 0,
+          "z": -0.75
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.2
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
+        "id": "boom-cyl-rod-left",
+        "bone": "boom-rod",
+        "role": "body",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.4,
+          "y": 0,
+          "z": 0.25
+        },
+        "to": {
+          "x": 1.65,
+          "y": 0,
+          "z": 0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.09
+        },
+        "region": "hydraulics",
+        "material": "chrome"
+      },
+      {
+        "id": "boom-cyl-rod-right",
+        "bone": "boom-rod",
+        "role": "body",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.4,
+          "y": 0,
+          "z": -0.75
+        },
+        "to": {
+          "x": 1.65,
+          "y": 0,
+          "z": -0.75
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.09
+        },
+        "region": "hydraulics",
+        "material": "chrome"
+      },
+      {
+        "id": "bucket-cyl-barrel",
+        "bone": "bucket-cyl",
+        "role": "body",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 0.85,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.15
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
+        "id": "bucket-cyl-rod",
+        "bone": "bucket-rod",
+        "role": "body",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.4,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 0.95,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.0756
+        },
+        "region": "hydraulics",
+        "material": "chrome"
+      },
+      {
+        "id": "stick-cyl-barrel",
+        "bone": "stick-cyl",
+        "role": "body",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": 0.0,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 1.6,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.19
+        },
+        "region": "hydraulics",
+        "material": "paint-steel"
+      },
+      {
+        "id": "stick-cyl-rod",
+        "bone": "stick-rod",
+        "role": "body",
+        "z": 3.5,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "member",
+        "from": {
+          "x": -0.5,
+          "y": 0,
+          "z": -0.25
+        },
+        "to": {
+          "x": 2.35,
+          "y": 0,
+          "z": -0.25
+        },
+        "section": {
+          "kind": "circle",
+          "d": 0.1
+        },
+        "region": "hydraulics",
+        "material": "chrome"
       },
       {
        "kind": "path",
@@ -10076,6 +11751,8 @@
       "key": "engine-load",
       "heatW": 1400
      },
+     "ratedPowerW": 110000,
+     "ratedPowerBasis": "rated-output",
      "source": "authored-estimate",
      "reference": "heywood-2018"
     },
@@ -10710,9 +12387,9 @@
           "material": "engine-metal",
           "role": "detail",
           "tone": 0.2,
-          "size": [1.0, 0.02, 1.8],
+          "size": [1.0, 0.05, 1.8],
           "transform": {
-            "translation": [-1.05, 1.26, 0.0]
+            "translation": [-1.05, 1.245, 0.0]
           }
         },
         {
@@ -10747,7 +12424,7 @@
           "material": "paint-steel",
           "role": "detail",
           "tone": 0.3,
-          "p0": [-1.65, 1.2, -1.15],
+          "p0": [-1.65, 1.12, -1.15],
           "p1": [-1.65, 1.4875, -1.15],
           "r0": 0.0125,
           "r1": 0.0125,
@@ -10789,7 +12466,7 @@
           "role": "detail",
           "tone": 0.25,
           "p0": [-1.2, 1.25, -0.9],
-          "p1": [-1.2, 1.8, -0.9],
+          "p1": [-1.2, 1.76, -0.9],
           "r0": 0.055,
           "r1": 0.055
         },
@@ -11506,7 +13183,19 @@
           "part": "member"
         },
         {
+          "id": "member-boom-cyl-barrel-right",
+          "of": "boom-cyl-barrel",
+          "member": "boom-cyl",
+          "part": "member"
+        },
+        {
           "id": "member-boom-cyl-rod",
+          "of": "boom-cyl-rod",
+          "member": "boom-rod",
+          "part": "member"
+        },
+        {
+          "id": "member-boom-cyl-rod-right",
           "of": "boom-cyl-rod",
           "member": "boom-rod",
           "part": "member"
@@ -12089,9 +13778,9 @@
           "material": "engine-metal",
           "role": "detail",
           "tone": 0.2,
-          "size": [1.0, 0.02, 1.8],
+          "size": [1.0, 0.05, 1.8],
           "transform": {
-            "translation": [-1.05, 1.26, 0.0]
+            "translation": [-1.05, 1.245, 0.0]
           }
         },
         {
@@ -12126,7 +13815,7 @@
           "material": "paint-steel",
           "role": "detail",
           "tone": 0.3,
-          "p0": [-1.65, 1.2, -1.15],
+          "p0": [-1.65, 1.12, -1.15],
           "p1": [-1.65, 1.4875, -1.15],
           "r0": 0.0125,
           "r1": 0.0125,
@@ -12143,7 +13832,7 @@
           "role": "detail",
           "tone": 0.25,
           "p0": [-1.2, 1.25, -0.9],
-          "p1": [-1.2, 1.8, -0.9],
+          "p1": [-1.2, 1.76, -0.9],
           "r0": 0.055,
           "r1": 0.055
         },
@@ -12667,7 +14356,19 @@
           "part": "member"
         },
         {
+          "id": "member-boom-cyl-barrel-right",
+          "of": "boom-cyl-barrel",
+          "member": "boom-cyl",
+          "part": "member"
+        },
+        {
           "id": "member-boom-cyl-rod",
+          "of": "boom-cyl-rod",
+          "member": "boom-rod",
+          "part": "member"
+        },
+        {
+          "id": "member-boom-cyl-rod-right",
           "of": "boom-cyl-rod",
           "member": "boom-rod",
           "part": "member"
@@ -13644,7 +15345,19 @@
           "part": "member"
         },
         {
+          "id": "member-boom-cyl-barrel-right",
+          "of": "boom-cyl-barrel",
+          "member": "boom-cyl",
+          "part": "member"
+        },
+        {
           "id": "member-boom-cyl-rod",
+          "of": "boom-cyl-rod",
+          "member": "boom-rod",
+          "part": "member"
+        },
+        {
+          "id": "member-boom-cyl-rod-right",
           "of": "boom-cyl-rod",
           "member": "boom-rod",
           "part": "member"
@@ -14513,7 +16226,19 @@
           "part": "member"
         },
         {
+          "id": "member-boom-cyl-barrel-right",
+          "of": "boom-cyl-barrel",
+          "member": "boom-cyl",
+          "part": "member"
+        },
+        {
           "id": "member-boom-cyl-rod",
+          "of": "boom-cyl-rod",
+          "member": "boom-rod",
+          "part": "member"
+        },
+        {
+          "id": "member-boom-cyl-rod-right",
           "of": "boom-cyl-rod",
           "member": "boom-rod",
           "part": "member"

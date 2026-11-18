@@ -12,6 +12,11 @@ afterEach(cleanup);
 
 // #region 📻️TableAvatarMatrix
 describe("TableAvatar", () => {
+  it("is content art for the border probe: a round portrait is not a rectangular border run", () => {
+    const { container } = render(<TableAvatar name="Ada Lovelace" />);
+    expect(container.querySelector('[data-slot="avatar"]')?.hasAttribute("data-border-probe-art")).toBe(true);
+  });
+
   it("uses the neutral sizing contract with positive border-interior clearance", () => {
     const { container } = render(<TableAvatar name="Ada Lovelace" />);
     expect(container.querySelector('[data-slot="avatar"]')?.classList.contains(spacing.sizeClass)).toBe(true);
@@ -84,10 +89,10 @@ describe("TableAvatar", () => {
 
     expect(ref.current).toBe(selected);
     expect(selected.className).toContain("custom-avatar");
-    expect(selected.className).toContain("ring-[color:var(--active-base)]");
+    expect(selected.className).toContain("border-[color:var(--active-base)]");
     expect(selected.style.width).toBe("24px");
     expect(selected.querySelector<HTMLElement>('[data-slot="avatar-fallback"]')?.style.color).toBe("red");
-    expect(hovered.className).toContain("ring-[color:var(--hover-base)]");
+    expect(hovered.className).toContain("border-[color:var(--hover-base)]");
   });
 });
 // #endregion 📻️TableAvatarMatrix

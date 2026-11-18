@@ -12,6 +12,7 @@ import { Icon, SelectionMarquee, useCallback, useEffect, useRef, useState, type 
 
 // #endregion 🔌️Adapters
 import { clientToSectionFraction, dispositionHasEphemeralLayout, dispositionPlacementContainer, marqueeSelectionRule, marqueeSelects, normalizeMarquee, POINTER_DRAG_THRESHOLD_PX, pointerNearSlideResetHotspot, revealDeckInOverview, suppressRevealOverviewSlideNavigation, usePresentationInteractionState } from "../🧮️interaction-model/🟦️.ts";
+import { SHARED_BORDER_CELL, SharedBorderChipGroup } from "../🔗️shared-border-chips/🟦️.tsx";
 import { resolveEffectiveDispositionRect, useSlideDispositionRegistry } from "./🗂️disposition-registry/🟦️.tsx";
 
 //#region 🔖️Interaction
@@ -180,18 +181,21 @@ export const SlideInteractionReset: FC<{
 
   return (
     <div ref={hostRef} className="presentation-interaction-slide-reset-host">
-      <button
-        type="button"
-        className="presentation-interaction-slide-reset"
-        title="Reset slide"
-        onClick={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          interaction.resetSlide(dispositionIds);
-        }}
-      >
-        <Icon icon="rotate-ccw" size="small" />
-      </button>
+      <SharedBorderChipGroup className="presentation-interaction-slide-reset-frame">
+        <button
+          type="button"
+          {...SHARED_BORDER_CELL}
+          className="presentation-interaction-slide-reset"
+          title="Reset slide"
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            interaction.resetSlide(dispositionIds);
+          }}
+        >
+          <Icon icon="rotate-ccw" size="small" />
+        </button>
+      </SharedBorderChipGroup>
     </div>
   );
 };

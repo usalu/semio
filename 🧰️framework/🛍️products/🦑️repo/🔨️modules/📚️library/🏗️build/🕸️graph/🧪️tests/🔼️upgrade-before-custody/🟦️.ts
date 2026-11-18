@@ -11,13 +11,13 @@ const source=graphSourceV1();
 const builder=source.indexOf("withBuilder:async<T>");
 
 test("the capacity upgrade of a rebuild is asked before the builder custody is taken",()=>{
- const upgrade=source.indexOf("await upgradeBuildCapacityBeforeRebuildV1();",builder),custody=source.indexOf("withGenerationCustodyV1(root,invocation,phaseControl,request,(store,control,claim)=>{image=store.root;return body(store,control,claim);})",builder);
+ const upgrade=source.indexOf("()=>upgradeBuildCapacityBeforeRebuildV1()",builder),custody=source.indexOf("withGenerationCustodyV1(root,invocation,phaseControl,request,",builder);
  expect(builder).toBeGreaterThan(0);expect(upgrade).toBeGreaterThan(builder);expect(custody).toBeGreaterThan(upgrade);
 });
 
 test("the phase mark stays inside the custody body and the only wait before the custody is the upgrade",()=>{
  const body=source.slice(builder,source.indexOf("withGenerationCustodyV1(",builder));
- expect(body).toContain('const body=async(store:RepositoryCacheStoreV1,control:ResourceLeaseControl,claim:SliceClaimV1)=>{await markBuildCapacityPhaseV1("rebuild");return build(store,control,claim);};');
+ expect(body).toContain('const body=async(store:RepositoryCacheStoreV1,control:ResourceLeaseControl,claim:SliceClaimV1)=>{await markBuildCapacityPhaseV1("rebuild");return build(store,control,claim);};');expect(source.slice(source.indexOf("withGenerationCustodyV1(",builder),source.indexOf("return result;",builder))).not.toContain("upgradeBuildCapacity");
  expect(body.match(/upgradeBuildCapacity/gu)?.length).toBe(1);
 });
 

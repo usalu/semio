@@ -70,3 +70,19 @@ test("installed dependency path scan publishes bounded progress frames and honou
   });
  }finally{rmSync(root,{recursive:true,force:true});}
 },120000);
+
+/** 🛡️ Checks authority custody at a bounded rate: the scan asks the store for custody at most once per authored interval (and at every ancestor check), not for every entry, and returns the same digest as a scan that asks every time. */
+test("installed dependency path scan checks custody at a bounded rate and returns the same digest",async()=>{
+ const ts=await import("typescript"),source=readFileSync(new URL("../../🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("dependency-path.ts",source,ts.ScriptTarget.Latest,true),fn=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="scanJavascriptDependencyInstalledPathsV1")!,
+ code=ts.transpileModule(fn.getText(tree),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText,descriptors=await import("@semio-tech/framework-filesystem/observation/descriptor");
+ const make=(interval:number)=>new Function("installSchema","createHash","lstatSync","withArtifactReadDirectoryV1","join","requireIssuedResourceControlV1","checkResourceLeaseControl",code+";return scanJavascriptDependencyInstalledPathsV1;")({$defs:{InstalledPathProtocol:{const:{...installSchema.$defs.InstalledPathProtocol.const,scanCustodyMilliseconds:interval}}}},createHash,lstatSync,descriptors.withArtifactReadDirectoryV1,join,()=>{},()=>{})as Scan;
+ const control={signal:new AbortController().signal,remainingMilliseconds:()=>null,publish:async()=>{},yieldContinuation:async()=>{}}as unknown as Parameters<Scan>[1];
+ const {tmpdir}=await import("node:os"),root=mkdtempSync(join(tmpdir(),"scan-custody-"));
+ try{
+  for(let directory=0;directory<20;directory++){mkdirSync(join(root,"d"+directory));for(let file=0;file<100;file++)writeFileSync(join(root,"d"+directory,"f"+file+".js"),"x");}
+  let every=0,bounded=0;
+  const all=await make(0)(root,control,()=>{every++;}),some=await make(60000)(root,control,()=>{bounded++;});
+  expect(some.sha256).toBe(all.sha256);expect(some.entries).toBe(all.entries);
+  expect(every).toBeGreaterThan(all.entries);expect(bounded).toBeLessThan(all.entries/10);expect(bounded).toBeGreaterThanOrEqual(1);
+ }finally{rmSync(root,{recursive:true,force:true});}
+},120000);

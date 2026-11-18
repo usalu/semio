@@ -34,7 +34,7 @@ const gone=(error:unknown):boolean=>(error as {code?:string}).code==="ENOENT";
 const sha=(data:Uint8Array|string):string=>createHash("sha256").update(data).digest("hex");
 
 /** 🛡️ Validates a value against one definition of the resilience schema. */
-export function requireResilienceShapeV1(definition:"SealedCode"|"SelfCheck"|"Health"|"Failure"|"History"|"Beat"|"BlockedRestart"|"Fallback"|"BootStage"|"Fixture",value:unknown,message:string):void{
+export function requireResilienceShapeV1(definition:"SealedCode"|"SelfCheck"|"Health"|"Failure"|"History"|"RefusedPaths"|"Beat"|"BlockedRestart"|"Fallback"|"BootStage"|"Fixture",value:unknown,message:string):void{
  let validator=validators.get(definition);
  if(validator===undefined){validator=compileJsonSchemaSubset({$ref:`#/definitions/${definition}`},schema);validators.set(definition,validator);}
  const errors=validator.validate(value);
@@ -445,6 +445,44 @@ export async function readHealthV1(root:string):Promise<HealthV1|undefined>{
   const value=JSON.parse(await readFile(healthPathV1(root),"utf8")) as unknown;
   requireResilienceShapeV1("Health",value,"Closed health required");
   return value as HealthV1;
+ }catch{return undefined;}
+}
+
+/** 🚫️ One path this machine refuses to carry, with the reason and the wall time it was last refused. */
+export type RefusedPathV1=Readonly<{path:string;reason:string;wallMs:number}>;
+
+/** 🚫️ The record of refused paths (`.cache/f/refused-paths.json`): `total` counts the refusals of paths that were not among the `recent` ones, `recent` keeps the `REFUSED_PATH_LIMIT_V1` newest distinct ones, newest last. */
+export type RefusedPathsV1=Readonly<{version:1;total:number;recent:readonly RefusedPathV1[]}>;
+
+/** 🚫️ How many distinct refused paths the record keeps. */
+export const REFUSED_PATH_LIMIT_V1=200;
+
+/** 📍️ The path of the refusal record the daemon keeps for `status`. */
+export function refusedPathsPathV1(root:string):string{return join(root,".cache","f","refused-paths.json");}
+
+/** 🚫️ Adds a refusal to the record without changing it in place: a path already in `recent` moves to the end with its new reason and time, a path not in `recent` counts into `total`, and the oldest entries beyond `REFUSED_PATH_LIMIT_V1` drop out. Paths longer than the schema allows are cut. */
+export function noteRefusedPathV1(record:RefusedPathsV1,path:string,reason:string,wallMs:number):RefusedPathsV1{
+ const kept=record.recent.filter(item=>item.path!==path),fresh=kept.length===record.recent.length,entry:RefusedPathV1={path:path.slice(0,4096),reason:reason.slice(0,200),wallMs};
+ return {version:1,total:record.total+(fresh?1:0),recent:[...kept,entry].slice(-REFUSED_PATH_LIMIT_V1)};
+}
+
+/** 🚫️ The empty refusal record. */
+export const NO_REFUSED_PATHS_V1:RefusedPathsV1={version:1,total:0,recent:[]};
+
+/** ✍️ Replaces the refusal record through tmp + rename; it is advisory, so there is no fsync. */
+export async function writeRefusedPathsV1(root:string,record:RefusedPathsV1):Promise<void>{
+ requireResilienceShapeV1("RefusedPaths",record,"Closed refused paths required");
+ const file=refusedPathsPathV1(root),temporary=`${file}.${tokenOf()}.tmp`;
+ await mkdir(dirname(file),{recursive:true});
+ try{await writeFile(temporary,JSON.stringify(record));await rename(temporary,file);}catch(error){await rm(temporary,{force:true});throw error;}
+}
+
+/** 👀️ Reads the refusal record; `undefined` when it is missing, torn or invalid. */
+export async function readRefusedPathsV1(root:string):Promise<RefusedPathsV1|undefined>{
+ try{
+  const value=JSON.parse(await readFile(refusedPathsPathV1(root),"utf8")) as unknown;
+  requireResilienceShapeV1("RefusedPaths",value,"Closed refused paths required");
+  return value as RefusedPathsV1;
  }catch{return undefined;}
 }
 

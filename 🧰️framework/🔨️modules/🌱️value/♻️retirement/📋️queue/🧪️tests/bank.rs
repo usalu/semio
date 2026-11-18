@@ -1,5 +1,6 @@
 //! 🏧️ One finite effect bank lends every queue test its Source-bound original effect and exact settlement.
 use semio_framework_value_control_contract::*;
+use semio_framework_value_retirement::{OriginalRetirementFailure,OriginalRetirementPoll};
 use semio_framework_value_testing_effect_bank::{EffectBank,Wallet};
 /// 🏦️ Opens the finite wallet every queue law spends from.
 pub fn bank()->EffectBank{let law:serde_json::Value=serde_json::from_str(include_str!("bank.json")).unwrap();EffectBank::new(Wallet::from_profile(&law["stock"]))}
@@ -13,3 +14,5 @@ pub fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_
 pub fn kind(failure:&OriginalRetirementFailure)->ValueRefusalKind{failure.primary().expect("original failure keeps a primary refusal").kind}
 /// 🎯️ Grants the exact quote of the selected action under the same copy body the step quotes with.
 pub fn quoted(body:usize,quote:impl Fn(usize)->RetirementDemand)->RetainedCloneGrant{let mut copy=body;for _ in 0..8{let d=quote(copy);let want=body.max(d.copy_bytes);if want==copy{return RetainedCloneGrant{maximum_copy_bytes:copy,..grant(d)}}copy=want}panic!("queue quote did not settle on one copy body")}
+/// 🚗️ Runs one poll-shaped original action under a real producer invocation and debits its work from the finite wallet.
+pub fn drive_poll(bank:&mut EffectBank,grant:RetainedCloneGrant,maximum:u64,call:impl FnMut(&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll)->(RetainedWorkOutcome<RetainedCloneStep,OriginalRetirementFailure>,Option<usize>){semio_framework_value_clone_source_testing::drive::warm();let turn=semio_framework_value_clone_source_testing::drive::drive(grant,maximum,call);bank.debit_work(turn.work);(turn,None)}

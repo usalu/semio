@@ -17,11 +17,10 @@ import { runtimeCommandNameV1 } from "../../../../🧰️framework/🔨️module
 /** 🎭️ Runs acceptance tests only against the server generation prepared and owned by the build tool. */
 export class TestScript extends BundleScript {
   protected selection:readonly string[]=[];
-  protected serviceScope: string | undefined;
   protected reportDirectory="play-e2e";
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Play E2E accepts no compiler or server arguments");
-    const service = playE2eServiceV1(this.repoRoot, this.serviceScope);
+    const service = playE2eServiceV1(this.repoRoot, process.env.SEMIO_TECH_PLAY_SCOPE);
     const root = resolve(this.root, "../.."), sessionRoot = service.root, controller = new AbortController(), signal = AbortSignal.any([this.invocation.control.signal, controller.signal]);
     const session = readServiceSession(sessionRoot, service.owner, playE2eInvocationPid(process.env));
     const interrupt = (): void => { process.exitCode = 130; controller.abort(); }, terminate = (): void => { process.exitCode = 143; controller.abort(); };
@@ -48,9 +47,14 @@ export class TestEnduserScript extends TestScript{
 
 /** 📋️ Exercises Forms through the same isolated live service as the complete acceptance suite. */
 export class TestFormsScript extends TestScript {
- protected override serviceScope="forms";
  protected override selection=["--grep","forms (en-US|de-DE)"];
  protected override reportDirectory="forms";
+}
+
+/** 📕️ Exercises every Standards pane (the norm apps) through an isolated live service of the Standards scope. */
+export class TestStandardsScript extends TestScript {
+ protected override selection=["--grep","boots .+ \\((din4108|din16798|din18599|en199[0-9]|iso16757|vdi3805)\\)"];
+ protected override reportDirectory="standards";
 }
 
 /** 🚀 Verifies the actual release pages with fresh browser contexts and no development server. */
@@ -63,7 +67,7 @@ export class TestReleaseScript extends BundleScript {
       try{
         const output=process.env.SEMIO_TICKET_DIR?join(process.env.SEMIO_TICKET_DIR,"🗑️generated/play-release-e2e"):join(root,"dist/reports/release-e2e");
         console.log(`Verifying published Play at ${service.baseURL}`);
-        const result=await withScriptInvocationSignalV1(this.invocation,pages.control.signal,original=>captureOwnedCommandResultV1(process.execPath,[join(this.repoRoot,"node_modules/playwright/cli.js"),"test","--config",join(root,"🔨️modules/🧪️e2e/🎚️config/🟦️.ts"),"--output",output],this.repoRoot,{control:pages.control,output:readNativeCallerAuthorityV1(this.invocation.capabilities).transport,env:scriptInvocationEnvironment(original,{...process.env,PLAYWRIGHT_BASE_URL:service.baseURL,PLAY_E2E_RELEASE_ORIGINS:JSON.stringify(service.origins),PLAYWRIGHT_BROWSERS_PATH:repoPlaywrightBrowsersPath(this.repoRoot)})}));
+        const result=await withScriptInvocationSignalV1(this.invocation,pages.control.signal,original=>captureOwnedCommandResultV1(process.execPath,[resolve(createRequire(join(root,"package.json")).resolve("playwright/package.json"),"../cli.js"),"test","--config",join(root,"🔨️modules/🧪️e2e/🎚️config/🟦️.ts"),"--output",output],this.repoRoot,{control:pages.control,output:readNativeCallerAuthorityV1(this.invocation.capabilities).transport,env:scriptInvocationEnvironment(original,{...process.env,PLAYWRIGHT_BASE_URL:service.baseURL,PLAY_E2E_RELEASE_ORIGINS:JSON.stringify(service.origins),PLAYWRIGHT_BROWSERS_PATH:repoPlaywrightBrowsersPath(this.repoRoot)})}));
         if(result.stdout)process.stdout.write(result.stdout);if(result.stderr)process.stderr.write(result.stderr);if(result.status!==0||result.signal!==null)throw new Error("Actual published Play acceptance child failed");
       }catch(error){failed=true;throw error;}finally{try{await service.stop();}catch(error){if(!failed)throw error;}}
     });

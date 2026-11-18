@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-ui-border-presentation"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "semio exact shared-edge border ownership matching the language-neutral border presentation vectors"
+
+[package.metadata.semio]
+role = "framework"
+id = "ui-border-presentation"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-job = { path = "../../../../../🧵️job/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = { workspace = true }

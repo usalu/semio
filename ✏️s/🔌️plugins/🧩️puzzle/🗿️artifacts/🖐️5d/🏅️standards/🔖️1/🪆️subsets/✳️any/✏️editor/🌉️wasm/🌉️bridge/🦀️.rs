@@ -122,7 +122,8 @@ impl Puzzle5dArtifactVcs {
     #[wasm_bindgen(js_name = pollEnvelopeLoad)]
     pub fn poll_envelope_load(&self, handle: &Puzzle5dEnvelopeLoadHandle) -> Result<u8, JsValue> {
         let mut app = self.app.borrow_mut();
-        let demand = app.maintenance_retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| fault_bridge::fault_to_js(semio_plugin::Fault::from(error.into_message())))?;
+        let fuel = self.caller.borrow_mut().turn(|cx| cx.fuel_remaining()).map_err(value_to_js)?;
+        let demand = app.maintenance_retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, fuel).map_err(|error| fault_bridge::fault_to_js(semio_plugin::Fault::from(error.into_message())))?;
         let poll = self
             .caller
             .borrow_mut()

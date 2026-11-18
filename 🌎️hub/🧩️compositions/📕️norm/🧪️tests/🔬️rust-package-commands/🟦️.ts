@@ -7,6 +7,12 @@ import { SHIPPED_COMPONENT_MAX_BYTES, SHIPPED_COMPONENT_PROFILE, componentDelive
 
 const NORM_COMPONENT_BUDGET_BYTES = 200 * 1024 * 1024;
 const PLUGIN_OWNER = "✏️s/🔌️plugins/📕️norm";
+/** 📕️ The three plugins that split the fifteen norm families, each with its hub-relative root and shipped component crate. */
+const NORM_PLUGINS = [
+  { id: "norm", root: ".", component: "semio-hub-norm-component" },
+  { id: "norm-eurocode", root: "🧩️extensions/📗️eurocode", component: "semio-hub-norm-eurocode-component" },
+  { id: "norm-eurocode-materials", root: "🧩️extensions/📙️eurocode-materials", component: "semio-hub-norm-eurocode-materials-component" },
+] as const;
 type WasmSection = { readonly id: number; readonly name: string; readonly bytes: number; readonly body: number };
 type NormComponentCensus = { readonly total: number; readonly module: number; readonly name: number; readonly code: number; readonly data: number };
 type MutationLeafSelector = { readonly kind: "id" | "index" | "implied"; readonly key: string | null };
@@ -296,14 +302,21 @@ export function runSurfaceRenderSourceScript(context: Readonly<{ root: string; r
   const testRoot = join(context.root, "..", "..", "🖥️app-surface", "🧪️tests/🧫️fixtures");
   const module = JSON.parse(readFileSync(join(context.repoRoot, PLUGIN_OWNER, "🧬️schema", "🔣️.json"), "utf8")) as { $id: string };
   const fixture = JSON.parse(readFileSync(join(testRoot, "🔣️.json"), "utf8")) as SurfaceFixture;
-  const pluginRoot = readFileSync(join(context.root, "..", "..", "🦀️.rs"), "utf8");
-  if (!pluginRoot.includes('.package_id("semio:norm")')) throw new Error("norm plugin does not declare its exact component package identity");
+  const hubRoot = join(context.root, "..", "..");
+  for (const plugin of NORM_PLUGINS) {
+    const pluginRoot = readFileSync(join(hubRoot, plugin.root, "🦀️.rs"), "utf8");
+    if (!pluginRoot.includes(`.package_id("semio:${plugin.id}")`)) throw new Error(`${plugin.id} plugin does not declare its exact component package identity`);
+  }
   const ajv = new Ajv({ allErrors: true, strict: true });
   ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
   ajv.addSchema(module);
 
-  const manifest = Bun.TOML.parse(readFileSync(join(context.root, "Cargo.toml"), "utf8")) as { package: { metadata: { semio: { playground: { variant: string }[] } } } };
-  const variants = new Set(manifest.package.metadata.semio.playground.map((entry) => entry.variant));
+  const variants = new Set(
+    NORM_PLUGINS.flatMap((plugin) => {
+      const manifest = Bun.TOML.parse(readFileSync(join(hubRoot, plugin.root, "🧩️component/📦️packages/🦀️rust/Cargo.toml"), "utf8")) as { package: { metadata: { semio: { playground: { variant: string }[] } } } };
+      return manifest.package.metadata.semio.playground.map((entry) => entry.variant);
+    }),
+  );
   const artifactRoot = join(context.repoRoot, PLUGIN_OWNER, "🗿️artifacts");
   const appSurface = readFileSync(join(context.repoRoot, PLUGIN_OWNER, "📇️registry", "🧬️contract", "🖥️app-surface", "🦀️.rs"), "utf8");
   const emptyConfig = 'config: semio_framework_schema_registry::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" }';
@@ -344,10 +357,7 @@ export function runSurfaceRenderSourceScript(context: Readonly<{ root: string; r
 
 /** 🏃️ Runs the `ComponentBudgetScript` command under the caller's roots and invocation. */
 export function runComponentBudgetScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>): void {
-  const component = componentDeliverableV1(join(context.root, "../../🧩️component/📦️packages/🦀️rust"), "semio-hub-norm-component", SHIPPED_COMPONENT_PROFILE).wasm;
-  if (!existsSync(component)) throw new Error(`norm's shipped component is absent, so its size cannot be weighed: build it with \`repo run semio-hub-norm-component:component\` (${component})`);
-  const census = componentCoreCensus(readFileSync(component));
-  for (const hostile of [Buffer.from("this is not a wasm artifact"), Buffer.from("\0asm\r\0\0", "latin1")]) {
+  for (const hostile of [Buffer.from("this is not a wasm artifact"), Buffer.from("\0asm\r\0\0", "latin1")]) {
     let refused = false;
     try {
       componentCoreCensus(hostile);
@@ -356,11 +366,16 @@ export function runComponentBudgetScript(context: Readonly<{ root: string; repoR
     }
     if (!refused) throw new Error("the component census accepted an artifact that is not a wasm component");
   }
-  if (census.code === 0 || census.module <= census.code) throw new Error(`norm's component census is not a real module: code=${census.code} module=${census.module}`);
-  if (census.name !== 0) throw new Error(`norm's shipped component carries a ${census.name} B \`name\` custom section: \`[profile.wasm-release] strip = "symbols"\` is not in effect, and without it this plugin does not fit ${SHIPPED_COMPONENT_MAX_BYTES} B`);
-  if (census.total > SHIPPED_COMPONENT_MAX_BYTES) throw new Error(`norm's shipped component is ${census.total} B against the ${SHIPPED_COMPONENT_MAX_BYTES} B admission bound its own describe enforces: it is ${census.total - SHIPPED_COMPONENT_MAX_BYTES} B over`);
-  if (census.total > NORM_COMPONENT_BUDGET_BYTES) throw new Error(`norm's shipped component is ${census.total} B against this plugin's own ${NORM_COMPONENT_BUDGET_BYTES} B budget: ${census.total - NORM_COMPONENT_BUDGET_BYTES} B of headroom is gone and the admission bound is next`);
-  console.log(`Norm shipped component budget met: ${census.total} B total (core module ${census.module} B: code ${census.code} B, data ${census.data} B, name 0 B), ${SHIPPED_COMPONENT_MAX_BYTES - census.total} B under the admission bound, ${NORM_COMPONENT_BUDGET_BYTES - census.total} B under this plugin's own budget, 2 hostile artifacts refused`);
+  for (const plugin of NORM_PLUGINS) {
+    const component = componentDeliverableV1(join(context.root, "../..", plugin.root, "🧩️component/📦️packages/🦀️rust"), plugin.component, SHIPPED_COMPONENT_PROFILE).wasm;
+    if (!existsSync(component)) throw new Error(`${plugin.id}'s shipped component is absent, so its size cannot be weighed: build it with \`repo run ${plugin.component}:component\` (${component})`);
+    const census = componentCoreCensus(readFileSync(component));
+    if (census.code === 0 || census.module <= census.code) throw new Error(`${plugin.id}'s component census is not a real module: code=${census.code} module=${census.module}`);
+    if (census.name !== 0) throw new Error(`${plugin.id}'s shipped component carries a ${census.name} B \`name\` custom section: \`[profile.wasm-release] strip = "symbols"\` is not in effect, and without it this plugin does not fit ${SHIPPED_COMPONENT_MAX_BYTES} B`);
+    if (census.total > SHIPPED_COMPONENT_MAX_BYTES) throw new Error(`${plugin.id}'s shipped component is ${census.total} B against the ${SHIPPED_COMPONENT_MAX_BYTES} B admission bound its own describe enforces: it is ${census.total - SHIPPED_COMPONENT_MAX_BYTES} B over`);
+    if (census.total > NORM_COMPONENT_BUDGET_BYTES) throw new Error(`${plugin.id}'s shipped component is ${census.total} B against this plugin's own ${NORM_COMPONENT_BUDGET_BYTES} B budget: ${census.total - NORM_COMPONENT_BUDGET_BYTES} B of headroom is gone and the admission bound is next`);
+    console.log(`${plugin.id} shipped component budget met: ${census.total} B total (core module ${census.module} B: code ${census.code} B, data ${census.data} B, name 0 B), ${SHIPPED_COMPONENT_MAX_BYTES - census.total} B under the admission bound, ${NORM_COMPONENT_BUDGET_BYTES - census.total} B under this plugin's own budget, 2 hostile artifacts refused`);
+  }
 }
 
 /** 🏃️ Runs the `MutationLeafTaxonomyGenerateScript` command under the caller's roots and invocation. */

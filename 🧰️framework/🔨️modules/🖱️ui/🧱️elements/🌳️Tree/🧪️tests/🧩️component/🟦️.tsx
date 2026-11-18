@@ -208,7 +208,7 @@ describe("Tree focus retention", () => {
     getByRole("button", {name:entry.before}).focus();
     fireEvent.focusOut(getByRole("button", {name:entry.before}), {relatedTarget:null});
     rerender(<Tree sections={sections(entry.parent,entry.after,"convert-line")} />);
-    await waitFor(() => expect(document.activeElement).toBe(getByRole("button", {name:entry.parent})));
+    await waitFor(() => expect(document.activeElement).toBe(getByRole("button", {name:entry.parent}).closest("[role=treeitem]")));
     unmount();
   });
 
@@ -1004,3 +1004,18 @@ describe("Tree empty state reading direction", () => {
   });
 });
 // #endregion 🈳️EmptyStateDirection
+
+describe("Tree shared-border consolidation", () => {
+  it("stacks file cards without margin or padding around framed content and renders row actions as direct cells", () => {
+    const view = render(<><Tree.Files title="Files" nodes={[{ name: "a.ts", path: "a.ts", type: "file" } as never]} /><Tree.Files title="More" nodes={[]} /></>);
+    const cards = [...view.container.querySelectorAll<HTMLElement>('[data-slot="tree-files"]')];
+    expect(cards).toHaveLength(2);
+    for (const card of cards) expect(card.className).not.toMatch(/(^|\s)(my|mt|mb|p|rounded)-/);
+    view.unmount();
+    const actions = render(<Tree sections={[{ id: "rows", label: "Rows", actions: [{ icon: <span aria-hidden="true" />, text: "Edit", onClick: () => {} }, { icon: <span aria-hidden="true" />, text: "Drop", onClick: () => {} }], items: [] }]} />);
+    const group = actions.container.querySelector<HTMLElement>('[data-slot="tree-header-actions"]')!;
+    expect(group.hasAttribute("data-shared-border-cells")).toBe(true);
+    expect(group.className).not.toMatch(/\bgap-/);
+    expect(group.querySelectorAll(":scope > [data-shared-border-frame]")).toHaveLength(2);
+  });
+});

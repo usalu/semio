@@ -19,7 +19,7 @@ test("The door labels its request with the target it builds, and the farm labels
  const directory=fresh();
  const label=await withBuildCapacityV1(["run","@teaching/architecture-course:build","--parallel=2"],{SEMIO_HOST_CAPACITY_DIRECTORY:directory,LANG:"en_US.UTF-8"},async granted=>rows(directory,"grants").find(grant=>grant.id===granted.handle!.id)?.label,{directory,policy,strip:(args:readonly string[])=>args,tool:"bazel",sample:async()=>({host:host(14000),swappedOutMegabytes:0}),observe:async()=>500,write:()=>undefined,exitCode:()=>0});
  expect(label).toBe("@teaching/architecture-course:build");
- const farm=requestBuildFarmCapacityV1({preferredJobs:2,environment:{SEMIO_HOST_CAPACITY_DIRECTORY:directory,LANG:"en_US.UTF-8"},directory,policy,write:()=>undefined,sample:async()=>({host:host(3000),swappedOutMegabytes:0})});
+ const farm=requestBuildFarmCapacityV1({preferredJobs:2,environment:{SEMIO_HOST_CAPACITY_DIRECTORY:directory,LANG:"en_US.UTF-8"},directory,policy,write:()=>undefined,sample:async()=>({host:host(300),swappedOutMegabytes:0})});
  await sleep(80);
  expect(rows(directory,"queue").map(waiter=>waiter.request.label)).toEqual(["graph-farm"]);
  farm.release();await farm.granted;

@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:graph:inference:project-nodes:take:v1",
+  "title": "Taking owner records the fleet already holds",
+  "description": "EN: A reader that has owners to infer first looks every one of them up, in one batch and in parallel, in its local store and in the fleet cache (existence by key, then the documents of the hits), takes what holds in its own tree, and only then schedules what is missing: it infers those in its own children and publishes them as a wave that every machine's pool pulls, while it keeps looking in the cache with a growing pause and takes a record the moment it appears. A fleet record that is there but does not hold in the reader's tree is counted as stale, never as present. A look that the cache did not answer (a fault) is repeated a few times before the owner counts as missing; it never turns an owner into a local inference by itself. The whole pass is bounded (`passBoundMilliseconds`), fails open (a pass that fails leaves every owner to the normal path) and `SEMIO_GRAPH_TAKE=off` skips it. DE: Ein Leser, der Projekte abzuleiten hat, schlägt zuerst alle in einem Stapel und parallel in seinem lokalen Speicher und im Flottenspeicher nach (Existenz nach Schlüssel, dann die Dokumente der Treffer), übernimmt, was in seinem eigenen Baum gilt, und plant erst dann, was fehlt: Das leitet er in eigenen Kindprozessen ab und veröffentlicht es als Welle, die der Pool jeder Maschine abholt, und schaut dabei mit wachsender Pause weiter in den Speicher und übernimmt einen Eintrag, sobald er erscheint. Ein Flotteneintrag, der da ist, aber im Baum des Lesers nicht gilt, zählt als veraltet, nie als vorhanden. Ein Blick, den der Speicher nicht beantwortet hat (Störung), wird einige Male wiederholt, bevor das Projekt als fehlend zählt; er macht nie von sich aus eine lokale Ableitung daraus. Der ganze Durchgang ist begrenzt (`passBoundMilliseconds`), versagt offen (ein gescheiterter Durchgang überlässt jedes Projekt dem normalen Weg) und `SEMIO_GRAPH_TAKE=off` überspringt ihn.",
+  "definitions": {
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["concurrency", "pollFirstMilliseconds", "pollGrowthPercent", "pollMaximumMilliseconds", "pollBatch", "faultRetries", "faultWaitMilliseconds", "progressMilliseconds", "passBoundMilliseconds", "releaseMilliseconds", "noProgressMilliseconds", "tailReportMilliseconds", "watchMilliseconds", "strongMemoryMegabytes", "strongCores", "cpuProgressPercent"],
+      "properties": {
+        "concurrency": { "type": "integer", "minimum": 1 },
+        "pollFirstMilliseconds": { "type": "integer", "minimum": 1 },
+        "pollGrowthPercent": { "type": "integer", "minimum": 100 },
+        "pollMaximumMilliseconds": { "type": "integer", "minimum": 1 },
+        "pollBatch": { "type": "integer", "minimum": 1 },
+        "faultRetries": { "type": "integer", "minimum": 0 },
+        "faultWaitMilliseconds": { "type": "integer", "minimum": 0 },
+        "progressMilliseconds": { "type": "integer", "minimum": 1 },
+        "passBoundMilliseconds": { "type": "integer", "minimum": 1 },
+        "releaseMilliseconds": { "type": "integer", "minimum": 1 },
+        "noProgressMilliseconds": { "type": "integer", "minimum": 1 },
+        "tailReportMilliseconds": { "type": "integer", "minimum": 1 },
+        "watchMilliseconds": { "type": "integer", "minimum": 1 },
+        "strongMemoryMegabytes": { "type": "integer", "minimum": 1 },
+        "strongCores": { "type": "integer", "minimum": 1 },
+        "cpuProgressPercent": { "type": "integer", "minimum": 1, "maximum": 100 }
+      },
+      "const": { "concurrency": 12, "pollFirstMilliseconds": 2000, "pollGrowthPercent": 150, "pollMaximumMilliseconds": 20000, "pollBatch": 48, "faultRetries": 3, "faultWaitMilliseconds": 4000, "progressMilliseconds": 10000, "passBoundMilliseconds": 900000, "releaseMilliseconds": 30000, "noProgressMilliseconds": 300000, "tailReportMilliseconds": 60000, "watchMilliseconds": 10000, "strongMemoryMegabytes": 24576, "strongCores": 8, "cpuProgressPercent": 10 }
+    },
+    "Outcome": { "enum": ["present", "fetched", "stale", "miss", "fault", "inferred"] },
+    "Texts": {
+      "const": {
+        "en": { "progress": "owners {done} of {total} done: {present} present, {fetched} fetched from the fleet, {here} inferred here ({running} running), {wanted} wanted from the fleet, {stale} stale in the fleet", "noProgress": "no owner made progress for {minutes} minutes ({done} of {total} owners done). Running: {running}. Waiting on: {waiting}. The read stops instead of blocking every other read of this machine; run the command again when memory or the fleet is free", "wave": "owners: {missing} to infer here or by the fleet, {wanted} published as wanted for every machine of the fleet", "tail": "no owner arrived for {minutes} minutes ({done} of {total} owners done); {count} still missing: {groups}", "tailHeavy": "{count} too large for this machine ({names}; the largest needs {megabytes} MB, one owner gets {limit} MB here, so only a larger machine of the fleet can infer them)", "tailRunning": "{count} running here ({names})", "tailParked": "{count} parked until memory is free ({names})", "tailFleet": "{count} waiting for the fleet, which has not stored them yet ({names})", "tailMore": "and {count} more", "tailPool": "The pool of this machine is {state} with {children} children, {running} owners running, {rate} owners per minute: {reason}" },
+        "de": { "progress": "Projekte {done} von {total} fertig: {present} vorhanden, {fetched} aus der Flotte geholt, {here} hier abgeleitet ({running} laufen), {wanted} von der Flotte erwartet, {stale} in der Flotte veraltet", "noProgress": "kein Projekt kam {minutes} Minuten voran ({done} von {total} Projekten fertig). Es laufen: {running}. Es wartet auf: {waiting}. Das Lesen bricht ab, statt jedes andere Lesen dieses Rechners zu blockieren; führe den Befehl erneut aus, sobald Speicher oder Flotte frei sind", "wave": "Projekte: {missing} hier oder von der Flotte abzuleiten, {wanted} als gewünscht für jede Maschine der Flotte veröffentlicht", "tail": "kein Projekt kam {minutes} Minuten an ({done} von {total} Projekten fertig); {count} fehlen noch: {groups}", "tailHeavy": "{count} zu groß für diese Maschine ({names}; das größte braucht {megabytes} MB, ein Projekt bekommt hier {limit} MB, also kann nur eine größere Maschine der Flotte sie ableiten)", "tailRunning": "{count} laufen hier ({names})", "tailParked": "{count} geparkt, bis Speicher frei ist ({names})", "tailFleet": "{count} wartet auf die Flotte, die sie noch nicht gespeichert hat ({names})", "tailMore": "und {count} weitere", "tailPool": "Der Pool dieser Maschine ist {state} mit {children} Kindprozessen, {running} Projekten in Arbeit, {rate} Projekten pro Minute: {reason}" }
+      }
+    }
+  }
+}

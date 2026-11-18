@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {mkdir,rename,rm,writeFile} from "node:fs/promises";
 import {readFileSync} from "node:fs";
 import {dirname,join} from "node:path";
@@ -8,7 +9,7 @@ const BASE=/^http:\/\/[A-Za-z0-9.\-[\]:]+$|^https:\/\/[A-Za-z0-9.\-[\]:]+$/u,PRO
 /** 🪞️ What the last probe of the group server's mirror found; machine-local, never replicated. */
 export type FleetMirrorStateV1=Readonly<{version:1;checkedAtMs:number;base:string;healthy:boolean}>;
 
-const statePath=(root:string)=>join(root,".cache","f","mirror-state.json");
+const statePath=(root:string)=>machinePathV1(root,".cache","f","mirror-state.json");
 
 /** 🔭️ The mirror base this machine may use right now: the last probe found it healthy within five minutes, `SEMIO_FLEET_MIRROR` is not `off`. Synchronous and local, so an environment builder can call it. */
 export function fleetMirrorBaseV1(ambient:Readonly<Record<string,string|undefined>>=process.env,now:number=Date.now()):string|undefined{

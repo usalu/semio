@@ -282,11 +282,10 @@ fn describe_budget() -> semio_framework::kernel::Budget {
 }
 
 /// 🛡️ Ceiling for the one artifact the emitter reads: a `wasm32-wasip2` component built either as the
-/// shipped `wasm-release` bytes (additionally bounded at 256 MiB by `SHIPPED_COMPONENT_MAX_BYTES` before
-/// they reach a receipt) or as the local-only `wasm-prototype` bytes of the single plugin being edited,
-/// whose unoptimized, unstripped link may reach this 512 MiB cap (`ITERATE_COMPONENT_MAX_BYTES` in
-/// `🏗️component-build/🟦️.ts`). It is deliberately NOT the runtime ceiling a served component meets.
-pub const DESCRIBE_ARTIFACT_MAX_BYTES: u64 = 512 * 1024 * 1024;
+/// shipped `wasm-release` bytes (bounded at 1 GiB by `SHIPPED_COMPONENT_MAX_BYTES`) or as the local-only
+/// `wasm-prototype` bytes of the single plugin being edited (bounded at 512 MiB by `ITERATE_COMPONENT_MAX_BYTES`):
+/// the larger of the two profile bounds. It is deliberately NOT the runtime ceiling a served component meets.
+pub const DESCRIBE_ARTIFACT_MAX_BYTES: u64 = 1024 * 1024 * 1024;
 
 /// 🧱 Fixed-size IO keeps hashing and publication memory/work bounded and observable.
 pub const DESCRIBE_IO_CHUNK_BYTES: usize = 64 * 1024;

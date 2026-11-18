@@ -6,8 +6,9 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { Button } from "@semio-tech/ui-react";
+import { Button, SharedBorderRow, SharedBorderRowCell } from "@semio-tech/ui-react";
 import type { AdminRecordedConnectionV1 } from "@semio-tech/framework-os";
+import { AdminNote, AdminPage } from "../📄️AdminPage/🟦️.tsx";
 import { useAdminT } from "../📚️I18n/🟦️.tsx";
 import { useAdminSession } from "../🔑️AdminSession/🟦️.tsx";
 // #endregion 🔌️Adapters
@@ -72,42 +73,48 @@ export function ConnectionsPage(): React.ReactElement {
   const isEmpty = connections.size === 0;
 
   return (
-    <div className="flex h-full w-full flex-col gap-single overflow-auto p-single">
-      <div className="flex items-center gap-single">
-        <h1 className="text-lg font-semibold text-emphasized">{t("admin.connections.title")}</h1>
-        <span className={`text-xs ${fresh ? "text-emphasized" : "text-muted-foreground"}`} role="status" data-slot="admin-connections-freshness">
+    <AdminPage
+      title={t("admin.connections.title")}
+      data-slot="admin-connections"
+      actions={
+        <SharedBorderRowCell className={`text-xs ${fresh ? "text-emphasized" : "text-muted-foreground"}`} role="status" data-slot="admin-connections-freshness">
           {fresh ? t("admin.connections.fresh") : t("admin.connections.stale")}
-        </span>
-      </div>
+        </SharedBorderRowCell>
+      }
+    >
       {isEmpty ? (
-        <p className="text-sm text-muted-foreground">{t("admin.connections.empty")}</p>
+        <AdminNote>{t("admin.connections.empty")}</AdminNote>
       ) : (
-        [...grouped.entries()].map(([spaceId, byDocument]) => (
-          <div key={spaceId} className="flex flex-col gap-single rounded border p-single">
-            <h2 className="text-sm font-semibold text-emphasized">
-              {t("admin.connections.space")}: {spaceId}
-            </h2>
-            {[...byDocument.entries()].map(([documentId, rows]) => (
-              <div key={documentId} className="ml-single flex flex-col gap-single">
-                <h3 className="text-sm text-emphasized">
-                  {t("admin.connections.document")}: {documentId}
-                </h3>
-                <div className="ml-single flex flex-col gap-single">
+        <SharedBorderRow orientation="vertical" edges={["bottom"]} data-slot="admin-connections-list">
+          {[...grouped.entries()].map(([spaceId, byDocument]) => (
+            <SharedBorderRow key={spaceId} orientation="vertical" data-slot="admin-connections-space">
+              <SharedBorderRowCell as="div" className="bg-muted/30">
+                <h2 className="text-sm font-semibold text-emphasized">
+                  {t("admin.connections.space")}: {spaceId}
+                </h2>
+              </SharedBorderRowCell>
+              {[...byDocument.entries()].map(([documentId, rows]) => (
+                <SharedBorderRow key={documentId} orientation="vertical" data-slot="admin-connections-document">
+                  <SharedBorderRowCell className="ps-double">
+                    <h3 className="text-sm text-emphasized">
+                      {t("admin.connections.document")}: {documentId}
+                    </h3>
+                  </SharedBorderRowCell>
                   {rows.map((row) => (
-                    <div key={row.syncSessionId} className="ml-single flex items-center justify-between gap-single text-sm" data-row-id={`connection:${row.syncSessionId}`}>
-                      <span>
+                    <SharedBorderRow key={row.syncSessionId} data-row-id={`connection:${row.syncSessionId}`}>
+                      <SharedBorderRowCell className="flex-1 ps-[calc(var(--spacing-double)*2)] text-sm">
                         {row.email ?? row.authenticatedUserId ?? "—"}
                         {row.role ? ` · ${row.role}` : ""}
-                      </span>
+                      </SharedBorderRowCell>
                       <Button id={`admin-connection-kick-${row.syncSessionId}`} icon="x" text={t("admin.connections.kick")} variant="ghost" onClick={() => client.closeConnection(row.syncSessionId)} />
-                    </div>
+                    </SharedBorderRow>
                   ))}
-                  </div>
-              </div>
-            ))}
-          </div>
-        ))
+                </SharedBorderRow>
+              ))}
+            </SharedBorderRow>
+          ))}
+        </SharedBorderRow>
       )}
-    </div>
+    </AdminPage>
   );
 }

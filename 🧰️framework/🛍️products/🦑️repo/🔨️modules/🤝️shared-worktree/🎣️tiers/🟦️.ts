@@ -130,7 +130,7 @@ export function parseHookInputV1(text:string):readonly string[]{
 /** 🔥 The hot set: the paths that were published, applied, hinted or seen by the watcher recently, newest last. A path is kept until `ttlMilliseconds` after its latest note, the oldest are dropped beyond `limit`. */
 export class HotSetV1{
  private readonly stamps=new Map<string,number>();
- constructor(readonly limit:number=20_000,readonly ttlMilliseconds:number=600_000){}
+ readonly limit:number; readonly ttlMilliseconds:number; constructor(limit:number=20_000,ttlMilliseconds:number=600_000){this.limit=limit;this.ttlMilliseconds=ttlMilliseconds;}
  get size():number{return this.stamps.size;}
  note(path:string,now:number):void{
   this.stamps.delete(path);this.stamps.set(path,now);
@@ -155,7 +155,7 @@ export class DirectoryTableV1{
  private stale=0;
  private readonly near=new Set<number>();
  size=0;
- constructor(readonly book:PathBookV1){}
+ readonly book:PathBookV1; constructor(book:PathBookV1){this.book=book;}
  private widen(id:number):void{
   if(id<this.mtime.length)return;
   const size=Math.max(id+1,this.mtime.length*2),mtime=new Float64Array(size),present=new Uint8Array(size),listed=new Uint8Array(size);
@@ -229,7 +229,7 @@ export class LatencyV1{
  private readonly publishes:{at:number;ms:number}[]=[];
  private readonly applies:{at:number;ms:number}[]=[];
  readonly tiers=new TierClocksV1();
- constructor(readonly capacity:number=100,readonly windowMilliseconds:number=600_000,readonly retainMilliseconds:number=3_600_000,readonly now:()=>number=Date.now){}
+ readonly capacity:number; readonly windowMilliseconds:number; readonly retainMilliseconds:number; readonly now:()=>number; constructor(capacity:number=100,windowMilliseconds:number=600_000,retainMilliseconds:number=3_600_000,now:()=>number=Date.now){this.capacity=capacity;this.windowMilliseconds=windowMilliseconds;this.retainMilliseconds=retainMilliseconds;this.now=now;}
  private record(list:{at:number;ms:number}[],milliseconds:number):void{
   if(!Number.isFinite(milliseconds)||milliseconds>this.windowMilliseconds||milliseconds<-this.windowMilliseconds)return;
   list.push({at:this.now(),ms:Math.max(0,Math.round(milliseconds))});

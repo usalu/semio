@@ -1,0 +1,205 @@
+## /run/user/1000/semio-repo/1000/host-1b5c41ca27f2.log
+2026-11-15T21:12:30.185Z access-proof version=3 root=/home/deck/semio protected=no sample=ok reproof=off route=direct pid=1713245 ppid=1713205
+## last 30 lines
+[repo] still working after 9140 s; last phase started: source.served
+[repository:command] still running after 9140 s
+[repository:command] still running after 9150 s
+[repository:command] still running after 9160 s
+[repo] still working after 9170 s; last phase started: source.served
+[repository:command] still running after 9170 s
+[repository:command] still running after 9180 s
+[repository:command] still running after 9190 s
+[repo] still working after 9200 s; last phase started: source.served
+[repository:command] still running after 9200 s
+[repository:command] still running after 9210 s
+[repository:command] still running after 9220 s
+[repo] still working after 9230 s; last phase started: source.served
+[repository:command] still running after 9230 s
+[repository:command] still running after 9240 s
+[repository:command] still running after 9250 s
+[repo] still working after 9260 s; last phase started: source.served
+[repository:command] still running after 9260 s
+[repository:command] still running after 9270 s
+[repository:command] still running after 9280 s
+[repo] still working after 9290 s; last phase started: source.served
+[repository:command] still running after 9290 s
+[repository:command] still running after 9300 s
+[repository:command] still running after 9310 s
+[repo] still working after 9320 s; last phase started: source.served
+2026-11-15T23:47:32.005Z shutdown superseded
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"resource-retirement-inventory:128","mode":"shared","elapsedMs":14}}
+[repository:command] still running after 9320 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"claim-retirement-scan:128","mode":"exclusive","elapsedMs":153}}
+[script] {"owner":"repository:build","command":"repo","stage":"complete"}
+## /run/user/1000/semio-repo/1000/host-9a98371c2d16.log
+2026-11-15T16:57:30.903Z access-proof version=3 root=/home/deck/semio protected=no sample=ok reproof=off route=direct pid=1093735 ppid=1093364
+graph: No verified change journal cursor is recorded for generation 389; verifying the tree once.
+graph: memory readings: machine 15848 MB (physical 15848 MB, cgroup limit none), available 8254 MB
+graph: 703 stale projects, 0 taken from the fleet, 57 too heavy for this machine (@semio-tech/s-dev-composition (about 22978 MB), semio-repo-test-host (about 20870 MB), workspace (about 20750 MB), @semio-tech/framework-rs (about 18346 MB), repo-storybook (about 15458 MB), @semio-tech/repo-test-runner-go (about 14784 MB), and 51 more; it can give about 3298 MB per project), it can infer 192 of the others (48 per wave); asking the fleet for 703
+graph: inferring 646 light projects here while the fleet works, continuously and lightest first (the server works heaviest first); what the fleet delivers meanwhile is taken and dropped here
+graph: 0 of 703 projects arrived from the fleet, 0 inferred here, 703 left
+graph: preparing 646 of the 646 open stale projects (1 compute slots), 0 of 646 already prepared
+graph: plan stage inference starts (managed 1164 MB, resident 1586 MB)
+graph: inferring 642 projects in this process (memory)
+graph: 0 of 703 projects arrived from the fleet, 0 inferred here, 703 left; the server last progressed 474 s ago, estimated time left: about 36 min
+graph: waiting for memory headroom (580 of 739 MB reserved, 2 projects running): semio-framework-value-original-vector needs 516 MB and has waited 0 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (1549 of 2256 MB reserved, 3 projects running): repo-artifact-reader needs 744 MB and has waited 0 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (826 of 1635 MB reserved, 1 projects running): @semio-tech/repo-test-domain needs 1736 MB and has waited 0 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: headroom of 793 MB is below one project (1736 MB), inferring one project at a time
+graph: waiting for memory headroom (1736 of 1107 MB reserved, 1 projects running): @semio-tech/repo-test needs 1736 MB and has waited 5 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: project @semio-tech/repo-test-domain (project) grew by 1702 MB, more than the 1024 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: waiting for memory headroom (1736 of 647 MB reserved, 1 projects running): @semio-tech/repo-statutes-go needs 1736 MB and has waited 0 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: plan stage inference settled from 6464 to 7400 MB
+graph: asking the host for up to 2 worker processes for 641 projects; the projects wait for them
+graph: inferring projects with 1 worker processes (1536 MB each)
+graph: plan stage inference took 18.1 s (managed 1510 MB, 356 MB more than at its start, resident 1806 MB)
+graph: preparing the stale projects failed (invalid build.closure.provider-generated-import {"port":"typescript-package-index","targets":"@semio-tech/ui-rs:generate"}); the refresh computes them itself
+graph: the fleet did not deliver 58 too heavy project(s) (@semio-tech/s-dev-composition (about 22958 MB), semio-repo-test-host (about 20852 MB), workspace (about 20732 MB), @semio-tech/framework-rs (about 18330 MB), repo-storybook (about 15446 MB), @semio-tech/repo-test-runner-go (about 14770 MB), and 52 more); this machine infers them itself, one at a time and alone after the others, each with up to about 8000 MB
+graph: refreshing 703 projects (generation 390)
+graph: 1058 stale facts (analysis 650, file 307, readdir 95, digest 4, readdirNames 1, stamp 1) leave 703 projects stale
+graph: test-s-plugins-norm-4e115d is stale: the workspace file ✏️s/🔌️plugins/📕️norm/🧪️tests/🌐️browser/📋️arguments/🟦️.ts was added
+graph: test-s-plugins-norm-4e115d is stale: the workspace file ✏️s/🔌️plugins/📕️norm/🧪️tests/🌐️browser/🟦️.ts was added
+graph: test-s-plugins-norm-4e115d is stale: the workspace file ✏️s/🔌️plugins/📕️norm/🧪️tests/🌐️browser/🧪️tests/🟦️.ts was added
+graph: test-s-plugins-norm-4e115d is stale: the workspace file ✏️s/🔌️plugins/📕️norm/🧪️tests/🌐️browser/🧭️journey/🟦️.ts was added
+graph: workspace is stale: the workspace file 🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/🎚️model-controls/🟦️.tsx was added
+graph: workspace is stale: the workspace file 🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/🎚️model-controls/🥒️.feature was added
+graph: workspace is stale: the workspace file 🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/📤️export/🗿️model/🏷️names/🟦️.ts was added
+graph: workspace is stale: the workspace file 🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/📤️export/🗿️model/🧩️scenes/🟦️.ts was added
+graph: workspace is stale: the workspace file 🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🧊️volumes-next-a/🌓️silhouette/🟦️.ts was added
+graph: workspace is stale: the workspace file 🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🧊️volumes-next-a/🟦️.ts was added
+graph: workspace is stale: the workspace file 🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🧊️volumes-next-a/🧮️measures/🟦️.ts was added
+graph: workspace is stale: the workspace file 🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🧊️volumes-next-a/🧱️lists/🟦️.ts was added
+graph: workspace is stale: the workspace file 🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🧊️volumes-next-a/🧱️rules/🟦️.ts was added
+graph: workspace is stale: the workspace file 🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🧊️volumes/🌓️silhouette/🟦️.ts was added
+graph: workspace is stale: the workspace file 🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🧊️volumes/🟦️.ts was added
+graph: workspace is stale: the workspace file 🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🧊️volumes/🧮️measures/🟦️.ts was added
+graph: 1058 more stale inputs are not listed
+2026-11-15T18:46:07.311Z request-failed 7e3ceb77 RepoError: invalid build.closure.provider-generated-import {"port":"typescript-package-index","targets":"@semio-tech/ui-rs:generate"}
+graph: plan answered, managed 109 MB, resident 205 MB (released 16 MB)
+## last 30 lines
+[repository:command] still running after 8760 s
+[repository:command] still running after 8770 s
+[repo] still working after 8780 s; last phase started: source.served
+[repository:command] still running after 8780 s
+[repository:command] still running after 8790 s
+[repository:command] still running after 8800 s
+[repo] still working after 8810 s; last phase started: source.served
+[repository:command] still running after 8810 s
+[repository:command] still running after 8820 s
+[repository:command] still running after 8830 s
+[repo] still working after 8840 s; last phase started: source.served
+[repository:command] still running after 8840 s
+[repository:command] still running after 8850 s
+[repository:command] still running after 8860 s
+[repo] still working after 8870 s; last phase started: source.served
+[repository:command] still running after 8870 s
+[repository:command] still running after 8880 s
+[repository:command] still running after 8890 s
+[repo] still working after 8900 s; last phase started: source.served
+[repository:command] still running after 8900 s
+[repository:command] still running after 8910 s
+[repository:command] still running after 8920 s
+[repo] still working after 8930 s; last phase started: source.served
+[repository:command] still running after 8930 s
+[repository:command] still running after 8940 s
+[repository:command] still running after 8950 s
+2026-11-15T19:26:36.918Z shutdown superseded
+[repo] still working after 8960 s; last phase started: source.served
+[repository:command] still running after 8960 s
+[script] {"owner":"repository:build","command":"repo","stage":"complete"}
+## /run/user/1000/semio-repo/1000/host-aa575684c4f7.log
+2026-11-15T19:25:35.670Z access-proof version=3 root=/home/deck/semio protected=no sample=ok reproof=off route=direct pid=1445613 ppid=1445542
+graph: No verified change journal cursor is recorded for generation 389; verifying the tree once.
+graph: plan stage verification settled from 6369 to 4108 MB
+graph: memory readings: machine 15848 MB (physical 15848 MB, cgroup limit none), available 6479 MB
+graph: 703 stale projects, 0 taken from the fleet, 43 too heavy for this machine (@semio-tech/framework-time-travel-rs (about 23820 MB), semio-repo-test-host (about 20236 MB), repo-storybook (about 14990 MB), @semio-tech/component-deployment-contract (about 13744 MB), @semio-tech/repo-test-dotnet (about 13402 MB), @semio-tech/framework-artifact-reference-rs (about 11796 MB), and 37 more; it can give about 3298 MB per project), it can infer 192 of the others (48 per wave); asking the fleet for 703
+graph: inferring 660 light projects here while the fleet works, continuously and lightest first (the server works heaviest first); what the fleet delivers meanwhile is taken and dropped here
+graph: 0 of 703 projects arrived from the fleet, 0 inferred here, 703 left
+graph: preparing 660 of the 660 open stale projects (1 compute slots), 0 of 660 already prepared
+graph: plan stage inference starts (managed 3257 MB, resident 3252 MB)
+graph: 0 of 703 projects arrived from the fleet, 0 inferred here, 703 left; the server last progressed 5 s ago, estimated time left: about 40 min
+graph: inferring 656 projects in this process (memory)
+graph: headroom of -215 MB is below one project (2048 MB), inferring one project at a time
+graph: project repo-mcp (project) grew by 3298 MB, more than the 1024 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: project @semio-tech/value-rs (language:cargo) grew by 2717 MB, more than the 1024 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: project @semio-tech/repo-tree-go (project) grew by 1922 MB, more than the 1024 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: project @semio-tech/repo-tickets-go (project) grew by 1614 MB, more than the 1024 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: project @semio-tech/repo-metrics-go (project) grew by 1475 MB, more than the 1024 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: project @semio-tech/repo-identity-go (project) grew by 1380 MB, more than the 1024 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: plan stage inference (during inference) grew the plan by 3216 MB, more than the 2567 MB this machine allows for it; it is stopped before the host runs short of memory
+graph: plan stop detail {"stage":"inference","operation":"inference","memory":{"rss":5543,"heapTotal":1071,"heapUsed":3724,"external":2750,"arrayBuffers":221},"heap":{"heapMb":3723.8,"extraMb":2749.5,"objectCount":20395669,"objectTypes":[{"type":"string","count":11160528},{"type":"Object","count":5789243},{"type":"Array","count":1397526},{"type":"Cell Butterfly","count":170747},{"type":"Set","count":166398},{"type":"WeakRef","count":156242},{"type":"Structure","count":41674},{"type":"Uint32Array","count":33083}]},"resources":{},"recent":[{"atMs":7236264,"heapUsed":2556,"external":1706,"arrayBuffers":222,"rss":3807,"operation":"inference/inference"},{"atMs":7236661,"heapUsed":2556,"external":1706,"arrayBuffers":222,"rss":3807,"operation":"inference/inference"},{"atMs":7237834,"heapUsed":2556,"external":1706,"arrayBuffers":222,"rss":3808,"operation":"inference/inference"},{"atMs":7238305,"heapUsed":2556,"external":1706,"arrayBuffers":222,"rss":3807,"operation":"inference/inference"},{"atMs":7238559,"heapUsed":2556,"external":1706,"arrayBuffers":222,"rss":3807,"operation":"inference/inference"},{"atMs":7238809,"heapUsed":2556,"external":1706,"arrayBuffers":222,"rss":3807,"operation":"inference/inference"},{"atMs":7239928,"heapUsed":2556,"external":1706,"arrayBuffers":222,"rss":3807,"operation":"inference/inference"},{"atMs":7240387,"heapUsed":2556,"external":1706,"arrayBuffers":222,"rss":3807,"operation":"inference/inference"},{"atMs":7240640,"heapUsed":2556,"external":1706,"arr
+graph: project @semio-tech/repo-hooks-go (project) grew by 3349 MB, more than the 1024 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: 33 projects taken from the fleet with 0 closure entries, 23 of them did not hold here and were inferred again, 0 not shared, 17 inferred here
+graph: project @semio-tech/replication-error-rs (language:rust) grew by 1035 MB, more than the 1024 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: headroom of 1841 MB again (1522 MB taken), resuming
+graph: project @semio-tech/replication-crypto-rs (language:rust) grew by 1566 MB, more than the 1024 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: project @semio-tech/print (project) grew by 1090 MB, more than the 1024 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: 1 of 703 projects arrived from the fleet, 59 inferred here, 643 left; the server last progressed 5 s ago, estimated time left: about 511 h 3 min
+graph: project @semio-tech/plugin-result-page-rs (language:rust) grew by 1495 MB, more than the 1024 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: headroom of 323 MB is below one project (2048 MB), inferring one project at a time
+graph: 0 of 703 projects arrived from the fleet, 82 inferred here, 621 left; the server last progressed 9 s ago, estimated time left: unknown
+graph: plan answered, managed 112 MB, resident 221 MB (released 31 MB)
+## last 30 lines
+[repository:command] still running after 16141 s
+[repository:command] still running after 16151 s
+[repo] still working after 16160 s; last phase started: source.served
+[repository:command] still running after 16161 s
+[repository:command] still running after 16171 s
+[repository:command] still running after 16181 s
+[repo] still working after 16190 s; last phase started: source.served
+[repository:command] still running after 16191 s
+[repository:command] still running after 16201 s
+[repository:command] still running after 16211 s
+[repo] still working after 16220 s; last phase started: source.served
+[repository:command] still running after 16221 s
+[repository:command] still running after 16231 s
+[repository:command] still running after 16241 s
+[repo] still working after 16250 s; last phase started: source.served
+[repository:command] still running after 16251 s
+[repository:command] still running after 16261 s
+[repository:command] still running after 16271 s
+[repo] still working after 16280 s; last phase started: source.served
+[repository:command] still running after 16281 s
+[repository:command] still running after 16291 s
+[repository:command] still running after 16301 s
+[repo] still working after 16310 s; last phase started: source.served
+[repository:command] still running after 16311 s
+[repository:command] still running after 16321 s
+[repository:command] still running after 16331 s
+2026-11-15T23:57:35.117Z graph-plan-too-heavy {"stage":"inference","operation":"inference","megabytes":6344,"limit":6339,"available":1615,"reserve":2048,"reason":"pressure","worker":{"heapMb":2504,"extraMb":1613.2,"objectCount":18268599,"objectTypes":[{"type":"string","count":10171159},{"type":"Object","count":5068949},{"type":"Array","count":1173760},{"type":"WeakRef","count":169807},{"type":"Set","count":168327},{"type":"Cell Butterfly","count":112169},{"type":"Structure","count":44645},{"type":"Uint32Array","count":34034}],"at":1794786708208}}
+graph: plan answered, managed 112 MB, resident 221 MB (released 31 MB)
+2026-11-15T23:57:37.017Z shutdown superseded
+[repo] still working after 16340 s; last phase started: source.served
+## /run/user/1000/semio-repo/1000/host-ddc08c637440.log
+2026-11-15T23:46:27.635Z access-proof version=3 root=/home/deck/semio protected=no sample=ok reproof=off route=direct pid=2106240 ppid=2106215
+## last 30 lines
+[repository:command] still running after 470 s
+[repository:command] still running after 480 s
+[repository:command] still running after 490 s
+[repo] still working after 500 s; last phase started: source.served
+[repository:command] still running after 500 s
+[repository:command] still running after 510 s
+[repository:command] still running after 520 s
+[repo] still working after 530 s; last phase started: source.served
+[repository:command] still running after 530 s
+[repository:command] still running after 540 s
+[repository:command] still running after 550 s
+[repo] still working after 560 s; last phase started: source.served
+[repository:command] still running after 560 s
+[repository:command] still running after 570 s
+[repository:command] still running after 580 s
+[repo] still working after 590 s; last phase started: source.served
+[repository:command] still running after 590 s
+[repository:command] still running after 600 s
+[repository:command] still running after 610 s
+[repo] still working after 620 s; last phase started: source.served
+[repository:command] still running after 620 s
+[repository:command] still running after 630 s
+[repository:command] still running after 640 s
+[repo] still working after 650 s; last phase started: source.served
+[repository:command] still running after 650 s
+[repository:command] still running after 660 s
+[repository:command] still running after 670 s
+[repo] still working after 680 s; last phase started: source.served
+[repository:command] still running after 680 s
+[repository:command] still running after 690 s

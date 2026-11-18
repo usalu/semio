@@ -1,0 +1,36 @@
+// R135 real run, cell "farm child / heavy Rust owner" on an injected 8 GB / 4 core host: the real plan (width, solo grant, capacity decision) and then one real farm job of @semio-tech/stdio-ifc-rs in a real worker process.
+// env: SEMIO_HOST_CAPACITY_TOTAL_MEGABYTES=8192 SEMIO_HOST_CAPACITY_CORES=4 (declared host), R135_OWNER (default @semio-tech/stdio-ifc-rs), R135_FREE (MB injected as available, default half)
+import { readFileSync, mkdtempSync, realpathSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
+import { deserialize } from "node:v8";
+const root = "/Users/ueli/Documents/semio", SP = "/private/tmp/claude-501/-Users-ueli-Documents-semio/9f6d3d77-cfd2-486b-942c-2101ee51a1fb/scratchpad/R135";
+const B = root + "/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build", PN = B + "/🕸️graph/📥️inference/📦️project-nodes", FARM = PN + "/🏊️project-farm";
+const dir = SP + "/slim", owner = process.env.R135_OWNER ?? "@semio-tech/stdio-ifc-rs";
+const { libraryBootstrap } = await import(B + "/🕸️graph/📥️inference/🟨️.mjs"); await libraryBootstrap;
+const host = (await import(root + "/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🪞️profile/🟦️.ts")).hostProfileV1(process.env);
+const total = host.totalMegabytes, cores = host.cores, free = Number(process.env.R135_FREE ?? Math.floor(total / 2));
+const decision: any = await import(root + "/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts");
+const { BUILD_HOST_CAPACITY_POLICY_V1: policy } = await import(B + "/🌡️host-capacity/🎛️control/🟦️.ts");
+const cost: any = await import(B + "/🪪️graph-state/🙋️wanted/💰️cost/🟦️.ts"), wanted: any = await import(B + "/🪪️graph-state/🙋️wanted/🟦️.ts");
+const plan: any = await import(B + "/🧠️memory/🪜️plan-stage/🟨️.mjs"), speed: any = await import(B + "/🐢️speed/🟨️.mjs").catch(() => ({ localMachineSpeedFactorV1: () => 1 }));
+const sample = { version: 1, atMs: Date.now(), platform: "darwin", cores, totalMegabytes: total, availableMegabytes: free, pressure: "normal", swapUsedMegabytes: 0, swapOutMegabytesPerSecond: 0, load: 1, openFiles: null, openFilesMaximum: null, attachedImages: null };
+const parentGrant = { id: "readparent1", operation: "show", jobs: 1, cpu: 2, reservedMegabytes: 2560, admittedAtMs: Date.now() - 120000, observedMegabytes: 2200, pid: process.pid, bootAtMs: Date.now() - 1e6, label: "projects" };
+const ask = { request: { id: "farmreq0001", operation: "exec", priority: "batch", minimumJobs: 1, preferredJobs: cores - 1, fixedMegabytes: 0, perJobMegabytes: 1536, cpuPerJob: 1, elastic: true, essential: true, label: "graph-farm", holder: "readparent1" }, arrivedAtMs: Date.now() - 1000, pid: process.pid };
+const row = decision.evaluateHostCapacityV1(policy, sample, [parentGrant], [ask], Date.now()).decisions[0];
+const width = plan.planFarmWorkersV1({ workerMegabytes: 1536, residentMegabytes: plan.PLAN_STAGE_POLICY_V1.parentFootprintMegabytes, environment: { SEMIO_SLICE_LEAN: "off" }, hostMegabytes: total, policy: plan.PLAN_STAGE_POLICY_V1, kind: "project-farm" });
+const solo = cost.soloGrantV1({ hostMegabytes: total, availableMegabytes: free }, wanted.wantedPolicyV1);
+console.log("HOST", JSON.stringify({ total, cores, free, speedFactor: speed.localMachineSpeedFactorV1(process.env), farmAloneCapMegabytes: plan.farmAloneCapV1?.(total), capacity: { verdict: row.verdict, jobs: row.jobs, reserved: row.reservedMegabytes, reason: row.reason }, farmWidth: width, soloManagedMegabytes: solo.managedMegabytes, soloFootprintMegabytes: solo.footprintMegabytes, capMegabytes: plan.PLAN_STAGE_POLICY_V1.farmChildFootprintMegabytes["project-farm"] }));
+const R: any = await import(PN + "/🟨️.mjs"), pool: any = await import(FARM + "/🏊️pool/🟨️.mjs"), service: any = await import(FARM + "/👷️service/🟨️.mjs");
+const head = JSON.parse(readFileSync(dir + "/head.json", "utf8")), units: any[] = JSON.parse(readFileSync(dir + "/units.json", "utf8")), session = deserialize(readFileSync(dir + "/session.bin"));
+const base = mkdtempSync(join(realpathSync(tmpdir()), "semio-r135-"));
+const full = { ...session, workspaceRoot: root, closureStore: undefined, stagingBase: base, authority: undefined };
+await service.open(full, { slot: 9, generation: 1 });
+const envr = service.sessionEnvironmentV1(), unit = units.find(u => u.name === owner)!;
+const job = R.ownerJobV1(envr, head.globals, unit);
+const events: any[] = [];
+const farm = pool.createFarmV1({ entry: FARM + "/👷️worker/🟨️.mjs", service: pathToFileURL(FARM + "/👷️service/🟨️.mjs").href, session: full, workers: Math.max(1, Math.min(width, row.jobs || 1)), megabytes: 1536, environment: { ...process.env, BUN_RUNTIME_TRANSPILER_CACHE_PATH: "0", MIMALLOC_PURGE_DELAY: "0" }, accept: () => true, report: (kind: string, fields: any) => { events.push({ kind, ...fields }); } });
+const t = performance.now(), answer = await farm.run(job), st = farm.stats();
+console.log("JOB", JSON.stringify({ owner, ok: answer.reply !== undefined, lost: answer.lost, failure: answer.failure?.message?.slice(0, 200), overrun: answer.overrun, seconds: Math.round((performance.now() - t) / 100) / 10, footprintMb: answer.footprintMegabytes, peakFootprintMb: Math.round(st.peakFootprintMegabytes), peakRssMb: Math.round(st.peakRssMegabytes), started: st.started, capped: st.capped, lost2: st.lost, events }));
+await farm.close(); rmSync(base, { recursive: true, force: true }); process.exit(0);

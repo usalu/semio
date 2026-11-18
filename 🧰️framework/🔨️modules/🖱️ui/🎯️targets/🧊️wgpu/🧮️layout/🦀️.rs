@@ -1,7 +1,7 @@
 // #region layout
 //! 🧮️ Flex stack layout for widget trees.
 
-use semio_ui_declaration::ui::{UiControlNode, UiTreeActionPlacement, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, UiTreeWindow, UiTreeWindowRowExtent};
+use semio_ui_declaration::ui::{UiControlNode, UiNode, UiTreeActionPlacement, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, UiTreeWindow, UiTreeWindowRowExtent};
 use semio_ui_theme::geometry::Rect;
 use semio_ui_theme::Theme;
 use ui_contract::SpaceToken;
@@ -60,6 +60,20 @@ pub fn gap_for_token(theme: &Theme, token: Option<&str>) -> f32 {
         None | Some("standard") => theme.gap_standard,
         named => gap_space_token(named).px(),
     }
+}
+
+/// 🪢️ A stack's gap: an unspecified token between bordered children is zero (their borders are one shared hairline), every other stack keeps the theme-resolved [`gap_for_token`].
+/// @see `🧱️elements/🪢️SharedBorderRow/🟦️.tsx`
+pub fn stack_gap_for_token(theme: &Theme, token: Option<&str>, bordered_children: bool) -> f32 {
+    match token {
+        None if bordered_children => 0.0,
+        other => gap_for_token(theme, other),
+    }
+}
+
+/// 🔲️ Whether `node` paints its own hairline border, so a stack of such nodes must not insert a gap between them.
+pub fn ui_node_is_bordered(node: &UiNode) -> bool {
+    matches!(node, UiNode::Button(_) | UiNode::Input(_) | UiNode::Select(_) | UiNode::Toggle(_) | UiNode::Slider(_) | UiNode::NumberStepper(_) | UiNode::Ring(_) | UiNode::IconSelect(_) | UiNode::Field(_) | UiNode::Section(_) | UiNode::OverviewCard(_) | UiNode::Progress(_))
 }
 
 pub fn padding_for_token(theme: &Theme, token: Option<&str>) -> f32 {

@@ -9,6 +9,7 @@ import { currentStylingAppearanceName, resolveColorHex } from "@semio-tech/ui-st
 import {
   cn,
   glassClass,
+  SharedBorderRow,
   Slider,
   type IntroductionResolvedGeometry,
   type IntroductionSurfaceResolver
@@ -839,13 +840,13 @@ export function alignModeToDag(mode: string): string {
 
 export function SelectionAlignChrome({ bounds, onAlign }: { readonly bounds: DagSelectionBounds; readonly onAlign: (mode: string) => void }) {
   return (
-    <div className={cn("pointer-events-auto absolute z-50 flex gap-0.5 rounded border border-border p-0.5 shadow-sm", glassClass)} data-level="pane" style={{ left: bounds.x, top: Math.max(0, bounds.y - 28) }}>
+    <SharedBorderRow className={cn("pointer-events-auto absolute z-50 shadow-sm", glassClass)} data-level="pane" style={{ left: bounds.x, top: Math.max(0, bounds.y - 28) }}>
       {ALIGN_MODES.map((mode) => (
-        <button key={mode.id} type="button" className="size-5 rounded text-xs hover:bg-active-base" aria-label={mode.id} onPointerDown={(event) => event.stopPropagation()} onClick={() => onAlign(mode.id)}>
+        <button key={mode.id} type="button" data-shared-border-cell="" className="size-5 text-xs hover:bg-active-base" aria-label={mode.id} onPointerDown={(event) => event.stopPropagation()} onClick={() => onAlign(mode.id)}>
           {mode.label}
         </button>
       ))}
-    </div>
+    </SharedBorderRow>
   );
 }
 //#endregion DagDomOverlays

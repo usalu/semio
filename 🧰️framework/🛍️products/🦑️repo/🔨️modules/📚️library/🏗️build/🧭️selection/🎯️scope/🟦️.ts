@@ -2,6 +2,7 @@ import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬
 import {buildPatternV1,selectBuildProjectsV1} from "../🟦️.ts";
 import type {BuildGraphV1} from "../../🕸️graph/📋️model/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+import {refuseBuildV1} from "../../📖️texts/🟦️.ts";
 /** 🎯️ One requested task. */
 export type TargetRefV1={readonly project:string;readonly target:string};
 /** 🎯️ Declares which tasks are demanded and whether the tools running them are part of the scope. */
@@ -66,6 +67,7 @@ export async function planScopedTargetsV1(source:ScopeSourceV1,scopeValue:unknow
  if(scope.includeToolClosure)for(let index=0;index<visit.length;index++){const name=visit[index]!,node=await read(name);for(const tool of node?.tools??[])if(!projects.has(tool))visit.push(tool);if(!projects.has(name)&&node)projects.add(name);for(const dependency of node?.dependencies??[])if(!projects.has(dependency))visit.push(dependency);}
  const sort=(values:Iterable<string>)=>[...values].sort(compare);
  const plan:ScopedPlanV1={version:1,scope,projects:sort(projects).filter(name=>nodes.get(name)),tasks:sort(tasks).map(ref),edges:sort(edges).map(row=>{const[from,to]=row.split("\u0001");return{from:ref(from!),to:ref(to!)};}),projectsRead:[...nodes.values()].filter(Boolean).length};
- if(validateJsonSchemaSubset({definitions:schema.definitions,$ref:"#/definitions/ScopedPlan"},plan).length)throw Error("Closed scoped plan required");
+ const violations=validateJsonSchemaSubset({definitions:schema.definitions,$ref:"#/definitions/ScopedPlan"},plan);
+ if(violations.length)throw refuseBuildV1("refused","graph.plan-not-closed",{detail:violations.slice(0,4).map(rule=>rule.slice(0,300)).join("; "),tasks:String(plan.tasks.length),edges:String(plan.edges.length),projects:String(plan.projects.length),targets:String(scope.targets.length)});
  return plan;
 }

@@ -1,8 +1,8 @@
 /** 🗺️ The address of the archive: which page is open and every meaningful state of it, as a shareable hash such as `#/humans/walking-commuter?view=thermal&scale=50&clip=walk-cycle&t=1.2`.
  *
- * Route: `#/` overview · `#/all` · `#/<category>` · `#/<category>/<asset>` · `#/collections[/<id>]` · `#/compare` · `#/playground`.
+ * Route: `#/` overview · `#/all` · `#/<category>` · `#/<category>/<asset>` · `#/collections[/<id>]` · `#/compare` · `#/playground` (the section playground) · `#/playground/plan` (the floor plan playground) · `#/playground/3d` (the 3D playground).
  * Parameters carry only what differs from the default, in a stable order, so `format(parse(x))` is canonical and a link reproduces the state: filters (`q cat an h root done sort dir`),
- * the viewer (`view vp cam vl scale pose|clip t zoom pan bg th tq fq range pat dg air mrt rh wind sun`; `vp` is `elevation`, `front`, `plan`, `axonometric` or `model`, `cam` the camera preset of the 3D model), the comparison (`p` per pane) and the playground (`p` per placement, `len`).
+ * the viewer (`view vp cam vl scale pose|clip t zoom pan bg th tq fq range pat dg air mrt rh wind sun`; `vp` is `elevation`, `front`, `plan`, `axonometric` or `model`, `cam` the camera preset of the 3D model), the comparison (`p` per pane) and the playground (`p` per placement, `len`, `dep`, `tl`, `cam`, `vp` of its section tab).
  * The reader's own preferences — language, theme — are never part of a link.
  *
  * @see ../🔎️search/🟦️.ts — filter parameters
@@ -13,7 +13,15 @@ import { CATEGORIES, FORCE_QUANTITIES, THERMAL_QUANTITIES, PLANAR_VIEWPOINTS, VI
 import type { CategoryId, DisplayRange, ForceQuantity, Slug, Text, ThermalQuantity, View, PlanarViewpoint } from "@teaching/staffage";
 import { CAMERA_PRESETS, DEFAULT_CAMERA, isCameraPreset, type CameraPresetName } from "../🧊️spatial/🟦️.ts";
 import { isViewpointKey, type ViewpointKey } from "../🔭️viewpoints/🟦️.ts";
-import { BACKGROUNDS, DEFAULT_LENGTH_M, type Background, type Placement, type Playground, type Selection } from "../💾️persistence/🟦️.ts";
+import { BACKGROUNDS, DEFAULT_DEPTH_M, DEFAULT_LENGTH_M, SECTION_VIEWPOINTS, TRACK_DEFAULTS, clampTimeline, clampTrack, type Background, type Placement, type Playground, type SectionViewpoint, type Selection } from "../💾️persistence/🟦️.ts";
+
+/** 🧪️ The three playgrounds: the section (side or front elevation), the floor plan and the 3D model, all over one shared scene. */
+export const PLAYGROUND_TABS = ["section", "plan", "model"] as const;
+
+/** 📤️ One of {@link PLAYGROUND_TABS}. */
+export type PlaygroundTab = (typeof PLAYGROUND_TABS)[number];
+
+const TAB_SEGMENTS: Readonly<Record<PlaygroundTab, string>> = { section: "", plan: "plan", model: "3d" };
 
 /** 📍️ A page of the archive. */
 export type Route =
@@ -23,7 +31,7 @@ export type Route =
   | { readonly page: "asset"; readonly category: CategoryId; readonly asset: Slug }
   | { readonly page: "collections"; readonly collection: Slug | null }
   | { readonly page: "compare" }
-  | { readonly page: "playground" };
+  | { readonly page: "playground"; readonly tab?: PlaygroundTab };
 
 /** 🏠️ The overview. */
 export const OVERVIEW: Route = { page: "overview" };
@@ -45,7 +53,7 @@ export function parseAddress(hash: string): Address {
   let route: Route = OVERVIEW;
   if (first === "all") route = { page: "all" };
   else if (first === "compare") route = { page: "compare" };
-  else if (first === "playground") route = { page: "playground" };
+  else if (first === "playground") route = second === "plan" ? { page: "playground", tab: "plan" } : second === "3d" ? { page: "playground", tab: "model" } : { page: "playground" };
   else if (first === "collections") route = { page: "collections", collection: isSlug(second) ? second : null };
   else if (isCategory(first)) route = isSlug(second) ? { page: "asset", category: first, asset: second } : { page: "category", category: first };
   return { route, params };
@@ -58,8 +66,11 @@ export function routePath(route: Route): string {
       return "/";
     case "all":
     case "compare":
-    case "playground":
       return `/${route.page}`;
+    case "playground": {
+      const segment = TAB_SEGMENTS[route.tab ?? "section"];
+      return segment === "" ? "/playground" : `/playground/${segment}`;
+    }
     case "category":
       return `/${route.category}`;
     case "asset":
@@ -314,31 +325,41 @@ export function compareToParams(compare: CompareState, into: URLSearchParams = n
 //#endregion ⚖️Compare
 
 //#region 🧪️Playground
+const isSectionViewpoint = (value: string | null): value is SectionViewpoint => (SECTION_VIEWPOINTS as readonly string[]).includes(value ?? "");
+const flag = (value: string | undefined): boolean => value === undefined || value !== "n";
+
 /** 🛝️ The playground of an address query, or null when the address carries none (the local one then stands). */
 export function playgroundFromParams(params: URLSearchParams): Playground | null {
   const tokens = params.getAll("p");
-  if (tokens.length === 0 && !params.has("len") && !params.has("scale") && !params.has("view") && !params.has("vp")) return null;
+  if (tokens.length === 0 && !["len", "dep", "tl", "cam", "scale", "view", "vp"].some((name) => params.has(name))) return null;
   const lengthM = clamp(number(params.get("len")) ?? DEFAULT_LENGTH_M, 4, 200);
+  const depthM = clamp(number(params.get("dep")) ?? DEFAULT_DEPTH_M, 2, 200);
   const view = params.get("view");
   const viewpoint = params.get("vp");
+  const camera = params.get("cam");
   const scale = number(params.get("scale"));
   const bg = params.get("bg");
-  const sideElevation = !isViewpoint(viewpoint) || viewpoint === "elevation";
   const placements = tokens.flatMap((token, index): Placement[] => {
-    const [asset, x, pick, offset, mirrored, z, yaw] = token.split("~");
-    return isSlug(asset) ? [{ id: `url-${index}`, asset, xM: clamp(number(x ?? null) ?? 0, 0, lengthM), zM: clamp(number(z ?? null) ?? 0, -lengthM / 2, lengthM / 2), yawDeg: clamp(number(yaw ?? null) ?? 0, -180, 180), pick: selectionFrom(pick), offsetS: number(offset ?? null) ?? 0, mirrored: mirrored === "m" && sideElevation }] : [];
+    const [asset, x, pick, offset, mirrored, z, yaw, start, duration, speed, loop, hold] = token.split("~");
+    return isSlug(asset)
+      ? [{ id: `url-${index}`, asset, xM: clamp(number(x ?? null) ?? 0, 0, lengthM), zM: clamp(number(z ?? null) ?? 0, -depthM / 2, depthM / 2), yawDeg: clamp(number(yaw ?? null) ?? 0, -180, 180), pick: selectionFrom(pick), offsetS: number(offset ?? null) ?? 0, mirrored: mirrored === "m", ...clampTrack({ startS: number(start ?? null) ?? TRACK_DEFAULTS.startS, durationS: number(duration ?? null), speed: number(speed ?? null) ?? TRACK_DEFAULTS.speed, loop: flag(loop), holdS: number(hold ?? null) }) }]
+      : [];
   });
-  return { scale: scale !== null && scale >= 1 ? scale : 100, view: isView(view) ? view : "dark-line", viewpoint: isViewpoint(viewpoint) ? viewpoint : PLANAR_DEFAULT, background: (BACKGROUNDS as readonly string[]).includes(bg ?? "") ? (bg as Background) : "paper", lengthM, placements };
+  return { scale: scale !== null && scale >= 1 ? scale : 100, view: isView(view) ? view : "dark-line", viewpoint: isSectionViewpoint(viewpoint) ? viewpoint : "elevation", camera: isCameraPreset(camera) ? camera : DEFAULT_CAMERA, background: (BACKGROUNDS as readonly string[]).includes(bg ?? "") ? (bg as Background) : "paper", lengthM, depthM, timelineS: clampTimeline(number(params.get("tl"))), placements };
 }
 
 /** 🧩️ Writes a playground into a query. */
 export function playgroundToParams(playground: Playground, into: URLSearchParams = new URLSearchParams()): URLSearchParams {
   if (playground.scale !== 100) into.set("scale", String(round(playground.scale, 2)));
   if (playground.view !== "dark-line") into.set("view", playground.view);
-  if (playground.viewpoint !== PLANAR_DEFAULT) into.set("vp", playground.viewpoint);
+  if (playground.viewpoint !== "elevation") into.set("vp", playground.viewpoint);
+  if (playground.camera !== DEFAULT_CAMERA) into.set("cam", playground.camera);
   if (playground.background !== "paper") into.set("bg", playground.background);
   if (playground.lengthM !== DEFAULT_LENGTH_M) into.set("len", String(round(playground.lengthM, 1)));
-  for (const placement of playground.placements) into.append("p", [placement.asset, round(placement.xM, 2), selectionToken(placement.pick), placement.offsetS === 0 ? "" : round(placement.offsetS, 2), placement.mirrored ? "m" : "", placement.zM === 0 ? "" : round(placement.zM, 2), placement.yawDeg === 0 ? "" : round(placement.yawDeg, 1)].join("~").replace(/~+$/u, ""));
+  if (playground.depthM !== DEFAULT_DEPTH_M) into.set("dep", String(round(playground.depthM, 1)));
+  if (playground.timelineS !== null) into.set("tl", String(round(playground.timelineS, 2)));
+  for (const placement of playground.placements)
+    into.append("p", [placement.asset, round(placement.xM, 2), selectionToken(placement.pick), placement.offsetS === 0 ? "" : round(placement.offsetS, 2), placement.mirrored ? "m" : "", placement.zM === 0 ? "" : round(placement.zM, 2), placement.yawDeg === 0 ? "" : round(placement.yawDeg, 1), placement.startS === 0 ? "" : round(placement.startS, 2), placement.durationS === null ? "" : round(placement.durationS, 2), placement.speed === 1 ? "" : round(placement.speed, 3), placement.loop ? "" : "n", placement.holdS === null ? "" : round(placement.holdS, 3)].join("~").replace(/~+$/u, ""));
   return into;
 }
 //#endregion 🧪️Playground
@@ -348,24 +369,27 @@ const PROBLEM_WORDS = {
   planarOnly: (value: string): Text => ({ en: `The link names the viewpoint "${value}", which this page cannot show; the side elevation is shown.`, de: `Der Link nennt die Blickrichtung "${value}", die diese Seite nicht zeigen kann; die Seitenansicht wird gezeigt.` }),
   camera: (value: string): Text => ({ en: `The link names an unknown camera "${value}"; the perspective view is shown. Use ${CAMERA_PRESETS.join(", ")}.`, de: `Der Link nennt eine unbekannte Kamera "${value}"; die Perspektive wird gezeigt. Gültig sind ${CAMERA_PRESETS.join(", ")}.` }),
   viewpoint: (value: string): Text => ({ en: `The link names an unknown viewpoint "${value}"; the side elevation is shown. Use elevation, front or plan.`, de: `Der Link nennt eine unbekannte Blickrichtung "${value}"; die Seitenansicht wird gezeigt. Gültig sind elevation, front und plan.` }),
+  sectionOnly: (value: string): Text => ({ en: `The link names the viewpoint "${value}", which the section playground cannot show; it shows the side elevation or the front elevation. The floor plan and the 3D model have playgrounds of their own.`, de: `Der Link nennt die Blickrichtung "${value}", die der Schnitt-Spielplatz nicht zeigen kann; er zeigt die Seitenansicht oder die Vorderansicht. Grundriss und 3D-Modell haben eigene Spielplätze.` }),
   mirror: { en: "The link mirrors placements, but mirroring applies to the side elevation only; they are drawn unmirrored.", de: "Der Link spiegelt Platzierungen, Spiegeln gilt aber nur in der Seitenansicht; sie werden ungespiegelt gezeichnet." } as Text,
+  camera3d: (value: string): Text => ({ en: `The link names an unknown camera "${value}"; the perspective view is shown. Use ${CAMERA_PRESETS.join(", ")}.`, de: `Der Link nennt eine unbekannte Kamera "${value}"; die Perspektive wird gezeigt. Gültig sind ${CAMERA_PRESETS.join(", ")}.` }),
   layout: (value: string): Text => ({ en: `The link names an unknown layout "${value}"; one viewpoint is shown. Use all for three views.`, de: `Der Link nennt ein unbekanntes Layout "${value}"; eine Blickrichtung wird gezeigt. Gültig ist all für drei Ansichten.` }),
   view: (value: string): Text => ({ en: `The link names an unknown representation "${value}"; the dark line drawing is shown.`, de: `Der Link nennt eine unbekannte Darstellung "${value}"; die dunkle Strichzeichnung wird gezeigt.` }),
 } as const;
 
 /** 🚨️ What the address query of a page says that the archive cannot read, in words: an unknown viewpoint, layout or representation is reported, never silently replaced. */
-export function addressProblems(params: URLSearchParams, page: "asset" | "compare" | "playground"): readonly Text[] {
+export function addressProblems(params: URLSearchParams, page: "asset" | "compare" | "playground", tab: PlaygroundTab = "section"): readonly Text[] {
   const problems: Text[] = [];
   const viewpoint = params.get("vp");
   const layout = params.get("vl");
   const view = params.get("view");
   const camera = params.get("cam");
-  const known = page === "asset" ? isViewpointKey(viewpoint) : isViewpoint(viewpoint);
-  if (viewpoint !== null && !known) problems.push(isViewpointKey(viewpoint) ? PROBLEM_WORDS.planarOnly(viewpoint) : PROBLEM_WORDS.viewpoint(viewpoint));
+  const known = page === "asset" ? isViewpointKey(viewpoint) : page === "playground" ? isSectionViewpoint(viewpoint) : isViewpoint(viewpoint);
+  if (viewpoint !== null && !known) problems.push(page === "playground" ? (isViewpointKey(viewpoint) ? PROBLEM_WORDS.sectionOnly(viewpoint) : PROBLEM_WORDS.viewpoint(viewpoint)) : isViewpointKey(viewpoint) ? PROBLEM_WORDS.planarOnly(viewpoint) : PROBLEM_WORDS.viewpoint(viewpoint));
   if (page === "asset" && camera !== null && !isCameraPreset(camera)) problems.push(PROBLEM_WORDS.camera(camera));
+  if (page === "playground" && camera !== null && !isCameraPreset(camera)) problems.push(PROBLEM_WORDS.camera3d(camera));
   if (page === "asset" && layout !== null && layout !== "all") problems.push(PROBLEM_WORDS.layout(layout));
   if (view !== null && !isView(view)) problems.push(PROBLEM_WORDS.view(view));
-  if (page === "playground" && isViewpoint(viewpoint) && viewpoint !== "elevation" && params.getAll("p").some((token) => token.split("~")[4] === "m")) problems.push(PROBLEM_WORDS.mirror);
+  if (page === "playground" && (tab !== "section" || viewpoint === "front") && params.getAll("p").some((token) => token.split("~")[4] === "m")) problems.push(PROBLEM_WORDS.mirror);
   for (const token of page === "compare" ? params.getAll("p") : []) {
     const named = token.split("~")[3];
     if (named !== undefined && named !== "" && !isViewpoint(named)) problems.push(isViewpointKey(named) ? PROBLEM_WORDS.planarOnly(named) : PROBLEM_WORDS.viewpoint(named));

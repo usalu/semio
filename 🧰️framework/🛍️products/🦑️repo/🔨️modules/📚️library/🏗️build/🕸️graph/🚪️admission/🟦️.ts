@@ -1,5 +1,6 @@
 import {buildOptionsV1,literalBuildProjectSelectorsV1,selectLiteralBuildProjectsV1} from "../../🧭️selection/📥️options/🟦️.ts";
 import {createHash} from "node:crypto";
+import {refuseBuildV1} from "../../📖️texts/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import selectionSchema from "../../🧬️schema/🚪️selection.json" with {type:"json"};
 import registrySchema from "../../🧬️schema/📋️owners.json" with {type:"json"};
@@ -10,10 +11,10 @@ import projectSchema from "../../🧬️schema/📋️project/🔣️.json" with
 export type BuildGraphSelectionV1={kind:"all"}|{kind:"owners";projects:string[];exclude:string[];targets?:string[]}|{kind:"tasks";tasks:{project:string;target:string;configuration?:string}[]};
 /** 🪪️ Resolves authored task and package names without evaluating independent owners. */
 export interface BuildOwnerRegistryV1{version:1;owners:{name:string;root:string;manifest:string;packages:string[];nativeRoots?:string[]}[];catalogProviders:{ownerRoot:string;sourcePath:string;consumerRoots:string[]}[]}
-/** 🔏️ Carries exact original owner observations and source-owned dependency identities. */
-export interface BuildOwnerAdmissionFactsV1{project:{name:string;targets:Record<string,{dependsOn?:unknown[]}>};files:string[];dependencies:string[];dependencyInputs?:Record<string,string[]>;generatedDependencies?:Record<string,string[]>}
+/** 🔏️ Carries exact original owner observations and source-owned dependency identities; `files` admit the owners that hold them, `observedFiles` are file facts of foreign owners that are members and invalidate but admit nothing. */
+export interface BuildOwnerAdmissionFactsV1{project:{name:string;targets:Record<string,{dependsOn?:unknown[]}>};files:string[];observedFiles?:string[];dependencies:string[];dependencyInputs?:Record<string,string[]>;generatedDependencies?:Record<string,string[]>}
 /** 🚪️ Closes manifest, command-source and prerequisite ownership before source assembly. */
-export interface BuildOwnerAdmissionV1{owners:string[];files:string[];targets:Record<string,string[]>;inputs:Record<string,string[]>;catalogProviders:{ownerRoot:string;sourcePath:string}[];generatedDependencies?:Record<string,Record<string,string[]>>}
+export interface BuildOwnerAdmissionV1{owners:string[];files:string[];observedFiles?:string[];targets:Record<string,string[]>;inputs:Record<string,string[]>;catalogProviders:{ownerRoot:string;sourcePath:string}[];generatedDependencies?:Record<string,Record<string,string[]>>}
 const contains=(root:string,path:string)=>root==="."||path===root||path.startsWith(root+"/");
 const sourceOwners=(registry:BuildOwnerRegistryV1)=>registry.owners.flatMap(owner=>[owner.root,...owner.nativeRoots??[]].map(root=>({root,name:owner.name}))).sort((a,b)=>b.root.length-a.root.length||a.name.localeCompare(b.name));
 
@@ -41,11 +42,27 @@ export function buildRelativeImportProjectV1(owners:readonly {name:string;root:s
  let selected:{name:string;root:string}|undefined;for(const owner of owners)if(owner.root!==admissionSchema.$defs.relativeImportOwnership.const.workspaceRoot&&contains(owner.root,path)&&(!selected||owner.root.length>selected.root.length||owner.root.length===selected.root.length&&owner.name.localeCompare(selected.name)<0))selected=owner;return selected?.name;
 }
 
+/** 🧭️ {@link buildSourceOwnerV1} for many paths against one registry: the owner of a path is found by looking up the path and each of its ancestors in an index of the roots (a constant number of steps per path) instead of scanning every owner root, which cost the files of the closure times the owners of the workspace; the deepest root wins, equal lengths keep the smallest name, the workspace root `.` owns what no deeper root owns. */
+export function createSourceOwnerResolverV1(registry:BuildOwnerRegistryV1):(path:string)=>string|undefined{
+ const ranked=new Map<string,{name:string;at:number}>();
+ sourceOwners(registry).forEach((owner,at)=>{if(!ranked.has(owner.root))ranked.set(owner.root,{name:owner.name,at});});
+ const workspace=ranked.get(".");
+ return path=>{let best=workspace;for(let end=path.length;end>0;end=path.lastIndexOf("/",end-1)){const hit=ranked.get(end===path.length?path:path.slice(0,end));if(hit!==undefined&&(best===undefined||hit.at<best.at))best=hit;}return best?.name;};
+}
+
 /** 🗂️ {@link buildRelativeImportProjectV1} for many paths against one owner list: the deepest owner root that is the path or one of its ancestors is found by looking up the ancestors of the path (a constant number of steps per path) instead of scanning every owner; equal roots keep the smallest name, the workspace root owns nothing. */
 export function createRelativeImportResolverV1(owners:readonly {name:string;root:string}[]):(path:string)=>string|undefined{
  const workspaceRoot=admissionSchema.$defs.relativeImportOwnership.const.workspaceRoot,named=new Map<string,string>();
  for(const owner of owners){if(owner.root===workspaceRoot)continue;const known=named.get(owner.root);if(known===undefined||owner.name.localeCompare(known)<0)named.set(owner.root,owner.name);}
  return path=>{for(let end=path.length;end>0;end=path.lastIndexOf("/",end-1)){const name=named.get(end===path.length?path:path.slice(0,end));if(name!==undefined)return name;}return undefined;};
+}
+
+/** 🗃️ The owner lookups every owner observation needs (package name to owner, root to owner, relative file to owner), built once per registry instead of once per observed owner. */
+const REGISTRY_INDEXES_V1=new WeakMap<object,{byPackage:Map<string,string>;byRoot:Map<string,string>;relativeProject:(path:string)=>string|undefined}>();
+export function registryOwnerIndexesV1(registry:BuildOwnerRegistryV1){
+ let known=REGISTRY_INDEXES_V1.get(registry);
+ if(known===undefined){const rows=registry.owners.flatMap(owner=>[owner.root,...owner.nativeRoots??[]].map(root=>({name:owner.name,root})));known={byPackage:new Map(registry.owners.flatMap(owner=>owner.packages.map(name=>[name,owner.name] as const))),byRoot:new Map(rows.map(row=>[row.root,row.name] as const)),relativeProject:createRelativeImportResolverV1(rows)};REGISTRY_INDEXES_V1.set(registry,known);}
+ return known;
 }
 
 /** 📥️ Applies authored roles to matching named inputs while retaining explicit compilation entries. */
@@ -80,7 +97,7 @@ export function buildSourceContractGroupsV1(project:{name:string;targets?:Record
   if(typeof row.input==="string"&&row.input&&keys.every(key=>["input","projects","dependencies"].includes(key))){if(row.projects!==undefined){if(!Array.isArray(row.projects)||row.projects.some(name=>typeof name!=="string"||!name)||row.dependencies!==undefined)throw Error("Canonical named input projects required");if(row.projects.includes(project.name))visit([row.input],depth+1);}else if(row.dependencies===undefined||row.dependencies===false)visit([row.input],depth+1);else if(row.dependencies!==true)throw Error("Closed named input dependency required");}
   else if(keys.length===1&&typeof row.fileset==="string"||keys.length===1&&typeof(row.env??row.runtime)==="string"||keys.length===1&&Array.isArray(row.externalDependencies)&&row.externalDependencies.every(name=>typeof name==="string")||typeof row.dependentTasksOutputFiles==="string"&&keys.every(key=>["dependentTasksOutputFiles","transitive"].includes(key))&&(row.transitive===undefined||typeof row.transitive==="boolean"))continue;
   else throw Error("Unsupported selected source input object");continue;
- }if(!value)throw Error("Named source input required");if(value.startsWith("^")){if(value.length===1)throw Error("Named dependency input required");continue;}if(value.includes("{workspaceRoot}")||value.includes("{projectRoot}"))continue;const contract=Object.hasOwn(contracts,value);if(contract)selected.add(value);if(complete.has(value))continue;if(active.has(value))throw Error("Selected named source input cycle: "+value);const inputs=named[value];if(inputs===undefined){if(contract)continue;throw Error("Unknown selected named source input: "+value);}active.add(value);visit(inputs,depth+1);active.delete(value);complete.add(value);}};
+ }if(!value)throw Error("Named source input required");if(value.startsWith("^")){if(value.length===1)throw Error("Named dependency input required");continue;}if(value.includes("{workspaceRoot}")||value.includes("{projectRoot}"))continue;const contract=Object.hasOwn(contracts,value);if(contract)selected.add(value);if(complete.has(value))continue;if(active.has(value))throw Error("Selected named source input cycle: "+value);const inputs=named[value];if(inputs===undefined){if(contract)continue;throw refuseBuildV1("invalid","graph.unknown-source-input",{owner:project.name,input:value});}active.add(value);visit(inputs,depth+1);active.delete(value);complete.add(value);}};
  for(const target of Object.values(project.targets??{}))visit(target.inputs??policy.defaultInputs);visit(requested);return[...selected].sort();
 }
 
@@ -89,10 +106,16 @@ export function buildGraphScopeKeyV1(selection:BuildGraphSelectionV1,registry:Bu
  return createHash("sha256").update(JSON.stringify([readBuildGraphSelectionV1(selection),readBuildOwnerRegistryV1(registry)])).digest("hex");
 }
 
+/** 🚪️ Admits only a closed owner admission. */
+export function readBuildOwnerAdmissionV1(value:unknown):BuildOwnerAdmissionV1{
+ if(validateJsonSchemaSubset(admissionSchema,value).length)throw Error("Closed selected build owner admission required");
+ return value as BuildOwnerAdmissionV1;
+}
+
 /** 🧩️ Converges exact task prerequisites and source owners through a caller-owned observation port. */
 export async function closeBuildOwnerAdmissionV1(selection:BuildGraphSelectionV1,registry:BuildOwnerRegistryV1,inspect:(owner:BuildOwnerRegistryV1["owners"][number],targets:readonly string[],inputs:readonly string[])=>Promise<BuildOwnerAdmissionFactsV1>):Promise<BuildOwnerAdmissionV1>{
  selection=readBuildGraphSelectionV1(selection);registry=readBuildOwnerRegistryV1(registry);
- const byName=new Map(registry.owners.map(owner=>[owner.name,owner])),ownerIndex=sourceOwners(registry),sourceOwner=(path:string)=>ownerIndex.find(owner=>contains(owner.root,path))?.name,admitted=new Set<string>(),targets=new Map<string,Set<string>>(),inputs=new Map<string,Set<string>>(),optionalTasks=new Set<string>(),files=new Set<string>(),providers=new Map<string,{ownerRoot:string;sourcePath:string}>(),revisions=new Map<string,string>(),facts=new Map<string,BuildOwnerAdmissionFactsV1>();
+ const byName=new Map(registry.owners.map(owner=>[owner.name,owner])),sourceOwner=createSourceOwnerResolverV1(registry),admitted=new Set<string>(),targets=new Map<string,Set<string>>(),inputs=new Map<string,Set<string>>(),optionalTasks=new Set<string>(),files=new Set<string>(),admitting=new Set<string>(),observed=new Set<string>(),providers=new Map<string,{ownerRoot:string;sourcePath:string}>(),revisions=new Map<string,string>(),facts=new Map<string,BuildOwnerAdmissionFactsV1>();
  const observe=async(owner:BuildOwnerRegistryV1["owners"][number],targets:readonly string[],inputs:readonly string[])=>{const value=await inspect(owner,targets,inputs);if(validateJsonSchemaSubset({$defs:admissionSchema.$defs,$ref:"#/$defs/ownerFacts"},value).length)throw Error("Closed build owner observations required");return value;};
  const admit=(name:string)=>{if(!byName.has(name))throw Error("Unknown canonical build owner: "+name);admitted.add(name);},task=(name:string,target:string,optional=false)=>{admit(name);const selected=targets.get(name)??new Set<string>(),key=name+"\0"+target;if(optional&&!selected.has(target))optionalTasks.add(key);else if(!optional)optionalTasks.delete(key);selected.add(target);targets.set(name,selected);};
  if(selection.kind==="all")for(const owner of registry.owners)admit(owner.name);else if(selection.kind==="owners")for(const name of selectLiteralBuildProjectsV1(registry.owners,selection.projects,selection.exclude)){admit(name);for(const target of selection.targets??[])task(name,target,true);}else for(const value of selection.tasks)task(value.project,value.target);
@@ -103,7 +126,7 @@ export async function closeBuildOwnerAdmissionV1(selection:BuildGraphSelectionV1
    for(const target of targets.get(name)??[])if(optionalTasks.has(name+"\0"+target)&&!facts.get(name)!.project.targets[target])targets.get(name)!.delete(target);
    const active=[...targets.get(name)??[]].sort(),requestedInputs=[...inputs.get(name)??[]].sort(),revision=JSON.stringify([active,requestedInputs]);if(revisions.get(name)===revision)continue;
    const value=active.length||requestedInputs.length?await observe(owner,active,requestedInputs):facts.get(name)!;if(value.project.name!==name)throw Error("Admitted canonical build owner differs: "+owner.manifest);revisions.set(name,revision);facts.set(name,value);changed=true;files.add(owner.manifest);
-   for(const file of value.files){files.add(file);const dependency=sourceOwner(file);if(dependency)admit(dependency);}for(const dependency of value.dependencies)admit(dependency);
+   for(const file of value.files){files.add(file);admitting.add(file);const dependency=sourceOwner(file);if(dependency)admit(dependency);}for(const file of value.observedFiles??[]){files.add(file);observed.add(file);}for(const dependency of value.dependencies)admit(dependency);
    for(const[dependency,groups]of Object.entries(value.dependencyInputs??{})){admit(dependency);const selected=inputs.get(dependency)??new Set<string>();for(const input of groups)selected.add(input);inputs.set(dependency,selected);}
    for(const target of active){const operation=value.project.targets[target];if(!operation)throw Error("Unknown admitted build target: "+name+":"+target);
     for(const dependency of [...operation.dependsOn??[],...value.generatedDependencies?.[target]??[]]){
@@ -116,7 +139,7 @@ export async function closeBuildOwnerAdmissionV1(selection:BuildGraphSelectionV1
   for(const provider of registry.catalogProviders)if(selection.kind==="all"||[...targets].some(([name,selected])=>[...selected].some(target=>facts.get(name)?.project.targets[target])&&provider.consumerRoots.some(root=>contains(root,byName.get(name)!.root)))||[...inputs.values()].some(selected=>selected.has("{workspaceRoot}/"+provider.sourcePath))){
    if(!providers.has(provider.sourcePath)){providers.set(provider.sourcePath,{ownerRoot:provider.ownerRoot,sourcePath:provider.sourcePath});files.add(provider.sourcePath);const owner=sourceOwner(provider.sourcePath);if(!owner)throw Error("Canonical catalog provider owner required");admit(owner);const selected=inputs.get(owner)??new Set<string>();selected.add("{workspaceRoot}/"+provider.sourcePath);inputs.set(owner,selected);changed=true;}
   }
-  if(!changed){const sorted=(values:Map<string,Set<string>>)=>Object.fromEntries([...values].filter(([,values])=>values.size).sort(([a],[b])=>a.localeCompare(b)).map(([name,values])=>[name,[...values].sort()])),result={owners:[...admitted].sort(),files:[...files].sort(),targets:sorted(targets),inputs:sorted(inputs),catalogProviders:[...providers.values()].sort((a,b)=>a.sourcePath.localeCompare(b.sourcePath)),...([...facts.values()].some(value=>Object.keys(value.generatedDependencies??{}).length)?{generatedDependencies:Object.fromEntries([...facts].filter(([,value])=>Object.keys(value.generatedDependencies??{}).length).sort(([a],[b])=>a.localeCompare(b)).map(([name,value])=>[name,Object.fromEntries(Object.entries(value.generatedDependencies!).sort(([a],[b])=>a.localeCompare(b)).map(([target,producers])=>[target,[...producers].sort()]))]))}:{})};if(validateJsonSchemaSubset(admissionSchema,result).length)throw Error("Closed selected build owner admission required");return result;}
+  if(!changed){const foreign=[...observed].filter(file=>!admitting.has(file)).sort(),sorted=(values:Map<string,Set<string>>)=>Object.fromEntries([...values].filter(([,values])=>values.size).sort(([a],[b])=>a.localeCompare(b)).map(([name,values])=>[name,[...values].sort()])),result={owners:[...admitted].sort(),files:[...files].sort(),...(foreign.length?{observedFiles:foreign}:{}),targets:sorted(targets),inputs:sorted(inputs),catalogProviders:[...providers.values()].sort((a,b)=>a.sourcePath.localeCompare(b.sourcePath)),...([...facts.values()].some(value=>Object.keys(value.generatedDependencies??{}).length)?{generatedDependencies:Object.fromEntries([...facts].filter(([,value])=>Object.keys(value.generatedDependencies??{}).length).sort(([a],[b])=>a.localeCompare(b)).map(([name,value])=>[name,Object.fromEntries(Object.entries(value.generatedDependencies!).sort(([a],[b])=>a.localeCompare(b)).map(([target,producers])=>[target,[...producers].sort()]))]))}:{})};readBuildOwnerAdmissionV1(result);return result;}
  }
  throw Error("Finite canonical owner closure exceeded");
 }

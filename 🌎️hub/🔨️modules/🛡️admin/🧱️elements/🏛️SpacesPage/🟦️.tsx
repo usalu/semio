@@ -6,8 +6,9 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { Button, Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table, uiDataLabel, type TableColumn } from "@semio-tech/ui-react";
+import { Button, SharedBorderRow, SharedBorderRowCell, SharedBorderRowLabel, Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table, uiDataLabel, useMediaQuery, UI_MOBILE_MEDIA_QUERY, type TableColumn } from "@semio-tech/ui-react";
 import type { DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, SpaceView } from "@semio-tech/framework-os";
+import { AdminPage } from "../📄️AdminPage/🟦️.tsx";
 import { useAdminT, type AdminI18nKey } from "../📚️I18n/🟦️.tsx";
 import { useAdminSession, type AdminSpaceDetail } from "../🔑️AdminSession/🟦️.tsx";
 // #endregion 🔌️Adapters
@@ -37,15 +38,15 @@ function CreateSpaceDialog({ open, onOpenChange, onCreate }: { readonly open: bo
         <DialogHeader>
           <DialogTitle>{t("admin.spaces.createTitle")}</DialogTitle>
         </DialogHeader>
-        <div className="flex flex-col gap-single">
-          <label className="flex flex-col gap-single text-sm" htmlFor="admin-space-create-name">
-            {t("admin.spaces.name")}
-            <Input id="admin-space-create-name" value={name} onChange={(event) => setName(event.target.value)} />
-          </label>
-          <label className="flex flex-col gap-single text-sm">
-            {t("admin.spaces.kind")}
+        <SharedBorderRow orientation="vertical" edges={["top"]}>
+          <SharedBorderRow>
+            <SharedBorderRowLabel htmlFor="admin-space-create-name">{t("admin.spaces.name")}</SharedBorderRowLabel>
+            <Input id="admin-space-create-name" className="flex-1 min-w-0" value={name} onChange={(event) => setName(event.target.value)} />
+          </SharedBorderRow>
+          <SharedBorderRow>
+            <SharedBorderRowLabel htmlFor="admin-space-create-kind">{t("admin.spaces.kind")}</SharedBorderRowLabel>
             <Select id="admin-space-create-kind-select" value={kind} onValueChange={(next) => setKind(next as DirectorySpaceKind)}>
-              <SelectTrigger id="admin-space-create-kind">
+              <SelectTrigger id="admin-space-create-kind" className="flex-1 min-w-0">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -56,11 +57,11 @@ function CreateSpaceDialog({ open, onOpenChange, onCreate }: { readonly open: bo
                 ))}
               </SelectContent>
             </Select>
-          </label>
-          <label className="flex flex-col gap-single text-sm">
-            {t("admin.spaces.visibility")}
+          </SharedBorderRow>
+          <SharedBorderRow>
+            <SharedBorderRowLabel htmlFor="admin-space-create-visibility">{t("admin.spaces.visibility")}</SharedBorderRowLabel>
             <Select id="admin-space-create-visibility-select" value={visibility} onValueChange={(next) => setVisibility(next as DirectorySpaceVisibility)}>
-              <SelectTrigger id="admin-space-create-visibility">
+              <SelectTrigger id="admin-space-create-visibility" className="flex-1 min-w-0">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -68,8 +69,8 @@ function CreateSpaceDialog({ open, onOpenChange, onCreate }: { readonly open: bo
                 <SelectItem value="public">{t("admin.spaces.visibilityPublic")}</SelectItem>
               </SelectContent>
             </Select>
-          </label>
-        </div>
+          </SharedBorderRow>
+        </SharedBorderRow>
         <DialogFooter>
           <Button id="admin-space-create-cancel" icon="x" text={t("admin.spaces.cancel")} variant="ghost" onClick={() => onOpenChange(false)} />
           <Button
@@ -103,21 +104,26 @@ function MembersPanel({ spaceId, detail, loadingMore, onLoadMore, onChanged }: {
     {
       id: "actions",
       header: t("admin.spaces.actions"),
+      cell: "row",
       accessor: (row) => (
-        <Button
-          id={`admin-space-member-remove-${row.userId}`}
-          icon="trash"
-          text={t("admin.spaces.remove")}
-          variant="ghost"
-          onClick={() => client.removeSpaceMember(spaceId, row.userId).then(onChanged)}
-        />
+        <SharedBorderRow framed={false} className="h-full w-fit">
+          <Button
+            id={`admin-space-member-remove-${row.userId}`}
+            icon="trash"
+            text={t("admin.spaces.remove")}
+            variant="ghost"
+            onClick={() => client.removeSpaceMember(spaceId, row.userId).then(onChanged)}
+          />
+        </SharedBorderRow>
       ),
     },
   ];
 
   return (
-    <div className="flex flex-col gap-single border-t p-single" data-slot="admin-space-members">
-      <h3 className="text-sm font-semibold text-emphasized">{t("admin.spaces.membersTitle")}</h3>
+    <SharedBorderRow orientation="vertical" edges={["bottom"]} data-slot="admin-space-members">
+      <SharedBorderRowCell>
+        <h3 className="text-sm font-semibold text-emphasized">{t("admin.spaces.membersTitle")}</h3>
+      </SharedBorderRowCell>
       <Table columns={memberColumns} data={[...detail.members.rows]} getRowId={(row) => `user:${row.userId}`} rowDragProps={(row) => ({ "data-row-id": `user:${row.userId}` }) as React.HTMLAttributes<HTMLTableRowElement>} rowHeight="compact" />
       {detail.members.nextCursor ? (
         <Button
@@ -129,13 +135,10 @@ function MembersPanel({ spaceId, detail, loadingMore, onLoadMore, onChanged }: {
           onClick={() => onLoadMore(detail.members.nextCursor!)}
         />
       ) : null}
-      <div className="flex items-end gap-single">
-        <label className="flex flex-col gap-single text-sm" htmlFor={`admin-space-member-email-${spaceId}`}>
-          {t("admin.spaces.email")}
-          <Input id={`admin-space-member-email-${spaceId}`} value={email} onChange={(event) => setEmail(event.target.value)} />
-        </label>
+      <SharedBorderRow data-slot="admin-space-member-add-row">
+        <Input id={`admin-space-member-email-${spaceId}`} aria-label={t("admin.spaces.email")} placeholder={t("admin.spaces.email")} className="flex-1 min-w-0" value={email} onChange={(event) => setEmail(event.target.value)} />
         <Select id={`admin-space-member-role-select-${spaceId}`} value={role} onValueChange={(next) => setRole(next as DirectorySpaceRole)}>
-          <SelectTrigger id={`admin-space-member-role-${spaceId}`} className="w-32">
+          <SelectTrigger id={`admin-space-member-role-${spaceId}`} aria-label={t("admin.spaces.role")} className="w-32">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -158,8 +161,8 @@ function MembersPanel({ spaceId, detail, loadingMore, onLoadMore, onChanged }: {
             });
           }}
         />
-      </div>
-      <div className="flex items-center gap-single">
+      </SharedBorderRow>
+      <SharedBorderRow data-slot="admin-space-invite-row">
         <Button
           id={`admin-space-invite-create-${spaceId}`}
           icon="link"
@@ -173,8 +176,10 @@ function MembersPanel({ spaceId, detail, loadingMore, onLoadMore, onChanged }: {
           }}
         />
         {inviteToken ? (
-          <span className="flex items-center gap-single text-sm text-muted-foreground">
-            <code data-slot="admin-space-invite-token">{inviteToken}</code>
+          <>
+            <SharedBorderRowCell className="flex-1 text-sm text-muted-foreground">
+              <code data-slot="admin-space-invite-token">{inviteToken}</code>
+            </SharedBorderRowCell>
             <Button
               id={`admin-space-invite-copy-${spaceId}`}
               icon="copy"
@@ -184,10 +189,10 @@ function MembersPanel({ spaceId, detail, loadingMore, onLoadMore, onChanged }: {
                 void navigator.clipboard?.writeText(inviteToken);
               }}
             />
-          </span>
+          </>
         ) : null}
-      </div>
-    </div>
+      </SharedBorderRow>
+    </SharedBorderRow>
   );
 }
 //#endregion 🔖️MembersPanel
@@ -207,6 +212,7 @@ export function SpacesPage(): React.ReactElement {
   const [detail, setDetail] = React.useState<AdminSpaceDetail | null>(null);
   const [loadingMembers, setLoadingMembers] = React.useState(false);
   const [createOpen, setCreateOpen] = React.useState(false);
+  const narrow = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
 
   const loadSpaces = React.useCallback((cursor?: string, append = false) => {
     setLoadingSpaces(true);
@@ -267,6 +273,49 @@ export function SpacesPage(): React.ReactElement {
     if (expandedId) loadDetail(expandedId);
   }, [loadSpaces, loadDetail, expandedId]);
 
+  const actionButtons = (row: SpaceView): React.ReactNode => (
+    <>
+      <Button
+        id={`admin-space-rename-${row.id}`}
+        icon="pencil"
+        text={t("admin.spaces.rename")}
+        variant="ghost"
+        onClick={() => {
+          const next = window.prompt(t("admin.spaces.rename"), row.name);
+          if (next && next.trim().length > 0) client.renameSpace(row.id, next.trim()).then(refreshExpanded);
+        }}
+      />
+      <Button
+        id={`admin-space-visibility-${row.id}`}
+        icon="eye"
+        text={t("admin.spaces.setVisibility")}
+        variant="ghost"
+        onClick={() => {
+          const next: DirectorySpaceVisibility = row.visibility === "public" ? "private" : "public";
+          client.setSpaceVisibility(row.id, next).then(refreshExpanded);
+        }}
+      />
+      <Button
+        id={`admin-space-archive-${row.id}`}
+        icon="trash"
+        text={t("admin.spaces.archive")}
+        variant="ghost"
+        onClick={() => {
+          if (window.confirm(t("admin.spaces.confirmArchive", { name: row.name }))) client.archiveSpace(row.id).then(refreshExpanded);
+        }}
+      />
+      <Button
+        id={`admin-space-delete-${row.id}`}
+        icon="x"
+        text={t("admin.spaces.delete")}
+        variant="ghost"
+        onClick={() => {
+          if (window.confirm(t("admin.spaces.confirmDelete", { name: row.name }))) client.deleteSpace(row.id).then(refreshExpanded);
+        }}
+      />
+    </>
+  );
+
   const columns: TableColumn<SpaceView>[] = [
     { id: "name", header: t("admin.spaces.name"), accessor: (row) => row.name },
     { id: "kind", header: t("admin.spaces.kind"), accessor: (row) => row.kind },
@@ -276,57 +325,34 @@ export function SpacesPage(): React.ReactElement {
     {
       id: "actions",
       header: t("admin.spaces.actions"),
+      cell: "row",
       accessor: (row) => (
-        <div className="flex items-center gap-single" onClick={(event) => event.stopPropagation()}>
-          <Button
-            id={`admin-space-rename-${row.id}`}
-            icon="pencil"
-            text={t("admin.spaces.rename")}
-            variant="ghost"
-            onClick={() => {
-              const next = window.prompt(t("admin.spaces.rename"), row.name);
-              if (next && next.trim().length > 0) client.renameSpace(row.id, next.trim()).then(refreshExpanded);
-            }}
-          />
-          <Button
-            id={`admin-space-visibility-${row.id}`}
-            icon="eye"
-            text={t("admin.spaces.setVisibility")}
-            variant="ghost"
-            onClick={() => {
-              const next: DirectorySpaceVisibility = row.visibility === "public" ? "private" : "public";
-              client.setSpaceVisibility(row.id, next).then(refreshExpanded);
-            }}
-          />
-          <Button
-            id={`admin-space-archive-${row.id}`}
-            icon="trash"
-            text={t("admin.spaces.archive")}
-            variant="ghost"
-            onClick={() => {
-              if (window.confirm(t("admin.spaces.confirmArchive", { name: row.name }))) client.archiveSpace(row.id).then(refreshExpanded);
-            }}
-          />
-          <Button
-            id={`admin-space-delete-${row.id}`}
-            icon="x"
-            text={t("admin.spaces.delete")}
-            variant="ghost"
-            onClick={() => {
-              if (window.confirm(t("admin.spaces.confirmDelete", { name: row.name }))) client.deleteSpace(row.id).then(refreshExpanded);
-            }}
-          />
-        </div>
+        <SharedBorderRow framed={false} className="h-full w-fit" onClick={(event) => event.stopPropagation()}>
+          {actionButtons(row)}
+        </SharedBorderRow>
       ),
     },
   ];
 
+  const renderMobileRow = (row: SpaceView, _index: number, selected: boolean, onClick: (event: React.MouseEvent) => void): React.ReactNode => (
+    <SharedBorderRow orientation="vertical" edges={["bottom"]} data-row-id={`space:${row.id}`} data-state={selected ? "selected" : undefined} data-slot="admin-space-row">
+      <SharedBorderRowCell as="div" role="button" tabIndex={0} aria-expanded={selected} className="font-semibold" onClick={onClick} onKeyDown={(event) => (event.key === "Enter" || event.key === " ") && onClick(event as unknown as React.MouseEvent)}>
+        {row.name}
+      </SharedBorderRowCell>
+      <SharedBorderRow framed={false}>
+        <SharedBorderRowCell className="flex-1 text-xs text-muted-foreground">{row.kind}</SharedBorderRowCell>
+        <SharedBorderRowCell className="flex-1 text-xs text-muted-foreground">{row.visibility === "public" ? t("admin.spaces.visibilityPublic") : t("admin.spaces.visibilityPrivate")}</SharedBorderRowCell>
+        <SharedBorderRowCell className="text-xs text-muted-foreground">{t("admin.spaces.members")} {row.memberCount}</SharedBorderRowCell>
+        <SharedBorderRowCell className="text-xs text-muted-foreground">{t("admin.spaces.documents")} {row.documentCount}</SharedBorderRowCell>
+      </SharedBorderRow>
+      <SharedBorderRow orientation="vertical" framed={false} className="[&_button]:w-full [&_button]:justify-start">
+        {actionButtons(row)}
+      </SharedBorderRow>
+    </SharedBorderRow>
+  );
+
   return (
-    <div className="flex h-full w-full flex-col gap-single overflow-auto p-single">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-emphasized">{t("admin.spaces.title")}</h1>
-        <Button id="admin-space-create-open" icon="plus" text={t("admin.spaces.create")} onClick={() => setCreateOpen(true)} />
-      </div>
+    <AdminPage title={t("admin.spaces.title")} data-slot="admin-spaces" actions={<Button id="admin-space-create-open" icon="plus" text={t("admin.spaces.create")} onClick={() => setCreateOpen(true)} />}>
       <Table
         columns={columns}
         data={spaces ?? []}
@@ -335,12 +361,18 @@ export function SpacesPage(): React.ReactElement {
         rowDragProps={(row) => ({ "data-row-id": `space:${row.id}` }) as React.HTMLAttributes<HTMLTableRowElement>}
         onRowClick={(row) => toggleExpanded(row.id)}
         selectedRows={expandedId ? new Set([`space:${expandedId}`]) : undefined}
+        isMobile={narrow}
+        renderMobileRow={renderMobileRow}
       />
-      {spacesCursor ? <Button id="admin-spaces-load-more" icon="arrow-down" text={t("admin.spaces.loadMore")} variant="ghost" disabled={loadingSpaces} onClick={() => loadSpaces(spacesCursor, true)} /> : null}
+      {spacesCursor ? (
+        <SharedBorderRow edges={["bottom"]}>
+          <Button id="admin-spaces-load-more" icon="arrow-down" text={t("admin.spaces.loadMore")} variant="ghost" disabled={loadingSpaces} onClick={() => loadSpaces(spacesCursor, true)} />
+        </SharedBorderRow>
+      ) : null}
       {expandedId && detail ? (
         <MembersPanel spaceId={expandedId} detail={detail} loadingMore={loadingMembers} onLoadMore={(cursor) => loadDetail(expandedId, cursor, true)} onChanged={refreshExpanded} />
       ) : null}
       <CreateSpaceDialog open={createOpen} onOpenChange={setCreateOpen} onCreate={(name, kind, visibility) => client.createSpace(name, kind, visibility).then(() => loadSpaces())} />
-    </div>
+    </AdminPage>
   );
 }

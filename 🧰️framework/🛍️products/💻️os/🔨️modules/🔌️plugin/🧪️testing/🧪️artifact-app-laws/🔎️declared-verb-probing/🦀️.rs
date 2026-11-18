@@ -205,6 +205,7 @@ where A:ArtifactApp+Default,M:store::ReferenceSpaceMember+store::MemberFactory+S
 /// 🧹️ Retires the stationary render tree through the host's own funded close after the caller observed it, so the next render rebuilds from the current document instead of re-serving the retained tree.
 fn release_fixture_render<A,M>(app:&mut VcsArtifactApp<A,M>,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>
 where A:ArtifactApp+Default,M:store::ReferenceSpaceMember+store::MemberFactory+Send+'static{
+    fixture_end_turn(cx)?;
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
         if app.close_render_work_request(cx)?==Some(true){return Ok(())}
         if cx.should_yield(){break}
@@ -216,6 +217,7 @@ where A:ArtifactApp+Default,M:store::ReferenceSpaceMember+store::MemberFactory+S
 #[doc(hidden)]
 pub async fn render_registered_fixture_app_over<A,M>(app:&mut VcsArtifactApp<A,M>,body_key:&str,snapshot_override_json:Option<&str>,view:&semio_framework::ViewModel,cx:&mut semio_framework_job::StepContext<'_>)->Result<String,semio_framework_job::OriginalTurnFailure>
 where A:ArtifactApp+Default,M:store::ReferenceSpaceMember+store::MemberFactory+Send+'static{
+    fixture_end_turn(cx)?;
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
         if cx.should_yield(){break}
         if app.render(body_key,snapshot_override_json,view,cx).await?.is_some(){

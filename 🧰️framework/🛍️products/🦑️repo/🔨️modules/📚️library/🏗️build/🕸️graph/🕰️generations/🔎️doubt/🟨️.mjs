@@ -1,6 +1,7 @@
 import{stat}from"node:fs/promises";
 import{basename,dirname,isAbsolute,resolve}from"node:path";
 import{createYielderV1}from"../🧱️guards/🟨️.mjs";
+import{rebaseRowV1,rebaseRowsV1}from"../../../👁️observation/🏚️relocation/🟨️.mjs";
 
 const ABSENT=new Set(["exists","fileExists","directoryExists"]),LISTING=new Set(["readdir","readdirNames"]);
 const parentOf=path=>{const cut=Math.max(path.lastIndexOf("/"),path.lastIndexOf("\\"));return cut<0?"":path.slice(0,cut);};
@@ -77,6 +78,7 @@ export function createEpochDoubtV1({stamps,statFile=path=>stat(path).catch(()=>u
  return Object.freeze({
   /** 🔢️ Classifies `rows`: 1 where the row is doubtful. */
   async classify(rows,{signal,progress}={}){
+   rows=rebaseRowsV1(rows);files.clear();
    const wantedDirectories=new Set(),wantedPaths=new Set();
    for(const row of rows)rowDependenciesV1(row,wantedDirectories,wantedPaths);
    const fresh=[...wantedDirectories].filter(path=>!directories.has(path));
@@ -86,7 +88,7 @@ export function createEpochDoubtV1({stamps,statFile=path=>stat(path).catch(()=>u
   },
   /** 💾️ After the check: keeps the stamps of the directories whose rows were all verified to hold and none stale, so the next pass vouches for them; only the rows that were not verified and the stale ones are read, never the rows that held. */
   async settled({rows,ids,stale}){
-   const selected=new Uint8Array(rows.length),exclude=new Set(),forget=id=>{const own=new Set();rowDependenciesV1(rows[id],own,new Set());for(const path of own)exclude.add(path);};
+   const selected=new Uint8Array(rows.length),exclude=new Set(),forget=id=>{const own=new Set();rowDependenciesV1(rebaseRowV1(rows[id]),own,new Set());for(const path of own)exclude.add(path);};
    for(const id of ids)selected[id]=1;
    for(let id=0;id<rows.length;id++)if(selected[id]!==1)forget(id);
    for(const id of stale)if(selected[id]===1)forget(id);
@@ -95,7 +97,7 @@ export function createEpochDoubtV1({stamps,statFile=path=>stat(path).catch(()=>u
   /** 📦️ After a generation is published: stamps every directory its structural rows look into, as far as it was untouched since `observedAt` (before the facts were observed), so a fresh process vouches for those directories at once. */
   async published({rows,observedAt}){
    const wanted=new Set(),ignored=new Set();
-   for(const row of rows)rowDependenciesV1(row,wanted,ignored);
+   for(const row of rows)rowDependenciesV1(rebaseRowV1(row),wanted,ignored);
    const{measured:taken}=await stamps.classify([...wanted],{observedAt});
    return stamps.save(taken);
   },

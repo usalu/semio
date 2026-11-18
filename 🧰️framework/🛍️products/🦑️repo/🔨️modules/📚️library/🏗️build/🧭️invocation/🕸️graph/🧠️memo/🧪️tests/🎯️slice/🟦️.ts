@@ -12,6 +12,7 @@ import type {ChangeCursorV1} from "../../../../../../../../../../🔨️modules/
 import type {ChangeAnswerV1,ChangeJournalClientV1} from "../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📜️changes/🧭️client/🟦️.ts";
 import {openGraphMemoV1,type MemoRecheckV1,type MemoRowV1} from "../../🟦️.ts";
 import {buildGraphMemoRelevanceV1,writeGraphMemoSliceSidecarV1} from "../../📤️relevance/🟦️.ts";
+beforeAll(async()=>{await (await import("../../../../../🕸️graph/📥️inference/🟨️.mjs")).libraryBootstrap;});
 
 const EPOCH="fedcba9876543210",exclude={rooted:[".gen",".leases"],names:["node_modules"]},insensitive=process.platform==="darwin"||process.platform==="win32";
 let sandbox="",counter=0;

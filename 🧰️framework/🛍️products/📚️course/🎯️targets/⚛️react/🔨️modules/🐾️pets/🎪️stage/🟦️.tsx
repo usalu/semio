@@ -21,7 +21,7 @@ import type { PetLayerHandle, PetLayerProps } from "@semio-tech/pets-react";
 import type { Deed, Menagerie, PetMode, Point, Slug } from "@semio-tech/pets";
 import { localized, type CourseLabelKey, type CourseLocale, type CourseText } from "../../🌐️i18n/🟦️.ts";
 import { HOME_PAGES, type CourseState, type CourseStep } from "../../🧭️session/🧮️state/🟦️.ts";
-import { BodyButton, useAnnouncement } from "../../🪟️chrome/🟦️.tsx";
+import { BodyButton, CELL, GROUP, cn, useAnnouncement } from "../../🪟️chrome/🟦️.tsx";
 
 //#region 🎬️Scene
 /** 🏡️ The scene of every screen that belongs to no quiz: the render target's own name for it. */
@@ -223,20 +223,22 @@ export function PetsPlayground(props: { readonly playing: PetPlay; readonly text
   const scope = useId();
   const { announcement, announce } = useAnnouncement();
   return (
-    <div className={props.row}>
-      <span className={props.name} aria-hidden="true">
+    <div {...GROUP} {...CELL} className={props.row}>
+      <span {...CELL} className={cn(props.name, "p-double")} aria-hidden="true">
         {text("course.preferences.petsPlayWith")}
       </span>
-      <div role="group" aria-label={text("course.preferences.petsPlayWith")} className="grid min-w-0 grid-cols-1 items-center gap-single sm:grid-cols-[max-content_minmax(0,1fr)]" data-pets-play="">
+      <div role="group" aria-label={text("course.preferences.petsPlayWith")} {...GROUP} {...CELL} className="flex min-w-0 flex-col" data-pets-play="">
         {playing.players.map((player) => (
-          <div key={player.species} role="group" aria-labelledby={`${scope}-${player.species}`} className="col-span-full grid grid-cols-subgrid items-center" data-pets-player={player.species}>
-            <span id={`${scope}-${player.species}`} className="text-sm font-semibold">
+          <div key={player.species} role="group" aria-labelledby={`${scope}-${player.species}`} {...GROUP} {...CELL} className="flex min-w-0 flex-col" data-pets-player={player.species}>
+            <span id={`${scope}-${player.species}`} {...CELL} className="p-double text-sm font-semibold">
               {player.name}
             </span>
-            <span className="flex min-w-0 flex-wrap gap-single">
+            <span {...CELL} className="course-tiles px-single">
               {PET_DEEDS.map((deed) => (
                 <BodyButton
                   key={deed}
+                  row
+                  tile
                   onClick={() => {
                     playing.play(player.species, deed);
                     announce(text(PET_DEED_SAID[deed], { name: player.name }));
@@ -248,7 +250,7 @@ export function PetsPlayground(props: { readonly playing: PetPlay; readonly text
             </span>
           </div>
         ))}
-        <p role="status" aria-live="polite" aria-atomic="true" className="col-span-full m-0 text-xs text-muted-foreground">
+        <p role="status" aria-live="polite" aria-atomic="true" {...CELL} className="m-0 p-double text-xs text-muted-foreground">
           {announcement.message === "" ? null : <span key={announcement.serial}>{announcement.message}</span>}
         </p>
       </div>

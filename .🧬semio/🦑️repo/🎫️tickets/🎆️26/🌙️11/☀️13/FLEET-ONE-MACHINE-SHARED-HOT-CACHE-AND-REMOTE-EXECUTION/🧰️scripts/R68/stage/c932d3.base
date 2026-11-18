@@ -1,0 +1,351 @@
+import{afterAll,expect,test}from"bun:test";
+import{chmodSync,existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,utimesSync,writeFileSync}from"node:fs";
+import{tmpdir}from"node:os";
+import{join}from"node:path";
+import{spawnSync}from"node:child_process";
+import{validateJsonSchemaSubset}from"../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import schema from"../🧬️schema/🔣️.json"with{type:"json"};
+import{READY_POLICY_V1 as P,READY_STAGES_V1 as STAGES,READY_STATUS_SCHEMA_V1,createReadyLeaseV1,createReadyPortsV1,createReadyStatusV1,readyInputHashV1,readyReasonV1,readyRepoBinaryV1,emptyReadyStateV1,readyBackoffV1,readyDecideV1,readyDigestsV1,readyHumanActiveV1,readyHumanRecordV1,readyHumanVerdictV1,readyIsServerV1,readyJobsV1,readyRefusalV1,readyTreeMegabytesV1,runReadyStageV1,runReadyV1,type ReadyCodeV1,type ReadyLocalStateV1,type ReadyPortsV1,type ReadyRunResultV1,type ReadyStatusV1}from"../🟦️.ts";
+
+/** 🚦️ Readiness that drives itself: a ready machine does nothing, a machine that is not ready runs its stages and records them, a failed stage waits for its back-off and is recorded, the group server never runs, and two runners on one machine never overlap. */
+const scratch:string[]=[];
+const temp=(label:string)=>{const path=mkdtempSync(join(tmpdir(),`ready-${label}-`));scratch.push(path);return path;};
+afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true});});
+const fixtureFile=join(import.meta.dir,"🧫️fixtures","🔣️.json"),schemaFile=join(import.meta.dir,"..","🧬️schema","🔣️.json");
+
+test("digests, back-off, jobs, tree size and the decision equal an independent implementation on the authored fixture",()=>{
+ const fixture=JSON.parse(readFileSync(fixtureFile,"utf8")) as {digests:{platform:"linux"|"macos"|"windows";files:Record<string,string>}[];backoff:{attempts:number;unit:number}[];jobs:{cores:number;availableMegabytes:number|null}[];tree:{rows:string;root:number}[];decide:{name:string;input:Parameters<typeof readyDecideV1>[0]}[];human:{name:string;input:Parameters<typeof readyHumanVerdictV1>[0]}[]};
+ const ours={
+  digests:fixture.digests.map(row=>readyDigestsV1({platform:row.platform,hash:path=>row.files[path]})),
+  backoff:fixture.backoff.map(row=>readyBackoffV1(row.attempts,row.unit)),
+  jobs:fixture.jobs.map(row=>readyJobsV1(row)),
+  tree:fixture.tree.map(row=>readyTreeMegabytesV1(row.rows,row.root)),
+  decide:fixture.decide.map(row=>readyDecideV1(row.input)),
+  human:fixture.human.map(row=>readyHumanVerdictV1(row.input)),
+ };
+ expect(ours.backoff.slice(0,7)).toEqual([30000,60000,120000,240000,480000,960000,1200000]);
+ expect(ours.tree).toEqual([9,0]);
+ expect(ours.human).toEqual([true,false,false,false,true,true,false,false]);
+ expect(new Set(ours.digests.map(row=>row.digest)).size).toBe(4);
+  expect(ours.digests[0]!.stages[0]!.digest).toBe(ours.digests[1]!.stages[0]!.digest);
+ expect(ours.digests[0]!.stages[2]!.digest).not.toBe(ours.digests[1]!.stages[2]!.digest);
+ expect(ours.digests[0]!.stages[3]!.digest,"a lock file edit touches only the stage that reads it").toBe(ours.digests[1]!.stages[3]!.digest);
+ expect(ours.digests[0]!.stages[4]!.digest).toBe(ours.digests[1]!.stages[4]!.digest);
+ const python=spawnSync("python3",["-I",join(import.meta.dir,"🧫️fixtures","🐍️oracle.py"),fixtureFile,schemaFile],{encoding:"utf8"});
+ expect(python.status).toBe(0);
+ expect(JSON.parse(python.stdout)).toEqual(JSON.parse(JSON.stringify(ours)));
+});
+
+test("every refusal code has its text in English and German and the stage table is the order the bootstrap needs",()=>{
+ const codes=schema.definitions.Refusal.properties.code.enum as ReadyCodeV1[];
+ expect(Object.keys(schema.definitions.Texts.const.en).sort()).toEqual([...codes,"ready"].sort());
+ expect(Object.keys(schema.definitions.Texts.const.de).sort()).toEqual([...codes,"ready"].sort());
+ for(const code of codes){const refusal=readyRefusalV1(code,{stage:"tools",exit:7,available:100,needed:1536});expect(refusal.en).not.toBe(refusal.de);expect(refusal.en).not.toContain("{");expect(refusal.de).not.toContain("{");}
+ expect(STAGES.map(stage=>stage.name)).toEqual(["native","repo-mcp","dependencies","tools","workspace"]);
+ expect(STAGES.find(stage=>stage.name==="tools")!.arguments).toEqual(["tools","setup","all"]);
+});
+
+type Outcome=Partial<ReadyRunResultV1>;
+function world(options:Readonly<{outcomes?:Outcome[];server?:boolean;human?:boolean;memory?:number|null;state?:ReadyLocalStateV1;marker?:boolean;repo?:boolean;stopAfterSleeps?:number;store?:string;leaseDirectory?:string;owner?:string;shared?:{state:ReadyLocalStateV1;marker:boolean;now:number;calls:string[];running:number;maximum:number}}>={}){
+ const shared=options.shared??{state:options.state??emptyReadyStateV1(),marker:options.marker??false,now:1_000_000,calls:[],running:0,maximum:0};
+ const controller=new AbortController(),sleeps:number[]=[],updates:Partial<ReadyStatusV1>[]=[],queue=[...options.outcomes??[]];
+ const digest=readyDigestsV1({platform:"linux",hash:path=>path==="bun.lock"?"a".repeat(64):"b".repeat(64)});
+ const status=options.store===undefined?{update:(patch:Partial<ReadyStatusV1>)=>{updates.push(patch);}}:(()=>{const real=createReadyStatusV1({store:options.store,origin:"g1-m99",platform:"linux",now:()=>shared.now});return{update:(patch:Partial<ReadyStatusV1>)=>{updates.push(patch);real.update(patch);}};})();
+ const ports:ReadyPortsV1={
+  server:options.server??false,now:()=>shared.now,jitter:0,cores:4,
+  sleep:async(milliseconds,signal)=>{sleeps.push(milliseconds);shared.now+=milliseconds;await new Promise<void>(done=>setTimeout(done,2));if(sleeps.length>=(options.stopAfterSleeps??40)||signal.aborted)controller.abort();},
+  digests:async()=>digest,
+  state:{read:()=>structuredClone(shared.state),write:state=>{shared.state=structuredClone(state);}},
+  marker:{exists:()=>shared.marker,write:()=>{shared.marker=true;}},
+  repoPresent:()=>options.repo??true,human:()=>options.human??false,
+  lease:createReadyLeaseV1({directory:options.leaseDirectory??temp("lease"),owner:options.owner??"one",now:()=>Date.now()}),
+  memory:()=>({availableMegabytes:options.memory===undefined?8192:options.memory,ok:options.memory===undefined||options.memory===null||options.memory>=P.memoryFloorMegabytes}),
+  run:async stage=>{
+   shared.calls.push(stage.name);shared.running++;shared.maximum=Math.max(shared.maximum,shared.running);
+   await new Promise<void>(done=>setTimeout(done,8));
+   shared.running--;
+   return{exit:0,timedOut:false,spawnFailed:false,cancelled:false,detached:false,startedMs:shared.now,peakMegabytes:512,tail:[],...queue.shift()};
+  },
+  status:{update:patch=>status.update(patch)},say:()=>{},
+ };
+ return{ports,controller,shared,sleeps,updates,digest,last:()=>Object.assign({},...updates) as Partial<ReadyStatusV1>};
+}
+
+test("a ready machine does nothing: no stage, no marker write, status ready",async()=>{
+ const probe=world({stopAfterSleeps:1}),done=Object.fromEntries(probe.digest.stages.map(stage=>[stage.name,{digest:stage.digest,doneMs:1}]));
+ const w=world({stopAfterSleeps:1,marker:true,state:{...emptyReadyStateV1(),stages:done,readyMs:5}});
+ await runReadyV1(w.ports,w.controller.signal);
+ expect(w.shared.calls).toEqual([]);
+ expect(w.last().state).toBe("ready");expect(w.last().ready).toBe(true);expect(w.last().digest).toBe(w.digest.digest);
+});
+
+test("a machine made ready by a person (marker and binary, no stage run here) adopts the marker and does nothing",async()=>{
+ const w=world({stopAfterSleeps:1,marker:true,repo:true});
+ await runReadyV1(w.ports,w.controller.signal);
+ expect(w.shared.calls).toEqual([]);expect(w.shared.state.adopted).toBe(true);expect(w.last().ready).toBe(true);
+});
+
+test("a machine that is not ready runs every stage in order, records each, writes the marker last and ready.json validates against the schema",async()=>{
+ const store=temp("store"),w=world({store,stopAfterSleeps:1,repo:false});
+ let writes=0;const original=w.ports.marker.write;
+ const ports:ReadyPortsV1={...w.ports,marker:{exists:w.ports.marker.exists,write:()=>{writes=w.shared.calls.length;original();}},repoPresent:()=>w.shared.calls.length>0};
+ await runReadyV1(ports,w.controller.signal);
+ expect(w.shared.calls).toEqual(STAGES.map(stage=>stage.name));
+ expect(writes).toBe(STAGES.length);
+ expect(w.shared.marker).toBe(true);
+ expect(Object.keys(w.shared.state.stages)).toEqual(STAGES.map(stage=>stage.name));
+ expect(w.shared.state.peakMegabytes).toBe(512);expect(w.shared.state.failure).toBeNull();
+ const running=w.updates.filter(update=>update.state==="running").map(update=>update.stage);
+ expect(running).toEqual(STAGES.map(stage=>stage.name));
+ const file=JSON.parse(readFileSync(join(store,"v1","origins","g1-m99","ready.json"),"utf8")) as ReadyStatusV1;
+ expect(validateJsonSchemaSubset(READY_STATUS_SCHEMA_V1,file,schema)).toEqual([]);
+ expect(file.ready).toBe(true);expect(file.state).toBe("ready");expect(file.digest).toBe(w.digest.digest);expect(file.peakMegabytes).toBe(512);expect(file.readyMs).not.toBeNull();
+});
+
+test("a failed stage is recorded with both texts, waits for its back-off exactly, is retried, and a success clears the attempts",async()=>{
+ const store=temp("store"),w=world({store,outcomes:[{},{},{},{exit:7,tail:["boom"]},{exit:7,tail:["boom again"]}],stopAfterSleeps:12});
+ await runReadyV1(w.ports,w.controller.signal);
+ expect(w.shared.calls.slice(0,7)).toEqual(["native","repo-mcp","dependencies","tools","tools","tools","workspace"]);
+ expect(w.sleeps.slice(0,2)).toEqual([30000,60000]);
+ const failed=w.updates.filter(update=>update.state==="backoff");
+ expect(failed.length).toBeGreaterThan(1);
+ const first=failed[0]!;
+ expect(first.refusal!.code).toBe("stage-failed");expect(first.refusal!.en).toContain("tools");expect(first.refusal!.en).toContain("7");expect(first.refusal!.de).toContain("Stufe tools");
+ expect(first.attempts).toBe(1);expect(first.exit).toBe(7);expect(first.tail).toEqual(["boom"]);expect(first.nextAttemptMs!).toBeGreaterThan(1_000_000);
+ expect(failed[failed.length-1]!.attempts).toBe(2);
+ expect(w.shared.state.failure).toBeNull();expect(w.shared.state.attempts).toBe(0);
+ expect(w.shared.marker).toBe(true);
+});
+
+test("a stage that ends with the retry exit of the repo command (75, run again) waits the first back-off every time instead of doubling it, and a real failure still doubles",async()=>{
+ const w=world({outcomes:[{},{},{},{exit:75},{exit:75},{exit:75},{exit:7},{exit:7}],stopAfterSleeps:9});
+ await runReadyV1(w.ports,w.controller.signal);
+ expect(w.sleeps.slice(0,3)).toEqual([30000,30000,30000]);expect(w.sleeps[3]!).toBeGreaterThan(60000);
+});
+
+test("a failing machine never loops hot: with a frozen clock a failed stage runs once and waits",async()=>{
+ const w=world({outcomes:Array.from({length:20},()=>({exit:1})),stopAfterSleeps:6});
+ const frozen:ReadyPortsV1={...w.ports,sleep:async(milliseconds,signal)=>{w.sleeps.push(milliseconds);await new Promise<void>(done=>setTimeout(done,2));if(w.sleeps.length>=6||signal.aborted)w.controller.abort();}};
+ await runReadyV1(frozen,w.controller.signal);
+ expect(w.shared.calls).toEqual(["native"]);
+ expect(w.sleeps.every(milliseconds=>milliseconds>0&&milliseconds<=P.backoffInitialMilliseconds)).toBe(true);
+ expect(w.shared.state.failure!.code).toBe("stage-failed");
+});
+
+test("timeouts and spawn failures are recorded with their own code and the stage input changing retries at once",async()=>{
+ const w=world({outcomes:[{exit:null,timedOut:true},{exit:null,spawnFailed:true}],stopAfterSleeps:4});
+ await runReadyV1(w.ports,w.controller.signal);
+ const codes=w.updates.filter(update=>update.state==="backoff").map(update=>update.refusal!.code);
+ expect(codes[0]).toBe("stage-timeout");expect(codes).toContain("spawn-failed");
+ const decided=readyDecideV1({server:false,digest:"e".repeat(64),stages:[{name:"native",digest:"1".repeat(64)}],done:{},marker:false,repo:false,human:false,lease:"free",memoryOk:true,failure:{digest:"d".repeat(64),nextAttemptMs:9_999_999},now:1});
+ expect(decided.action).toBe("run");
+});
+
+test("the group server never runs a stage and writes nothing",async()=>{
+ const store=temp("store"),w=world({server:true,store,stopAfterSleeps:1});
+ await runReadyV1(w.ports,w.controller.signal);
+ expect(w.shared.calls).toEqual([]);expect(w.updates).toEqual([]);expect(existsSync(join(store,"v1","origins","g1-m99","ready.json"))).toBe(false);
+ expect(readyIsServerV1("g1-server","g1")).toBe(true);expect(readyIsServerV1("g1-m03","g1")).toBe(false);expect(readyIsServerV1("g1-server",undefined)).toBe(false);expect(readyIsServerV1("g2-server","g1")).toBe(false);
+ expect(readyDecideV1({server:true,digest:"d".repeat(64),stages:[],done:{},marker:false,repo:false,human:false,lease:"free",memoryOk:true,failure:null,now:1}).action).toBe("server");
+});
+
+test("a person running the setup and too little free memory are observed or waited for, never fought",async()=>{
+ const human=world({human:true,stopAfterSleeps:2});
+ await runReadyV1(human.ports,human.controller.signal);
+ expect(human.shared.calls).toEqual([]);expect(human.last().state).toBe("observing");expect(human.last().refusal!.code).toBe("human-running");expect(human.last().refusal!.de).toContain("Person");
+ const low=world({memory:900,stopAfterSleeps:2});
+ await runReadyV1(low.ports,low.controller.signal);
+ expect(low.shared.calls).toEqual([]);expect(low.last().state).toBe("waiting");expect(low.last().refusal!.code).toBe("memory-low");expect(low.last().refusal!.en).toContain("900");
+ const directory=temp("human");
+ expect(readyHumanActiveV1(directory)).toBe(false);
+ const file=join(directory,P.humanName),listed={commands:()=>["bash /home/w/native-bootstrap.sh /tmp/log"]},unlisted={commands:()=>["bash /home/w/other.sh"]};
+ writeFileSync(file,"");
+ expect(readyHumanActiveV1(directory,Date.now(),listed),"an empty marker counts while the older wrapper is in the process list").toBe(true);
+ expect(readyHumanActiveV1(directory,Date.now(),unlisted),"an empty marker of a wrapper that is gone expires at once").toBe(false);
+ expect(readyHumanActiveV1(directory,Date.now(),{commands:()=>{throw new Error("ps failed");}})).toBe(false);
+ const old=new Date(Date.now()-P.humanFreshMilliseconds-5000);utimesSync(file,old,old);expect(readyHumanActiveV1(directory,Date.now(),listed)).toBe(false);
+ const exited=spawnSync(process.execPath,["-e","0"]);expect(exited.status).toBe(0);
+ const record=(pid:number,startedMs:number)=>JSON.stringify({version:1,pid,startedMs});
+ writeFileSync(file,record(process.pid,Date.now()));
+ expect(readyHumanActiveV1(directory,Date.now(),unlisted),"a live owner counts however the process list reads").toBe(true);
+ writeFileSync(file,record(exited.pid,Date.now()));
+ expect(readyHumanActiveV1(directory,Date.now(),listed),"the process that wrote the marker is gone: the fresh marker is ignored").toBe(false);
+ writeFileSync(file,record(process.pid,Date.now()-P.humanMaximumMilliseconds-1000));
+ expect(readyHumanActiveV1(directory,Date.now(),listed),"a live owner that started longer ago than the maximum no longer blocks, whatever the file times say").toBe(false);
+ expect(readyHumanRecordV1("")).toBeNull();expect(readyHumanRecordV1("{\"version\":1,\"pid\":0,\"startedMs\":5}")).toBeNull();expect(readyHumanRecordV1("{\"version\":1,\"pid\":7,\"startedMs\":5}")).toEqual({pid:7,startedMs:5});
+ expect(validateJsonSchemaSubset(schema.definitions.Human,JSON.parse(record(7,5)),schema)).toEqual([]);
+ expect(validateJsonSchemaSubset(schema.definitions.Human,{version:1,pid:0,startedMs:5},schema)).not.toEqual([]);
+});
+
+test("two runners on one machine never overlap: one lease, every stage runs once, the loser observes",async()=>{
+ const leaseDirectory=temp("lease2"),shared={state:emptyReadyStateV1(),marker:false,now:1_000_000,calls:[] as string[],running:0,maximum:0};
+ const a=world({shared,leaseDirectory,owner:"a",stopAfterSleeps:6}),b=world({shared,leaseDirectory,owner:"b",stopAfterSleeps:6});
+ await Promise.all([runReadyV1(a.ports,a.controller.signal),runReadyV1(b.ports,b.controller.signal)]);
+ expect(shared.maximum).toBe(1);
+ expect(shared.calls).toEqual(STAGES.map(stage=>stage.name));
+ expect(shared.marker).toBe(true);
+ const sawLoser=[a,b].some(runner=>runner.updates.some(update=>update.refusal?.code==="lease-held"));
+ expect(sawLoser||a.updates.length+b.updates.length>0).toBe(true);
+});
+
+test("the lease: exclusive, renewed by its holder, taken over only when stale or its process is gone, released by its owner only",()=>{
+ const directory=temp("lease3");let clock=1000;
+ const make=(owner:string,alive=(_pid:number)=>true)=>createReadyLeaseV1({directory,owner,pid:owner==="a"?111:222,now:()=>clock,alive});
+ const a=make("a"),b=make("b");
+ expect(a.acquire()).toBe("own");expect(b.acquire()).toBe("other");expect(a.acquire()).toBe("own");expect(b.peek()).toBe("other");expect(a.peek()).toBe("own");
+ b.release();expect(a.peek()).toBe("own");
+ clock+=P.leaseStaleMilliseconds-1;expect(b.acquire()).toBe("other");
+ expect(a.renew()).toBe(true);clock+=P.leaseStaleMilliseconds-1;expect(b.acquire()).toBe("other");
+ clock+=2;expect(b.peek()).toBe("free");expect(b.acquire()).toBe("own");expect(a.renew()).toBe(false);expect(a.peek()).toBe("other");
+ const dead=make("c",pid=>pid!==222);expect(dead.peek()).toBe("free");
+ b.release();expect(b.peek()).toBe("free");
+ expect(existsSync(join(directory,"takeover"))).toBe(false);
+});
+
+test("the status file is replaced atomically, validated, and a document that violates the schema is not written",()=>{
+ const store=temp("status");let clock=5;
+ const status=createReadyStatusV1({store,origin:"g1-m98",platform:"linux",now:()=>clock});
+ status.update({state:"running",stage:"native"});
+ const file=join(store,"v1","origins","g1-m98","ready.json");
+ expect(JSON.parse(readFileSync(file,"utf8")).stage).toBe("native");
+ clock=9;status.update({state:"ready",ready:true,stage:null,peakMegabytes:1.5 as unknown as number});
+ expect(JSON.parse(readFileSync(file,"utf8")).state).toBe("running");
+});
+
+const posix=process.platform==="win32"?test.skip:test;
+function fakeHome(script:string):{home:string;restore:()=>void}{
+ const home=temp("home"),bin=join(home,".local","bin");mkdirSync(bin,{recursive:true});
+ writeFileSync(join(bin,"repo"),script);chmodSync(join(bin,"repo"),0o755);
+ return{home,restore:()=>undefined};
+}
+const stageOf=(name:string,timeoutMilliseconds?:number)=>({...STAGES.find(stage=>stage.name===name)!,...timeoutMilliseconds===undefined?{}:{timeoutMilliseconds}});
+
+posix("a real stage runs the account's repo binary with its tools on PATH, the language, no cache override and a bounded job count, and keeps a log and a peak",async()=>{
+ const {home,restore}=fakeHome('#!/bin/sh\necho "args=$*"\necho "locale=$LANG"\necho "lang=$SEMIO_LANGUAGE jobs=$CARGO_BUILD_JOBS make=$MAKEFLAGS root=$SEMIO_WORKSPACE_ROOT token=${SEMIO_REMOTE_CACHE_TOKEN:-none}"\necho "path=$PATH"\nexit 0\n');
+ try{
+  const root=temp("root");
+  const result=await runReadyStageV1({home,root,environment:{PATH:"/usr/bin:/bin",SEMIO_REMOTE_CACHE_TOKEN:"secret",SEMIO_FLEET_GROUP:"g1"},stage:stageOf("tools"),signal:new AbortController().signal,jobs:3,onLine:()=>undefined});
+  expect(result.exit).toBe(0);expect(result.timedOut).toBe(false);expect(result.spawnFailed).toBe(false);
+  expect(result.tail[0]).toBe("args=tools setup all");
+  expect(result.tail[1]).toBe(`locale=${process.platform==="darwin"?"en_US.UTF-8":"C.UTF-8"}`);
+  expect(result.tail[2]).toBe(`lang=en jobs=3 make=-j3 root=${root} token=none`);
+  expect(result.tail[3]!.startsWith(`path=${join(home,".local","bin")}`)).toBe(true);
+  expect(readFileSync(join(root,...P.directory,"tools.log"),"utf8")).toContain("args=tools setup all");
+  const german=await runReadyStageV1({home,root,environment:{PATH:"/usr/bin:/bin",SEMIO_LANGUAGE:"de"},stage:stageOf("tools"),signal:new AbortController().signal,jobs:1,onLine:()=>undefined});
+  expect(german.tail[2]).toContain("lang=de");
+ }finally{restore();}
+});
+
+posix("a real stage reports a failing exit and a missing binary, never throws",async()=>{
+ const {home,restore}=fakeHome('#!/bin/sh\necho "no network"\nexit 9\n');
+ try{
+  const root=temp("root"),failed=await runReadyStageV1({home,root,environment:{},stage:stageOf("workspace"),signal:new AbortController().signal,jobs:1,onLine:()=>undefined});
+  expect(failed.exit).toBe(9);expect(failed.tail).toEqual(["no network"]);
+ }finally{restore();}
+ const empty=temp("empty"),missing=await runReadyStageV1({home:empty,root:temp("root"),environment:{},stage:stageOf("tools"),signal:new AbortController().signal,jobs:1,onLine:()=>undefined});
+ expect(missing.spawnFailed).toBe(true);expect(missing.exit).toBeNull();
+});
+
+posix("a stage outlives the runner that started it: aborting the signal detaches, a new runner adopts the same process and gets its result, and the cancel file ends the whole process group",async()=>{
+ const pidFile=join(temp("pids"),"pid");
+ const {home}=fakeHome(`#!/bin/sh\n(sleep 30 & echo $! > ${pidFile}; wait) &\nsleep 1\necho adopted-output\nwait\n`);
+ const gone=(pid:number):boolean=>{try{process.kill(pid,0);return false;}catch{return true;}};
+ const root=temp("root"),first=new AbortController(),lines:string[]=[];
+ const run=(signal:AbortSignal,timeout?:number)=>runReadyStageV1({home,root,environment:{},stage:stageOf("tools",timeout),signal,jobs:1,onLine:line=>lines.push(line)});
+ const running=run(first.signal);
+ for(let waited=0;!existsSync(pidFile)&&waited<5000;waited+=25)await new Promise<void>(done=>setTimeout(done,25));
+ const sleeper=Number(readFileSync(pidFile,"utf8").trim());
+ first.abort();
+ const detached=await running;
+ expect(detached.detached).toBe(true);
+ expect(gone(sleeper),"the stage keeps running after its runner left").toBe(false);
+ const record=JSON.parse(readFileSync(join(root,...P.directory,P.inflightName),"utf8")) as {stage:string;pid:number};
+ expect(record.stage).toBe("tools");
+ const second=run(new AbortController().signal),other=runReadyStageV1({home,root,environment:{},stage:stageOf("workspace"),signal:new AbortController().signal,jobs:1,onLine:()=>undefined});
+ await new Promise<void>(done=>setTimeout(done,800));
+ writeFileSync(join(root,...P.directory,P.cancelName),"");
+ const cancelled=await second;
+ expect(cancelled.cancelled).toBe(true);expect(cancelled.detached).toBe(false);expect(cancelled.exit).not.toBe(0);
+ for(let waited=0;!gone(sleeper)&&waited<3000;waited+=50)await new Promise<void>(done=>setTimeout(done,50));
+ expect(gone(sleeper),"the cancel ended the whole process group").toBe(true);
+ expect(existsSync(join(root,...P.directory,P.inflightName))).toBe(false);
+ const after=await other;
+ expect(after.exit).toBe(0);
+});
+
+posix("a stage that runs too long is stopped as timed out, with its group",async()=>{
+ const pidFile=join(temp("pids"),"pid"),{home}=fakeHome(`#!/bin/sh\n(sleep 30 & echo $! > ${pidFile}; wait) &\nwait\n`);
+ const gone=(pid:number):boolean=>{try{process.kill(pid,0);return false;}catch{return true;}};
+ const timed=await runReadyStageV1({home,root:temp("root"),environment:{},stage:stageOf("tools",600),signal:new AbortController().signal,jobs:1,onLine:()=>undefined});
+ expect(timed.timedOut).toBe(true);expect(timed.exit).not.toBe(0);
+ const sleeper=Number(readFileSync(pidFile,"utf8").trim());
+ for(let waited=0;!gone(sleeper)&&waited<3000;waited+=50)await new Promise<void>(done=>setTimeout(done,50));
+ expect(gone(sleeper)).toBe(true);
+});
+
+test("the output of a stage and its timings are mirrored into the store: at most 200 lines and 64 KiB per stage, rotated by stage, timings capped, both validated",async()=>{
+ const store=temp("mirror"),root=temp("mirror-root");
+ const ports=createReadyPortsV1({root,environment:{SEMIO_FLEET_STORE_ROOT:store},origin:"g1-m97",group:"g1",say:()=>undefined});
+ const origin=join(store,"v1","origins","g1-m97");
+ ports.mirror!("tools",Array.from({length:200},(_all,index)=>`line ${index} ${"x".repeat(600)}`));
+ const text=readFileSync(join(origin,`${P.mirrorPrefix}tools.txt`),"utf8");
+ expect(text.length).toBeLessThanOrEqual(P.mirrorBytes);expect(text.trimEnd().endsWith("x")).toBe(true);
+ ports.mirror!("native",["a","b"]);
+ expect(readFileSync(join(origin,`${P.mirrorPrefix}native.txt`),"utf8")).toContain("a\nb");
+ for(let index=0;index<P.timingsKept+5;index++)ports.timing!({stage:"tools",startedMs:1000*index,endedMs:1000*index+5000,seconds:5,exit:index%2,outcome:index%2?"stage-failed":"ok",peakMegabytes:null,attempts:index%2,digest:"abc"});
+ const timings=JSON.parse(readFileSync(join(origin,P.timingsName),"utf8")) as {runs:{startedMs:number}[]};
+ expect(timings.runs.length).toBe(P.timingsKept);expect(timings.runs.at(-1)!.startedMs).toBe(1000*(P.timingsKept+4));
+ expect(validateJsonSchemaSubset(schema.definitions.Timings,timings,schema)).toEqual([]);
+});
+
+posix("a real stage's output is mirrored while it runs and once more at its end, 200 lines at most",async()=>{
+ const {home}=fakeHome('#!/bin/sh\ni=0\nwhile [ $i -lt 300 ]; do echo "line $i"; i=$((i+1)); done\nsleep 1\nexit 0\n');
+ const seen:string[][]=[];
+ const result=await runReadyStageV1({home,root:temp("root"),environment:{},stage:stageOf("tools"),signal:new AbortController().signal,jobs:1,onLine:()=>undefined,mirror:(stage,lines)=>{expect(stage).toBe("tools");seen.push([...lines]);}});
+ expect(result.exit).toBe(0);expect(result.startedMs).toBeGreaterThan(0);
+ expect(seen.length).toBeGreaterThan(0);expect(seen.at(-1)!.length).toBe(P.mirrorLines);expect(seen.at(-1)!.at(-1)).toBe("line 299");
+});
+
+test("a native stage that ends 0 without leaving the repo binary is a failure with a back-off, not a loop; the binary is found in the launcher directory too",async()=>{
+ const w=world({repo:false,stopAfterSleeps:1});
+ await runReadyV1(w.ports,w.controller.signal);
+ expect(w.shared.calls).toEqual(["native"]);
+ expect(w.shared.state.failure!.stage).toBe("native");expect(w.shared.state.failure!.code).toBe("stage-failed");
+ expect(w.shared.marker).toBe(false);
+ const home=temp("repohome"),local=temp("localappdata");
+ expect(readyRepoBinaryV1(home,{},"linux")).toBeUndefined();
+ mkdirSync(join(home,".local","share","semio","launcher","bin"),{recursive:true});writeFileSync(join(home,".local","share","semio","launcher","bin","repo"),"");
+ expect(readyRepoBinaryV1(home,{},"linux")).toBe(join(home,".local","share","semio","launcher","bin","repo"));
+ mkdirSync(join(local,"semio","launcher","bin"),{recursive:true});writeFileSync(join(local,"semio","launcher","bin","repo.exe"),"");
+ expect(readyRepoBinaryV1(temp("emptyhome"),{LOCALAPPDATA:local},"win32")).toBe(join(local,"semio","launcher","bin","repo.exe"));
+});
+
+test("readiness hashes what is provisioned, not the words: texts of the tool table, scripts and dependencies of package.json never make a stage stale, a pin does",()=>{
+ const table=(pin:string,summary:string)=>JSON.stringify({groups:{all:["bun"]},tools:[{id:"bun",summary:{en:summary},pin:{format:"value",value:pin},locate:[],setup:{kind:"bun"}}],steps:[{id:"h",kind:"cargo-helpers",configuration:"prototype",platforms:["linux"],timeoutSeconds:1200,summary:{en:summary}}],messages:{texts:{a:summary}}});
+ const path="x/🧰️tool-setup/🔣️.json";
+ expect(readyInputHashV1(path,table("1.4.2","one"))).toBe(readyInputHashV1(path,table("1.4.2","another text")));
+ expect(readyInputHashV1(path,table("1.4.2","one"))).not.toBe(readyInputHashV1(path,table("1.4.3","one")));
+ const pkg=(extra:object)=>JSON.stringify({packageManager:"bun@1.4.2",engines:{node:"24"},workspaces:["a"],...extra});
+ expect(readyInputHashV1("package.json",pkg({scripts:{a:"b"},dependencies:{x:"1"}}))).toBe(readyInputHashV1("package.json",pkg({})));
+ expect(readyInputHashV1("package.json",pkg({packageManager:"bun@1.4.3"}))).not.toBe(readyInputHashV1("package.json",pkg({})));
+ expect(readyInputHashV1("bun.lock","a")).not.toBe(readyInputHashV1("bun.lock","b"));
+});
+
+test("ready.json says why a stage was started: first run, inputs changed, previous failed, adopted",async()=>{
+ const first=world({stopAfterSleeps:1,outcomes:[{exit:1}]});
+ await runReadyV1(first.ports,first.controller.signal);
+ const reasons=first.updates.filter(update=>update.state==="running").map(update=>update.reason?.code);
+ expect(reasons[0]).toBe("first-run");
+ const again=world({stopAfterSleeps:3,state:first.shared.state});
+ again.shared.now=first.shared.now+10*60_000;
+ await runReadyV1(again.ports,again.controller.signal);
+ expect(again.updates.find(update=>update.state==="running")!.reason!.code).toBe("previous-failed");
+ const changed=world({stopAfterSleeps:1,state:{...emptyReadyStateV1(),stages:{native:{digest:"f".repeat(64),doneMs:1}}}});
+ await runReadyV1(changed.ports,changed.controller.signal);
+ const row=changed.updates.find(update=>update.state==="running")!.reason!;
+ expect(row.code).toBe("inputs-changed");expect(row.en).toContain("native");expect(row.de).toContain("native");
+ const adopted=world({stopAfterSleeps:1});
+ await runReadyV1({...adopted.ports,inflight:()=>"native"},adopted.controller.signal);
+ expect(adopted.updates.find(update=>update.state==="running")!.reason!.code).toBe("adopted");
+ expect(readyReasonV1("binary-missing","tools").de).toContain("tools");
+});

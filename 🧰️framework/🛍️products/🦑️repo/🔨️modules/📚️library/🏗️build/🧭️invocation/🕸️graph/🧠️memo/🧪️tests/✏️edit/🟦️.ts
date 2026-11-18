@@ -20,6 +20,7 @@ import {GRAPH_MEMO_POLICY_V1,collectGraphMemoV1,collectMemoChangesV1,openGraphMe
 import {buildGraphMemoRelevanceV1,writeGraphMemoSidecarFilesV1,writeGraphMemoSliceSidecarV1,type MemoBuiltV1} from "../../📤️relevance/🟦️.ts";
 import {memoFactsHoldV1} from "../../🚪️command/🟦️.ts";
 import {answerGraphMemoDerivationV1,deriveGraphMemoSuspectsV1,graphMemoDerivationHeldV1,graphMemoDeriveAnswerFileV1,graphMemoSuspectsV1,readGraphMemoDeriveFileV1,settleGraphMemoDerivationV1,writeGraphMemoDeriveFileV1,type MemoDeriverV1} from "../../🧮️derive/🟦️.ts";
+beforeAll(async()=>{await (await import("../../../../../🕸️graph/📥️inference/🟨️.mjs")).libraryBootstrap;});
 
 const EPOCH="5e5e5e5e5e5e5e5e",NAMES=new Set(["node_modules",".git"]),insensitive=process.platform==="darwin"||process.platform==="win32",LATER=60000;
 let sandbox="",counter=0;

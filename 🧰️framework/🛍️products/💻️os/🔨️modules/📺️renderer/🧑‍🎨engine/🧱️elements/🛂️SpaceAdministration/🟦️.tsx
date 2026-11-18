@@ -15,7 +15,7 @@
 
 // #region 🔌️Adapters
 import { useEffect, useId, useMemo, useRef, useState, type ReactElement } from "../⚛️react-port/🟦️.ts";
-import { Button, registerUiTranslationBundles, useLabel } from "@semio-tech/ui-react";
+import { Button, registerUiTranslationBundles, SharedBorderRow, SharedBorderRowCell, useLabel } from "@semio-tech/ui-react";
 import type { DirectoryAdministrationInviteCapabilityStatusV1, DirectoryAdministrationPhaseV1 } from "@semio-tech/framework/backbone";
 import type { DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationInviteRowV1, DirectorySpaceAdministrationMemberRowV1, DirectorySpaceAdministrationPageV1, DirectorySpaceRole, DirectorySpaceVisibility } from "@semio-tech/framework/directory/schema";
 // #endregion 🔌️Adapters
@@ -363,14 +363,14 @@ export function SpaceAdministrationPane({ spaceId, phase, page, receiptSha256, c
             {labels.delete}
           </Button>
           {deleteConfirmation && canDelete ? (
-            <div role="alertdialog" aria-labelledby={`${deleteId}-title`} aria-describedby={`${deleteId}-description`} className="flex flex-col gap-2 border p-2">
-              <h3 id={`${deleteId}-title`}>{labels.delete}</h3>
-              <p id={`${deleteId}-description`}>{labels.deleteWarning}</p>
-              <div className="flex gap-2">
+            <SharedBorderRow role="alertdialog" aria-labelledby={`${deleteId}-title`} aria-describedby={`${deleteId}-description`} orientation="vertical">
+              <SharedBorderRowCell><h3 id={`${deleteId}-title`}>{labels.delete}</h3></SharedBorderRowCell>
+              <SharedBorderRowCell><p id={`${deleteId}-description`}>{labels.deleteWarning}</p></SharedBorderRowCell>
+              <SharedBorderRow>
                 <Button icon="trash-2" type="button" variant="outline" onClick={() => { setDeleteConfirmation(false); onIntent({ kind: "delete-space" }); }}>{labels.deleteConfirm}</Button>
                 <Button icon="x" type="button" variant="outline" onClick={() => { restoreDeleteFocus.current = true; setDeleteConfirmation(false); }}>{labels.deleteCancel}</Button>
-              </div>
-            </div>
+              </SharedBorderRow>
+            </SharedBorderRow>
           ) : null}
         </section>
       ) : null}

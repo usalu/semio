@@ -46,7 +46,7 @@ solidSuite("🧵️loft", (c, ours, resolved) => {
 });
 
 it("the loft frames of sections without rotation match the capsule's lateral axis (same helper)", async () => {
-  const { tessellateSolid } = await import("../../🔺️tessellation/🟦️.ts");
+  const { tessellateSolid } = await import("../../🔺️tessellation/🧱️solid/🟦️.ts");
   const quality = { chordM: 0.0005, minSegments: 24, maxSegments: 128 };
   const loft = tessellateSolid({ id: "l", kind: "loft", node: "n", material: "m", sections: [{ at: [0, 0, 0], rx: 0.3, ry: 0.1 }, { at: [0.6, 0.8, 0], rx: 0.3, ry: 0.1 }], capStart: true, capEnd: true } as never, quality);
   const capsule = tessellateSolid({ id: "c", kind: "capsule", node: "n", material: "m", p0: [0, 0, 0], p1: [0.6, 0.8, 0], r0: 0.1, r1: 0.1, lateralScale: 3 } as never, quality);

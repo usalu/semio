@@ -60,7 +60,7 @@ describe("compare and playground", () => {
   });
 
   it("round-trips a playground layout and clamps positions to the ground", () => {
-    const playground = { scale: 50, view: "light-solid" as const, viewpoint: "elevation" as const, background: "dark" as const, lengthM: 30, placements: [{ id: "url-0", asset: "park-bench", xM: 3.25, zM: 0, yawDeg: 0, pick: null, offsetS: 0, mirrored: false }, { id: "url-1", asset: "walking-commuter", xM: 12, zM: 1.5, yawDeg: 30, pick: { kind: "clip" as const, clip: "walk" }, offsetS: 0.4, mirrored: true }] };
+    const playground = { scale: 50, view: "light-solid" as const, viewpoint: "front" as const, camera: "axonometric" as const, background: "dark" as const, lengthM: 30, depthM: 8, timelineS: 12, placements: [{ id: "url-0", asset: "park-bench", xM: 3.25, zM: 0, yawDeg: 0, pick: null, offsetS: 0, mirrored: false, startS: 0, durationS: null, speed: 1, loop: true, holdS: null }, { id: "url-1", asset: "walking-commuter", xM: 12, zM: 1.5, yawDeg: 30, pick: { kind: "clip" as const, clip: "walk" }, offsetS: 0.4, mirrored: true, startS: 1.5, durationS: 6, speed: 0.5, loop: false, holdS: 0.25 }] };
     expect(playgroundFromParams(new URLSearchParams(playgroundToParams(playground).toString()))).toEqual(playground);
     expect(playgroundFromParams(new URLSearchParams("len=10&p=park-bench~99"))?.placements[0]?.xM).toBe(10);
     expect(playgroundFromParams(new URLSearchParams())).toBeNull();
@@ -69,7 +69,7 @@ describe("compare and playground", () => {
 
 describe("filters", () => {
   it("round-trips search, filters and order", () => {
-    const filters = { ...NO_FILTERS, q: "eiche tree", categories: ["vegetation" as const, "humans" as const], analytics: ["thermal" as const], heightMinM: 0.5, heightMaxM: 12, rootMotion: true, completion: ["authored" as const], sort: "mass" as const, descending: true };
+    const filters = { ...NO_FILTERS, q: "eiche tree", categories: ["vegetation" as const, "humans" as const], analytics: ["thermal" as const], heightMinM: 0.5, heightMaxM: 12, powerMinW: 100, powerMaxW: 2500, rootMotion: true, completion: ["authored" as const], sort: "mass" as const, descending: true };
     expect(filtersFromParams(new URLSearchParams(filtersToParams(filters).toString()))).toEqual(filters);
     expect(filtersToParams(NO_FILTERS).toString()).toBe("");
   });

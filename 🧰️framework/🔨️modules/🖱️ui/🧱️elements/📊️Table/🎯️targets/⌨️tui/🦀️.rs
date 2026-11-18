@@ -224,7 +224,7 @@ pub fn paint_table(t: &TableState, theme: &Theme, rect: Rect, buf: &mut CellBuff
     if rect.height == 1 {
         return;
     }
-    buf.hline(Pos { x: content.x, y: rect.y + 1 }, content.width, '\u{2500}', theme.role(Role::BorderNormal), bg);
+    buf.hline(Pos { x: content.x, y: rect.y + 1 }, rect.width, '\u{2500}', theme.role(Role::BorderNormal), bg);
     if rect.height <= HEADER_LINES {
         return;
     }
@@ -272,7 +272,7 @@ pub fn paint_table(t: &TableState, theme: &Theme, rect: Rect, buf: &mut CellBuff
         if y >= bottom {
             break;
         }
-        buf.hline(Pos { x: content.x, y }, content.width, '\u{2500}', theme.role(Role::BorderNormal), bg);
+        buf.hline(Pos { x: content.x, y }, rect.width, '\u{2500}', theme.role(Role::BorderNormal), bg);
         y += 1;
     }
     paint_scroll_bar(buf, theme, Rect::new(rect.x + rect.width - 1, body.y, 1, body.height), window.start, fit, visible.len());

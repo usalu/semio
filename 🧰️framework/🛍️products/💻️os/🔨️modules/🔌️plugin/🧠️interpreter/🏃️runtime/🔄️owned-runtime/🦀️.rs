@@ -240,6 +240,7 @@ impl OwnedRuntime {
     /// 📈️ Executes owned `describe` with bounded fuel-progress observations for build tooling.
     pub async fn describe_observed(&self, compiled: &OwnedCompiledGuest, budget: Budget, progress: impl FnMut(u64, std::time::Duration)) -> Result<Vec<u8>, TurnFault> {
         let state = &mut self.instantiate_actor(compiled).map_err(TurnFault::Host)?;
+        state.original_job_clock=Some((budget.retained.work.clock_binding,self.original_clock));
         begin_owned_operation(state, OwnedOperation::Describe, None)?;
         resume_owned_operation_observed(state, OwnedOperation::Describe, budget.fuel, budget.deadline_us, OwnedDeadline::Original, progress, None).map(|invocation| invocation.output)
     }

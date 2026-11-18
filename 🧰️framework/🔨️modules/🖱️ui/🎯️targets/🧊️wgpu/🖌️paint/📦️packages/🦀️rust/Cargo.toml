@@ -36,6 +36,7 @@ semio-ui-text = { path = "../../../../../🔤️typography/📦️packages/🦀�
 semio-ui-theme = { path = "../../../../../🎨️styling/🎭️theme/📦️packages/🦀️rust" }
 semio-ui-wgpu-controls = { path = "../../../🔘️controls/📦️packages/🦀️rust" }
 semio-ui-wgpu-events = { path = "../../../⚡️events/📦️packages/🦀️rust" }
+semio-ui-wgpu-light = { path = "../../../🪶️light/📦️packages/🦀️rust" }
 semio-ui-wgpu-layout = { path = "../../../🧱️layout-stack/📦️packages/🦀️rust" }
 semio-ui-wgpu-mounted-layout = { path = "../../../📌️mounted_layout/📦️packages/🦀️rust" }
 semio-ui-wgpu-widget-kit = { path = "../../../🪀️widgets/🧰️kit/📦️packages/🦀️rust" }

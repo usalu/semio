@@ -1777,6 +1777,8 @@
             "key": "fan",
             "heatW": 120
           },
+          "ratedPowerW": 120,
+          "ratedPowerBasis": "electrical-input",
           "source": "authored-estimate",
           "reference": "incropera-2018"
         },
@@ -1847,6 +1849,8 @@
             "key": "light",
             "heatW": 30
           },
+          "ratedPowerW": 30,
+          "ratedPowerBasis": "electrical-input",
           "source": "authored-estimate",
           "reference": "incropera-2018"
         },
@@ -2317,6 +2321,8 @@
                 "exponent": 12
               }
             ],
+            "capStart": true,
+            "capEnd": true,
             "region": "chimney"
           },
           {
@@ -2340,6 +2346,8 @@
                 "exponent": 12
               }
             ],
+            "capStart": true,
+            "capEnd": true,
             "region": "chimney"
           },
           {
@@ -2955,6 +2963,8 @@
                 "exponent": 12
               }
             ],
+            "capStart": true,
+            "capEnd": true,
             "region": "chimney"
           },
           {
@@ -2978,6 +2988,8 @@
                 "exponent": 12
               }
             ],
+            "capStart": true,
+            "capEnd": true,
             "region": "chimney"
           },
           {
@@ -3381,6 +3393,8 @@
                 "exponent": 12
               }
             ],
+            "capStart": true,
+            "capEnd": true,
             "region": "chimney"
           },
           {
@@ -3404,6 +3418,8 @@
                 "exponent": 12
               }
             ],
+            "capStart": true,
+            "capEnd": true,
             "region": "chimney"
           },
           {

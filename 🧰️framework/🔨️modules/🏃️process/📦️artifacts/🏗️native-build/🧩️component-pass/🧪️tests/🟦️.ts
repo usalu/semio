@@ -9,6 +9,7 @@ import { captureOwnedCommandV1 } from "../../../../🎛️owned-execution/🟦�
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import { spawnSync } from "node:child_process";
+import { formatStampProtocolV1 } from "../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧷️format-stamps/🟨️.mjs";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
@@ -16,7 +17,7 @@ import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import { readUnitHistoryV1, unitHistoryPathV1 } from "../../🎟️admission/🟦️.ts";
 import { lawSourceBoundaryV1, lawStoragePolicyV1, schedulerBinaries, withLawStorageV1, type LawStorageV1 } from "../../🧪️tests/🦀️cargo/🟦️.ts";
 import { readTimelineV1 } from "../../📈️telemetry/🟦️.ts";
-import { nativeBuildComponentStagePathV1, announcedRunIdentityV1, announcedUnitIdentityV1, componentBatchesV1, reclaimablePassFilesV1, unitFootprintKindV1, unitGraphHistoryKeyV1, componentArtifactV1, NATIVE_BUILD_DRIVER_POLICY_V1, nativeBuildGenerationKindV1, nativeBuildGenerationV1, nativeBuildPassArgsV1, nativeBuildJobWorkerBudgetV1, profileBuildModeV1, runNativeBuildDriverV1, unitGraphClosuresV1, unitGraphIdentityV1, type LinkedComponentV1, type NativeBuildOutcomeV1, type NativeBuildStageV1 } from "../🟦️.ts";
+import { nativeBuildReusedUnitsV1, nativeBuildComponentStagePathV1, announcedRunIdentityV1, announcedUnitIdentityV1, componentBatchesV1, reclaimablePassFilesV1, unitFootprintKindV1, unitGraphHistoryKeyV1, componentArtifactV1, NATIVE_BUILD_DRIVER_POLICY_V1, nativeBuildGenerationKindV1, nativeBuildGenerationV1, nativeBuildPassArgsV1, nativeBuildJobWorkerBudgetV1, profileBuildModeV1, runNativeBuildDriverV1, unitGraphClosuresV1, unitGraphIdentityV1, type LinkedComponentV1, type NativeBuildOutcomeV1, type NativeBuildStageV1 } from "../🟦️.ts";
 import{admitNativeBuildPlanV1,type NativeBuildJobV1,type NativeBuildPassV1,type NativeBuildPlanV1} from "../📋️contract/🟦️.ts";
 
 const artifacts = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!);
@@ -325,6 +326,26 @@ test("a finalizer runs once its stages settled, also after one failed, and the f
 }, 120_000);
 
 
+test("a job failing at once rejects the driver, naming it, and terminates the sibling job still running", async () => {
+  const root = mkdtempSync(join(artifacts, "ff-")), cargo = stubCargo(root), pass = stubWorkspace(root, "hub", ["comp-a"], "release"), pids = join(root, "long.pid");
+  const long = stubJob(root, "long", [], 0);
+  writeFileSync(long.command[1]!, `import { writeFileSync } from "node:fs";\nwriteFileSync(${JSON.stringify(pids)}, String(process.pid));\nawait Bun.sleep(120000);\n`);
+  const failing = stubJob(root, "broken", [], 0, 3);
+  const started = performance.now();
+  await expect(runStub(root, { version: 1, passes: [pass], jobs: [long, failing] }, cargo)).rejects.toThrow(/job failed.*job:broken/su);
+  expect(performance.now() - started).toBeLessThan(30_000);
+  if (existsSync(pids)) { const pid = Number(readFileSync(pids, "utf8")); await Bun.sleep(300); expect(() => process.kill(pid, 0)).toThrow(); }
+}, 60_000);
+
+test("a job that exits with the shared restart status runs again once with the shared backoff instead of failing the build", async () => {
+  const root = mkdtempSync(join(artifacts, "rs-")), cargo = stubCargo(root), pass = stubWorkspace(root, "hub", ["comp-a"], "release"), marker = join(root, "restarted");
+  const restarting = stubJob(root, "restarting", [], 0);
+  writeFileSync(restarting.command[1]!, `import { existsSync, writeFileSync, appendFileSync } from "node:fs";\nappendFileSync(${JSON.stringify(join(root, "starts.log"))}, "x");\nif (!existsSync(${JSON.stringify(marker)})) { writeFileSync(${JSON.stringify(marker)}, ""); process.exit(${formatStampProtocolV1().exitCode}); }\n`);
+  const outcome = await runStub(root, { version: 1, passes: [pass], jobs: [restarting] }, cargo);
+  expect(outcome.failed).toEqual([]);
+  expect(readFileSync(join(root, "starts.log"), "utf8")).toBe("xx");
+}, 60_000);
+
 test("queued exclusive compiler cancellation drains rejected work and permits a successor",async()=>{
  const root=mkdtempSync(join(artifacts,"q-")),cargo=stubCargo(root),pass=stubWorkspace(root,"hub",["comp-a"],"release"),law=fixture.queuedExclusiveCancellation;
  const holder={...stubJob(root,"holder",[],law.holdMs),workerProtocol:"reserved" as const},queued={...stubJob(root,"queued",[],0),workerProtocol:"exclusive" as const};
@@ -453,4 +474,9 @@ test("the driver declares the scheduler registry selection beside its pass selec
   expect(cargoRegistryReadSelectionV1({ manifest: request.manifest, cwd: request.cwd, offline: false })).toBe(JSON.stringify([manifest, root, false]));
   expect(request.environment.CARGO_TARGET_DIR).toBe(join(root, "t"));
   expect(request.environment.CARGO_BUILD_BUILD_DIR).toBe(join(root, "b"));
+});
+
+test("a resumed build counts the units Cargo reused apart from the ones it compiled", () => {
+  expect(nativeBuildReusedUnitsV1([{ reason: "compiler-artifact", fresh: true }, { reason: "compiler-artifact", fresh: false }, { reason: "build-script-executed" }, { reason: "compiler-artifact", fresh: true }, { reason: "compiler-artifact" }])).toBe(2);
+  expect(nativeBuildReusedUnitsV1([])).toBe(0);
 });

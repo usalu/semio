@@ -4,6 +4,7 @@ import { type RevealResolvedDisposition } from "../../🔀️reveal-morph/🟦�
 import { MorphAnchorOnWrapperContext, PresentationDispositionEnlargeContext, PresentationFigureCropFrameContext, PresentationInteractiveDispositionIdContext } from "../../🏷️morph-context/🟦️.ts";
 import { MorphDispositionView } from "../../🎭️morph-views/🟦️.tsx";
 import { DISPOSITION_RESIZE_HANDLES, transformFrameStyle, usePresentationInteractionState } from "../../🧮️interaction-model/🟦️.ts";
+import { SHARED_BORDER_CELL, SharedBorderChipGroup } from "../../🔗️shared-border-chips/🟦️.tsx";
 import { useSlideEpochState } from "./🔶️slide-epoch/🟦️.tsx";
 import { useAttachPointerGestureState } from "./🔸️attach-pointer-gesture/🟦️.tsx";
 import { buildPointerDownState } from "./🟠️pointer-down/🟦️.tsx";
@@ -79,16 +80,16 @@ export const InteractiveDisposition: FC<{
         ) : null}
       </div>
       {showControls ? (
-        <div className="presentation-interaction-actions">
+        <SharedBorderChipGroup className="presentation-interaction-actions">
           {canResetPosition ? (
-            <button type="button" className="presentation-interaction-reset" title="Reset position" onClick={onResetClick}>
+            <button type="button" {...SHARED_BORDER_CELL} className="presentation-interaction-reset" title="Reset position" onClick={onResetClick}>
               <Icon icon="rotate-ccw" size="small" />
             </button>
           ) : null}
-          <button type="button" className="presentation-interaction-enlarge" title={enlarged ? "Exit enlarge" : "Enlarge"} aria-pressed={enlarged} onClick={onEnlargeClick}>
+          <button type="button" {...SHARED_BORDER_CELL} className="presentation-interaction-enlarge" title={enlarged ? "Exit enlarge" : "Enlarge"} aria-pressed={enlarged} onClick={onEnlargeClick}>
             <Icon icon="maximize-2" size="small" />
           </button>
-        </div>
+        </SharedBorderChipGroup>
       ) : null}
     </div>
   );

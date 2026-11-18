@@ -240,6 +240,7 @@ describe("LayeredOverview", () => {
       expect(element.getAttribute("aria-hidden")).toBe("true");
       expect(element.getAttribute("role")).toBeNull();
     }
+    expect(strip().hasAttribute("data-layered-backdrop")).toBe(true);
     expect(root.querySelectorAll(".ui-veil")).toHaveLength(1);
     expect(veil()!.getAttribute("data-level")).toBe("dialog");
     expect(veil()!.dataset.veil).toBe("whole");
@@ -846,7 +847,7 @@ describe("LayeredOverview swipe", () => {
     const placed = [...cards().querySelectorAll<HTMLElement>("[data-layered-cell]")];
     expect(placed.map((cell) => [cell.dataset.layeredCell, Number(cell.style.gridColumn) - 1, Number(cell.style.gridRow) - 1])).toEqual(HOME.map((id) => [id, GRID[id]!.column, GRID[id]!.row]));
     for (const cell of placed) {
-      expect(cell.className.split(" ")).toEqual(expect.arrayContaining(["pointer-events-none", "items-center-safe", "overflow-y-auto", "[:where(&)_*]:touch-pinch-zoom"]));
+      expect(cell.className.split(" ")).toEqual(expect.arrayContaining(["pointer-events-none", "items-stretch", "overflow-y-auto", "[:where(&)_*]:touch-pinch-zoom"]));
       expect(cell.style.touchAction, "a cell that may scroll is a scroll container, so it must refuse the browser's pan itself").toBe("pinch-zoom");
     }
     expect(within(cards()).getAllByRole("region").map((region) => region.getAttribute("aria-labelledby"))).toEqual(HOME.map((id) => `card-${id}`));
@@ -1077,14 +1078,14 @@ describe("LayeredOverview swipe", () => {
     for (const hint of root.querySelectorAll<HTMLElement>("[data-layered-neighbour]")) expect([hint.className.includes("opacity-0"), hint.getAttribute("aria-hidden")]).toEqual([false, null]);
   });
 
-  it("keeps the cards and the hints inside the app's chrome at the top and bottom, and shows no hint over an opened page or in strip mode", () => {
+  it("keeps the cards and the hints flush with the app's chrome at the top and bottom, and shows no hint over an opened page or in strip mode", () => {
     const { root, unmount } = swipeHome({ insets: { top: "3.5rem", bottom: "5.5rem" } });
     const cell = root.querySelector<HTMLElement>('[data-layered-cell="learner"]')!;
-    expect([cell.style.paddingTop, cell.style.paddingBottom]).toEqual(["calc(44px + 3.5rem)", "calc(44px + 5.5rem)"]);
-    expect(root.querySelector<HTMLElement>('[data-layered-neighbour="down"]')!.style.bottom).toBe("calc(5.5rem + var(--spacing-single))");
+    expect([cell.style.paddingTop, cell.style.paddingBottom]).toEqual(["calc(28px + 3.5rem)", "calc(28px + 5.5rem)"]);
+    expect(root.querySelector<HTMLElement>('[data-layered-neighbour="down"]')!.style.bottom).toBe("5.5rem");
     swipe(root, [450, 600], [450, 300], 100);
     frames(600);
-    expect(root.querySelector<HTMLElement>('[data-layered-neighbour="up"]')!.style.top).toBe("calc(3.5rem + var(--spacing-single))");
+    expect(root.querySelector<HTMLElement>('[data-layered-neighbour="up"]')!.style.top).toBe("3.5rem");
     fireEvent.click(screen.getByRole("button", { name: "Open Heating" }));
     frames(600);
     expect(root.querySelectorAll("[data-layered-neighbour]")).toHaveLength(0);

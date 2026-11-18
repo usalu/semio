@@ -240,7 +240,7 @@ describe("📐️ the reading order of a row", () => {
   it("keeps the parts of a matching row in their reading order, the value cards before the rows", () => {
     render(<MatchingTaskView task={LAMPS} answer={undefined} onAnswer={() => undefined} text={courseText("en")} locale="en" />);
     expect(rowsOf("course-slot")).toEqual([fixture.order["course-slot"], fixture.order["course-slot"]]);
-    expect([...document.querySelector(".course-match")!.children].map((part) => part.tagName + (part.classList.contains("course-cards") ? ".cards" : part.classList.contains("course-rows") ? ".rows" : ""))).toEqual(["H3", "UL.cards", "UL.rows"]);
+    expect([...document.querySelector(".course-match")!.children].map((part) => part.tagName + (part.classList.contains("course-cards") ? ".cards" : part.classList.contains("course-rows") ? ".rows" : ""))).toEqual(["H3", "DIV", "UL.rows"]);
   });
 });
 

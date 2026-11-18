@@ -399,24 +399,7 @@
       },
       {
        "kind": "poly",
-       "points": [
-        [
-         0.215,
-         0.45
-        ],
-        [
-         0.26,
-         0.5
-        ],
-        [
-         0.26,
-         1.1
-        ],
-        [
-         0.215,
-         1.15
-        ]
-       ],
+       "points": [[0.214, 0.447], [0.26, 0.447], [0.26, 1.153], [0.214, 1.153]],
        "closed": true,
        "id": "fan-guard",
        "bone": "unit",
@@ -426,6 +409,19 @@
        "tone": 0.3,
        "region": "fan-guard",
        "material": "galvanised-steel"
+      },
+      {
+        "id": "guard-spokes",
+        "bone": "unit",
+        "role": "detail",
+        "z": 2.3,
+        "filled": false,
+        "tone": 0.3,
+        "kind": "path",
+        "d": "M 0.26 0.5 L 0.26 1.1",
+        "penMm": 0.12,
+        "region": "fan-guard",
+        "material": "galvanised-steel"
       },
       {
        "kind": "poly",
@@ -489,24 +485,7 @@
       },
       {
        "kind": "poly",
-       "points": [
-        [
-         -0.02,
-         -0.025
-        ],
-        [
-         0.22,
-         -0.025
-        ],
-        [
-         0.22,
-         0.025
-        ],
-        [
-         -0.02,
-         0.025
-        ]
-       ],
+       "points": [[-0.02, -0.025], [0.225, -0.025], [0.225, 0.025], [-0.02, 0.025]],
        "closed": true,
        "id": "vane",
        "bone": "vane",
@@ -931,8 +910,8 @@
        "solid": {
         "kind": "extruded",
         "sweep": "w",
-        "z0": -0.56,
-        "z1": 0.56
+        "z0": -0.55,
+        "z1": 0.55
        }
       },
       {
@@ -943,24 +922,7 @@
        "filled": true,
        "tone": 0.3,
        "kind": "poly",
-       "points": [
-        [
-         -0.02,
-         -0.025
-        ],
-        [
-         0.22,
-         -0.025
-        ],
-        [
-         0.22,
-         0.025
-        ],
-        [
-         -0.02,
-         0.025
-        ]
-       ],
+       "points": [[-0.02, -0.025], [0.225, -0.025], [0.225, 0.025], [-0.02, 0.025]],
        "closed": true,
        "region": "discharge-vane",
        "material": "powder-coat",
@@ -1140,8 +1102,8 @@
        "solid": {
         "kind": "extruded",
         "sweep": "w",
-        "z0": -0.56,
-        "z1": 0.56
+        "z0": -0.55,
+        "z1": 0.55
        }
       },
       {
@@ -1152,24 +1114,7 @@
        "filled": true,
        "tone": 0.3,
        "kind": "poly",
-       "points": [
-        [
-         -0.02,
-         -0.025
-        ],
-        [
-         0.22,
-         -0.025
-        ],
-        [
-         0.22,
-         0.025
-        ],
-        [
-         -0.02,
-         0.025
-        ]
-       ],
+       "points": [[-0.02, -0.025], [0.225, -0.025], [0.225, 0.025], [-0.02, 0.025]],
        "closed": true,
        "region": "discharge-vane",
        "material": "powder-coat",
@@ -1491,24 +1436,7 @@
       },
       {
        "kind": "poly",
-       "points": [
-        [
-         -0.02,
-         -0.025
-        ],
-        [
-         0.22,
-         -0.025
-        ],
-        [
-         0.22,
-         0.025
-        ],
-        [
-         -0.02,
-         0.025
-        ]
-       ],
+       "points": [[-0.02, -0.025], [0.225, -0.025], [0.225, 0.025], [-0.02, 0.025]],
        "closed": true,
        "id": "vane",
        "bone": "vane",
@@ -1853,8 +1781,8 @@
        "solid": {
         "kind": "extruded",
         "sweep": "w",
-        "z0": -0.56,
-        "z1": 0.56
+        "z0": -0.55,
+        "z1": 0.55
        }
       },
       {
@@ -1865,24 +1793,7 @@
        "filled": true,
        "tone": 0.3,
        "kind": "poly",
-       "points": [
-        [
-         -0.02,
-         -0.025
-        ],
-        [
-         0.22,
-         -0.025
-        ],
-        [
-         0.22,
-         0.025
-        ],
-        [
-         -0.02,
-         0.025
-        ]
-       ],
+       "points": [[-0.02, -0.025], [0.225, -0.025], [0.225, 0.025], [-0.02, 0.025]],
        "closed": true,
        "region": "discharge-vane",
        "material": "powder-coat",
@@ -2047,8 +1958,8 @@
        "solid": {
         "kind": "extruded",
         "sweep": "w",
-        "z0": -0.56,
-        "z1": 0.56
+        "z0": -0.55,
+        "z1": 0.55
        }
       },
       {
@@ -2059,24 +1970,7 @@
        "filled": true,
        "tone": 0.3,
        "kind": "poly",
-       "points": [
-        [
-         -0.02,
-         -0.025
-        ],
-        [
-         0.22,
-         -0.025
-        ],
-        [
-         0.22,
-         0.025
-        ],
-        [
-         -0.02,
-         0.025
-        ]
-       ],
+       "points": [[-0.02, -0.025], [0.225, -0.025], [0.225, 0.025], [-0.02, 0.025]],
        "closed": true,
        "region": "discharge-vane",
        "material": "powder-coat",
@@ -2172,37 +2066,64 @@
     "geometry": {
      "elevation": [
       {
-       "kind": "poly",
-       "points": [
-        [
-         -0.225,
-         0
+        "kind": "poly",
+        "points": [
+          [
+            -0.225,
+            0.08
+          ],
+          [
+            0.225,
+            0.08
+          ],
+          [
+            0.225,
+            1.41
+          ],
+          [
+            -0.225,
+            1.41
+          ]
         ],
-        [
-         0.225,
-         0
+        "closed": true,
+        "id": "casing",
+        "bone": "unit",
+        "role": "body",
+        "z": 2,
+        "filled": true,
+        "tone": 0.55,
+        "region": "casing",
+        "material": "powder-coat"
+      },
+      {
+        "kind": "poly",
+        "points": [
+          [
+            -0.17,
+            0
+          ],
+          [
+            0.17,
+            0
+          ],
+          [
+            0.17,
+            0.09
+          ],
+          [
+            -0.17,
+            0.09
+          ]
         ],
-        [
-         0.225,
-         1.41
-        ],
-        [
-         -0.225,
-         1.41
-        ]
-       ],
-       "closed": true,
-       "id": "casing",
-       "bone": "unit",
-       "role": "body",
-       "z": 2,
-       "filled": true,
-       "tone": 0.55,
-       "regions": [
-        "casing",
-        "feet"
-       ],
-       "material": "powder-coat"
+        "closed": true,
+        "id": "feet",
+        "bone": "unit",
+        "role": "body",
+        "z": 1.5,
+        "filled": true,
+        "tone": 0.2,
+        "region": "feet",
+        "material": "rubber"
       },
       {
        "kind": "poly",
@@ -2356,24 +2277,7 @@
       },
       {
        "kind": "poly",
-       "points": [
-        [
-         -0.02,
-         -0.03
-        ],
-        [
-         0.22,
-         -0.03
-        ],
-        [
-         0.22,
-         0.03
-        ],
-        [
-         -0.02,
-         0.03
-        ]
-       ],
+       "points": [[-0.02, -0.03], [0.225, -0.03], [0.225, 0.03], [-0.02, 0.03]],
        "closed": true,
        "id": "vane",
        "bone": "vane",
@@ -2448,8 +2352,8 @@
        "solid": {
         "kind": "extruded",
         "sweep": "w",
-        "z0": -0.56,
-        "z1": 0.56
+        "z0": -0.55,
+        "z1": 0.55
        }
       },
       {
@@ -2460,24 +2364,7 @@
        "filled": true,
        "tone": 0.3,
        "kind": "poly",
-       "points": [
-        [
-         -0.02,
-         -0.03
-        ],
-        [
-         0.22,
-         -0.03
-        ],
-        [
-         0.22,
-         0.03
-        ],
-        [
-         -0.02,
-         0.03
-        ]
-       ],
+       "points": [[-0.02, -0.03], [0.225, -0.03], [0.225, 0.03], [-0.02, 0.03]],
        "closed": true,
        "region": "discharge-vane",
        "material": "powder-coat",
@@ -2534,22 +2421,49 @@
        "material": "galvanised-steel"
       },
       {
-       "id": "casing",
-       "bone": "unit",
-       "role": "body",
-       "z": 2,
-       "filled": true,
-       "tone": 0.55,
-       "kind": "rect",
-       "x": -0.55,
-       "y": 0,
-       "w": 1.1,
-       "h": 1.41,
-       "regions": [
-        "casing",
-        "feet"
-       ],
-       "material": "powder-coat"
+        "id": "casing",
+        "bone": "unit",
+        "role": "body",
+        "z": 2,
+        "filled": true,
+        "tone": 0.55,
+        "kind": "rect",
+        "x": -0.55,
+        "y": 0.08,
+        "w": 1.1,
+        "h": 1.33,
+        "region": "casing",
+        "material": "powder-coat"
+      },
+      {
+        "id": "foot-left",
+        "bone": "unit",
+        "role": "body",
+        "z": 1.5,
+        "filled": true,
+        "tone": 0.2,
+        "kind": "rect",
+        "x": 0.34,
+        "y": 0,
+        "w": 0.18,
+        "h": 0.09,
+        "region": "feet",
+        "material": "rubber"
+      },
+      {
+        "id": "foot-right",
+        "bone": "unit",
+        "role": "body",
+        "z": 1.5,
+        "filled": true,
+        "tone": 0.2,
+        "kind": "rect",
+        "x": -0.52,
+        "y": 0,
+        "w": 0.18,
+        "h": 0.09,
+        "region": "feet",
+        "material": "rubber"
       }
      ],
      "plan": [
@@ -2585,8 +2499,8 @@
        "solid": {
         "kind": "extruded",
         "sweep": "w",
-        "z0": -0.56,
-        "z1": 0.56
+        "z0": -0.55,
+        "z1": 0.55
        }
       },
       {
@@ -2597,24 +2511,7 @@
        "filled": true,
        "tone": 0.3,
        "kind": "poly",
-       "points": [
-        [
-         -0.02,
-         -0.03
-        ],
-        [
-         0.22,
-         -0.03
-        ],
-        [
-         0.22,
-         0.03
-        ],
-        [
-         -0.02,
-         0.03
-        ]
-       ],
+       "points": [[-0.02, -0.03], [0.225, -0.03], [0.225, 0.03], [-0.02, 0.03]],
        "closed": true,
        "region": "discharge-vane",
        "material": "powder-coat",
@@ -2801,24 +2698,7 @@
       },
       {
        "kind": "poly",
-       "points": [
-        [
-         -0.02,
-         -0.06
-        ],
-        [
-         0.22,
-         -0.06
-        ],
-        [
-         0.22,
-         0.06
-        ],
-        [
-         -0.02,
-         0.06
-        ]
-       ],
+       "points": [[-0.02, -0.06], [0.225, -0.06], [0.225, 0.06], [-0.02, 0.06]],
        "closed": true,
        "id": "vane",
        "bone": "vane",
@@ -2863,8 +2743,8 @@
        "solid": {
         "kind": "extruded",
         "sweep": "w",
-        "z0": -0.56,
-        "z1": 0.56
+        "z0": -0.55,
+        "z1": 0.55
        }
       },
       {
@@ -2875,24 +2755,7 @@
        "filled": true,
        "tone": 0.3,
        "kind": "poly",
-       "points": [
-        [
-         -0.02,
-         -0.06
-        ],
-        [
-         0.22,
-         -0.06
-        ],
-        [
-         0.22,
-         0.06
-        ],
-        [
-         -0.02,
-         0.06
-        ]
-       ],
+       "points": [[-0.02, -0.06], [0.225, -0.06], [0.225, 0.06], [-0.02, 0.06]],
        "closed": true,
        "region": "discharge-vane",
        "material": "powder-coat",
@@ -2973,8 +2836,8 @@
        "solid": {
         "kind": "extruded",
         "sweep": "w",
-        "z0": -0.56,
-        "z1": 0.56
+        "z0": -0.55,
+        "z1": 0.55
        }
       },
       {
@@ -2985,24 +2848,7 @@
        "filled": true,
        "tone": 0.3,
        "kind": "poly",
-       "points": [
-        [
-         -0.02,
-         -0.06
-        ],
-        [
-         0.22,
-         -0.06
-        ],
-        [
-         0.22,
-         0.06
-        ],
-        [
-         -0.02,
-         0.06
-        ]
-       ],
+       "points": [[-0.02, -0.06], [0.225, -0.06], [0.225, 0.06], [-0.02, 0.06]],
        "closed": true,
        "region": "discharge-vane",
        "material": "powder-coat",
@@ -4418,6 +4264,8 @@
       "key": "refrigerant-duty",
       "heatW": -220
      },
+     "ratedPowerW": 150,
+     "ratedPowerBasis": "electrical-input",
      "source": "authored-estimate",
      "reference": "en-14511"
     },
@@ -4455,6 +4303,8 @@
       "key": "compressor",
       "heatW": 700
      },
+     "ratedPowerW": 2700,
+     "ratedPowerBasis": "electrical-input",
      "source": "authored-estimate"
     },
     {
@@ -5177,7 +5027,7 @@
           "material": "powder-coat",
           "role": "body",
           "tone": 0.35,
-          "size": [0.47, 0.04, 1.12],
+          "size": [0.47, 0.04, 1.1],
           "cornerRadius": 0.004,
           "transform": {
             "translation": [0.235, -0.02, 0.0]
@@ -5212,10 +5062,10 @@
           "material": "powder-coat",
           "role": "body",
           "tone": 0.3,
-          "size": [0.24, 0.05, 0.72],
+          "size": [0.245, 0.05, 0.72],
           "cornerRadius": 0.016,
           "transform": {
-            "translation": [0.1, 0.0, 0.12]
+            "translation": [0.1025, 0.0, 0.12]
           }
         },
         {
@@ -5962,7 +5812,7 @@
           "material": "powder-coat",
           "role": "body",
           "tone": 0.35,
-          "size": [0.47, 0.04, 1.12],
+          "size": [0.47, 0.04, 1.1],
           "cornerRadius": 0.01,
           "transform": {
             "translation": [0.235, -0.02, 0.0]
@@ -5997,10 +5847,10 @@
           "material": "powder-coat",
           "role": "body",
           "tone": 0.3,
-          "size": [0.24, 0.05, 0.72],
+          "size": [0.245, 0.05, 0.72],
           "cornerRadius": 0.02,
           "transform": {
-            "translation": [0.1, 0.0, 0.12]
+            "translation": [0.1025, 0.0, 0.12]
           }
         },
         {
@@ -6457,7 +6307,7 @@
           "material": "powder-coat",
           "role": "body",
           "tone": 0.35,
-          "size": [0.47, 0.05, 1.12],
+          "size": [0.47, 0.05, 1.1],
           "transform": {
             "translation": [0.235, -0.025, 0.0]
           }
@@ -6469,9 +6319,9 @@
           "material": "powder-coat",
           "role": "body",
           "tone": 0.3,
-          "size": [0.24, 0.06, 0.72],
+          "size": [0.245, 0.06, 0.72],
           "transform": {
-            "translation": [0.1, 0.0, 0.12]
+            "translation": [0.1025, 0.0, 0.12]
           }
         }
       ],
@@ -6870,7 +6720,7 @@
           "material": "powder-coat",
           "role": "body",
           "tone": 0.35,
-          "size": [0.47, 0.1, 1.12],
+          "size": [0.47, 0.1, 1.1],
           "transform": {
             "translation": [0.235, -0.05, 0.0]
           }
@@ -6882,9 +6732,9 @@
           "material": "powder-coat",
           "role": "body",
           "tone": 0.3,
-          "size": [0.24, 0.12, 0.72],
+          "size": [0.245, 0.12, 0.72],
           "transform": {
-            "translation": [0.1, 0.0, 0.12]
+            "translation": [0.1025, 0.0, 0.12]
           }
         }
       ],

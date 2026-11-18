@@ -76,6 +76,17 @@ def capabilities(live,attestations):
     return warnings
 
 
+def refused(path):
+    """Independent statement of the path policy of the replica (a path it never carries): more than 256 UTF-16 units, a component of more than 255 UTF-8 bytes, a character Windows forbids or a control character, a component that ends with a dot or a space, a Windows device name."""
+    if len(path.encode("utf-16-le"))//2>256: return True
+    for part in path.split("/"):
+        if len(part.encode("utf-8"))>255: return True
+        if part and part[-1] in ". ": return True
+        stem=part.split(".")[0].rstrip(" ").upper()
+        if stem in ("CON","PRN","AUX","NUL","CONIN$","CONOUT$","CLOCK$") or (len(stem)==4 and stem[:3] in ("COM","LPT") and stem[3] in "123456789\u00b9\u00b2\u00b3"): return True
+    return any(char in '<>:"|?*\\' or ord(char)<32 or 127<=ord(char)<=159 for char in path)
+
+
 def view_of(porcelain):
     """Independent reader of `git status --porcelain=v1 -z` output: entries are `XY path`, a rename or copy is followed by one more field."""
     fields=porcelain.split("\0")
@@ -89,6 +100,9 @@ def view_of(porcelain):
         x,y,path=record[0],record[1],unicodedata.normalize("NFC",record[3:])
         if x in "RC" or y in "RC": index+=1
         if x+y=="!!": continue
+        if refused(path):
+            if x not in " ?": staged+=1
+            continue
         if x+y=="??":
             untracked+=1
             lines.append("?? "+path)

@@ -23,12 +23,13 @@ test("the first build of the process names its start, the first wave of a delta 
   expect(Number.isSafeInteger(told[0]![0]!.phases!.membership)).toBe(true);
   expect(told[0]![0]!.phases!["plan.facts"]).toBeUndefined();
   await edit(dir,COUNT);
-  await world.refresh({published:(_generation:number,info:Info)=>{told[1]!.push(info);}});
+  await world.refresh({published:(_generation:number,info:Info)=>{told[1]!.push(info);},wave:(info:unknown)=>{told[1]!.push(info as Info);}});
   expect(told[1]!.length).toBe(3);
   const [first,second,third]=told[1]!.map(info=>info.phases!);
   for(const name of ["plan.index","plan.facts","plan.settle"])expect(Number.isSafeInteger(first![name]),name).toBe(true);
   for(const wave of [first!,second!,third!])expect(wave.start).toBeUndefined();
   for(const wave of [second!,third!])for(const name of ["plan.index","plan.facts","plan.settle","membership"])expect(wave[name],name).toBeUndefined();
-  for(const wave of [first!,second!,third!])for(const name of ["prime","plan","compute","fragments","patch","pack","publish"])expect(Number.isSafeInteger(wave[name]),name).toBe(true);
+  for(const wave of [first!,second!])for(const name of ["prime","plan","compute","fragments"])expect(Number.isSafeInteger(wave[name]),name).toBe(true);
+  for(const name of ["prime","plan","compute","fragments","patch","pack","publish"])expect(Number.isSafeInteger(third![name]),name).toBe(true);
  }finally{rmSync(dir,{recursive:true,force:true});}
 });

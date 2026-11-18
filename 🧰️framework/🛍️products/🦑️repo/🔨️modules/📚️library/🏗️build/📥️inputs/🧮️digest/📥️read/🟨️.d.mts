@@ -10,6 +10,7 @@ export type ExactSourceMetadataV1=ExactSourceFileV1&Readonly<{value:unknown}>;
 export function withExactSourceReadBatchV1<T>(root:string,control:ResourceLeaseControl,run:(batch:ExactSourceReadBatchV1)=>Promise<T>):Promise<T>;
 export function requireExactSourceReadBatchV1(batch:ExactSourceReadBatchV1,root:string):void;
 export function readExactSourceFileV1(batch:ExactSourceReadBatchV1,name:string,maximumBytes?:number):Promise<ExactSourceFileV1|null>;
+export function readExactSourceInterfaceV1(batch:ExactSourceReadBatchV1,name:string,maximumBytes?:number):Promise<ExactSourceMetadataV1|null>;
 export function readExactSourceJsonV1(batch:ExactSourceReadBatchV1,name:string,maximumBytes?:number):Promise<ExactSourceMetadataV1|null>;
 export function readExactSourceTomlV1(batch:ExactSourceReadBatchV1,name:string):Promise<ExactSourceMetadataV1|null>;
 export function exactSourceReadBatchFactsV1(batch:ExactSourceReadBatchV1):Readonly<{files:number;sourceBytes:number;metadataBytes:number;readOperations:number;bytesRead:number}>;

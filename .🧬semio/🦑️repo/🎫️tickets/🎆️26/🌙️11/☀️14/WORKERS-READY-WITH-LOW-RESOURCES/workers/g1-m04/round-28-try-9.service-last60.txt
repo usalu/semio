@@ -1,0 +1,60 @@
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:7:664:2:0:semio-framework-value-source-hold|language%3Acargo|0|0,semio-framework-value-retirement-contract|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 7 of 664 projects · 2 running, longest 0 s: semio-framework-value-source-hold (language:cargo, 0 s, 0 rows), semio-framework-value-retirement-contract (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[capacity] admitted exec: 1 job(s), 1536 MB reserved (7603 MB available, 1536 MB floor)
+graph: inferring projects with 1 worker processes (1536 MB each)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:7:664:5:0:semio-framework-value-source-hold|language%3Acargo|0|0,semio-framework-value-retirement-contract|language%3Acargo|0|0,semio-framework-value-receiving|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 7 of 664 projects · 5 running, longest 0 s: semio-framework-value-source-hold (language:cargo, 0 s, 0 rows), semio-framework-value-retirement-contract (language:cargo, 0 s, 0 rows), semio-framework-value-receiving (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:7:664:7:0:semio-framework-value-source-hold|language%3Acargo|0|0,semio-framework-value-retirement-contract|language%3Acargo|0|0,semio-framework-value-receiving|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 7 of 664 projects · 7 running, longest 0 s: semio-framework-value-source-hold (language:cargo, 0 s, 0 rows), semio-framework-value-retirement-contract (language:cargo, 0 s, 0 rows), semio-framework-value-receiving (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: 0 of 703 projects arrived from the fleet, 7 inferred here, 696 left; the server last progressed 1868 s ago, estimated time left: about 19 min
+[repository:command] still running after 7260 s
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:7:664:7:0:semio-framework-value-retirement-contract|language%3Acargo|0|0,semio-framework-value-receiving|language%3Acargo|0|0,semio-framework-value-paged-clone|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 7 of 664 projects · 7 running, longest 0 s: semio-framework-value-retirement-contract (language:cargo, 0 s, 0 rows), semio-framework-value-receiving (language:cargo, 0 s, 0 rows), semio-framework-value-paged-clone (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:9:664:7:0:semio-framework-value-retirement-contract|language%3Acargo|0|0,semio-framework-value-receiving|language%3Acargo|0|0,semio-framework-value-paged-clone|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 9 of 664 projects · 7 running, longest 0 s: semio-framework-value-retirement-contract (language:cargo, 0 s, 0 rows), semio-framework-value-receiving (language:cargo, 0 s, 0 rows), semio-framework-value-paged-clone (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:11:664:7:0:semio-framework-value-retirement-contract|language%3Acargo|0|0,semio-framework-value-receiving|language%3Acargo|0|0,semio-framework-value-paged-clone|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 11 of 664 projects · 7 running, longest 0 s: semio-framework-value-retirement-contract (language:cargo, 0 s, 0 rows), semio-framework-value-receiving (language:cargo, 0 s, 0 rows), semio-framework-value-paged-clone (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: waiting for memory headroom (489 of 1262 MB reserved, 7 projects running): repo-policy needs 1176 MB and has waited 0 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:13:664:6:0:semio-framework-value-receiving|language%3Acargo|0|0,semio-framework-value-paged-clone|language%3Acargo|0|0,semio-framework-value-original-vector|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 13 of 664 projects · 6 running, longest 0 s: semio-framework-value-receiving (language:cargo, 0 s, 0 rows), semio-framework-value-paged-clone (language:cargo, 0 s, 0 rows), semio-framework-value-original-vector (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: headroom of 1044 MB is below one project (1176 MB), inferring one project at a time
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+graph: 0 of 703 projects arrived from the fleet, 20 inferred here, 683 left; the server last progressed 1872 s ago, estimated time left: about 19 min
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:20:664:1:0:repo-policy|project|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 20 of 664 projects · 1 running, longest 0 s: repo-policy (project, 0 s, 0 rows)
+graph: waiting for memory headroom (1176 of 1223 MB reserved, 1 projects running): repo-nx-output-custody needs 901 MB and has waited 3 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+[repository:command] still running after 7270 s
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:20:664:1:5:repo-policy|project|5|0:waiting|1176|1223|language%3Atypescript","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 20 of 664 projects · 1 running, longest 5 s: repo-policy (project, 5 s, 0 rows) · waiting for memory headroom (1176 of 1223 MB reserved)
+graph: waiting for memory headroom (1176 of 1220 MB reserved, 1 projects running): repo-nx-output-custody needs 901 MB and has waited 8 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: 0 of 703 projects arrived from the fleet, 20 inferred here, 683 left; the server last progressed 1882 s ago, estimated time left: about 19 min
+[repo] still working after 7280 s; last phase started: source.served
+[repository:command] still running after 7280 s
+graph: plan stage inference settled from 7167 to 7417 MB
+Graph: Plan-Stufe inference beruhigt von 7167 auf 7417 MB
+[repository:command] still running after 7290 s
+[repository:command] still running after 7300 s

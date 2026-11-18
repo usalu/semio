@@ -1,0 +1,44 @@
+/** 🐌️ Contract: the owners start in the order of their cost class: the light ones first (the held requests first among them), then the ones recorded as slow, last the ones that need a solo grant. A slow owner never starts before a light one, so the minutes of its synchronous stretches never hold back the light owners and the workers that serve them; the classes are read from the recorded seconds of the owner cost table.
+ * @see ../../🟨️.mjs */
+import{expect,test}from"bun:test";
+import{mkdirSync,mkdtempSync,rmSync,writeFileSync}from"node:fs";
+import{tmpdir}from"node:os";
+import{join}from"node:path";
+import{OWNER_SLOW_SECONDS_V1,graphOwnerEnforcementV1,orderOwnerJobsV1}from"../../🟨️.mjs";
+
+const job=(name:string)=>({name}),names=(list:{name:string}[])=>list.map(item=>item.name);
+
+test("light owners start before slow ones and slow ones before the solo owners, the rank decides inside a class and a class keeps its order without a rank",()=>{
+ const jobs=["slow-1","light-b","solo-1","light-a","slow-2","light-c"].map(job),rank=new Map([["light-a",0],["light-b",1],["light-c",2],["slow-1",5],["slow-2",4],["solo-1",0]]);
+ const ordered=orderOwnerJobsV1([...jobs],{alone:new Set(["solo-1"]),slow:new Set(["slow-1","slow-2"]),rank:name=>rank.get(name)!});
+ expect(names(ordered)).toEqual(["light-a","light-b","light-c","slow-2","slow-1","solo-1"]);
+ expect(names(orderOwnerJobsV1([...jobs],{alone:new Set(["solo-1"]),slow:new Set(["slow-1","slow-2"])}))).toEqual(["light-b","light-a","light-c","slow-1","slow-2","solo-1"]);
+ expect(names(orderOwnerJobsV1([...jobs]))).toEqual(names(jobs));
+});
+
+test("an owner both slow and solo is solo (last)",()=>{
+ expect(names(orderOwnerJobsV1(["x","y","z"].map(job),{alone:new Set(["x"]),slow:new Set(["x","y"])}))).toEqual(["z","y","x"]);
+});
+
+test("the cost table names the slow owners by their recorded seconds, and a table without the owner or without the file names nobody",async()=>{
+ const root=mkdtempSync(join(tmpdir(),"slow-last-"));
+ try{
+  const directory=join(root,".cache/f/graph-costs");mkdirSync(directory,{recursive:true});
+  const sample={megabytes:10,atMs:Date.now(),stopped:false,hostMegabytes:32768};
+  writeFileSync(join(directory,"owner-costs.json"),JSON.stringify({version:2,owners:{
+   fast:{kind:"project",rows:1,seconds:OWNER_SLOW_SECONDS_V1-1,samples:[sample]},
+   edge:{kind:"project",rows:1,seconds:OWNER_SLOW_SECONDS_V1,samples:[sample]},
+   long:{kind:"language:cargo",rows:1,seconds:837,samples:[sample]},
+  }}));
+  const enforcement=await graphOwnerEnforcementV1(root,{},6*1073741824,()=>0,()=>16*1073741824,()=>32768);
+  expect(enforcement.slow?.(["fast","edge","long","unknown"])).toEqual(["edge","long"]);
+  const empty=mkdtempSync(join(tmpdir(),"slow-last-empty-"));
+  try{expect((await graphOwnerEnforcementV1(empty,{},6*1073741824,()=>0,()=>16*1073741824,()=>32768)).slow?.(["fast","long"])).toEqual([]);}finally{rmSync(empty,{recursive:true,force:true});}
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+test("the inference orders its jobs through orderOwnerJobsV1 with the slow class and times every owner through the owner clock",async()=>{
+ const text=await Bun.file(new URL("../../🟨️.mjs",import.meta.url)).text();
+ expect(text).toContain("orderOwnerJobsV1(jobs,{alone,slow:new Set(enforcement.slow?.(");
+ for(const step of['clock.begin(job.name)','clock.finish(job.name','"queue"','"authority"','"farm"','"inline"','"observe"','"refs"','"observations"','"release"','"publish"'])expect(text,step).toContain(step);
+});

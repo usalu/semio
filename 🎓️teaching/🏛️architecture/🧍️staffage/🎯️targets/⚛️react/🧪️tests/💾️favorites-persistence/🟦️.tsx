@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { VIEWS } from "@teaching/staffage";
 import { ArchiveStore, INITIAL_STATE, STORAGE_KEY, STORAGE_VERSION, memoryStorage, reduce, sanitize } from "../../🔨️modules/💾️persistence/🟦️.ts";
 
-const placement = { id: "p1", asset: "park-bench", xM: 30, zM: 0, yawDeg: 0, pick: null, offsetS: 0, mirrored: false };
+const placement = { id: "p1", asset: "park-bench", xM: 30, zM: 0, yawDeg: 0, pick: null, offsetS: 0, mirrored: false, startS: 0, durationS: null, speed: 1, loop: true, holdS: null };
 
 describe("favorites", () => {
   it("survive a reload through the same storage", () => {
@@ -78,7 +78,7 @@ describe("reading storage", () => {
     expect(state.collections).toEqual([]);
     expect(state.playground.scale).toBe(1);
     expect(state.playground.view).toBe("dark-line");
-    expect(state.playground.placements).toEqual([{ id: "q", asset: "a-b", xM: 0, zM: 0, yawDeg: 0, pick: null, offsetS: 0, mirrored: false }]);
+    expect(state.playground.placements).toEqual([{ id: "q", asset: "a-b", xM: 0, zM: 0, yawDeg: 0, pick: null, offsetS: 0, mirrored: false, startS: 0, durationS: null, speed: 1, loop: true, holdS: null }]);
   });
 
   it("reports volatile persistence when storage refuses writes and keeps working", () => {

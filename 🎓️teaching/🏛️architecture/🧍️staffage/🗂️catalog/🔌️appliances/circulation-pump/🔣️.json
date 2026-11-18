@@ -1892,11 +1892,26 @@
               "filled": true,
               "tone": 0.78,
               "kind": "rect",
-              "x": -0.055,
+              "x": -0.05,
               "y": 0.1075,
               "w": 0.05,
               "h": 0.0425,
               "r": 0.004,
+              "region": "terminal-box",
+              "material": "polyamide"
+            },
+            {
+              "id": "terminal-neck",
+              "bone": "terminal",
+              "role": "body",
+              "z": 3.49,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "rect",
+              "x": -0.045,
+              "y": 0.1,
+              "w": 0.04,
+              "h": 0.0075,
               "region": "terminal-box",
               "material": "polyamide"
             },
@@ -1908,16 +1923,7 @@
               "filled": false,
               "tone": 0.3,
               "kind": "poly",
-              "points": [
-                [
-                  -0.055,
-                  0.1325
-                ],
-                [
-                  -0.005,
-                  0.1325
-                ]
-              ],
+              "points": [[-0.05, 0.1325], [0.0, 0.1325]],
               "closed": false
             },
             {
@@ -3605,6 +3611,8 @@
             "key": "power",
             "heatW": 18
           },
+          "ratedPowerW": 45,
+          "ratedPowerBasis": "electrical-input",
           "source": "authored-estimate",
           "reference": "incropera-2018"
         },

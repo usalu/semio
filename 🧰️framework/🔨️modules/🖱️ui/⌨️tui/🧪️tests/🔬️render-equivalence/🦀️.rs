@@ -187,7 +187,7 @@ fn apply(world: &mut World, op: &Op, clock: &mut u64) -> Vec<(NodeId, semio_ui_t
                 1 => Direction::Column,
                 _ => Direction::Stack,
             };
-            tui.scene.node_mut(id).set_constraint(Constraint { direction, width: dim(*w), height: dim(*h), gap: *pad % 2, padding: [*pad, 0, *pad, 0] });
+            tui.scene.node_mut(id).set_constraint(Constraint { direction, width: dim(*w), height: dim(*h), gap: *pad % 2, padding: [*pad, 0, *pad, 0], ..Default::default() });
         }
         Op::SetVisible { node, visible } => {
             let id = pick(*node);

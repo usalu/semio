@@ -1,0 +1,13 @@
+export type TakeOutcomeV1 = "present" | "fetched" | "stale" | "miss" | "fault";
+export type TakePolicyV1 = Readonly<{ concurrency: number; pollFirstMilliseconds: number; pollGrowthPercent: number; pollMaximumMilliseconds: number; pollBatch: number; faultRetries: number; faultWaitMilliseconds: number; progressMilliseconds: number; passBoundMilliseconds: number }>;
+export type TakeCountsV1 = Readonly<{ total: number; present: number; fetched: number; here: number; stale: number; running: number; wanted: number; done: number; missing: number }>;
+/** ⚙️ The authored numbers of the take pass. */
+export const TAKE_POLICY_V1: TakePolicyV1;
+/** ⏱️ The pause before look number `round` at the cache. */
+export function takePollWaitV1(round: number, policy?: TakePolicyV1): number;
+/** 📒️ What a reader knows about its owners while it resolves them. */
+export function createTakeLedgerV1(total: number): Readonly<{ mark(name: string, outcome: TakeOutcomeV1 | "inferred"): void; want(names: Iterable<string>): void; run(delta: number): void; state(name: string): string | undefined; counts(): TakeCountsV1; line(language: string): string; waveLine(language: string): string }>;
+/** 🔍️ Looks at every name once, and again those the cache did not answer. */
+export function takePassV1(input: Readonly<{ names: readonly string[]; attempt(name: string): Promise<TakeOutcomeV1>; concurrency?: number; faultRetries?: number; faultWaitMilliseconds?: number; sleep?(milliseconds: number): Promise<void>; signal?: AbortSignal; mark?(name: string, outcome: TakeOutcomeV1): void }>): Promise<ReadonlyMap<string, TakeOutcomeV1>>;
+/** 🔁️ Looks again at the cache for the owners that are still missing, with a growing pause. */
+export function takePollV1(input: Readonly<{ queue(): readonly string[]; attempt(name: string): Promise<TakeOutcomeV1>; arrived(name: string, outcome: TakeOutcomeV1): void | Promise<void>; stop(): boolean; signal?: AbortSignal; sleep?(milliseconds: number, signal?: AbortSignal): Promise<void>; policy?: TakePolicyV1 }>): Promise<Readonly<{ looks: number; found: number }>>;

@@ -437,5 +437,423 @@
         }
       }
     }
+  ],
+  "clips": [
+    {
+      "id": "clip-physical-fundamentals",
+      "topic": "energy",
+      "emoji": "🧲",
+      "title": {
+        "en": "Physical Fundamentals",
+        "de": "Physikalische Grundlagen"
+      },
+      "description": {
+        "en": "Power and energy, conservation, the heat pump, radiation, thermal mass and sensible versus latent heat.",
+        "de": "Leistung und Energie, Energieerhaltung, Wärmepumpe, Strahlung, thermische Masse sowie sensible und latente Wärme."
+      },
+      "poster": {
+        "file": "PhysicalFundamentals_FullSection.png"
+      }
+    },
+    {
+      "id": "clip-ventilation",
+      "topic": "energy",
+      "emoji": "🌬️",
+      "title": {
+        "en": "Ventilation",
+        "de": "Lüftung"
+      },
+      "description": {
+        "en": "Why we ventilate, air flow rates, heat flow through air, natural and mechanical ventilation and the hand-over.",
+        "de": "Warum wir lüften, Luftmengen, Wärmestrom der Luft, natürliche und mechanische Lüftung und die Übergabe."
+      },
+      "poster": {
+        "file": "Ventilation_01_WarumLueften.png"
+      }
+    },
+    {
+      "id": "clip-heating",
+      "topic": "energy",
+      "emoji": "🔥",
+      "title": {
+        "en": "Heating Demand",
+        "de": "Heizwärmebedarf"
+      },
+      "description": {
+        "en": "Conduction, convection, internal and solar gains up to the final heating demand calculation.",
+        "de": "Transmission, Konvektion, interne und solare Gewinne bis zur Berechnung des Heizwärmebedarfs."
+      },
+      "poster": {
+        "file": "Heating_01_Introduction.png"
+      }
+    },
+    {
+      "id": "clip-cooling",
+      "topic": "energy",
+      "emoji": "❄️",
+      "title": {
+        "en": "Cooling Demand",
+        "de": "Kühlbedarf"
+      },
+      "description": {
+        "en": "Heating versus cooling, internal gains, transmission and humidity, solar radiation, system sizing and summer strategy.",
+        "de": "Heizen und Kühlen im Vergleich, interne Gewinne, Transmission und Feuchte, Sonneneinstrahlung, Systemauslegung und Sommerstrategie."
+      },
+      "poster": {
+        "file": "Cooling_01_HeatingVsCooling.png"
+      }
+    },
+    {
+      "id": "clip-energy-balance",
+      "topic": "energy",
+      "emoji": "📊",
+      "title": {
+        "en": "Energy Balance",
+        "de": "Energiebilanz"
+      },
+      "description": {
+        "en": "The energy balance, standards and climate, demand versus power, useful to final and primary energy, the energy certificate and practice.",
+        "de": "Energiebilanz, Regelwerke und Klima, Bedarf und Leistung, Nutz-, End- und Primärenergie, Energieausweis und Praxis."
+      },
+      "poster": {
+        "file": "EnergyBalance_01_Energiebilanz.png"
+      }
+    },
+    {
+      "id": "clip-grasshopper-anatomy",
+      "topic": "grasshopper",
+      "emoji": "🦗",
+      "title": {
+        "en": "Grasshopper: Anatomy",
+        "de": "Grasshopper: Anatomie"
+      },
+      "description": {
+        "en": "Canvas, sliders, components, parameters, panels, and data trees, shown on the Nakagin Capsule Tower.",
+        "de": "Canvas, Slider, Komponenten, Parameter, Panels und Datenbäume am Beispiel des Nakagin Capsule Tower."
+      },
+      "poster": {
+        "file": "Grasshopper_01_Anatomy.png"
+      }
+    },
+    {
+      "id": "clip-grasshopper-capsule",
+      "topic": "grasshopper",
+      "emoji": "🦗",
+      "title": {
+        "en": "Grasshopper: Capsule",
+        "de": "Grasshopper: Kapsel"
+      },
+      "description": {
+        "en": "One parametric capsule driven by six sliders, from the box to the window cut and the bolt points.",
+        "de": "Eine parametrische Kapsel mit sechs Slidern, von der Box über den Fensterausschnitt bis zu den Bolzenpunkten."
+      },
+      "poster": {
+        "file": "Grasshopper_02_Capsule.png"
+      }
+    },
+    {
+      "id": "clip-grasshopper-tower",
+      "topic": "grasshopper",
+      "emoji": "🦗",
+      "title": {
+        "en": "Grasshopper: Tower",
+        "de": "Grasshopper: Turm"
+      },
+      "description": {
+        "en": "Planes at the floor pitch, masks and Cull Index assemble the tower of 140 capsules.",
+        "de": "Ebenen im Geschossraster, Masken und Cull Index setzen den Turm aus 140 Kapseln zusammen."
+      },
+      "poster": {
+        "file": "Grasshopper_03_Tower.png"
+      }
+    },
+    {
+      "id": "clip-grasshopper-casting",
+      "topic": "grasshopper",
+      "emoji": "🦗",
+      "title": {
+        "en": "Grasshopper: Casting",
+        "de": "Grasshopper: Typumwandlung"
+      },
+      "description": {
+        "en": "How mismatched data is cast between parameter types, and what a failing cast looks like.",
+        "de": "Wie nicht passende Daten zwischen Parametertypen umgewandelt werden und wie eine fehlschlagende Umwandlung aussieht."
+      },
+      "poster": {
+        "file": "Grasshopper_04_Casting.png"
+      }
+    },
+    {
+      "id": "clip-grasshopper-trees",
+      "topic": "grasshopper",
+      "emoji": "🦗",
+      "title": {
+        "en": "Grasshopper: Trees",
+        "de": "Grasshopper: Datenbäume"
+      },
+      "description": {
+        "en": "Paths, branches, Flatten, Graft, Path Mapper and data matching on the tower of 140 capsules.",
+        "de": "Pfade, Äste, Flatten, Graft, Path Mapper und Data Matching am Turm aus 140 Kapseln."
+      },
+      "poster": {
+        "file": "Grasshopper_05_Trees.png"
+      }
+    },
+    {
+      "id": "clip-excel-anatomy",
+      "topic": "excel",
+      "emoji": "📊",
+      "title": {
+        "en": "Excel: Anatomy",
+        "de": "Excel: Anatomie"
+      },
+      "description": {
+        "en": "Worksheets, cells, ranges, formats and the first formula of the capsule workbook.",
+        "de": "Tabellenblätter, Zellen, Bereiche, Formate und die erste Formel der Kapsel-Arbeitsmappe."
+      },
+      "poster": {
+        "file": "Excel_01_Anatomy.png"
+      }
+    },
+    {
+      "id": "clip-excel-references",
+      "topic": "excel",
+      "emoji": "📊",
+      "title": {
+        "en": "Excel: References",
+        "de": "Excel: Bezüge"
+      },
+      "description": {
+        "en": "Relative, absolute and mixed references, references across sheets and the 3D reference.",
+        "de": "Relative, absolute und gemischte Bezüge, Bezüge über Blätter und der 3D-Bezug."
+      },
+      "poster": {
+        "file": "Excel_02_References.png"
+      }
+    },
+    {
+      "id": "clip-excel-program",
+      "topic": "excel",
+      "emoji": "📊",
+      "title": {
+        "en": "Excel: Room Program",
+        "de": "Excel: Raumprogramm"
+      },
+      "description": {
+        "en": "Tables, COUNTIFS, XLOOKUP and SUMPRODUCT turn 140 capsule rows into a room program.",
+        "de": "Tabellen, ZÄHLENWENNS, XVERWEIS und SUMMENPRODUKT machen aus 140 Kapselzeilen ein Raumprogramm."
+      },
+      "poster": {
+        "file": "Excel_03_Program.png"
+      }
+    },
+    {
+      "id": "clip-excel-energy",
+      "topic": "excel",
+      "emoji": "📊",
+      "title": {
+        "en": "Excel: Energy",
+        "de": "Excel: Energie"
+      },
+      "description": {
+        "en": "Envelope surfaces, U-values, heat loss and the annual heating demand per capsule and tower.",
+        "de": "Hüllflächen, U-Werte, Wärmeverluste und der jährliche Heizwärmebedarf je Kapsel und Turm."
+      },
+      "poster": {
+        "file": "Excel_04_Energy.png"
+      }
+    },
+    {
+      "id": "clip-bim-information",
+      "topic": "bim",
+      "emoji": "🏗️",
+      "title": {
+        "en": "BIM: Information",
+        "de": "BIM: Information"
+      },
+      "description": {
+        "en": "A bare number becomes a piloti spacing with unit, context, place and provenance.",
+        "de": "Aus einer nackten Zahl wird ein Pilotiabstand mit Einheit, Kontext, Ort und Herkunft."
+      },
+      "poster": {
+        "file": "BIM_01_Information.png"
+      }
+    },
+    {
+      "id": "clip-bim-objects",
+      "topic": "bim",
+      "emoji": "🏗️",
+      "title": {
+        "en": "BIM: Objects",
+        "de": "BIM: Objekte"
+      },
+      "description": {
+        "en": "The IFC class tree, types and occurrences, property sets and the wall with its opening.",
+        "de": "Der IFC-Klassenbaum, Typen und Vorkommen, Property Sets und die Wand mit ihrer Öffnung."
+      },
+      "poster": {
+        "file": "BIM_02_Objects.png"
+      }
+    },
+    {
+      "id": "clip-bim-representations",
+      "topic": "bim",
+      "emoji": "🏗️",
+      "title": {
+        "en": "BIM: Representations",
+        "de": "BIM: Darstellungen"
+      },
+      "description": {
+        "en": "One wall in plan, section, elevation and 3D, always with the same GlobalId.",
+        "de": "Eine Wand in Grundriss, Schnitt, Ansicht und 3D, stets mit derselben GlobalId."
+      },
+      "poster": {
+        "file": "BIM_03_Representations.png"
+      }
+    },
+    {
+      "id": "clip-bim-models",
+      "topic": "bim",
+      "emoji": "🏗️",
+      "title": {
+        "en": "BIM: Models",
+        "de": "BIM: Modelle"
+      },
+      "description": {
+        "en": "Architecture, structure and services models on one schema, federation, clashes and translation.",
+        "de": "Architektur-, Tragwerks- und Haustechnikmodell auf einem Schema, Föderation, Kollisionen und Übersetzung."
+      },
+      "poster": {
+        "file": "BIM_04_Models.png"
+      }
+    },
+    {
+      "id": "clip-bim-exchange",
+      "topic": "bim",
+      "emoji": "🏗️",
+      "title": {
+        "en": "BIM: Exchange",
+        "de": "BIM: Austausch"
+      },
+      "description": {
+        "en": "One piloti and the slab leave the model as STEP, as a mesh and as an analysis model.",
+        "de": "Eine Piloti und die Decke verlassen das Modell als STEP, als Netz und als Berechnungsmodell."
+      },
+      "poster": {
+        "file": "BIM_05_Exchange.png"
+      }
+    },
+    {
+      "id": "clip-bim-consistency",
+      "topic": "bim",
+      "emoji": "🏗️",
+      "title": {
+        "en": "BIM: Consistency",
+        "de": "BIM: Konsistenz"
+      },
+      "description": {
+        "en": "A change of the roof slab ripples through revisions, loads, checks and the linked analysis model.",
+        "de": "Eine Änderung der Dachdecke zieht Revisionen, Lasten, Prüfungen und das verknüpfte Berechnungsmodell nach sich."
+      },
+      "poster": {
+        "file": "BIM_06_Consistency.png"
+      }
+    },
+    {
+      "id": "clip-optimization-extrema",
+      "topic": "optimization",
+      "emoji": "🎯",
+      "title": {
+        "en": "Optimization: Extrema",
+        "de": "Optimierung: Extrema"
+      },
+      "description": {
+        "en": "Local and global minima of the electricity demand while the room turns through all bearings.",
+        "de": "Lokale und globale Minima des Strombedarfs, während sich der Raum durch alle Himmelsrichtungen dreht."
+      },
+      "poster": {
+        "file": "Optimization_Extrema.png"
+      }
+    },
+    {
+      "id": "clip-optimization-sampling",
+      "topic": "optimization",
+      "emoji": "🎯",
+      "title": {
+        "en": "Optimization: Sampling",
+        "de": "Optimierung: Stichproben"
+      },
+      "description": {
+        "en": "Grid, random draws and Latin hypercube fill the plane of window ratio and overhang.",
+        "de": "Raster, Zufallsziehungen und Latin Hypercube füllen die Ebene aus Fensteranteil und Vordach."
+      },
+      "poster": {
+        "file": "Optimization_Sampling.png"
+      }
+    },
+    {
+      "id": "clip-optimization-experiments",
+      "topic": "optimization",
+      "emoji": "🎯",
+      "title": {
+        "en": "Optimization: Experiments",
+        "de": "Optimierung: Versuche"
+      },
+      "description": {
+        "en": "Four summer rooms as 2² runs: main effects, interaction, curvature and a confirmation run.",
+        "de": "Vier Sommerräume als 2²-Versuche: Haupteffekte, Wechselwirkung, Krümmung und ein Bestätigungsversuch."
+      },
+      "poster": {
+        "file": "Optimization_Experiments.png"
+      }
+    },
+    {
+      "id": "clip-optimization-index",
+      "topic": "optimization",
+      "emoji": "🎯",
+      "title": {
+        "en": "Optimization: Index",
+        "de": "Optimierung: Index"
+      },
+      "description": {
+        "en": "Five façade variants on physical scales, weights that re-rank the winner and a budget limit.",
+        "de": "Fünf Fassadenvarianten auf physikalischen Skalen, Gewichte, die den Sieger neu bestimmen, und eine Budgetgrenze."
+      },
+      "poster": {
+        "file": "Optimization_Index.png"
+      }
+    },
+    {
+      "id": "clip-optimization-pareto",
+      "topic": "optimization",
+      "emoji": "🎯",
+      "title": {
+        "en": "Optimization: Pareto",
+        "de": "Optimierung: Pareto"
+      },
+      "description": {
+        "en": "36 designs on cost against electricity: dominance, the front, payback and the knee.",
+        "de": "36 Entwürfe in Kosten gegen Strom: Dominanz, die Front, Amortisation und der Knick."
+      },
+      "poster": {
+        "file": "Optimization_Pareto.png"
+      }
+    },
+    {
+      "id": "clip-optimization-algorithms",
+      "topic": "optimization",
+      "emoji": "🎯",
+      "title": {
+        "en": "Optimization: Algorithms",
+        "de": "Optimierung: Algorithmen"
+      },
+      "description": {
+        "en": "Gradient descent, pattern search and a genetic algorithm within a budget of 50 runs.",
+        "de": "Gradientenabstieg, Mustersuche und ein genetischer Algorithmus innerhalb eines Budgets von 50 Läufen."
+      },
+      "poster": {
+        "file": "Optimization_Algorithms.png"
+      }
+    }
   ]
 }

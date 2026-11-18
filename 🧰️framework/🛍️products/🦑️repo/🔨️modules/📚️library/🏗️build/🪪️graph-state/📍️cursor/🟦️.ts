@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {createHash,randomBytes} from "node:crypto";
 import {lstatSync,readFileSync} from "node:fs";
 import {mkdir,readFile,readdir,rename,rm,stat,utimes,writeFile} from "node:fs/promises";
@@ -96,7 +97,7 @@ export function snapshotRowsV1(before:SnapshotV1,after:SnapshotV1):CursorRowV1[]
 }
 
 /** 🗄️ The snapshots of this machine, one file per instance below the cache of the replica; atomic writes, the newest kept. */
-export function snapshotStoreV1(root:string,directory:string=join(root,...policy.directory.split("/")),maximum:number=policy.maximumSnapshots){
+export function snapshotStoreV1(root:string,directory:string=machinePathV1(root,...policy.directory.split("/")),maximum:number=policy.maximumSnapshots){
  const path=(instance:string)=>join(directory,instance+policy.extension);
  return Object.freeze({
   directory,
@@ -134,7 +135,7 @@ const alive=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(er
 /** 🩺️ What the health file of the replica daemon of `root` allows: `unusable` (no fresh health, store unreachable or process dead: the manifest cannot be used), `verify` (the daemon does not state that its manifest reflects the tree: it has no verification yet, lost trust through an event that can make the manifest wrong for shared source paths, or its last verification is older than ten minutes; every file the manifest names is then checked against its size and modification time before it is believed) or `trusted` (a sweep of the daemon found the manifest equal to the tree after its last loss). The lifetime failure counters of the health file play no part; the rule is `decideTrustV1` of the shared worktree trust member, the statement is the `trust` object of the health schema. */
 export async function manifestTrustV1(root:string,now:number=Date.now(),isAlive:(pid:number)=>boolean=alive):Promise<"unusable"|"verify"|"trusted">{
  try{
-  const value=JSON.parse(await readFile(join(root,".cache","f","health.json"),"utf8")) as {wallMs:number;pid:number;store:string;trust?:unknown};
+  const value=JSON.parse(await readFile(machinePathV1(root,".cache","f","health.json"),"utf8")) as {wallMs:number;pid:number;store:string;trust?:unknown};
   if(typeof value.wallMs!=="number"||typeof value.pid!=="number")return "unusable";
   let trust:TrustV1|undefined;
   try{requireTrustShapeV1("Trust",value.trust,"trust");trust=value.trust as TrustV1;}catch{}
@@ -146,7 +147,7 @@ export async function manifestTrustV1(root:string,now:number=Date.now(),isAlive:
 export async function settleReplicaV1(root:string,now:()=>number=Date.now):Promise<void>{
  const started=now();
  for(;;){
-  const at=(await stat(join(root,".cache","f","state.wal")).catch(()=>undefined))?.mtimeMs;
+  const at=(await stat(machinePathV1(root,".cache","f","state.wal")).catch(()=>undefined))?.mtimeMs;
   if(at===undefined)return;
   const wait=policy.settleMilliseconds-(now()-at);
   if(wait<=0||now()-started>=policy.settleMaximumMilliseconds)return;

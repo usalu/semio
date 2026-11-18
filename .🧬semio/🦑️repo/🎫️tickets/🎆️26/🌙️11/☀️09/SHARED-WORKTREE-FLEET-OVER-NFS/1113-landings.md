@@ -918,3 +918,43 @@ Not run: a real `repo` build command (forbidden graph commands on this machine).
 - restarts: build-agent and its graph server child on every machine: restart through the code-closure watch (exit 75)
 - restarts: policy.json: read by every `repo` build command at its next start; no service is restarted by it alone
 - originals for `land.py --rollback`: `/Users/Shared/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️13/FLEET-ONE-MACHINE-SHARED-HOT-CACHE-AND-REMOTE-EXECUTION/🗑️generated/R24-landing-081424`
+
+## Package R46 landing (2026-11-15 17:29, with R34): the fleet converges to the git state of the archivist (index tree base for unrepresentable paths, members follow, atomic index rebuild, NFD alias displaced, self-check retry, stage warning, info/exclude emptied)
+- copy `🤝️shared-worktree/README.md` before edb2f53969e5 after 6cc692d6f3e4
+- copy `🤝️shared-worktree/🌿️git/🟦️.ts` before 07caa0e43b8c after 1bae7f6c6705
+- copy `🤝️shared-worktree/🌿️git/🧪️tests/🔧️config.ts` before f2acffb274f0 after ab9ccc9e6c08
+- copy `🤝️shared-worktree/🌿️git/🧪️tests/🟦️.ts` before 0d4496a8f026 after efffb6304c8c
+- copy `🤝️shared-worktree/🩺️attest/🟦️.ts` before e298194c8594 after 05093bf6f0f7
+- copy `🤝️shared-worktree/🩺️attest/🧪️tests/🐍️.py` before 0bba5dcfebc5 after 6dc037c3f4c0
+- copy `🤝️shared-worktree/🩺️attest/🧪️tests/🟦️.ts` before 12bf3026bba5 after 3be53e0c1871
+- copy `🤝️shared-worktree/🩺️attest/🧪️tests/🧫️fixtures/🔣️.json` before 8436f3b98b99 after a5b52461742d
+- copy `🤝️shared-worktree/🩺️attest/🧬️schema/🔣️.json` before 478eb88fa73f after 3c6f42df94af
+- copy `🤝️shared-worktree/🛡️resilience/🟦️.ts` before d5008fa00f5f after de1fdb593329
+- copy `🤝️shared-worktree/🛡️resilience/🧪️tests/🟦️.ts` before 9a46dad6f883 after dccf3515b709
+- copy `🤝️shared-worktree/🛡️resilience/🧬️schema/🔣️.json` before 6361bdc3003f after 38e17b50e247
+- copy `🤝️shared-worktree/🔁️replica/🟦️.ts` before b89cdbd4b9be after 56ccf2936043
+- copy `🤝️shared-worktree/🔁️replica/📖️texts/🔣️.json` before ad5ec530f6ab after 42cb8028c7d7
+- copy `🤝️shared-worktree/🔁️replica/⌨️command/🟦️.ts` before 0653f53e7b1d after b4a8cc520543
+- copy `🤝️shared-worktree/🔁️replica/🧪️tests/🌿️git.py` before 8caac89c86ba after bb95312fb857
+- copy `🤝️shared-worktree/🔁️replica/🧪️tests/🌿️git.ts` before 7c665397539c after 2684e9077830
+- copy `🤝️shared-worktree/🔁️replica/🧪️tests/🟦️.ts` before bb07500cb40f after b707a73e5363
+- copy `🤝️shared-worktree/🔁️replica/🧬️schema/🔣️.json` before 8a6ebff32110 after 4ac92d1e3d15
+- copy `🤝️shared-worktree/🔁️replica/🧲️adopt/🧪️tests/🟦️.ts` before e724021662b0 after e61b592c1604
+- the land.py process ended with the session restart after 15 test files; the remaining suites were run by hand on the live tree: all green except `⏱️turns.ts` (fails on the unmodified code under load 50 too) and two load-timing flakes that passed on rerun; `🩺️attest/🧪️tests/🟦️.ts` relay test made race-free afterwards (133 pass three times); `🌿️git.ts` got the test 'two machines editing the same file ...' afterwards
+- restarts: replica daemon of every machine; g1-server restarted 17:30, sidecars build-agent 75731, build-scheduler 75732, build-cache 75733 kept their pids (adopted)
+- originals for `land.py --rollback`: `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️13/FLEET-ONE-MACHINE-SHARED-HOT-CACHE-AND-REMOTE-EXECUTION/🗑️generated/R46-landing-172818`
+
+## Package R44 landing (2026-11-15 17:52): order-independent JSON extraction in the provisioning scripts, with its law tests
+- copy `🗺️topology/🥾️provision/🐚️.sh` before 2ab867fb6b86 after 44fc91d6cda7
+- copy `🗺️topology/🥾️provision/🔵️.ps1` before 1d9a97a6faf3 after 5478fd5b4647
+- copy `🗺️topology/🥾️provision/🧪️tests/🟦️.ts` before 3c6af6a2e507 after be232ff3bc5f
+- copy `🗺️topology/🥾️provision/🧪️tests/🐍️.py` before 37c052547c3c after bbc73acd7c6c
+- copy `🗺️topology/🧪️tests/🟦️.ts` before 559a3aa68ee5 after a810bba1a2ff
+- copy `🗺️topology/🥾️provision/🧪️tests/🟦️extraction.ts` before new after 175e0b1efcd3
+- restarts: none. The code digest of the replica does not change (the provisioning scripts are sealed companions, the tests are outside the import closure): no replica daemon, relay, cache, scheduler or agent restarts on any machine.
+- kit: the group server's kit maintenance (relay/attest loop) re-seals the changed companions under the same digest and republishes `v1/bootstrap/kit` (SHA256SUMS and `published` change); a machine that provisions after that gets the new scripts, joined machines get the files through the replica like any file.
+- originals for `land.py --rollback 1115175241`: `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️13/FLEET-ONE-MACHINE-SHARED-HOT-CACHE-AND-REMOTE-EXECUTION/🗑️generated/R44-landing-1115175241`
+
+## R52 2026-11-15 18:32: `🔁️replica/🧪️tests/⏱️turns.ts` only (test file, outside the import closure; no restart)
+- the drift-repair turn-length test and the forced-collection rate-limit test now run on a logical clock (performance.now replaced for the test body; one tick per manifest entry named) instead of wall time, so host load cannot fail them; sha256 after da708868a27c
+- test: `⏱️turns.ts` 3 pass (run twice); the other test files of the module were not re-run (no source change)

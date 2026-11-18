@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:repo:dependencies:fence-budget:v1",
+  "title": "How often the dependency producer pays for a full fence of the ownership walk and the staged inputs",
+  "description": "A full fence of the producer of `repo dependencies sync` replays the whole ownership frontier twice (about 100 000 directories, 400 000 lstat calls) and re-reads and re-hashes every staged input file. The producer used to take one at each of about 31 sites (one after every 64 published bindings among them), so a Windows worker that needs 330 s for one fence spent more than two hours on fences alone and never reached the end of its stage before the cap. Now the fences that precede an irreversible step are `final` and always full; every other fence is `interim` and is full only when the last full fence ended at least `factor` times its own duration ago (never more than `maximumGapMilliseconds` ago), so fences take at most about one ninth of the stage on any machine and nothing at all on a machine whose fence is instant. A skipped interim fence still checks the store custody. The final fences before the sources are rewritten and before the receipts are sealed catch every change a skipped fence would have caught, and the producer already retries over the delta.",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "factor": 8,
+        "maximumGapMilliseconds": 1800000
+      }
+    },
+    "Platform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "fenceMilliseconds",
+        "bindingMilliseconds"
+      ],
+      "properties": {
+        "name": {
+          "enum": [
+            "darwin",
+            "linux",
+            "win32"
+          ]
+        },
+        "fenceMilliseconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bindingMilliseconds": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "nowMs",
+        "final",
+        "durationMs",
+        "due"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "nowMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "final": {
+          "type": "boolean"
+        },
+        "durationMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "due": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runs",
+        "platforms"
+      ],
+      "properties": {
+        "runs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "steps"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "steps": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/Step"
+                }
+              }
+            }
+          }
+        },
+        "platforms": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Platform"
+          }
+        }
+      }
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/definitions/Policy"
+    }
+  ]
+}

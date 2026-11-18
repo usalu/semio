@@ -1,0 +1,17 @@
+{
+ "prefix": [
+  {"name": "all fit", "sizes": [10, 20, 30], "budget": 100, "kept": 3},
+  {"name": "the sum may reach the budget exactly", "sizes": [50, 50, 1], "budget": 100, "kept": 2},
+  {"name": "the first that does not fit ends the list", "sizes": [60, 50, 1], "budget": 100, "kept": 1},
+  {"name": "a first document above the budget keeps none", "sizes": [101, 1], "budget": 100, "kept": 0},
+  {"name": "no documents", "sizes": [], "budget": 100, "kept": 0}
+ ],
+ "wait": [
+  {"name": "first try, no jitter, no breaker", "attempt": 0, "breaker": 0, "unit": 0, "milliseconds": 2000},
+  {"name": "second try with half the jitter", "attempt": 1, "breaker": 0, "unit": 0.5, "milliseconds": 6750},
+  {"name": "the last back-off repeats", "attempt": 7, "breaker": 0, "unit": 0, "milliseconds": 15000},
+  {"name": "an open breaker lengthens the wait", "attempt": 0, "breaker": 9000, "unit": 0, "milliseconds": 9000},
+  {"name": "the breaker wait is bounded", "attempt": 0, "breaker": 600000, "unit": 0, "milliseconds": 20000},
+  {"name": "a negative breaker is none", "attempt": 0, "breaker": -5, "unit": 0.99, "milliseconds": 2495}
+ ]
+}

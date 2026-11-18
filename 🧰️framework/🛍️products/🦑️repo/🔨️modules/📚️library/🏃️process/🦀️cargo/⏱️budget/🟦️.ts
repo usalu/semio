@@ -22,6 +22,8 @@ export const PACKAGE_TEST_BUDGET_MS: Record<string, Partial<Record<TestLevel, nu
   "semio-hub-layout": { quick: 600_000 },
   "semio-hub-cad": { quick: 1_200_000 },
   "semio-hub-norm": { quick: 1_800_000 },
+  "semio-hub-norm-eurocode": { quick: 1_800_000 },
+  "semio-hub-norm-eurocode-materials": { quick: 1_800_000 },
   "semio-hub-playbook": { quick: 600_000 },
   "semio-hub-imperative": { quick: 600_000 },
   "semio-hub-remodel": { quick: 600_000 },

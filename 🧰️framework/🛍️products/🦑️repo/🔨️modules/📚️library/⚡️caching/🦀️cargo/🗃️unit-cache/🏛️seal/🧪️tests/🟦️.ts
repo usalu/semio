@@ -7,7 +7,7 @@ import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import {requirePinnedTestToolV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {UNIT_CACHE_POLICY_V1} from "../../🔏️key/🟦️.ts";
-import {ensureUnitCacheShimV1,sealedUnitCacheScriptV1,sealedUnitCacheV1,UNIT_CACHE_SCRIPT_V1} from "../../🚪️launch/🟦️.ts";
+import {ensureUnitCacheShimV1,unitCacheWrapperV1,sealedUnitCacheV1,UNIT_CACHE_SCRIPT_V1} from "../../🚪️launch/🟦️.ts";
 import {sealModulesV1} from "../🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 
@@ -83,11 +83,11 @@ test("snapshots outside the newest few and the retention window are collected, t
  expect(kept.length).toBe(policy.keepSnapshots);expect(kept).toContain(digests.at(-1)!);expect(new Set([...kept,...removed])).toEqual(new Set(digests));
 }));
 
-test("the compiler wrapper stand-in and the environment script name the sealed copy, never the live tooling", () => {
+test("the compiler wrapper stand-in names the sealed copy, never the live tooling", () => {
  const root=scratch();
  try{
-  const cache=join(root,"u"),shim=ensureUnitCacheShimV1(cache),sealed=sealedUnitCacheV1(cache),script=sealedUnitCacheScriptV1(cache)!;
-  expect(script).toBe(sealed.entries[0]!);expect(script.startsWith(join(cache,policy.directory))).toBe(true);expect(script).not.toBe(UNIT_CACHE_SCRIPT_V1);
+  const cache=join(root,"u"),shim=ensureUnitCacheShimV1(cache),sealed=sealedUnitCacheV1(cache),script=sealed.entries[0]!;
+  expect(unitCacheWrapperV1(cache)).toBe(shim);expect(script).toBe(sealed.entries[0]!);expect(script.startsWith(join(cache,policy.directory))).toBe(true);expect(script).not.toBe(UNIT_CACHE_SCRIPT_V1);
   if(process.platform!=="win32"){const text=readFileSync(shim,"utf8");expect(text).toContain(script);expect(text).not.toContain(UNIT_CACHE_SCRIPT_V1);expect(shim.endsWith(sealed.digest)).toBe(true);}
  }finally{rmSync(root,{recursive:true,force:true});}
 },120000);

@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import{requireIssuedResourceControlInvocationV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {repositoryCacheBudgetV1} from "../🟦️.ts";
 import {createHash,randomUUID,randomBytes} from "node:crypto";
@@ -58,7 +59,7 @@ async function manifestRecordsV1(path:string,size:number):Promise<ReadonlySet<st
 
 /** 🕸️ Retains immutable graph bytes and their enforcing storage through one backend consumer. */
 export async function withRepositoryBuildGraphArtifactV1<T>(workspace:string,graph:BuildGraphV1,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,body:(artifact:RepositoryBuildGraphArtifactV1,actualControl:ResourceLeaseControl)=>Promise<T>,prepare?: (additionalBytes:number)=>Promise<void>):Promise<T>{
- requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkScriptInvocation(invocation);if(validateJsonSchemaSubset(schema,policy).length||policy.maximumSnapshotBytes>policy.maximumRetainedBytes)throw Error("Closed graph artifact budget required");const encoded=await encodeGraphRecordsV1(readBuildGraphV1(graph),{policy:policy.records as never,maximumBytes:policy.maximumSnapshotBytes}),digest=encoded.digest,leaseDirectory=join(workspace,".cache/b/l/m/data");
+ requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkScriptInvocation(invocation);if(validateJsonSchemaSubset(schema,policy).length||policy.maximumSnapshotBytes>policy.maximumRetainedBytes)throw Error("Closed graph artifact budget required");const encoded=await encodeGraphRecordsV1(readBuildGraphV1(graph),{policy:policy.records as never,maximumBytes:policy.maximumSnapshotBytes}),digest=encoded.digest,leaseDirectory=machinePathV1(workspace,".cache/b/l/m/data");
  const maximumAdmissionAttempts=policy.maximumAdmissionAttempts;let fundedBytes:number|undefined;for(let attempt=0;attempt<maximumAdmissionAttempts;attempt++){
  const result=await withRepositoryCacheStoreV1(workspace,"graph",invocation,phaseControl,async(store,actualControl)=>{
   const check=()=>checkResourceLeaseControl(actualControl);check();const directory=requireNativeStoragePathV1(store.root,join(store.root,"snapshots")),path=requireNativeStoragePathV1(store.root,join(directory,digest+".json")),writer=await acquireQueuedResourceLease({directory:leaseDirectory,resource:"build-graph-store:"+store.root,mode:"exclusive",owner:randomBytes(16).toString("base64url"),signal:actualControl.signal,control:actualControl});let reader:ResourceLease|undefined,primary:{error:unknown}|undefined;

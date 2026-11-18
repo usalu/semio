@@ -19,6 +19,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import { core } from "@semio-tech/cad-js";
+import { Button, Input, SharedBorderRow, SharedBorderRowCell, SharedBorderRowLabel } from "@semio-tech/ui-react";
 import * as renderer from "../../⚙️engine/📺️renderer/🟦️.tsx";
 const { InteractionCanvas, InteractionSpatialView, r3fPreviewKernel, useInteractionRuntime, useInteractionSnapshot, useTessellation } = renderer;
 const { Model, loadSpatialInteraction, solidRef } = core;
@@ -147,8 +148,8 @@ function CadBoxInteractionRuntimeHost({ spec, opts, kernel, autoRun }: { readonl
   }, [autoRun, rt]);
 
   return (
-    <div style={{ display: "flex", height: "100%", width: "100%" }}>
-      <div style={{ position: "relative", flex: "1 1 auto", minHeight: 0 }}>
+    <SharedBorderRow className="h-full w-full">
+      <div data-shared-border-cell="" style={{ position: "relative", flex: "1 1 auto", minHeight: 0 }}>
         <InteractionCanvas frameloop="always">
           <InteractionSpatialView
             snapshot={snapshot}
@@ -162,38 +163,36 @@ function CadBoxInteractionRuntimeHost({ spec, opts, kernel, autoRun }: { readonl
           />
         </InteractionCanvas>
       </div>
-      <div style={{ width: 240, flex: "0 0 auto", padding: 12, fontSize: 12, display: "flex", flexDirection: "column", gap: 8, borderLeft: "1px solid rgba(128,128,128,0.3)", overflowY: "auto" }}>
-        <div>
+      <SharedBorderRow orientation="vertical" className="w-60 flex-none overflow-y-auto text-xs">
+        <SharedBorderRowCell className="block">
           <strong>primitive.box</strong>
           <div>state: {snapshot.state}</div>
           <div>revision: {snapshot.revision}</div>
           <div>canUndo: {String(snapshot.capabilities.canUndo)}</div>
           <div>solid: {kernel.lastBox ? solidId ?? "(pending)" : "(none)"}</div>
-        </div>
-        <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          height
-          <input type="number" step={0.1} value={heightInput} onChange={(e) => setHeightInput(Number(e.target.value))} />
-        </label>
-        <button type="button" onClick={() => void rt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} })}>
+        </SharedBorderRowCell>
+        <SharedBorderRowLabel htmlFor="cad-box-height" width="auto">height</SharedBorderRowLabel>
+        <Input id="cad-box-height" type="number" step={0.1} value={heightInput} onChange={(e) => setHeightInput(Number(e.target.value))} />
+        <Button type="button" variant="outline" icon="arrow-right" onClick={() => void rt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} })}>
           corner A (0,0,0)
-        </button>
-        <button type="button" onClick={() => void rt.send({ kind: "pointer.down", point: [2, 3, 0] as Vec3, modifiers: {} })}>
+        </Button>
+        <Button type="button" variant="outline" icon="arrow-right" onClick={() => void rt.send({ kind: "pointer.down", point: [2, 3, 0] as Vec3, modifiers: {} })}>
           corner B (2,3,0)
-        </button>
-        <button type="button" onClick={() => void rt.send({ kind: "set.height", value: heightInput, modifiers: {} })}>
+        </Button>
+        <Button type="button" variant="outline" icon="arrow-right" onClick={() => void rt.send({ kind: "set.height", value: heightInput, modifiers: {} })}>
           set height
-        </button>
-        <button type="button" disabled={!snapshot.capabilities.canCommit} onClick={() => void rt.send({ kind: "confirm", modifiers: {} })}>
+        </Button>
+        <Button type="button" variant="outline" icon="check" disabled={!snapshot.capabilities.canCommit} onClick={() => void rt.send({ kind: "confirm", modifiers: {} })}>
           confirm
-        </button>
-        <button type="button" disabled={!snapshot.capabilities.canUndo} onClick={() => rt.undo()}>
+        </Button>
+        <Button type="button" variant="outline" icon="x" disabled={!snapshot.capabilities.canUndo} onClick={() => rt.undo()}>
           undo
-        </button>
-        <pre data-testid="cad-box-debug" style={{ margin: 0, whiteSpace: "pre-wrap", opacity: 0.7 }}>
+        </Button>
+        <SharedBorderRowCell className="block"><pre data-testid="cad-box-debug" style={{ margin: 0, whiteSpace: "pre-wrap", opacity: 0.7 }}>
           {JSON.stringify({ state: snapshot.state, lastBox: kernel.lastBox })}
-        </pre>
-      </div>
-    </div>
+        </pre></SharedBorderRowCell>
+      </SharedBorderRow>
+    </SharedBorderRow>
   );
 }
 // #endregion 🎛️StoryHost

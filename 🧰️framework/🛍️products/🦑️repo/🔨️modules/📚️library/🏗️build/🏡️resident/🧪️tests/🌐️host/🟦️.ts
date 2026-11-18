@@ -1,5 +1,5 @@
 import {afterAll,describe,expect,test} from "bun:test";
-import {copyFileSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,realpathSync,rmSync,utimesSync} from "node:fs";
+import {copyFileSync,existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,realpathSync,rmSync,utimesSync} from "node:fs";
 import {createHash} from "node:crypto";
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
@@ -12,6 +12,7 @@ import {createGraphPlannerPortV1} from "../../🔌️ports/🧭️plan/🟨️.m
 import {spawnHostServiceV1} from "../../🏗️composition/🌐️host/🟨️.mjs";
 import {createSlicePoolV1} from "../../🏗️composition/🌐️host/👷️slice-pool/🟨️.mjs";
 import {GRAPH_MEMORY_POLICY_V1} from "../../../🧠️memory/🟨️.mjs";
+import {GRAPH_CUT_POLICY_V1} from "../../../🧠️memory/✂️cut/🟨️.mjs";
 import {PlanRefusedErrorV1,connectHostV1,holdHostV1,requestHostStatusV1,requestPlanV1} from "../../🚪️client/🛰️plan/🟨️.mjs";
 import {hostEndpointsV1} from "../../📨️protocol/📍️endpoint/🏠️host/🟨️.mjs";
 import {HOST_POLICY_V1,validatorV1} from "../../📨️protocol/🎚️policy/🟨️.mjs";
@@ -23,7 +24,7 @@ import {KIND_RULES_V1,verifyObservedV1} from "../../../🕸️graph/🧮️deriv
 import {createTaskRecorderV1} from "../../../🕸️graph/🧮️derived-nodes/🎯️task-state/🟨️.mjs";
 import {createRevisionCaptureHookV1,createRevisionPinHookV1,loadManifestV1,openPinnedWorldV1,releasePinV1} from "../../../🧊️revision/🟦️.ts";
 
-const GRAPH=join(HERE,"🧫️fixtures/🛰️host-graph.json"),MAIN=join(HERE,"🌐️host/🖥️host-main.mjs");
+const GRAPH=join(HERE,"🧫️fixtures/🛰️host-graph.json"),MAIN=join(HERE,"🌐️host/🖥️host-main.mjs"),THROWING=join(HERE,"🌐️host/💥️throwing-host-main.mjs");
 const base=mkdtempSync(join(process.platform==="win32"?tmpdir():"/tmp","hs-"));
 afterAll(()=>rmSync(base,{recursive:true,force:true}));
 const oracle=(targets:string[])=>JSON.parse(spawnSync(process.env.SEMIO_PYTHON??"python3",["-I",ORACLE,"plan",GRAPH,...targets],{encoding:"utf8"}).stdout) as Record<string,string[]>;
@@ -130,12 +131,15 @@ describe("slice worker pool",()=>{
   await pool.run({root,graphText,busyMilliseconds:600,reportPhase:"verification"},{onProgress:(_ms:number,detail:any)=>{if(detail)details.push(detail);}});
   expect(details.length).toBeGreaterThan(0);expect(details[0]).toEqual({phase:"verification",done:7,total:9});
  });
- test("at most the maximum run at once, one root runs one after the other, a queued load can be cancelled and a failing worker rejects",async()=>{
+ test("at most the maximum run at once, different loads of one root run one after the other, identical loads of one root share one worker, a queued load can be cancelled and a failing worker rejects",async()=>{
   const pool=createSlicePoolV1({workerUrl:slow,maximum:2,heartbeatMilliseconds:1000}),a=workspace("w-pa"),b=workspace("w-pb"),c=workspace("w-pc");
-  const started=performance.now(),runs=[pool.run({root:a,graphText,busyMilliseconds:600}),pool.run({root:a,graphText,busyMilliseconds:600}),pool.run({root:b,graphText,busyMilliseconds:600})];
+  const runs=[pool.run({root:a,graphText,busyMilliseconds:600,tool:"first"}),pool.run({root:a,graphText,busyMilliseconds:600,tool:"second"}),pool.run({root:a,graphText,busyMilliseconds:600,tool:"first"}),pool.run({root:b,graphText,busyMilliseconds:600})];
+  for(let wait=0;pool.stats().started<2&&wait<1200;wait++)await sleep(50);
   await sleep(100);expect(pool.stats().active).toBeLessThanOrEqual(2);
-  await Promise.all(runs);const elapsed=performance.now()-started;
-  expect(elapsed).toBeGreaterThan(1100);
+  expect(pool.stats().started,"the second load of the root waits for the first, the identical twin of the first shares it").toBe(2);
+  await Promise.all(runs);
+  expect(pool.stats().started,"first, other root, second: the twin never started a worker").toBe(3);
+  expect(pool.stats().completed).toBe(3);
   const controller=new AbortController(),slowOne=pool.run({root:c,graphText,busyMilliseconds:5000},{signal:controller.signal});
   await sleep(200);controller.abort(new Error("cancelled by test"));await expect(slowOne).rejects.toThrow("cancelled by test");expect(pool.stats().cancelled).toBe(1);
   await expect(pool.run({root:c,graphText,busyMilliseconds:0,fail:true})).rejects.toThrow("fixture failure");expect(pool.stats().failed).toBeGreaterThanOrEqual(1);
@@ -153,7 +157,7 @@ describe("slice memory guard",()=>{
  /** 🧪️ A modelled process: its resident bytes are a fixed base plus the growth of the running slice loads, read by the pool's guard and by the service's own sweep alike, so the outcome never depends on the allocator or on timing. */
  const serve=async(name:string,limitMegabytes:number,margin:number,growthMegabytes:number,residentMegabytes?:number)=>{
   const base=512*MiB;let busy:()=>number=()=>0;const rss=()=>base+(busy()>0?growthMegabytes*MiB:0);
-  const pool=createSlicePoolV1({workerUrl:slow,maximum:2,marginMegabytes:margin,sampleMilliseconds:50,headroom:()=>({limitBytes:base+limitMegabytes*MiB,currentBytes:rss()})});busy=()=>pool.memory().filter(row=>row.running).length;
+  const pool=createSlicePoolV1({hostMegabytes:0,cutPolicy:{...GRAPH_CUT_POLICY_V1,levels:0},workerUrl:slow,maximum:2,marginMegabytes:margin,sampleMilliseconds:50,headroom:()=>({limitBytes:base+limitMegabytes*MiB,currentBytes:rss()})});busy=()=>pool.memory().filter(row=>row.running).length;
   const env=environment(name),implementation=digestOf("impl-"+name),runtime=hostEndpointsV1(implementation,env),root=workspace("w-"+name);
   const planner=createGraphPlannerPortV1({identify:async()=>digestOf(name+"-key"),loadGraph:async()=>JSON.parse(graphText),loadSlice:async(request:any)=>pool.run({root:request.root,graphText,busyMilliseconds:1500},{signal:request.signal,onProgress:request.onProgress})});
   const service=createHostServiceV1({runtime,implementation,ports:{planner,workers:{memory:()=>pool.memory(),active:()=>pool.busy()},resident:{rss}},policy:{residentCheckMilliseconds:50,...residentMegabytes===undefined?{}:{maximumResidentBytes:residentMegabytes*MiB}}});await service.start();
@@ -304,6 +308,15 @@ describe("bounded memory",()=>{
   for(let at=0;at<100&&exits.length===0;at++)await sleep(50);
   expect(exits).toEqual(["memory"]);expect(h.service.pool.stats().bytes).toBe(0);
  });
+ test("a service over its resident bound is never retired while a plan is in flight: a read longer than the drain cut is answered, and the service retires only after it",async()=>{
+  const h=inProcess("m-busy",{maximumResidentBytes:1},6200),root=workspace("mw-busy");
+  await h.service.start();
+  const exits:string[]=[];h.service.closed.then(reason=>exits.push(reason));
+  const answer=await requestPlanV1({root,implementation:h.implementation,targets:["core:build"],agent:"a",language:"en",environment:h.env});
+  checkPlan((answer as any).plan.tasks,["core:build"]);
+  for(let at=0;at<100&&exits.length===0;at++)await sleep(50);
+  expect(exits).toEqual(["memory"]);
+ },30000);
  test("a stalled slice load reaches the client as the typed refusal: code stalled, retry later, rendered in both languages, never internal",async()=>{
   const env=environment("stalled"),implementation=digestOf("impl-stalled"),runtime=hostEndpointsV1(implementation,env),root=workspace("stalled-w");
   const stalled=Object.assign(new Error("stalled process.routing.stalled-worker"),{name:"RepoError",code:"stalled",key:"process.routing.stalled-worker",values:{minutes:10,retry:"later"}});
@@ -342,7 +355,7 @@ describe("bounded memory",()=>{
   try{
    const error=await requestPlanV1({root,implementation,targets:["core:build"],agent:"a",language:"de",environment:env}).then(()=>undefined,reason=>reason as any);
    expect(error?.name).toBe("PlanRefusedErrorV1");expect(error.code).toBe("internal");expect(error.retry).toBe("later");
-   expect(JSON.stringify(error.message_)).not.toContain("secret implementation detail");expect(error.message_.de).toContain("unerwarteten");expect(error.message_.en).toContain("unexpected");expect(error.message_.en).toMatch(/reference [0-9a-f]{8}/u);
+   expect(error.message_.en).toContain("Error: secret implementation detail");expect(error.message_.de).toContain("Error: secret implementation detail");expect(error.message_.de).toContain("unerwarteten");expect(error.message_.en).toContain("unexpected");expect(error.message_.en).toMatch(/reference [0-9a-f]{8}/u);
    const reference=/reference ([0-9a-f]{8})/u.exec(error.message_.en)![1]!;
    expect(error.message_.en).toContain(runtime.log);expect(error.message_.de).toContain(runtime.log);
    expect(logged.some(line=>line.startsWith("request-failed "+reference+" ")&&line.includes("secret implementation detail"))).toBe(true);
@@ -351,7 +364,7 @@ describe("bounded memory",()=>{
  test("a full disk reaches the client as the typed disk refusal that names the partition, the free bytes and the gc command, never as an internal failure",async()=>{
   const env=environment("disk"),implementation=digestOf("impl-disk"),runtime=hostEndpointsV1(implementation,env),root=workspace("disk-w"),logged:string[]=[];
   const planner=createGraphPlannerPortV1({identify:async()=>"id",loadGraph:async()=>{throw Object.assign(new Error("ENOSPC: no space left on device, write"),{code:"ENOSPC",path:join(root,"x")});}});
-  const service=createHostServiceV1({runtime,implementation,ports:{planner},policy:{residentCheckMilliseconds:50},log:(event:string,detail?:string)=>{logged.push(event+" "+detail);}});
+  const service=createHostServiceV1({runtime,implementation,ports:{planner},access:{root},policy:{residentCheckMilliseconds:50},log:(event:string,detail?:string)=>{logged.push(event+" "+detail);}});
   await service.start();
   try{
    const error=await requestPlanV1({root,implementation,targets:["core:build"],agent:"a",language:"de",environment:env}).then(()=>undefined,reason=>reason as any);
@@ -402,14 +415,14 @@ describe("host service as a separate process",()=>{
  test("a service started by a client does not inherit the client's capacity grant or plan child and gets the declared collector target",async()=>{
   const{mkdtempSync,readFileSync,rmSync}=await import("node:fs"),{tmpdir}=await import("node:os"),{join}=await import("node:path"),directory=mkdtempSync(join(tmpdir(),"host-env-")),out=join(directory,"env.json");
   try{
-   const start=spawnHostServiceV1({command:[process.execPath,"-e","require('node:fs').writeFileSync(process.argv[1],JSON.stringify(process.env))",out],environment:{PATH:process.env.PATH??"",SEMIO_HOST_CAPACITY_GRANT:"grant",SEMIO_HOST_CAPACITY_PLAN:"{}",SEMIO_BUILD_GRAPH_PLAN_OUT:"/x",SEMIO_LANGUAGE:"en"}});
+   const start=spawnHostServiceV1({command:[process.execPath,"-e","require('node:fs').writeFileSync(process.argv[1],JSON.stringify(process.env))",out],environment:{PATH:process.env.PATH??"",SEMIO_SERVICE_LAUNCHD:"off",SEMIO_HOST_CAPACITY_GRANT:"grant",SEMIO_HOST_CAPACITY_PLAN:"{}",SEMIO_BUILD_GRAPH_PLAN_OUT:"/x",SEMIO_LANGUAGE:"en"}});
    start({runtime:{directory,log:join(directory,"log")}});
-   for(let at=0;at<100&&!require("node:fs").existsSync(out);at++)await sleep(50);
+   for(let at=0;at<400&&!require("node:fs").existsSync(out);at++)await sleep(50);
    const seen=JSON.parse(readFileSync(out,"utf8"));
    expect(seen.SEMIO_HOST_CAPACITY_GRANT).toBeUndefined();expect(seen.SEMIO_HOST_CAPACITY_PLAN).toBeUndefined();expect(seen.SEMIO_BUILD_GRAPH_PLAN_OUT).toBeUndefined();
    expect(seen.SEMIO_LANGUAGE).toBe("en");expect(seen.BUN_JSC_forceRAMSize).toBe(String(GRAPH_MEMORY_POLICY_V1.serviceHeapMegabytes*1048576));
   }finally{rmSync(directory,{recursive:true,force:true});}
- });
+ },30000);
  const launch=(implementation:string,env:Record<string,string>,policy:Record<string,unknown>={})=>spawnHostServiceV1({command:[process.execPath,MAIN,implementation,GRAPH,JSON.stringify({residentCheckMilliseconds:50,...policy})],environment:env});
  const ask=(root:string,implementation:string,env:Record<string,string>,agent:string,targets=["app:test"])=>requestPlanV1({root,implementation,targets,agent,language:"en",environment:env,spawnService:launch(implementation,env)});
  test("16 concurrent clients start exactly one daemon; kill -9 mid-life is recovered by the next request",async()=>{
@@ -428,6 +441,23 @@ describe("host service as a separate process",()=>{
   process.kill(stopped!.pid,"SIGTERM");
   for(let at=0;at<100&&await requestHostStatusV1({implementation,environment:env});at++)await sleep(50);
   expect(await requestHostStatusV1({implementation,environment:env})).toBeUndefined();
+ },60000);
+ test("real process: a resident service that throws refuses with its message in both languages and writes the whole block into the origin folder of the store within seconds",async()=>{
+  const store=mkdtempSync(join(base,"store-")),env={...environment("t"),SEMIO_FLEET_STORE_ROOT:store,SEMIO_FLEET_ORIGIN:"g1-real",SEMIO_HOST_FIXTURE_MESSAGE_PAD:"90000"},implementation=digestOf("proc-throw"),root=workspace("tw");
+  const spawnService=spawnHostServiceV1({command:[process.execPath,THROWING,implementation],environment:env});
+  const started=Date.now(),error=await requestPlanV1({root,implementation,targets:["app:test"],agent:"a",language:"en",environment:env,spawnService}).then(()=>undefined,reason=>reason as any);
+  try{
+   expect(error?.name).toBe("PlanRefusedErrorV1");expect(error.code).toBe("internal");
+   const reference=/reference ([0-9a-f]{8})/u.exec(error.message_.en)![1]!;
+   expect(error.message_.en).toContain("): TypeError [E_FIXTURE]: fixture graph is not iterable");expect(error.message_.de).toContain("): TypeError [E_FIXTURE]: fixture graph is not iterable");
+   expect(error.message_.en.length).toBeLessThan(2400);
+   const file=join(store,"v1","origins","g1-real","service-failure.txt"),text=readFileSync(file,"utf8");
+   expect(Date.now()-started).toBeLessThan(10000);
+   expect(text.startsWith("request-failed "+reference+" ")).toBe(true);expect(text).toContain("code: E_FIXTURE");expect(text).toContain("name: TypeError");
+   expect(text).toContain("en: The resident service met an unexpected failure (reference "+reference+")");expect(text).toContain("de: Der residente Dienst ist auf einen unerwarteten Fehler");
+   expect(text).toContain("\n    at ");expect(Buffer.byteLength(text)).toBeLessThanOrEqual(65536);expect(Buffer.byteLength(text)).toBeGreaterThan(60000);
+   expect(existsSync(join(store,"v1","origins","g1-real","service-failure-"+reference+".txt"))).toBe(true);
+  }finally{const status=await requestHostStatusV1({implementation,environment:env});if(status)process.kill(status.pid,"SIGTERM");rmSync(store,{recursive:true,force:true});}
  },60000);
  test("a client of another implementation digest starts a new daemon and the old one retires",async()=>{
   const env=environment("q"),root=workspace("qw"),old=digestOf("proc-old"),fresh=digestOf("proc-new"),policy={supersededGraceMilliseconds:100};

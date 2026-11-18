@@ -1,0 +1,66 @@
+{
+ "version": 1,
+ "owners": 100,
+ "entriesPerOwner": 4,
+ "blindFootprintMegabytes": 623,
+ "managedMegabytes": 4447,
+ "grantMegabytes": 6553,
+ "softPercent": 60,
+ "hardPercent": 85,
+ "readings": [
+  {
+   "footprint": 623,
+   "managed": 4447
+  },
+  {
+   "footprint": 5900,
+   "managed": 400
+  },
+  {
+   "footprint": 3000,
+   "managed": 3000
+  },
+  {
+   "footprint": 100,
+   "managed": 5600
+  },
+  {
+   "footprint": 100,
+   "managed": 100
+  }
+ ],
+ "lookManagedMegabytes": [
+  300,
+  310,
+  305,
+  290,
+  350,
+  420,
+  500,
+  260,
+  265,
+  270,
+  400,
+  420,
+  128,
+  300,
+  300
+ ],
+ "lookShrink": [
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  true,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false
+ ]
+}

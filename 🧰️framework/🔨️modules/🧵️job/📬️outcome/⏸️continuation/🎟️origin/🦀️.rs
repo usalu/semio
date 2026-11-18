@@ -31,7 +31,13 @@ impl OriginalJobReturnOrigin{
   Ok(RetirementDemand{depth:1,..Default::default()})
  }
 
+ pub fn debug_state(&self)->String{format!("parent={} pending={} returning={} closing={} source_ready={} frame={} credit={:?} witness={} continuation={} outcome={}",self.source.parent.is_some(),self.source.pending.is_some(),self.source.returning.is_some(),self.receiver.closing,self.receiver.source_ready,self.receiver.frame.is_some(),self.receiver.credit.as_ref().map(|c|(c.live,c.capture,c.receive,c.capture_observed,c.receive_observed,c.serial,c.slot)),self.receiver.witness.is_some(),self.receiver.continuation.is_some(),self.receiver.outcome.is_some())}
  pub fn admit(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+  let before=cx.retained_progress();let result=self.admit_inner(cx);
+  if matches!(result,Ok(false))&&before==cx.retained_progress(){semio_framework_job_context::debug_probe("origin_admit_false",format!("cancelled={} yield={} borrowed={} state=[{}]",cx.is_cancelled(),cx.should_yield(),cx.original_return_budget_is_borrowed(),self.debug_state()));}
+  result
+ }
+ fn admit_inner(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if self.receiver.closing||cx.is_cancelled()||cx.should_yield(){return Ok(false)}
   if self.source.parent.is_none(){
    if self.source.returning.is_some(){return Ok(false)}

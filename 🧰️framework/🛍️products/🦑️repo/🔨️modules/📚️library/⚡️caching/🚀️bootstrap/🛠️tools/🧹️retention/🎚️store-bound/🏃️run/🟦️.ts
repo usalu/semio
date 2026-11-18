@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {lstat,readdir,realpath} from "node:fs/promises";
 import {basename,dirname,join} from "node:path";
 import {cacheTextV1,formatCacheBytesV1,type CacheLanguageV1} from "../../../../../💾️storage/🧾️ledger/🟦️.ts";
@@ -30,7 +31,7 @@ export async function censusNxToolingStoreV1(workspace:string,storeRoot:string,p
  const base=join(storeRoot,"nx");let names:string[];
  try{names=await readdir(base);}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return{kind:"absent"};throw error;}
  let current:string;
- try{current=await realpath(join(workspace,".nx/installation"));}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return{kind:"noCurrent"};throw error;}
+ try{current=await realpath(machinePathV1(workspace,".nx/installation"));}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return{kind:"noCurrent"};throw error;}
  const identity=basename(current),physical=await realpath(base);
  if(dirname(current)!==physical||!hex.test(identity))return{kind:"noCurrent"};
  const images:{identity:string;createdAt:number}[]=[];let seen=0;

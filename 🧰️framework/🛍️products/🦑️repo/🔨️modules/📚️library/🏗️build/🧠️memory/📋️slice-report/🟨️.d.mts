@@ -1,0 +1,24 @@
+/** 📋️ The declared numbers of the slice memory report. */
+export const SLICE_REPORT_POLICY_V1:Readonly<{version:1;directory:string;name:string;fileBytes:number;intervalMilliseconds:number;topTypes:number;stopLines:number;progressMilliseconds:number;censusChildren:number;censusTimeoutMilliseconds:number}>;
+export function registerSliceReportSourceV1(name:string,read:()=>unknown):()=>void;
+export function readSliceReportSourceV1(name:string):unknown;
+export function readFinalSliceReportSourceV1(name:string):unknown;
+export function startSliceProgressV1(input:{emit:(event:{phase:string;done:number;total:number})=>void;read?:(name:string)=>unknown;final?:(name:string)=>unknown;milliseconds?:number}):()=>void;
+export type SliceCollectionV1={name:string;entries:number;sample?:()=>unknown[];bytes?:number};
+export function describeCollectionV1(name:string,collection:unknown):SliceCollectionV1;
+export function registerSliceCollectionsV1(name:string,read:()=>SliceCollectionV1[]):()=>void;
+export function estimateCollectionBytesV1(entries:number,sample:unknown[]):number;
+export function collectSliceCollectionsV1(policy?:unknown):{name:string;entries:number;estimatedBytes:number}[];
+export function noteSliceReportPhaseV1(event:{phase?:string;done?:number;total?:number}):void;
+export function noteSliceReportStageV1(event:{stage?:string;operation?:string;managedMegabytes?:number;residentMegabytes?:number}):void;
+export function noteSliceReportStopV1(event:{stage:string;operation:string;usedMegabytes:number;budgetMegabytes:number}):void;
+export function buildSliceReportV1(input:{reason:"start"|"interval"|"plan-stop"|"end";heap?:()=>{heapSize:number;extraMemorySize:number;objectCount:number;objectTypeCounts?:Record<string,number>}|undefined;now?:()=>number;policy?:SliceReportPolicyV1}):Record<string,unknown>;
+export function writeSliceReportV1(root:string,input:{reason:"start"|"interval"|"plan-stop"|"end";heap?:()=>unknown}):void;
+export function startSliceReportV1(input:{root:string;heap?:()=>unknown;footprint?:SliceFootprintV1;table?:()=>Promise<string>;intervalMilliseconds?:number}):Readonly<{now(reason:"start"|"interval"|"plan-stop"|"end"):void;stop():void}>;
+type SliceReportPolicyV1=Readonly<{fileBytes:number;topTypes:number;collectionsTop:number;collectionsBytes:number;collectionSample:number}>;
+export type SliceFootprintV1={self?:()=>Promise<number|undefined>|number|undefined;tree?:()=>Promise<number|undefined>|number|undefined};
+export type SliceProcessesV1={self?:{rssMegabytes:number;vszMegabytes:number};count:number;rssMegabytes:number;children:{pid:number;role:string;rssMegabytes:number;vszMegabytes:number}[]};
+export function sharedBytesV1(value:unknown,seen?:Set<unknown>):number;
+export function processRoleV1(command:string):string;
+export function parseProcessTreeV1(text:string,root:number,top?:number):SliceProcessesV1;
+export function measureSliceProcessesV1(input?:{footprint?:SliceFootprintV1;table?:()=>Promise<string>;pid?:number}):Promise<{processes?:SliceProcessesV1;footprintMegabytes?:number;treeFootprintMegabytes?:number}>;

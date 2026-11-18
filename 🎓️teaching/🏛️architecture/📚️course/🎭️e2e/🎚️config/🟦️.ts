@@ -8,7 +8,8 @@
  *   decoration whose waits count the pets' own time;
  * - the `exclusive` shard runs on one worker with a proctor of its own: `presence`, then `shortage`, then `away`, then
  *   `faults` count who is online, take the proctor away for a moment, take it away before a learner ever arrives, and let it
- *   die again and again or speak another contract.
+ *   die again and again or speak another contract; `chaos` and `reconnect` then put a whole class through failures and kill the
+ *   proctor in every phase of its learners' reconnects.
  *
  * The workers of a wave come from the gate (the worker policy of the admitted memory and cores); `--workers` explicitly
  * overrides the shared shard's. Every step waits at most twenty seconds for what it expects, so a hang fails at once; the
@@ -50,6 +51,8 @@ export default defineConfig({
     { name: "shortage", dependencies: ["presence"], testMatch: ["🔌️connection-shortage/🟦️.ts"] },
     { name: "away", dependencies: ["shortage"], testMatch: ["📴️proctor-away/🟦️.ts"] },
     { name: "faults", dependencies: ["away"], testMatch: ["🛟️proctor-faults/🟦️.ts"] },
+    { name: "chaos", dependencies: ["faults"], timeout: 4 * 60 * 60_000, expect: { timeout: 150_000 }, use: { actionTimeout: 120_000, navigationTimeout: 150_000, trace: "off" }, testMatch: ["🌪️chaos-crowd/🟦️.ts"] },
+    { name: "reconnect", dependencies: ["chaos"], timeout: 3 * 60 * 60_000, expect: { timeout: 30_000 }, use: { actionTimeout: 60_000, trace: "off" }, testMatch: ["🔁️reconnect-storm/🟦️.ts"] },
     { name: "pets", fullyParallel: true, testMatch: ["🐕️pet-walk/🟦️.ts", "🐕️pet-walk/🧭️cast-and-choices/🟦️.ts", "🐕️pet-walk/🪜️mischief-ladder-and-phone/🟦️.ts"] },
   ],
 });

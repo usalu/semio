@@ -206,3 +206,41 @@ fn a_focus_request_made_while_a_modal_is_open_waits_for_it_to_close() {
     tui.close_overlay(menu);
     assert_eq!(tui.focus(), Some(other), "the waiting request is honoured, not the older focus ({list:?})");
 }
+
+#[test]
+fn a_menu_separator_joins_the_frame_with_tee_junctions() {
+    let (mut tui, _list) = scene();
+    tui.open_menu(Pos { x: 5, y: 3 }, items());
+    tui.render();
+    let text = frame_text(&tui);
+    let rule = text.lines().find(|line| line.contains('\u{251c}')).unwrap_or_else(|| panic!("no tee junction\n{text}"));
+    let left = rule.find('\u{251c}').unwrap();
+    let right = rule.find('\u{2524}').unwrap_or_else(|| panic!("no right tee junction\n{text}"));
+    assert!(left < right && rule[left + '\u{251c}'.len_utf8()..right].chars().all(|c| c == '\u{2500}'), "{rule}");
+    assert!(!text.lines().any(|line| line.contains("\u{2502}\u{2500}") || line.contains("\u{2500}\u{2502}")), "no rule stops against a frame edge\n{text}");
+}
+
+#[test]
+fn the_palette_query_rule_joins_the_frame_with_tee_junctions() {
+    let (mut tui, _list) = scene();
+    tui.open_palette(PaletteState::new(vec![PaletteItem::new("Open settings", "C-,")]));
+    tui.render();
+    let text = frame_text(&tui);
+    let rule = text.lines().find(|line| line.contains('\u{251c}')).unwrap_or_else(|| panic!("no tee junction\n{text}"));
+    assert!(rule.contains('\u{2524}'), "{rule}");
+    assert!(!text.lines().any(|line| line.contains("\u{2502}\u{2500}") || line.contains("\u{2500}\u{2502}")), "no rule stops against a frame edge\n{text}");
+}
+
+#[test]
+fn menu_separators_and_the_palette_query_rule_join_their_frame_with_tee_junctions() {
+    let (mut tui, _list) = scene();
+    tui.open_menu(Pos { x: 5, y: 3 }, items());
+    tui.render();
+    let text = frame_text(&tui);
+    assert!(text.lines().any(|line| line.contains('\u{251c}') && line.contains('\u{2524}')), "the separator row is ├──┤: {text}");
+    tui.dispatch(&key(Key::Esc));
+    tui.open_palette(PaletteState::new(vec![PaletteItem::new("Open settings", "C-,")]));
+    tui.render();
+    let text = frame_text(&tui);
+    assert!(text.lines().any(|line| line.contains('\u{251c}') && line.contains('\u{2524}')), "the palette query rule is ├──┤: {text}");
+}

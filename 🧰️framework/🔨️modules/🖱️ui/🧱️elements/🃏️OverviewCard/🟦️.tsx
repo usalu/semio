@@ -26,6 +26,10 @@ export interface OverviewCardBaseProps {
   readonly className?: string;
   readonly bodyClassName?: string;
   readonly contentClassName?: string;
+  /** 🧱️ Takes the body's padding away and makes the content a vertical shared-border group: its direct children are
+   * cells (`data-shared-border-cell`, each with its own padding) whose single dividers lie between them (framed controls placed directly in it are cells too, see `data-shared-border-cells`) and whose outer
+   * edges are the card's own silhouette, so no frame of a child lies inside the card's frame with a gap. */
+  readonly flush?: boolean;
   readonly data?: Readonly<Record<`data-${string}`, string | undefined>>;
 }
 
@@ -61,7 +65,7 @@ const CARD_STACK_DATA = { "data-overview-card-stack": "" } as const;
  * @see ../🗂️WindowChrome/🟦️.tsx
  * @see https://www.w3.org/WAI/ARIA/apg/practices/landmark-regions/ — sections named by their heading */
 export function OverviewCard(props: OverviewCardProps): React.ReactElement {
-  const { slot, icon, title, titleAdornment, children, footerLeft, footerRight, className, bodyClassName, contentClassName, data } = props;
+  const { slot, icon, title, titleAdornment, children, footerLeft, footerRight, className, bodyClassName, contentClassName, flush = false, data } = props;
   const Heading = props.as === "section" ? (`h${props.headingLevel ?? 2}` as const) : "span";
   const chrome = (
     <WindowChrome
@@ -69,7 +73,7 @@ export function OverviewCard(props: OverviewCardProps): React.ReactElement {
       active={false}
       stackSlot={`${slot}-stack`}
       stackDataAttrs={CARD_STACK_DATA}
-      stackClassName={cn("w-full min-w-0", props.as === "section" && "h-full")}
+      stackClassName="h-full w-full min-w-0"
       titleChips={
         <div data-slot={`${slot}-title-chip`} className={cn(windowChromeTitleChipClass, "flex min-w-0 max-w-full items-center gap-single px-single")}>
           {icon}
@@ -85,13 +89,13 @@ export function OverviewCard(props: OverviewCardProps): React.ReactElement {
         </div>
       }
       body={
-        <div data-slot={`${slot}-content`} className={cn("w-full min-w-0", contentClassName)}>
+        <div data-slot={`${slot}-content`} data-shared-border-group={flush ? "" : undefined} data-shared-border-cells={flush ? "" : undefined} data-orientation={flush ? "vertical" : undefined} className={cn("w-full min-w-0", contentClassName)}>
           {children}
         </div>
       }
       footerLeftChips={footerLeft}
       footerRightChips={footerRight}
-      bodyClassName={bodyClassName ?? "p-double"}
+      bodyClassName={bodyClassName ?? (flush ? "p-0" : "p-double")}
     />
   );
   if (props.as === "section") {
@@ -110,12 +114,12 @@ export function OverviewCard(props: OverviewCardProps): React.ReactElement {
       aria-label={props.label}
       onClick={props.onClick}
       className={cn(
-        "pointer-events-auto group w-full min-w-0 cursor-pointer border-0 bg-transparent p-0 text-left outline-none",
+        "pointer-events-auto group h-full w-full min-w-0 cursor-pointer border-0 bg-transparent p-0 text-left outline-none",
         "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         className,
       )}
     >
-      <div data-overview-card-paint="" className={cn("transition-transform duration-200 motion-reduce:transition-none group-hover:-translate-y-0.5", props.lifted && "-translate-y-0.5")}>{chrome}</div>
+      <div data-overview-card-paint="" className={cn("h-full transition-transform duration-200 motion-reduce:transition-none group-hover:-translate-y-0.5", props.lifted && "-translate-y-0.5")}>{chrome}</div>
     </button>
   );
 }
@@ -158,7 +162,7 @@ export const OverviewCardAction = React.forwardRef<HTMLButtonElement, OverviewCa
       primary ? "text-foreground" : "text-muted-foreground hover:text-foreground",
       className,
     )}
-    style={{ minHeight: "max(1.5rem, calc(7 * var(--ui-spacing)))", ...style }}
+    style={{ minHeight: "var(--chip-row-height)", ...style }}
     {...rest}
   >
     {children}

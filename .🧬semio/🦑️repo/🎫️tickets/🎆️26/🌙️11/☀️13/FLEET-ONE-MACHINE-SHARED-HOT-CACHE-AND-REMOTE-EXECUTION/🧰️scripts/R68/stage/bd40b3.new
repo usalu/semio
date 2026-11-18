@@ -1,0 +1,84 @@
+import schema from "./🧬️schema/🔣️.json" with { type: "json" };
+
+export const TAKE_POLICY_V1 = Object.freeze({ ...schema.definitions.Policy.const });
+const TEXTS = schema.definitions.Texts.const;
+
+/** ⏱️ The pause before look number `round` (0 is the first) at the cache for records that other machines may have stored meanwhile: it starts at `pollFirstMilliseconds` and grows by `pollGrowthPercent` percent per look up to `pollMaximumMilliseconds`, in integer arithmetic, so every language computes the same numbers.
+ * @see ./🧪️tests/🐍️.py */
+export function takePollWaitV1(round, policy = TAKE_POLICY_V1) {
+  let wait = policy.pollFirstMilliseconds;
+  for (let step = 0; step < round && wait < policy.pollMaximumMilliseconds; step++) wait = Math.min(policy.pollMaximumMilliseconds, Math.floor(wait * policy.pollGrowthPercent / 100));
+  return Math.min(wait, policy.pollMaximumMilliseconds);
+}
+
+/** 📒️ What a reader knows about its owners while it resolves them: the outcome of every look, which owners it published as wanted for the fleet and how many run here; the counts it reports and the line in both languages. An owner counts once, by its last outcome. */
+export function createTakeLedgerV1(total) {
+  const states = new Map(), wanted = new Set();
+  let running = 0;
+  const count = outcome => { let sum = 0; for (const state of states.values()) if (state === outcome) sum++; return sum; };
+  const counts = () => {
+    const present = count("present"), fetched = count("fetched"), here = count("inferred"), stale = count("stale");
+    return Object.freeze({ total, present, fetched, here, stale, running, wanted: wanted.size, done: present + fetched + here, missing: total - present - fetched - here });
+  };
+  return Object.freeze({
+    mark(name, outcome) { states.set(name, outcome); if (outcome === "present" || outcome === "fetched" || outcome === "inferred") wanted.delete(name); },
+    want(names) { for (const name of names) if (!["present", "fetched", "inferred"].includes(states.get(name))) wanted.add(name); },
+    run(delta) { running = Math.max(0, running + delta); },
+    state(name) { return states.get(name); },
+    counts,
+    line(language) { return fill(TEXTS[language === "de" ? "de" : "en"].progress, counts()); },
+    waveLine(language) { const row = counts(); return fill(TEXTS[language === "de" ? "de" : "en"].wave, row); },
+  });
+}
+
+const fill = (text, values) => text.replace(/\{(\w+)\}/gu, (_all, name) => String(values[name] ?? 0));
+
+/** 🔍️ Looks at every name with `concurrency` workers, once, and again (up to `faultRetries` times, after `faultWaitMilliseconds`) those whose look the cache did not answer (`fault`); answers the outcome of every name. `attempt(name)` answers "present", "fetched", "stale", "miss" or "fault"; a fault that remains is a "miss" (the caller infers or waits for it, the fleet decides nothing). Never throws for an attempt that throws: that name is a miss. `signal` stops the pass early (names not looked at are absent from the answer). */
+export async function takePassV1({ names, attempt, concurrency = TAKE_POLICY_V1.concurrency, faultRetries = TAKE_POLICY_V1.faultRetries, faultWaitMilliseconds = TAKE_POLICY_V1.faultWaitMilliseconds, sleep = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds)), signal, mark = () => {} }) {
+  const outcomes = new Map();
+  let pending = [...names];
+  for (let round = 0; round <= faultRetries && pending.length > 0 && signal?.aborted !== true; round++) {
+    if (round > 0) await sleep(faultWaitMilliseconds * 2 ** (round - 1));
+    const faulted = [];
+    let next = 0;
+    await Promise.all(Array.from({ length: Math.min(concurrency, pending.length) }, async () => {
+      while (next < pending.length && signal?.aborted !== true) {
+        const name = pending[next++];
+        let outcome;
+        try { outcome = await attempt(name); } catch { outcome = "miss"; }
+        if (outcome === "fault" && round < faultRetries) { faulted.push(name); continue; }
+        outcomes.set(name, outcome === "fault" ? "miss" : outcome);
+        mark(name, outcomes.get(name));
+      }
+    }));
+    pending = faulted;
+  }
+  return outcomes;
+}
+
+/** 🔁️ Looks again at the cache for the owners that are still missing, with a growing pause: `queue()` names the owners not started yet (a batch of at most `pollBatch` of them is looked at, rotating, so every owner gets its turn), `attempt(name)` answers like in {@link takePassV1}; a record that appeared is reported to `arrived(name, outcome)` and resets the pause. Stops when `stop()` is true or `signal` aborts; answers how many looks it made and how many records arrived. */
+export async function takePollV1({ queue, attempt, arrived, stop, signal, sleep = (milliseconds, abort) => new Promise(resolve => { const timer = setTimeout(resolve, milliseconds); abort?.addEventListener("abort", () => { clearTimeout(timer); resolve(); }, { once: true }); }), policy = TAKE_POLICY_V1 }) {
+  let round = 0, offset = 0, looks = 0, found = 0;
+  while (stop() !== true && signal?.aborted !== true) {
+    await sleep(takePollWaitV1(round, policy), signal);
+    if (stop() === true || signal?.aborted === true) break;
+    const names = queue();
+    if (names.length === 0) { round++; continue; }
+    offset %= names.length;
+    const batch = names.slice(offset, offset + policy.pollBatch);
+    if (batch.length < policy.pollBatch) batch.push(...names.slice(0, Math.min(names.length - batch.length, policy.pollBatch - batch.length)));
+    offset += policy.pollBatch;
+    let hit = 0, next = 0;
+    await Promise.all(Array.from({ length: Math.min(policy.concurrency, batch.length) }, async () => {
+      while (next < batch.length && stop() !== true) {
+        const name = batch[next++];
+        looks++;
+        let outcome;
+        try { outcome = await attempt(name); } catch { continue; }
+        if (outcome === "present" || outcome === "fetched") { hit++; found++; await arrived(name, outcome); }
+      }
+    }));
+    round = hit > 0 ? 0 : round + 1;
+  }
+  return Object.freeze({ looks, found });
+}

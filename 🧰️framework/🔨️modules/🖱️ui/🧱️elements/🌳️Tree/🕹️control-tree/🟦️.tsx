@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Stepper } from "../../🪜️Stepper/🟦️.tsx";
+import { useSharedBorderFrameRef } from "../../🗂️WindowChrome/shared-border.ts";
 import { Slider } from "../../🎚️Slider/🟦️.tsx";
 import { Toggle } from "../../🔀️Toggle/🟦️.tsx";
 import { CheckIcon, CloseIcon } from "../../🔣️Icons/🟦️.tsx";
@@ -168,8 +169,10 @@ interface ControlTreeRowProps {
   left: React.ReactNode;
   right?: React.ReactNode;
 }
-const ControlTreeRow: React.FC<ControlTreeRowProps> = ({ className, left, right }) => (
-  <div data-dim data-slot="control-tree-row" className={cn("grid min-w-0 w-full items-center gap-x-tiny min-h-small", className)} style={{ gridTemplateColumns: `minmax(0, 1fr) ${uiSpacingLen(STYLING_DOM.controlValueColumnUiSpacing)}` }}>
+const ControlTreeRow: React.FC<ControlTreeRowProps> = ({ className, left, right }) => {
+  const frameRef = useSharedBorderFrameRef<HTMLDivElement>();
+  return (
+  <div ref={frameRef} data-dim data-slot="control-tree-row" data-shared-border-frame="" data-shared-border-edges="bottom" className={cn("grid min-w-0 w-full items-center gap-x-tiny min-h-small", className)} style={{ gridTemplateColumns: `minmax(0, 1fr) ${uiSpacingLen(STYLING_DOM.controlValueColumnUiSpacing)}` }}>
     <div data-slot="control-tree-row-left" className="relative min-w-0">
       {left}
     </div>
@@ -177,7 +180,8 @@ const ControlTreeRow: React.FC<ControlTreeRowProps> = ({ className, left, right 
       {right}
     </div>
   </div>
-);
+  );
+};
 interface ControlTreeFolderRowProps {
   node: ControlTreeNode;
   classNames?: ControlTreeClassNames;

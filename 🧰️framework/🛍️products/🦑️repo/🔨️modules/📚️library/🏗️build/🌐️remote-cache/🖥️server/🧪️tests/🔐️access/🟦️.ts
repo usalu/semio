@@ -120,3 +120,27 @@ test("attack: every signed write binds its body: blobs to their digest, nx archi
  expect((await send("/semio/v1/cache/archive2","archive",sha("archive"))).status).toBe(200);
  expect(await (await fleet.signed(fleet.b)(`http://127.0.0.1:${port}/semio/v1/cache/archive2`)).text()).toBe("archive");
 });
+
+const unitResult=(manifest:string,outputs:readonly string[])=>encodeProtobufV1(REAPI_V1.actionResult,{output_files:[{path:"unit.json",digest:{hash:manifest,size_bytes:3}},...outputs.map((hash,index)=>({path:`out/o${index}`,digest:{hash,size_bytes:3}}))],exit_code:0});
+
+test("provenance: two builds of one unit whose manifests differ only in their timestamps are the same result, other output bytes are still a divergence",async()=>{
+ const fleet=await fleetServer(),key=sha("manifest unit"),put=(root:string,bytes:Uint8Array)=>fleet.signed(root)(`${fleet.base}/ac/${key}`,{method:"PUT",body:bytes});
+ expect((await put(fleet.a,unitResult(sha("built at 1"),[sha("rlib"),sha("rmeta")]))).status).toBe(200);
+ expect((await put(fleet.b,unitResult(sha("built at 2"),[sha("rmeta"),sha("rlib")]))).status,"another origin, same outputs, other manifest").toBe(200);
+ expect((await put(fleet.b,unitResult(sha("built at 3"),[sha("other rlib"),sha("rmeta")]))).status,"another origin, other outputs").toBe(409);
+ const status=await (await fleet.signed(fleet.a)(`http://127.0.0.1:${fleet.running.port}/status`)).json() as {divergences:{count:number}};
+ expect(status.divergences.count).toBe(1);
+});
+
+test("consumption: the status names which origin read the results of which origin, and how many of them were compiled units",async()=>{
+ const fleet=await fleetServer(),unit=sha("consumed unit"),record=sha("consumed record");
+ const put=(root:string,key:string,bytes:Uint8Array)=>fleet.signed(root)(`${fleet.base}/ac/${key}`,{method:"PUT",body:bytes});
+ expect((await put(fleet.a,unit,unitResult(sha("m"),[sha("rlib")]))).status).toBe(200);
+ expect((await put(fleet.a,record,result([sha("record.br")]))).status).toBe(200);
+ const get=async(root:string,key:string)=>{const answer=await fleet.signed(root)(`${fleet.base}/ac/${key}`);await answer.arrayBuffer();return answer.status;};
+ expect(await get(fleet.b,unit)).toBe(200);expect(await get(fleet.b,unit)).toBe(200);expect(await get(fleet.b,record)).toBe(200);expect(await get(fleet.a,unit)).toBe(200);expect(await get(fleet.b,sha("absent"))).toBe(404);
+ const head=await fleet.signed(fleet.b)(`${fleet.base}/ac/${unit}`,{method:"HEAD"});expect(head.status).toBe(200);
+ const status=await (await fleet.signed(fleet.a)(`http://127.0.0.1:${fleet.running.port}/status`)).json() as {consumption:{since:number;total:number;pairs:Record<string,{hits:number;units:number}>}};
+ expect(status.consumption.total).toBe(4);expect(status.consumption.since).toBeGreaterThan(0);
+ expect(status.consumption.pairs).toEqual({"g1-m01>g1-m02":{hits:3,units:2},"g1-m01>g1-m01":{hits:1,units:1}});
+});

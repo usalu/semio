@@ -58,7 +58,7 @@ export function parseFootprintsV1(text:string):ReadonlyMap<number,number>{
 
 const capture=async(command:readonly string[],milliseconds:number):Promise<string>=>{
  try{
-  const child=Bun.spawn([...command],{stdin:"ignore",stdout:"pipe",stderr:"ignore"}),timer=setTimeout(()=>{try{child.kill("SIGKILL");}catch{}},milliseconds);
+  const child=Bun.spawn([...command],{windowsHide:true,stdin:"ignore",stdout:"pipe",stderr:"ignore"}),timer=setTimeout(()=>{try{child.kill("SIGKILL");}catch{}},milliseconds);
   try{return await new Response(child.stdout).text();}finally{clearTimeout(timer);}
  }catch{return"";}
 };

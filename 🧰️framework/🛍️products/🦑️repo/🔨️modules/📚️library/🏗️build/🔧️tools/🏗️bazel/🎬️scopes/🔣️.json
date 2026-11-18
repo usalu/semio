@@ -6,7 +6,9 @@
       "roots": [
         "🧰️framework/🔨️modules/⚙️runtime/🍞️bun/🟦️.ts",
         "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🤝️handover/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🟦️.ts",
         "🧰️framework/🔨️modules/🏃️process/🔒️leases/📦️metadata/🟦️.ts",
+        "🧰️framework/🔨️modules/🧬️schema/📄️source/🔗️closure/🟦️.ts",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/⚡️recovery/🟦️.ts",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/📤️child/🟦️.ts",

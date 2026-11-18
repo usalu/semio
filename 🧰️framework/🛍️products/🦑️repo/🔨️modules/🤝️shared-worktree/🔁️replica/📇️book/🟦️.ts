@@ -170,7 +170,7 @@ export class CompactTableV1{
  readonly buckets=emptyBucketsV1();
  shared=0;
  writes=0;
- constructor(readonly book:ReplicaBookV1,readonly local:boolean){}
+ readonly book:ReplicaBookV1; readonly local:boolean; constructor(book:ReplicaBookV1,local:boolean){this.book=book;this.local=local;}
  private term(id:number):Uint8Array|undefined{
   if(!this.local||!this.live(id))return undefined;
   const operation=this.operationAt(id)!;

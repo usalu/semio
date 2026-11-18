@@ -128,7 +128,7 @@
             "maxLength": 512
           },
           "minItems": 1,
-          "maxItems": 2000,
+          "maxItems": 152768,
           "uniqueItems": true
         },
         "roots": {
@@ -802,8 +802,8 @@
     "SourceClosureReadPolicyV1": {
       "const": {
         "maximumRecordBytes": 16777216,
-        "maximumAggregateBytes": 67108864,
-        "maximumRecords": 2048,
+        "maximumAggregateBytes": 536870912,
+        "maximumRecords": 16384,
         "maximumFiles": 65536,
         "maximumNxBytes": 1048576,
         "chunkBytes": 65536

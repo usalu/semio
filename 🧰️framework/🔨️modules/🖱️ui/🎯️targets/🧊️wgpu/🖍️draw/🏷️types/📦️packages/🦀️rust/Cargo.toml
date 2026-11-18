@@ -24,6 +24,7 @@ path = "../../🦀️.rs"
 testkit = []
 
 [dependencies]
+semio-ui-border-presentation = { path = "../../../../../../🔨️modules/📏️border-presentation/📦️packages/🦀️rust" }
 semio-ui-scene-mesh = { path = "../../../../../../🎬️scene/📐️math/🕸️mesh/📦️packages/🦀️rust" }
 semio-ui-scene-pass = { path = "../../../../../../🎬️scene/📐️math/🎞️pass/📦️packages/🦀️rust" }
 semio-ui-scene-camera = { path = "../../../../../../🎬️scene/📐️math/🎥️camera/📦️packages/🦀️rust" }

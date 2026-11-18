@@ -45,7 +45,7 @@ test("the build-directory custody is its own class: its holder may wait for ever
  const custody='["semio.cargo.custody-lease/v1","/w/.cache/b/r/m/b/p","prototype"]';
  expect(classifyLeaseResourceV1(live,custody).id).toBe("cargo-custody");
  expect(classifyLeaseResourceV1(live,'["semio.cargo.build-lease/v1","/b","prototype"]').id).toBe("cargo-coordination");
- expect(live.allowed.filter(edge=>edge.from==="cargo-custody").map(edge=>edge.to).sort()).toEqual(live.classes.filter(row=>row.id!=="registry-fetch"&&row.inert!==true).map(row=>row.id).sort());
+ expect(live.allowed.filter(edge=>edge.from==="cargo-custody").map(edge=>edge.to).sort()).toEqual(live.classes.filter(row=>row.id!=="registry-fetch"&&row.inert!==true&&row.ground===undefined).map(row=>row.id).sort());
  expect(live.allowed.filter(edge=>edge.to==="cargo-custody").map(edge=>edge.from)).toEqual(["cargo-custody"]);
  expect(live.allowed.some(edge=>edge.from==="registry-fetch"||edge.to==="registry-fetch")).toBe(false);
 });

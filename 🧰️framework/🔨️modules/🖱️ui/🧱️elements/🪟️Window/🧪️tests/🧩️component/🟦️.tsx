@@ -14,6 +14,8 @@ import dockNames from "../../../../🧪️tests/🧫️fixtures/🪟️dock-acce
 import Ajv2020 from "ajv/dist/2020.js";
 import searchRouting from "../🧫️fixtures/🔎️search-fold-routing/🔣️.json";
 import paneFolds from "../🧫️fixtures/🔀️pane-fold-independence/🔣️.json";
+import paneExclusive from "../🧫️fixtures/🔀️pane-fold-exclusive/🔣️.json";
+import { UiMobileProvider } from "../../../../🔨️modules/📱️ui-mobile-context/🟦️.tsx";
 import { createMemoryStoragePort } from "../../../../🔨️modules/🗄️storage-port/🟦️.ts";
 import { ShellScopeProvider, createShellScope } from "../../../🐚️ShellScope/🟦️.tsx";
 import paneEdges from "../🧫️fixtures/pane-edges.json";
@@ -53,6 +55,26 @@ it("keeps Actions and Search pane folds independent in both explicit locales", (
     const view = render(<ShellScopeProvider scope={scope}><Window id="fold-window" active actionPane={<div data-testid="fold-actions">Actions</div>} search={{ input: { placeholder: uiDataLabel(locale.placeholder) } }}>Body</Window></ShellScopeProvider>, { container: app });
     try {
       for (const kind of entry.clicks) fireEvent.click(app.querySelector('[id="framework.window.foldWindow.' + kind + '.toggle"]')!);
+      expect(view.queryByTestId("fold-actions") !== null, locale.locale + ":" + entry.id).toBe(entry.actions);
+      expect(view.queryByPlaceholderText(locale.placeholder) !== null, locale.locale + ":" + entry.id).toBe(entry.search);
+    } finally {
+      view.unmount();
+      root.remove();
+    }
+  }
+});
+
+it("shows one pane body at a time in a mobile window, in both explicit locales", () => {
+  for (const locale of searchRouting.locales) for (const entry of paneExclusive.cases) {
+    const root = document.createElement("div"), app = document.createElement("div"), portal = document.createElement("div");
+    root.append(app, portal);
+    document.body.append(root);
+    const scope = createShellScope({ shellId: "pane-exclusive-" + locale.locale + "-" + entry.id, storage: createMemoryStoragePort(), initialLocale: locale.locale as "en" | "de" });
+    scope.rootRef.current = root;
+    scope.portalLayerRef.current = portal;
+    const view = render(<ShellScopeProvider scope={scope}><UiMobileProvider mobile><Window id="exclusive-window" active actionPane={<div data-testid="fold-actions">Actions</div>} search={{ input: { placeholder: uiDataLabel(locale.placeholder) } }}>Body</Window></UiMobileProvider></ShellScopeProvider>, { container: app });
+    try {
+      for (const kind of entry.clicks) fireEvent.click(app.querySelector('[id="framework.window.exclusiveWindow.' + kind + '.toggle"]')!);
       expect(view.queryByTestId("fold-actions") !== null, locale.locale + ":" + entry.id).toBe(entry.actions);
       expect(view.queryByPlaceholderText(locale.placeholder) !== null, locale.locale + ":" + entry.id).toBe(entry.search);
     } finally {
@@ -200,4 +222,19 @@ it("keeps the first chrome-aware content control reachable without changing scro
       expect(within(surface).getByRole("button", { name: "Add row" })).toBeTruthy();
     } finally { view.unmount(); bounds.mockRestore(); }
   }
+});
+
+it("anchors window controls on the window edge as one gapless cells group", () => {
+  const view = render(<Window id="controls-window" fill onClose={() => {}} onOpenInNewWindow={() => {}} controls={<button type="button">Extra</button>}><div>Body</div></Window>);
+  try {
+    const group = view.container.querySelector<HTMLElement>('[data-slot="window-controls"]')!;
+    expect(group.hasAttribute("data-shared-border-group")).toBe(true);
+    expect(group.hasAttribute("data-shared-border-cells")).toBe(true);
+    expect(group.className).not.toMatch(/\bgap-/);
+    const overlay = group.parentElement!;
+    expect(overlay.className).toContain("top-0");
+    expect(overlay.className).toContain("right-0");
+    expect(overlay.className).not.toMatch(/\b(gap-|top-1|right-1)/);
+    expect(group.querySelector(':scope > [data-shared-border-frame]')).not.toBeNull();
+  } finally { view.unmount(); }
 });

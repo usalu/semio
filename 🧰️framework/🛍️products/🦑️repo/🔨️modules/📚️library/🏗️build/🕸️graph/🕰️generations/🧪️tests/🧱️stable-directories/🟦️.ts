@@ -73,7 +73,7 @@ test("a present entry is probed when links are possible, because a link target c
 
 test("the host proves directories stable from the earlier frontier before it verifies, and never trusts a present entry to be no link",()=>{
  const text=graphSourceV1();
- const proof=text.indexOf("stableDirectoriesV1(previous.frontier,live.frontier)"),verify=text.indexOf("observationV1.observationsHold(plain,64,state.stable,true,signal)");
+ const proof=text.indexOf("stableDirectoriesV1(previous.frontier,live.frontier)"),verify=text.indexOf("observationV1.observationsHold(free,64,state.stable,true,signal)");
  expect(proof).toBeGreaterThan(0);expect(verify).toBeGreaterThan(0);
  expect(text.slice(proof-200,proof)).toContain("seams.membership(previous,signal)");
  expect(text).toContain("previous?.frontier?");

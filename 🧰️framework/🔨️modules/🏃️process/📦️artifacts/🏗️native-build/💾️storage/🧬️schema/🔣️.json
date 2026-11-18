@@ -1200,14 +1200,10 @@
           ],
           "properties": {
             "dev": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 9007199254740991
+              "$ref": "#/definitions/PhysicalIdentity"
             },
             "ino": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 9007199254740991
+              "$ref": "#/definitions/PhysicalIdentity"
             },
             "mode": {
               "type": "integer",
@@ -1227,14 +1223,10 @@
           ],
           "properties": {
             "dev": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 9007199254740991
+              "$ref": "#/definitions/PhysicalIdentity"
             },
             "ino": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 9007199254740991
+              "$ref": "#/definitions/PhysicalIdentity"
             },
             "size": {
               "type": "integer",
@@ -1258,14 +1250,10 @@
           ],
           "properties": {
             "dev": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 9007199254740991
+              "$ref": "#/definitions/PhysicalIdentity"
             },
             "ino": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 9007199254740991
+              "$ref": "#/definitions/PhysicalIdentity"
             },
             "mode": {
               "type": "integer",
@@ -3370,6 +3358,20 @@
         "nonempty": "retain-refuse",
         "journalName": "storage-events.jsonl"
       }
+    },
+    "PhysicalIdentity": {
+      "description": "One physical identity (device, volume serial, inode, file id) as an exact token: the JSON integer while it is a safe number, else its decimal digits above 2^53 (a 64-bit NTFS file id, a 128-bit ReFS id). Never a rounded number.",
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "string",
+          "pattern": "^[1-9][0-9]{15,38}$"
+        }
+      ]
     }
   }
 }

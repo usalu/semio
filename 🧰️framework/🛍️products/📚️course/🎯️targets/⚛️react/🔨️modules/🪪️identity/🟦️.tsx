@@ -13,7 +13,7 @@
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactElement } from "react";
 import { HANDLE_INPUT_MAX, HANDLE_MAX, normalizeHandle, type Identity, type IdentityClaim, type Rejection } from "@semio-tech/course";
 import { REJECTION_LABELS, type CourseLabelKey, type CourseText } from "../🌐️i18n/🟦️.ts";
-import { BodyButton, CardAction, CardIcon, Dialog, ProblemNote, type Problem } from "../🪟️chrome/🟦️.tsx";
+import { BodyButton, CELL, CardAction, CardIcon, CardSection, Dialog, GROUP, ProblemNote, type Problem } from "../🪟️chrome/🟦️.tsx";
 import type { CourseNotice } from "../🧭️session/🧮️state/🟦️.ts";
 import type { CourseSession } from "../🧭️session/🟦️.ts";
 import type { SessionFailure } from "../🧭️session/📋️session-model/🟦️.ts";
@@ -162,6 +162,7 @@ export function IdentityScreen(props: { readonly session: CourseSession; readonl
   const publicId = `${scope}-public`;
   return (
       <Dialog
+        flush
         id={`${scope}-title`}
         role="dialog"
         observed={props.observed}
@@ -177,10 +178,12 @@ export function IdentityScreen(props: { readonly session: CourseSession; readonl
           </CardAction>
         }
       >
-        <form id={`${scope}-form`} onSubmit={submit} noValidate aria-busy={working !== undefined} className="flex min-w-0 flex-col gap-double">
-        <p id={`${scope}-lead`} className="course-prose m-0 text-sm leading-normal">{text("course.identity.lead")}</p>
-        <fieldset className="course-kinds m-0 min-w-0 border border-normal p-double">
-          <legend className="px-single text-sm font-semibold">{text("course.identity.kind")}</legend>
+        <form id={`${scope}-form`} onSubmit={submit} noValidate aria-busy={working !== undefined} {...GROUP} className="flex min-w-0 flex-col">
+        <CardSection>
+          <p id={`${scope}-lead`} className="course-prose m-0 text-sm leading-normal">{text("course.identity.lead")}</p>
+        </CardSection>
+        <fieldset {...CELL} className="course-kinds m-0 min-w-0 p-double">
+          <legend className="p-0 text-sm font-semibold">{text("course.identity.kind")}</legend>
           {KINDS.map((option) => (
             <div key={option.kind} className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-single">
               <input
@@ -206,39 +209,43 @@ export function IdentityScreen(props: { readonly session: CourseSession; readonl
           ))}
         </fieldset>
         {kind === "anonymous" ? null : (
-          <div className="flex max-w-md flex-col gap-single">
-            <label htmlFor={`${scope}-handle`} className="text-sm font-semibold">
+          <div {...GROUP} {...CELL} className="flex min-w-0 flex-col">
+            <label {...CELL} htmlFor={`${scope}-handle`} className="p-double text-sm font-semibold">
               {text(kind === "name" ? "course.identity.handleName" : "course.identity.handlePseudonym")}
             </label>
-            <input
-              ref={input}
-              id={`${scope}-handle`}
-              type="text"
-              value={handle}
-              autoComplete={kind === "name" ? "name" : "nickname"}
-              spellCheck={false}
-              aria-invalid={faulty}
-              aria-describedby={faulty ? `${errorId} ${ruleId} ${publicId}` : `${ruleId} ${publicId}`}
-              onChange={(event) => setHandle(event.target.value)}
-              className="course-input"
-            />
-            <p id={ruleId} className="m-0 text-xs leading-normal text-muted-foreground">
+            <div {...CELL} className="course-field">
+              <input
+                ref={input}
+                id={`${scope}-handle`}
+                type="text"
+                value={handle}
+                autoComplete={kind === "name" ? "name" : "nickname"}
+                spellCheck={false}
+                aria-invalid={faulty}
+                aria-describedby={faulty ? `${errorId} ${ruleId} ${publicId}` : `${ruleId} ${publicId}`}
+                onChange={(event) => setHandle(event.target.value)}
+                className="course-input"
+              />
+            </div>
+            <p id={ruleId} {...CELL} className="m-0 p-double text-xs leading-normal text-muted-foreground">
               {text("course.identity.handleRule")}
             </p>
           </div>
         )}
-        <div className="course-note course-prose flex flex-col gap-single border-l-2 px-double py-single text-xs leading-normal">
+        <div {...CELL} className="course-note course-prose flex flex-col gap-single p-double text-xs leading-normal">
           <p id={publicId} className="m-0">
             {text("course.identity.public")}
           </p>
           <p className="m-0">{text("course.identity.forFun")}</p>
         </div>
-        {problem === undefined ? null : <ProblemNote id={errorId} problem={problem} text={text} />}
+        {problem === undefined ? null : <ProblemNote cell id={errorId} problem={problem} text={text} />}
         {working === undefined ? null : (
-          <p role="status" className="m-0 flex flex-wrap items-center gap-double text-sm">
-            {text("course.identity.working")}
-            <BodyButton onClick={() => working.abort()}>{text("course.run.cancel")}</BodyButton>
-          </p>
+          <>
+            <p role="status" {...CELL} className="m-0 flex flex-wrap items-center gap-double p-double text-sm">
+              {text("course.identity.working")}
+            </p>
+            <BodyButton row onClick={() => working.abort()}>{text("course.run.cancel")}</BodyButton>
+          </>
         )}
         </form>
       </Dialog>

@@ -4727,6 +4727,8 @@
             "en": "Inside the closed bowl: not visible from the side in any pose; its state is read numerically and in the thermal overlay of the bowl shell above it.",
             "de": "Im geschlossenen Kessel: in keiner Pose von der Seite sichtbar; sein Zustand wird numerisch und über die Thermalansicht der darüberliegenden Kesselschale gelesen."
           },
+          "ratedPowerW": 8000,
+          "ratedPowerBasis": "fuel-input",
           "source": "authored-estimate",
           "reference": "turns-2012"
         }
@@ -5840,7 +5842,6 @@
             "profile": [[0.5, 0.12], [0.44, 0.12], [0.4275, 0.1175], [0.4205, 0.1], [0.42, 0.08], [0.42, 0.0]],
             "axis": [0, 1, 0],
             "origin": [0.0, 0.0, 0.0],
-            "sectionFaces": [],
             "region": "ash-catcher"
           },
           {
@@ -7169,7 +7170,7 @@
             "material": "charcoal",
             "role": "body",
             "tone": 0.1,
-            "profile": [[-0.057, 0.0], [-0.057, 0.2151], [0.0168, 0.239], [0.066, 0.1673], [0.066, 0.0], [-0.057, 0.0]],
+            "profile": [[-0.03, 0.0], [-0.03, 0.15], [0.0168, 0.22], [0.066, 0.1673], [0.066, 0.0], [-0.03, 0.0]],
             "axis": [0, 1, 0],
             "origin": [0.0, 0.0, 0.0]
           },
@@ -10142,7 +10143,6 @@
             "profile": [[0.5, 0.12], [0.43, 0.12], [0.43, 0.0]],
             "axis": [0, 1, 0],
             "origin": [0.0, 0.0, 0.0],
-            "sectionFaces": [],
             "region": "ash-catcher"
           },
           {

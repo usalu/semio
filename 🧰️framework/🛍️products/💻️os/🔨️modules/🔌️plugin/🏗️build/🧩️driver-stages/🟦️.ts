@@ -35,7 +35,7 @@ import { stageFleetDecoratorV1, stageFleetEventTextV1 } from "../../../../../�
  * module; the `discard` finalizer then removes an assembled module no publish took and the stage work directory, whatever failed or was cancelled. A component
  * without a deployment directory is described and receipted only. `describeMode` `write` replaces a differing committed pair
  * (`components describe`) instead of refusing it. A plan's `stageAfter` adds the jobs of the same driver a stage
- * consumes (the descriptor emitter before `describe`, browser support before `probe`).
+ * consumes (the descriptor emitter before `describe`, browser support before `browser`).
  * @see ../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts
  * @see ../../🖨️describe/🏷️component-receipt/🧬️schema/🔣️.json */
 export function componentDriverStagesV1(repoRoot:string,invocation:ScriptInvocation,publisher:ComponentModelPublicationV1,facet:ComponentStageFacetV1,describeMode:ComponentDescribeModeV1):(component:LinkedComponentV1)=>readonly NativeBuildStageV1[]{

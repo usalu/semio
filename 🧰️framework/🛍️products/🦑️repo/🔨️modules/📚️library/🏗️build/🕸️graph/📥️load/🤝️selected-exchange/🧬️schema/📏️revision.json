@@ -1,0 +1,9 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:graph:load:selected-exchange:revision:v1",
+  "title": "The history of the semantics revision of the exchange of sealed selected generations",
+  "description": "Every revision names the digest of what inference was declared to produce when it was set (the stamp of every inferrer, the fixture corpus of the derived inferrers, the schema of the graph). To change what inference produces: bump `revision` in the policy of the schema of the exchange and append one row here with the new digest; the law `revision` names the digest to write.",
+  "history": [
+    { "revision": 1, "digest": "768fd593840fd2595b6750134dc4795d0e06f9aa5cfc07af13fae5ea9fdf6cd5" }
+  ]
+}

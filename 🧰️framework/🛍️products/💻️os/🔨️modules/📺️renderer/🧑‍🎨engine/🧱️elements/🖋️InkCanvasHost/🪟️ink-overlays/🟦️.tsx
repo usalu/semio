@@ -1,6 +1,6 @@
 /** 🪟️ InkCanvasHost overlays: the selection chrome with its resize handles, the viewport grid and the text and table cell editor overlays. */
 import { useEffect, useRef } from "../../⚛️react-port/🟦️.ts";
-import { useLabel } from "@semio-tech/ui-react";
+import { Input, SharedBorderRow, useLabel } from "@semio-tech/ui-react";
 import type { InkBounds, InkTableItem, InkTextItem, InkTextParagraph } from "../🧾️ink-model/🟦️.ts";
 import { inkHtmlToParagraphs, inkParagraphsToHtml } from "../🌳️ink-document-ops/🟦️.ts";
 
@@ -33,11 +33,11 @@ export function InkTextEditorOverlay({ block, screenBounds, onCommit, onCancel }
     return () => editor.removeEventListener("keydown", onKeyDown);
   }, [onCancel]);
   return (
-    <div className="absolute z-30" style={{ left: screenBounds.x, top: screenBounds.y, width: screenBounds.width, height: screenBounds.height }}>
-      <div className="bg-background/95 mb-1 flex gap-1 rounded border p-1 shadow-sm">
+    <SharedBorderRow orientation="vertical" className="bg-background/95 absolute z-30 shadow-sm" style={{ left: screenBounds.x, top: screenBounds.y, width: screenBounds.width, height: screenBounds.height }}>
+      <SharedBorderRow className="shrink-0">
         <button
           type="button"
-          className="hover:bg-muted rounded px-2 py-0.5 text-xs"
+          data-shared-border-cell="" className="hover:bg-muted px-2 py-0.5 text-xs"
           onMouseDown={(event) => {
             event.preventDefault();
             applyCommand("bold");
@@ -47,7 +47,7 @@ export function InkTextEditorOverlay({ block, screenBounds, onCommit, onCancel }
         </button>
         <button
           type="button"
-          className="hover:bg-muted rounded px-2 py-0.5 text-xs italic"
+          data-shared-border-cell="" className="hover:bg-muted px-2 py-0.5 text-xs italic"
           onMouseDown={(event) => {
             event.preventDefault();
             applyCommand("italic");
@@ -57,7 +57,7 @@ export function InkTextEditorOverlay({ block, screenBounds, onCommit, onCancel }
         </button>
         <button
           type="button"
-          className="hover:bg-muted rounded px-2 py-0.5 text-xs underline"
+          data-shared-border-cell="" className="hover:bg-muted px-2 py-0.5 text-xs underline"
           onMouseDown={(event) => {
             event.preventDefault();
             applyCommand("underline");
@@ -67,7 +67,7 @@ export function InkTextEditorOverlay({ block, screenBounds, onCommit, onCancel }
         </button>
         <button
           type="button"
-          className="hover:bg-muted rounded px-2 py-0.5 text-xs"
+          data-shared-border-cell="" className="hover:bg-muted px-2 py-0.5 text-xs"
           onMouseDown={(event) => {
             event.preventDefault();
             const url = window.prompt(linkUrlPromptLabel);
@@ -76,12 +76,12 @@ export function InkTextEditorOverlay({ block, screenBounds, onCommit, onCancel }
         >
           {linkLabel}
         </button>
-      </div>
+      </SharedBorderRow>
       <div
         ref={editorRef}
         contentEditable
         suppressContentEditableWarning
-        className="text-foreground bg-background h-[calc(100%-2rem)] w-full overflow-auto rounded border p-2 outline-none"
+        data-shared-border-cell="" className="text-foreground bg-background min-h-0 w-full flex-1 overflow-auto p-2 outline-none"
         style={{ fontSize: block.fontSize, fontWeight: block.fontWeight, textAlign: block.align }}
         dangerouslySetInnerHTML={{ __html: inkParagraphsToHtml(block.paragraphs) }}
         onBlur={() => {
@@ -89,7 +89,7 @@ export function InkTextEditorOverlay({ block, screenBounds, onCommit, onCancel }
           onCommit(inkHtmlToParagraphs(editorRef.current));
         }}
       />
-    </div>
+    </SharedBorderRow>
   );
 }
 
@@ -114,23 +114,25 @@ export function InkTableCellEditorOverlay({
     inputRef.current?.select();
   }, []);
   return (
-    <input
-      ref={inputRef}
-      className="bg-background ring-primary absolute z-30 rounded border px-2 py-1 text-sm ring-2 outline-none"
-      style={{ left: screenBounds.x, top: screenBounds.y, width: screenBounds.width, height: screenBounds.height }}
-      defaultValue={block.rows[row]?.[col]?.content ?? ""}
-      onKeyDown={(event) => {
-        if (event.key === "Escape") {
-          event.preventDefault();
-          onCancel();
-        }
-        if (event.key === "Enter" || event.key === "Tab") {
-          event.preventDefault();
-          onCommit(event.currentTarget.value, true);
-        }
-      }}
-      onBlur={(event) => onCommit(event.currentTarget.value)}
-    />
+    <div className="absolute z-30 flex" style={{ left: screenBounds.x, top: screenBounds.y, width: screenBounds.width, height: screenBounds.height }}>
+      <Input
+        id="ink-table-cell-editor"
+        ref={inputRef}
+        className="text-sm"
+        defaultValue={block.rows[row]?.[col]?.content ?? ""}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") {
+            event.preventDefault();
+            onCancel();
+          }
+          if (event.key === "Enter" || event.key === "Tab") {
+            event.preventDefault();
+            onCommit(event.currentTarget.value, true);
+          }
+        }}
+        onBlur={(event) => onCommit(event.currentTarget.value)}
+      />
+    </div>
   );
 }
 //#endregion Overlays

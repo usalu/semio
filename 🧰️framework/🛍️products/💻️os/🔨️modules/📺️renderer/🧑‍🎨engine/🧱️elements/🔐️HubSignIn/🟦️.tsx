@@ -16,7 +16,7 @@
 
 // #region 🔌️Adapters
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactElement } from "../⚛️react-port/🟦️.ts";
-import { Button, useLabel } from "@semio-tech/ui-react";
+import { Button, Input, SharedBorderRow, SharedBorderRowCell, useLabel } from "@semio-tech/ui-react";
 import {
   HUB_SIGN_IN_PASSWORD_MIN_BYTES,
   LOCAL_BOOTSTRAP_HUB_CONNECTION_ID_V1,
@@ -29,6 +29,7 @@ import {
   type HubSignInErrorCodeV1
 } from "@semio-tech/framework/directory/sign-in";
 import { hubUiLabel } from "../🔗️HubConnection/🌐️ui-labels/🟦️.ts";
+import { HubFieldRow, HubRowItem, HubRowList, HubSelectField } from "../🔗️HubConnection/🪢️hub-rows/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 //#region 🔖️Types
@@ -86,10 +87,9 @@ function AddHubForm({ onAddHub, locale, busy }: { readonly onAddHub: HubSignInPa
   };
 
   return (
-    <form aria-label={groupLabel} onSubmit={submit} className="flex flex-col gap-2 sm:flex-row sm:items-end">
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <label htmlFor={`${id}-origin`} className="text-xs text-muted-foreground">{addressLabel}</label>
-        <input
+    <SharedBorderRow as="form" orientation="vertical" aria-label={groupLabel} onSubmit={submit}>
+      <HubFieldRow htmlFor={`${id}-origin`} label={addressLabel}>
+        <Input
           id={`${id}-origin`}
           name="hubOrigin"
           type="text"
@@ -104,12 +104,12 @@ function AddHubForm({ onAddHub, locale, busy }: { readonly onAddHub: HubSignInPa
             setTyped(event.target.value);
             setInvalid(false);
           }}
-          className="w-full min-w-0 rounded-sm border px-single py-1 text-sm"
+          className="min-w-0 flex-1 text-sm"
         />
-        {invalid ? <p id={`${id}-origin-error`} role="alert" className="text-xs text-destructive">{text.invalidOrigin}</p> : null}
-      </div>
-      <Button icon="plus" type="submit" variant="outline" aria-label={submitLabel} disabled={busy || typed.trim().length === 0}>{submitLabel}</Button>
-    </form>
+        <Button icon="plus" type="submit" variant="outline" aria-label={submitLabel} disabled={busy || typed.trim().length === 0}>{submitLabel}</Button>
+      </HubFieldRow>
+      {invalid ? <SharedBorderRowCell tone="destructive"><p id={`${id}-origin-error`} role="alert" className="text-xs text-destructive">{text.invalidOrigin}</p></SharedBorderRowCell> : null}
+    </SharedBorderRow>
   );
 }
 //#endregion 🔖️AddHub
@@ -163,64 +163,51 @@ export function HubSignInPane({ book, session, locale, onSelectConnection, onAdd
   };
 
   return (
-    <section aria-labelledby={`${id}-title`} data-semio-hub-phase={session.phase} data-semio-hub-connection={session.connectionId} className="flex w-full min-w-0 flex-col gap-4 p-4">
-      <header className="flex flex-col gap-1">
-        <h2 id={`${id}-title`} className="text-base font-medium">{title}</h2>
-        <p className="text-sm text-muted-foreground">{description}</p>
-      </header>
+    <SharedBorderRow as="section" orientation="vertical" aria-labelledby={`${id}-title`} data-semio-hub-phase={session.phase} data-semio-hub-connection={session.connectionId} className="w-full">
+      <SharedBorderRow as="header" orientation="vertical">
+        <SharedBorderRowCell><h2 id={`${id}-title`} className="text-base font-medium">{title}</h2></SharedBorderRowCell>
+        <SharedBorderRowCell><p className="text-sm text-muted-foreground">{description}</p></SharedBorderRowCell>
+      </SharedBorderRow>
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor={`${id}-hub`} className="text-xs text-muted-foreground">{hubLabel}</label>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <select
-            id={`${id}-hub`}
-            data-element-alias="os.hub.signIn.hub"
-            value={book.selectedId}
-            disabled={busy}
-            onChange={(event) => onSelectConnection(event.target.value)}
-            className="w-full min-w-0 rounded-sm border px-single py-1 text-sm sm:flex-1"
-          >
-            {book.connections.map((entry) => (
-              <option key={entry.id} value={entry.id}>{`${entry.kind === "local-bootstrap" ? thisDeviceLabel : entry.label} — ${entry.origin}`}</option>
-            ))}
-          </select>
-          {book.selectedId === LOCAL_BOOTSTRAP_HUB_CONNECTION_ID_V1 ? null : (
-            <Button icon="trash-2" type="button" variant="outline" disabled={busy} aria-label={forgetLabel} onClick={() => onForgetHub(book.selectedId)}>{forgetLabel}</Button>
-          )}
-        </div>
-      </div>
+      <HubSelectField
+        id={`${id}-hub`}
+        label={hubLabel}
+        value={book.selectedId}
+        alias="os.hub.signIn.hub"
+        disabled={busy}
+        options={book.connections.map((entry) => ({ value: entry.id, label: `${entry.kind === "local-bootstrap" ? thisDeviceLabel : entry.label} — ${entry.origin}` }))}
+        onValueChange={onSelectConnection}
+      >
+        {book.selectedId === LOCAL_BOOTSTRAP_HUB_CONNECTION_ID_V1 ? null : (
+          <Button icon="trash-2" type="button" variant="outline" disabled={busy} aria-label={forgetLabel} onClick={() => onForgetHub(book.selectedId)}>{forgetLabel}</Button>
+        )}
+      </HubSelectField>
 
       <AddHubForm onAddHub={onAddHub} locale={locale} busy={busy} />
 
-      {expiredText === null ? null : <p role="status" aria-live="polite" className="text-sm">{expiredText}</p>}
+      {expiredText === null ? null : <SharedBorderRowCell><p role="status" aria-live="polite" className="text-sm">{expiredText}</p></SharedBorderRowCell>}
 
       {errorText === null ? null : (
-        <p
-          ref={errorRef}
-          tabIndex={-1}
-          role="alert"
-          aria-label={errorRegionLabel}
-          data-semio-hub-error={session.error ?? ""}
-          className="rounded-sm border border-destructive/40 bg-destructive/10 px-single py-1 text-sm text-destructive"
-        >
-          {errorText}
-        </p>
+        <SharedBorderRowCell tone="destructive" className="flex-1">
+          <p ref={errorRef} tabIndex={-1} role="alert" aria-label={errorRegionLabel} data-semio-hub-error={session.error ?? ""} className="text-sm text-destructive">{errorText}</p>
+        </SharedBorderRowCell>
       )}
 
       {session.phase === "signed-in" ? (
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm">{signedInLabel}</p>
-          <Button icon="lock" type="button" variant="outline" aria-label={signOutLabel} disabled={session.phase !== "signed-in"} onClick={onSignOut}>{signOutLabel}</Button>
-        </div>
+        <HubRowList>
+          <HubRowItem>
+            <SharedBorderRowCell className="flex-1"><p className="text-sm">{signedInLabel}</p></SharedBorderRowCell>
+            <Button icon="lock" type="button" variant="outline" aria-label={signOutLabel} disabled={session.phase !== "signed-in"} onClick={onSignOut}>{signOutLabel}</Button>
+          </HubRowItem>
+        </HubRowList>
       ) : (
-        <p className="text-sm text-muted-foreground">{signedOutLabel}</p>
+        <SharedBorderRowCell><p className="text-sm text-muted-foreground">{signedOutLabel}</p></SharedBorderRowCell>
       )}
 
       {!offered ? null : (
-        <form aria-label={title} onSubmit={submit} className="flex flex-col gap-3">
-          <div className="flex flex-col gap-1">
-            <label htmlFor={`${id}-email`} className="text-xs text-muted-foreground">{emailLabel}</label>
-            <input
+        <SharedBorderRow as="form" orientation="vertical" aria-label={title} onSubmit={submit}>
+            <HubFieldRow htmlFor={`${id}-email`} label={emailLabel}>
+            <Input
               id={`${id}-email`}
               data-element-alias="os.hub.signIn.email"
               name="email"
@@ -233,13 +220,12 @@ export function HubSignInPane({ book, session, locale, onSelectConnection, onAdd
               aria-invalid={!emailValid}
               aria-describedby={emailValid ? undefined : `${id}-email-error`}
               onChange={(event) => setEmail(event.target.value)}
-              className="w-full min-w-0 rounded-sm border px-single py-1 text-sm"
+              className="min-w-0 flex-1 text-sm"
             />
-            {emailValid ? null : <p id={`${id}-email-error`} className="text-xs text-destructive">{text.invalidEmail}</p>}
-          </div>
-          <div className="flex flex-col gap-1">
-            <label htmlFor={`${id}-password`} className="text-xs text-muted-foreground">{passwordLabel}</label>
-            <input
+            </HubFieldRow>
+            {emailValid ? null : <SharedBorderRowCell tone="destructive"><p id={`${id}-email-error`} className="text-xs text-destructive">{text.invalidEmail}</p></SharedBorderRowCell>}
+            <HubFieldRow htmlFor={`${id}-password`} label={passwordLabel}>
+            <Input
               id={`${id}-password`}
               data-element-alias="os.hub.signIn.password"
               name="password"
@@ -252,21 +238,21 @@ export function HubSignInPane({ book, session, locale, onSelectConnection, onAdd
               aria-invalid={!passwordValid}
               aria-describedby={passwordValid ? undefined : `${id}-password-error`}
               onChange={(event) => setPassword(event.target.value)}
-              className="w-full min-w-0 rounded-sm border px-single py-1 text-sm"
+              className="min-w-0 flex-1 text-sm"
             />
-            {passwordValid ? null : <p id={`${id}-password-error`} className="text-xs text-destructive">{text.shortPassword}</p>}
-          </div>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            </HubFieldRow>
+            {passwordValid ? null : <SharedBorderRowCell tone="destructive"><p id={`${id}-password-error`} className="text-xs text-destructive">{text.shortPassword}</p></SharedBorderRowCell>}
+          <SharedBorderRow>
             <Button id="os.hub.signIn.submit" icon="unlock" type="submit" variant="outline" aria-busy={busy} aria-label={busy ? busyLabel : submitLabel} disabled={!submittable}>{busy ? busyLabel : submitLabel}</Button>
             {busy ? <Button icon="x" type="button" variant="outline" aria-label={cancelLabel} onClick={onCancel}>{cancelLabel}</Button> : null}
-          </div>
-        </form>
+          </SharedBorderRow>
+        </SharedBorderRow>
       )}
 
-      <p role="status" aria-live="polite" data-semio-hub-local-only="true" className="text-xs text-muted-foreground">
+      <SharedBorderRowCell><p role="status" aria-live="polite" data-semio-hub-local-only="true" className="text-xs text-muted-foreground">
         {session.offline ? `${offlineLabel} ${localOnlyLabel}` : localOnlyLabel}
-      </p>
-    </section>
+      </p></SharedBorderRowCell>
+    </SharedBorderRow>
   );
 }
 //#endregion 🔖️Pane

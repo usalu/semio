@@ -33,8 +33,20 @@ where
     Manifest: std::future::Future<Output = App>,
     Build: Fn() -> Manifest,
 {
-    let mut a = new_registered_app_with_members::<A, M, _>(manifest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, identity).await;
-    let mut b = new_registered_app_with_members::<A, M, _>(manifest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, identity).await;
+    let (a, b) = paired_registered_apps_boxed_with_members::<A, M, Manifest, Build>(channel, manifest, mounted_policy, identity).await;
+    (*a, *b)
+}
+
+/// 📦️ [`paired_registered_apps_with_members`] holding both replicas on the heap, so no future of a law carries a megabyte instance inline.
+pub async fn paired_registered_apps_boxed_with_members<A, M, Manifest, Build>(channel: &str, manifest: Build, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> (Box<VcsArtifactApp<A, M>>, Box<VcsArtifactApp<A, M>>)
+where
+    A: ArtifactApp + Default,
+    M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
+    Manifest: std::future::Future<Output = App>,
+    Build: Fn() -> Manifest,
+{
+    let mut a = new_registered_app_boxed_with_members::<A, M, _>(manifest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, identity).await;
+    let mut b = new_registered_app_boxed_with_members::<A, M, _>(manifest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, identity).await;
     a.bind_instance_id(meta("local").instance_id).await;
     b.bind_instance_id(meta("local").instance_id).await;
     let (backbone_a, backbone_b) = MemoryBackbone::pair(channel, channel).await;
@@ -208,19 +220,19 @@ where
     let mut original_caller=OriginalFixtureCaller::admit().expect("closed original fixture caller admission");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=async{
-    let (mut instance_a, mut instance_b) = paired_registered_apps_with_members::<A, M, Manifest, Build>(channel, manifest, mounted_policy, identity).await;
-    let genesis = probe(&instance_a);
+    let (mut instance_a, mut instance_b) = paired_registered_apps_boxed_with_members::<A, M, Manifest, Build>(channel, manifest, mounted_policy, identity).await;
+    let genesis = probe(&*instance_a);
     let receiver = meta("actor-a").instance_id;
-    dispatch_original_fixture_command(&mut instance_a, &command_a, &meta("actor-a"), mounted_policy, identity, cx).await.expect("a applies its edit");
-    settle_registered_typed_operation(&mut instance_a, receiver, mounted_policy, identity,cx).await.expect("a's edit publishes");
-    dispatch_original_fixture_command(&mut instance_b, &command_b, &meta("actor-b"), mounted_policy, identity, cx).await.expect("b applies its edit");
-    settle_registered_typed_operation(&mut instance_b, receiver, mounted_policy, identity,cx).await.expect("b's edit publishes");
-    exchange_and_assert_convergence(&mut instance_a, &mut instance_b, "actor-a", &probe, mounted_policy, identity,cx).await;
-    assert_ne!(probe(&instance_a), genesis, "the replicated edits must actually land, not converge on the untouched genesis");
+    dispatch_original_fixture_command(&mut *instance_a, &command_a, &meta("actor-a"), mounted_policy, identity, cx).await.expect("a applies its edit");
+    settle_registered_typed_operation(&mut *instance_a, receiver, mounted_policy, identity,cx).await.expect("a's edit publishes");
+    dispatch_original_fixture_command(&mut *instance_b, &command_b, &meta("actor-b"), mounted_policy, identity, cx).await.expect("b applies its edit");
+    settle_registered_typed_operation(&mut *instance_b, receiver, mounted_policy, identity,cx).await.expect("b's edit publishes");
+    exchange_and_assert_convergence(&mut *instance_a, &mut *instance_b, "actor-a", &probe, mounted_policy, identity,cx).await;
+    assert_ne!(probe(&*instance_a), genesis, "the replicated edits must actually land, not converge on the untouched genesis");
     instance_a.detach_backbone().await.expect("a releases its backbone");
     instance_b.detach_backbone().await.expect("b releases its backbone");
-    close_registered_fixture_app(&mut instance_a, mounted_policy,cx).expect("registered fixture original close");
-    close_registered_fixture_app(&mut instance_b, mounted_policy,cx).expect("registered fixture original close");
+    close_registered_fixture_app(&mut *instance_a, mounted_policy,cx).expect("registered fixture original close");
+    close_registered_fixture_app(&mut *instance_b, mounted_policy,cx).expect("registered fixture original close");
 
     }.await;
     let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original fixture caller paid terminal retirement");

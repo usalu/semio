@@ -1,0 +1,164 @@
+{
+ "version": 1,
+ "policy": {
+  "defaultOwnerMegabytes": 512,
+  "heavyOwnerMegabytes": 3072,
+  "ceilingBytes": 2147483648,
+  "peakSamples": 4,
+  "reserveCores": 1,
+  "maximumConcurrent": 3
+ },
+ "cases": [
+  {
+   "name": "an 8 GB worker takes a first light owner of an unlearned kind",
+   "kind": "project",
+   "peaks": {},
+   "runningMegabytes": [],
+   "headroomMegabytes": 5000,
+   "cores": 4,
+   "admit": true,
+   "estimateMegabytes": 512,
+   "learned": false
+  },
+  {
+   "name": "an unlearned kind runs alone",
+   "kind": "project",
+   "peaks": {},
+   "runningMegabytes": [
+    300
+   ],
+   "headroomMegabytes": 5000,
+   "cores": 4,
+   "admit": false,
+   "estimateMegabytes": 512,
+   "learned": false
+  },
+  {
+   "name": "a learned light kind runs beside another when the headroom covers both",
+   "kind": "language:typescript",
+   "peaks": {
+    "language:typescript": [
+     13242806,
+     13404331,
+     7610729
+    ]
+   },
+   "runningMegabytes": [
+    13
+   ],
+   "headroomMegabytes": 5000,
+   "cores": 4,
+   "admit": true,
+   "estimateMegabytes": 13,
+   "learned": true
+  },
+  {
+   "name": "samples at the ceiling are no measurement",
+   "kind": "project",
+   "peaks": {
+    "project": [
+     2147483648,
+     2147483648,
+     2147483648,
+     2147483648,
+     2147483648,
+     2147483648,
+     2147483648,
+     2147483648
+    ]
+   },
+   "runningMegabytes": [],
+   "headroomMegabytes": 5000,
+   "cores": 4,
+   "admit": true,
+   "estimateMegabytes": 512,
+   "learned": false
+  },
+  {
+   "name": "an owner larger than the free memory is left to a larger machine",
+   "kind": "language:rust",
+   "peaks": {
+    "language:rust": [
+     1449532202,
+     1708391222
+    ]
+   },
+   "runningMegabytes": [],
+   "headroomMegabytes": 1000,
+   "cores": 8,
+   "admit": false,
+   "estimateMegabytes": 1629,
+   "learned": true
+  },
+  {
+   "name": "a heavy learned owner never runs beside another",
+   "kind": "root:language:cargo",
+   "peaks": {
+    "root:language:cargo": [
+     4831838208
+    ]
+   },
+   "runningMegabytes": [
+    200
+   ],
+   "headroomMegabytes": 20000,
+   "cores": 8,
+   "admit": false,
+   "estimateMegabytes": 4608,
+   "learned": true
+  },
+  {
+   "name": "all slots taken",
+   "kind": "language:typescript",
+   "peaks": {
+    "language:typescript": [
+     13242806
+    ]
+   },
+   "runningMegabytes": [
+    13,
+    13,
+    13
+   ],
+   "headroomMegabytes": 5000,
+   "cores": 4,
+   "admit": false,
+   "estimateMegabytes": 13,
+   "learned": true
+  },
+  {
+   "name": "the headroom less the running owners must cover the estimate",
+   "kind": "language:rust",
+   "peaks": {
+    "language:rust": [
+     1449532202
+    ]
+   },
+   "runningMegabytes": [
+    1200
+   ],
+   "headroomMegabytes": 1800,
+   "cores": 8,
+   "admit": false,
+   "estimateMegabytes": 1382,
+   "learned": true
+  },
+  {
+   "name": "one core machine takes one owner at a time",
+   "kind": "language:typescript",
+   "peaks": {
+    "language:typescript": [
+     13242806
+    ]
+   },
+   "runningMegabytes": [
+    13
+   ],
+   "headroomMegabytes": 5000,
+   "cores": 1,
+   "admit": false,
+   "estimateMegabytes": 13,
+   "learned": true
+  }
+ ]
+}

@@ -153,6 +153,20 @@ describe("ToggleGroup", () => {
     expect(document.activeElement).toBe(ltrAlpha);
   });
 
+  it("sizes action shells to their content so the split item never overflows its shared-border cell", () => {
+    const { container } = render(
+      <ToggleGroup
+        items={[
+          { value: "alpha", icon: "x", text: "Alpha" },
+          { value: "beta", icon: "x", text: "Beta", action: <button type="button">Action</button> },
+        ]}
+      />,
+    );
+    const shells = container.querySelectorAll<HTMLElement>('[data-slot="toggle-group-item-shell"]');
+    expect(shells[1]!.className).toMatch(/\bshrink-0\b/);
+    expect(shells[1]!.className).not.toMatch(/\bflex-1\b/);
+  });
+
   it("roves vertically and keeps the action as a keyboard-focusable sibling", () => {
     const changes = vi.fn();
     const action = vi.fn();

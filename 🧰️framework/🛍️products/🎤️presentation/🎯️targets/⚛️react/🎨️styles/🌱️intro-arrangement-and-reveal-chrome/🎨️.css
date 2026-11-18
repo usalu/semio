@@ -72,6 +72,17 @@
 	color: var(--color-primary);
 }
 
+.reveal .controls button {
+	width: 3.2em;
+	height: 3.2em;
+	box-sizing: border-box;
+}
+
+.reveal .controls .navigate-down {
+	bottom: 0;
+	padding-bottom: 0;
+}
+
 .reveal .progress {
 	background-color: color-mix(in srgb, var(--foreground) 18%, transparent);
 	color: var(--color-primary);

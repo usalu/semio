@@ -39,8 +39,8 @@ use flow_style::{flow_for, tree_content_flow};
 mod style_mapping_and_chrome_metrics;
 use style_mapping_and_chrome_metrics::grows_children;
 pub use style_mapping_and_chrome_metrics::{
-    field_chrome_metrics, section_chrome_metrics, ChromeBand, SectionFieldChromeMetrics,
-    FIELD_DETAIL_FONT_SIZE, FIELD_LABEL_FONT_SIZE, FIELD_LABEL_LINE_HEIGHT, SECTION_TITLE_BODY_GAP,
+    field_chrome_metrics, field_description_height, section_chrome_metrics, ChromeBand, SectionFieldChromeMetrics,
+    FIELD_CELL_DIVIDER, FIELD_CELL_PADDING_BLOCK, FIELD_DETAIL_FONT_SIZE, FIELD_LABEL_FONT_SIZE, FIELD_LABEL_LINE_HEIGHT, SECTION_TITLE_BODY_GAP,
     SECTION_TITLE_FONT_SIZE, SECTION_TITLE_LINE_HEIGHT, SECTION_TRAILING_MARGIN,
 };
 

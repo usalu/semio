@@ -1,3 +1,4 @@
+import {spawnSync} from "node:child_process";
 import {mkdirSync,readdirSync,readFileSync,renameSync,statSync,unlinkSync,writeFileSync} from "node:fs";
 import {homedir,uptime} from "node:os";
 import {isAbsolute,join} from "node:path";
@@ -54,13 +55,27 @@ export function prepare(directory:string):string{
  return root;
 }
 
-export function readGrants(directory:string,now:number,policy:HostCapacityPolicyV1):HostGrantV1[]{
+/** 🕰️ The start of a process in milliseconds since the epoch (the moment of the call less its elapsed time from `ps`, good to a second), `undefined` when it cannot be told (Windows, a missing process, a failing command). */
+export function processStartMillisecondsV1(pid:number,platform:NodeJS.Platform=process.platform,now:()=>number=Date.now):number|undefined{
+ if(platform==="win32"||!Number.isInteger(pid)||pid<1)return undefined;
+ try{
+  const run=spawnSync("ps",["-o","etime=","-p",String(pid)],{encoding:"utf8",timeout:3000}),found=/^\s*(?:(\d+)-)?(?:(\d+):)?(\d+):(\d+)\s*$/u.exec(run.stdout);
+  return found===null?undefined:now()-((((Number(found[1]??0)*24+Number(found[2]??0))*60+Number(found[3]))*60+Number(found[4]))*1000);
+ }catch{return undefined;}
+}
+
+/** ♻️ Whether the live process of a grant is another process than the one that admitted it: its heartbeat is older than two beats and the process at its pid started after the grant was admitted (a process that blocks its event loop for a long computation started before its grant, a reused pid after it), so the grant of a dead owner whose pid was reused is reclaimed at once instead of after `staleMilliseconds`. A pure function of its facts. */
+export function hostGrantPidReusedV1(facts:Readonly<{grant:Pick<HostGrantV1,"admittedAtMs">;heartbeatAgeMs:number;heartbeatMs:number;startMs:number|undefined;toleranceMs?:number}>):boolean{
+ return facts.heartbeatAgeMs>2*facts.heartbeatMs&&facts.startMs!==undefined&&facts.startMs>facts.grant.admittedAtMs+(facts.toleranceMs??5000);
+}
+
+export function readGrants(directory:string,now:number,policy:HostCapacityPolicyV1,startOf:(pid:number)=>number|undefined=processStartMillisecondsV1):HostGrantV1[]{
  const rows:HostGrantV1[]=[],boot=hostBootAtV1(directory,now);
  for(const name of names(directory,"grants")){
   const path=join(directory,"grants",name),value=readJson(path);
   if(!isHostCapacityV1("Grant",value)){if(now-modified(path)>policy.wait.lockStaleMilliseconds)remove(path);continue;}
   const grant=value as HostGrantV1;
-  if(!isCurrentHostGrantV1({grant,expectedId:name.slice(0,-5),pidAlive:alive(grant.pid),nowMs:now,bootAtMs:boot,modifiedAtMs:modified(path)},policy))remove(path);else rows.push(grant);
+  if(!isCurrentHostGrantV1({grant,expectedId:name.slice(0,-5),pidAlive:alive(grant.pid)&&!(now-modified(path)>2*policy.wait.heartbeatMilliseconds&&hostGrantPidReusedV1({grant,heartbeatAgeMs:now-modified(path),heartbeatMs:policy.wait.heartbeatMilliseconds,startMs:startOf(grant.pid)})),nowMs:now,bootAtMs:boot,modifiedAtMs:modified(path)},policy))remove(path);else rows.push(grant);
  }
  return rows;
 }

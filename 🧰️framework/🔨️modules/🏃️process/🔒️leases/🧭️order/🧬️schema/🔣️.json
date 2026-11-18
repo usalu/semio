@@ -76,6 +76,33 @@
         "inert": {
           "type": "boolean"
         },
+        "ground": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "reason"
+          ],
+          "properties": {
+            "reason": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "en",
+                "de"
+              ],
+              "properties": {
+                "en": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "de": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        },
         "title": {
           "type": "object",
           "additionalProperties": false,
@@ -260,6 +287,20 @@
               "type": "integer",
               "minimum": 10,
               "maximum": 60000
+            }
+          }
+        },
+        "groundWait": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "boundMilliseconds"
+          ],
+          "properties": {
+            "boundMilliseconds": {
+              "type": "integer",
+              "minimum": 1000,
+              "maximum": 86400000
             }
           }
         },
@@ -528,6 +569,21 @@
           "type": "integer",
           "minimum": 0
         },
+        "blockerCommand": {
+          "type": "string",
+          "maxLength": 240
+        },
+        "blockerSelf": {
+          "type": "boolean"
+        },
+        "boundMilliseconds": {
+          "type": "integer",
+          "minimum": 1000
+        },
+        "speedFactor": {
+          "type": "number",
+          "minimum": 1
+        },
         "cycle": {
           "type": "array",
           "items": {
@@ -557,6 +613,10 @@
           "en": "Refusing to wait: {requested} ({requestedMode}) has been unavailable for {seconds} s{blocker} while this process holds {held} exclusively, which blocks everyone who needs {held}. Release {held} before waiting, or acquire {requested} first.",
           "de": "Warten abgelehnt: {requested} ({requestedMode}) ist seit {seconds} s nicht verfügbar{blocker}, während dieser Prozess {held} exklusiv hält und damit alle blockiert, die {held} brauchen. {held} vor dem Warten freigeben oder {requested} zuerst nehmen."
         },
+        "waitBound": {
+          "en": "Refusing to wait any longer: {requested} ({requestedMode}) has been unavailable for {seconds} s{blocker}, longer than the {bound} s this machine allows for {requestedClass} (declared {base} s, scaled by the machine speed factor {factor}). This process holds {holds}. The holder has to finish first: run the command again afterwards.",
+          "de": "Warten nicht länger zugelassen: {requested} ({requestedMode}) ist seit {seconds} s nicht verfügbar{blocker}, länger als die {bound} s, die dieser Rechner für {requestedClass} zulässt (festgelegt {base} s, mit dem Geschwindigkeitsfaktor {factor} des Rechners skaliert). Dieser Prozess hält {holds}. Zuerst muss der Halter fertig werden: den Befehl danach erneut ausführen."
+        },
         "selfDeadlock": {
           "en": "Self-deadlock: {requested} is requested {requestedMode} while this process already holds it {heldMode}. Take the strongest mode up front or use the queued upgrade.",
           "de": "Selbst-Verklemmung: {requested} wird {requestedMode} angefordert, obwohl dieser Prozess es bereits {heldMode} hält. Den stärksten Modus gleich nehmen oder das Upgrade der Warteschlange benutzen."
@@ -576,6 +636,22 @@
         "blocker": {
           "en": ", held by process {pid} for {heldSeconds} s",
           "de": ", gehalten von Prozess {pid} seit {heldSeconds} s"
+        },
+        "blockerCommand": {
+          "en": ", held by process {pid} ({command}) for {heldSeconds} s",
+          "de": ", gehalten von Prozess {pid} ({command}) seit {heldSeconds} s"
+        },
+        "blockerSelf": {
+          "en": ", held by another task of this very process for {heldSeconds} s",
+          "de": ", gehalten von einer anderen Task desselben Prozesses seit {heldSeconds} s"
+        },
+        "blockerUnknown": {
+          "en": ", held by no process of the lease registry (a process of older code, or a claim queue ahead)",
+          "de": ", gehalten von keinem Prozess der Lease-Registrierung (ein Prozess mit älterem Code oder eine Warteschlange davor)"
+        },
+        "holdsNothing": {
+          "en": "nothing",
+          "de": "nichts"
         },
         "observed": {
           "en": "[lease-order] {message}",

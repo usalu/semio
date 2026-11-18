@@ -1,0 +1,47 @@
+import { mkdtempSync, realpathSync, rmSync } from "node:fs";
+import { hostname, tmpdir } from "node:os";
+import { join } from "node:path";
+import { deserialize } from "node:v8";
+import { libraryBootstrap } from "../../../🟨️.mjs";
+import { exportProjectRecordV1, projectClosureTravelV1, projectRecordKeyTextV1 } from "../../../../../👁️observation/🟨️.mjs";
+import { graphFleetClientV1 } from "../../../../../🪪️graph-state/🛰️exchange/🟦️.ts";
+import { graphFleetSettingsV1 } from "../../../../../🪪️graph-state/🧶️nx/🟦️.ts";
+import { createProjectFleetPortV1 } from "../../../../../🪪️graph-state/📦️project-records/🟦️.ts";
+import { remoteCacheFetchV1 } from "../../../../../🌐️remote-cache/🛰️fleet/🟦️.ts";
+import { ownerJobV1, projectRecordKeyV1 } from "../../🟨️.mjs";
+import { OWNER_POOL_POLICY_V1 as P, publishOwnerPoolFailureV1, readOwnerPoolFailureV1 } from "../🟦️.ts";
+
+/** 🔬️ The revision of the record code this process runs: a child whose revision differs from the wave's would file its records under other keys. */
+export const ownerPoolRevisionV1 = () => projectRecordKeyTextV1(null);
+
+/** 🔬️ Opens the real inference driver of one wave in this process: the inference session the publisher described, under this machine's own root, one staging directory, and the claim, run and publish of an owner: claim by the digest of the record state (a stored record is never computed, a failure note of another machine gives the claim back), infer into the staging directory, publish the record to the fleet cache and remove the staged leaves. `fleetRoot` is the checkout whose facts name the cache (the root itself unless a test brings its own cache). */
+export async function openOwnerPoolInferenceV1({ root, fleetRoot = root, environment, session: bytes, globals, say = () => {} }) {
+  await libraryBootstrap;
+  const settings = graphFleetSettingsV1(fleetRoot, environment);
+  if (settings === undefined) throw new Error("no fleet cache");
+  const client = graphFleetClientV1(settings, { fetch: remoteCacheFetchV1(environment, { root: fleetRoot }) }), port = createProjectFleetPortV1({ root, environment, client });
+  if (port === undefined) throw new Error("no fleet port");
+  const service = await import("../../🏊️project-farm/👷️service/🟨️.mjs"), base = mkdtempSync(join(realpathSync(tmpdir()), "semio-owner-pool-"));
+  const session = { ...deserialize(bytes), workspaceRoot: root, closureStore: undefined, stagingBase: base, authority: undefined };
+  await service.open(session, { slot: 0, generation: 1 });
+  const env = service.sessionEnvironmentV1(), staging = service.stagingDirectoryV1(), jobs = new Map(), leaves = new Map(), digests = new Map(), revision = projectRecordKeyTextV1(null);
+  const forget = name => { for (const leaf of leaves.get(name) ?? []) rmSync(join(staging, leaf), { recursive: true, force: true }); leaves.delete(name); jobs.delete(name); };
+  return {
+    revision,
+    async claim(unit) {
+      let job = jobs.get(unit.name);
+      try { job ??= ownerJobV1(env, globals, unit); } catch { return { state: "fault" }; }
+      jobs.set(unit.name, job);
+      const cachePath = join(staging, "inference", "np", job.cacheKey + ".json");
+      const answer = await port.claim({ cachePath, fleet: job.root, keyText: projectRecordKeyTextV1(projectRecordKeyV1(job.head, job.root, job.json, undefined, job.selectedInputs)), expectedMilliseconds: Math.max(unit.expectedMilliseconds, P.claimExpectedMinimumMilliseconds), ttlMilliseconds: P.claimTtlMilliseconds, exportRecord: () => exportProjectRecordV1(cachePath), closures: projectClosureTravelV1(), import: async () => false });
+      if (answer.state !== "granted") { if (answer.state === "stored") jobs.delete(unit.name); return answer; }
+      const note = await readOwnerPoolFailureV1(client, answer.digest, revision);
+      if (note !== undefined) { await answer.abandon(); jobs.delete(unit.name); return { state: "refused" }; }
+      digests.set(unit.name, answer.digest);
+      return { state: "granted", digest: answer.digest, why: () => answer.why(), deterministic: () => answer.deterministic(), publish: async () => { try { return await answer.publish(); } finally { forget(unit.name); } }, abandon: async () => { try { await answer.abandon(); } finally { forget(unit.name); } } };
+    },
+    async run(unit) { const reply = await service.run(jobs.get(unit.name)); leaves.set(unit.name, [...reply.names, "inference/np/" + jobs.get(unit.name).cacheKey + ".json.records"]); return true; },
+    fail(name, message, deterministic) { if (deterministic && digests.has(name)) void publishOwnerPoolFailureV1({ client, owner: hostname() + ":" + process.pid, origin: hostname(), recordDigest: digests.get(name), revision, cause: message }); },
+    close() { rmSync(base, { recursive: true, force: true }); },
+  };
+}

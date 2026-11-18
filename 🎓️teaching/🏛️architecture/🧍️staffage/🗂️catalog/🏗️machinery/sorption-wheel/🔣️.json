@@ -556,6 +556,30 @@
               }
             },
             {
+              "id": "spoke-front-face",
+              "bone": "rotor",
+              "role": "detail",
+              "z": 3.45,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "path",
+              "d": "M 0.095 0.033 L 0.095 0.265 M 0.095 0.355 L 0.095 0.587",
+              "region": "disc",
+              "material": "silica-gel"
+            },
+            {
+              "id": "spoke-rear-face",
+              "bone": "rotor",
+              "role": "detail",
+              "z": 3.45,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "path",
+              "d": "M -0.09 0.033 L -0.09 0.265 M -0.09 0.355 L -0.09 0.587",
+              "region": "disc",
+              "material": "silica-gel"
+            },
+            {
               "id": "regen-sector",
               "bone": "seal",
               "role": "body",
@@ -631,6 +655,30 @@
                 "z0": -0.09,
                 "z1": 0.09
               }
+            },
+            {
+              "id": "spoke-front-face",
+              "bone": "rotor",
+              "role": "detail",
+              "z": 3.45,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "path",
+              "d": "M -0.285 0.095 L -0.045 0.095 M 0.045 0.095 L 0.285 0.095",
+              "region": "disc",
+              "material": "silica-gel"
+            },
+            {
+              "id": "spoke-rear-face",
+              "bone": "rotor",
+              "role": "detail",
+              "z": 3.45,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "path",
+              "d": "M -0.285 -0.09 L -0.045 -0.09 M 0.045 -0.09 L 0.285 -0.09",
+              "region": "disc",
+              "material": "silica-gel"
             }
           ]
         },
@@ -1863,6 +1911,8 @@
             "key": "regeneration",
             "heatW": 28
           },
+          "ratedPowerW": 1500,
+          "ratedPowerBasis": "electrical-input",
           "source": "authored-estimate",
           "reference": "incropera-2018"
         },
@@ -1900,6 +1950,8 @@
             "key": "rotation",
             "heatW": 1.5
           },
+          "ratedPowerW": 30,
+          "ratedPowerBasis": "electrical-input",
           "source": "authored-estimate",
           "reference": "incropera-2018"
         }

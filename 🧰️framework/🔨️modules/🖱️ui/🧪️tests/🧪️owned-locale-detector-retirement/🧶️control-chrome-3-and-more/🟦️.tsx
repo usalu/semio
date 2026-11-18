@@ -141,7 +141,9 @@ describe("control chrome", () => {
         );
         expect(midDrag).toContain('data-slot="panel-empty-drop-zone"');
         expect(midDrag).toContain('data-panel-empty="true"');
-        expect(midDrag).toContain("border-accent");
+        expect(midDrag).toContain('data-shared-border-cell=""');
+        expect(midDrag).toContain('data-active="true"');
+        expect(midDrag).not.toContain("border-dashed");
       });
   
       it("PanelChromeTabBar owns the empty-anchor drop zone for chrome-hosted middle anchors", () => {
@@ -248,7 +250,7 @@ describe("control chrome", () => {
         expect(leftRoot.getAttribute("dir")).toBeNull();
         expect(leftRoot.style.top).toBe("50%");
         expect(leftRoot.style.transform).toBe("translateY(-50%)");
-        expect(leftRoot.style.maxHeight).toBe("calc(100% - (var(--panel-inset) * 2))");
+        expect(leftRoot.style.maxHeight).toBe("calc(100% - (0px * 2))");
         expect(leftContainer.querySelectorAll('[data-slot="panel-resize-handle"]').length).toBe(1);
         expect((leftContainer.querySelector('[data-slot="panel-resize-handle"]') as HTMLElement).className).toContain("right-0");
   

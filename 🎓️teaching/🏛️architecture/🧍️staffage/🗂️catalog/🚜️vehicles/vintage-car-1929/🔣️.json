@@ -435,6 +435,141 @@
        "material": "exhaust-steel"
       },
       {
+       "kind": "rect",
+       "x": -1.5,
+       "y": 0.41,
+       "w": 0.1,
+       "h": 0.11,
+       "id": "body-mount-a",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -0.55,
+       "y": 0.41,
+       "w": 0.1,
+       "h": 0.11,
+       "id": "body-mount-b",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 0.35,
+       "y": 0.41,
+       "w": 0.1,
+       "h": 0.11,
+       "id": "body-mount-c",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -1.515,
+       "y": 0.285,
+       "w": 0.03,
+       "h": 0.08,
+       "id": "exhaust-hanger-1",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -0.615,
+       "y": 0.285,
+       "w": 0.03,
+       "h": 0.08,
+       "id": "exhaust-hanger-2",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 0.485,
+       "y": 0.285,
+       "w": 0.03,
+       "h": 0.08,
+       "id": "exhaust-hanger-3",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -0.825,
+       "y": 0.33,
+       "w": 0.05,
+       "h": 0.08,
+       "id": "running-bracket-1",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -0.025,
+       "y": 0.33,
+       "w": 0.05,
+       "h": 0.08,
+       "id": "running-bracket-2",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 0.775,
+       "y": 0.33,
+       "w": 0.05,
+       "h": 0.08,
+       "id": "running-bracket-3",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
        "id": "running-board",
        "bone": "chassis",
        "role": "body",
@@ -529,9 +664,9 @@
        "filled": true,
        "tone": 0.78,
        "kind": "rect",
-       "x": 1.78,
+       "x": 1.76,
        "y": 0.56,
-       "w": 0.1,
+       "w": 0.12,
        "h": 0.7,
        "r": 0.03,
        "region": "radiator",
@@ -1054,8 +1189,8 @@
        "y0": 0.5,
        "x1": 2.05,
        "y1": 0.43,
-       "r0": 0.012,
-       "r1": 0.012,
+       "r0": 0.0225,
+       "r1": 0.0225,
        "region": "body-panels",
        "id": "bracket-front",
        "bone": "chassis",
@@ -1071,8 +1206,8 @@
        "y0": 0.5,
        "x1": -1.95,
        "y1": 0.43,
-       "r0": 0.012,
-       "r1": 0.012,
+       "r0": 0.0225,
+       "r1": 0.0225,
        "region": "body-panels",
        "id": "bracket-rear",
        "bone": "chassis",
@@ -1095,6 +1230,40 @@
        "role": "detail",
        "z": 0.8,
        "filled": true,
+       "tone": 0.35,
+       "region": "exhaust-system",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0.95,
+       "y0": 0.84,
+       "x1": 1.5,
+       "y1": 0.84,
+       "r0": 0.03,
+       "r1": 0.03,
+       "id": "exhaust-manifold",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 0.8,
+       "tone": 0.35,
+       "region": "exhaust-system",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0.95,
+       "y0": 0.84,
+       "x1": 0.93,
+       "y1": 0.28,
+       "r0": 0.027,
+       "r1": 0.027,
+       "id": "exhaust-downpipe",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 0.8,
        "tone": 0.35,
        "region": "exhaust-system",
        "material": "exhaust-steel"
@@ -1900,9 +2069,54 @@
       },
       {
        "kind": "rect",
-       "x": -0.58,
+       "x": 0.17,
+       "y": 0.41,
+       "w": 0.24,
+       "h": 0.11,
+       "id": "body-mount-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -0.1,
+       "y": 0.41,
+       "w": 0.2,
+       "h": 0.11,
+       "id": "body-mount-c",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -0.41,
+       "y": 0.41,
+       "w": 0.24,
+       "h": 0.11,
+       "id": "body-mount-r",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -0.62,
        "y": 0.34,
-       "w": 1.16,
+       "w": 1.24,
        "h": 0.06,
        "id": "axle-f",
        "bone": "axle-f",
@@ -1913,12 +2127,114 @@
        "material": "cast-iron"
       },
       {
-       "kind": "rect",
-       "x": -0.4,
-       "y": 0.195,
-       "w": 0.2,
-       "h": 0.15,
-       "r": 0.06,
+       "kind": "poly",
+       "points": [
+        [
+         -0.302,
+         0.194
+        ],
+        [
+         -0.261,
+         0.206
+        ],
+        [
+         -0.234,
+         0.232
+        ],
+        [
+         -0.225,
+         0.266
+        ],
+        [
+         -0.234,
+         0.309
+        ],
+        [
+         -0.261,
+         0.333
+        ],
+        [
+         -0.261,
+         0.339
+        ],
+        [
+         -0.158,
+         0.821
+        ],
+        [
+         -0.15,
+         0.836
+        ],
+        [
+         -0.154,
+         0.856
+        ],
+        [
+         -0.174,
+         0.869
+        ],
+        [
+         -0.197,
+         0.866
+        ],
+        [
+         -0.208,
+         0.851
+        ],
+        [
+         -0.208,
+         0.832
+        ],
+        [
+         -0.308,
+         0.369
+        ],
+        [
+         -0.309,
+         0.365
+        ],
+        [
+         -0.349,
+         0.365
+        ],
+        [
+         -0.351,
+         0.32
+        ],
+        [
+         -0.366,
+         0.307
+        ],
+        [
+         -0.368,
+         0.296
+        ],
+        [
+         -0.377,
+         0.288
+        ],
+        [
+         -0.383,
+         0.271
+        ],
+        [
+         -0.375,
+         0.237
+        ],
+        [
+         -0.364,
+         0.226
+        ],
+        [
+         -0.356,
+         0.224
+        ],
+        [
+         -0.339,
+         0.206
+        ]
+       ],
+       "closed": true,
        "id": "silencer",
        "bone": "chassis",
        "role": "detail",
@@ -1980,7 +2296,7 @@
        "y": 1.14,
        "w": 1.2,
        "h": 0.5,
-       "r": 0.05,
+       "r": 0.005,
        "id": "cabin",
        "bone": "chassis",
        "role": "body",
@@ -2159,32 +2475,56 @@
        "kind": "poly",
        "points": [
         [
-         0.5,
-         0.45
+         0.582,
+         0.454
         ],
         [
-         0.85,
-         0.45
+         0.752,
+         0.455
         ],
         [
-         0.85,
-         0.7
+         0.784,
+         0.463
         ],
         [
-         0.8,
-         0.82
+         0.801,
+         0.476
         ],
         [
-         0.68,
-         0.85
+         0.827,
+         0.596
         ],
         [
-         0.55,
+         0.848,
+         0.649
+        ],
+        [
+         0.848,
          0.84
         ],
         [
-         0.5,
-         0.75
+         0.816,
+         0.849
+        ],
+        [
+         0.541,
+         0.849
+        ],
+        [
+         0.507,
+         0.842
+        ],
+        [
+         0.499,
+         0.825
+        ],
+        [
+         0.499,
+         0.474
+        ],
+        [
+         0.507,
+         0.463
         ]
        ],
        "closed": true,
@@ -2201,32 +2541,64 @@
        "kind": "poly",
        "points": [
         [
-         -0.5,
-         0.45
+         -0.751,
+         0.454
         ],
         [
-         -0.85,
-         0.45
+         -0.581,
+         0.461
         ],
         [
-         -0.85,
-         0.7
+         -0.556,
+         0.476
         ],
         [
-         -0.8,
-         0.82
+         -0.554,
+         0.489
         ],
         [
-         -0.68,
-         0.85
+         -0.513,
+         0.493
         ],
         [
-         -0.55,
+         -0.502,
+         0.506
+        ],
+        [
+         -0.502,
          0.84
         ],
         [
-         -0.5,
-         0.75
+         -0.545,
+         0.849
+        ],
+        [
+         -0.815,
+         0.849
+        ],
+        [
+         -0.843,
+         0.844
+        ],
+        [
+         -0.851,
+         0.825
+        ],
+        [
+         -0.847,
+         0.65
+        ],
+        [
+         -0.828,
+         0.6
+        ],
+        [
+         -0.802,
+         0.476
+        ],
+        [
+         -0.783,
+         0.459
         ]
        ],
        "closed": true,
@@ -2398,13 +2770,313 @@
        "material": "exhaust-steel"
       },
       {
+       "kind": "rect",
+       "x": 1.725,
+       "y": -0.35,
+       "w": 0.05,
+       "h": 0.7,
+       "id": "crossmember-front",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 0.175,
+       "y": -0.35,
+       "w": 0.05,
+       "h": 0.7,
+       "id": "crossmember-mid",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -1.925,
+       "y": -0.35,
+       "w": 0.05,
+       "h": 0.7,
+       "id": "crossmember-rear",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 1.47,
+       "y": 0.41,
+       "w": 0.06,
+       "h": 0.19,
+       "id": "axle-f-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 1.47,
+       "y": -0.6,
+       "w": 0.06,
+       "h": 0.19,
+       "id": "axle-f-r",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 1.47,
+       "y": -0.35,
+       "w": 0.06,
+       "h": 0.7,
+       "id": "axle-f-mid",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -1.53,
+       "y": 0.41,
+       "w": 0.06,
+       "h": 0.19,
+       "id": "axle-r-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -1.53,
+       "y": -0.6,
+       "w": 0.06,
+       "h": 0.19,
+       "id": "axle-r-r",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -1.53,
+       "y": -0.35,
+       "w": 0.06,
+       "h": 0.7,
+       "id": "axle-r-mid",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -0.825,
+       "y": 0.41,
+       "w": 0.05,
+       "h": 0.27,
+       "id": "running-bracket-1-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -0.825,
+       "y": -0.68,
+       "w": 0.05,
+       "h": 0.27,
+       "id": "running-bracket-1-r",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -0.025,
+       "y": 0.41,
+       "w": 0.05,
+       "h": 0.27,
+       "id": "running-bracket-2-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -0.025,
+       "y": -0.68,
+       "w": 0.05,
+       "h": 0.27,
+       "id": "running-bracket-2-r",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 0.775,
+       "y": 0.41,
+       "w": 0.05,
+       "h": 0.27,
+       "id": "running-bracket-3-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 0.775,
+       "y": -0.68,
+       "w": 0.05,
+       "h": 0.27,
+       "id": "running-bracket-3-r",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 0.9,
+       "y": 0.17,
+       "w": 0.1,
+       "h": 0.22,
+       "id": "engine-bearer-1-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 0.9,
+       "y": -0.39,
+       "w": 0.1,
+       "h": 0.22,
+       "id": "engine-bearer-1-r",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 1.4,
+       "y": 0.17,
+       "w": 0.1,
+       "h": 0.22,
+       "id": "engine-bearer-2-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 1.4,
+       "y": -0.39,
+       "w": 0.1,
+       "h": 0.22,
+       "id": "engine-bearer-2-r",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 0.84,
+       "y": -0.52,
+       "w": 0.04,
+       "h": 0.2,
+       "id": "spare-mount",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
        "kind": "capsule",
-       "x0": -1.7575,
+       "x0": -1.75,
        "y0": -0.35,
-       "x1": -2.067,
+       "x1": -2.08,
        "y1": -0.35,
-       "r0": 0.0375,
-       "r1": 0.0375,
+       "r0": 0.032,
+       "r1": 0.0275,
        "id": "tail-pipe",
        "bone": "chassis",
        "role": "detail",
@@ -2450,44 +3122,20 @@
        "kind": "poly",
        "points": [
         [
-         -1.99,
-         0
+         -1.991,
+         -0.621
         ],
         [
-         -1.99,
-         0.5
+         0.601,
+         -0.621
         ],
         [
-         -1.9,
-         0.62
+         0.601,
+         0.621
         ],
         [
-         0.6,
-         0.62
-        ],
-        [
-         0.6,
-         0
-        ],
-        [
-         0.6,
-         0
-        ],
-        [
-         0.6,
-         -0.62
-        ],
-        [
-         -1.9,
-         -0.62
-        ],
-        [
-         -1.99,
-         -0.5
-        ],
-        [
-         -1.99,
-         0
+         -1.991,
+         0.621
         ]
        ],
        "closed": true,
@@ -2506,7 +3154,7 @@
        "y": -0.34,
        "w": 1.16,
        "h": 0.68,
-       "r": 0.06,
+       "r": 0.015,
        "id": "hood",
        "bone": "chassis",
        "role": "body",
@@ -2627,9 +3275,9 @@
       },
       {
        "kind": "rect",
-       "x": 1.78,
+       "x": 1.76,
        "y": -0.22,
-       "w": 0.1,
+       "w": 0.12,
        "h": 0.44,
        "r": 0.02,
        "id": "radiator-shell",
@@ -2676,32 +3324,32 @@
        "kind": "poly",
        "points": [
         [
-         0.96,
-         0.5
+         0.961,
+         0.499
         ],
         [
-         0.96,
-         0.78
+         2.135,
+         0.499
         ],
         [
-         1.1,
-         0.85
+         2.135,
+         0.655
         ],
         [
-         1.7,
-         0.85
+         1.998,
+         0.799
         ],
         [
-         2,
-         0.8
+         1.704,
+         0.848
         ],
         [
-         2.14,
-         0.65
+         1.098,
+         0.848
         ],
         [
-         2.14,
-         0.5
+         0.961,
+         0.779
         ]
        ],
        "closed": true,
@@ -2718,32 +3366,40 @@
        "kind": "poly",
        "points": [
         [
-         0.96,
-         -0.5
-        ],
-        [
-         0.96,
-         -0.78
-        ],
-        [
          1.1,
-         -0.85
+         -0.851
         ],
         [
-         1.7,
-         -0.85
+         1.702,
+         -0.851
         ],
         [
-         2,
+         2.0,
          -0.8
         ],
         [
-         2.14,
-         -0.65
+         2.135,
+         -0.656
         ],
         [
-         2.14,
+         2.135,
          -0.5
+        ],
+        [
+         1.199,
+         -0.502
+        ],
+        [
+         1.1,
+         -0.622
+        ],
+        [
+         0.961,
+         -0.622
+        ],
+        [
+         0.961,
+         -0.781
         ]
        ],
        "closed": true,
@@ -2760,32 +3416,32 @@
        "kind": "poly",
        "points": [
         [
-         -0.98,
-         0.55
+         -2.027,
+         0.549
         ],
         [
-         -0.98,
-         0.8
+         -0.982,
+         0.549
         ],
         [
-         -1.1,
-         0.85
+         -0.982,
+         0.801
         ],
         [
-         -1.8,
-         0.85
+         -1.097,
+         0.849
         ],
         [
-         -2,
+         -1.805,
+         0.849
+        ],
+        [
+         -2.0,
          0.78
         ],
         [
-         -2.03,
-         0.6
-        ],
-        [
-         -2.03,
-         0.55
+         -2.027,
+         0.626
         ]
        ],
        "closed": true,
@@ -2802,32 +3458,32 @@
        "kind": "poly",
        "points": [
         [
-         -0.98,
-         -0.55
+         -1.802,
+         -0.851
         ],
         [
-         -0.98,
-         -0.8
+         -1.099,
+         -0.851
         ],
         [
-         -1.1,
-         -0.85
+         -0.982,
+         -0.802
         ],
         [
-         -1.8,
-         -0.85
+         -0.982,
+         -0.551
         ],
         [
-         -2,
-         -0.78
+         -2.027,
+         -0.551
         ],
         [
-         -2.03,
-         -0.6
+         -2.027,
+         -0.626
         ],
         [
-         -2.03,
-         -0.55
+         -2.0,
+         -0.779
         ]
        ],
        "closed": true,
@@ -2902,12 +3558,12 @@
       },
       {
        "kind": "capsule",
-       "x0": 2.06,
+       "x0": 2.05,
        "y0": 0.3,
-       "x1": 2.19,
+       "x1": 2.2,
        "y1": 0.3,
-       "r0": 0.02,
-       "r1": 0.02,
+       "r0": 0.012,
+       "r1": 0.012,
        "id": "bracket-front-l",
        "bone": "chassis",
        "role": "detail",
@@ -2919,12 +3575,12 @@
       },
       {
        "kind": "capsule",
-       "x0": 2.06,
+       "x0": 2.05,
        "y0": -0.3,
-       "x1": 2.19,
+       "x1": 2.2,
        "y1": -0.3,
-       "r0": 0.02,
-       "r1": 0.02,
+       "r0": 0.012,
+       "r1": 0.012,
        "id": "bracket-front-r",
        "bone": "chassis",
        "role": "detail",
@@ -2952,12 +3608,12 @@
       },
       {
        "kind": "capsule",
-       "x0": -2.09,
+       "x0": -2.1,
        "y0": 0.3,
-       "x1": -1.96,
+       "x1": -1.95,
        "y1": 0.3,
-       "r0": 0.02,
-       "r1": 0.02,
+       "r0": 0.012,
+       "r1": 0.012,
        "id": "bracket-rear-l",
        "bone": "chassis",
        "role": "detail",
@@ -2969,12 +3625,12 @@
       },
       {
        "kind": "capsule",
-       "x0": -2.09,
+       "x0": -2.1,
        "y0": -0.3,
-       "x1": -1.96,
+       "x1": -1.95,
        "y1": -0.3,
-       "r0": 0.02,
-       "r1": 0.02,
+       "r0": 0.012,
+       "r1": 0.012,
        "id": "bracket-rear-r",
        "bone": "chassis",
        "role": "detail",
@@ -3103,6 +3759,171 @@
        "material": "exhaust-steel"
       },
       {
+       "kind": "rect",
+       "x": -1.06,
+       "y": 0.41,
+       "w": 0.12,
+       "h": 0.11,
+       "id": "body-mount-a-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -1.06,
+       "y": 0.41,
+       "w": 0.12,
+       "h": 0.11,
+       "id": "body-mount-a-r",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 0.24,
+       "y": 0.41,
+       "w": 0.12,
+       "h": 0.11,
+       "id": "body-mount-b-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 0.24,
+       "y": 0.41,
+       "w": 0.12,
+       "h": 0.11,
+       "id": "body-mount-b-r",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 1.76,
+       "y": 0.41,
+       "w": 0.06,
+       "h": 0.15,
+       "id": "radiator-mount",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -1.515,
+       "y": 0.285,
+       "w": 0.03,
+       "h": 0.08,
+       "id": "exhaust-hanger-1",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 0.485,
+       "y": 0.285,
+       "w": 0.03,
+       "h": 0.08,
+       "id": "exhaust-hanger-2",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -0.83,
+       "y": 0.33,
+       "w": 0.06,
+       "h": 0.08,
+       "id": "running-bracket-1-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 0.77,
+       "y": 0.33,
+       "w": 0.06,
+       "h": 0.08,
+       "id": "running-bracket-2-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -0.83,
+       "y": 0.33,
+       "w": 0.06,
+       "h": 0.08,
+       "id": "running-bracket-1-r",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 0.77,
+       "y": 0.33,
+       "w": 0.06,
+       "h": 0.08,
+       "id": "running-bracket-2-r",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
        "id": "running-board",
        "bone": "chassis",
        "role": "body",
@@ -3197,9 +4018,9 @@
        "filled": true,
        "tone": 0.78,
        "kind": "rect",
-       "x": 1.78,
+       "x": 1.76,
        "y": 0.56,
-       "w": 0.1,
+       "w": 0.12,
        "h": 0.7,
        "r": 0.03,
        "region": "radiator",
@@ -3534,8 +4355,8 @@
        "y0": 0.5,
        "x1": 2.05,
        "y1": 0.43,
-       "r0": 0.012,
-       "r1": 0.012,
+       "r0": 0.0225,
+       "r1": 0.0225,
        "region": "body-panels",
        "id": "bracket-front",
        "bone": "chassis",
@@ -3551,8 +4372,8 @@
        "y0": 0.5,
        "x1": -1.95,
        "y1": 0.43,
-       "r0": 0.012,
-       "r1": 0.012,
+       "r0": 0.0225,
+       "r1": 0.0225,
        "region": "body-panels",
        "id": "bracket-rear",
        "bone": "chassis",
@@ -3575,6 +4396,40 @@
        "role": "detail",
        "z": 0.8,
        "filled": true,
+       "tone": 0.35,
+       "region": "exhaust-system",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0.95,
+       "y0": 0.84,
+       "x1": 1.5,
+       "y1": 0.84,
+       "r0": 0.03,
+       "r1": 0.03,
+       "id": "exhaust-manifold",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 0.8,
+       "tone": 0.35,
+       "region": "exhaust-system",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0.95,
+       "y0": 0.84,
+       "x1": 0.93,
+       "y1": 0.28,
+       "r0": 0.027,
+       "r1": 0.027,
+       "id": "exhaust-downpipe",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 0.8,
        "tone": 0.35,
        "region": "exhaust-system",
        "material": "exhaust-steel"
@@ -4214,9 +5069,9 @@
       },
       {
        "kind": "rect",
-       "x": -0.58,
+       "x": -0.62,
        "y": 0.34,
-       "w": 1.16,
+       "w": 1.24,
        "h": 0.06,
        "id": "axle-f",
        "bone": "axle-f",
@@ -4227,12 +5082,86 @@
        "material": "cast-iron"
       },
       {
-       "kind": "rect",
-       "x": -0.4,
-       "y": 0.195,
-       "w": 0.2,
-       "h": 0.15,
-       "r": 0.06,
+       "kind": "poly",
+       "points": [
+        [
+         -0.313,
+         0.196
+        ],
+        [
+         -0.261,
+         0.204
+        ],
+        [
+         -0.234,
+         0.23
+        ],
+        [
+         -0.227,
+         0.256
+        ],
+        [
+         -0.234,
+         0.309
+        ],
+        [
+         -0.261,
+         0.331
+        ],
+        [
+         -0.261,
+         0.343
+        ],
+        [
+         -0.152,
+         0.826
+        ],
+        [
+         -0.152,
+         0.856
+        ],
+        [
+         -0.178,
+         0.871
+        ],
+        [
+         -0.197,
+         0.867
+        ],
+        [
+         -0.208,
+         0.852
+        ],
+        [
+         -0.306,
+         0.372
+        ],
+        [
+         -0.309,
+         0.365
+        ],
+        [
+         -0.351,
+         0.365
+        ],
+        [
+         -0.351,
+         0.32
+        ],
+        [
+         -0.381,
+         0.282
+        ],
+        [
+         -0.373,
+         0.234
+        ],
+        [
+         -0.339,
+         0.204
+        ]
+       ],
+       "closed": true,
        "id": "silencer",
        "bone": "chassis",
        "role": "detail",
@@ -4294,7 +5223,7 @@
        "y": 1.14,
        "w": 1.2,
        "h": 0.5,
-       "r": 0.05,
+       "r": 0.005,
        "id": "cabin",
        "bone": "chassis",
        "role": "body",
@@ -4390,32 +5319,44 @@
        "kind": "poly",
        "points": [
         [
-         0.5,
-         0.45
-        ],
-        [
-         0.85,
-         0.45
-        ],
-        [
-         0.85,
-         0.7
-        ],
-        [
-         0.8,
-         0.82
-        ],
-        [
-         0.68,
-         0.85
-        ],
-        [
          0.55,
-         0.84
+         0.455
         ],
         [
-         0.5,
-         0.75
+         0.756,
+         0.455
+        ],
+        [
+         0.797,
+         0.478
+        ],
+        [
+         0.846,
+         0.639
+        ],
+        [
+         0.846,
+         0.842
+        ],
+        [
+         0.816,
+         0.849
+        ],
+        [
+         0.531,
+         0.849
+        ],
+        [
+         0.505,
+         0.842
+        ],
+        [
+         0.501,
+         0.47
+        ],
+        [
+         0.505,
+         0.463
         ]
        ],
        "closed": true,
@@ -4432,32 +5373,56 @@
        "kind": "poly",
        "points": [
         [
+         -0.77,
+         0.455
+        ],
+        [
+         -0.646,
+         0.455
+        ],
+        [
+         -0.62,
+         0.47
+        ],
+        [
+         -0.564,
+         0.474
+        ],
+        [
+         -0.553,
+         0.504
+        ],
+        [
          -0.5,
-         0.45
+         0.512
         ],
         [
-         -0.85,
-         0.45
+         -0.504,
+         0.842
         ],
         [
-         -0.85,
-         0.7
+         -0.534,
+         0.849
+        ],
+        [
+         -0.819,
+         0.849
+        ],
+        [
+         -0.845,
+         0.842
+        ],
+        [
+         -0.849,
+         0.658
         ],
         [
          -0.8,
-         0.82
+         0.478
         ],
         [
-         -0.68,
-         0.85
-        ],
-        [
-         -0.55,
-         0.84
-        ],
-        [
-         -0.5,
-         0.75
+         -0.785,
+         0.459
         ]
        ],
        "closed": true,
@@ -4559,13 +5524,426 @@
        "material": "exhaust-steel"
       },
       {
+       "kind": "rect",
+       "x": -2.03,
+       "y": 0.35,
+       "w": 0.05,
+       "h": 0.1,
+       "id": "tail-lamp",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
        "kind": "capsule",
-       "x0": -1.7575,
+       "x0": 2.2,
+       "y0": 0.3,
+       "x1": 2.05,
+       "y1": 0.3,
+       "r0": 0.012,
+       "r1": 0.012,
+       "id": "bracket-front-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "capsule",
+       "x0": 2.2,
+       "y0": -0.3,
+       "x1": 2.05,
+       "y1": -0.3,
+       "r0": 0.012,
+       "r1": 0.012,
+       "id": "bracket-front-r",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "capsule",
+       "x0": -2.1,
+       "y0": 0.3,
+       "x1": -1.95,
+       "y1": 0.3,
+       "r0": 0.012,
+       "r1": 0.012,
+       "id": "bracket-rear-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "capsule",
+       "x0": -2.1,
+       "y0": -0.3,
+       "x1": -1.95,
+       "y1": -0.3,
+       "r0": 0.012,
+       "r1": 0.012,
+       "id": "bracket-rear-r",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 1.725,
+       "y": -0.35,
+       "w": 0.05,
+       "h": 0.7,
+       "id": "crossmember-front",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -1.925,
+       "y": -0.35,
+       "w": 0.05,
+       "h": 0.7,
+       "id": "crossmember-rear",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -1.06,
+       "y": 0.345,
+       "w": 0.12,
+       "h": 0.07,
+       "id": "body-mount-a-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -1.06,
+       "y": -0.415,
+       "w": 0.12,
+       "h": 0.07,
+       "id": "body-mount-a-r",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 0.24,
+       "y": 0.345,
+       "w": 0.12,
+       "h": 0.07,
+       "id": "body-mount-b-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 0.24,
+       "y": -0.415,
+       "w": 0.12,
+       "h": 0.07,
+       "id": "body-mount-b-r",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 1.76,
+       "y": -0.1,
+       "w": 0.06,
+       "h": 0.2,
+       "id": "radiator-mount",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 0.9,
+       "y": 0.17,
+       "w": 0.1,
+       "h": 0.22,
+       "id": "engine-bearer-1-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 0.9,
+       "y": -0.39,
+       "w": 0.1,
+       "h": 0.22,
+       "id": "engine-bearer-1-r",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 1.4,
+       "y": 0.17,
+       "w": 0.1,
+       "h": 0.22,
+       "id": "engine-bearer-2-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 1.4,
+       "y": -0.39,
+       "w": 0.1,
+       "h": 0.22,
+       "id": "engine-bearer-2-r",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -0.83,
+       "y": 0.41,
+       "w": 0.06,
+       "h": 0.27,
+       "id": "running-bracket-1-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 0.77,
+       "y": 0.41,
+       "w": 0.06,
+       "h": 0.27,
+       "id": "running-bracket-2-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -0.83,
+       "y": -0.68,
+       "w": 0.06,
+       "h": 0.27,
+       "id": "running-bracket-1-r",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 0.77,
+       "y": -0.68,
+       "w": 0.06,
+       "h": 0.27,
+       "id": "running-bracket-2-r",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 0.84,
+       "y": -0.52,
+       "w": 0.04,
+       "h": 0.2,
+       "id": "spare-mount",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 1.47,
+       "y": 0.41,
+       "w": 0.06,
+       "h": 0.19,
+       "id": "axle-f-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 1.47,
+       "y": -0.6,
+       "w": 0.06,
+       "h": 0.19,
+       "id": "axle-f-r",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 1.47,
+       "y": -0.35,
+       "w": 0.06,
+       "h": 0.7,
+       "id": "axle-f-mid",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -1.53,
+       "y": 0.41,
+       "w": 0.06,
+       "h": 0.19,
+       "id": "axle-r-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -1.53,
+       "y": -0.6,
+       "w": 0.06,
+       "h": 0.19,
+       "id": "axle-r-r",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -1.53,
+       "y": -0.35,
+       "w": 0.06,
+       "h": 0.7,
+       "id": "axle-r-mid",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.18,
+       "region": "body-panels",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "capsule",
+       "x0": -1.75,
        "y0": -0.35,
-       "x1": -2.067,
+       "x1": -2.08,
        "y1": -0.35,
-       "r0": 0.0375,
-       "r1": 0.0375,
+       "r0": 0.032,
+       "r1": 0.0275,
        "id": "tail-pipe",
        "bone": "chassis",
        "role": "detail",
@@ -4609,44 +5987,20 @@
        "kind": "poly",
        "points": [
         [
-         -1.99,
-         0
+         -1.991,
+         -0.621
         ],
         [
-         -1.99,
-         0.5
+         0.601,
+         -0.621
         ],
         [
-         -1.9,
-         0.62
+         0.601,
+         0.621
         ],
         [
-         0.6,
-         0.62
-        ],
-        [
-         0.6,
-         0
-        ],
-        [
-         0.6,
-         0
-        ],
-        [
-         0.6,
-         -0.62
-        ],
-        [
-         -1.9,
-         -0.62
-        ],
-        [
-         -1.99,
-         -0.5
-        ],
-        [
-         -1.99,
-         0
+         -1.991,
+         0.621
         ]
        ],
        "closed": true,
@@ -4660,12 +6014,194 @@
        "material": "paint"
       },
       {
-       "kind": "rect",
-       "x": 0.62,
-       "y": -0.34,
-       "w": 1.16,
-       "h": 0.68,
-       "r": 0.06,
+       "kind": "poly",
+       "points": [
+        [
+         0.932,
+         -0.351
+        ],
+        [
+         0.944,
+         -0.339
+        ],
+        [
+         1.045,
+         -0.339
+        ],
+        [
+         1.052,
+         -0.351
+        ],
+        [
+         1.064,
+         -0.339
+        ],
+        [
+         1.165,
+         -0.339
+        ],
+        [
+         1.172,
+         -0.351
+        ],
+        [
+         1.184,
+         -0.339
+        ],
+        [
+         1.285,
+         -0.339
+        ],
+        [
+         1.292,
+         -0.351
+        ],
+        [
+         1.304,
+         -0.339
+        ],
+        [
+         1.405,
+         -0.339
+        ],
+        [
+         1.413,
+         -0.351
+        ],
+        [
+         1.424,
+         -0.339
+        ],
+        [
+         1.525,
+         -0.339
+        ],
+        [
+         1.532,
+         -0.351
+        ],
+        [
+         1.544,
+         -0.339
+        ],
+        [
+         1.78,
+         -0.339
+        ],
+        [
+         1.78,
+         0.339
+        ],
+        [
+         1.544,
+         0.339
+        ],
+        [
+         1.536,
+         0.351
+        ],
+        [
+         1.525,
+         0.339
+        ],
+        [
+         1.424,
+         0.339
+        ],
+        [
+         1.416,
+         0.351
+        ],
+        [
+         1.405,
+         0.339
+        ],
+        [
+         1.304,
+         0.339
+        ],
+        [
+         1.296,
+         0.351
+        ],
+        [
+         1.285,
+         0.339
+        ],
+        [
+         1.184,
+         0.339
+        ],
+        [
+         1.176,
+         0.351
+        ],
+        [
+         1.165,
+         0.339
+        ],
+        [
+         1.064,
+         0.339
+        ],
+        [
+         1.056,
+         0.351
+        ],
+        [
+         1.045,
+         0.339
+        ],
+        [
+         0.944,
+         0.339
+        ],
+        [
+         0.936,
+         0.351
+        ],
+        [
+         0.925,
+         0.339
+        ],
+        [
+         0.621,
+         0.339
+        ],
+        [
+         0.621,
+         0.321
+        ],
+        [
+         0.662,
+         0.321
+        ],
+        [
+         0.621,
+         0.294
+        ],
+        [
+         0.621,
+         -0.294
+        ],
+        [
+         0.662,
+         -0.321
+        ],
+        [
+         0.621,
+         -0.321
+        ],
+        [
+         0.621,
+         -0.339
+        ],
+        [
+         0.925,
+         -0.339
+        ]
+       ],
+       "closed": true,
        "id": "hood",
        "bone": "chassis",
        "role": "body",
@@ -4757,9 +6293,9 @@
       },
       {
        "kind": "rect",
-       "x": 1.78,
+       "x": 1.76,
        "y": -0.22,
-       "w": 0.1,
+       "w": 0.12,
        "h": 0.44,
        "r": 0.02,
        "id": "radiator-shell",
@@ -4791,32 +6327,36 @@
        "kind": "poly",
        "points": [
         [
-         0.96,
-         0.5
+         0.963,
+         0.501
         ],
         [
-         0.96,
-         0.78
+         2.137,
+         0.501
         ],
         [
-         1.1,
-         0.85
+         2.137,
+         0.655
         ],
         [
-         1.7,
-         0.85
+         2.047,
+         0.749
         ],
         [
-         2,
-         0.8
+         1.901,
+         0.816
         ],
         [
-         2.14,
-         0.65
+         1.721,
+         0.846
         ],
         [
-         2.14,
-         0.5
+         1.094,
+         0.846
+        ],
+        [
+         0.963,
+         0.782
         ]
        ],
        "closed": true,
@@ -4833,32 +6373,48 @@
        "kind": "poly",
        "points": [
         [
-         0.96,
+         1.094,
+         -0.849
+        ],
+        [
+         1.717,
+         -0.849
+        ],
+        [
+         1.908,
+         -0.815
+        ],
+        [
+         2.051,
+         -0.748
+        ],
+        [
+         2.129,
+         -0.665
+        ],
+        [
+         2.137,
+         -0.654
+        ],
+        [
+         2.137,
          -0.5
         ],
         [
-         0.96,
-         -0.78
+         1.293,
+         -0.504
         ],
         [
-         1.1,
-         -0.85
+         1.106,
+         -0.62
         ],
         [
-         1.7,
-         -0.85
+         0.963,
+         -0.62
         ],
         [
-         2,
-         -0.8
-        ],
-        [
-         2.14,
-         -0.65
-        ],
-        [
-         2.14,
-         -0.5
+         0.963,
+         -0.781
         ]
        ],
        "closed": true,
@@ -4875,32 +6431,36 @@
        "kind": "poly",
        "points": [
         [
-         -0.98,
-         0.55
+         -2.025,
+         0.551
         ],
         [
-         -0.98,
-         0.8
+         -0.982,
+         0.551
         ],
         [
-         -1.1,
-         0.85
+         -0.982,
+         0.802
         ],
         [
-         -1.8,
-         0.85
+         -1.061,
+         0.832
         ],
         [
-         -2,
-         0.78
+         -1.196,
+         0.851
         ],
         [
-         -2.03,
-         0.6
+         -1.804,
+         0.851
         ],
         [
-         -2.03,
-         0.55
+         -1.954,
+         0.795
+        ],
+        [
+         -2.025,
+         0.63
         ]
        ],
        "closed": true,
@@ -4917,32 +6477,36 @@
        "kind": "poly",
        "points": [
         [
-         -0.98,
-         -0.55
+         -1.807,
+         -0.849
         ],
         [
-         -0.98,
+         -1.177,
+         -0.849
+        ],
+        [
+         -1.046,
+         -0.83
+        ],
+        [
+         -0.982,
          -0.8
         ],
         [
-         -1.1,
-         -0.85
+         -0.982,
+         -0.549
         ],
         [
-         -1.8,
-         -0.85
+         -2.025,
+         -0.549
         ],
         [
-         -2,
-         -0.78
+         -2.025,
+         -0.631
         ],
         [
-         -2.03,
-         -0.6
-        ],
-        [
-         -2.03,
-         -0.55
+         -1.95,
+         -0.8
         ]
        ],
        "closed": true,
@@ -5095,6 +6659,81 @@
        "material": "exhaust-steel"
       },
       {
+       "kind": "rect",
+       "x": -0.55,
+       "y": 0.41,
+       "w": 0.3,
+       "h": 0.11,
+       "id": "body-mount-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "tone": 0.6,
+       "region": "body-panels",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -0.05,
+       "y": 0.33,
+       "w": 0.1,
+       "h": 0.08,
+       "id": "running-bracket-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "tone": 0.6,
+       "region": "body-panels",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": 2.04,
+       "y": 0.44,
+       "w": 0.17,
+       "h": 0.05,
+       "id": "bracket-front-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "tone": 0.6,
+       "region": "body-panels",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -2.11,
+       "y": 0.44,
+       "w": 0.17,
+       "h": 0.05,
+       "id": "bracket-rear-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "tone": 0.6,
+       "region": "body-panels",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": 0.84,
+       "y": 0.76,
+       "w": 0.04,
+       "h": 0.04,
+       "id": "spare-mount",
+       "filled": true,
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "tone": 0.6,
+       "region": "body-panels",
+       "material": "paint"
+      },
+      {
        "id": "running-board",
        "bone": "chassis",
        "role": "body",
@@ -5165,7 +6804,7 @@
        "filled": true,
        "tone": 0.5,
        "kind": "path",
-       "d": "M 0.96,0.47 C 1.00,0.68 1.20,0.85 1.50,0.85 C 1.84,0.85 2.04,0.72 2.14,0.52 L 2.11,0.47 C 2.02,0.64 1.80,0.80 1.50,0.80 C 1.22,0.80 1.05,0.64 1.01,0.45 Z",
+       "d": "M 0.96,0.49 C 1.00,0.68 1.20,0.85 1.50,0.85 C 1.84,0.85 2.04,0.72 2.14,0.52 L 2.11,0.47 C 2.02,0.64 1.80,0.80 1.50,0.80 C 1.22,0.80 1.05,0.64 1.01,0.49 Z",
        "region": "fenders",
        "material": "paint"
       },
@@ -5177,7 +6816,7 @@
        "filled": true,
        "tone": 0.5,
        "kind": "path",
-       "d": "M -0.98,0.47 C -0.96,0.70 -1.15,0.85 -1.50,0.85 C -1.80,0.85 -1.98,0.72 -2.03,0.52 L -2.00,0.47 C -1.96,0.62 -1.78,0.80 -1.50,0.80 C -1.22,0.80 -1.03,0.64 -1.01,0.45 Z",
+       "d": "M -0.98,0.49 C -0.96,0.70 -1.15,0.85 -1.50,0.85 C -1.80,0.85 -1.98,0.72 -2.03,0.52 L -2.00,0.47 C -1.96,0.62 -1.78,0.80 -1.50,0.80 C -1.22,0.80 -1.03,0.64 -1.01,0.49 Z",
        "region": "fenders",
        "material": "paint"
       },
@@ -5711,6 +7350,195 @@
        "material": "exhaust-steel"
       },
       {
+       "kind": "ellipse",
+       "cx": 0.55,
+       "cy": 0.99,
+       "rx": 0.11,
+       "ry": 0.11,
+       "id": "headlamp-bowl-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.2,
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": -0.55,
+       "cy": 0.99,
+       "rx": 0.11,
+       "ry": 0.11,
+       "id": "headlamp-bowl-r",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.2,
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 0.533,
+       "y": 0.783,
+       "w": 0.035,
+       "h": 0.134,
+       "id": "lamp-stalk-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.2,
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -0.568,
+       "y": 0.783,
+       "w": 0.035,
+       "h": 0.134,
+       "id": "lamp-stalk-r",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.2,
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 0.685,
+       "y": 0.3,
+       "w": 0.082,
+       "h": 0.14,
+       "id": "hub-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.2,
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -0.767,
+       "y": 0.3,
+       "w": 0.082,
+       "h": 0.14,
+       "id": "hub-r",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.2,
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -0.62,
+       "y": 0.34,
+       "w": 1.24,
+       "h": 0.06,
+       "id": "axle-f",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.2,
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 0.62,
+       "y": 0.4,
+       "w": 0.18,
+       "h": 0.06,
+       "id": "running-board-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.2,
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -0.8,
+       "y": 0.4,
+       "w": 0.18,
+       "h": 0.06,
+       "id": "running-board-r",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.2,
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -0.415,
+       "y": 0.41,
+       "w": 0.83,
+       "h": 0.11,
+       "id": "body-mount",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.2,
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.302,
+         0.193
+        ],
+        [
+         -0.264,
+         0.2
+        ],
+        [
+         -0.227,
+         0.245
+        ],
+        [
+         -0.234,
+         0.313
+        ],
+        [
+         -0.279,
+         0.343
+        ],
+        [
+         -0.339,
+         0.335
+        ],
+        [
+         -0.384,
+         0.275
+        ],
+        [
+         -0.377,
+         0.237
+        ],
+        [
+         -0.347,
+         0.207
+        ]
+       ],
+       "closed": true,
+       "id": "exhaust",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.2,
+       "material": "exhaust-steel"
+      },
+      {
        "kind": "poly",
        "points": [
         [
@@ -5815,32 +7643,36 @@
        "kind": "poly",
        "points": [
         [
-         0.5,
-         0.45
-        ],
-        [
-         0.85,
-         0.45
-        ],
-        [
-         0.85,
-         0.7
-        ],
-        [
-         0.8,
-         0.82
-        ],
-        [
-         0.68,
-         0.85
-        ],
-        [
          0.55,
-         0.84
+         0.456
         ],
         [
-         0.5,
-         0.75
+         0.745,
+         0.456
+        ],
+        [
+         0.797,
+         0.478
+        ],
+        [
+         0.85,
+         0.643
+        ],
+        [
+         0.85,
+         0.846
+        ],
+        [
+         0.505,
+         0.846
+        ],
+        [
+         0.497,
+         0.486
+        ],
+        [
+         0.505,
+         0.463
         ]
        ],
        "closed": true,
@@ -5860,32 +7692,32 @@
        "kind": "poly",
        "points": [
         [
+         -0.755,
+         0.456
+        ],
+        [
+         -0.583,
+         0.463
+        ],
+        [
          -0.5,
-         0.45
+         0.501
         ],
         [
-         -0.85,
-         0.45
+         -0.5,
+         0.846
         ],
         [
-         -0.85,
-         0.7
+         -0.845,
+         0.846
+        ],
+        [
+         -0.853,
+         0.666
         ],
         [
          -0.8,
-         0.82
-        ],
-        [
-         -0.68,
-         0.85
-        ],
-        [
-         -0.55,
-         0.84
-        ],
-        [
-         -0.5,
-         0.75
+         0.478
         ]
        ],
        "closed": true,
@@ -5949,6 +7781,286 @@
         "body-panels",
         "exhaust-system"
        ],
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -0.55,
+       "y": 0.345,
+       "w": 0.3,
+       "h": 0.07,
+       "id": "body-mount-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.2,
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -0.55,
+       "y": -0.415,
+       "w": 0.3,
+       "h": 0.07,
+       "id": "body-mount-r",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.2,
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -0.05,
+       "y": 0.41,
+       "w": 0.1,
+       "h": 0.27,
+       "id": "running-bracket-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.2,
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 1.675,
+       "y": 0.44,
+       "w": 0.21,
+       "h": 0.22,
+       "id": "headlamp-bowl-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.2,
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 1.7425,
+       "y": 0.5325,
+       "w": 0.035,
+       "h": 0.035,
+       "id": "lamp-stalk-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.2,
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 2.04,
+       "y": 0.275,
+       "w": 0.17,
+       "h": 0.05,
+       "id": "bracket-front-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.2,
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -2.11,
+       "y": 0.275,
+       "w": 0.17,
+       "h": 0.05,
+       "id": "bracket-rear-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.2,
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -0.05,
+       "y": -0.68,
+       "w": 0.1,
+       "h": 0.27,
+       "id": "running-bracket-r",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.2,
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 1.675,
+       "y": -0.66,
+       "w": 0.21,
+       "h": 0.22,
+       "id": "headlamp-bowl-r",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.2,
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 1.7425,
+       "y": -0.5675,
+       "w": 0.035,
+       "h": 0.035,
+       "id": "lamp-stalk-r",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.2,
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 2.04,
+       "y": -0.325,
+       "w": 0.17,
+       "h": 0.05,
+       "id": "bracket-front-r",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.2,
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -2.11,
+       "y": -0.325,
+       "w": 0.17,
+       "h": 0.05,
+       "id": "bracket-rear-r",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.2,
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -2.03,
+       "y": 0.35,
+       "w": 0.05,
+       "h": 0.1,
+       "id": "tail-lamp",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.2,
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 0.84,
+       "y": -0.52,
+       "w": 0.04,
+       "h": 0.2,
+       "id": "spare-mount",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.2,
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 1.47,
+       "y": 0.41,
+       "w": 0.06,
+       "h": 0.19,
+       "id": "axle-f-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.2,
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 1.47,
+       "y": -0.6,
+       "w": 0.06,
+       "h": 0.19,
+       "id": "axle-f-r",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.2,
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": 1.47,
+       "y": -0.35,
+       "w": 0.06,
+       "h": 0.7,
+       "id": "axle-f-mid",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.2,
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -1.53,
+       "y": 0.41,
+       "w": 0.06,
+       "h": 0.19,
+       "id": "axle-r-l",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.2,
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -1.53,
+       "y": -0.6,
+       "w": 0.06,
+       "h": 0.19,
+       "id": "axle-r-r",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.2,
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -1.53,
+       "y": -0.35,
+       "w": 0.06,
+       "h": 0.7,
+       "id": "axle-r-mid",
+       "filled": true,
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1,
+       "tone": 0.2,
        "material": "exhaust-steel"
       },
       {
@@ -6154,32 +8266,36 @@
        "kind": "poly",
        "points": [
         [
-         0.96,
-         0.5
+         0.967,
+         0.497
         ],
         [
-         0.96,
-         0.78
+         2.13,
+         0.497
         ],
         [
-         1.1,
+         2.13,
+         0.662
+        ],
+        [
+         2.047,
+         0.73
+        ],
+        [
+         1.882,
+         0.82
+        ],
+        [
+         1.522,
          0.85
         ],
         [
-         1.7,
+         1.095,
          0.85
         ],
         [
-         2,
-         0.8
-        ],
-        [
-         2.14,
-         0.65
-        ],
-        [
-         2.14,
-         0.5
+         0.967,
+         0.782
         ]
        ],
        "closed": true,
@@ -6199,32 +8315,40 @@
        "kind": "poly",
        "points": [
         [
-         0.96,
+         1.095,
+         -0.853
+        ],
+        [
+         1.515,
+         -0.853
+        ],
+        [
+         1.905,
+         -0.815
+        ],
+        [
+         2.13,
+         -0.665
+        ],
+        [
+         2.13,
          -0.5
         ],
         [
-         0.96,
-         -0.78
-        ],
-        [
-         1.1,
-         -0.85
-        ],
-        [
-         1.7,
-         -0.85
-        ],
-        [
-         2,
-         -0.8
-        ],
-        [
-         2.14,
-         -0.65
-        ],
-        [
-         2.14,
+         1.492,
          -0.5
+        ],
+        [
+         1.117,
+         -0.62
+        ],
+        [
+         0.967,
+         -0.62
+        ],
+        [
+         0.967,
+         -0.785
         ]
        ],
        "closed": true,
@@ -6244,32 +8368,32 @@
        "kind": "poly",
        "points": [
         [
-         -0.98,
-         0.55
+         -2.023,
+         0.547
         ],
         [
-         -0.98,
-         0.8
+         -0.988,
+         0.547
         ],
         [
-         -1.1,
-         0.85
+         -0.988,
+         0.802
         ],
         [
-         -1.8,
-         0.85
+         -1.085,
+         0.847
         ],
         [
-         -2,
-         0.78
+         -1.573,
+         0.847
         ],
         [
-         -2.03,
-         0.6
+         -1.903,
+         0.817
         ],
         [
-         -2.03,
-         0.55
+         -2.023,
+         0.66
         ]
        ],
        "closed": true,
@@ -6286,32 +8410,32 @@
        "kind": "poly",
        "points": [
         [
-         -0.98,
-         -0.55
-        ],
-        [
-         -0.98,
-         -0.8
+         -1.513,
+         -0.853
         ],
         [
          -1.1,
-         -0.85
+         -0.853
         ],
         [
-         -1.8,
-         -0.85
+         -0.988,
+         -0.808
         ],
         [
-         -2,
-         -0.78
+         -0.988,
+         -0.553
         ],
         [
-         -2.03,
-         -0.6
+         -2.023,
+         -0.553
         ],
         [
-         -2.03,
-         -0.55
+         -2.023,
+         -0.665
+        ],
+        [
+         -1.903,
+         -0.815
         ]
        ],
        "closed": true,
@@ -8278,6 +10402,8 @@
       "key": "engine-load",
       "heatW": 900
      },
+     "ratedPowerW": 45000,
+     "ratedPowerBasis": "rated-output",
      "source": "authored-estimate",
      "reference": "heywood-2018"
     },
@@ -9071,8 +11197,8 @@
           "tone": 0.2,
           "sections": [
             {
-              "at": [0.622, 1.157748, 0.0],
-              "rx": 0.294832,
+              "at": [0.61, 1.157748, 0.0],
+              "rx": 0.34,
               "ry": 0.0125,
               "exponent": 8,
               "rotation": [0, 0.707107, 0, 0.707107]
@@ -9350,10 +11476,10 @@
           "material": "nickel-plate",
           "role": "body",
           "tone": 0.85,
-          "size": [0.1, 0.7, 0.44],
+          "size": [0.12, 0.7, 0.44],
           "cornerRadius": 0.03,
           "transform": {
-            "translation": [1.83, 0.91, 0.0]
+            "translation": [1.82, 0.91, 0.0]
           }
         },
         {
@@ -13382,8 +15508,8 @@
           "tone": 0.2,
           "sections": [
             {
-              "at": [0.622, 1.157748, 0.0],
-              "rx": 0.294832,
+              "at": [0.61, 1.157748, 0.0],
+              "rx": 0.34,
               "ry": 0.0125,
               "exponent": 8,
               "rotation": [0, 0.707107, 0, 0.707107]
@@ -13597,10 +15723,10 @@
           "material": "nickel-plate",
           "role": "body",
           "tone": 0.85,
-          "size": [0.1, 0.7, 0.44],
+          "size": [0.12, 0.7, 0.44],
           "cornerRadius": 0.03,
           "transform": {
-            "translation": [1.83, 0.91, 0.0]
+            "translation": [1.82, 0.91, 0.0]
           }
         },
         {

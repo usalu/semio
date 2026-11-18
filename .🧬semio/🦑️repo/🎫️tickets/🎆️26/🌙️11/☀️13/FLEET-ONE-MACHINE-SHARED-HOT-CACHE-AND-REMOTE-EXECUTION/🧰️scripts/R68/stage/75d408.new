@@ -1,0 +1,48 @@
+import{createHash}from"node:crypto";
+import{lstatSync,readFileSync}from"node:fs";
+import schema from"./🧬️schema/🔣️.json"with{type:"json"};
+import type{GraphStateV1}from"../../🟦️.ts";
+
+/** 📏️ The authored numbers of the refresh rule.
+ * @see ./🧬️schema/🔣️.json */
+export const FRESH_POLICY_V1=schema.definitions.Policy.const;
+type Row=Readonly<{kind:string;path:string;fact?:unknown}>;
+export type FreshVerdictV1=Readonly<{fresh:boolean;stale:number;checked:number}>;
+
+/** 🔏️ The file rows of a record that carry a content digest: a `file` row (`fact.sha256`) and an `analysis` row (`fact.source.sha256`), as the digests a taker compares with its own tree. A pure function.
+ * @see ./🧪️tests/🐍️.py */
+export function observedDigestsV1(rows:readonly Row[]):readonly Readonly<{path:string;sha256:string}>[]{
+ const found:{path:string;sha256:string}[]=[];
+ for(const row of rows){
+  const fact=(row.kind==="file"?row.fact:row.kind==="analysis"?(row.fact as {source?:unknown}|undefined)?.source:undefined) as {sha256?:unknown}|undefined;
+  if(typeof row.path==="string"&&fact!==undefined&&fact!==null&&typeof fact.sha256==="string")found.push({path:row.path,sha256:fact.sha256});
+ }
+ return found;
+}
+
+/** 🧪️ Whether a stored record still holds in the tree `hashOf` reads: every digest row is compared (a file that is gone counts as changed); a record younger than the minimum age or with more rows than the maximum is never judged stale. A pure function.
+ * @see ./🧪️tests/🐍️.py */
+export function freshVerdictV1(input:Readonly<{rows:readonly Row[];hashOf(path:string):string|undefined;createdMs:number;now:number;policy?:typeof FRESH_POLICY_V1}>):FreshVerdictV1{
+ const policy=input.policy??FRESH_POLICY_V1,digests=observedDigestsV1(input.rows);
+ if(input.now-input.createdMs<policy.minimumAgeMilliseconds||input.rows.length>policy.maximumRows)return{fresh:true,stale:0,checked:0};
+ let stale=0;for(const row of digests)if(input.hashOf(row.path)!==row.sha256)stale++;
+ return{fresh:stale===0,stale,checked:digests.length};
+}
+
+/** 🎫️ The state a refresh of a stale record is claimed under: the state of the record with a digest that names the stale entry (the digest of its record document), so a refresh claim never collides with the claim of the first computation and is a new claim for every stale entry. A pure function.
+ * @see ./🧪️tests/🐍️.py */
+export function refreshStateV1(state:GraphStateV1,noteHash:string):GraphStateV1{
+ return Object.freeze({...state,digest:createHash("sha256").update(JSON.stringify([FRESH_POLICY_V1.domain,state.digest,noteHash])).digest("hex")}) as GraphStateV1;
+}
+
+const memo=new Map<string,Readonly<{stamp:string;sha256:string}>>();
+/** 🔢️ The sha256 of a file of this tree, or undefined when it cannot be read; remembered per path while its size and times stay the same, so the files every record names (the tool code) are read once. */
+export function fileDigestV1(path:string):string|undefined{
+ try{
+  const status=lstatSync(path),stamp=`${status.size}:${status.mtimeMs}:${status.ino}`,kept=memo.get(path);
+  if(kept!==undefined&&kept.stamp===stamp)return kept.sha256;
+  const sha256=createHash("sha256").update(readFileSync(path)).digest("hex");
+  memo.delete(path);memo.set(path,{stamp,sha256});while(memo.size>FRESH_POLICY_V1.maximumRows)memo.delete(memo.keys().next().value!);
+  return sha256;
+ }catch{return undefined;}
+}

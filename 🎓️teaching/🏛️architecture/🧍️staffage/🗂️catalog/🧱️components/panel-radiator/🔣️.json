@@ -356,7 +356,9 @@
               "id": "end-cap-far",
               "bone": "radiator",
               "role": "detail",
+              "z": 3,
               "filled": true,
+              "tone": 0.7,
               "region": "panel-rear",
               "material": "painted-steel",
               "kind": "poly",
@@ -2745,6 +2747,8 @@
           "skyViewFactor": 0.5,
           "layers": [],
           "heatCapacityJM2K": 22000,
+          "ratedPowerW": 0,
+          "ratedPowerBasis": "passive",
           "source": "authored-estimate",
           "reference": "radiator-catalogues",
           "hydronic": {

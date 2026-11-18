@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import{withCompilerWorkspaceSharedWriteV1}from"../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
 import{repositoryExactCargoProfileV1}from"./📋️profile/🟦️.ts";
 import {join} from "node:path";
@@ -69,11 +70,11 @@ export async function runRepositoryExactCargoLaws(options:RepositoryExactCargoLa
       if(command!=="cargo"||args[0]!=="test"||capture.invocation!==invocation)throw Error("Original exact Cargo dependency operation required");
       const selector=args.indexOf("--manifest-path"),manifest=args[selector+1];
       if(selector<0||!manifest||!Object.values(manifestPaths).includes(manifest))throw Error("Original exact Cargo dependency manifest required");
-      return withRepositoryCargoInputsV1({invocation:invocation,consumption:{kind:"compiler",producer:"artifact",operation:"test"},workspace:root,cwd:root,manifest,args,network,control:phaseControl,storage:store.storage,environment},input=>{if(input.selections.length!==1)throw Error("One issued exact Cargo manifest selection required");return withCompilerWorkspaceSharedWriteV1(store.storage,join(root,".cache/b/l/m/data"),input.control,()=>body({arguments:input.selections[0]!.arguments,environment:input.environment,control:input.control}));});
+      return withRepositoryCargoInputsV1({invocation:invocation,consumption:{kind:"compiler",producer:"artifact",operation:"test"},workspace:root,cwd:root,manifest,args,network,control:phaseControl,storage:store.storage,environment},input=>{if(input.selections.length!==1)throw Error("One issued exact Cargo manifest selection required");return withCompilerWorkspaceSharedWriteV1(store.storage,machinePathV1(root,".cache/b/l/m/data"),input.control,()=>body({arguments:input.selections[0]!.arguments,environment:input.environment,control:input.control}));});
     },
     probe:host.capture,
   };
-  return runExactCargoLaws({...options,consume:consumer?.value,invocation,control,storage:store.storage,sourceBoundary:store.sourceBoundary,leaseDirectory:join(root,".cache/b/l/m/data"),env:environment,nativeEnv:{...options.nativeEnv,CARGO_HOME:environment.CARGO_HOME,CARGO_BUILD_BUILD_DIR:environment.CARGO_BUILD_BUILD_DIR,TMPDIR:environment.TMPDIR,TMP:environment.TMP,TEMP:environment.TEMP,SEMIO_TEST_ARTIFACT_DIR:artifactDirectory},artifactDir:artifactDirectory,cargoArgs:["--profile",profile,...(options.cargoArgs??[])],manifestPaths,cargoTargetDir:environment.CARGO_TARGET_DIR!},preparedPort);
+  return runExactCargoLaws({...options,consume:consumer?.value,invocation,control,storage:store.storage,sourceBoundary:store.sourceBoundary,leaseDirectory:machinePathV1(root,".cache/b/l/m/data"),env:environment,nativeEnv:{...options.nativeEnv,CARGO_HOME:environment.CARGO_HOME,CARGO_BUILD_BUILD_DIR:environment.CARGO_BUILD_BUILD_DIR,TMPDIR:environment.TMPDIR,TMP:environment.TMP,TEMP:environment.TEMP,SEMIO_TEST_ARTIFACT_DIR:artifactDirectory},artifactDir:artifactDirectory,cargoArgs:["--profile",profile,...(options.cargoArgs??[])],manifestPaths,cargoTargetDir:environment.CARGO_TARGET_DIR!},preparedPort);
   });
   });
 }

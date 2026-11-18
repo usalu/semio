@@ -98,6 +98,14 @@ impl OriginalJobFixtureCaller{
     pub fn fund_closure(&mut self,copy_bytes:usize,items:usize){self.stock.maximum_copy_bytes=self.stock.maximum_copy_bytes.checked_add(copy_bytes).expect("original fixture closure funding");self.stock.maximum_items=self.stock.maximum_items.checked_add(items).expect("original fixture closure funding")}
     /// 🪢️ Lends the caller's whole unspent stock and fuel as one long-lived context; pair it with [`Self::settle_lent_fuel`] once the context is dropped.
     pub fn lend_context(&mut self)->StepContext<'_>{let parent=self.parent.as_ref().expect("original fixture parent remains retained while its context is lent");let budget=StepBudget::new(self.fuel,self.deadline,self.stock);let mut cx=parent.borrow_context(budget,self.clock,&mut self.sequence,&mut self.spent).expect("original fixture parent lends its single context");cx.bind_original_clock_binding(self.clock_binding).expect("original fixture clock binds to its genuine source context");cx}
+    /// 🔁️ Lends the one long-lived context after paying the production origin refresh of its own Source turn: a lent context has no host turn to serve the resident birth driver, so its Source origin would stay pinned to the birth turns and no worker could ever claim its receiving place.
+    pub fn lend_refreshed_context(&mut self)->StepContext<'_>{
+        let parent=self.parent.as_ref().expect("original fixture parent remains retained while its context is lent");let budget=StepBudget::new(self.fuel,self.deadline,self.stock);
+        let mut cx=parent.borrow_context(budget,self.clock,&mut self.sequence,&mut self.spent).expect("original fixture parent lends its single context");
+        cx.bind_original_clock_binding(self.clock_binding).expect("original fixture clock binds to its genuine source context");
+        for _ in 0..64{if matches!(self.birth.advance(&mut cx).expect("original fixture context origin refresh"),semio_framework_job_native_turn::OriginalJobReturnBirthTurn::Idle){break}}
+        cx
+    }
     /// ⛽️ Records the fuel a lent context left, so later retirement spends only what remains.
     pub fn settle_lent_fuel(&mut self,remaining:u64){self.fuel=self.fuel.min(remaining)}
     pub fn stock(&self)->RetainedCloneGrant{self.stock}

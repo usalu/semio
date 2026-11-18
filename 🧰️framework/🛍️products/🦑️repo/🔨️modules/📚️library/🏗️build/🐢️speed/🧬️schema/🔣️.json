@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:speed:v1",
+  "title": "Machine speed factor / Geschwindigkeitsfaktor der Maschine",
+  "description": "EN: Every wall-clock limit of the build and the readiness path (the init and job timers of the farms, the request timer of the walk farm, the progress window of the take pass, the stall window and the stage caps of the readiness worker) is written for the reference machine (referenceCores cores, referenceMegabytes MB) and is multiplied by the speed factor of the machine that runs it: max(1, referenceCores / cores) x max(1, referenceMegabytes / memory) ^ memoryExponent, at most maximumFactor, so a machine of 8 GB and 4 cores waits 2.83 times as long before it declares a silent step dead, and a machine at or above the reference waits exactly the authored time. A machine declared smaller through the host capacity declaration counts as declared. A step that shows progress (new output, processor time) is never stopped by a limit: the limits are windows without progress. DE: Jede Zeitgrenze des Build- und Bereitschaftspfads (die Start- und Auftragszeiten der Farmen, die Anfragezeit der Walk-Farm, das Fortschrittsfenster des Übernahmedurchgangs, das Stillstandsfenster und die Stufenobergrenzen des Bereitschafts-Workers) ist für die Referenzmaschine geschrieben (referenceCores Kerne, referenceMegabytes MB) und wird mit dem Geschwindigkeitsfaktor der Maschine multipliziert, die sie ausführt: max(1, referenceCores / Kerne) x max(1, referenceMegabytes / Speicher) ^ memoryExponent, höchstens maximumFactor; eine Maschine mit 8 GB und 4 Kernen wartet also 2,83-mal so lange, bevor sie einen stillen Schritt für tot erklärt, und eine Maschine auf oder über der Referenz wartet genau die geschriebene Zeit. Eine über die Erklärung der Host-Kapazität kleiner erklärte Maschine zählt wie erklärt. Ein Schritt, der Fortschritt zeigt (neue Ausgabe, Prozessorzeit), wird nie durch eine Grenze gestoppt: die Grenzen sind Fenster ohne Fortschritt.",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "referenceCores": 8,
+        "referenceMegabytes": 16384,
+        "memoryExponent": 0.5,
+        "maximumFactor": 4,
+        "livenessMilliseconds": 5000,
+        "livenessCpuMilliseconds": 50
+      }
+    }
+  }
+}

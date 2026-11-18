@@ -1,0 +1,22 @@
+{
+  "title": "Set Up Mac Mini 05 as Fleet Worker G1 M08 and Collaborate With the Coordinator",
+  "emoji": "🛬",
+  "status": "open",
+  "description": "Setup this machine as a worker and collaborate with the coordinator. This machine (ueli-workstation-mac-mini-m4-16gb-256gb-05, origin g1-m08, group g1) already joined the fleet; nothing arrived from it since round 18 (04:13 UTC) because the machine restarted. Resume the worker readiness protocol of ticket 26/11/14/WORKERS-READY-WITH-LOW-RESOURCES at the current round (30): run the native bootstrap, report into workers/g1-m08 of that ticket, change no build code, until the worker is ready or the protocol says stop.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "ba4e5972-3f73-417a-9fc2-1978ad60a786"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-15 18:49:44",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Setup this machine as a worker and collaborate with the coordinator. This machine (ueli-workstation-mac-mini-m4-16gb-256gb-05, origin g1-m08, group g1) already joined the fleet; nothing arrived from it since round 18 (04:13 UTC) because the machine restarted. Resume the worker readiness protocol of ticket 26/11/14/WORKERS-READY-WITH-LOW-RESOURCES at the current round (30): run the native bootstrap, report into workers/g1-m08 of that ticket, change no build code, until the worker is ready or the protocol says stop.",
+      "llm": "fable-5-2"
+    }
+  ]
+}

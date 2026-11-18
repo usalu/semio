@@ -240,3 +240,105 @@ pub(super) fn paint_group_node_step(
         retained_presence_step(draw, bounds, theme, presence)
     }
 }
+
+/// 🃏️ One card of a native stack as the painter sees it: its absolute rect, its chip texts and the chip rows' widths.
+struct CardGeometry {
+    rect: Rect,
+    title: String,
+    footer: Option<String>,
+    title_chip: f32,
+    footer_chip: f32,
+    shares_footer: bool,
+}
+
+/// 📐️ The cards of the stack `id`, with chips clamped so a cap chip and a footer chip never touch (the band is always shared, which is what the layout reserved).
+fn card_stack_geometry(tree: &UiTree, id: NodeId, bounds: Rect, atlas: &mut FontAtlas, theme: &Theme) -> Vec<CardGeometry> {
+    let kids: Vec<_> = tree.children(id).filter_map(|child| match &tree.node(child)?.spec.0 {
+        UiNode::OverviewCard(card) => Some((card, tree.accepted_layout(child)?)),
+        _ => None,
+    }).collect();
+    let pad = theme.padding_standard;
+    let count = kids.len();
+    kids.iter().enumerate().map(|(index, (card, layout))| {
+        let limit = ((layout.width - semio_ui_wgpu_light::card_bands::CARD_BAND_MIN_GAP as f32) * 0.5).max(0.0);
+        let chip = |text: &str, atlas: &mut FontAtlas| (atlas.measure_text(text, theme.font_size_body).0 + pad * 2.0).min(limit);
+        CardGeometry {
+            rect: Rect::new(bounds.x + layout.x, bounds.y + layout.y, layout.width, layout.height),
+            title: card.title.as_str().to_string(),
+            footer: card.footer.clone(),
+            title_chip: chip(card.title.as_str(), atlas),
+            footer_chip: card.footer.as_deref().map_or(0.0, |footer| chip(footer, atlas)),
+            shares_footer: index + 1 < count && card.footer.is_some(),
+        }
+    }).collect()
+}
+
+fn card_stack_cards(geometry: &[CardGeometry], row: f64) -> Vec<semio_ui_wgpu_light::card_stack::CardStackCard> {
+    use semio_ui_wgpu_light::card_bands::CardBandSpan;
+    use semio_ui_wgpu_light::card_stack::{CardStackCard, CardStackEdge};
+    geometry.iter().map(|card| {
+        let width = f64::from(card.rect.w);
+        CardStackCard {
+            height: f64::from(card.rect.h) + if card.shares_footer { row } else { 0.0 },
+            top: CardStackEdge { depth: row, chips: vec![CardBandSpan { left: 0.0, right: f64::from(card.title_chip) }] },
+            bottom: CardStackEdge { depth: if card.footer.is_some() { row } else { 0.0 }, chips: if card.footer.is_some() { vec![CardBandSpan { left: width - f64::from(card.footer_chip), right: width }] } else { Vec::new() } },
+        }
+    }).collect()
+}
+
+/// 🃏️ Paints one step of a native card stack: the interlocked silhouettes as shared-border lines (each coincident line once), then every chip text.
+#[allow(clippy::too_many_arguments, reason = "one retained paint context plus the arm payload")]
+pub(super) fn paint_card_stack_node_step(
+    tree: &UiTree,
+    id: NodeId,
+    atlas: &mut FontAtlas,
+    draw: &mut DrawList,
+    cursor: &mut RetainedNodePaintCursor,
+    theme: &Theme,
+    bounds: Rect,
+    presence: &UiPresence,
+) -> RetainedNodePaintStep {
+    let geometry = card_stack_geometry(tree, id, bounds, atlas, theme);
+    let row = f64::from(theme.control_height);
+    let texts = geometry.len() * 2;
+    if cursor.phase == 0 {
+        let Some(first) = geometry.first() else {
+            cursor.advance(1);
+            return RetainedNodePaintStep::Pending;
+        };
+        let cards = card_stack_cards(&geometry, row);
+        let outlines = semio_ui_wgpu_light::card_stack::card_stack_outlines(f64::from(first.rect.x), f64::from(first.rect.y), f64::from(first.rect.w), &cards);
+        let items = outlines.iter().map(Vec::len).sum::<usize>();
+        let result = retained_fixed_output_budgeted(draw, items, |draw| {
+            semio_ui_wgpu_light::card_stack::paint_card_stack(draw, &outlines, theme.stroke_hairline, theme.border_normal, semio_ui_draw_contract::SharedBorderState::Normal);
+        });
+        if let Err(error) = &result { eprintln!("[DEBUG] card outlines fault {error:?} items {items}"); }
+        cursor.advance(1);
+        return if result.is_err() { RetainedNodePaintStep::Fault } else { RetainedNodePaintStep::Pending };
+    }
+    if usize::from(cursor.phase) <= texts {
+        let slot = usize::from(cursor.phase) - 1;
+        let card = &geometry[slot / 2];
+        let pad = theme.padding_standard;
+        let line = theme.font_size_body * 1.35;
+        let (text, x, chip, y, color) = if slot % 2 == 0 {
+            (Some(card.title.as_str()), card.rect.x, card.title_chip, card.rect.y, theme.text)
+        } else {
+            let y = if card.shares_footer { card.rect.y + card.rect.h } else { card.rect.y + card.rect.h - theme.control_height };
+            (card.footer.as_deref(), card.rect.x + card.rect.w - card.footer_chip, card.footer_chip, y, theme.text_muted)
+        };
+        let Some(text) = text else {
+            cursor.advance(1);
+            return RetainedNodePaintStep::Pending;
+        };
+        let rect = Rect::new(x + pad, y + (theme.control_height - line) * 0.5, (chip - pad * 2.0).max(0.0), line);
+        return match retained_text_node_step_weighted(text, rect, theme.font_size_body, color, semio_ui_text::TextWeight::of(slot % 2 == 0), atlas, draw, cursor) {
+            RetainedNodePaintStep::Complete => {
+                cursor.advance(1);
+                RetainedNodePaintStep::Pending
+            }
+            step => { if step == RetainedNodePaintStep::Fault { eprintln!("[DEBUG] card text fault slot {slot}"); } step }
+        };
+    }
+    retained_presence_step(draw, bounds, theme, presence)
+}

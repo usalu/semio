@@ -309,6 +309,7 @@
       ],
       "dependsOn": [
         "@semio-tech/os-plugin-describe-rs:build",
+        "@semio-tech/os-plugin-native-transpile-rs:build",
         "@semio-tech/framework-plugin-web:support"
       ],
       "outputs": [],

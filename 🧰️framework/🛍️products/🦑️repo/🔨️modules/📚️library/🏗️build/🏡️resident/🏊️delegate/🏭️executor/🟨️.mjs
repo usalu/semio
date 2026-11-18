@@ -22,7 +22,7 @@ export function createExecutorPoolV1({command,environment,cwd,size,readyTimeoutM
  const executors=[];let refused=false,closed=false,starts=0;
  const start=()=>{
   starts++;
-  const child=spawnProcess(command[0],command.slice(1),{cwd,env:environment,stdio:["ignore","pipe","pipe","pipe"]});
+  const child=spawnProcess(command[0],command.slice(1),{cwd,env:environment,stdio:["ignore","pipe","pipe","pipe"],windowsHide:true});
   const executor={child,state:"starting",pending:undefined,listeners:new Map()};
   child.stdio[3].on("error",error=>{
    log("executor-protocol",String(error?.message??error));

@@ -594,15 +594,15 @@
     "RuntimeDataDiscoveryPolicy": {
       "const": {
         "maximumDepth": 32,
-        "maximumDirectories": 1024,
-        "maximumEntries": 1024,
-        "maximumResults": 1024,
-        "maximumDeclaredBytes": 16777216
+        "maximumDirectories": 8192,
+        "maximumEntries": 8192,
+        "maximumResults": 8192,
+        "maximumDeclaredBytes": 67108864
       }
     },
     "MemoPolicy": {
       "const": {
-        "maximumFileBytes": 4194304,
+        "maximumFileBytes": 33554432,
         "concurrency": 24
       }
     },
@@ -647,14 +647,250 @@
         }
       }
     },
-    "SourceCensusPolicy": { "const": { "maximumFiles": 8192, "maximumSourceBytes": 67108864, "progressFiles": 16 } },
+    "SourceCensusPolicy": { "const": { "maximumFiles": 65536, "maximumSourceBytes": 268435456, "progressFiles": 16 } },
+    "SourceClosureFamily": { "const": {
+      "version": 1,
+      "bound": "closure.definitions.Policy.maximumFiles",
+      "members": [
+        {
+          "file": "⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🧬️schema/🔣️.json",
+          "pointer": "properties/files",
+          "key": "maxItems",
+          "offset": 0
+        },
+        {
+          "file": "⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧬️schema/🔣️.json",
+          "pointer": "$defs/SourceCapacityDiagnostic/properties/files",
+          "key": "maximum",
+          "offset": 1
+        },
+        {
+          "file": "⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧬️schema/🔣️.json",
+          "pointer": "properties/sources",
+          "key": "maxItems",
+          "offset": 0
+        },
+        {
+          "file": "🏗️build/📥️inputs/🔏️revision/🧬️schema/🔣️.json",
+          "pointer": "definitions/CapturedPhysicalSourceImages/properties/images",
+          "key": "maxItems",
+          "offset": 0
+        },
+        {
+          "file": "🏗️build/📥️inputs/🔏️revision/🧬️schema/🔣️.json",
+          "pointer": "definitions/CapturedPhysicalSources/properties/sources",
+          "key": "maxItems",
+          "offset": 0
+        },
+        {
+          "file": "🏗️build/📥️inputs/🔏️revision/🧬️schema/🔣️.json",
+          "pointer": "definitions/CapturedReadRefusal/properties/sourceCount",
+          "key": "maximum",
+          "offset": 0
+        },
+        {
+          "file": "🏗️build/📥️inputs/🔏️revision/🧬️schema/🔣️.json",
+          "pointer": "definitions/CapturedReadRefusalCase/properties/sources",
+          "key": "maximum",
+          "offset": 0
+        },
+        {
+          "file": "🏗️build/📥️source/🔏️closure/🧬️schema/🔣️.json",
+          "pointer": "definitions/AdmittedResolutions/properties/files",
+          "key": "maxItems",
+          "offset": 0
+        },
+        {
+          "file": "🏗️build/📥️source/🔏️closure/🧬️schema/🔣️.json",
+          "pointer": "definitions/AdmittedSources/properties/sources",
+          "key": "maxItems",
+          "offset": 0
+        },
+        {
+          "file": "🏗️build/📥️source/🔏️closure/🧬️schema/🔣️.json",
+          "pointer": "properties/files",
+          "key": "maxItems",
+          "offset": 0
+        },
+        {
+          "file": "🏗️build/🔧️tools/🏗️bazel/🎬️scopes/🧬️schema/🔣️.json",
+          "pointer": "properties/scopes/items/properties/classes/items/properties/traced/properties/modules",
+          "key": "maxItems",
+          "offset": 0
+        },
+        {
+          "file": "🏗️build/🔧️tools/🏗️bazel/🎬️scopes/🧬️schema/🔣️.json",
+          "pointer": "properties/scopes/items/properties/classes/items/properties/traced/properties/physical",
+          "key": "maxItems",
+          "offset": 0
+        },
+        {
+          "file": "🏗️build/🔧️tools/🏗️bazel/🎬️scopes/🧬️schema/🔣️.json",
+          "pointer": "properties/scopes/items/properties/classes/items/properties/traced/properties/reads",
+          "key": "maxItems",
+          "offset": 0
+        },
+        {
+          "file": "⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧭️sites/🧬️schema/🔣️.json",
+          "pointer": "$defs/Policy/const",
+          "key": "maximumSitesPerFile",
+          "offset": 0
+        }
+      ],
+      "byteBound": "closure.definitions.Policy.maximumSnapshotBytes",
+      "byteMembers": [
+        {
+          "file": "../../../../🔨️modules/🏃️process/🎛️owned-execution/📥️auxiliary/🧬️schema/🔣️.json",
+          "pointer": "properties/text",
+          "key": "maxLength",
+          "offset": 0
+        },
+        {
+          "file": "../../../../🔨️modules/🏃️process/🎛️owned-execution/📥️auxiliary/🧬️schema/🔣️.json",
+          "pointer": "definitions/Policy/const",
+          "key": "maximumBytes",
+          "offset": 0
+        },
+        {
+          "file": "../../../../🔨️modules/🏃️process/🎛️owned-execution/📥️auxiliary/🧬️schema/🔣️.json",
+          "pointer": "definitions/Case/properties/count",
+          "key": "maximum",
+          "offset": 1
+        }
+      ],
+      "exempt": [
+        {
+          "file": "⚡️caching/📦️artifacts/🔒️bounded/🧬️schema/🔣️.json",
+          "pointer": "properties/paths",
+          "key": "maxItems",
+          "reason": {
+            "en": "The file roster of one dependency package or artifact, not the source closure.",
+            "de": "Die Dateiliste eines Abhängigkeitspakets oder Artefakts, nicht der Quellabschluss."
+          }
+        },
+        {
+          "file": "⚡️caching/📦️artifacts/🕸️wasm/🧬️schema/🔣️.json",
+          "pointer": "definitions/Package/properties/files",
+          "key": "maxItems",
+          "reason": {
+            "en": "The file roster of one dependency package or artifact, not the source closure.",
+            "de": "Die Dateiliste eines Abhängigkeitspakets oder Artefakts, nicht der Quellabschluss."
+          }
+        },
+        {
+          "file": "⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧬️schema/📥️install.json",
+          "pointer": "$defs/ProducerStageScope/properties/files",
+          "key": "maxItems",
+          "reason": {
+            "en": "The file roster of one dependency package or artifact, not the source closure.",
+            "de": "Die Dateiliste eines Abhängigkeitspakets oder Artefakts, nicht der Quellabschluss."
+          }
+        },
+        {
+          "file": "⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧬️schema/📥️install.json",
+          "pointer": "$defs/SourceOwnerPlan/properties/sources",
+          "key": "maxItems",
+          "reason": {
+            "en": "The file roster of one dependency package or artifact, not the source closure.",
+            "de": "Die Dateiliste eines Abhängigkeitspakets oder Artefakts, nicht der Quellabschluss."
+          }
+        },
+        {
+          "file": "⚡️caching/🚀️bootstrap/📦️dependencies/🧾️generation/🧬️schema/🔣️.json",
+          "pointer": "$defs/Producer/properties/files",
+          "key": "maxItems",
+          "reason": {
+            "en": "The file roster of one dependency package or artifact, not the source closure.",
+            "de": "Die Dateiliste eines Abhängigkeitspakets oder Artefakts, nicht der Quellabschluss."
+          }
+        },
+        {
+          "file": "⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🧬️schema/🔣️.json",
+          "pointer": "definitions/CloneTraversal/properties/files",
+          "key": "maximum",
+          "reason": {
+            "en": "The file roster of one dependency package or artifact, not the source closure.",
+            "de": "Die Dateiliste eines Abhängigkeitspakets oder Artefakts, nicht der Quellabschluss."
+          }
+        },
+        {
+          "file": "⚡️caching/🦀️cargo/📦️units/🏗️compiler/🔏️code/🧬️schema/📜️receipt.json",
+          "pointer": "properties/source/properties/sources",
+          "key": "maxItems",
+          "reason": {
+            "en": "Rust crate sources: a separate closure family with its own bound.",
+            "de": "Rust-Crate-Quellen: eine eigene Abschlussfamilie mit eigener Grenze."
+          }
+        },
+        {
+          "file": "⚡️caching/🧹️pruning/📦️metadata/🧬️schema/🔣️.json",
+          "pointer": "properties/files",
+          "key": "maxItems",
+          "reason": {
+            "en": "The file roster of one dependency package or artifact, not the source closure.",
+            "de": "Die Dateiliste eines Abhängigkeitspakets oder Artefakts, nicht der Quellabschluss."
+          }
+        },
+        {
+          "file": "🏗️build/🏛️sealed/🧬️schema/🔣️.json",
+          "pointer": "definitions/Changes/properties/paths",
+          "key": "maxItems",
+          "reason": {
+            "en": "One request or event batch, not the source closure.",
+            "de": "Ein Anfrage- oder Ereignisstapel, nicht der Quellabschluss."
+          }
+        },
+        {
+          "file": "🏗️build/🏡️resident/🏗️composition/🧬️schema/🔥️warm.json",
+          "pointer": "properties/modules",
+          "key": "maxItems",
+          "reason": {
+            "en": "One request or event batch, not the source closure.",
+            "de": "Ein Anfrage- oder Ereignisstapel, nicht der Quellabschluss."
+          }
+        },
+        {
+          "file": "🏗️build/📥️inputs/🎯️precision/🧬️schema/🔣️.json",
+          "pointer": "definitions/Rule/properties/reads",
+          "key": "maxItems",
+          "reason": {
+            "en": "A hand-authored list of at most this many entries, not derived from a source closure.",
+            "de": "Eine von Hand geschriebene Liste mit höchstens so vielen Einträgen, nicht aus einem Quellabschluss abgeleitet."
+          }
+        },
+        {
+          "file": "🏗️build/🕸️graph/📥️inference/🦀️native-manifests/🧬️schema/🔣️.json",
+          "pointer": "definitions/BuildScriptAssertion/properties/files",
+          "key": "maxItems",
+          "reason": {
+            "en": "A hand-authored list of at most this many entries, not derived from a source closure.",
+            "de": "Eine von Hand geschriebene Liste mit höchstens so vielen Einträgen, nicht aus einem Quellabschluss abgeleitet."
+          }
+        },
+        {
+          "file": "🏗️build/🚀️bootstrap/📦️parsers/🧬️schema/🔣️.json",
+          "pointer": "properties/parsers/items/properties/files",
+          "key": "maximum",
+          "reason": {
+            "en": "The file roster of one dependency package or artifact, not the source closure.",
+            "de": "Die Dateiliste eines Abhängigkeitspakets oder Artefakts, nicht der Quellabschluss."
+          }
+        }
+      ]
+    } },
+    "SourceCapacityTexts": {
+      "const": {
+        "en": "Authorizer source closure capacity exceeded: files={files}/{maximumFiles}, bytes={bytes}/{maximumBytes}. The closure reached {path} through {chain}. Drop the import that pulls this subtree into the entry, or raise maximumFiles, maximumSourceBytes and maximumSnapshotBytes together in the Policy of build/source/closure/schema (one file per 4096 source bytes, snapshot 1.5 times the sources).",
+        "de": "Kapazität des Autorisierer-Quellabschlusses überschritten: Dateien={files}/{maximumFiles}, Bytes={bytes}/{maximumBytes}. Der Abschluss erreichte {path} über {chain}. Entferne den Import, der diesen Teilbaum in den Einstieg zieht, oder erhöhe maximumFiles, maximumSourceBytes und maximumSnapshotBytes gemeinsam in der Policy von build/source/closure/schema (eine Datei je 4096 Quellbytes, Snapshot das 1,5-fache der Quellen)."
+      }
+    },
     "CompilerClosureLaw": {
       "const": {
         "version": 1,
         "entry": "🔏️authorizers/📜️script.ts",
-        "maximumFiles": 2400,
-        "maximumSourceBytes": 18874368,
-        "maximumSnapshotBytes": 27262976,
+        "maximumFiles": 12288,
+        "maximumSourceBytes": 50331648,
+        "maximumSnapshotBytes": 75497472,
         "reservedHeadroomBasisPoints": 1000,
         "entryGuardBound": "import\\.meta\\.main\\s*\\?\\?",
         "entryGuards": [
@@ -673,10 +909,10 @@
       "properties": {
         "kind": { "const": "source-census" }, "version": { "const": 1 },
         "entry": { "type": "string", "minLength": 1, "maxLength": 256 },
-        "files": { "type": "integer", "minimum": 1, "maximum": 8192 },
-        "sourceBytes": { "type": "integer", "minimum": 0, "maximum": 67108864 },
+        "files": { "type": "integer", "minimum": 1, "maximum": 65536 },
+        "sourceBytes": { "type": "integer", "minimum": 0, "maximum": 268435456 },
         "snapshotBytes": { "type": "integer", "minimum": 0 },
-        "sources": { "type": "array", "maxItems": 8192, "items": { "type": "object", "additionalProperties": false, "required": ["path", "bytes", "origin", "importer"], "properties": { "path": { "type": "string", "minLength": 1, "maxLength": 256 }, "bytes": { "type": "integer", "minimum": 0, "maximum": 4194304 }, "origin": { "enum": ["entry", "import", "declared-companion", "discovered-data", "workspace-manifest", "unknown"] }, "importer": { "type": ["string", "null"] } } } }
+        "sources": { "type": "array", "maxItems": 65536, "items": { "type": "object", "additionalProperties": false, "required": ["path", "bytes", "origin", "importer"], "properties": { "path": { "type": "string", "minLength": 1, "maxLength": 256 }, "bytes": { "type": "integer", "minimum": 0, "maximum": 4194304 }, "origin": { "enum": ["entry", "import", "declared-companion", "discovered-data", "workspace-manifest", "unknown"] }, "importer": { "type": ["string", "null"] } } } }
       }
     },
     "SourceCapacityDiagnostic": {
@@ -724,12 +960,12 @@
         "files": {
           "type": "integer",
           "minimum": 1,
-          "maximum": 2049
+          "maximum": 16385
         },
         "bytes": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 25165824
+          "maximum": 71303168
         },
         "largest": {
           "type": "array",
@@ -792,7 +1028,7 @@
           }
         }
       },
-      "maxItems": 2048
+      "maxItems": 16384
     },
     "resolutions": {
       "type": "array",

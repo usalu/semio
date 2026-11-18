@@ -1,6 +1,6 @@
 /** 🎨️ Settings chrome panel, Theme tab: the colour, spacing, geometry and number input rows, the contrast badge, the appearance groups and the theme settings tree. */
 import { useState, type ReactElement } from "../../⚛️react-port/🟦️.ts";
-import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, type ThemeAppearanceName, type ThemePaletteGroup, type TreeDataItem, type TreePanelConfig, type UiTranslationKey, borderElementClass, cn, resolveThemeAppearancePalettes } from "@semio-tech/ui-react";
+import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, type ThemeAppearanceName, type ThemePaletteGroup, type TreeDataItem, type TreePanelConfig, type UiTranslationKey, borderElementClass, cn, resolveThemeAppearancePalettes, SharedBorderRow } from "@semio-tech/ui-react";
 import { resolveThemeGeometry, themeCompactSpacingUi, themeGeometryMetricDescription, WCAG_AA_CONTRAST, themePaintContrastPairs, type Rgba8, type WcagContrastGrade } from "@semio-tech/ui-styling";
 import { shellLabel, shellLabelLocale } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import type { SettingsHostApi } from "../⚙️settings-general/🟦️.tsx";
@@ -16,7 +16,7 @@ function themeColorInputRow(id: string, label: string, hex: string, onChange: (h
   return {
     id,
     label,
-    control: <input id={id} type="color" className={cn(borderElementClass, "h-small w-16 shrink-0 rounded border bg-background")} value={hex} onChange={(event) => onChange(event.target.value)} />,
+    control: <SharedBorderRow className="shrink-0"><input id={id} type="color" data-shared-border-cell="" className={cn(borderElementClass, "h-small w-16 shrink-0 bg-background")} value={hex} onChange={(event) => onChange(event.target.value)} /></SharedBorderRow>,
   };
 }
 
@@ -170,16 +170,19 @@ function buildThemeAppearanceGroupItems(host: SettingsHostApi, appearance: Theme
         control: (
           <div className="flex w-full flex-col gap-single">
             <div className="flex w-full items-center gap-single">
-              <input
-                type="color"
-                className={cn(borderElementClass, "h-small w-10 shrink-0 rounded border bg-background")}
-                value={hex}
-                aria-label={paintKey}
-                aria-describedby={describedBy}
-                aria-invalid={contrast?.warning ? true : undefined}
-                onChange={(event) => host.setThemeAppearancePaint(appearance, group, paintKey, event.target.value, alpha)}
-              />
-              {themeAlphaInput(`${rowId}.alpha`, alpha, (nextAlpha) => host.setThemeAppearancePaint(appearance, group, paintKey, hex, nextAlpha))}
+              <SharedBorderRow className="shrink-0">
+                <input
+                  type="color"
+                  data-shared-border-cell=""
+                  className={cn(borderElementClass, "h-small w-10 shrink-0 bg-background")}
+                  value={hex}
+                  aria-label={paintKey}
+                  aria-describedby={describedBy}
+                  aria-invalid={contrast?.warning ? true : undefined}
+                  onChange={(event) => host.setThemeAppearancePaint(appearance, group, paintKey, event.target.value, alpha)}
+                />
+                {themeAlphaInput(`${rowId}.alpha`, alpha, (nextAlpha) => host.setThemeAppearancePaint(appearance, group, paintKey, hex, nextAlpha))}
+              </SharedBorderRow>
               {contrast ? (
                 <span
                   id={`${rowId}.contrast`}

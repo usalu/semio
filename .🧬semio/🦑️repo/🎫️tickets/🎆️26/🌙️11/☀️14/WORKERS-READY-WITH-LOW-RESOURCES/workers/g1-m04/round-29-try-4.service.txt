@@ -1,0 +1,77 @@
+## /run/user/1000/semio-repo/1000/host-623b07c36aee.log
+2026-11-15T15:48:32.034Z access-proof version=3 root=/home/deck/semio protected=no sample=ok reproof=off route=direct pid=935550 ppid=935469
+graph: No verified change journal cursor is recorded for generation 389; verifying the tree once.
+graph: memory readings: machine 15848 MB (physical 15848 MB, cgroup limit none), available 8481 MB
+graph: 703 stale projects, 0 taken from the fleet, 34 too heavy for this machine (@semio-tech/s-dev-composition (about 23238 MB), @semio-tech/2d-regions-rs (about 23228 MB), semio-repo-test-host (about 21106 MB), workspace (about 20984 MB), @semio-tech/framework-rs (about 18554 MB), repo-storybook (about 15632 MB), and 28 more; it can give about 3298 MB per project), it can infer 192 of the others (48 per wave); asking the fleet for 703
+graph: inferring 669 light projects here while the fleet works, continuously and lightest first (the server works heaviest first); what the fleet delivers meanwhile is taken and dropped here
+graph: 0 of 703 projects arrived from the fleet, 0 inferred here, 703 left
+graph: preparing 669 of the 669 open stale projects (1 compute slots), 0 of 669 already prepared
+graph: plan stage inference starts (managed 906 MB, resident 1095 MB)
+graph: asking the host for up to 2 worker processes for 665 projects; the projects wait for them
+graph: headroom of 935 MB is below one project (1176 MB), inferring one project at a time
+graph: waiting for memory headroom (1176 of 935 MB reserved, 1 projects running): semio-plugin-original-job-ownership needs 256 MB and has waited 0 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: the worker processes are starting; this process infers no project meanwhile and holds them for the workers for at most 60 s
+graph: headroom of 934 MB again (256 MB taken), resuming
+graph: 0 of 703 projects arrived from the fleet, 0 inferred here, 703 left; the server last progressed 391 s ago, estimated time left: about 24 min
+graph: inferring projects with 1 worker processes (1536 MB each)
+graph: waiting for memory headroom (1176 of 1160 MB reserved, 1 projects running): @semio-tech/repo-script-providers needs 1176 MB and has waited 1 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: plan stage inference settled from 6642 to 7581 MB
+graph: plan answered, managed 109 MB, resident 188 MB (released 10 MB)
+graph: 703 stale projects, 0 taken from the fleet, 33 too heavy for this machine (@semio-tech/s-dev-composition (about 23198 MB), semio-repo-test-host (about 21070 MB), workspace (about 20948 MB), @semio-tech/framework-rs (about 18522 MB), repo-storybook (about 15606 MB), @semio-tech/repo-test-runner-go (about 14926 MB), and 27 more; it can give about 3298 MB per project), it can infer 192 of the others (48 per wave); asking the fleet for 703
+graph: waiting for memory headroom (768 of 865 MB reserved, 3 projects running): semio-framework-value-source-turn needs 256 MB and has waited 4 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (1280 of 1252 MB reserved, 5 projects running): semio-framework-value-retirement-contract needs 256 MB and has waited 2 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (1536 of 1361 MB reserved, 6 projects running): semio-framework-value-receiving needs 256 MB and has waited 1 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: plan stage inference (during inference) grew the plan by 3622 MB, more than the 2567 MB this machine allows for it; it is stopped before the host runs short of memory
+graph: plan stop detail {"stage":"inference","operation":"inference","memory":{"rss":3248,"heapTotal":195,"heapUsed":2361,"external":2166,"arrayBuffers":1726},"heap":{"heapMb":2360.8,"extraMb":2166.1,"objectCount":3879584,"objectTypes":[{"type":"string","count":1864762},{"type":"Array","count":586357},{"type":"Object","count":418206},{"type":"Set","count":150454},{"type":"WeakRef","count":99129},{"type":"Structure","count":36960},{"type":"Function","count":23820},{"type":"FunctionExecutable","count":20248}]},"resources":{},"recent":[{"atMs":49830,"heapUsed":624,"external":435,"arrayBuffers":97,"rss":1317,"operation":"inference/inference"},{"atMs":50360,"heapUsed":655,"external":438,"arrayBuffers":97,"rss":1333,"operation":"inference/inference"},{"atMs":50633,"heapUsed":665,"external":439,"arrayBuffers":97,"rss":1318,"operation":"inference/inference"},{"atMs":51185,"heapUsed":590,"external":422,"arrayBuffers":97,"rss":1218,"operation":"inference/inference"},{"atMs":51714,"heapUsed":595,"external":425,"arrayBuffers":97,"rss":1244,"operation":"inference/inference"},{"atMs":52228,"heapUsed":652,"external":475,"arrayBuffers":124,"rss":1289,"operation":"inference/inference"},{"atMs":52497,"heapUsed":691,"external":506,"arrayBuffers":107,"rss":1379,"operation":"inference/inference"},{"atMs":52805,"heapUsed":732,"external":547,"arrayBuffers":136,"rss":1425,"operation":"inference/inference"},{"atMs":53064,"heapUsed":647,"external":479,"arrayBuffers":112,"rss":1400,"operation":"inferen
+graph: project semio-os-mcp-process-arena (language:cargo) grew by 3222 MB, more than the 1024 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: headroom of -2448 MB is below one project (256 MB), inferring one project at a time
+graph: waiting for memory headroom (1176 of 1156 MB reserved, 1 projects running): repo-nx-output-custody needs 901 MB and has waited 1 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (901 of 922 MB reserved, 1 projects running): repo-configured-source needs 901 MB and has waited 2 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (901 of 909 MB reserved, 1 projects running): repo-next-inputs needs 901 MB and has waited 4 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (901 of 1071 MB reserved, 1 projects running): repo-graph-maintenance needs 901 MB and has waited 2 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: project repo-nx-output-custody (language:typescript) grew by 2037 MB, more than the 1024 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: waiting for memory headroom (901 of 674 MB reserved, 1 projects running): repo-cache-retirement needs 901 MB and has waited 4 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (901 of 665 MB reserved, 1 projects running): repo-build-file-membership needs 901 MB and has waited 0 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (769 of 712 MB reserved, 1 projects running): repo-artifact-reader needs 769 MB and has waited 5 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (2572 of 2677 MB reserved, 2 projects running): repo-next-storage needs 769 MB and has waited 3 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: project repo-policy (project) grew by 1803 MB, more than the 1024 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: project repo-cache-reset (language:typescript) grew by 2161 MB, more than the 1024 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: project repo-next-storage (language:typescript) grew by 2387 MB, more than the 1024 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: project repo-build-file-membership (language:typescript) grew by 5168 MB, more than the 1024 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: waiting for memory headroom (769 of 0 MB reserved, 1 projects running): repo needs 1176 MB and has waited 0 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (1176 of 831 MB reserved, 1 projects running): @semio-tech/value-ts needs 1176 MB and has waited 3 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (1176 of 382 MB reserved, 1 projects running): @semio-tech/value-testing-presence-retirement-rs needs 590 MB and has waited 0 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (1583 of 954 MB reserved, 1 projects running): @semio-tech/value-testing-allocator-rs needs 831 MB and has waited 10 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: project repo (project) grew by 1482 MB, more than the 1024 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: waiting for memory headroom (831 of 816 MB reserved, 1 projects running): @semio-tech/value-testing-admission-rs needs 831 MB and has waited 1 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+## last 30 lines
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[repository:command] still running after 1110 s
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: waiting for memory headroom (963 of 1173 MB reserved, 1 projects running): @semio-tech/value-testing-admission-rs needs 831 MB and has waited 23 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:27:666:1:20:%40semio-tech%2Fvalue-testing-allocator-rs|language%3Arust|20|0:waiting|963|1173|language%3Arust","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 27 of 666 projects · 1 running, longest 20 s: @semio-tech/value-testing-allocator-rs (language:rust, 20 s, 0 rows) · waiting for memory headroom (963 of 1173 MB reserved)
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: 0 of 703 projects arrived from the fleet, 29 inferred here, 674 left; the server last progressed 692 s ago, estimated time left: about 29 min
+graph: waiting for memory headroom (963 of 1147 MB reserved, 1 projects running): @semio-tech/value-testing-admission-rs needs 831 MB and has waited 28 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:27:666:1:25:%40semio-tech%2Fvalue-testing-allocator-rs|language%3Arust|25|0:waiting|963|1147|language%3Arust","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 27 of 666 projects · 1 running, longest 25 s: @semio-tech/value-testing-allocator-rs (language:rust, 25 s, 0 rows) · waiting for memory headroom (963 of 1147 MB reserved)
+[repository:command] still running after 1120 s
+graph: waiting for memory headroom (963 of 1097 MB reserved, 1 projects running): @semio-tech/value-testing-admission-rs needs 831 MB and has waited 34 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:27:666:1:30:%40semio-tech%2Fvalue-testing-allocator-rs|language%3Arust|30|0:waiting|963|1097|language%3Arust","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 27 of 666 projects · 1 running, longest 30 s: @semio-tech/value-testing-allocator-rs (language:rust, 30 s, 0 rows) · waiting for memory headroom (963 of 1097 MB reserved)
+graph: 0 of 703 projects arrived from the fleet, 29 inferred here, 674 left; the server last progressed 704 s ago, estimated time left: about 29 min
+[repo] still working after 1130 s; last phase started: source.served
+graph: waiting for memory headroom (963 of 835 MB reserved, 1 projects running): @semio-tech/value-testing-admission-rs needs 831 MB and has waited 39 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:27:666:1:35:%40semio-tech%2Fvalue-testing-allocator-rs|language%3Arust|35|0:waiting|963|835|language%3Arust","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 27 of 666 projects · 1 running, longest 35 s: @semio-tech/value-testing-allocator-rs (language:rust, 35 s, 0 rows) · waiting for memory headroom (963 of 835 MB reserved)
+[repository:command] still running after 1130 s
+graph: waiting for memory headroom (963 of 1007 MB reserved, 1 projects running): @semio-tech/value-testing-admission-rs needs 831 MB and has waited 44 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:27:666:1:40:%40semio-tech%2Fvalue-testing-allocator-rs|language%3Arust|40|0:waiting|963|1007|language%3Arust","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 27 of 666 projects · 1 running, longest 40 s: @semio-tech/value-testing-allocator-rs (language:rust, 40 s, 0 rows) · waiting for memory headroom (963 of 1007 MB reserved)
+[repository:command] still running after 1140 s
+[repository:command] still running after 1150 s
+[repo] still working after 1160 s; last phase started: source.served
+[repository:command] still running after 1160 s
+graph: plan answered, managed 104 MB, resident 173 MB (released 5 MB)

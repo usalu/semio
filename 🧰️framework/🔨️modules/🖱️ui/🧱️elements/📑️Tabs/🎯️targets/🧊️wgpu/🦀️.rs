@@ -162,7 +162,7 @@ pub fn build_tabs(id: &str, rows: &[TabRow], value: &str, orientation: TabsOrien
 fn stack(id: String, horizontal: bool, children: Vec<UiNode>) -> UiNode {
     UiNode::Stack(UiStackNode {
         direction: if horizontal { "row".to_string() } else { "column".to_string() },
-        gap: None,
+        gap: Some("none".to_string()),
         padding: None,
         id: Some(id),
         presence: UiPresence::default(),

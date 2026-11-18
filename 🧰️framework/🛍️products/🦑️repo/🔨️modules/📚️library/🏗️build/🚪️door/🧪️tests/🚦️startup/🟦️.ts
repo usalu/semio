@@ -6,6 +6,8 @@ import {tmpdir} from "node:os";
 import {dirname,join,resolve} from "node:path";
 import {build} from "esbuild";
 import fixture from "./🔣️.json" with {type:"json"};
+import{existsSync as existsRootV1}from"node:fs";import{dirname as dirnameRootV1,join as joinRootV1}from"node:path";
+const repositoryRootV1=(()=>{let directory=import.meta.dir;while(!existsRootV1(joinRootV1(directory,"MODULE.bazel"))&&dirnameRootV1(directory)!==directory)directory=dirnameRootV1(directory);return directory;})();
 
 const scratch=mkdtempSync(join(tmpdir(),"startup-law-"));
 afterAll(()=>rmSync(scratch,{recursive:true,force:true}));
@@ -47,7 +49,7 @@ test("the group matcher flags exactly the modules whose path names a group",()=>
 test("the traced front door equals the static closure an independent bundler computes",async()=>{
  const traced=(await load({id:"closure-help",kind:"door",args:["repo","--help"]})).filter(path=>path!==entry&&!path.endsWith("/⚙️runtime/🏁️main/🟦️.ts")&&!path.endsWith("/📤️output/🚪️entry/🟦️.ts")&&!trampoline.some(part=>path.includes(part))).sort();
  const result=await build({entryPoints:[doorCore],bundle:true,format:"esm",platform:"node",write:false,outdir:join(scratch,"bundle"),metafile:true,external:["node:*","bun:*"],logLevel:"silent",plugins:[{name:"light-entries",setup(builder){builder.onResolve({filter:/.*/},args=>args.path.includes("⌨️command")||args.kind==="dynamic-import"?{path:args.path,external:true}:undefined);}}]});
- const inputs=Object.keys(result.metafile.inputs).filter(path=>!path.endsWith(".json")).map(path=>resolve(process.cwd(),path)).sort();
+ const inputs=Object.keys(result.metafile.inputs).filter(path=>!path.endsWith(".json")).map(path=>resolve(repositoryRootV1,path)).sort();
  expect(traced).toEqual([...new Set(inputs)].sort());
 });
 

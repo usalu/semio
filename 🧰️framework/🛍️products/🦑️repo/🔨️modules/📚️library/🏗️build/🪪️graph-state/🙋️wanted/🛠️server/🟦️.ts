@@ -2,7 +2,7 @@ import{mkdirSync,readFileSync,renameSync,rmSync,writeFileSync}from"node:fs";
 import{dirname}from"node:path";
 import type{GraphFleetClientV1}from"../../🛰️exchange/🟦️.ts";
 import{claimWantedV1,publishServedV1,readServeStateV1,wantedClaimKeyV1,wantedTextV1,type ServeStateV1,type WantedHeadroomV1,type WantedPolicyV1,type WantedRequestV1,wantedPolicyV1}from"../🟦️.ts";
-import{clearSteeringV1,readPendingV1,writePriorityV1}from"../../../🕸️graph/🕰️generations/🧭️steering/🟨️.mjs";
+import{clearSteeringV1,readPendingV1,readPriorityV1,writePriorityV1}from"../../../🕸️graph/🕰️generations/🧭️steering/🟨️.mjs";
 import{parseGraphWaveRowV1,type GraphWaveRowV1}from"../../../🕸️graph/📈️wave-row/🟨️.mjs";
 import{estimateOwnerCostV1,estimateRemainingMillisecondsV1,orderByCostV1,type OwnerCostTableV1}from"../💰️cost/🟦️.ts";
 import{publishOwnerCostsV1}from"../💰️cost/🟦️.ts";
@@ -15,11 +15,18 @@ export type WantedServerPolicyV1=typeof wantedServerPolicyV1;
 export type WantedInferV1=Readonly<{ok:boolean;status:number;seconds:number;generation:number|null;detail:string}>;
 
 /** 🩺️ The verdict over one background graph read: it goes on while it makes progress and ends only when it does not. */
-export type GraphReadWatchV1=Readonly<{feed(text:string):void;verdict():"go"|"stalled"|"too-long";generation():number|null;silentMilliseconds():number}>;
+export type GraphReadWatchV1=Readonly<{feed(text:string):void;verdict():"go"|"stalled"|"too-long";generation():number|null;silentMilliseconds():number;counters():Readonly<Record<string,readonly number[]>>}>;
 
-/** 🩺️ Watches the stderr of one graph read of the server: a wave is progress, told by a generation number higher than any seen (the line of a published generation, English or German, however the chunks are cut) or by a line that says the read pauses for others; the read is stopped when no progress was made for `inferStallMilliseconds` (published waves are durable, the next read starts from them, so a stopped read loses only the wave in flight) or when it has run `inferMaximumMilliseconds`. A cold refresh of an hour or more is never cut while its waves keep coming. */
-export function createGraphReadWatchV1(policy:WantedServerPolicyV1=wantedServerPolicyV1,now:()=>number=Date.now,onWave?:(row:GraphWaveRowV1)=>void):GraphReadWatchV1{
- const started=now();let progressAt=started,newest=-1,pending="";
+/** 🩺️ Watches the stderr of one graph read of the server: progress is a wave (a generation number higher than any seen, English or German, however the chunks are cut), a line that says the read pauses for others, or any counter of a phase line (`\"resource\":\"build:graph-phase:owners:15:5101:9:885:...\"`) that passed the highest value seen for its phase: owners finished, facts verified, files stamped, so a read that finishes owners for hours without publishing a manifest is alive; the read is stopped when none of these happened for `inferStallMilliseconds` (published waves are durable, the next read starts from them, so a stopped read loses only the wave in flight) or when it has run `inferMaximumMilliseconds`. A cold refresh of an hour or more is never cut while its waves keep coming. */
+export function createGraphReadWatchV1(policy:WantedServerPolicyV1=wantedServerPolicyV1,now:()=>number=Date.now,onWave?:(row:GraphWaveRowV1)=>void,startedMs:number=now()):GraphReadWatchV1{
+ const started=startedMs,high=new Map<string,number[]>();let progressAt=now(),newest=-1,pending="";
+ const counted=(line:string):boolean=>{
+  const found=/"resource":"([^"]+)"/u.exec(line);if(found===null)return false;
+  const parts=found[1]!.split(":"),at=parts.findIndex(part=>/^\d+$/u.test(part));if(at<1)return false;
+  const name=parts.slice(0,at).join(":"),numbers:number[]=[];for(let index=at;index<parts.length&&/^\d+$/u.test(parts[index]!);index++)numbers.push(Number(parts[index]));
+  const known=high.get(name);if(known===undefined){high.set(name,numbers);return true;}
+  let advanced=false;numbers.forEach((value,index)=>{if(value>(known[index]??-1)){known[index]=value;advanced=true;}});return advanced;
+ };
  return Object.freeze({
   feed(text:string):void{
    pending+=text;const lines=pending.split("\n");pending=lines.pop()!.slice(-4096);
@@ -28,12 +35,14 @@ export function createGraphReadWatchV1(policy:WantedServerPolicyV1=wantedServerP
     if(wave){progressAt=now();if(wave.generation>newest)newest=wave.generation;try{onWave?.(wave);}catch{}continue;}
     if(/(?:paused after|pausiert nach) /iu.test(line)){progressAt=now();continue;}
     const found=/generation (\d+)/iu.exec(line);
-    if(found&&Number(found[1])>newest){newest=Number(found[1]);progressAt=now();}
+    if(found&&Number(found[1])>newest){newest=Number(found[1]);progressAt=now();continue;}
+    if(counted(line))progressAt=now();
    }
   },
   verdict():"go"|"stalled"|"too-long"{const at=now();return at-started>=policy.inferMaximumMilliseconds?"too-long":at-progressAt>=policy.inferStallMilliseconds?"stalled":"go";},
   generation:()=>newest<0?null:newest,
   silentMilliseconds:()=>now()-progressAt,
+  counters:()=>Object.fromEntries([...high].map(([name,numbers])=>[name,[...numbers]])),
  });
 }
 
@@ -88,7 +97,7 @@ export function serveStateFileV1(file:string):Readonly<{load():ServeStateV1|unde
 export type GraphServeWorkV1=Readonly<{restartPending():boolean;report(busy:boolean):void}>;
 
 /** 🔁️ The long-lived serving loop of a machine with headroom. It serves the requests of every machine of its platform class (a slot is per requester, the request names the platform) and counts the others. A machine that may not serve (`mayServe` answers false: it could never run the read) claims no request, so the request stays for a machine that can. It never blocks on a graph read: every round (seconds) it takes over the live requests of the other machines, tells the running read which projects to infer first (the priority file of `steerDirectory`), tells each requester which of its projects are fresh already (the read writes which asked-for projects are still dirty; every other asked-for project is fresh in this machine's tree) and keeps a sign of life on the answer, so a request is seen within one round, answered at once from what exists, and answered again as waves publish. Every answer carries the progress record of its request (how many projects, when the work last advanced: a read started or a wave published, and the time left estimated from what this read has finished or else from the measured cost table), so the requester waits for as long as it advances and not for a fixed time. A request is idempotent: the requester renews it (same creation time, later expiry, fewer projects) and the server keeps its claim, its running read and its position; a request asked again as a new one joins the held one (what is fresh stays fresh, nothing is inferred twice); the claims of the held requests are renewed so no other machine serves them meanwhile; the projects are ordered by how many held requests ask for them, so a project two workers wait for is inferred once and first. When no read runs and a request is held it starts one with the priority (headroom and pressure permitting; a failing read answers nobody and is held off for the quiet time); a read that ends well answers every held request completely with its generation. When no request is held it refreshes the fleet generation in the background after the worktree went quiet for `refreshQuietMilliseconds` (or the generation is older than `refreshIntervalMilliseconds`: edits arrive constantly, so a trailing debounce with a maximum age), only while its headroom allows it and no other machine holds the refresh slot of the interval (`mayRefresh`). The loop never throws except on cancellation. */
-export async function runWantedServerV1(input:Readonly<{client:GraphFleetClientV1;owner:string;platform:string;language:"en"|"de";steerDirectory:string;requesters():Promise<readonly string[]>;headroom():Promise<WantedHeadroomV1>;mayServe?():Promise<boolean>;infer(reason:"request"|"refresh",signal:AbortSignal|undefined,published?:readonly string[]):Promise<WantedInferV1>;state?:Readonly<{load():ServeStateV1|undefined;save(state:ServeStateV1):void}>;quietMilliseconds():Promise<number>;mayRefresh?():Promise<boolean>;costs?():OwnerCostTableV1|undefined;say(line:string):void;signal:AbortSignal;sleep(milliseconds:number,signal:AbortSignal):Promise<void>;now?:()=>number;rounds?:number;policy?:WantedPolicyV1;server?:WantedServerPolicyV1;work?:GraphServeWorkV1}>):Promise<void>{
+export async function runWantedServerV1(input:Readonly<{client:GraphFleetClientV1;owner:string;platform:string;language:"en"|"de";steerDirectory:string;requesters():Promise<readonly string[]>;headroom():Promise<WantedHeadroomV1>;mayServe?():Promise<boolean>;infer(reason:"request"|"refresh",signal:AbortSignal|undefined,published?:readonly string[]):Promise<WantedInferV1>;adopt?(signal:AbortSignal|undefined):Readonly<{reason:"request"|"refresh";done:Promise<WantedInferV1>}>|undefined;state?:Readonly<{load():ServeStateV1|undefined;save(state:ServeStateV1):void}>;quietMilliseconds():Promise<number>;mayRefresh?():Promise<boolean>;costs?():OwnerCostTableV1|undefined;say(line:string):void;signal:AbortSignal;sleep(milliseconds:number,signal:AbortSignal):Promise<void>;now?:()=>number;rounds?:number;policy?:WantedPolicyV1;server?:WantedServerPolicyV1;work?:GraphServeWorkV1}>):Promise<void>{
  const now=input.now??Date.now,policy=input.policy??wantedPolicyV1,server=input.server??wantedServerPolicyV1,{language}=input;
  type Held={request:WantedRequestV1;list:readonly string[];told:boolean;toldAt:number;toldProgressAt:number;heldAt:number;claimedAt:number};
  type Running={reason:"request"|"refresh";startedAt:number;controller:AbortController;finished:boolean;done:Promise<void>};
@@ -121,11 +130,11 @@ export async function runWantedServerV1(input:Readonly<{client:GraphFleetClientV
   const complete=generation!==null;
   await publishServedV1({client:input.client,server:input.owner,request:entry.request,projects,generation,progress:{total:entry.request.projects.length,progressAtMs:Math.max(progressAt,entry.heldAt),remainingMilliseconds:remaining(entry,complete)},now}).catch(()=>false);
  };
- const start=(reason:"request"|"refresh")=>{
-  clearSteeringV1(input.steerDirectory);priorityKey="";progressAt=now();dirtyCount=-1;
+ const start=(reason:"request"|"refresh",adopted?:Promise<WantedInferV1>)=>{
+  if(adopted===undefined)clearSteeringV1(input.steerDirectory);priorityKey="";progressAt=now();dirtyCount=-1;
   const controller=new AbortController(),forward=()=>controller.abort(input.signal.reason);input.signal.addEventListener("abort",forward,{once:true});
   const state:Running={reason,startedAt:now(),controller,finished:false,done:Promise.resolve()};
-  state.done=input.infer(reason,controller.signal,[...new Set([...held.values()].flatMap(entry=>entry.list))].sort()).catch((error):WantedInferV1=>({ok:false,status:1,seconds:(now()-state.startedAt)/1000,generation:null,detail:String((error as Error)?.message??error).slice(0,200)})).then(async result=>{
+  state.done=(adopted??input.infer(reason,controller.signal,[...new Set([...held.values()].flatMap(entry=>entry.list))].sort())).catch((error):WantedInferV1=>({ok:false,status:1,seconds:(now()-state.startedAt)/1000,generation:null,detail:String((error as Error)?.message??error).slice(0,200)})).then(async result=>{
    input.signal.removeEventListener("abort",forward);state.finished=true;
    if(input.signal.aborted)return;
    if(!result.ok){holdUntil=now()+server.refreshQuietMilliseconds;failed(result);if(reason==="refresh")refreshedAt=now();tell();return;}
@@ -140,7 +149,12 @@ export async function runWantedServerV1(input:Readonly<{client:GraphFleetClientV
   const table=input.costs?.(),asked=[...held.values()].sort((a,b)=>a.request.createdMs-b.request.createdMs),demand=new Map<string,number>();
   for(const entry of asked)for(const name of new Set(entry.request.projects))demand.set(name,(demand.get(name)??0)+1);
   const wanted=orderByCostV1(asked.flatMap(entry=>entry.request.projects),name=>estimateOwnerCostV1(table,name),new Set(asked.flatMap(entry=>entry.request.heavy??[])),demand),key=wanted.join("\n");
-  if(key!==priorityKey){priorityKey=key;priorityAt=now();writePriorityV1(input.steerDirectory,wanted,priorityAt);}
+  if(key!==priorityKey){
+   const same=priorityKey===""&&running!==undefined&&!running.finished?readPriorityV1({SEMIO_GRAPH_STEER_DIRECTORY:input.steerDirectory}):undefined;
+   priorityKey=key;
+   if(same!==undefined&&same.projects.join("\n")===[...new Set(wanted)].join("\n"))priorityAt=same.atMs;
+   else{priorityAt=now();writePriorityV1(input.steerDirectory,wanted,priorityAt);}
+  }
  };
  const fresh=(request:WantedRequestV1):readonly string[]=>{
   const pending=readPendingV1(input.steerDirectory);
@@ -157,6 +171,8 @@ export async function runWantedServerV1(input:Readonly<{client:GraphFleetClientV
   const key=JSON.stringify(table);if(key===costsKey||now()-costsAt<server.costsMilliseconds)return;
   costsKey=key;costsAt=now();await publishOwnerCostsV1({client:input.client,server:input.owner,table}).catch(()=>false);
  };
+ const attached=input.signal.aborted?undefined:input.adopt?.(input.signal);
+ if(attached!==undefined)start(attached.reason,attached.done);
  while(!input.signal.aborted&&(input.rounds===undefined||round++<input.rounds)){
   try{
    await shareCosts();
@@ -217,4 +233,10 @@ export async function runWantedServerV1(input:Readonly<{client:GraphFleetClientV
  }
  persist();
  if(running!==undefined){if(input.signal.aborted)running.controller.abort(input.signal.reason);await running.done;}
+}
+
+
+/** 🧾️ Why the server stops a graph read, as written to `read-stop.json` before the signal is sent (schema `ReadStop` in `../🧬️schema/🔣️.json`): the verdict, the milliseconds without progress, the newest generation and the highest counter of every phase. */
+export function graphReadStopRowV1(watch:GraphReadWatchV1,verdict:"stalled"|"too-long"|"memory-overrun",runner:number,read:number|null,at:number=Date.now()):Readonly<{version:1;verdict:string;atMs:number;silentMilliseconds:number;generation:number|null;counters:Readonly<Record<string,readonly number[]>>;runner:number;read:number|null}>{
+ return Object.freeze({version:1,verdict,atMs:at,silentMilliseconds:watch.silentMilliseconds(),generation:watch.generation(),counters:watch.counters(),runner,read});
 }

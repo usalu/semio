@@ -85,9 +85,10 @@ for (const locale of LOCALES) {
     await enter(learner, { kind: "anonymous" });
     await authorPreview(learner);
     for (const assignment of course.assignments) {
-      await openGrid(learner, assignment.topic);
+      await openGrid(learner, "assignments");
       const document = assignment.documents[locale];
-      const link = learner.page.getByRole("region", { name: locale === "en" ? "Assignments" : "Übungen", exact: true }).getByRole("link", { name: `${assignment.title[locale]} · PDF`, exact: true });
+      const card = learner.page.locator(`[data-card="assignment:${assignment.id}"]`);
+      const link = card.getByRole("link", { name: locale === "en" ? "Download PDF" : "PDF herunterladen", exact: true });
       const href = `/assignments/${document.file}`;
       await expect(link).toBeVisible();
       await expect(link).toHaveAttribute("href", href);
@@ -101,6 +102,10 @@ for (const locale of LOCALES) {
       expect([...bytes.subarray(0, 5)]).toEqual([37, 80, 68, 70, 45]);
       expect(bytes.byteLength).toBeGreaterThan(5);
       expect(bytes.byteLength).toBeLessThanOrEqual(16 * 1024 * 1024);
+      await card.getByRole("link", { name: assignment.title[locale], exact: true }).click();
+      await expect(learner.page.locator(`[data-layered-pane="${assignment.id}"] iframe`)).toHaveAttribute("src", `${href}#view=FitH`);
+      await learner.page.keyboard.press("Escape");
+      await expect(pane(learner.page, assignment.id)).not.toHaveAttribute("data-opened", "");
     }
   });
 
@@ -152,10 +157,10 @@ for (const locale of LOCALES) {
     expect(theirs.length).toBe(mine.length);
     expect(mine.filter((text, index) => text === theirs[index]), `the notice of what is stored: worded the same in ${locale} and ${other(locale)}`).toEqual([]);
 
-    for (const id of ["learner", "quizzes", ...COURSE.topics.map((topic) => topic.id), ...QUIZZES.map((quiz) => quiz.id), "board", "badges", "prefs"]) {
+    for (const id of ["learner", "quizzes", "assignments", "clips", ...COURSE.topics.map((topic) => topic.id), ...QUIZZES.map((quiz) => quiz.id), "board", "badges", "prefs"]) {
       await learner.page.evaluate((page) => (window.location.hash = page), id);
       await expect(pane(learner.page, id)).toHaveAttribute("data-opened", "");
-      await expectBothLanguages(learner, locale, `page ${id}`, [name]);
+      await expectBothLanguages(learner, locale, `page ${id}`, [name, ...[...course.assignments, ...course.clips].flatMap((entry) => [entry.title.en, entry.title.de])]);
       await learner.page.keyboard.press("Escape");
       await expect(pane(learner.page, id)).not.toHaveAttribute("data-opened", "");
       await openGrid(learner);

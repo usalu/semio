@@ -10,9 +10,40 @@ import { inferenceAuthorityRowsV1, inferenceRecordIdentityV1 } from "../../../..
 import { adoptedCapturedBuildLaunchV1 } from "../../../../../🏗️build/📥️source/🔏️closure/🚪️command/🟦️.ts";
 import { GRAPH_FARM_WORKER_ROLE_V1, graphFarmIdentityDifferenceV1, graphFarmIdentityV1 } from "./🪆️captured/🟨️.mjs";
 import { graphWaveMeterV1 } from "../../../📈️wave-row/🟨️.mjs";
-import { requestBuildFarmCapacityV1 } from "../../../../../🏗️build/🌡️host-capacity/🟦️.ts";
-import { choosePoolV1, createFarmTemporaryDirectoryV1, createFarmV1, grantedPoolV1, ownGrantPoolV1, retireOwnedGraphPoolV1, planGraphFarmV1, renderGraphFarmMessagesV1, GRAPH_FARM_POLICY_V1 } from "./🏊️pool/🟨️.mjs";
+import { FOOTPRINT_POLICY_V1, createFootprintMeterV1, footprintAtLeastManagedV1, footprintGateV1, readTreeFootprintBytesV1 } from "../../../../🧠️memory/🦶️footprint/🟨️.mjs";
 
+let farmMeter;
+
+/** 📏️ What the next farm child is booked at: the declared megabytes of a child until three children have reported their footprint, then the 75th percentile of the measured footprints plus 15 percent, never under 768 MB and never over the declared size, so the reservation follows what children really hold and the gate carries as many of them as the memory allows.
+ * @see ./🧪️tests/🧮️measured-ask/🟦️.ts */
+export const askWorkerMegabytesV1 = (declaredMegabytes, footprintsMegabytes) => {
+  const sizes = footprintsMegabytes.filter(value => Number.isFinite(value) && value > 0).sort((left, right) => left - right);
+  if (sizes.length < 3) return declaredMegabytes;
+  return Math.max(768, Math.min(declaredMegabytes, Math.ceil(sizes[Math.min(sizes.length - 1, Math.ceil(sizes.length * 0.75) - 1)] * 1.15)));
+};
+
+/** 🛑️ Whether the farm holds its next job: admitting a job adds a child that peaks at `farmWorkerPeakMegabytes` of the plan policy (measured), so the farm holds while the tree footprint of this process (the worker and its farm children) plus that one child would pass the hard share of the ceiling of the footprint gate; with no gate it never holds. The reading is the farm's own meter of the same tree footprint the gate and the pool read, refreshed after one second: the meter of the gate answers from a reading up to five seconds old (`ttlMilliseconds`), and a farm child grew the tree to 9.4 and 10.0 GB within that time.
+ * Before it answers true the parent releases the caches it keeps beside its work (`release` returns the bytes it let go): the parent is the largest process of the read and must give back what it can before a child is held back.
+ * @see ./🏊️pool/🟨️.mjs `hold` */
+export const farmHeldV1 = (gate = footprintGateV1(), allowanceMegabytes = PLAN_STAGE_POLICY_V1.farmWorkerPeakMegabytes["project-farm"], meter = (farmMeter ??= createFootprintMeterV1({ ttlMilliseconds: GRAPH_FARM_POLICY_V1.holdMeterMilliseconds, read: async () => footprintAtLeastManagedV1(await readTreeFootprintBytesV1(process.pid)) })), release = undefined) => {
+  const grant = gate?.grantBytes();
+  if (!(grant > 0)) return false;
+  const limit = grant * FOOTPRINT_POLICY_V1.hardPercent / 100, over = freed => meter.bytes() - freed + allowanceMegabytes * 1048576 > limit;
+  if (!over(0)) return false;
+  let freed = 0;
+  try { const bytes = release?.(); if (Number.isFinite(bytes) && bytes > 0) freed = bytes; } catch {}
+  return over(freed);
+};
+import { requestBuildFarmCapacityV1 } from "../../../../../🏗️build/🌡️host-capacity/🟦️.ts";
+import { PLAN_STAGE_POLICY_V1, leanSliceV1, reserveFarmV1 } from "../../../../🧠️memory/🪜️plan-stage/🟨️.mjs";
+import { leanFarmPolicyV1, renderLeanSliceMessageV1 } from "../../../../🧠️memory/🪶️lean/🟨️.mjs";
+import { warmThroughV1 } from "../🔱️warm/🟨️.mjs";
+import { queuedJobTextV1 } from "../../../../../🏗️build/👁️observation/🚧️read-parent/🟨️.mjs";
+import { GraphFarmOverrunErrorV1, choosePoolV1, createFarmTemporaryDirectoryV1, createFarmV1, grantedPoolV1, ownGrantPoolV1, retireOwnedGraphPoolV1, planGraphFarmV1, renderGraphFarmMessagesV1, GRAPH_FARM_POLICY_V1 } from "./🏊️pool/🟨️.mjs";
+
+/** 🛑️ The refusal of a job that no farm child could do after its tries: the parent does not infer it in their place. */
+const jobFailedV1 = (project, reason, tries) => { const text = language => language === "de" ? `Farm-Kindprozesse konnten ${project} in ${tries} Versuchen nicht ableiten (${reason}); der Elternprozess leitet es nicht ab` : `farm children could not infer ${project} in ${tries} tries (${reason}); the parent does not infer it`; return Object.assign(new Error(text("en") + " / " + text("de")), { code: "graph.farm-job-failed", semioProject: project }); };
+const EMPTY_ATTEMPTS_V1 = 5, QUEUE_TELL_MILLISECONDS_V1 = 60000;
 const ORIGIN = physicalSourceOriginV1(import.meta.url, import.meta.semioPhysicalSourceURL), ENTRY = fileURLToPath(new URL("./👷️worker/🟨️.mjs", ORIGIN)), SERVICE = new URL("./👷️service/🟨️.mjs", ORIGIN).href, REPORTED_FAILURES = 8;
 
 /** 🏘️ The worker pools of this process, one hub per session (what the parent keyed its projects with): the graph constructions of one process that share a session (the waves of one refresh) share the pools, so a worker starts once, keeps what it loaded for its first project and serves every wave. */
@@ -34,6 +65,7 @@ const closePoolV1 = pool => pool.closing ??= (pool.farm.close().finally(() => po
 function retireHubV1(hub) {
   if (hub.retired !== undefined) return hub.retired;
   hub.closing = true;
+  hub.lease?.release();
   if (HUBS.get(hub.key) === hub) HUBS.delete(hub.key);
   clearTimeout(hub.idleTimer);
   hub.wake();
@@ -62,7 +94,7 @@ export async function closeProjectFarmsV1() {
 /**
  * 🏊️ Opens the project farm of one graph construction on the worker pools of its session: pools that an earlier construction of this process started for the same session (the earlier waves of a refresh) are used at once, otherwise the farm plans, asks and starts them, and answers undefined when the work is small or the farm is switched off. Nothing is asked of the host before the work proves to be cold: the farm engages once at least `minimumProjects` projects had no valid record and they are a quarter of the projects seen so far, so a warm run costs nothing. A generation that is already cold (`engage`) starts the worker its grant pays for at once, so those misses are not inferred in this process until that quarter is reached.
  * The pools belong to the session, not to the construction: `close` of a construction reports its wave and leaves the workers running (they are unreferenced while no construction uses them, so they never keep the process alive, and they end after `idleCloseMilliseconds` without a construction, on `closeProjectFarmsV1` and with the process); a changed session (the registry, the contracts, the command inputs or the project roots) retires the pools of the old one.
- * The parent never infers a project while a worker can be had: a project waits for the pools that are being started (at most `holdMilliseconds`) or for the host's answer to the capacity request (at most `grantWaitMilliseconds`); only when no worker came in that time, the host granted none or the farm is off, the parent infers it, and a pool that comes later takes the projects after it. A worker starts from its own environment (it needs no message of this process), so a busy event loop of the parent never keeps it from starting.
+ * The parent never infers a project while a worker can be had: a project waits for the pools that are being started (at most `holdMilliseconds`) or for the host's answer to the capacity request (as long as the request is pending: the first worker of a farm is `essential` and the gate admits it whatever the free memory says, so the parent, the largest process of the read, never infers an owner a worker could run); only when a started pool stays silent for `holdMilliseconds`, the host granted none or the farm is off, the parent infers it, and a pool that comes later takes the projects after it. A worker starts from its own environment (it needs no message of this process), so a busy event loop of the parent never keeps it from starting.
  * A project that a worker fails goes back to the pool once, on any worker; this process infers it only when the second try fails as well or no worker is left. Cancelling the signal of a construction retires the pools of its session at once, and a process that exits takes its workers with it.
  * Once the graph cache declines the leaves a worker produced (its optional quota is full), no further project goes to a worker and every pool is closed at once: a declined project is inferred again by this process, so going on would infer each one twice and keep the workers' memory and grants.
  * A pool that is disabled (its workers refused for a differing identity, or degraded) gives its host grant back at once, so the memory and cores reserved for workers that never run are free for the other runs of the machine at once.
@@ -70,21 +102,29 @@ export async function closeProjectFarmsV1() {
  * The session hands every worker what the parent keyed its projects with (the registry, the command inputs and the generator contracts it read once), so a peer edit between the parent's read and a worker's start can never put content of other contracts under the parent's key.
  * In a process that runs from a captured snapshot (`launch`, by default the snapshot this process adopted; `null` starts workers from the files) every worker is started from that same snapshot, written once to a private file its environment names, and serves only when it reports the captured implementation and the record identity of this process, under the sealed load authority this process sends it (a worker never repeats what this command read before its first project); a worker loaded from the files on disk, which peers may have changed since the capture, is refused.
  */
-export function openProjectFarmV1({ workspaceRoot, context, contracts, closureStore, projects, commandInputs, lateClosures = false, projectsByRoot, componentRoots, environment = process.env, signal = undefined, processed = () => 0, launch = adoptedCapturedBuildLaunchV1(), command = undefined, commandArguments = undefined, spawnProcess = undefined, request = requestBuildFarmCapacityV1, adopt = adoptStagedGraphLeavesV1, cores = availableParallelism(), maximumWorkers = Infinity, engage = false, policy = GRAPH_FARM_POLICY_V1, write = line => { process.stderr.write(line + "\n"); } }) {
+export function openProjectFarmV1({ workspaceRoot, context, contracts, closureStore, projects, commandInputs, lateClosures = false, projectsByRoot, componentRoots, environment = process.env, signal = undefined, processed = () => 0, launch = adoptedCapturedBuildLaunchV1(), command = undefined, commandArguments = undefined, spawnProcess = undefined, request = requestBuildFarmCapacityV1, adopt = adoptStagedGraphLeavesV1, cores = availableParallelism(), maximumWorkers = Infinity, engage = false, immediate = false, releaseCaches = undefined, policy: declaredPolicy = GRAPH_FARM_POLICY_V1, write = line => { process.stderr.write(line + "\n"); } }) {
+  const lean = leanSliceV1({ environment, cores, residentMegabytes: process.memoryUsage().rss / 1048576 }), policy = leanFarmPolicyV1(declaredPolicy, lean);
+  if (lean.lean) engage = true;
   const say = (key, fields) => { for (const line of renderGraphFarmMessagesV1(key, fields, environment)) write(line); };
   const captured = launch ?? undefined, key = hubKeyV1({ workspaceRoot, closureStore, context, contracts, commandInputs, lateClosures, projectsByRoot, componentRoots }, captured?.implementation);
   let hub = HUBS.get(key);
   for (const [other, old] of HUBS) if (other !== key && old.users === 0 && old.pools.every(pool => !pool.farm.pending)) void retireHubV1(old).catch(() => {});
   if (hub !== undefined && (hub.state === "off" || hub.closing)) { void retireHubV1(hub).catch(() => {}); hub = undefined; }
-  const plan = planGraphFarmV1({ projects, environment, cores, policy, maximumWorkers });
+  const plan = planGraphFarmV1({ projects, environment, cores, policy, maximumWorkers, minimumWorkers: lean.lean ? 1 : 2 });
   if (hub === undefined && REFUSED.has(key)) { say("serial", { projects, reason: "identity" }); return undefined; }
   if (hub === undefined) {
     if (plan.workers === 0) { if (plan.reason === "work" || plan.reason === "cpu" || plan.reason === "memory") say("serial", { projects, reason: plan.reason }); return undefined; }
+    const lease = reserveFarmV1({ kind: "project-farm", workerMegabytes: policy.workerMegabytes, wanted: plan.workers, environment });
+    if (lease.workers < (lean.lean ? 1 : 2)) { lease.release(); if (lean.lean) for (const line of renderLeanSliceMessageV1("tooSmall", { child: lean.childMegabytes, parent: lean.parentMegabytes, ceiling: Math.round(lean.limitMegabytes ?? 0) }, environment)) write(line); say("serial", { projects, reason: "memory" }); return undefined; }
+    plan.workers = Math.min(plan.workers, lease.workers);
     hub = createHubV1(key);
+    hub.lease = lease;
     HUBS.set(key, hub);
   }
   const { pools, readyWaiters, listeners } = hub, own = [], call = { closed: false };
-  const counts = { adopted: 0, failed: 0, lost: 0, declined: 0, recycled: 0, leaves: 0, adoptMilliseconds: 0, misses: 0, lostJobs: 0, workerCpuMilliseconds: 0, holding: false };
+  let warmGaveUp = false;
+  const warmWhy = {}, noteWarm = why => { warmWhy[why] = (warmWhy[why] ?? 0) + 1; };
+  const counts = { adopted: 0, failed: 0, lost: 0, declined: 0, recycled: 0, capped: 0, overruns: 0, leaves: 0, adoptMilliseconds: 0, misses: 0, lostJobs: 0, workerCpuMilliseconds: 0, holding: false };
   const started = performance.now();
   hub.say = say;
   hub.users++;
@@ -103,8 +143,9 @@ export function openProjectFarmV1({ workspaceRoot, context, contracts, closureSt
     try { auxiliaryFile = captured === undefined ? undefined : imageFile(); } catch (error) { release(); stop("degraded", { reason: String(error?.message ?? error) }); return undefined; }
     const base = createFarmTemporaryDirectoryV1("staging"), pool = { source, workers, megabytes, base, released: false, release: () => { if (!pool.released) { pool.released = true; release(); } }, ready: false, farm: undefined, work: new Set(), closing: undefined };
     pool.farm = createFarmV1({
-      entry: captured === undefined ? ENTRY : GRAPH_FARM_WORKER_ROLE_V1, service: SERVICE, workers, megabytes, policy, environment: captured === undefined ? environment : { ...environment, ...captured.environment },
+      entry: captured === undefined ? ENTRY : GRAPH_FARM_WORKER_ROLE_V1, service: SERVICE, workers, megabytes, policy, limitMegabytes: lean.limitMegabytes ?? Infinity, environment: captured === undefined ? environment : { ...environment, ...captured.environment },
       session: { version: 3, workspaceRoot, closureStore, registry: context.registry ?? null, contracts, commandInputs: commandInputs ?? null, lateClosures, projectsByRoot: [...projectsByRoot], componentRoots, stagingBase: base, authority: inferenceAuthorityRowsV1() },
+      hold: () => farmHeldV1(undefined, undefined, undefined, releaseCaches),
       accept: identity => { const difference = graphFarmIdentityDifferenceV1(graphFarmIdentityV1(inferenceRecordIdentityV1(), captured?.implementation), identity); hub.refusal = difference === "" ? undefined : difference + (Array.isArray(identity?.conflicts) && identity.conflicts.length ? " (" + identity.conflicts.join(", ") + ")" : ""); return difference === ""; },
       report: (event, fields) => {
         if (event === "disabled") {
@@ -115,6 +156,8 @@ export function openProjectFarmV1({ workspaceRoot, context, contracts, closureSt
         }
         if (event === "recycled") { counts.recycled++; sayHub("recycled", fields); }
         else if (event === "lost") { counts.lost++; sayHub("lost", fields); }
+        else if (event === "priority") sayHub("priority", fields);
+        else if (event === "capped") { counts.capped++; sayHub(fields.alone ? "cappedAlone" : "capped", fields); }
         else if (event === "disabled") sayHub(String(fields.reason).startsWith("identity") ? "refused" : "degraded", hub.refusal === undefined ? fields : { ...fields, reason: fields.reason + ": " + hub.refusal });
       },
       retired: (slot, generation) => { try { rmSync(join(base, "w" + slot + "-g" + generation), { recursive: true, force: true }); } catch {} },
@@ -133,8 +176,8 @@ export function openProjectFarmV1({ workspaceRoot, context, contracts, closureSt
     const first = ownGrantPoolV1(environment, policy);
     if (first !== undefined) start(first, () => {});
     say("waiting", { workers: plan.workers, projects });
-    const ask = want => {
-      const raw = request({ preferredJobs: want, megabytes: policy.workerMegabytes, environment, signal, write });
+    const ask = (want, essential = false) => {
+      const raw = request({ preferredJobs: want, essential, megabytes: askWorkerMegabytesV1(policy.workerMegabytes, [...peaks.values()].map(bytes => bytes / 1048576)), environment, signal, write });
       let given = false;
       const asked = { granted: raw.granted, release: () => { if (!given) { given = true; raw.release(); } } };
       hub.capacity = asked; hub.waiting = asked;
@@ -149,48 +192,105 @@ export function openProjectFarmV1({ workspaceRoot, context, contracts, closureSt
         if (have < plan.workers && !hub.closing && hub.state !== "off") return ask(plan.workers - have);
       });
     };
-    hub.opening = ask(plan.workers).catch(error => { if (pools.length === 0) stop("serial", { projects, reason: String(error?.message ?? error) }); hub.wake(); });
+    hub.opening = ask(plan.workers, pools.length === 0).catch(error => { if (pools.length === 0) stop("serial", { projects, reason: String(error?.message ?? error) }); hub.wake(); });
   };
   const refreshOwned = () => { if (hub.ownedRefresh) return hub.ownedRefresh; const pool = pools.find(each => each.source === "own" && each.ready && each.farm.usable); if (!pool) return Promise.resolve(); const next = ownGrantPoolV1(environment, policy); hub.ownedRefresh = retireOwnedGraphPoolV1(pool, next).then(retired => { if (retired && !hub.closing && hub.state !== "off") { const current = ownGrantPoolV1(environment, policy); if (current) start(current, () => {}); } }).finally(() => { hub.ownedRefresh = undefined; }); return hub.ownedRefresh; };
-  const dispatch = async (pool, job, retry) => {
+  const peaks = new Map();
+  const dispatch = async (pool, job, note = {}) => {
     const outcome = await pool.farm.run(job, { signal });
-    if (outcome.failure) { if (++counts.failed <= REPORTED_FAILURES) say("failed", { project: job.name, reason: outcome.failure.message.slice(0, 200) }); return retry ? AGAIN : false; }
-    if (outcome.lost !== undefined) { counts.lostJobs++; (counts.lostReasons ??= {})[outcome.lost] = (counts.lostReasons[outcome.lost] ?? 0) + 1; return false; }
+    if (outcome.failure) { if (++counts.failed <= REPORTED_FAILURES) say("failed", { project: job.name, reason: outcome.failure.message.slice(0, 200) }); note.reason = outcome.failure.message.slice(0, 200); return AGAIN; }
+    if (outcome.overrun !== undefined) { counts.overruns++; throw new GraphFarmOverrunErrorV1({ ...outcome.overrun, project: job.name }, environment); }
+    if (outcome.lost !== undefined) { counts.lostJobs++; (counts.lostReasons ??= {})[outcome.lost] = (counts.lostReasons[outcome.lost] ?? 0) + 1; note.reason = "lost: " + outcome.lost; return AGAIN; }
     const adopting = performance.now(), adoption = adopt(workspaceRoot, join(pool.base, "w" + outcome.slot + "-g" + outcome.generation), outcome.reply.names);
     counts.adoptMilliseconds += performance.now() - adopting;
-    counts.leaves += outcome.reply.names.length; counts.workerCpuMilliseconds += outcome.reply.cpuMilliseconds;
+    counts.leaves += outcome.reply.names.length; counts.workerCpuMilliseconds += outcome.reply.cpuMilliseconds; if (typeof outcome.reply.peakMegabytes === "number") peaks.set(job.name, outcome.reply.peakMegabytes * 1048576);
     if (adoption.declined) { counts.declined++; say("declined", { project: job.name }); if (hub.state !== "off") { stop("degraded", { reason: "the graph cache declined the leaves of " + job.name }); for (const each of pools) { each.ready = false; void closePoolV1(each).catch(() => {}); } } return false; }
-    if (adoption.published + adoption.present === 0) return false;
+    if (adoption.published + adoption.present === 0) { note.reason = "nothing adopted"; return AGAIN; }
     counts.adopted++;
     return true;
   };
-  if (hub.state === "idle" && engage === true) open();
+  if (hub.state === "idle" && (engage === true || immediate === true)) open();
   else if (hub.state !== "idle" && pools.some(pool => pool.ready)) say("reused", { projects });
+  const askChild = job => warmThroughV1({
+    pick: () => { const at = choosePoolV1(pools.map(pool => ({ ready: pool.ready, usable: pool.farm.usable, idle: pool.farm.idle, pending: pool.farm.pending, width: pool.farm.width }))); return at < 0 ? undefined : pools[at]; },
+    run: async pool => { const work = pool.farm.run(job, { signal }); pool.work.add(work); try { const outcome = await work; if (outcome.overrun === undefined) return outcome; counts.overruns++; const error = new GraphFarmOverrunErrorV1({ ...outcome.overrun, project: job.name }, environment); return { failure: { name: error.name, message: error.message, code: error.code } }; } finally { pool.work.delete(work); } },
+    hopeless: () => warmGaveUp ? "no child came before" : hub.state === "off" || hub.closing ? "farm-" + (hub.closing ? "closing" : "off") : signal?.aborted ? "aborted" : pools.some(pool => !pool.closing && pool.farm.usable) || hub.waiting !== undefined || hub.state === "waiting" && pools.length === 0 ? undefined : "no-usable-child",
+    wait: milliseconds => readyWithin(milliseconds),
+  });
+  const exists = () => hub.state !== "off" && !hub.closing && !call.closed && signal?.aborted !== true && !(hub.unavailable && hub.waiting === undefined && !pools.some(pool => !pool.ready && !pool.closing && pool.farm.usable));
+  const waitForChild = async name => {
+    let told = -Infinity;
+    for (;;) {
+      if (hub.state === "off" || hub.closing || call.closed || signal?.aborted) return false;
+      if (pools.some(pool => pool.ready && pool.farm.usable)) return true;
+      const granting = hub.waiting !== undefined, booting = pools.some(pool => !pool.ready && !pool.closing && pool.farm.usable);
+      if (!granting && !booting && hub.state !== "idle") { hub.unavailable = true; return false; }
+      if (!counts.holding) { counts.holding = true; say("holding", { seconds: Math.round((booting ? policy.holdMilliseconds : policy.grantWaitMilliseconds) / 1000) }); }
+      if (performance.now() - told >= QUEUE_TELL_MILLISECONDS_V1) { told = performance.now(); write(queuedJobTextV1(name, granting ? "the host capacity governor holds the first child" : booting ? "the first child is starting" : "no child is ready")); }
+      await readyWithin(1000);
+    }
+  };
   return Object.freeze({
     /** 🔔️ Calls the listener with the loop count of the pools once a pool is ready and again whenever the farm grows. @param {(loops: number) => void} listener */
+    /** 📏️ The memory the child that inferred `name` grew by, in bytes, or undefined when no child did. @param {string} name */
+    peakOf(name) { return peaks.get(name); },
     onReady(listener) { listeners.add(listener); own.push(listener); if (pools.some(pool => pool.ready)) listener(loops()); },
+    /** 🔱️ Starts the pools now instead of at the first miss (the warm pass settles owners before any is known to miss). */
+    engage() { if (hub.state === "idle") open(); },
+    /** 📐️ The children that are ready: the lanes the warm pass can run at once. */
+    width() { return pools.reduce((total, pool) => total + (pool.ready ? pool.workers : 0), 0); },
+    /** 🧮️ The memory budget of one child, as the farm plans it. */
+    workerMegabytes() { return policy.workerMegabytes; },
+    /** ⏳️ Waits at most `milliseconds` for the first child to be ready and answers whether one is. */
+    async whenReady(milliseconds) {
+      const until = performance.now() + milliseconds;
+      while (!pools.some(pool => pool.ready) && hub.state !== "off" && !hub.closing && !hub.unavailable && !signal?.aborted && performance.now() < until) await readyWithin(Math.max(1, Math.min(1000, until - performance.now())));
+      return pools.some(pool => pool.ready);
+    },
+    /** 🔱️ Runs one warm job (an owner to settle, see `warmProjectRecordV1`) on a ready child and answers its reply, or undefined when no child could (the parent then takes the owner itself); nothing is adopted, the child wrote its durable row itself. */
+    warmReasons() { return { ...warmWhy }; },
+    exists() { return exists(); },
+    /** 🔍️ What the children are doing right now, for the line of a parked owner: busy, idle, starting and empty slots, the queue, whether a job runs alone (every other child waits for it) and the restarts. */
+    describe() { return pools.filter(pool => !pool.closing && pool.farm?.snapshot !== undefined).map(pool => { const s = pool.farm.snapshot; return "children busy " + s.busy + ", idle " + s.idle + ", starting " + s.starting + ", not started " + s.empty + ", queued jobs " + s.queued + (s.alone ? ", a job runs alone and the others wait" : "") + ", restarts " + s.restarts; }).join("; ") || "no children"; },
+    async observe(job) {
+      let failures = 0, lost = 0, told = -Infinity;
+      for (;;) {
+        warmGaveUp = false;
+        const result = await askChild(job);
+        if (result.reply !== undefined) { counts.workerCpuMilliseconds += result.reply.cpuMilliseconds ?? 0; return result.reply; }
+        if (!exists()) return undefined;
+        const why = String(result.why);
+        if (why.startsWith("failure:") && ++failures > policy.maximumAttempts) throw jobFailedV1(job.name, why, failures);
+        if (why.startsWith("lost:") && ++lost > EMPTY_ATTEMPTS_V1) throw jobFailedV1(job.name, why, lost);
+        if (performance.now() - told >= QUEUE_TELL_MILLISECONDS_V1) { told = performance.now(); write(queuedJobTextV1(job.name, why)); }
+        await readyWithin(1000);
+      }
+    },
+    async warm(job) {
+      const result = await askChild(job);
+      if (result.reply === undefined) { if (result.why.startsWith("no child within")) warmGaveUp = true; noteWarm(result.why); return undefined; }
+      counts.workerCpuMilliseconds += result.reply.cpuMilliseconds ?? 0;
+      return result.reply;
+    },
     async prepare(job) {
-      if (hub.state === "idle") { counts.misses++; if (counts.misses >= policy.minimumProjects && counts.misses * 10000 >= processed() * policy.missBasisPoints) open(); return false; }
+      if (hub.state === "idle") { counts.misses++; if (immediate === true || counts.misses >= policy.minimumProjects && counts.misses * 10000 >= processed() * policy.missBasisPoints) open(); if (immediate !== true) return false; }
       if (hub.state === "off" || hub.closing) return false;
       await refreshOwned();
-      const starting = pools.some(pool => !pool.ready && !pool.closing && pool.farm.usable);
-      if (!pools.some(pool => pool.ready) && !hub.unavailable && (hub.waiting !== undefined || starting)) {
-        const milliseconds = starting ? policy.holdMilliseconds : policy.grantWaitMilliseconds;
-        if (!counts.holding) { counts.holding = true; say("holding", { seconds: Math.round(milliseconds / 1000) }); }
-        await readyWithin(milliseconds);
-        if (!pools.some(pool => pool.ready)) hub.unavailable = true;
-        if (hub.state === "off" || hub.closing) return false;
-      }
-      for (let attempt = 0; attempt < 2; attempt++) {
+      const note = {};
+      for (let attempt = 0; ; attempt++) {
+        if (!(await waitForChild(job.name))) return false;
         const at = choosePoolV1(pools.map(pool => ({ ready: pool.ready, usable: pool.farm.usable, idle: pool.farm.idle, pending: pool.farm.pending, width: pool.farm.width })));
-        if (at < 0) return false;
-        const pool = pools[at], work = dispatch(pool, job, attempt === 0);
+        if (at < 0) continue;
+        const pool = pools[at], work = dispatch(pool, job, note);
         pool.work.add(work);
         let answer;
         try { answer = await work; } finally { pool.work.delete(work); }
         if (answer !== AGAIN) return answer;
+        if (hub.state === "off" || hub.closing) return false;
+        const empty = note.reason === "nothing adopted";
+        if (empty ? attempt >= EMPTY_ATTEMPTS_V1 : attempt >= policy.maximumAttempts) throw jobFailedV1(job.name, note.reason ?? "no reason", attempt + 1);
+        if (empty) await readyWithin(2500);
       }
-      return false;
     },
     async close() {
       if (call.closed) return;

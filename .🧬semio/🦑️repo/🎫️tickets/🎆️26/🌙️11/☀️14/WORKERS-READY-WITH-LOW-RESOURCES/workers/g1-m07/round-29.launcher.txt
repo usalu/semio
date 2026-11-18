@@ -1,0 +1,65 @@
+## before try 1 2026-11-15T15:34:39Z
+3496899 lrwxr-xr-x@ 1 ueli  staff  30 Nov 14 22:55 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+target inode 3496898 mtime 2026-11-14T22:55:52
+Identifier=tech.semio.repo
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+## after try 1 2026-11-15T16:11:16Z
+3496899 lrwxr-xr-x@ 1 ueli  staff  30 Nov 14 22:55 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+target inode 3496898 mtime 2026-11-14T22:55:52
+Identifier=tech.semio.repo
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+## before try 2 2026-11-15T16:16:17Z
+3496899 lrwxr-xr-x@ 1 ueli  staff  30 Nov 14 22:55 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+target inode 3496898 mtime 2026-11-14T22:55:52
+Identifier=tech.semio.repo
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+## after try 2 2026-11-15T16:27:02Z
+3496899 lrwxr-xr-x@ 1 ueli  staff  30 Nov 14 22:55 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+target inode 3496898 mtime 2026-11-14T22:55:52
+Identifier=tech.semio.repo
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+## before try 3 2026-11-15T16:32:02Z
+3496899 lrwxr-xr-x@ 1 ueli  staff  30 Nov 14 22:55 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+target inode 3496898 mtime 2026-11-14T22:55:52
+Identifier=tech.semio.repo
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+## after try 3 2026-11-15T16:38:13Z
+3496899 lrwxr-xr-x@ 1 ueli  staff  30 Nov 14 22:55 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+target inode 3496898 mtime 2026-11-14T22:55:52
+Identifier=tech.semio.repo
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+## before try 4 2026-11-15T16:43:13Z
+3496899 lrwxr-xr-x@ 1 ueli  staff  30 Nov 14 22:55 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+target inode 3496898 mtime 2026-11-14T22:55:52
+Identifier=tech.semio.repo
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+## after try 4 2026-11-15T16:50:27Z
+3496899 lrwxr-xr-x@ 1 ueli  staff  30 Nov 14 22:55 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+target inode 3496898 mtime 2026-11-14T22:55:52
+Identifier=tech.semio.repo
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+## before try 5 2026-11-15T16:52:13Z
+3496899 lrwxr-xr-x@ 1 ueli  staff  30 Nov 14 22:55 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+target inode 3496898 mtime 2026-11-14T22:55:52
+Identifier=tech.semio.repo
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+## after try 5 2026-11-15T18:47:12Z
+3496899 lrwxr-xr-x@ 1 ueli  staff  30 Nov 14 22:55 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+target inode 3496898 mtime 2026-11-14T22:55:52
+Identifier=tech.semio.repo
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+## before try 6 2026-11-15T18:52:12Z
+3496899 lrwxr-xr-x@ 1 ueli  staff  30 Nov 14 22:55 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+target inode 3496898 mtime 2026-11-14T22:55:52
+Identifier=tech.semio.repo
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+## after try 6 2026-11-15T18:55:49Z
+3496899 lrwxr-xr-x@ 1 ueli  staff  30 Nov 14 22:55 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+target inode 3496898 mtime 2026-11-14T22:55:52
+Identifier=tech.semio.repo
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+## before try 7 2026-11-15T19:00:49Z
+3496899 lrwxr-xr-x@ 1 ueli  staff  30 Nov 14 22:55 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+target inode 3496898 mtime 2026-11-14T22:55:52
+Identifier=tech.semio.repo
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357

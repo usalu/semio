@@ -14,7 +14,8 @@
     "partition": {
       "enum": [
         "rust",
-        "products"
+        "products",
+        "receipts"
       ]
     },
     "resource": {

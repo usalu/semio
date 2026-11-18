@@ -1,0 +1,19 @@
+{
+  "machines": [
+    { "cores": 4, "totalMegabytes": 8192 },
+    { "cores": 8, "totalMegabytes": 16384 },
+    { "cores": 10, "totalMegabytes": 32768 },
+    { "cores": 6, "totalMegabytes": 12288 },
+    { "cores": 2, "totalMegabytes": 4096 },
+    { "cores": 4, "totalMegabytes": 16384 },
+    { "cores": 16, "totalMegabytes": 8192 },
+    { "cores": 1, "totalMegabytes": 1024 }
+  ],
+  "times": [
+    { "text": "0:01.50", "milliseconds": 1500 },
+    { "text": "  12:03.25 ", "milliseconds": 723250 },
+    { "text": "1:02:03.25", "milliseconds": 3723250 },
+    { "text": "2-03:04:05", "milliseconds": 183845000 },
+    { "text": "garbage", "milliseconds": null }
+  ]
+}

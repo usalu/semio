@@ -2,7 +2,7 @@
   "sizeClass": "size-workbench",
   "textClass": "text-xs",
   "iconClass": "size-small",
-  "rosterGapClass": "gap-single",
+  "rosterGapClass": null,
   "outerPx": 24,
   "lineBoxPx": 16,
   "iconPx": 16,

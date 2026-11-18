@@ -3,11 +3,13 @@
   "emoji": "🎓",
   "status": "open",
   "description": "Get the architecture course website and its proctor server running end to end and ready to be redeployed: bootstrap the host, run every course, renderer and proctor suite, build the site, run the dev stack and the end-to-end gate, and fix every defect found on the way.",
-  "summary": "Site and proctor build, pass unit tests, typecheck, check and the end-to-end gate in dev and release-rehearsal topologies (87 tests each); release site artifact staged (88 files). Fixed the e2e gate's browser install policy and Playwright scope, pet pick-up on the overview, the assignment PDF budget, FixedCommandPage storage demand, stale kernel tests, build-library type errors and the print test re-export edge. Docker image and release workflow remain Linux-only; legal notice content is an owner decision. See readiness-report.md.",
+  "summary": "Frontend and proctor tested end to end natively: proctor 133/133; new proctor chaos gate (100 protocol learners, all 10 quizzes, dropped sockets/streams, duplicate and aborted commands, kill/term restarts, independent audit) holds incl. 100 learners behind one IP with production limits; new browser chaos spec (10 browsers + 90 protocol learners, static release build, offline/reload/tab/slow network/proctor kills, ghost sockets) passes; Playwright suite passes in dev and rehearsal after fixes; unit suites green. Fixed follow scroll, pets ground on single-card pages, phone segments overflow, pet focus outline, locked tint swallowing pointer, gateway nodelay log noise; stale specs updated; chaos project added to exclusive shard. CDN folder rebuilt and restaged (validate: no problems). Details in readiness-report.md and e2e-suite.md.",
   "goal": "🎯runningproducts",
   "sessions": [
     "cb13e02a-4b40-46c0-a58f-3f6e629e9b1c",
-    "f57655e0-af44-4287-9b2b-3e79ad7e8761"
+    "f57655e0-af44-4287-9b2b-3e79ad7e8761",
+    "c3c5f8f8-d9ef-48c6-bacd-89df4dcd8e24",
+    "089c4dd6-11a8-412f-bf62-f8614e5875f2"
   ],
   "interactions": [
     {
@@ -36,6 +38,121 @@
       "client": "claude-code",
       "checkpoint": "",
       "prompt": "Close the remaining open defects before redeploy: pet-ladder spec flake, three failing launcher Go tests, print inference test failures, proctor open and preflight findings, stale lock entry, and run every deploy target that can run on this host."
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-17 16:15:36",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "efff7f986f5231a088a66da7c5e33a32529cd3c0",
+      "summary": "Architecture course site is staged for the CDN via a native (graph-free) pipeline: tectonic-built assignment PDFs (6, 1.91 MB), vite release build with the PDF runtime channel (native-build.ts), publish-verb validation and staging (native-validate.ts) into dist/release/pages/course (116 files, 8.9 MB, no problems). Playwright smoke (native-smoke.ts) passes all apps; all ten quizzes pass on desktop and phone. Energy quiz pools draw Zipf-weighted toward everyday magnitudes. Homepage gains Assignments card with in-page PDF viewer and download, and Learning Clips card with posters (urls to be provided by the owner). English energy assignment uses decimal points and SPF. Earlier: heating-cooling assignment wiring, 94 repo-tooling type fixes incl. replica kept bug. Not done: upload (workflow still calls repo run publish), Docker targets (need Linux x64), site.legal URLs, build graph on g1-m02 (fleet: single-project inference above 6.5 GB). Details in readiness-report.md.",
+      "files": [
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️📚️course📃readme"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️📚️course⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🔨️modules🗃️🎲️randomness💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🔨️modules🗃️🎲️randomness💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🧬️schema⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️❓️quiz⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🏠️home💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️📝️assignments💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️❄️cooling🗃️❓️quiz⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🧬️schema💻🦀️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📊️demand🗃️❓️quiz⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️📚️course🗃️🏗️builder🗃️🌐️vite💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️📚️course🗃️🚀️deploy🗃️🌐️site💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️📚️course🗃️🧪️tests🗃️🧪️course💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🏃️process🗃️🏗️build🗃️🌡️hostcapacity🗃️🎫️gate💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🔨️modules🗃️✅️validation💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🔨️modules🗃️🃏️sheet💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🧬️schema💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🔥️heating🗃️❓️quiz⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🧲️physics🗃️❓️quiz⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️📚️course🗃️🚀️deploy💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🔨️modules🗃️✅️validation💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🔨️modules🗃️🃏️sheet💻🟦️"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-17 18:00:45",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Make sure frontend and backend run and are tested end to end without bugs: every quiz, all disconnect eventualities, around 100 concurrent users."
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-18 03:54:37",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "efff7f986f5231a088a66da7c5e33a32529cd3c0",
+      "summary": "Frontend and proctor tested end to end natively: proctor 133/133; new proctor chaos gate (100 protocol learners, all 10 quizzes, dropped sockets/streams, duplicate and aborted commands, kill/term restarts, independent audit) holds incl. 100 learners behind one IP with production limits; new browser chaos spec (10 browsers + 90 protocol learners, static release build, offline/reload/tab/slow network/proctor kills, ghost sockets) passes; Playwright suite passes in dev and rehearsal after fixes; unit suites green. Fixed follow scroll, pets ground on single-card pages, phone segments overflow, pet focus outline, locked tint swallowing pointer, gateway nodelay log noise; stale specs updated; chaos project added to exclusive shard. CDN folder rebuilt and restaged (validate: no problems). Details in readiness-report.md and e2e-suite.md.",
+      "files": [
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️📚️course🗃️🎭️e2e🗃️🔒️sessions🗃️🧫️fixtures⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️📚️course🗃️🎭️e2e🗃️🔒️sessions⚙️🔣️"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-18 03:55:51",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Close the remaining gaps: restore real grapple perches, settle the presence reconnect after proctor kills, and run ~100 real browser learners at once."
     }
   ]
 }

@@ -48,6 +48,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + Sync + 'static> ArtifactStoreEnv
 }
 
 impl<P: Send + Sync + 'static, Mutation: Send + Sync + 'static> ErasedSnapshotRetirement for ArtifactStoreEnvelopeRetirement<P, Mutation> {
+    fn next_computational_work(&self, _body: usize) -> Result<u64, ValueError> { Ok(u64::from(!self.terminal_is_empty())) }
     fn close_step(&mut self,_body:usize,effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
         if self.ownership_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         let step = if self.active.is_some() { semio_framework_value::RetirementPollExit::resume(artifact_retirement_box_close_step(&mut self.active,effect.grant().maximum_copy_bytes,effect)) }
@@ -85,14 +86,15 @@ impl<P: Send + Sync + 'static> ArtifactGenesisRetirement<P> {
     }
     pub fn demands(&self, copy: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         use semio_framework_value::RetirementDemand;
-        if let Some(active) = self.active.as_ref() { return semio_framework_value::factory_ticket_demands(active, copy); }
-        if self.snapshot.is_some() { return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<Option<Arc<P>>>() * 2 + std::mem::size_of::<Option<Box<dyn ErasedSnapshotRetirement>>>(), capacity_bytes: semio_framework_value::factory::ArcRootRetirement::<P>::constructor_capacity_bytes(), depth: 1, ..Default::default() }); }
-        if self.pack.is_some() { return Ok(RetirementDemand { capacity_bytes: semio_framework_value_snapshot_read::arc_lease_birth_bytes::<Vec<u8>>(), depth: 1, ..Default::default() }); }
+        if let Some(active) = self.active.as_ref() { return artifact_retirement_box_demands(active, copy); }
+        if self.snapshot.is_some() { return Ok(semio_framework_value::factory::ArcRootRetirement::<P>::admission_demand()); }
+        if self.pack.is_some() { return Ok(semio_framework_value_snapshot_read::arc_lease_admission_demand::<Vec<u8>>()); }
         Ok(Default::default())
     }
 }
 
 impl<P: Send + Sync + 'static> ErasedSnapshotRetirement for ArtifactGenesisRetirement<P> {
+    fn next_computational_work(&self, _body: usize) -> Result<u64, ValueError> { Ok(u64::from(!self.terminal_is_empty())) }
     fn close_step(&mut self,body:usize,effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> {
         use semio_framework_value::retained_clone::RetainedCloneStep;
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
@@ -143,6 +145,7 @@ impl<P: Send + Sync + 'static> ArtifactStoreDisplacedSnapshotRetirement<P> {
 }
 
 impl<P: Send + Sync + 'static> ErasedSnapshotRetirement for ArtifactStoreDisplacedSnapshotRetirement<P> {
+    fn next_computational_work(&self, _body: usize) -> Result<u64, ValueError> { Ok(u64::from(!self.terminal_is_empty())) }
     fn close_step(&mut self,_body:usize,effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
         use semio_framework_value::retained_clone::admit_retained_clone_close;
         let empty = RetainedCloneProgress::default();

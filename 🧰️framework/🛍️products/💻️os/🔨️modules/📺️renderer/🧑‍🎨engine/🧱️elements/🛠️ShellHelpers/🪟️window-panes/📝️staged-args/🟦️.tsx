@@ -1,6 +1,6 @@
 /** 📝️ Window panes, staged args: the staged argument controls (reference, color, vector, number) and the form gate of an action. */
 import { type ActionArgControl, type ActionDefinition, argControl, actionArgNumberFacets, type ActionArgNumberFacets, referenceIdText, referenceIdValue, type ReferenceIdType } from "@semio-tech/framework";
-import { Icon, IconSelector, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider, Stepper, Textarea, Toggle, ToggleGroup, uiDataLabel, type UIDialogFieldBinding } from "@semio-tech/ui-react";
+import { Icon, IconSelector, Input, SharedBorderRow, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider, Stepper, Textarea, Toggle, ToggleGroup, uiDataLabel, type UIDialogFieldBinding } from "@semio-tech/ui-react";
 import { type ReactElement, useState } from "../../../⚛️react-port/🟦️.ts";
 import { parseUiColorHex, uiColorHex, uiNumberCrossedBound, uiNumberDisplay, uiNumberDisplayText, uiNumberFieldKey, uiNumberKeyValue, uiNumberTypedValue } from "@semio-tech/ui-contract/component";
 import type { InteractionState } from "@semio-tech/framework-interaction";
@@ -43,7 +43,7 @@ function stagedReferenceIds(value: unknown): readonly string[] {
 /** 🧷️ A staged reference input with the W1-E `reference_list` recipe semantics: one chip per referenced id that removes
  * it on activation (announced as "Remove <id>"), an empty line while there is none, and a "use current selection"
  * button that takes the live selection (capped at `maxItems`, the first id for a single reference). */
-function StagedReferenceField({ id, labelledBy, value, many, maxItems, domain, idType, disabled, selection, onChange }: { readonly id: string; readonly labelledBy?: string; readonly value: unknown; readonly many: boolean; readonly maxItems?: number; readonly domain?: string; readonly idType?: ReferenceIdType; readonly disabled?: boolean; readonly selection?: StagedArgContextV1["selection"]; readonly onChange: (value: unknown) => void }): ReactElement {
+export function StagedReferenceField({ id, labelledBy, value, many, maxItems, domain, idType, disabled, selection, onChange }: { readonly id: string; readonly labelledBy?: string; readonly value: unknown; readonly many: boolean; readonly maxItems?: number; readonly domain?: string; readonly idType?: ReferenceIdType; readonly disabled?: boolean; readonly selection?: StagedArgContextV1["selection"]; readonly onChange: (value: unknown) => void }): ReactElement {
   const ids = stagedReferenceIds(value);
   const removeLabel = (item: string) => String(shellLabel("ui.referenceList.remove", { item }));
   const commit = (next: readonly string[]) => {
@@ -55,14 +55,14 @@ function StagedReferenceField({ id, labelledBy, value, many, maxItems, domain, i
       {ids.length === 0 ? (
         <span data-staged-reference-empty="" className="text-xs text-muted-foreground">{shellLabel("ui.referenceList.empty")}</span>
       ) : (
-        <div role="toolbar" aria-labelledby={labelledBy} className="flex flex-wrap gap-tiny">
+        <SharedBorderRow role="toolbar" aria-labelledby={labelledBy} className="max-w-full self-start">
           {ids.map((item) => (
-            <button key={item} type="button" data-staged-reference-chip={item} aria-label={removeLabel(item)} title={removeLabel(item)} disabled={disabled} className="inline-flex items-center gap-tiny rounded-sm border px-single text-xs" onClick={() => commit(ids.filter((other) => other !== item))}>
+            <button key={item} type="button" data-staged-reference-chip={item} aria-label={removeLabel(item)} title={removeLabel(item)} disabled={disabled} data-shared-border-cell="" className="inline-flex min-w-0 items-center gap-tiny px-single text-xs" onClick={() => commit(ids.filter((other) => other !== item))}>
               {item}
               <Icon icon="x" size="small" />
             </button>
           ))}
-        </div>
+        </SharedBorderRow>
       )}
       <button type="button" data-staged-reference-use-selection="" disabled={disabled || selection === undefined} className="self-start text-xs underline" onClick={() => {
         const picked = [...new Set(selection?.(domain) ?? [])];
@@ -93,35 +93,38 @@ function StagedColorField({ id, labelledBy, value, alpha, disabled, required, on
   };
   return (
     <div id={id} role="group" aria-labelledby={labelledBy} data-staged-control="color" className="flex w-full min-w-0 flex-wrap items-center gap-single">
-      <input
-        id={`${id}.swatch`}
-        type="color"
-        aria-labelledby={labelledBy}
-        className="h-medium w-medium shrink-0 cursor-pointer rounded-sm border"
-        value={uiColorHex(rgba, false)}
-        disabled={disabled}
-        onChange={(event) => {
-          const parsed = parseUiColorHex(event.target.value);
-          if (parsed) commit([...parsed.slice(0, 3), rgba[3]!]);
-        }}
-      />
-      <Input
-        id={`${id}.hex`}
-        aria-label={String(shellLabel("ui.colorInput.hex"))}
-        required={required}
-        type="text"
-        spellCheck={false}
-        className="h-medium w-[7rem] min-w-0 font-mono"
-        value={draft ?? uiColorHex(rgba, alpha)}
-        disabled={disabled}
-        onChange={(event) => setDraft(event.target.value)}
-        onBlur={(event) => commitHex(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key !== "Enter") return;
-          event.preventDefault();
-          commitHex(event.currentTarget.value);
-        }}
-      />
+      <SharedBorderRow className="shrink-0">
+        <input
+          id={`${id}.swatch`}
+          type="color"
+          aria-labelledby={labelledBy}
+          data-shared-border-cell=""
+          className="h-medium w-medium shrink-0 cursor-pointer bg-transparent p-0"
+          value={uiColorHex(rgba, false)}
+          disabled={disabled}
+          onChange={(event) => {
+            const parsed = parseUiColorHex(event.target.value);
+            if (parsed) commit([...parsed.slice(0, 3), rgba[3]!]);
+          }}
+        />
+        <Input
+          id={`${id}.hex`}
+          aria-label={String(shellLabel("ui.colorInput.hex"))}
+          required={required}
+          type="text"
+          spellCheck={false}
+          className="w-[7rem] min-w-0 font-mono"
+          value={draft ?? uiColorHex(rgba, alpha)}
+          disabled={disabled}
+          onChange={(event) => setDraft(event.target.value)}
+          onBlur={(event) => commitHex(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key !== "Enter") return;
+            event.preventDefault();
+            commitHex(event.currentTarget.value);
+          }}
+        />
+      </SharedBorderRow>
       {alpha ? <Slider id={`${id}.alpha`} aria-label={String(shellLabel("ui.colorInput.alpha"))} className="min-w-[6rem] flex-1" min={0} max={1} step={0.01} value={[rgba[3]!]} disabled={disabled} onValueChange={(values) => commit([...rgba.slice(0, 3), values[0] ?? rgba[3]!])} /> : null}
     </div>
   );

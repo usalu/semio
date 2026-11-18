@@ -1,0 +1,49 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { OWNER_POOL_POLICY_V1 as P, ownerPoolRecycleV1, pullOwnerPoolV1 } from "../🟦️.ts";
+
+const MEGABYTE = 1048576, megabytes = () => Math.round(process.memoryUsage().rss / MEGABYTE);
+
+/** 🧒️ What a child process of the pool ends with: the wave is stored by somebody (0), it passed its memory or age and is replaced (75), the record code differs from the wave's (76), it could not open the wave (77) or the supervisor asked it to stop (78). */
+export const OWNER_POOL_CHILD_EXIT_V1 = Object.freeze({ finished: 0, recycled: P.recycleExitCode, revision: 76, failed: 77, drained: 78 });
+
+/** 🧒️ One child of the pool: ONE process, ONE owner at a time (an owner is CPU bound JavaScript, so the cores of a machine are used by processes and not by slots of one event loop), which opens the wave under this machine's root once, walks the list from its own start (see {@link pullOwnerPoolV1}), claims, infers and publishes, and is replaced by the supervisor when its resident memory passed `recycleMegabytes` after an owner or its age passed the lifetime (the allocator never returns memory, so a fresh process is the only way to give it back). It reports one JSON object per line (`ready`, `beat`, `done`, `end`: resident size, the cpu and wall time of every owner, the claim statistics); a line `drain` on its input, or the end of its input (the supervisor died), makes it stop after the owner in flight. `driver` is the module that opens the inference (the real one unless a test brings another). */
+export async function runOwnerPoolChildV1({ args, write, input, environment = process.env }) {
+  const opened = Date.now();
+  const head = JSON.parse(readFileSync(join(args.dir, "head.json"), "utf8")), units = JSON.parse(readFileSync(join(args.dir, "units.json"), "utf8")), session = readFileSync(join(args.dir, "session.bin"));
+  const driver = await (args.driver === undefined || args.driver === null ? import("../🔬️inference/🟨️.mjs").then(module => module.openOwnerPoolInferenceV1) : import(args.driver).then(module => module.openOwnerPoolInferenceV1));
+  let opening;
+  try { opening = await driver({ root: args.root, fleetRoot: args.fleetRoot ?? args.root, environment, session, globals: head.globals, units }); }
+  catch (error) { write({ t: "end", reason: "open", message: String(error?.message ?? error).slice(0, 300) }); return OWNER_POOL_CHILD_EXIT_V1.failed; }
+  if (opening.revision !== undefined && head.revision !== undefined && head.revision !== opening.revision) { write({ t: "end", reason: "revision" }); opening.close?.(); return OWNER_POOL_CHILD_EXIT_V1.revision; }
+  let drain = false, recycle = false, running = 0, cpu = process.cpuUsage(), latest;
+  input?.on("data", chunk => { if (String(chunk).includes("drain")) drain = true; });
+  input?.on("end", () => { drain = true; });
+  const readyRss = megabytes();
+  write({ t: "ready", pid: process.pid, rss: megabytes(), openMilliseconds: Date.now() - opened, units: units.length });
+  const beat = setInterval(() => write({ t: "beat", rss: megabytes(), running, stats: latest, port: opening.stats?.() }), P.beatMilliseconds);
+  const began = Date.now(), over = () => drain || recycle || Date.now() - began > (args.lifetimeMilliseconds ?? P.childLifetimeMilliseconds);
+  let stats;
+  try {
+    stats = await pullOwnerPoolV1({
+      units: () => units, puller: args.puller, slots: () => (over() ? 0 : 1), stop: over,
+      claim: async unit => { await opening.resend?.().catch(() => undefined); return opening.claim(unit); }, run: unit => opening.run(unit), fail: (name, message, deterministic, code) => { write({ t: "fail", name, message: message.slice(0, 300), deterministic, code: code ?? "" }); opening.fail?.(name, message, deterministic); },
+      busy: count => { running = count; }, progress: stats => { latest = { ...stats }; },
+      done: (unit, ok, milliseconds) => {
+        const used = process.cpuUsage(cpu); cpu = process.cpuUsage();
+        const rss = megabytes(); if (ownerPoolRecycleV1({ rss, readyRss, recycleMegabytes: args.recycleMegabytes ?? Infinity })) recycle = true;
+        write({ t: "done", name: unit.name, kind: unit.kind, ok, milliseconds, cpuMilliseconds: Math.round((used.user + used.system) / 1000), rss, peak: Math.round(process.resourceUsage().maxRSS / 1024) });
+      },
+    });
+  } finally { clearInterval(beat); await Promise.race([opening.resend?.({ force: true }).catch(() => undefined), new Promise(done => setTimeout(done, P.resendFinalMilliseconds))]); opening.close?.(); }
+  const reason = recycle ? "recycled" : drain ? "drained" : Date.now() - began > (args.lifetimeMilliseconds ?? P.childLifetimeMilliseconds) ? "recycled" : "finished";
+  write({ t: "end", reason, stats, port: opening.stats?.(), rss: megabytes() });
+  return reason === "finished" ? 0 : reason === "recycled" ? OWNER_POOL_CHILD_EXIT_V1.recycled : OWNER_POOL_CHILD_EXIT_V1.drained;
+}
+
+if (import.meta.main) {
+  const args = JSON.parse(readFileSync(process.argv[2], "utf8")), write = value => { try { process.stdout.write(JSON.stringify(value) + "\n"); } catch {} };
+  process.stdin.resume();
+  const code = await runOwnerPoolChildV1({ args, write, input: process.stdin });
+  process.exit(code);
+}

@@ -12,7 +12,7 @@
 #   --relocate-from  the worktree of an already joined machine that moves to the canonical path (found automatically from the installed replica service when it differs): the services stop, `relocate` takes the identity (the origin id never changes) and adopts the store in the new tree, the services start at the new path, `relocate --phase finish` verifies and retires the old tree (never deleted);
 #   --first-machine  the first machine of the fleet: a checkout is at the canonical path and the store is empty; `seed` publishes it instead of `join` (refused when the store already has origins; never use it twice);
 #   --server   this machine is the group server, on the platform that the topology names for it (linux or macos; a Windows server uses the PowerShell script): the script writes the exports, mounts the peers read-only, installs the remote cache and relay services next to the replica (the cache tokens file must exist: it is never written here), its daily compaction passes --collect-blobs (the only machine that deletes unreferenced blobs), and, unless --first-machine is also given, one `relay --once` round copies the other groups into its still empty store before it settles and joins; it needs --archive (a peer group's bootstrap directory) when the worktree is empty. On Linux the store is the local export bind-mounted at the store mount (no NFS client entry); on macOS the store root is the exported folder itself (--store);
-# The script needs the topology file next to it (../🔣️.json): the early steps run before the repo launcher exists, so they read the worktree path and the NFS export from it with sed; the topology command re-derives the same values later and the script refuses any difference.
+# The script needs the topology file next to it (../🔣️.json): the early steps run before the repo launcher exists, so they read the worktree path and the NFS export from it with the JSON walker of the region 🔎️Json (awk: any key order, whitespace and unknown keys); the topology command re-derives the same values later and the script refuses any difference.
 # Re-running is safe: when .cache/f/machine.json exists, its origin and group must equal the arguments (otherwise the script stops before it changes anything); `join` is then skipped, while the mounts, limits and services are installed again.
 # Linux workers get /etc/sysctl.d/90-semio-fleet.conf with fs.inotify.max_user_watches >= 1048576 and max_user_instances, applied and verified (the tree has ~122k directories).
 # Steps: canonical worktree, bootstrap archive (verify its sha256 against manifest.json, extract with the OS tar), the standalone `repo` launcher (built from the checkout by the launcher installer; it needs no compiler and no package), system limits, store mount and NFS client, clock synchronisation check, cache environment, replica and compact services (daily compaction timer or task), `bootstrap-settle`, `join`, service start, and only then, as the last step, the repository's native bootstrap (build tools, Node.js, Rust, .NET, uv, `repo-mcp:install`, `workspace:setup`).
@@ -76,35 +76,132 @@ TOPOLOGY_JSON=""
 for candidate in "$SCRIPT_DIR"/../🔣*.json; do TOPOLOGY_JSON=$candidate; done
 [ -f "$TOPOLOGY_JSON" ] || fail "the topology file was not found next to this script: $SCRIPT_DIR/.."
 
-json_object() { printf '%s' "$1" | sed -n "s/.*\"$2\"[[:space:]]*:[[:space:]]*{\([^}]*\)}.*/\1/p"; }
-json_string() { printf '%s' "$1" | sed -n "s/.*\"$2\"[[:space:]]*:[[:space:]]*\"\([^\"]*\)\".*/\1/p"; }
-TOPOLOGY_TEXT=$(tr -d '\n\r' < "$TOPOLOGY_JSON")
-WORKTREE_TEMPLATE=$(json_string "$(json_object "$TOPOLOGY_TEXT" worktree)" "$PLATFORM")
+# #region 🔎️Json
+# Facts are read from JSON by walking it, never by text patterns: key order, whitespace, nesting, unknown keys and braces or quotes inside strings cannot change an answer. A new machine has only POSIX tools, so this is awk (LC_ALL=C: bytes, so emoji paths pass through and the walk stays linear); no jq, no Python. `json_flat` prints one `path<TAB>value` line per scalar (`groups[0].nfs.host`, `worktree.macos`; `\"`, `\\`, `\/` and `\u0020`..`\u007e` are decoded, other escapes stay as written), refuses malformed JSON and duplicate keys (exit 1, reason on stderr). / Fakten werden aus JSON gelesen, indem man es durchläuft, nie mit Textmustern.
+JSON_FLAT_AWK='
+function fail(message) { printf "json: %s at byte %d\n", message, i > "/dev/stderr"; failed = 1; exit 1 }
+function child(   found) {
+  if (depth == 0) return ""
+  if (kind[depth] == "o") return (base[depth] == "" ? key[depth] : base[depth] "." key[depth])
+  return base[depth] "[" position[depth] "]"
+}
+function emit(value,   found) {
+  found = child()
+  if (found in seen) fail("duplicate key " found)
+  seen[found] = 1
+  printf "%s\t%s\n", found, value
+  if (depth == 0) done = 1
+}
+function wantsKey() { return depth > 0 && kind[depth] == "o" && expectKey[depth] }
+{ text = text $0 "\n" }
+END {
+  size = length(text); i = 1; depth = 0; done = 0
+  if (substr(text, 1, 3) == "\357\273\277") i = 4
+  while (i <= size) {
+    c = substr(text, i, 1)
+    if (c == " " || c == "\t" || c == "\n" || c == "\r" || c == ":") { i++; continue }
+    if (done) fail("text after the document")
+    if (c == ",") {
+      if (depth == 0) fail("comma outside a container")
+      if (kind[depth] == "a") position[depth]++; else expectKey[depth] = 1
+      i++; continue
+    }
+    if (c == "{" || c == "[") {
+      if (wantsKey()) fail("key expected")
+      found = child(); depth++; kind[depth] = (c == "{" ? "o" : "a"); base[depth] = found
+      position[depth] = 0; key[depth] = ""; expectKey[depth] = (c == "{"); i++; continue
+    }
+    if (c == "}" || c == "]") {
+      if (depth == 0 || (c == "}") != (kind[depth] == "o")) fail("unbalanced " c)
+      depth--; if (depth == 0) done = 1
+      i++; continue
+    }
+    if (c == "\"") {
+      value = ""; closed = 0; i++
+      while (i <= size) {
+        c = substr(text, i, 1)
+        if (c == "\"") { closed = 1; i++; break }
+        if (c == "\\") {
+          e = substr(text, i + 1, 1)
+          if (e == "\"" || e == "\\" || e == "/") { value = value e; i += 2; continue }
+          if (e == "u" && substr(text, i + 2, 2) == "00") {
+            high = index("0123456789abcdef", tolower(substr(text, i + 4, 1))); low = index("0123456789abcdef", tolower(substr(text, i + 5, 1)))
+            code = (high - 1) * 16 + (low - 1)
+            if (high && low && code >= 32 && code < 127) { value = value sprintf("%c", code); i += 6; continue }
+          }
+          value = value c e
+          i += 2; continue
+        }
+        value = value c; i++
+      }
+      if (!closed) fail("unterminated string")
+      if (wantsKey()) { key[depth] = value; expectKey[depth] = 0 } else emit(value)
+      continue
+    }
+    value = ""
+    while (i <= size) {
+      c = substr(text, i, 1)
+      if (c == "," || c == "}" || c == "]" || c == " " || c == "\t" || c == "\n" || c == "\r" || c == ":" || c == "\"") break
+      value = value c; i++
+    }
+    if (value == "") fail("unexpected character " c)
+    if (wantsKey()) fail("key expected")
+    emit(value)
+  }
+  if (!done || depth != 0) fail("incomplete document")
+}
+'
+json_flat() { LC_ALL=C awk "$JSON_FLAT_AWK"; }
+json_fact() { printf '%s\n' "$1" | JSON_KEY=$2 LC_ALL=C awk 'BEGIN { key = ENVIRON["JSON_KEY"] } { at = index($0, "\t"); if (!found && substr($0, 1, at - 1) == key) { value = substr($0, at + 1); found = 1 } } END { if (found) print value }'; }
+json_group() { printf '%s\n' "$1" | JSON_KEY=$2 LC_ALL=C awk 'BEGIN { id = ENVIRON["JSON_KEY"] } { at = index($0, "\t"); name = substr($0, 1, at - 1); if (name ~ /^groups\[[0-9]+\]\.id$/ && substr($0, at + 1) == id) { count++; path = substr(name, 1, length(name) - 3) } } END { if (count == 1) print path }'; }
+json_seal_files() {
+  LC_ALL=C awk -v summary="$1" '
+  BEGIN { FS = "\t" }
+  $1 ~ /^files\[[0-9]+\]\.(path|bytes|sha256|executable)$/ {
+    number = $1; sub(/^files\[/, "", number); sub(/\].*$/, "", number); index_of = number + 0
+    field = $1; sub(/^files\[[0-9]+\]\./, "", field)
+    value = substr($0, index($0, "\t") + 1); listed[index_of] = 1; if (index_of > last) last = index_of
+    if (field == "path") path[index_of] = value; else if (field == "bytes") bytes[index_of] = value
+    else if (field == "sha256") hash[index_of] = value; else execute[index_of] = value
+  }
+  END {
+    found = 0; expected = 0
+    for (n = 0; n <= last; n++) if (n in listed) {
+      expected++
+      if (n in path && bytes[n] ~ /^[0-9]+$/ && hash[n] ~ /^[0-9a-f][0-9a-f]*$/ && length(hash[n]) == 64 && (execute[n] == "true" || execute[n] == "false")) {
+        found++; printf "%d\t%s\t%s\t%s\n", (execute[n] == "true"), bytes[n], hash[n], path[n]
+      }
+    }
+    printf "%d %d\n", expected, found > summary
+  }'
+}
+# #endregion 🔎️Json
+TOPOLOGY_FLAT=$(json_flat < "$TOPOLOGY_JSON") || fail "the topology file is not valid JSON, see the reason above: $TOPOLOGY_JSON / die Topologie-Datei ist kein gültiges JSON, siehe Grund oben: $TOPOLOGY_JSON"
+WORKTREE_TEMPLATE=$(json_fact "$TOPOLOGY_FLAT" "worktree.$PLATFORM")
 case "$WORKTREE_TEMPLATE" in
   "~/"*) WORKTREE=${WORKER_HOME%/}/${WORKTREE_TEMPLATE#"~/"} ;;
   ""|"~"*) fail "the topology has no usable worktree template for $PLATFORM: $WORKTREE_TEMPLATE" ;;
   *) WORKTREE=$WORKTREE_TEMPLATE ;;
 esac
-GROUP_NFS=$(printf '%s' "$TOPOLOGY_TEXT" | sed -n "s/.*{[[:space:]]*\"id\"[[:space:]]*:[[:space:]]*\"$GROUP_ID\"[[:space:]]*,[[:space:]]*\"nfs\"[[:space:]]*:[[:space:]]*{\([^}]*\)}.*/\1/p")
-NFS_HOST=$(json_string "$GROUP_NFS" host)
-NFS_EXPORT=$(json_string "$GROUP_NFS" export)
+GROUP_PATH=$(json_group "$TOPOLOGY_FLAT" "$GROUP_ID")
+NFS_HOST=$(json_fact "$TOPOLOGY_FLAT" "$GROUP_PATH.nfs.host")
+NFS_EXPORT=$(json_fact "$TOPOLOGY_FLAT" "$GROUP_PATH.nfs.export")
 if [ -n "${SEMIO_FLEET_GROUP:-}${SEMIO_FLEET_NFS_HOST:-}${SEMIO_FLEET_NETWORK:-}${SEMIO_FLEET_CACHE_ENDPOINT:-}" ]; then
   { [ -n "${SEMIO_FLEET_GROUP:-}" ] && [ -n "${SEMIO_FLEET_NFS_HOST:-}" ] && [ -n "${SEMIO_FLEET_NETWORK:-}" ]; } || fail "SEMIO_FLEET_GROUP, SEMIO_FLEET_NFS_HOST and SEMIO_FLEET_NETWORK are set together"
   if [ "$SEMIO_FLEET_GROUP" = "$GROUP_ID" ]; then NFS_HOST=$SEMIO_FLEET_NFS_HOST; fi
 fi
 NFS_SOURCE="$NFS_HOST:$NFS_EXPORT"
 { [ -n "$WORKTREE" ] && [ "$NFS_SOURCE" != ":" ]; } || fail "the topology has no worktree for $PLATFORM or no group $GROUP_ID: $TOPOLOGY_JSON"
-GROUP_SERVER=$(printf '%s' "$TOPOLOGY_TEXT" | sed -n "s/.*{[[:space:]]*\"id\"[[:space:]]*:[[:space:]]*\"$GROUP_ID\"[[:space:]]*,[[:space:]]*\"nfs\"[[:space:]]*:[[:space:]]*{[^}]*}[[:space:]]*,[[:space:]]*\"server\"[[:space:]]*:[[:space:]]*{\([^}]*\)}.*/\1/p")
-SERVER_PLATFORM=$(json_string "$GROUP_SERVER" platform)
-SERVER_PROTOCOL=$(json_string "$GROUP_SERVER" protocol)
+SERVER_PLATFORM=$(json_fact "$TOPOLOGY_FLAT" "$GROUP_PATH.server.platform")
+SERVER_PROTOCOL=$(json_fact "$TOPOLOGY_FLAT" "$GROUP_PATH.server.protocol")
 { [ -n "$SERVER_PLATFORM" ] && [ -n "$SERVER_PROTOCOL" ]; } || fail "the topology has no server for group $GROUP_ID: $TOPOLOGY_JSON"
 [ "$SERVER_PROTOCOL" != smb ] || fail "group $GROUP_ID shares its store over SMB, which only Windows workers mount: use the PowerShell script on a Windows machine"
 [ "$SERVER" = 0 ] || [ "$SERVER_PLATFORM" = "$PLATFORM" ] || fail "the topology puts the server of $GROUP_ID on $SERVER_PLATFORM, this machine is $PLATFORM: provision it without --server, or change the one topology file"
 JOINED=0
 MACHINE=$WORKTREE/.cache/f/machine.json
 if [ -f "$MACHINE" ]; then
-  MACHINE_TEXT=$(tr -d '\n\r' < "$MACHINE")
-  MACHINE_ORIGIN=$(json_string "$MACHINE_TEXT" originId); MACHINE_GROUP=$(json_string "$MACHINE_TEXT" groupId)
+  MACHINE_FLAT=$(json_flat < "$MACHINE") || fail "$MACHINE is not valid JSON, see the reason above: remove the worktree state first / $MACHINE ist kein gültiges JSON"
+  MACHINE_ORIGIN=$(json_fact "$MACHINE_FLAT" originId); MACHINE_GROUP=$(json_fact "$MACHINE_FLAT" groupId)
   { [ -n "$MACHINE_ORIGIN" ] && [ -n "$MACHINE_GROUP" ]; } || fail "$MACHINE has no originId and groupId: remove the worktree state first"
   [ "$MACHINE_ORIGIN" = "$ORIGIN_ID" ] || fail "$MACHINE belongs to origin $MACHINE_ORIGIN, not $ORIGIN_ID: pass that origin, or remove the worktree state first"
   [ "$MACHINE_GROUP" = "$GROUP_ID" ] || fail "$MACHINE belongs to group $MACHINE_GROUP, not $GROUP_ID: pass that group, or remove the worktree state first"
@@ -133,9 +230,9 @@ if [ -z "$OLD_WORKTREE" ] && [ "$JOINED" = 0 ]; then
   [ -z "$INSTALLED" ] || OLD_WORKTREE=${INSTALLED%/"$MODULES/🤝️shared-worktree/🔁️replica"}
 fi
 if [ -n "$OLD_WORKTREE" ] && [ "$OLD_WORKTREE" != "$WORKTREE" ] && [ "$JOINED" = 0 ] && [ -f "$OLD_WORKTREE/.cache/f/machine.json" ]; then
-  OLD_TEXT=$(tr -d '\n\r' < "$OLD_WORKTREE/.cache/f/machine.json")
-  [ "$(json_string "$OLD_TEXT" originId)" = "$ORIGIN_ID" ] || fail "$OLD_WORKTREE belongs to origin $(json_string "$OLD_TEXT" originId), not $ORIGIN_ID: origin ids never change and are never reused, pass that origin"
-  [ "$(json_string "$OLD_TEXT" groupId)" = "$GROUP_ID" ] || fail "$OLD_WORKTREE belongs to group $(json_string "$OLD_TEXT" groupId), not $GROUP_ID: pass that group"
+  OLD_FLAT=$(json_flat < "$OLD_WORKTREE/.cache/f/machine.json") || fail "$OLD_WORKTREE/.cache/f/machine.json is not valid JSON, see the reason above / ist kein gültiges JSON"
+  [ "$(json_fact "$OLD_FLAT" originId)" = "$ORIGIN_ID" ] || fail "$OLD_WORKTREE belongs to origin $(json_fact "$OLD_FLAT" originId), not $ORIGIN_ID: origin ids never change and are never reused, pass that origin"
+  [ "$(json_fact "$OLD_FLAT" groupId)" = "$GROUP_ID" ] || fail "$OLD_WORKTREE belongs to group $(json_fact "$OLD_FLAT" groupId), not $GROUP_ID: pass that group"
   RELOCATE=1
 fi
 
@@ -331,14 +428,20 @@ install_nfs_client() {
   else fail "install an NFS client (mount.nfs) first"; fi
 }
 fetch_archive() {
-  local source=$1 target=$2 attempt expected actual name
+  local source=$1 target=$2 attempt expected actual name stem manifest
   for attempt in 1 2 3 4 5; do
     [ -f "$source/manifest.json" ] || fail "no bootstrap archive in $source: run bootstrap-archive on the group server (its relay refreshes it on a schedule) or pass --archive <directory>"
-    name=$(sed -n 's/.*"archive"[[:space:]]*:[[:space:]]*"\(worktree-[0-9a-f]\{16\}\.tar\)".*/\1/p' "$source/manifest.json")
+    manifest=$(json_flat < "$source/manifest.json") || fail "unreadable $source/manifest.json"
+    name=$(json_fact "$manifest" archive)
+    case $name in worktree-*.tar) stem=${name#worktree-}; stem=${stem%.tar} ;; *) stem="" ;; esac
+    case $stem in *[!0-9a-f]*) stem="" ;; esac
+    [ "${#stem}" = 16 ] || name=""
     { [ -n "$name" ] && [ -f "$source/$name" ]; } || fail "the bootstrap manifest in $source names no archive that exists: run bootstrap-archive on the group server (its relay refreshes it on a schedule) or pass --archive <directory>"
-    expected=$(sed -n 's/.*"sha256"[[:space:]]*:[[:space:]]*"\([0-9a-f]\{64\}\)".*/\1/p' "$source/manifest.json")
-    EXPECTED_FILES=$(sed -n 's/.*"files"[[:space:]]*:[[:space:]]*\([0-9][0-9]*\).*/\1/p' "$source/manifest.json")
-    { [ -n "$expected" ] && [ -n "$EXPECTED_FILES" ]; } || fail "unreadable $source/manifest.json"
+    expected=$(json_fact "$manifest" sha256)
+    EXPECTED_FILES=$(json_fact "$manifest" files)
+    case $expected in *[!0-9a-f]*) expected="" ;; esac
+    case $EXPECTED_FILES in *[!0-9]*) EXPECTED_FILES="" ;; esac
+    { [ "${#expected}" = 64 ] && [ -n "$EXPECTED_FILES" ]; } || fail "unreadable $source/manifest.json"
     cp "$source/$name" "$target"
     actual=$(sha256_of "$target")
     if [ "$actual" = "$expected" ]; then say "archive verified: sha256 $expected, $EXPECTED_FILES files"; return 0; fi
@@ -369,34 +472,32 @@ overlay_open_store() {
 }
 overlay_digest() {
   local v1=$1 attested="" seal name created best="" newest=-1
-  if [ -f "$v1/origins/$GROUP_ID-server/attest.json" ]; then attested=$(grep -o '"code":"[0-9a-f]\{64\}"' "$v1/origins/$GROUP_ID-server/attest.json" | head -n 1 | cut -d'"' -f4 || true); fi
+  if [ -f "$v1/origins/$GROUP_ID-server/attest.json" ]; then attested=$(json_fact "$(json_flat < "$v1/origins/$GROUP_ID-server/attest.json" 2>/dev/null || true)" code); fi
+  case $attested in *[!0-9a-f]*) attested="" ;; esac
+  [ "${#attested}" = 64 ] || attested=""
   if [ -n "$attested" ] && [ -f "$v1/bootstrap/code/$attested/sealed.json" ]; then printf '%s' "$attested"; return 0; fi
   for seal in "$v1"/bootstrap/code/*/sealed.json; do
     [ -f "$seal" ] || continue
     name=$(basename "$(dirname "$seal")")
     [ "${#name}" = 64 ] || continue
     case $name in *[!0-9a-f]*) continue ;; esac
-    created=$(grep -o '"createdMs":[0-9]*' "$seal" | head -n 1 | cut -d: -f2 || true)
-    if [ -n "$created" ] && [ "$created" -gt "$newest" ]; then newest=$created; best=$name; fi
+    created=$(json_fact "$(json_flat < "$seal" 2>/dev/null || true)" createdMs)
+    case $created in ""|*[!0-9]*) continue ;; esac
+    if [ "$created" -gt "$newest" ]; then newest=$created; best=$name; fi
   done
   printf '%s' "$best"
 }
 overlay_stage() {
-  local code=$1/bootstrap/code/$2 stage=$3 entry path bytes hash bit expected found
+  local code=$1/bootstrap/code/$2 stage=$3 path bytes hash bit expected found
   OVERLAY_PROBLEM=""
-  tr -d '\n\r' < "$code/sealed.json" > "$stage/seal"
-  grep -q '"version":1' "$stage/seal" || { overlay_problem "the seal is not version 1 / das Siegel ist nicht Version 1"; return 1; }
-  grep -q "\"digest\":\"$2\"" "$stage/seal" || { overlay_problem "the seal names another digest than its folder / das Siegel nennt einen anderen Digest als sein Ordner"; return 1; }
-  grep -oE '\{"path":"[^"]*","bytes":[0-9]+,"sha256":"[0-9a-f]{64}","executable":(true|false)\}' "$stage/seal" > "$stage/entries" || true
-  expected=$(grep -o '"sha256":' "$stage/seal" | wc -l | tr -d ' ')
-  found=$(wc -l < "$stage/entries" | tr -d ' ')
-  { [ "$found" = "$expected" ] && [ "$found" -gt 0 ]; } || { overlay_problem "the seal lists $expected hashes but $found readable files / das Siegel nennt $expected Hashes, aber $found lesbare Dateien"; return 1; }
+  json_flat < "$code/sealed.json" > "$stage/seal" 2> "$stage/seal.error" || { overlay_problem "the seal is not valid JSON ($(head -n 1 "$stage/seal.error")) / das Siegel ist kein gültiges JSON"; return 1; }
+  [ "$(json_fact "$(cat "$stage/seal")" version)" = 1 ] || { overlay_problem "the seal is not version 1 / das Siegel ist nicht Version 1"; return 1; }
+  [ "$(json_fact "$(cat "$stage/seal")" digest)" = "$2" ] || { overlay_problem "the seal names another digest than its folder / das Siegel nennt einen anderen Digest als sein Ordner"; return 1; }
+  json_seal_files "$stage/summary" < "$stage/seal" > "$stage/entries"
+  read -r expected found < "$stage/summary"
+  { [ "$found" = "$expected" ] && [ "$found" -gt 0 ]; } || { overlay_problem "the seal lists $expected files but $found readable ones / das Siegel nennt $expected Dateien, aber $found lesbare"; return 1; }
   : > "$stage/list"
-  while IFS= read -r entry; do
-    path=${entry#'{"path":"'}; path=${path%%'","bytes":'*}
-    bytes=${entry#*'"bytes":'}; bytes=${bytes%%,*}
-    hash=${entry##*'"sha256":"'}; hash=${hash%%\"*}
-    case $entry in *'"executable":true}') bit=1 ;; *) bit=0 ;; esac
+  while IFS=$'\t' read -r bit bytes hash path; do
     overlay_safe_path "$path" || { overlay_problem "unsafe path in the seal: $path / unsicherer Pfad im Siegel: $path"; return 1; }
     mkdir -p "$(dirname "$stage/files/$path")"
     cp "$code/files/$path" "$stage/files/$path" 2>/dev/null || { overlay_problem "missing $path / fehlt $path"; return 1; }

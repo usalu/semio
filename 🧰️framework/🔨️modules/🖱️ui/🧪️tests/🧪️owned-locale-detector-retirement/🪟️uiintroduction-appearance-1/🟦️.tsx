@@ -60,7 +60,7 @@ describe("UIIntroduction appearance", () => {
       const closeButton = container.querySelector('[data-slot="introduction-close"]') as HTMLElement;
       for (const flowingChip of [titleChip, stepChip, backButtonGroup, nextButtonGroup, closeButton]) {
         expect(flowingChip).toBeTruthy();
-        expect(flowingChip.parentElement?.hasAttribute("data-window-silhouette-chip")).toBe(true);
+        expect((flowingChip.parentElement?.hasAttribute("data-shared-border-cells") ? flowingChip.parentElement.parentElement : flowingChip.parentElement)?.hasAttribute("data-window-silhouette-chip")).toBe(true);
         expect(flowingChip.getAttribute("data-level") ?? flowingChip.closest("[data-level]")?.getAttribute("data-level")).toBe("dialog");
       }
 

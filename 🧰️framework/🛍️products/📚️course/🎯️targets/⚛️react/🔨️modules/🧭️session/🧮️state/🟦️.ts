@@ -20,8 +20,8 @@ import {
 } from "@semio-tech/course";
 
 //#region 🧭️State
-/** 📄️ The root home pages: each is a card and its backdrop, addressed by hash (`#board`); quizzes holds topic or quiz grids. */
-export const HOME_PAGES = { learner: "learner", quizzes: "quizzes", leaderboard: "board", badges: "badges", preferences: "prefs" } as const;
+/** 📄️ The root home pages: each is a card and its backdrop, addressed by hash (`#board`); quizzes holds topic or quiz grids, assignments the course's exercises and clips its learning clips. */
+export const HOME_PAGES = { learner: "learner", quizzes: "quizzes", assignments: "assignments", clips: "clips", leaderboard: "board", badges: "badges", preferences: "prefs" } as const;
 
 /** 🪧️ The screen the learner is on (ephemeral local-only); on home, `page` is the page opened over the overview — one
  * of {@link HOME_PAGES}, a topic id, or a quiz id. */
@@ -202,7 +202,7 @@ export function stepAbove(state: Pick<CourseState, "step" | "runs" | "course">):
     const selected = step.page;
     if (selected === undefined) return undefined;
     const topic = state.course?.topics?.find((candidate) => candidate.quizzes.includes(selected));
-    const page = topic?.id ?? (state.course?.quizzes.some((candidate) => candidate.id === selected) || state.course?.topics?.some((candidate) => candidate.id === selected) ? HOME_PAGES.quizzes : undefined);
+    const page = topic?.id ?? (state.course?.quizzes.some((candidate) => candidate.id === selected) || state.course?.topics?.some((candidate) => candidate.id === selected) ? HOME_PAGES.quizzes : state.course?.assignments?.some((candidate) => candidate.id === selected) ? HOME_PAGES.assignments : state.course?.clips?.some((candidate) => candidate.id === selected) ? HOME_PAGES.clips : undefined);
     return page === undefined ? { screen: "home" } : { screen: "home", page };
   }
   if (step.screen !== "run" && step.screen !== "results") return undefined;

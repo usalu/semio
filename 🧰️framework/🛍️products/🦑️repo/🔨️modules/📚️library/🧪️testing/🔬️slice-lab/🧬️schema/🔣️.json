@@ -1,0 +1,118 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/library/testing/slice-lab/v1",
+  "title": "Slice lab: the real readiness path of a worker over a declared slice of the project graph",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "prefix": "slw",
+        "group": "slice-lab",
+        "sampleMilliseconds": 2000,
+        "stopGraceMilliseconds": 8000,
+        "settleMilliseconds": 3000,
+        "markerEnvironment": "SEMIO_SLICE_LAB_ID",
+        "machineEnvironment": "SEMIO_SLICE_LAB_MACHINE",
+        "runtimePrefix": "/tmp/sl-",
+        "maximumWorkDirectoryCharacters": 40,
+        "memoryChoices": [16384, 8192],
+        "defaultTimeoutSeconds": 1800,
+        "target": "build",
+        "slice": [
+          "@semio-tech/norm-din4108",
+          "@semio-tech/norm-din4108-rs",
+          "repo-mcp"
+        ],
+        "maximumOwners": 40,
+        "skippedStages": ["native", "repo-mcp", "dependencies", "tools"],
+        "skippedArguments": ["--help"],
+        "provision": ["f", "b", "b/c"],
+        "tailLines": 20,
+        "loadWarning": 30,
+        "loopLagLimitMilliseconds": 200,
+        "frozen": {"exclude": [".🧬semio/🦑️repo/🎫️tickets"], "include": [], "ambient": [".cache/b/d/m/j"], "entries": ["node_modules"], "entrySkips": ["@semio-tech"], "directory": "r", "author": "slice-lab"}
+      }
+    },
+    "Options": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["machines", "memoryMegabytes", "cores", "slice", "timeoutSeconds"],
+      "properties": {
+        "machines": {"type": "integer", "minimum": 1, "maximum": 4},
+        "memoryMegabytes": {"enum": [16384, 8192]},
+        "cores": {"type": "integer", "minimum": 1, "maximum": 64},
+        "slice": {"type": "array", "minItems": 1, "maxItems": 64, "items": {"type": "string", "minLength": 1}},
+        "target": {"type": "string", "minLength": 1},
+        "timeoutSeconds": {"type": "integer", "minimum": 30, "maximum": 14400},
+        "workspaceArguments": {"type": "array", "items": {"type": "string"}},
+        "execute": {"type": "boolean"},
+        "stages": {"enum": ["workspace", "all"]},
+        "skip": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "warm": {"type": "string", "minLength": 1},
+        "kinds": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "frozen": {"type": "boolean"},
+        "frozenDirectory": {"type": "string", "minLength": 1},
+        "edit": {"type": "string", "minLength": 1},
+        "stagger": {"type": "integer", "minimum": -1, "maximum": 3600},
+        "preload": {"type": "string", "minLength": 1},
+        "out": {"type": "string", "minLength": 1},
+        "work": {"type": "string", "minLength": 1},
+        "language": {"enum": ["en", "de"]}
+      }
+    },
+    "Texts": {
+      "const": {
+        "en": {
+          "ready": "reached ready: true",
+          "wall": "stopped at a wall: stage {stage}, phase {phase}",
+          "timeout": "no verdict within {seconds} s; last stage {stage}, phase {phase}",
+          "slice": "slice of {owners} owners requested, the read admitted {admitted}",
+          "skipped": "stages replaced by `repo --help` (not exercised): {stages}",
+          "leftovers": "leftover processes {processes}, leftover attached disk images {images}",
+          "duplicates": "owners inferred more than once across machines: {count}",
+          "peak": "peak footprint {peak} MB against the limit of {limit} MB",
+          "load": "load average at start {load}",
+          "lag": "parent event-loop lag, maximum {lag} ms (limit {limit} ms)",
+          "busy": "processes of the machines busy in {share} percent of the samples",
+          "published": "selected graph publications sealed on the machines: {count}",
+          "nice": "lab processes that ran below normal priority (nice other than 0): {count}",
+          "notExercised": "not exercised by a selected read yet: assembly, validation, seal and publish of a slice generation, and a target run on the slice",
+          "live": "files below the live state of the checkout that the machines held open: {count}",
+          "owners": "owners of the read per machine (maximum seen: present / fetched from the fleet / inferred here of total): {rows}",
+          "starts": "seconds each machine took from its own start to ready: {rows}",
+          "churn": "files of the tree below `framework` that peers changed while the run was going (a read of a moving tree is invalidated by them): {count}{sample}",
+          "detached": "disk images the lab detached after the machines were stopped: {count}",
+          "windows": "the lab lists processes with ps and runs on macOS and Linux",
+          "frozen": "frozen view: {files} files ({megabytes} MB logical, cloned in {seconds} s without copying bytes where the file system clones); {drift} files of the live tree changed since the freeze and stay invisible to the machines",
+          "frozenChurn": "files of the frozen view that changed during the run (must be 0): {count}{sample}",
+          "usage": "usage: slice-lab run [--machines=1|2] [--memory=16384|8192] [--cores=8] [--slice=a,b,...] [--target=build] [--timeout=1800] [--execute] [--frozen[=<dir>]] [--edit=<file>] [--stagger=<seconds>|-1] [--out=<dir>] [--lang=en|de]"
+        },
+        "de": {
+          "ready": "ready: true erreicht",
+          "wall": "an einer Wand gestoppt: Stufe {stage}, Phase {phase}",
+          "timeout": "kein Urteil innerhalb von {seconds} s; letzte Stufe {stage}, Phase {phase}",
+          "slice": "Ausschnitt von {owners} Eigentümern angefragt, das Lesen liess {admitted} zu",
+          "skipped": "Stufen durch `repo --help` ersetzt (nicht geprüft): {stages}",
+          "leftovers": "übrige Prozesse {processes}, übrige angehängte Disk-Images {images}",
+          "duplicates": "Eigentümer, die über Maschinen hinweg mehr als einmal abgeleitet wurden: {count}",
+          "peak": "Spitzenverbrauch {peak} MB gegen die Grenze von {limit} MB",
+          "load": "Lastmittel zu Beginn {load}",
+          "lag": "Schleifenverzug des Elternprozesses, Maximum {lag} ms (Grenze {limit} ms)",
+          "busy": "Prozesse der Maschinen waren in {share} Prozent der Messpunkte beschäftigt",
+          "published": "auf den Maschinen versiegelte ausgewählte Graph-Veröffentlichungen: {count}",
+          "nice": "Laborprozesse mit niedrigerer Priorität (nice ungleich 0): {count}",
+          "notExercised": "von einem ausgewählten Lesen noch nicht geprüft: Zusammenbau, Validierung, Versiegeln und Veröffentlichen einer Ausschnitts-Generation sowie ein Ziellauf auf dem Ausschnitt",
+          "live": "Dateien im Live-Zustand des Checkouts, die die Maschinen offen hielten: {count}",
+          "owners": "Eigentümer des Lesens je Maschine (Höchstwert: vorhanden / aus der Flotte geholt / hier abgeleitet von gesamt): {rows}",
+          "starts": "Sekunden jeder Maschine vom eigenen Start bis ready: {rows}",
+          "churn": "Dateien des Baums unter `framework`, die andere während des Laufs geändert haben (ein Lesen eines bewegten Baums wird dadurch ungültig): {count}{sample}",
+          "detached": "Disk-Images, die das Labor nach dem Stopp der Maschinen gelöst hat: {count}",
+          "windows": "das Labor listet Prozesse mit ps und läuft auf macOS und Linux",
+          "frozen": "eingefrorene Sicht: {files} Dateien ({megabytes} MB logisch, in {seconds} s geklont ohne Bytes zu kopieren, wo das Dateisystem klont); {drift} Dateien des Live-Baums haben sich seit dem Einfrieren geändert und bleiben für die Maschinen unsichtbar",
+          "frozenChurn": "Dateien der eingefrorenen Sicht, die sich während des Laufs geändert haben (muss 0 sein): {count}{sample}",
+          "usage": "Aufruf: slice-lab run [--machines=1|2] [--memory=16384|8192] [--cores=8] [--slice=a,b,...] [--target=build] [--timeout=1800] [--execute] [--frozen[=<dir>]] [--edit=<file>] [--stagger=<Sekunden>|-1] [--out=<dir>] [--lang=en|de]"
+        }
+      }
+    }
+  }
+}

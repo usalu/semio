@@ -181,7 +181,7 @@ impl Shell {
 }
 
 fn root_stack() -> UiNode {
-    UiNode::Stack(UiStackNode { direction: "column".into(), gap: None, padding: None, id: Some("shell.root".into()), presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children: Vec::new(), menu: None })
+    UiNode::Stack(UiStackNode { direction: "column".into(), gap: Some("none".into()), padding: None, id: Some("shell.root".into()), presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children: Vec::new(), menu: None })
 }
 
 /// 🎨️✏️ Everything `build_root`/`build_axis`/`build_stack`/`build_window` need to paint role-aware
@@ -217,7 +217,7 @@ fn build_axis(tree: &mut UiTree, parent: NodeId, axis: &WindowLayoutAxisNode, or
 /// 🗂️ A tab group: a `Stack` container marked `CLIPS_CHILDREN` (its content clips to its own bounds)
 /// whose children are the window-cap `Button` leaves built by `build_window`.
 fn build_stack(tree: &mut UiTree, parent: NodeId, stack: &WindowLayoutStackNode, ordinal: u32, ctx: &ShellPaintContext<'_>) {
-    let spec = UiNode::Stack(UiStackNode { direction: "column".into(), gap: None, padding: None, id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children: Vec::new(), menu: None });
+    let spec = UiNode::Stack(UiStackNode { direction: "column".into(), gap: Some("none".into()), padding: None, id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children: Vec::new(), menu: None });
     let id = tree.insert_child(Some(parent), Node::new(NodeKey::Positional(SHELL_STACK, ordinal), WidgetSpec(spec)));
     if let Some(node) = tree.node_mut(id) {
         node.flags.set(NodeFlags::CLIPS_CHILDREN, true);

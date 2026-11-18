@@ -1,0 +1,48 @@
+import {heapStats} from "bun:jsc";
+import {mkdirSync,mkdtempSync,readFileSync,writeFileSync} from "node:fs";
+import {createHash} from "node:crypto";
+import {tmpdir} from "node:os";
+import {join} from "node:path";
+const ws="/Users/ueli/Documents/semio",B=ws+"/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build",I=B+"/🕸️graph/📥️inference";
+const [,, ownerList, mode="cold", snapshotAt="0"]=process.argv,ownerNames=ownerList.split(","),MiB=1048576;
+const out=process.env.OWNER_MEM_OUT||"/tmp/owner-mem";
+const log=(...a)=>console.log("[DEBUG] "+a.join(" "));
+const managed=()=>{const u=process.memoryUsage();return Math.round((u.heapUsed+u.external)/MiB);};
+const rss=()=>Math.round(process.memoryUsage().rss/MiB);
+const inference=await import(I+"/🟨️.mjs");await inference.libraryBootstrap;
+const nodes=await import(I+"/📦️project-nodes/🟨️.mjs");
+const scriptInputs=await import(I+"/🧭️script-inputs/🟨️.mjs");
+const observation=await import(B+"/👁️observation/🟨️.mjs");
+const storage=await import(B+"/📥️inputs/💾️storage/🟨️.mjs");
+const revision=await import(B+"/📥️inputs/🔏️revision/🟨️.mjs");
+const registry=JSON.parse(readFileSync(ws+"/📋️build-owners.json","utf8"));
+const contracts=nodes.projectGeneratorContractsV1(ws);
+const storeDirectory=mode==="warm"?scriptInputs.closureStoreDirectoryV1(ws):mkdtempSync(join(tmpdir(),"owner-mem-store-"));
+mkdirSync(storeDirectory,{recursive:true});
+const session={version:3,workspaceRoot:ws,closureStore:storeDirectory,registry,contracts,commandInputs:null,lateClosures:true,projectsByRoot:[],componentRoots:[]};
+const staging=join(ws,".cache","f","owner-mem-probe-"+process.pid);mkdirSync(staging,{recursive:true});
+
+let peak=0,peakRss=0,snapped=false;
+const sample=()=>{const m=managed(),r=rss();if(m>peak)peak=m;if(r>peakRss)peakRss=r;};
+const timer=setInterval(sample,50);
+const environment=await observation.observeInferenceSnapshotV1(()=>nodes.createProjectInferenceEnvironmentV1(session));
+const api=scriptInputs.closureApiV1(environment.scripts,ws);
+const commandInputs=await observation.observeInferenceSnapshotV1(()=>api.nativeCommandInputs());
+environment.commandInputs=commandInputs;
+const handle=scriptInputs.closureHandleOfV1(commandInputs);
+const globals={projectAuthority:createHash("sha256").update(JSON.stringify([contracts])).digest("hex"),registryDigest:"probe",commandRevision:createHash("sha256").update(JSON.stringify(handle?.key??null)).digest("hex"),late:true};
+const assembly=await import(I+"/🧱️project-assembly/🟨️.mjs");
+Bun.gc(true);const base=managed();log("environment ready managed",base);
+const held=[];
+for(const [index,ownerName] of ownerNames.entries()){
+ const owner=registry.owners.find(o=>o.name==="@semio-tech/"+ownerName);if(!owner)throw Error("unknown owner "+ownerName);
+ const json=JSON.parse(readFileSync(join(ws,owner.manifest),"utf8"));json.root=owner.root;
+ const job=nodes.ownerJobV1(environment,globals,{name:owner.name,json});
+ Bun.gc(true);const before=managed();peak=before;const t=performance.now();
+ const run=()=>revision.withImplementationPinV1(()=>storage.withBuildGraphStagingV1({root:staging},()=>scriptInputs.withClosurePassV1(()=>observation.observeInferenceSnapshotV1(async()=>{const project=await nodes.inferProjectBodyV1(environment,job);return assembly.resolveClosureRefsV1(project,ws,environment.scripts,"hash",undefined);}))));
+ const resolved=await run();held.push(resolved.project);
+ const afterRun=managed();if(process.env.OWNER_MEM_RELEASE!=="off")scriptInputs.releaseOwnerStateV1(environment.scripts,{gate:{grantBytes:()=>6553*MiB,footprintBytes:()=>623*MiB}});Bun.gc(true);const afterGc=managed();
+ log("OWNER",index,ownerName,"ms",Math.round(performance.now()-t),"before",before,"peak",peak,"afterRun",afterRun,"afterGc",afterGc,"retainedSinceBase",afterGc-base,"projectBytes",JSON.stringify(resolved.project).length,"rows",resolved.rows.length);
+}
+clearInterval(timer);
+if(process.env.SNAP_END)writeFileSync(process.env.SNAP_END,(s=>typeof s==="string"?s:JSON.stringify(s))(Bun.generateHeapSnapshot("v8")));

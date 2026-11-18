@@ -8,7 +8,7 @@ export type RemoteExecutionLoadEntryV1={report:RemoteExecutionLoadReportV1;recei
 export class RemoteExecutionLoadTableV1{
  private readonly entries=new Map<string,RemoteExecutionLoadEntryV1>();
  private readonly kept=new Map<string,Pick<RemoteExecutionLoadEntryV1,"offloadedIn"|"offloadedOut"|"refused">>();
- constructor(readonly expireMs:number,private readonly clock:()=>number=Date.now){}
+ readonly expireMs:number; private readonly clock:()=>number; constructor(expireMs:number,clock:()=>number=Date.now){this.expireMs=expireMs;this.clock=clock;}
 
  /** 📥️ Takes a report; the scheduler's own counters of the machine survive it. */
  accept(report:RemoteExecutionLoadReportV1):void{

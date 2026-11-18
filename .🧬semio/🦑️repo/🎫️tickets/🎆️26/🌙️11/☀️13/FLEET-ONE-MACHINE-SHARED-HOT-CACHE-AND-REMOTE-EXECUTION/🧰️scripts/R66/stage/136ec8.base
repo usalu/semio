@@ -1,0 +1,35 @@
+import{randomBytes}from"node:crypto";
+import{hostname}from"node:os";
+import{serialize}from"node:v8";
+import{graphFleetClientV1}from"../../../../../🪪️graph-state/🛰️exchange/🟦️.ts";
+import{graphFleetSettingsV1}from"../../../../../🪪️graph-state/🧶️nx/🟦️.ts";
+import{remoteCacheFetchV1}from"../../../../../🌐️remote-cache/🛰️fleet/🟦️.ts";
+import{projectRecordKeyTextV1}from"../../../../../👁️observation/🟨️.mjs";
+import{createOwnerPoolStatusV1}from"../📊️status/🟦️.ts";
+import{OWNER_POOL_POLICY_V1 as P,ownerPoolIdV1,publishOwnerPoolV1,type OwnerPoolHeadV1,type OwnerPoolUnitV1}from"../🟦️.ts";
+
+/** 📣️ What the machine that runs a wave hands over about it, evaluated only when the wave proves cold. */
+export type OwnerPoolPublisherInputV1=Readonly<{workspaceRoot:string;environment:Readonly<Record<string,string|undefined>>;identity:string;globals:OwnerPoolHeadV1["globals"];session():unknown;units():readonly OwnerPoolUnitV1[];peaks():Readonly<Record<string,readonly number[]>>;threshold?:number;store?:string|undefined;origin?:string;say?(line:string):void;publish?:typeof publishOwnerPoolV1}>;
+
+/** 📣️ Publishes the owner pool of a wave once, as soon as the wave has missed `threshold` owners (a warm wave publishes nothing): the work runs after the current turn, every fault ends in "this machine infers every owner itself", and `SEMIO_OWNER_POOL=off` publishes nothing. */
+export function createOwnerPoolPublisherV1(input:OwnerPoolPublisherInputV1):Readonly<{miss(count:number):void;published():Promise<boolean>;finish(wave:Readonly<{owners:number;seconds:number;consumedByHost:Readonly<Record<string,number>>}>):void}>{
+ let started:Promise<boolean>|undefined,waveId:string|null=null,count=0;
+ const status=input.origin===undefined?undefined:createOwnerPoolStatusV1({store:input.store,origin:input.origin,role:"publisher"});
+ const settings=input.environment[P.environmentOff]==="off"?undefined:graphFleetSettingsV1(input.workspaceRoot,input.environment);
+ const run=async():Promise<boolean>=>{
+  try{
+   if(settings===undefined||!settings.upload)return false;
+   const client=graphFleetClientV1(settings,{fetch:remoteCacheFetchV1(input.environment,{root:input.workspaceRoot})}),units=input.units(),partial={version:1 as const,identity:input.identity,globals:input.globals,peaks:input.peaks(),publisher:`${hostname()}:${process.pid}:${randomBytes(3).toString("hex")}`.replace(/[^A-Za-z0-9._:@/+-]/gu,"-").slice(0,160)};
+   const id=ownerPoolIdV1(partial,units);waveId=id;count=units.length;const head:OwnerPoolHeadV1={...partial,revision:projectRecordKeyTextV1(null),id,createdMs:Date.now()};
+   const stored=await(input.publish??publishOwnerPoolV1)({client,owner:head.publisher,manifest:{head,session:serialize(input.session()),units}});
+   input.say?.(`owner pool ${id.slice(0,12)}: ${units.length} owners ${stored?"published to":"not accepted by"} the fleet / ${units.length} Owner ${stored?"an die Flotte veröffentlicht":"von der Flotte nicht angenommen"}`);
+   status?.update({state:"pulling",wave:id,units:units.length,published:0,lastError:stored?null:"the fleet did not accept the pool"});
+   return stored;
+  }catch{return false;}
+ };
+ return Object.freeze({
+  miss(count){if(started===undefined&&settings!==undefined&&count>=(input.threshold??8))started=new Promise<void>(done=>setTimeout(done,0)).then(run);},
+  published:()=>started??Promise.resolve(false),
+  finish(wave){if(started===undefined)return;status?.update({state:"idle",wave:waveId,units:count,stored:Object.values(wave.consumedByHost).reduce((sum,each)=>sum+each,0),consumedByHost:{...wave.consumedByHost},waveSeconds:Math.round(wave.seconds*10)/10,ownersPerMinute:wave.seconds>0?Math.round(wave.owners/wave.seconds*600)/10:0});},
+ });
+}

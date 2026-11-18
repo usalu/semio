@@ -39,7 +39,7 @@ test("every release between waves says more follows, the last wave and the end o
   await loadGenerationGraphV1({...first.host,release:async()=>{}} as never);
   await edit(dir,COUNT);
   const mock=createMockHost(dir);
-  const host={...mock.host,release:async(options?:{more?:boolean})=>{releases.push(options);},published:async(_generation:number,info:Info)=>{infos.push(info);carriedStagesV1.yield=7;}};
+  const host={...mock.host,release:async(options?:{more?:boolean})=>{releases.push(options);},waveDone:async(info:Info)=>{infos.push(info);carriedStagesV1.yield=7;},published:async(_generation:number,info:Info)=>{infos.push(info);carriedStagesV1.yield=7;}};
   await loadGenerationGraphV1(host as never);
   expect(releases).toEqual([{more:true},{more:true},{more:false},undefined]);
   expect(infos.length).toBe(3);

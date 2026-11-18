@@ -21,7 +21,7 @@ const seed=(directory:string,files:Record<string,string>)=>{mkdirSync(directory,
 const input=(root:string,lines?:string[])=>({lane:layout(root).lane,shared:layout(root).shared,laneId:"ab12",language:"en" as const,...lines?{report:(line:string)=>{lines.push(line);}}:{}});
 
 test("the retention policy is complete: every field the module reads is authored, so no path is ever built from an undefined name",()=>{
- expect(Object.keys(rules).sort()).toEqual(["bindingPrefix","chunkBytes","destinationPrefix","ledger","ledgerPattern","maximumFileBytes","maximumFiles","scanMaximumEntries"]);
+ expect(Object.keys(rules).sort()).toEqual(["bindingPrefix","chunkBytes","destinationPrefix","ledger","ledgerPattern","maximumFileBytes","maximumFiles","scanMaximumDirectories","scanMaximumEntries"]);
  for(const [name,value] of Object.entries(rules))expect(value,name).not.toBeUndefined();
  expect(typeof rules.ledger).toBe("string");expect(new RegExp(rules.ledgerPattern,"u").test("cargo-unit-provenance-x.json")).toBe(true);
 });

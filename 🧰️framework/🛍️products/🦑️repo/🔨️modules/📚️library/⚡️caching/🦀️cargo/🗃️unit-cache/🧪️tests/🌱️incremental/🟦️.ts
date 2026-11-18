@@ -28,7 +28,7 @@ test.skipIf(process.platform==="win32")("a workspace unit that misses the cache 
  const rows=events(cache,"f1"),misses=rows.filter(row=>row.kind==="miss"&&row.crate===fixture.edited);
  expect(misses.length).toBe(fixture.rounds);expect(misses.every(row=>row.reason?.endsWith(" incremental:lane"))).toBe(true);
  expect(rows.filter(row=>row.kind==="publish"&&row.crate===fixture.edited).length).toBe(fixture.expect.publishedEdits);
- expect(rows.filter(row=>row.kind==="incremental"&&row.crate===fixture.focus).length).toBe(fixture.rounds);
+ expect(rows.filter(row=>row.kind==="miss"&&row.crate===fixture.focus&&row.reason?.endsWith(" incremental:lane")).length).toBe(fixture.rounds);
  const kept=new Set(readFileSync(record,"utf8").split("\n").filter(line=>line.includes(fixture.flag)).map(line=>line.split(" ")[line.split(" ").indexOf("--crate-name")+1]!));
  expect([...kept].sort()).toEqual(fixture.expect.incrementalCompiles);
  const sessions=(target:string)=>{const out=new Set<string>();const walk=(directory:string):void=>{for(const name of readdirSync(directory,{withFileTypes:true}))if(name.isDirectory()){if(name.name==="incremental")for(const session of readdirSync(join(directory,name.name)))out.add(session.replace(/-[^-]+$/u,""));else walk(join(directory,name.name));}};walk(target);return[...out].sort();};

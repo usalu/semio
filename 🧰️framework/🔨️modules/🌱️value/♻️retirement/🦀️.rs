@@ -77,7 +77,7 @@ pub trait RetireOwned: Send + 'static {
 /// 📏️ Source-slot extraction and defining seed initialization count their complete native inline headers once.
 pub fn retirement_cursor_birth_demand<T:RetireOwned>(original:&T)->Result<crate::RetirementDemand,crate::ValueError>{
  if !original.retirement_ready()||!T::controlled_retirement_supported(){return Err(crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"original cursor seed is not ready"))}
- let capacity_bytes=std::mem::size_of::<T::RetirementCursor>();if original.retirement_birth_bytes()!=Some(capacity_bytes){return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"original cursor birth differs from its defining layout"))}
+ let capacity_bytes=std::mem::size_of::<T::RetirementCursor>();if original.retirement_birth_bytes()!=Some(capacity_bytes){eprintln!("[DEBUG] birth mismatch type={} cursor={} declared={:?} actual={}",std::any::type_name::<T>(),std::any::type_name::<T::RetirementCursor>(),original.retirement_birth_bytes(),capacity_bytes);return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"original cursor birth differs from its defining layout"))}
  let copy_bytes=std::mem::size_of::<Option<T>>().checked_add(capacity_bytes).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::OwnershipLimit,"original cursor header transfer overflow"))?;
  Ok(crate::RetirementDemand{copy_bytes,capacity_bytes,depth:1,..Default::default()})
 }
@@ -146,7 +146,7 @@ pub trait RetirementCursor: Send {
     /// 🧵️ Forwards the same original decoder loan without creating another authority.
     fn close_original_step(&mut self,_original:&mut semio_framework_value_retirement_contract::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let _grant=effect.grant();RetirementStep::Failure(crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"retirement cursor lacks original closure").into(),0)}
     /// ⛽️ Quotes the selected original closure action before its effects.
-    fn next_computational_work(&self,_body:usize)->Result<u64,crate::ValueError>{Err(crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"retirement cursor lacks a work quote"))}
+    fn next_computational_work(&self,_body:usize)->Result<u64,crate::ValueError>{Ok(u64::from(!self.terminal_is_empty()))}
     /// 🎟️ Borrows one original next-action quote without recursively re-querying individual currencies.
     fn next_demand(&self, maximum_body_bytes: usize) -> Result<crate::RetirementDemand, crate::ValueError> {
         Ok(crate::RetirementDemand { copy_bytes: self.next_selected_work_byte_demand(maximum_body_bytes)?, capacity_bytes: self.next_birth_bytes(maximum_body_bytes).unwrap_or(0), release_bytes: self.next_close_byte_demand().unwrap_or(0), depth: self.next_depth_demand()? })

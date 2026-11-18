@@ -2,7 +2,6 @@
   "version": 1,
   "checkoutFromTests": "../../../../../../../../../../..",
   "cargoScript": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts",
-  "minimumLeaving": 138,
   "introduced": [
     "resident-service",
     "graph-demand",

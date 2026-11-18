@@ -123,7 +123,7 @@ describe("Inline Tree resolution controls", () => {
       fireEvent.click(button);
       expect(resolve).toHaveBeenLastCalledWith(fixture.conflict.id, expected.suffix);
     }
-    expect(container.querySelector(".flex.items-center")?.children).toHaveLength(2);
+    expect(container.querySelector("[data-shared-border-group]")?.children).toHaveLength(2);
   });
 });
 

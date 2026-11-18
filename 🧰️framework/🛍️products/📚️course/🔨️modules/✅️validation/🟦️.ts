@@ -344,11 +344,21 @@ function icon(value: unknown, path: string, report: Report): void {
   if (Object.hasOwn(json, "motion")) literal(json.motion, at(path, "motion"), report, MOTIONS);
 }
 
+/** 📉️ A Zipf distribution: its kind and a positive exponent. */
+function distribution(value: unknown, path: string, report: Report): boolean {
+  const json = object(value, path, report, ["kind", "exponent"]);
+  if (!json) return false;
+  const kind = !Object.hasOwn(json, "kind") || literal(json.kind, at(path, "kind"), report, ["zipf"]);
+  if (!Object.hasOwn(json, "exponent") || !number(json.exponent, at(path, "exponent"), report)) return false;
+  if (json.exponent <= 0) return report(at(path, "exponent"), "value-invalid"), false;
+  return kind;
+}
+
 /** 🧺️ Every item belongs to one slot, and every slot contributes exactly one question variant. */
 /** 💰️ A complete partition into balanced variant slots and a finite time budget. */
 function questionPool(task: Json, path: string, report: Report): void {
   const base = at(path, "pool");
-  const pool = object(task.pool, base, report, ["seconds", "slots"]);
+  const pool = object(task.pool, base, report, ["seconds", "slots"], ["distribution"]);
   if (!pool) return;
   if (Object.hasOwn(pool, "seconds")) {
     if (integer(pool.seconds, at(base, "seconds"), report, 1) && pool.seconds > 3600) report(at(base, "seconds"), "value-invalid");
@@ -363,7 +373,8 @@ function questionPool(task: Json, path: string, report: Report): void {
       used.add(id as string);
     });
   }) : undefined;
-  if (slots && task.draw !== slots.length) report(at(path, "draw"), "value-invalid");
+  const distributed = Object.hasOwn(pool, "distribution") && distribution(pool.distribution, at(base, "distribution"), report);
+  if (slots && (distributed ? typeof task.draw !== "number" || task.draw >= slots.length : task.draw !== slots.length)) report(at(path, "draw"), "value-invalid");
   if ([...known].some(id => !used.has(id))) report(at(base, "slots"), "value-invalid");
 }
 
@@ -481,10 +492,47 @@ function assignments(value: unknown, topics: unknown, report: Report): void {
   uniqueIds(entries, "/assignments", report);
 }
 
+/** 🎬️ Validates learning clips, their topic ownership and their optional per-language hosted addresses without a schema dependency. */
+function clips(value: unknown, topics: unknown, report: Report): void {
+  const topicIds = new Set(Array.isArray(topics) ? topics.filter(isObject).map((topic) => topic.id) : []);
+  const entries = array(value, "/clips", report, 0, (entry, path) => {
+    const clip = object(entry, path, report, ["id", "topic", "emoji", "title", "description", "poster"], ["urls"]);
+    if (!clip) return;
+    if (Object.hasOwn(clip, "id")) slug(clip.id, at(path, "id"), report);
+    if (Object.hasOwn(clip, "topic") && slug(clip.topic, at(path, "topic"), report) && !topicIds.has(clip.topic)) report(at(path, "topic"), "value-invalid");
+    if (Object.hasOwn(clip, "emoji")) string(clip.emoji, at(path, "emoji"), report, 1, 16);
+    for (const key of ["title", "description"]) if (Object.hasOwn(clip, key)) text(clip[key], at(path, key), report);
+    if (Object.hasOwn(clip, "poster")) {
+      const poster = object(clip.poster, at(path, "poster"), report, ["file"]);
+      if (poster && Object.hasOwn(poster, "file") && string(poster.file, at(at(path, "poster"), "file"), report, 1, 128) && !/^[A-Za-z0-9]+(?:[_-][A-Za-z0-9]+)*\.png$/u.test(poster.file)) report(at(at(path, "poster"), "file"), "value-invalid");
+    }
+    if (clip.urls === undefined) return;
+    const urls = object(clip.urls, at(path, "urls"), report, [], ["en", "de"]);
+    if (!urls) return;
+    if (Object.keys(urls).length === 0) report(at(path, "urls"), "items-too-few");
+    for (const language of ["en", "de"]) if (urls[language] !== undefined && string(urls[language], at(at(path, "urls"), language), report, 1, 2048) && !/^https:\/\/[^\s/?#]+(?:[/?#]\S*)?$/u.test(urls[language])) report(at(at(path, "urls"), language), "value-invalid");
+  });
+  uniqueIds(entries, "/clips", report);
+}
+
+/** 🧭️ Keeps the addresses of assignments and clips apart from each other, from quizzes, topics and the reserved root pages, so that every page has one address. */
+function pageAddresses(assignmentList: unknown, clipList: unknown, topics: unknown, quizIds: ReadonlySet<string>, report: Report): void {
+  const taken = new Set<string>([...quizIds, ...RESERVED_COURSE_IDS, ...(Array.isArray(topics) ? topics.filter(isObject).flatMap((topic) => (typeof topic.id === "string" ? [topic.id] : [])) : [])]);
+  for (const [member, entries] of [["/assignments", assignmentList], ["/clips", clipList]] as const) {
+    if (!Array.isArray(entries)) continue;
+    entries.forEach((entry, index) => {
+      const id = isObject(entry) ? entry.id : undefined;
+      if (typeof id !== "string") return;
+      if (taken.has(id)) report(at(at(member, index), "id"), "value-invalid");
+      taken.add(id);
+    });
+  }
+}
+
 /** 📰️ Validates the solution-free course, including authored release times. */
 export function courseViewIssues(value: unknown): ValidationIssue[] {
   return collect((report) => {
-    const json = object(value, "", report, ["id", "title", "introduction", "quizzes", "badges"], ["short", "topics", "unlocks", "assignments"]);
+    const json = object(value, "", report, ["id", "title", "introduction", "quizzes", "badges"], ["short", "topics", "unlocks", "assignments", "clips"]);
     if (!json) return;
     if (Object.hasOwn(json, "id")) slug(json.id, "/id", report);
     if (Object.hasOwn(json, "title")) text(json.title, "/title", report);
@@ -514,6 +562,8 @@ export function courseViewIssues(value: unknown): ValidationIssue[] {
     }) : undefined;
     const quizIds = uniqueIds(quizzes, "/quizzes", report);
     if (json.assignments !== undefined) assignments(json.assignments, json.topics, report);
+    if (json.clips !== undefined) clips(json.clips, json.topics, report);
+    pageAddresses(json.assignments, json.clips, json.topics, quizIds, report);
     if (json.unlocks !== undefined) unlocks(json.unlocks, report);
     if (json.topics !== undefined) topicGroups(json.topics, quizIds, report);
     const badges = Object.hasOwn(json, "badges") ? array(json.badges, "/badges", report, 0, (entry, path) => {
@@ -531,7 +581,7 @@ export function courseViewIssues(value: unknown): ValidationIssue[] {
 /** 📚️ Every issue of a course document given its quizzes in course order: structure per the schema, unique paths, quiz ids and badge ids, and badge rules that reference existing quizzes and select at least one task. */
 export function courseIssues(course: unknown, quizzes: readonly Quiz[]): ValidationIssue[] {
   return collect((report) => {
-    const json = object(course, "", report, ["schema", "id", "title", "introduction", "quizzes", "badges"], ["$schema", "short", "topics", "unlocks", "assignments"]);
+    const json = object(course, "", report, ["schema", "id", "title", "introduction", "quizzes", "badges"], ["$schema", "short", "topics", "unlocks", "assignments", "clips"]);
     if (!json) return;
     if (Object.hasOwn(json, "$schema")) string(json.$schema, "/$schema", report);
     if (Object.hasOwn(json, "schema") && json.schema !== COURSE_SCHEMA) report("/schema", "value-invalid");
@@ -559,6 +609,8 @@ export function courseIssues(course: unknown, quizzes: readonly Quiz[]): Validat
       quizIds.add(quiz.id);
     });
     if (json.assignments !== undefined) assignments(json.assignments, json.topics, report);
+    if (json.clips !== undefined) clips(json.clips, json.topics, report);
+    pageAddresses(json.assignments, json.clips, json.topics, quizIds, report);
     if (json.unlocks !== undefined) unlocks(json.unlocks, report);
     if (Object.hasOwn(json, "topics")) topicGroups(json.topics, quizIds, report);
     const badges = Object.hasOwn(json, "badges")

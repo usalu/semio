@@ -20,6 +20,8 @@ export async function runHostCommandV1({args,languages,implementation,runForegro
    if(!found){print(say("host-down",{}));return 1;}
    if(args.includes("--output=json")){print(JSON.stringify(found,null,2));return 0;}
    print(say("host-started",{pid:found.pid,workspaces:found.workspaces.length,megabytes:found.rssMb}));
+   if(found.identity)print(say("host-identity",{code:found.identity.implementation.slice(0,12),root:found.identity.root,state:found.identity.state||"(checkout)",started:new Date(found.startedAt).toISOString(),inFlight:found.inFlight,queued:found.queue,endpoint:found.identity.endpoint,log:found.identity.log}));
+   if(found.owner)print(say("host-owner-"+found.owner.route,{pid:found.owner.pid,seconds:found.owner.idleSeconds}));
    if(found.memory)print(say("host-memory",{rss:found.memory.rssMb,hwm:found.memory.hwmMb??"?",heap:found.memory.heapMb,objects:found.memory.objectCount,caches:found.memory.caches.length}));
    if(found.plans)print(say("host-plans",{total:found.plans.total,hits:found.plans.hits,computed:found.plans.computed,seconds:Math.round(found.plans.lastMilliseconds/1000),budget:found.plans.budgetRefusals,reinferred:found.plans.load?.ownersReinferred??"?",cutoff:found.plans.load?.ownersCutOff??"?",files:found.plans.captureFiles,probes:found.plans.captureProbes}));
    if(found.reload&&found.reload.state!=="current")print(say("host-reload-"+found.reload.state,{next:String(found.reload.next??"").slice(0,12),seconds:Math.round((found.reload.state==="draining"?HOST_POLICY_V1.reload.drainStallMilliseconds:HOST_POLICY_V1.reload.maximumDeferralMilliseconds)/1000),reason:found.reload.reason??""}));

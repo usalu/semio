@@ -2483,19 +2483,34 @@
      ],
      "front": [
       {
-       "kind": "rect",
-       "x": -0.425,
-       "y": 0,
-       "w": 0.85,
-       "h": 0.18,
-       "id": "front-foot-block",
-       "bone": "stand",
-       "role": "body",
-       "filled": true,
-       "z": 2.7,
-       "tone": 0.5,
-       "region": "stand",
-       "material": "galvanised-steel"
+        "id": "front-feet-left",
+        "bone": "stand",
+        "role": "body",
+        "z": 2.7,
+        "filled": true,
+        "tone": 0.5,
+        "kind": "rect",
+        "x": -0.4375,
+        "y": 0,
+        "w": 0.075,
+        "h": 0.18,
+        "region": "stand",
+        "material": "galvanised-steel"
+      },
+      {
+        "id": "front-feet-right",
+        "bone": "stand",
+        "role": "body",
+        "z": 2.7,
+        "filled": true,
+        "tone": 0.5,
+        "kind": "rect",
+        "x": 0.3625,
+        "y": 0,
+        "w": 0.075,
+        "h": 0.18,
+        "region": "stand",
+        "material": "galvanised-steel"
       },
       {
        "kind": "rect",
@@ -2554,12 +2569,12 @@
     },
     "decisions": {
      "silhouette": {
-      "en": "A 3.4 mm by 2 mm by 2.8 mm collector: one merged tilted slab on a base rail and two struts in the side view, one merged block on a foot block in the front view and one merged rectangle in the top view.",
-      "de": "Ein 3,4 mm mal 2 mm mal 2,8 mm grosser Kollektor: eine zusammengeführte geneigte Platte auf Fussschiene und zwei Stützen in der Seitenansicht, ein zusammengeführter Block auf einem Fussblock in der Vorderansicht und ein zusammengeführtes Rechteck in der Draufsicht."
+      "en": "A 3.4 mm by 2 mm by 2.8 mm collector: one merged tilted slab on a base rail and two struts in the side view, one merged block on two feet in the front view and one merged rectangle in the top view.",
+      "de": "Ein 3,4 mm mal 2 mm mal 2,8 mm grosser Kollektor: eine zusammengeführte geneigte Platte auf Fussschiene und zwei Stützen in der Seitenansicht, ein zusammengeführter Block auf zwei Füssen in der Vorderansicht und ein zusammengeführtes Rechteck in der Draufsicht."
      },
      "retained": {
-      "en": "Slab, base rail and both struts in the side view; foot block and slab face in the front view; the full footprint in the top view. The tilt and the three real dimensions of 1.70 m, 1.00 m and 1.41 m are kept.",
-      "de": "Platte, Fussschiene und beide Stützen in der Seitenansicht; Fussblock und Plattenfläche in der Vorderansicht; die volle Grundfläche in der Draufsicht. Die Neigung und die drei wahren Masse 1,70 m, 1,00 m und 1,41 m bleiben erhalten."
+      "en": "Slab, base rail and both struts in the side view; both feet and slab face in the front view; the full footprint in the top view. The tilt and the three real dimensions of 1.70 m, 1.00 m and 1.41 m are kept.",
+      "de": "Platte, Fussschiene und beide Stützen in der Seitenansicht; beide Füsse und Plattenfläche in der Vorderansicht; die volle Grundfläche in der Draufsicht. Die Neigung und die drei wahren Masse 1,70 m, 1,00 m und 1,41 m bleiben erhalten."
      },
      "merged": {
       "en": "Housing, glass, absorber and both headers are one form listing five regions; the two foot pads of the front view are one block.",
@@ -2585,9 +2600,7 @@
       "en": "The slab lists five regions as one merged form in every view.",
       "de": "Die Platte führt in jeder Ansicht fünf Regionen als eine zusammengeführte Form."
      }
-    }
-   }
-  },
+    } }},
   "symbols": [],
   "poses": [
    {
@@ -3508,6 +3521,8 @@
       "key": "flow",
       "heatW": -620
      },
+     "ratedPowerW": 0,
+     "ratedPowerBasis": "passive",
      "source": "authored-estimate",
      "reference": "incropera-2018"
     },
@@ -4034,6 +4049,7 @@
           "kind": "ellipsoid",
           "bone": "headers",
           "material": "copper",
+          "role": "body",
           "tone": 0.4,
           "member": "headers",
           "part": "mass",
@@ -5202,8 +5218,8 @@
       ],
       "decisions": [
         {
-          "en": "Redrawn against the 1:500 shapes: one 100 mm tilted slab for the whole collector (tray, insulation, absorber and glass), two 75 mm base rails and two 75 mm struts per rail (the drawing's foot block is generalised to the 75 mm smallest feature, not to a full-width plate).",
-          "de": "Neu gezeichnet gegen die Formen 1:500: eine einzige 100 mm dicke geneigte Platte für den ganzen Kollektor (Wanne, Dämmung, Absorber und Glas), zwei 75-mm-Fußschienen und je Schiene zwei 75-mm-Streben (der gezeichnete Fußblock ist auf die kleinste Einzelheit von 75 mm verallgemeinert, nicht zu einer Platte über die ganze Breite)."
+          "en": "Redrawn against the 1:500 shapes: one 100 mm tilted slab for the whole collector (tray, insulation, absorber and glass), two 75 mm base rails and two 75 mm struts per rail (the two feet of the drawing are 75 mm wide, the smallest feature, with the open frame between them).",
+          "de": "Neu gezeichnet gegen die Formen 1:500: eine einzige 100 mm dicke geneigte Platte für den ganzen Kollektor (Wanne, Dämmung, Absorber und Glas), zwei 75-mm-Fußschienen und je Schiene zwei 75-mm-Streben (die beiden gezeichneten Füße sind 75 mm breit, die kleinste Einzelheit, mit dem offenen Rahmen dazwischen)."
         },
         {
           "en": "Thermal: the housing is the slab; the glazing, absorber and the two headers have no body solid at this scale and are real hidden solids inside it (75 mm minimum: glass slab 75 mm, absorber slab 75 mm overlapping it, 75 mm header pipes), lower faces declared as section faces; plume disc of 75 mm. Structure: the slab, the two 75 mm struts per side and the rails carry the load; glass, absorber and headers are hidden member solids inside the slab (real solids, the body has none); one slab mass, two strut lumps, two contact pads.",

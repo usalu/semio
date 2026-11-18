@@ -12,7 +12,7 @@ import { tracks } from "../../🔨️modules/🥞️levels/🟦️.tsx";
 import { ROOT_PAGES } from "../../🔨️modules/🏠️overview/🟦️.tsx";
 
 const text = (value: string) => ({ en: value, de: value });
-const human = (id: string): ManifestEntry => ({ id, category: "humans", title: text(id), heightM: 1.7, widthM: 0.5, poses: [], clips: [], representations: { "500": "unavailable", "200": "unavailable", "100": "authored", "50": "unavailable" }, symbols: [], analytics: [], exports: ["svg"], distinction: text(id), completion: "planned" });
+const human = (id: string): ManifestEntry => ({ id, category: "humans", title: text(id), heightM: 1.7, widthM: 0.5, powerW: 0, poses: [], clips: [], representations: { "500": "unavailable", "200": "unavailable", "100": "authored", "50": "unavailable" }, symbols: [], analytics: [], exports: ["svg"], distinction: text(id), completion: "planned" });
 const manifest = { $schema: "", version: "semio.staffage/v2", categories: CATEGORIES.map((id) => ({ id, emoji: "x", title: text(id), description: text(id), folder: id })), collections: [], entries: Array.from({ length: 24 }, (_, index) => human(`human-${index + 1}`)) } as unknown as Manifest;
 
 const view = { width: 1280, height: 400 };

@@ -1,0 +1,144 @@
+== try 2 stalled 2026-11-15T18:30:16Z, last progress: [semio] Installing|34|336|
+-- last 60 lines of /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-b79757bed7da.log
+[repository:command] still running after 1870 s
+[repo] still working after 1880 s; last phase started: source.served
+[repository:command] still running after 1880 s
+[repository:command] still running after 1890 s
+[repository:command] still running after 1900 s
+[repo] still working after 1910 s; last phase started: source.served
+[repository:command] still running after 1910 s
+[repository:command] still running after 1920 s
+[repository:command] still running after 1930 s
+[repo] still working after 1940 s; last phase started: source.served
+[repository:command] still running after 1940 s
+[repository:command] still running after 1950 s
+[repository:command] still running after 1960 s
+[repo] still working after 1970 s; last phase started: source.served
+[repository:command] still running after 1970 s
+[repository:command] still running after 1980 s
+[repository:command] still running after 1990 s
+[repo] still working after 2000 s; last phase started: source.served
+[repository:command] still running after 2000 s
+[repository:command] still running after 2010 s
+[repository:command] still running after 2020 s
+[repo] still working after 2030 s; last phase started: source.served
+[repository:command] still running after 2030 s
+[repository:command] still running after 2040 s
+[repository:command] still running after 2050 s
+[repo] still working after 2060 s; last phase started: source.served
+[repository:command] still running after 2060 s
+[repository:command] still running after 2070 s
+[repository:command] still running after 2080 s
+[repo] still working after 2090 s; last phase started: source.served
+[repository:command] still running after 2090 s
+[repository:command] still running after 2100 s
+[repository:command] still running after 2110 s
+[repo] still working after 2120 s; last phase started: source.served
+[repository:command] still running after 2120 s
+[repository:command] still running after 2130 s
+[repository:command] still running after 2140 s
+[repo] still working after 2150 s; last phase started: source.served
+[repository:command] still running after 2150 s
+[repository:command] still running after 2160 s
+[repository:command] still running after 2170 s
+[repo] still working after 2180 s; last phase started: source.served
+[repository:command] still running after 2180 s
+[repository:command] still running after 2190 s
+[repository:command] still running after 2200 s
+[repo] still working after 2210 s; last phase started: source.served
+[repository:command] still running after 2210 s
+[repository:command] still running after 2220 s
+[repository:command] still running after 2230 s
+[repo] still working after 2240 s; last phase started: source.served
+[repository:command] still running after 2240 s
+[repository:command] still running after 2250 s
+[repository:command] still running after 2260 s
+[repo] still working after 2270 s; last phase started: source.served
+[repository:command] still running after 2270 s
+[repository:command] still running after 2280 s
+[repository:command] still running after 2290 s
+[repo] still working after 2300 s; last phase started: source.served
+[repository:command] still running after 2300 s
+[repository:command] still running after 2310 s
+-- last 60 lines of /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-ec883dab0a20.log
+[repository:command] still running after 26948 s
+[repository:command] still running after 26958 s
+[repo] still working after 26971 s; last phase started: source.served
+[repository:command] still running after 26968 s
+[repository:command] still running after 26978 s
+[repository:command] still running after 26988 s
+[repo] still working after 27001 s; last phase started: source.served
+[repository:command] still running after 26998 s
+[repository:command] still running after 27008 s
+[repository:command] still running after 27018 s
+[repo] still working after 27031 s; last phase started: source.served
+[repository:command] still running after 27028 s
+[repository:command] still running after 27038 s
+[repository:command] still running after 27048 s
+[repo] still working after 27061 s; last phase started: source.served
+[repository:command] still running after 27058 s
+[repository:command] still running after 27068 s
+[repository:command] still running after 27078 s
+[repo] still working after 27091 s; last phase started: source.served
+[repository:command] still running after 27088 s
+[repository:command] still running after 27098 s
+[repository:command] still running after 27108 s
+[repo] still working after 27121 s; last phase started: source.served
+[repository:command] still running after 27118 s
+[repository:command] still running after 27128 s
+[repository:command] still running after 27138 s
+[repo] still working after 27151 s; last phase started: source.served
+[repository:command] still running after 27148 s
+[repository:command] still running after 27158 s
+[repository:command] still running after 27168 s
+[repo] still working after 27181 s; last phase started: source.served
+[repository:command] still running after 27178 s
+[repository:command] still running after 27188 s
+[repository:command] still running after 27198 s
+[repo] still working after 27211 s; last phase started: source.served
+[repository:command] still running after 27208 s
+[repository:command] still running after 27218 s
+[repository:command] still running after 27228 s
+[repo] still working after 27241 s; last phase started: source.served
+[repository:command] still running after 27238 s
+[repository:command] still running after 27248 s
+[repository:command] still running after 27258 s
+[repo] still working after 27271 s; last phase started: source.served
+[repository:command] still running after 27268 s
+[repository:command] still running after 27278 s
+[repository:command] still running after 27288 s
+[repo] still working after 27301 s; last phase started: source.served
+[repository:command] still running after 27298 s
+[repository:command] still running after 27308 s
+[repository:command] still running after 27318 s
+[repo] still working after 27331 s; last phase started: source.served
+[repository:command] still running after 27328 s
+[repository:command] still running after 27338 s
+[repository:command] still running after 27348 s
+[repo] still working after 27361 s; last phase started: source.served
+[repository:command] still running after 27358 s
+[repository:command] still running after 27368 s
+[repository:command] still running after 27378 s
+[repo] still working after 27391 s; last phase started: source.served
+[repository:command] still running after 27388 s
+-- last 20 lines of the bootstrap log
+[repo] still working after 560 s; last phase started: source.served
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 557 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 558 s)
+[repository:command] still running after 560 s
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 559 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 560 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 561 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 562 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 563 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 564 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 565 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 566 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 567 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 568 s)
+[repository:command] still running after 570 s
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 569 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 570 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 571 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 572 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 573 s)

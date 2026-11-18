@@ -2012,6 +2012,8 @@
             "key": "load",
             "heatW": 2.4
           },
+          "ratedPowerW": 2.4,
+          "ratedPowerBasis": "electrical-input",
           "source": "authored-estimate",
           "reference": "incropera-2018"
         }

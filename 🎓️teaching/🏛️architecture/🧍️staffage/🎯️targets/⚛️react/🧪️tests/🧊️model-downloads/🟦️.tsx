@@ -182,6 +182,7 @@ describe("📤️ export panel", () => {
     fireEvent.click(card.getByRole("button", { name: /Export GLB/u }));
     await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
     expect(seen).toMatchObject({ pose: "carry-bag", view: "light-solid" });
+    await waitFor(() => expect(document.querySelector("[data-result]")).not.toBeNull());
     expect(document.querySelector("[data-result]")!.textContent).toContain("x.glb");
     expect(document.querySelector("[data-result]")!.textContent).toContain("4.0 kB");
     expect(document.querySelector("[data-result]")!.textContent).toContain("A note.");

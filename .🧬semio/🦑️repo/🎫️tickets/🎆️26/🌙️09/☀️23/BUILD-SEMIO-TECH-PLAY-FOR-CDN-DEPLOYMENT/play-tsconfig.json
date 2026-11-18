@@ -1,0 +1,6 @@
+{
+  "extends": "../../../../../../../tsconfig.json",
+  "compilerOptions": { "types": [], "typeRoots": [] },
+  "include": ["../../../../../../../🏢️semio-tech/🎡️play/**/*.ts", "../../../../../../../🏢️semio-tech/🎡️play/**/*.tsx"],
+  "exclude": ["**/node_modules/**", "**/dist/**", "**/🗑️generated/**"]
+}

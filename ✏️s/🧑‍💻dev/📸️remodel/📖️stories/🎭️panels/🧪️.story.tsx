@@ -18,6 +18,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
+import { Button, SharedBorderRow } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useCallback, useMemo, useState, type ReactElement } from "react";
 
@@ -52,14 +53,14 @@ function RemodelPanelStoryHost({ panelId, document, locale }: { readonly panelId
 
   return (
     <div style={{ display: "flex", height: "100%", width: "100%", flexDirection: "column" }}>
-      <div style={{ display: "flex", gap: 6, padding: 4 }}>
+      <SharedBorderRow wrap>
         {LOCALES.map((candidate) => (
-          <button key={candidate} type="button" data-testid={`remodel-panel-locale-${candidate}`} onClick={() => onAction({ controllerId: REMODEL_EDITOR_CONTROLLER_ID, action: "setLocale", args: { locale: candidate } })}>
+          <Button variant="outline" icon="arrow-right" key={candidate} type="button" data-testid={`remodel-panel-locale-${candidate}`} onClick={() => onAction({ controllerId: REMODEL_EDITOR_CONTROLLER_ID, action: "setLocale", args: { locale: candidate } })}>
             {candidate}
             {config.locale === candidate ? " ✓" : ""}
-          </button>
+          </Button>
         ))}
-      </div>
+      </SharedBorderRow>
       <div data-testid={`remodel-panel-${panelId}`} style={{ flex: "1 1 auto", minHeight: 0, overflow: "auto" }}>
         <InterpretedUiNode store={store} onAction={onAction} onIntent={() => undefined} />
       </div>

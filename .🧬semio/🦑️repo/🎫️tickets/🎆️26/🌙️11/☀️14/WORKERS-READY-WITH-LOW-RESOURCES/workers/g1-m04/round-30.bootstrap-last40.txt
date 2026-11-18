@@ -1,0 +1,41 @@
+## last 40 lines of /home/deck/native-bootstrap-round-30.log
+[repo] still working after 15230 s; last phase started: door.script
+[repo] still working after 15260 s; last phase started: door.script
+[repo] still working after 15290 s; last phase started: door.script
+[repo] still working after 15320 s; last phase started: door.script
+[repo] still working after 15350 s; last phase started: door.script
+[repo] still working after 15380 s; last phase started: door.script
+[repo] still working after 15410 s; last phase started: door.script
+[repo] still working after 15440 s; last phase started: door.script
+[repo] still working after 15470 s; last phase started: door.script
+[repo] still working after 15500 s; last phase started: door.script
+[repo] still working after 15530 s; last phase started: door.script
+[repo] still working after 15560 s; last phase started: door.script
+[repo] still working after 15590 s; last phase started: door.script
+[repo] still working after 15620 s; last phase started: door.script
+[repo] still working after 15650 s; last phase started: door.script
+[repo] still working after 15680 s; last phase started: door.script
+[repo] still working after 15710 s; last phase started: door.script
+[repo] still working after 15740 s; last phase started: door.script
+[repo] still working after 15770 s; last phase started: door.script
+[repo] still working after 15800 s; last phase started: door.script
+[repo] still working after 15830 s; last phase started: door.script
+[repo] still working after 15860 s; last phase started: door.script
+[repo] still working after 15890 s; last phase started: door.script
+[repo] still working after 15920 s; last phase started: door.script
+[repo] still working after 15950 s; last phase started: door.script
+[repo] still working after 15980 s; last phase started: door.script
+[repo] still working after 16010 s; last phase started: door.script
+[repo] still working after 16040 s; last phase started: door.script
+[repo] still working after 16070 s; last phase started: door.script
+[repo] still working after 16100 s; last phase started: door.script
+[repo] still working after 16130 s; last phase started: door.script
+[repo] still working after 16160 s; last phase started: door.script
+[repo] still working after 16190 s; last phase started: door.script
+[repo] still working after 16220 s; last phase started: door.script
+[repo] still working after 16250 s; last phase started: door.script
+[repo] still working after 16283 s; last phase started: door.script
+[repo] still working after 16313 s; last phase started: door.script
+The project graph could not be read on this machine yet: the plan stage inference (during inference) grew to 6344 MB, more than the 6339 MB this machine gives a plan, and only 1615 MB of memory were available (at least 2048 MB are kept in reserve) after it gave back what it could. It was stopped before the host ran short of memory. Nothing is wrong with your tree; run the command again when a machine with free memory serves the graph, or read the graph on a larger machine.
+end 2026-11-15T23:57:38Z
+native_rc=75

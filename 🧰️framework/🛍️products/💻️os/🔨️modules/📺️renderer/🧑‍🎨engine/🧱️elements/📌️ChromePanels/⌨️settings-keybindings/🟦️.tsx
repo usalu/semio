@@ -1,5 +1,5 @@
 /** ⌨️ Settings chrome panel, Keybindings tab: the keybinding capture step and the keybindings settings tree. */
-import { Button, type TreePanelConfig, formatKeybindingShortcut, humanizeControlId, parseKeybindingChords, resolveControlLabelId, uiDataLabel } from "@semio-tech/ui-react";
+import { Button, SharedBorderRow, type TreePanelConfig, formatKeybindingShortcut, humanizeControlId, parseKeybindingChords, resolveControlLabelId, uiDataLabel } from "@semio-tech/ui-react";
 import { shellLabel, shellLabelIfDefined } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import type { SettingsHostApi } from "../⚙️settings-general/🟦️.tsx";
 
@@ -51,8 +51,9 @@ export function buildSettingsKeybindingsTree(host: SettingsHostApi): TreePanelCo
             id: `framework.settings.keybindings.${controlId}`,
             label: conflict ? `${label} (${shellLabel("settings.keybindings.conflict")})` : label,
             control: (
-              <div className="flex items-center gap-single">
-                <span className="min-w-[5rem] font-mono text-xs text-muted-foreground">{formatKeybindingShortcut(keys)}</span>
+              <div className="flex items-stretch">
+                <span className="flex min-w-[5rem] items-center px-single font-mono text-xs text-muted-foreground">{formatKeybindingShortcut(keys)}</span>
+                <SharedBorderRow className="shrink-0">
                 <Button
                   id={`framework.settings.keybindings.capture.${controlId}`}
                   icon={{ kind: "emoji", emoji: "⌨️" }}
@@ -70,6 +71,7 @@ export function buildSettingsKeybindingsTree(host: SettingsHostApi): TreePanelCo
                   }}
                 />
                 <Button id={`framework.settings.keybindings.reset.${controlId}`} variant="ghost" icon="rotate-ccw" text={shellLabel("settings.keybindings.reset")} onClick={() => host.resetKeybindingOverride(controlId)} />
+                </SharedBorderRow>
               </div>
             ),
           };

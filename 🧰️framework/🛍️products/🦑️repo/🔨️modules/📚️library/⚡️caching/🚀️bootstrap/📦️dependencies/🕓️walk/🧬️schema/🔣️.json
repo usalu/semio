@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:repo:dependencies:ownership-walk:v1",
+  "title": "How the walk over the ownership of a dependency store reports its counts and saves its listings",
+  "description": "The ownership walk of `repo dependencies sync` visits every directory below the workspace (millions of steps on a machine with a large `node_modules`) and used to print only the name of its latest step, labelled like a lock; a walk that the stage cap stopped lost every listing it had read and began again. Now the walk prints a count line every `reportMilliseconds` (steps so far, steps per second since the start and since the last line, in English and German), and saves the listings it has settled every `checkpointMilliseconds` once at least `checkpointMinimumOperations` steps are new, so the next try is seeded with them and goes on where this one stopped.",
+  "definitions": {
+    "Policy": {"const": {"version": 1, "reportMilliseconds": 30000, "checkpointMilliseconds": 120000, "checkpointMinimumOperations": 20000}},
+    "Texts": {
+      "const": {
+        "en": {"report": "Ownership walk: {count} steps in {seconds} s, {rate} per second since the start and {recent} per second lately ({operation})."},
+        "de": {"report": "Besitzprüfung: {count} Schritte in {seconds} s, {rate} pro Sekunde seit dem Start und {recent} pro Sekunde zuletzt ({operation})."}
+      }
+    },
+    "Step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "nowMs", "operation", "count", "report", "checkpoint"],
+      "properties": {
+        "name": {"type": "string"},
+        "nowMs": {"type": "integer"},
+        "operation": {"type": "string"},
+        "count": {"type": "integer"},
+        "report": {"type": "boolean"},
+        "checkpoint": {"type": "boolean"}
+      }
+    },
+    "Fixture": {"type": "object", "additionalProperties": false, "required": ["steps"], "properties": {"steps": {"type": "array", "items": {"$ref": "#/definitions/Step"}}}}
+  },
+  "oneOf": [{"$ref": "#/definitions/Policy"}]
+}

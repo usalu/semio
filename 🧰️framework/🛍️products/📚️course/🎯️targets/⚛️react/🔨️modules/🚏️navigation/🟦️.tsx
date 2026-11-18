@@ -73,12 +73,13 @@ export function NavigationControls(props: { readonly session: CourseSession; rea
     return place === undefined ? caption(way) : text(WAY_LABELS[way].to, { place });
   };
   return (
-    <div role="group" aria-label={text("course.nav.ways")} className="flex w-fit border border-normal">
+    <div role="group" aria-label={text("course.nav.ways")} data-shared-border-frame="" data-shared-border-edges="top right bottom left" className="flex w-fit">
       {NAVIGATION_WAYS.map((way) => (
         <button
           key={way}
           type="button"
           data-course-nav={way}
+          data-shared-border-cell=""
           aria-label={label(way)}
           title={label(way)}
           aria-disabled={ways[way] === undefined}
@@ -87,7 +88,7 @@ export function NavigationControls(props: { readonly session: CourseSession; rea
           className={cn(overviewCardChipClass, "course-target min-w-[1.5rem] cursor-pointer justify-center text-muted-foreground transition-colors hover:text-foreground aria-disabled:cursor-not-allowed aria-disabled:opacity-50 aria-disabled:hover:text-muted-foreground")}
         >
           <Icon icon={WAY_ICONS[way]} size="small" />
-          <span className="whitespace-nowrap">{caption(way)}</span>
+          <span className="whitespace-nowrap max-md:sr-only">{caption(way)}</span>
         </button>
       ))}
     </div>

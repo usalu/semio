@@ -93,15 +93,18 @@ fn encode_turn(bank: &mut EffectBank, what: &str, native: &mut NativeEncodeContr
     settled(driven::<OriginalRetirementFailure>(bank, original_grant(), CLOSE_WORK, |effect, reply, recover| if recover { native.recover_close_retirement_recipient_into(CLOSE_BODY, effect, reply) } else { native.close_retirement_recipient_into(CLOSE_BODY, effect, reply) }).0, what)
 }
 
-/// 🚮️ Runs one funded close turn of the original decode recipient; a selected failure birth runs first through its separate driver.
+/// 🚮️ Runs one funded close turn of the original decode recipient whose control already holds its Work and construction loans; a selected failure birth runs first through its separate driver.
+fn close_decode_installed(native: &mut NativeDecodeControl<'_>) -> RetainedCloneProgress {
+    let birth = native.with_retirement::<_, ValueError>(original_grant(), |loan| Ok(loan.requires_original_birth().then(|| loan.close_original_birth_step(original_grant())))).expect("original decode failure birth selects");
+    match birth {
+        Some(poll) => settled(poll, "original decode failure birth closes"),
+        None => settled(native.with_effect(original_grant(), CLOSE_WORK, |native, effect| native.close_retirement_recipient(CLOSE_BODY, effect)).expect("original decode close effect opens").expect("original decode close work is admitted"), "original decode recipient closes"),
+    }
+}
+
+/// 🚮️ Lends the original Work and construction authorities to the decode control for one funded close turn.
 fn close_decode(lent: &mut Lent, native: &mut NativeDecodeControl<'_>) -> RetainedCloneProgress {
-    lend!(lent, native, |native: &mut NativeDecodeControl<'_>| {
-        let birth = native.with_retirement::<_, ValueError>(original_grant(), |loan| Ok(loan.requires_original_birth().then(|| loan.close_original_birth_step(original_grant())))).expect("original decode failure birth selects");
-        match birth {
-            Some(poll) => settled(poll, "original decode failure birth closes"),
-            None => settled(native.with_effect(original_grant(), CLOSE_WORK, |native, effect| native.close_retirement_recipient(CLOSE_BODY, effect)).expect("original decode close effect opens").expect("original decode close work is admitted"), "original decode recipient closes"),
-        }
-    })
+    lend!(lent, native, |native: &mut NativeDecodeControl<'_>| close_decode_installed(native))
 }
 
 /// 🧲️ Runs `operation` under an original native decode owner and closes every retired owner afterwards.
@@ -149,33 +152,55 @@ pub fn with_sqlite_recipient<T>(limits: SqliteDatabaseLimits, accept: &mut dyn F
     result
 }
 
-/// 🚏️ Executes a routed IO payload under original native and SQLite authorities, then closes both native directions.
+/// 🚏️ Executes a routed IO payload under original native and SQLite authorities, then closes both native directions. The decode and encode controls install their own Work and construction loans for the whole run, so both share the one lifetime the run's `IoRunControl` demands.
 pub async fn io_run(route: &IoRoute, payload: IoPayload, limits: SqliteDatabaseLimits, progress: &mut dyn FnMut(SqliteSnapshotProgress) -> bool) -> IoResult<IoPayload> {
     let grant = original_grant();
     let mut receive = |_| true;
     let mut emit = |_| true;
     let mut receive_recipient = NativeDecodeRetirementRecipient::new();
     let mut emit_recipient = NativeEncodeRetirementRecipient::new();
-    let mut receive_control = NativeDecodeControl::new(NATIVE_MAXIMUM_BYTES, &mut receive);
-    let mut emit_control = NativeEncodeControl::new(NATIVE_MAXIMUM_BYTES, &mut emit);
-    receive_control.install_retirement_recipient(&mut receive_recipient).expect("original decode recipient installs");
-    emit_control.install_retirement_recipient(&mut emit_recipient).expect("original encode recipient installs");
-    let mut native = IoRunControl::new(&mut receive_control, &mut emit_control, grant);
-    let mut snapshot = SqliteSnapshotControl::new(progress, limits);
-    let result = io_run_with_snapshot_control(route, &mut Some(payload), &mut native, &mut snapshot).await;
-    close_original(&mut native);
-    drop(native);
-    result
+    let (mut decoding, mut encoding) = (Lent::new(), Lent::new());
+    let mut result = None;
+    decoding.construction
+        .with_loan(&mut (), |decode_construction| {
+            decoding.work.with_loan(&mut (), |decode_work| {
+                encoding.construction.with_loan(&mut (), |encode_construction| {
+                    encoding.work.with_loan(&mut (), |encode_work| {
+                        let (mut decode_construction, mut decode_work) = (decode_construction.reborrow(), decode_work.reborrow());
+                        let (mut encode_construction, mut encode_work) = (encode_construction.reborrow(), encode_work.reborrow());
+                        let mut receive_control = NativeDecodeControl::new(NATIVE_MAXIMUM_BYTES, &mut receive);
+                        let mut emit_control = NativeEncodeControl::new(NATIVE_MAXIMUM_BYTES, &mut emit);
+                        receive_control.install_retirement_recipient(&mut receive_recipient).expect("original decode recipient installs");
+                        emit_control.install_retirement_recipient(&mut emit_recipient).expect("original encode recipient installs");
+                        receive_control.install_work_recipient(&mut decode_work).expect("original decode work loan installs");
+                        receive_control.install_construction_recipient(&mut decode_construction).expect("original decode construction loan installs");
+                        emit_control.install_work_recipient(&mut encode_work).expect("original encode work loan installs");
+                        emit_control.install_construction_recipient(&mut encode_construction).expect("original encode construction loan installs");
+                        let mut native = IoRunControl::new(&mut receive_control, &mut emit_control, grant);
+                        let mut snapshot = SqliteSnapshotControl::new(progress, limits);
+                        result = Some(io_run_with_snapshot_control(route, &mut Some(payload), &mut native, &mut snapshot).into_inner());
+                        close_original(&mut native);
+                        drop(native);
+                        Ok::<(), ValueError>(())
+                    })
+                })
+            })
+        })
+        .expect("original decode construction loan")
+        .expect("original decode work loan")
+        .expect("original encode construction loan")
+        .expect("original encode work loan")
+        .expect("original io run ran");
+    result.expect("original io run produced its result")
 }
 
-/// 🧹️ Closes both native directions of one routed run through host-funded turns charged to their original grants.
+/// 🧹️ Closes both native directions of one routed run through host-funded turns charged to their original grants; both controls already hold their installed loans.
 fn close_original(native: &mut IoRunControl<'_, '_>) {
     let mut bank = original_bank();
-    let mut lent = Lent::new();
     {
         let mut owner = native.snapshot_decode().expect("original decode direction");
         while owner.native().has_retirement_owner() {
-            let progress = close_decode(&mut lent, owner.native());
+            let progress = close_decode_installed(owner.native());
             owner.record_progress(progress).expect("original decode close is funded");
         }
     }
@@ -229,7 +254,7 @@ pub fn encode_native<T: ArtifactSqliteSnapshotHost>(value: &T, encoding: Snapsho
 fn settled_io<T>(output: Option<IoResult<T>>, turn: ArtifactSqliteSnapshotTurn) -> IoResult<T> {
     match (output, turn.result) {
         (Some(result), Ok(())) => result,
-        (_, Err(_)) => Err(IoError::from_value_error(ValueError::literal(ValueRefusalKind::InvalidValue, "original snapshot turn failed"))),
+        (_, Err(error)) => Err(IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue, format!("original snapshot turn failed: {error:?}")))),
         (None, Ok(())) => Err(IoError::from_value_error(ValueError::literal(ValueRefusalKind::InvalidValue, "original snapshot turn produced no output"))),
     }
 }

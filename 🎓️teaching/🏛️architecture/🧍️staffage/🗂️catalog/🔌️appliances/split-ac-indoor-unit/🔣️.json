@@ -570,7 +570,7 @@
               "y": 0,
               "w": 0.85,
               "h": 0.29,
-              "r": 0.045
+              "r": 0.03
             },
             {
               "id": "intake-grille",
@@ -1684,6 +1684,8 @@
             "key": "cooling",
             "heatW": -20
           },
+          "ratedPowerW": 700,
+          "ratedPowerBasis": "electrical-input",
           "source": "authored-estimate",
           "reference": "en-14511"
         },

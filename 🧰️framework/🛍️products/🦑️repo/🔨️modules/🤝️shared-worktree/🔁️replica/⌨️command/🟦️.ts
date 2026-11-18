@@ -4,6 +4,7 @@ import {join} from "node:path";
 import {isAbsolute,resolve} from "node:path";
 import {groupV1,peerStorePathV1,platformV1,readTopologyV1} from "../../🗺️topology/🟦️.ts";
 import {compactV1,dryOpenReplicaV1,fleetCompactV1,homedOriginsV1,joinV1,JoinRefusedV1,OriginTakenV1,relayOnceV1,relayV1,ReplicaBusyV1,requestRepairV1,requireReplicaShapeV1,runV1,seedV1,setSyncEnabledV1,snapshotV1,statusV1,smokeBootV1,storeReachableV1,verifyV1,type ReplicaEventV1,type ReplicaOptionsV1,type StatusReportV1} from "../🟦️.ts";
+import {readinessReportV1,type ReadinessRowV1} from "../../🩺️attest/🚦️readiness/🟦️.ts";
 import {attestPathV1,codeDigestV1,fleetReportV1,freshSecondsV1,readAttestationV1,readRetirementV1,requireAttestShapeV1,viewDiffV1,writeRetirementV1,type FleetReportV1} from "../../🩺️attest/🟦️.ts";
 import {formatHlcV1,listOriginsV1,parseHlcV1} from "../../📒️journal/🟦️.ts";
 import {installBootStageV1,readFallbackV1,selfCheckV1} from "../../🛡️resilience/🟦️.ts";
@@ -169,6 +170,12 @@ function showStatus(report:StatusReportV1,say:(key:string,variables?:Variables)=
  if(report.daemon.running)say("status.daemon.running",{pid:report.daemon.pid??0});else say("status.daemon.stopped");
  say("status.queue",{files:report.files,incoming:report.queue.incoming,outgoing:report.queue.outgoing??"?",lost:report.lost});
  if(report.refused!==null&&report.refused>0)say("status.refused",{refused:report.refused});
+ if(report.refusedPaths.recent.length>0){
+  const reasons=new Map<string,number>();
+  for(const item of report.refusedPaths.recent)reasons.set(item.reason,(reasons.get(item.reason)??0)+1);
+  say("status.refusals",{count:report.refusedPaths.recent.length,total:report.refusedPaths.total,reasons:[...reasons].map(([reason,count])=>`${reason} ${count}`).join(", ")});
+  for(const item of report.refusedPaths.recent.slice(-5).reverse())say("status.refusals.item",{reason:item.reason,path:item.path});
+ }
  if(report.retired!==null)say("status.retired",{origin:report.originId,by:report.retired.by,reason:report.retired.reason===""?"-":report.retired.reason});
  if(report.daemon.busySeconds!==undefined)say("status.daemon.busy",{seconds:report.daemon.busySeconds});
  if(report.code!==undefined&&report.code.source!=="worktree")say("status.code.fallback",{source:`@status.code.${report.code.source}`,phase:`@status.code.phase.${report.code.phase}`});
@@ -217,6 +224,18 @@ function showFleet(report:FleetReportV1,say:(key:string,variables?:Variables)=>v
  for(const item of report.warnings)say(`fleet.warning.${item.kind}`,{origin:item.originId,detail:item.detail});
  for(const item of report.differing)say(differsKey(report,item),{origin:item.originId,field:item.field,value:item.value?.slice(0,80)??"-",expected:item.expected?.slice(0,80)??"-"});
  say(report.ok?"fleet.ok":"fleet.failed",{origins:report.rows.length,fresh:report.freshSeconds});
+}
+
+/** 🚦️ The readiness table of the workers, one row per origin from its own `ready.json`, in each output language with the stored reason of that language; the group server and workers without a status are named, and the verdict of `fleet` is not changed by it. */
+function showReadiness(rows:readonly ReadinessRowV1[],context:ReplicaCommandContextV1,languages:readonly ReplicaLanguageV1[]):void{
+ const workers=rows.filter(row=>row.kind==="worker");
+ if(workers.length===0)return;
+ for(const language of languages){
+  const text=(key:string,variables:Variables={}):string=>replicaTextV1(language,key,variables);
+  context.notice(text("fleet.ready.header"));
+  for(const row of workers)context.notice(text("fleet.ready.row",{origin:row.originId,state:row.state??text("fleet.ready.none"),ready:row.ready===null?"-":text(row.ready?"fleet.ready.yes":"fleet.ready.no"),stage:row.state===null||row.stageCount===0?"-":`${row.stageIndex}/${row.stageCount}${row.stage===null?"":`:${row.stage}`}`,attempts:row.attempts,exit:row.exit??"-",peak:row.peakMegabytes??"-",age:row.ageSeconds===null?"-":`${row.ageSeconds}s`,digest:row.digest===null?"-":row.digest.slice(0,8),reason:row.refusal===null?"-":row.refusal[language]}));
+  context.notice(text("fleet.ready.summary",{ready:workers.filter(row=>row.ready===true).length,workers:workers.length,silent:workers.filter(row=>row.state===null).length}));
+ }
 }
 
 const viewCap=40;
@@ -417,7 +436,7 @@ async function execute(parsed:ReplicaArgumentsV1,context:ReplicaCommandContextV1
   }
   if(signal.aborted)return {exitCode:130};
   if(parsed.flags.has("--json")){requireAttestShapeV1("Report",report,"Closed fleet report required");context.write(JSON.stringify(report));}
-  else showFleet(report,say,"fleet.header");
+  else{showFleet(report,say,"fleet.header");showReadiness(await readinessReportV1(storeRoot,Date.now()),context,replicaLanguagesV1(parsed.values["--lang"],context.environment));}
   const blocked=await listAccessV1(storeRoot);
   for(const item of blocked)say("fleet.access",{origin:item.originId,worktree:item.worktree,state:item.state});
   if(!parsed.flags.has("--json"))await showPeerStores(options.groupId,options.originId,say);

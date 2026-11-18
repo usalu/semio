@@ -1,0 +1,18 @@
+# R119: where the reader's accept cost goes, and the shared verdict files (landed 07:30 UTC)
+
+Scripts: `☀️13/FLEET-…/🧰️scripts/R119/` (`accept.ts` accept path per owner, `run1.sh`, `prof.py` cpuprofile summary, `patches.mjs`, `land.mjs`, `window.sh`, `test/`). Own children only, load 20-50.
+
+## 1. Where the CPU goes (measured, `bun --cpu-prof`, real reader steps gate -> settle -> verify)
+Important correction to the census: its 2 minutes for `trinity-jack-rs` came from an EMPTY private closure store (every shared entry downloaded and unpacked). Cold store, trinity: 192 s CPU = fleet entry lane `unpackOf`/`localBundleV1`/`save` 84 s (JSON.parse of the packed entries 57 s, Buffer toString 18 s), forced GC from the footprint governor (`releaseIfGrownV1` in `yieldInferenceV1`) 37 s, layer verification 12 s. With the real, warm closure store (what a reader has): trinity 3.3 s CPU, of which layer verdicts (`indexedLayerHoldsAsyncV1`, 6 533 row-id probes of 6.5k layers) about 2.5-5.9 s; verify of the owner's own rows 3 ms. Own rows (b): verify 1-78 ms per owner over 12 owners, so (b) needs no fix. Per owner settle (warm store) varied 0.03 s to 120 s: owners whose entries are stale or missing locally pay the fleet download/unpack again (`stdio-dwg-rs` 120 s CPU, `stdio-deflate-rs` 45 s settle + 50 s gate, `wfc-grid2d-rs` gate 33 s, `norm-en1994-rs` settle 14 s); `gate` (import of the record plus its closure entries from the fleet) is the other big step. Accept rate in this sample: 3 of 12 owners accepted.
+Split: (a) work on shared entries identical for every owner = layer/entry verification (done once per process and round already, but repeated by every farm child, pool child and new round) plus fleet download/unpack of shared entries per store; (b) own rows: under 80 ms.
+
+## 2. Fix landed (a, verification part)
+Verdict files per round shared across processes, fresh and stale verdicts, in-memory memo kept. `validation-round` law untouched (observation module not edited; new round = new directory). Measured, trinity, warm store, own child: writer process (first verifier) 3.3 -> 4.8 s CPU (+1.5 s once per read for 6.6k small files); a second process of the same round: settle 3.2 s -> 0.6 s CPU, layer work 6 569 -> 0, entry checks 68 -> 0 (4.5x).
+Law tests `🧪️tests/🧬️read-verdicts` (3): two processes of one round check each entry once (child: 0 entry checks, 0 layer checks, 0 probes; a lone child checks all), a new round has its own directory and verifies again, no round means no scope.
+
+## 3. NOT done / unverified
+- `refs` out of the parent (coordinator addition): not built and not profiled; the resolved project must travel back to the parent (it IS the record result), so moving it needs a return channel (file in the closure store, parent reads by digest) and its own decision. Parent RSS peak before/after over 50 owners NOT measured. Shared reference data per read: not done.
+- The cold-store cost (fleet unpack 84 s, forced GC 37 s for trinity) is untouched: next candidates are streaming/sharing the unpack once per store (a download memo file keyed by document digest) and R117's GC trigger.
+- Owners per minute over 200 accepted owners and the five-owner before/after table: not run (three accepted owners took more than 12 minutes of the budget at load 30-50; stopped). Only trinity before/after exists above.
+- Layer claims serialise concurrent children (wait up to 30 s); entry-level checks have no claim, concurrent children can duplicate the cheap entry-row part.
+- Server effect not seen: running servers have old code; farm `observe` jobs pass `verdicts` only when the parent has a round.

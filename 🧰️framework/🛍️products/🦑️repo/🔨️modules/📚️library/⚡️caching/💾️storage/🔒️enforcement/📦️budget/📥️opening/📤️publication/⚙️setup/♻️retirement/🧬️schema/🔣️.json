@@ -16,7 +16,8 @@
           "patches",
           "package.json",
           "{{lockFile}}",
-          "{{scopeConfig}}"
+          "{{scopeConfig}}",
+          "bindings.json"
         ],
         "capsuleRoles": [
           "i",

@@ -83,7 +83,7 @@ test("a read that holds far more than its grant under pressure is stopped after 
   expect(over.ok).toBe(false);expect(Date.now()-started).toBeLessThan(5000);
   expect(over.detail).toBe(wantedTextV1("memoryOverrun","en",{footprint:31000,grant:14336,minutes:"0.0"}));
   const calm=await inferGraphReadV1({command:path,cwd:tmpdir(),environment:{},reason:"request",signal:AbortSignal.timeout(900),language:"en",policy:small,measure:async()=>({footprintMegabytes:9000,grantMegabytes:14336,pressure:"warn"})});
-  expect(calm.detail).toBe("[repo] still working");
+  expect(calm.ok).toBe(false);expect(calm.detail,"a caller that stops waiting detaches from the read within its grant, it never stops it as an overrun").toBe("detached");
  }finally{rmSync(dir,{recursive:true,force:true});}
 },30000);
 

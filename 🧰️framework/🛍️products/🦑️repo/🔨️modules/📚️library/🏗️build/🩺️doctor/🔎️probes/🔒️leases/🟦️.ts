@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {existsSync,readdirSync,rmSync,statSync} from "node:fs";
 import {join,resolve,sep} from "node:path";
 import {buildLeaseReportV1,readLeaseQueuesV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/📋️status/🟦️.ts";
@@ -51,7 +52,7 @@ export const leasesProbeV1:DoctorProbeV1=Object.freeze({
  area:"leases",phase:1,
  repairs:[Object.freeze({id:"leases-registry",area:"leases" as const,run:(ports:DoctorPortsV1,_context:unknown,dryRun:boolean)=>repair(ports,dryRun)})],
  async read(ports,context){
-  const directory=resolve(ports.root,REPOSITORY_LEASE_DIRECTORY_V1);
+  const directory=machinePathV1(ports.root,REPOSITORY_LEASE_DIRECTORY_V1);
   if(!existsSync(directory))return {unavailable:"The lease directory does not exist yet; the leases image was never attached"};
   const now=ports.now(),root=leaseRegistryRootV1(ports.environment),policy=leaseOrderPolicyV1(ports.environment);
   const entries=readLeaseRegistryEntriesV1(root,directory,now,false),queues=readLeaseQueuesV1(directory),violations=readLeaseViolationsV1(root,directory,context.policy.leases.violationsLimit);

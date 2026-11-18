@@ -43,7 +43,7 @@ export function analyticOptionsOf(request: Pick<SpatialRequest, "environment" | 
 export function modelOptionsOf(_asset: Asset, request: SpatialRequest): AssetModelOptions {
   const { query } = request;
   if (query.kind === "transition") throw new ModelRequestError("model-bad-option", "transition");
-  const base = analyticOptionsOf(request);
+  const base = { ...analyticOptionsOf(request), ...(request.scales === undefined ? {} : { scales: request.scales }) };
   return query.kind === "pose" ? { ...base, at: { kind: "pose", pose: query.pose }, poses: [query.pose], clips: [] } : { ...base, at: { kind: "clip", clip: query.clip, timeS: 0 }, poses: [], clips: [query.clip] };
 }
 

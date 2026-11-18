@@ -33,6 +33,30 @@
   --ui-available-height: 100dvh;
 }
 
+:root {
+  --device-pixel: 1px;
+}
+@media (min-resolution: 1.25dppx) {
+  :root { --device-pixel: 0.8px; }
+}
+@media (min-resolution: 1.5dppx) {
+  :root { --device-pixel: 0.6666667px; }
+}
+@media (min-resolution: 2dppx) {
+  :root { --device-pixel: 0.5px; }
+}
+@media (min-resolution: 3dppx) {
+  :root { --device-pixel: 0.3333333px; }
+}
+
+/* Single source of truth for the shell bands: the theme-owned `--navbar-height` / `--footer-height` snapped to a whole device pixel. Every consumer (Navbar, Footer, docked panel offsets, panel header, page insets) reads these, so the bands' shared lines coincide exactly with the windows beneath. Declared on every theme root so a root with its own geometry re-snaps its own values. */
+:root,
+[data-ui-theme] {
+  --navbar-band-height: round(nearest, var(--navbar-height), var(--device-pixel));
+  --footer-band-height: round(nearest, var(--footer-height), var(--device-pixel));
+  --chip-row-height: round(nearest, max(1.5rem, calc(7 * var(--ui-spacing))), var(--device-pixel));
+}
+
 .h-screen {
   height: var(--ui-available-height, 100dvh);
 }
@@ -254,6 +278,7 @@
       background: transparent;
     }
 
+    [data-slot="scroll-area"],
     .ui-scrollbar-hidden {
       scrollbar-width: none;
 
@@ -1731,16 +1756,15 @@
 }
 
 .introduction-demo-callout-chips {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: calc(var(--ui-spacing) * 0.5);
-  padding-top: calc(var(--ui-spacing) * 0.5);
+  gap: 0;
 }
 
 .introduction-demo-callout-chip {
   display: none;
   align-items: center;
-  border: var(--stroke-hairline) solid var(--accent-foreground);
   background: color-mix(in oklab, var(--temporary) 92%, transparent);
   color: var(--muted-foreground);
   padding: var(--spacing-single);
@@ -1749,6 +1773,20 @@
   line-height: var(--text-2xs--line-height);
   letter-spacing: 0.02em;
   white-space: nowrap;
+}
+
+.introduction-demo-callout-chips > .introduction-demo-callout-chip {
+  border-block-end-width: 0 !important;
+}
+
+.introduction-demo-callout[data-double="true"] .introduction-demo-callout-chip:has(~ .introduction-demo-callout-chip[data-chip="double"]),
+.introduction-demo-callout[data-modifiers~="alt"] .introduction-demo-callout-chip:has(~ .introduction-demo-callout-chip[data-chip="alt"]),
+.introduction-demo-callout[data-modifiers~="shift"] .introduction-demo-callout-chip:has(~ .introduction-demo-callout-chip[data-chip="shift"]),
+.introduction-demo-callout[data-modifiers~="control"] .introduction-demo-callout-chip:has(~ .introduction-demo-callout-chip[data-chip="control"]),
+.introduction-demo-callout[data-modifiers~="meta"] .introduction-demo-callout-chip:has(~ .introduction-demo-callout-chip[data-chip="meta"]),
+.introduction-demo-callout[data-scroll-direction="up"] .introduction-demo-callout-chip:has(~ .introduction-demo-callout-chip[data-chip="zoom-in"]),
+.introduction-demo-callout[data-scroll-direction="down"] .introduction-demo-callout-chip:has(~ .introduction-demo-callout-chip[data-chip="zoom-out"]) {
+  border-block-end-width: var(--stroke-hairline) !important;
 }
 
 .introduction-demo-callout[data-double="true"] .introduction-demo-callout-chip[data-chip="double"],
@@ -6544,7 +6582,7 @@
 
 /* #region 🪟️ShellParentHover
  * Parent-shell edge strokes mirror mode-dock silhouette hover: a dedicated stroke layer
- * (navbar/footer pseudo-edges, panel/pane `[data-slot="chrome-frame"]`) recolors while the
+ * (navbar/footer pseudo-edges, mobile panel compositor frame) recolors while the
  * pointer is inside the parent. Never recolor the parent's own Tailwind `!border-*` — those
  * utilities win the cascade and made the previous border-*-color :hover rules invisible.
  * Use :hover only — never :focus-within — so clicking a toggle/pane does not leave the border
@@ -6581,6 +6619,34 @@
 [data-slot="navbar"]:hover::after,
 [data-slot="footer"]:hover::before {
   background-color: var(--border-emphasized-color);
+}
+
+/* Framed controls in a tree row's value column span the row's full height, so consecutive rows' controls meet on one shared line instead of floating with gaps between them. */
+[data-slot="tree-item-control"] [data-shared-border-frame],
+[data-slot="tree-item-control"] [data-shared-border-cell] {
+  align-self: stretch;
+  height: auto;
+  max-height: none;
+}
+
+:root {
+  --panel-header-height: var(--chip-row-height);
+}
+/* Chrome-hosted panel tab strips inside a shell band are exactly as tall as the band, so the strip shares the band's lines. */
+[data-slot="navbar"] {
+  --panel-header-height: var(--navbar-band-height);
+}
+[data-slot="footer"] {
+  --panel-header-height: var(--footer-band-height);
+}
+
+/* Controls in the shell bands span the band's full height, so their top and bottom edges coincide with the band's own edges (one hairline, never a second one beside it). */
+:is([data-slot="navbar"], [data-slot="footer"]) :is([data-shared-border-frame], :has(> [data-shared-border-frame])):not([data-slot="navbar"], [data-slot="footer"], [data-slot="navbar-item"]) {
+  align-self: stretch;
+}
+:is([data-slot="navbar"], [data-slot="footer"]) [data-shared-border-frame]:not([data-slot="navbar"], [data-slot="footer"]) {
+  height: auto;
+  max-height: none;
 }
 
 [data-slot="navbar"] :is([data-slot="button-group"], [data-slot="toggle-group"], [data-slot="action-group"], [data-slot="app-panel-toggle-group"]),
@@ -6658,38 +6724,135 @@
   border-color: var(--border-normal-color);
 }
 
+/* `data-shared-border-edges` is the one source of truth for a frame's painted sides: the overlay draws the listed sides, so the native border of every unlisted side is zero (zero specificity, so cell dividers and explicit sides still win). */
+:where([data-shared-border-frame][data-shared-border-edges]:not([data-shared-border-edges~="top"])) { border-top-width: 0; }
+:where([data-shared-border-frame][data-shared-border-edges]:not([data-shared-border-edges~="right"])) { border-right-width: 0; }
+:where([data-shared-border-frame][data-shared-border-edges]:not([data-shared-border-edges~="bottom"])) { border-bottom-width: 0; }
+:where([data-shared-border-frame][data-shared-border-edges]:not([data-shared-border-edges~="left"])) { border-left-width: 0; }
+/* A standalone input or textarea frame is painted by its overlay alone: the inner native control carries no second border at the same coordinates, and an invalid control recolours the overlay instead. */
+[data-shared-border-frame] > :is([data-slot="input"], [data-slot="textarea"]) {
+  border-width: 0;
+  border-radius: 0;
+}
+[data-shared-border-frame]:has(> :is([data-slot="input"], [data-slot="textarea"])[aria-invalid="true"]) > svg[data-shared-border-overlay] [data-shared-border-segment][data-shared-border-state="normal"] { stroke: var(--destructive-border); }
+/* A shared-border owner (`data-shared-border-cells`: a row, or a flush card's content group) turns its direct framed controls into cells: no frame of their own, their outer edges are the owner's edges, the one divider to the next cell is theirs, and they stretch across the owner. */
+[data-shared-border-cells] > [data-shared-border-frame] {
+  border-style: solid;
+  border-width: 0;
+  border-radius: 0;
+  align-self: stretch;
+  height: auto;
+  min-height: 0;
+  max-height: none;
+}
+[data-shared-border-cells][data-orientation="vertical"] > [data-shared-border-frame] {
+  width: auto;
+  max-width: none;
+}
+[data-shared-border-cells] > [data-shared-border-frame] > :is([data-slot="input"], [data-slot="textarea"]) {
+  border-width: 0;
+  border-radius: 0;
+}
+/* Native form controls are cells without a box: a native control or contentEditable surface carrying `data-shared-border-cell`, or sitting in a field cell (`data-shared-border-field`, a `<label>` around label text and one control), loses border, radius and background, fills the cell and stretches; the divider stays the cell's. */
+[data-shared-border-cell]:where(select, textarea, input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]), [contenteditable]:not([contenteditable="false"])) {
+  border-width: 0;
+  border-radius: 0;
+  background-color: transparent;
+  align-self: stretch;
+  min-width: 0;
+}
+[data-shared-border-cells] > [data-shared-border-cell]:where(select, textarea, input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]), [contenteditable]:not([contenteditable="false"])) {
+  height: auto;
+  min-height: 0;
+}
+[data-shared-border-field] > :where(select, textarea, input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]), [contenteditable]:not([contenteditable="false"])) {
+  border-width: 0;
+  border-radius: 0;
+  background-color: transparent;
+  flex: 1 1 0%;
+  min-width: 0;
+  align-self: stretch;
+  padding-block: 0;
+}
+[data-shared-border-field] > :where(input[type="color"]) {
+  padding: 0;
+  flex: 0 0 auto;
+  inline-size: 2em;
+  align-self: center;
+}
+[data-shared-border-field] > :where(input[type="range"]) {
+  flex: 1 1 0%;
+  min-width: 0;
+}
+/* A destructive row paints a destructive surface and, while its cells are in the normal state, destructive seams and edges. */
+[data-shared-border-cells][data-tone="destructive"], [data-shared-border-cell][data-tone="destructive"] {
+  background-color: color-mix(in oklab, var(--destructive-border) 10%, transparent);
+}
+[data-shared-border-cells][data-tone="destructive"] > svg[data-shared-border-overlay] [data-shared-border-segment][data-shared-border-state="normal"] { stroke: var(--destructive-border); }
 /* Shared cells use one real divider, never a second inset-shadow separator. */
-:is(.shared-border-cell, [data-shared-border-cell]) {
+:is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]) {
   border-inline-end: var(--stroke-hairline) solid var(--border-normal-color);
 }
-:is(.shared-border-cell, [data-shared-border-cell]):not(:has(~ :is(.shared-border-cell, [data-shared-border-cell]))) {
+:is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):not(:has(~ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]))) {
   border-inline-end-width: 0;
 }
-:is(.shared-border-frame, [data-shared-border-frame]) > :is(.shared-border-cell, [data-shared-border-cell]) {
+:is(.shared-border-frame, [data-shared-border-frame]) > :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]) {
   border-width: 0;
   border-inline-end-width: var(--stroke-hairline);
 }
-:is(.shared-border-frame, [data-shared-border-frame]) > :is(.shared-border-cell, [data-shared-border-cell]):not(:has(~ :is(.shared-border-cell, [data-shared-border-cell]))) {
+:is(.shared-border-frame, [data-shared-border-frame]) > :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):not(:has(~ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]))) {
   border-inline-end-width: 0;
 }
-:is([data-shared-border-frame], [data-shared-border-group])[data-orientation="vertical"] > :is(.shared-border-cell, [data-shared-border-cell]) {
+:is([data-shared-border-frame], [data-shared-border-group])[data-orientation="vertical"] > :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]) {
   border-inline-end-width: 0;
   border-block-end: var(--stroke-hairline) solid var(--border-normal-color);
 }
-:is([data-shared-border-frame], [data-shared-border-group])[data-orientation="vertical"] > :is(.shared-border-cell, [data-shared-border-cell]):not(:has(~ :is(.shared-border-cell, [data-shared-border-cell]))) {
+:is([data-shared-border-frame], [data-shared-border-group])[data-orientation="vertical"] > :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):not(:has(~ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]))) {
   border-block-end-width: 0;
+}
+/* A framed cell that leaves its bottom edge to another owner (a card grid that closes it) draws no block-end divider either: the owner paints that one line. */
+:is([data-shared-border-frame], [data-shared-border-group])[data-orientation="vertical"] > [data-shared-border-frame][data-shared-border-edges]:not([data-shared-border-edges~="bottom"]) {
+  border-block-end-width: 0;
+}
+/* A collapsed disclosure has no visible cell after its summary: the summary is the last cell, so the parent's divider closes it. */
+details:not([open])[data-orientation="vertical"]:is([data-shared-border-frame], [data-shared-border-group]) > summary:is(.shared-border-cell, [data-shared-border-cell]) {
+  border-block-end-width: 0;
+}
+/* A wrapping owner (`data-shared-border-wrap`: a `SharedBorderRow wrap` or a wrapping `ToggleGroup`, whose cells are tagged `data-wrap-end` / `data-wrap-last` by `useSharedBorderWrap`) breaks its cells into lines that stretch to the owner's width. Every cell draws one divider to the right and one below; the cell closing a line drops the right one and the cells of the last line the lower one, where the owner's own edge is painted, so a seam is one hairline across lines too. A dropped divider leaves a margin of the same size, so a cell never changes size (and never re-wraps) when it is tagged. */
+[data-shared-border-wrap] {
+  flex-wrap: wrap;
+}
+[data-shared-border-wrap] > :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]) {
+  flex: 1 0 auto;
+  border-block-end: var(--stroke-hairline) solid var(--border-normal-color);
+}
+[data-shared-border-wrap] > [data-shared-border-frame] > [data-slot="button-group-item"] {
+  flex-grow: 1;
+}
+[data-shared-border-wrap] > [data-wrap-end]:is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-frame]) {
+  border-inline-end-width: 0;
+}
+[data-shared-border-wrap] > [data-wrap-last]:is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-frame]) {
+  border-block-end-width: 0;
+}
+:is([data-shared-border-cells][data-shared-border-wrap], [data-shared-border-cells] > [data-shared-border-wrap]) > [data-wrap-end] {
+  margin-inline-end: var(--stroke-hairline);
+}
+:is([data-shared-border-cells][data-shared-border-wrap], [data-shared-border-cells] > [data-shared-border-wrap]) > [data-wrap-last] {
+  margin-block-end: var(--stroke-hairline);
 }
 /* First-layer important ownership/hover rules outrank active utilities and unlayered overrides. */
 @layer shared-border-priority {
-:is(.shared-border-cell, [data-shared-border-cell]):where(:focus-within, :has(+ :is(.shared-border-cell, [data-shared-border-cell]):focus-within)) { border-color: var(--active-base) !important; }
-:is(.shared-border-cell, [data-shared-border-cell]):where(:is([data-active="true"], [data-state="on"], [data-state="active"], [aria-selected="true"], [aria-pressed="true"]), :has(> :is([data-active="true"], [data-state="on"], [data-state="active"], [aria-selected="true"], [aria-pressed="true"])), :has(+ :is(.shared-border-cell, [data-shared-border-cell]):is([data-active="true"], [data-state="on"], [data-state="active"], [aria-selected="true"], [aria-pressed="true"])), :has(+ :is(.shared-border-cell, [data-shared-border-cell]) > :is([data-active="true"], [data-state="on"], [data-state="active"], [aria-selected="true"], [aria-pressed="true"]))) { border-color: var(--active-base) !important; }
-:is(.shared-border-cell, [data-shared-border-cell]):where(.border-waiting, :has(+ :is(.shared-border-cell, [data-shared-border-cell]).border-waiting)) { border-color: var(--waiting-border-color, var(--border-normal-color)) !important; }
-:is(.shared-border-cell, [data-shared-border-cell]):where(.border-loading, :has(+ :is(.shared-border-cell, [data-shared-border-cell]).border-loading)) { border-color: var(--loading-border-color, var(--border-normal-color)) !important; }
-:is(.shared-border-cell, [data-shared-border-cell]):where([data-introduced="true"], :has(+ :is(.shared-border-cell, [data-shared-border-cell])[data-introduced="true"])) { border-color: var(--introduced-border-color, var(--color-secondary)) !important; }
-:is(.shared-border-cell, [data-shared-border-cell]):where([data-celebrated="true"], :has(+ :is(.shared-border-cell, [data-shared-border-cell])[data-celebrated="true"])) { border-color: var(--border-normal-color) !important; }
+  :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):where([data-tone="destructive"], :has(+ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame])[data-tone="destructive"])) { border-color: var(--destructive-border); }
+:is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):where(:focus-within, :has(+ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):focus-within)) { border-color: var(--active-base) !important; }
+:is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):where(:is([data-active="true"], [data-state="on"], [data-state="active"], [aria-selected="true"], [aria-pressed="true"]), :has(> :is([data-active="true"], [data-state="on"], [data-state="active"], [aria-selected="true"], [aria-pressed="true"])), :has(+ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):is([data-active="true"], [data-state="on"], [data-state="active"], [aria-selected="true"], [aria-pressed="true"])), :has(+ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]) > :is([data-active="true"], [data-state="on"], [data-state="active"], [aria-selected="true"], [aria-pressed="true"]))) { border-color: var(--active-base) !important; }
+:is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):where(.border-waiting, :has(+ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]).border-waiting)) { border-color: var(--waiting-border-color, var(--border-normal-color)) !important; }
+:is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):where(.border-loading, :has(+ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]).border-loading)) { border-color: var(--loading-border-color, var(--border-normal-color)) !important; }
+:is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):where([data-introduced="true"], :has(+ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame])[data-introduced="true"])) { border-color: var(--introduced-border-color, var(--color-secondary)) !important; }
+:is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):where([data-celebrated="true"], :has(+ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame])[data-celebrated="true"])) { border-color: var(--border-normal-color) !important; }
 /* A seam belongs to the preceding cell but reflects either incident cell's hover. */
-:is(.shared-border-cell, [data-shared-border-cell]):hover:not(:disabled, [aria-disabled="true"], [aria-disabled="true"] *),
-:is(.shared-border-cell, [data-shared-border-cell]):has(+ :is(.shared-border-cell, [data-shared-border-cell]):hover:not(:disabled, [aria-disabled="true"], [aria-disabled="true"] *)) {
+:is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):hover:not(:disabled, [aria-disabled="true"], [aria-disabled="true"] *),
+:is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):has(+ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):hover:not(:disabled, [aria-disabled="true"], [aria-disabled="true"] *)) {
   border-color: var(--border-emphasized-color) !important;
 }
 :is(.shared-border-frame, [data-shared-border-frame]):hover:not(:disabled, [aria-disabled="true"], [aria-disabled="true"] *) {
@@ -6700,10 +6863,10 @@
   border-inline-end-color: var(--border-emphasized-color) !important;
 }
 @media (forced-colors: active) {
-  :is(.shared-border-cell, [data-shared-border-cell]) { border-color: CanvasText !important; }
-  :is(.shared-border-cell, [data-shared-border-cell]):where(:focus-within, :has(+ :is(.shared-border-cell, [data-shared-border-cell]):focus-within), :is([data-active="true"], [data-state="on"], [data-state="active"], [aria-selected="true"], [aria-pressed="true"]), :has(+ :is(.shared-border-cell, [data-shared-border-cell]):is([data-active="true"], [data-state="on"], [data-state="active"], [aria-selected="true"], [aria-pressed="true"]))) { border-color: Highlight !important; }
-  :is(.shared-border-cell, [data-shared-border-cell]):hover:not(:disabled, [aria-disabled="true"], [aria-disabled="true"] *),
-  :is(.shared-border-cell, [data-shared-border-cell]):has(+ :is(.shared-border-cell, [data-shared-border-cell]):hover:not(:disabled, [aria-disabled="true"], [aria-disabled="true"] *)),
+  :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]) { border-color: CanvasText !important; }
+  :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):where(:focus-within, :has(+ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):focus-within), :is([data-active="true"], [data-state="on"], [data-state="active"], [aria-selected="true"], [aria-pressed="true"]), :has(+ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):is([data-active="true"], [data-state="on"], [data-state="active"], [aria-selected="true"], [aria-pressed="true"]))) { border-color: Highlight !important; }
+  :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):hover:not(:disabled, [aria-disabled="true"], [aria-disabled="true"] *),
+  :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):has(+ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):hover:not(:disabled, [aria-disabled="true"], [aria-disabled="true"] *)),
   :is(.shared-border-frame, [data-shared-border-frame]):hover:not(:disabled, [aria-disabled="true"], [aria-disabled="true"] *) {
     border-color: Highlight !important;
   }
@@ -7110,6 +7273,9 @@
 @utility min-h-medium {
   min-height: var(--size-medium);
 }
+@utility min-h-chip-row {
+  min-height: var(--chip-row-height);
+}
 @utility min-h-large {
   min-height: var(--size-large);
 }
@@ -7198,6 +7364,17 @@
   backdrop-filter: blur(var(--veil-blur)) saturate(var(--glass-saturate));
   background-color: color-mix(in srgb, var(--surface-bg) calc(var(--veil-alpha) * 100%), transparent);
 }
+/* 🧊 Backdrop pages of a layered landing show their content blurred through the veil but never a border: every border colour and outline of the subtree is transparent
+   and the compositor overlay / silhouette strokes are not painted, so no bordered box or edge fragment ghosts through a U-gap, a chip band or an edge hint. */
+[data-layered-backdrop] *,
+[data-layered-backdrop] *::before,
+[data-layered-backdrop] *::after {
+  border-color: transparent !important;
+  outline-color: transparent !important;
+}
+[data-layered-backdrop] :is([data-shared-border-overlay], [data-window-silhouette-border], [class*="window-silhouette-border"]) {
+  visibility: hidden !important;
+}
 /* 🌫 The card whose explore control is pressed wears the veil's tint, so the page behind it is the only crisp surface. */
 [data-layered-card][data-tinted] > * {
   position: relative;
@@ -7266,22 +7443,16 @@
 /* #endregion 🪟️GlassAccessibilityFallbacks */
 /* #endregion 🪟️LevelGlassUtilities */
 
-/* Shell frame stroke is on [data-slot="chrome-frame"]; inset scroll hosts so scrollbars stay inside. */
+/* Shell frame stroke is a compositor overlay on the panel/pane host: scroll hosts fill it edge to edge, so a bordered control touching the frame shares the frame's line instead of sitting beside it. */
 [data-slot="panel"] [data-slot="scroll-area"],
 [data-slot="pane"] [data-slot="scroll-area"] {
   box-sizing: border-box;
-  padding: var(--stroke-hairline);
+  padding: 0;
 }
 
-[data-slot="chrome-frame"] {
-  border-width: var(--stroke-hairline);
-  border-style: solid;
-  border-color: var(--border-normal-color) !important;
-  transition: border-color 120ms ease;
-}
-
-:is([data-slot="panel"], [data-slot="pane"]):hover [data-slot="chrome-frame"] {
-  border-color: var(--border-emphasized-color) !important;
+/* Last row of a table inside a shared frame defers its bottom edge to that frame. */
+:is([data-shared-border-frame], [data-slot="popover-content"], [data-slot="dialog-content"]) table > tbody > tr:last-child {
+  border-bottom-width: 0;
 }
 
 /* 🪟️ Window / panel / pane silhouette stacks: emphasize this stack's own SVG stroke while the pointer is
@@ -7348,6 +7519,15 @@
   border-style: none;
 }
 
+/* 🪟️ A folded pane chip stretched to the width of the control group hanging under it: the chip and its toggle fill the stack, so both share the same left and right lines. */
+[data-pane-chip-fill] > [data-window-silhouette-chip] {
+  flex: 1 1 auto;
+}
+
+[data-pane-chip-fill] > [data-window-silhouette-chip] > [data-slot="window-pane-chrome-toggle"] {
+  flex: 1 1 auto;
+}
+
 /* ⌨️ Docked controls keep an explicit inset keyboard indicator inside the silhouette stroke. */
 [data-window-silhouette-chip] > :focus-visible,
 [data-window-silhouette-chip] :is(button, [role="button"], [tabindex]):focus-visible {
@@ -7377,6 +7557,61 @@
 [data-slot="context-menu-content"] {
   background: transparent !important;
   background-color: transparent !important;
+}
+
+/* 🃏️ Card stack and grid: cards interlock with no gap. The measured `--card-stack-lift|cap|footer` (see `useCardInterlock`) lift a
+ * card (its grid cell in a grid) onto the bottom line of the one above and give the lower cap row and the upper footer row the
+ * height of one shared band; the rows themselves let pointer events through to the chips of the card beneath. */
+:is([data-card-stack] > [data-overview-card], [data-card-stack] > .contents > [data-overview-card], [data-card-grid] > [data-card-grid-cell], [data-card-grid] > .contents > [data-card-grid-cell]) {
+  margin-block-start: calc(var(--card-stack-lift, 0px) * -1);
+}
+
+/* 🪢️ Tiled cards never lift: a translate would break the shared line with the neighbour, so hover emphasis stays on colour and outline. */
+:is([data-card-stack], [data-card-grid]) [data-overview-card-paint] {
+  translate: none !important;
+  transform: none !important;
+}
+
+:is([data-card-stack], [data-card-grid]) [data-overview-card-stack] > [data-slot="window-chrome-cap"] {
+  min-height: var(--card-stack-cap, 0px);
+}
+
+:is([data-card-stack], [data-card-grid]) [data-overview-card-stack] > [data-slot="window-chrome-footer"] {
+  min-height: var(--card-stack-footer, 0px);
+}
+
+:is([data-card-stack], [data-card-grid]) [data-overview-card-stack] > :is([data-slot="window-chrome-cap"], [data-slot="window-chrome-footer"]) {
+  pointer-events: none;
+}
+
+:is([data-card-stack], [data-card-grid]) [data-overview-card-stack] > :is([data-slot="window-chrome-cap"], [data-slot="window-chrome-footer"]) > [data-window-silhouette-chip] {
+  pointer-events: auto;
+}
+
+/* 🔳️ Card grid: cards tile edge to edge. No gap, no cell padding, the card fills its cell, so neighbours share one line. */
+:where([data-card-grid]) {
+  display: grid;
+  gap: 0;
+  padding: 0;
+  grid-template-columns: var(--card-grid-columns, repeat(auto-fit, minmax(min(100%, var(--card-grid-min-column, 18rem)), 1fr)));
+  grid-template-rows: var(--card-grid-rows, none);
+  grid-auto-rows: auto;
+}
+
+:where([data-card-grid-cell]) {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  align-items: stretch;
+  justify-content: stretch;
+  margin: 0;
+  padding: 0;
+}
+
+:where([data-card-grid-cell]) > *,
+:where([data-card-grid-cell]) > .contents > * {
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 [data-slot="introduction-info-box"],
@@ -7640,9 +7875,6 @@
   font: inherit;
 }
 
-[data-slot="side-panel-tabs"],
-[data-slot="mobile-panel-tabs"],
-[data-slot="accordion-item"],
 [data-slot="command-input-wrapper"],
 table tbody tr,
 table thead.border-b {

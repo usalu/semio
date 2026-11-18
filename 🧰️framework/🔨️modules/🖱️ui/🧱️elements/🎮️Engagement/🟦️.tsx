@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Slider } from "../🎚️Slider/🟦️.tsx";
 import { Stepper } from "../🪜️Stepper/🟦️.tsx";
 import { Ring } from "../⭕️Ring/🟦️.tsx";
+import { SharedBorderRow, SharedBorderRowCell } from "../🪢️SharedBorderRow/🟦️.tsx";
 import { normalizeEngagementActionText } from "../🔍️WindowSearch/🟦️.tsx";
 
 export interface EngagementOption {
@@ -168,31 +169,33 @@ function EngagementControlView({ control }: { readonly control: EngagementContro
   }, [control]);
   if (control.kind === "slider") {
     return (
-      <div data-slot="engagement-control" data-control-kind="slider" className="flex min-w-0 flex-col gap-half px-half">
-        {label ? <span className="text-element text-xs">{label}</span> : null}
-        <Slider
-          id={control.id ?? "engagement-control.slider"}
-          value={[control.value]}
-          min={control.min}
-          max={control.max}
-          ready={control.ready}
-          step={control.step}
-          disabled={control.disabled}
-          onValueChange={(values) => {
-            const next = values[0];
-            if (next === undefined) return;
-            lastNumericRef.current = next;
-            control.onChange?.(next);
-          }}
-          onPointerUp={() => control.onCommit?.(lastNumericRef.current)}
-        />
-      </div>
+      <SharedBorderRow orientation="vertical" framed={false} data-slot="engagement-control" data-control-kind="slider">
+        {label ? <SharedBorderRowCell className="text-element text-xs">{label}</SharedBorderRowCell> : null}
+        <SharedBorderRowCell>
+          <Slider
+            id={control.id ?? "engagement-control.slider"}
+            value={[control.value]}
+            min={control.min}
+            max={control.max}
+            ready={control.ready}
+            step={control.step}
+            disabled={control.disabled}
+            onValueChange={(values) => {
+              const next = values[0];
+              if (next === undefined) return;
+              lastNumericRef.current = next;
+              control.onChange?.(next);
+            }}
+            onPointerUp={() => control.onCommit?.(lastNumericRef.current)}
+          />
+        </SharedBorderRowCell>
+      </SharedBorderRow>
     );
   }
   if (control.kind === "stepper") {
     return (
-      <div data-slot="engagement-control" data-control-kind="stepper" className="flex min-w-0 flex-col gap-half px-half">
-        {label ? <span className="text-element text-xs">{label}</span> : null}
+      <SharedBorderRow orientation="vertical" framed={false} data-slot="engagement-control" data-control-kind="stepper">
+        {label ? <SharedBorderRowCell className="text-element text-xs">{label}</SharedBorderRowCell> : null}
         <Stepper
           id={control.id ?? "engagement-control.stepper"}
           value={control.value}
@@ -205,14 +208,14 @@ function EngagementControlView({ control }: { readonly control: EngagementContro
           }}
           onPointerUp={() => control.onCommit?.(lastNumericRef.current)}
         />
-      </div>
+      </SharedBorderRow>
     );
   }
   if (control.kind === "toggleGroup") {
     if (!control.options.length) return null;
     return (
-      <div data-slot="engagement-control" data-control-kind="toggleGroup" className="flex min-w-0 flex-col gap-half px-half">
-        {label ? <span className="text-element text-xs">{label}</span> : null}
+      <SharedBorderRow orientation="vertical" framed={false} data-slot="engagement-control" data-control-kind="toggleGroup">
+        {label ? <SharedBorderRowCell className="text-element text-xs">{label}</SharedBorderRowCell> : null}
         <ButtonGroup id={control.id} detailPanelWidthMode="fill">
           {control.options.map((option) => (
             <ButtonGroupItem
@@ -226,14 +229,14 @@ function EngagementControlView({ control }: { readonly control: EngagementContro
             />
           ))}
         </ButtonGroup>
-      </div>
+      </SharedBorderRow>
     );
   }
   if (control.kind === "select") {
     if (!control.items.length) return null;
     return (
-      <div data-slot="engagement-control" data-control-kind="select" className="flex min-w-0 flex-col gap-half px-half">
-        {label ? <span className="text-element text-xs">{label}</span> : null}
+      <SharedBorderRow orientation="vertical" framed={false} data-slot="engagement-control" data-control-kind="select">
+        {label ? <SharedBorderRowCell className="text-element text-xs">{label}</SharedBorderRowCell> : null}
         <Select id={control.id ?? "engagement-control.select"} value={control.value} onValueChange={(value) => control.onChange?.(value)} disabled={control.disabled}>
           <SelectTrigger id={control.id} className="h-medium w-full min-w-0" size="sm">
             <SelectValue placeholder={control.placeholder ?? selectLabel} />
@@ -246,7 +249,7 @@ function EngagementControlView({ control }: { readonly control: EngagementContro
             ))}
           </SelectContent>
         </Select>
-      </div>
+      </SharedBorderRow>
     );
   }
   if (!control.options.length) return null;
@@ -257,10 +260,10 @@ function EngagementControlView({ control }: { readonly control: EngagementContro
     selected: control.value === option.id,
   }));
   return (
-    <div data-slot="engagement-control" data-control-kind="ring" className="flex min-w-0 flex-col items-center gap-half px-half">
+    <SharedBorderRowCell data-slot="engagement-control" data-control-kind="ring" className="flex-col justify-center gap-half">
       {label ? <span className="text-element text-xs">{label}</span> : null}
       <Ring id={control.id ?? "engagement-control.ring"} orbs={orbs} onOrbSelect={(orbId) => control.onSelect?.(orbId)} />
-    </div>
+    </SharedBorderRowCell>
   );
 }
 
@@ -273,43 +276,47 @@ const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options,
   const hasOptions = !!options?.length;
   const hasControl = !!control || !!controls?.length;
   const hasStatus = !!status?.length;
+  const optionsFirst = hasOptions && !primaryStepStatus && !hasControl && !secondaryStatus?.length;
 
   if (!hasOptions && !hasControl && !hasStatus) return null;
 
   return (
     <LevelProvider level="pane">
-      <div
+      <SharedBorderRow
+        orientation="vertical"
+        edges={optionsFirst ? ["right", "bottom", "left"] : undefined}
         data-slot="engagement"
         data-session-active={sessionActive ? "true" : undefined}
-        className={cn("pointer-events-auto flex w-full min-w-0 max-w-full flex-col gap-half", sessionActive && "bg-active-base ring-accent/35 rounded-sm ring-1 shadow-sm", className)}
+        data-shared-border-state={sessionActive ? "active" : undefined}
+        className={cn("pointer-events-auto w-full max-w-full", sessionActive && "bg-active-base shadow-sm", className)}
       >
         {primaryStepStatus ? (
-          <div data-slot="engagement-step-heading" className="text-foreground px-half text-sm font-medium leading-tight">
+          <SharedBorderRowCell data-slot="engagement-step-heading" className="text-foreground text-sm font-medium leading-tight">
             {primaryStepStatus.content}
-          </div>
+          </SharedBorderRowCell>
         ) : null}
         {control ? <EngagementControlView control={control} /> : null}
         {controls?.map((row) => (
           <EngagementControlView key={row.id ?? row.label ?? row.kind} control={row} />
         ))}
         {secondaryStatus?.length ? (
-          <div data-slot="engagement-status" role="status" aria-live="polite" aria-atomic="true" className="flex flex-wrap items-center justify-center gap-single text-xs text-muted-foreground">
+          <SharedBorderRowCell data-slot="engagement-status" role="status" aria-live="polite" aria-atomic="true" className="flex-wrap justify-center gap-single text-xs text-muted-foreground">
             {secondaryStatus.map((item) => (
               <span key={item.id} data-slot="engagement-status-item">
                 {item.content}
               </span>
             ))}
-          </div>
+          </SharedBorderRowCell>
         ) : null}
         {hasOptions ? (
-          <div
+          <SharedBorderRow
+            framed={false}
             data-slot="engagement-options"
             data-step-options={sessionActive ? "true" : undefined}
-            className="flex flex-wrap items-center justify-center gap-half"
             role="group"
             aria-label={sessionActive ? stepOptionsAriaLabel || ENGAGEMENT_USER.actionsAria : ENGAGEMENT_USER.actionsAria}
           >
-            <ButtonGroup id={UI_ENGAGEMENT.actions}>
+            <ButtonGroup id={UI_ENGAGEMENT.actions} className="flex-1 justify-center">
               {options!.map((option) => {
                 const actionLabel = normalizeEngagementActionText(option.label ?? "");
                 const optionControlId = isInternalChromeControlId(option.id) ? undefined : option.id;
@@ -318,9 +325,9 @@ const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options,
                 );
               })}
             </ButtonGroup>
-          </div>
+          </SharedBorderRow>
         ) : null}
-      </div>
+      </SharedBorderRow>
     </LevelProvider>
   );
 };

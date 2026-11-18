@@ -19,7 +19,7 @@
      "task-key"
     ],
     "deriveConcurrency": 8,
-    "maximumNodes": 262144,
+    "maximumNodes": 1048576,
     "maximumTrace": 65536,
     "verifyParallelNodes": 16,
     "storeDelayMilliseconds": 250,

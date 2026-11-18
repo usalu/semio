@@ -253,9 +253,11 @@ impl<I:OriginalReturnOrigin> OriginalReturnBudget<I>{
   self.origin=Some(input);self.spent=input.spent();self.work=input.work();Ok(true)
  }
  /// 🔁️ See `README.md`.
+ /// 🔁️ Whether no claim, held currency or failure stands between this Source and a renewed turn.
+ pub fn renewable(&self)->bool{self.claims==0&&self.held_items==0&&self.held_copy_bytes==0&&self.held_release_bytes==0&&self.held_capacity_bytes==0&&self.held_fuel==0&&self.failure.is_none()}
  pub fn renew_turn(&mut self)->Result<(),ValueError>{
   let origin=self.origin.ok_or_else(||refused(E::STOCK_ABSENT))?;
-  if self.claims!=0||self.held_items!=0||self.held_copy_bytes!=0||self.held_release_bytes!=0||self.held_capacity_bytes!=0||self.held_fuel!=0||self.failure.is_some(){return Err(refused("original return source with live claims cannot renew its turn"))}
+  if !self.renewable(){return Err(refused("original return source with live claims cannot renew its turn"))}
   self.spent=origin.spent();self.work=origin.work();Ok(())
  }
  pub fn snapshot(&self)->OriginalReturnBudgetSnapshot{let live=if self.origin_commit.is_some()&&self.origin_prior.is_none(){self.origin}else{self.origin()};let(origin,fuel)=live.map_or((RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0},0),|origin|(origin.granted(),origin.fuel()));OriginalReturnBudgetSnapshot{granted:origin,fuel,spent:self.spent,work:self.work,held_items:usize::from(self.held_items),held_copy_bytes:self.held_copy_bytes,held_release_bytes:self.held_release_bytes,held_capacity_bytes:self.held_capacity_bytes,held_fuel:u64::from(self.held_fuel),claims:usize::from(self.claims),serial:self.serial}}

@@ -202,6 +202,8 @@ impl<'a> StepContext<'a> {
         let result=authority.with_loan(&mut semio_framework_job_receiving::OriginalJobWorkRecipient::new(&fuel,&mut ready),|work_loan|native.with_work_recipient(work_loan,operation)).map_err(E::from)?;
         let performed=native.actual_work().saturating_sub(before);self.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));result
     }
+    /// 🛫️ Snapshots this caller's fuel, deadline, clock and cancellation so a later encoder hop, which cannot borrow the context, still commits under its original Work loan.
+    pub fn native_encoder_work(&self)->NativeEncoderWork{NativeEncoderWork{fuel:self.fuel_remaining,deadline:self.deadline_us,now:self.now_us,cancel:self.cancel_token(),performed:0}}
     /// ♻️ Loans retirement-only authority after cancellation while retaining the original deadline, fuel and physical credits.
     pub fn with_native_retirement<T>(&mut self,operation:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeRetirementDecodeControl<'_, '_>)->Result<T,ValueError>)->Result<T,ValueError>{
         if self.fuel_remaining==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original retirement turn has no fuel"));}
@@ -526,6 +528,8 @@ pub mod testkit {
     pub fn operation_mut<'a>(cx:&'a mut StepContext<'_>)->&'a mut OperationId{&mut cx.operation}
     pub fn retained_grant_mut<'a>(cx:&'a mut StepContext<'_>)->&'a mut RetainedCloneGrant{&mut cx.retained}
     pub fn retained_progress_mut<'a>(cx:&'a mut StepContext<'_>)->&'a mut RetainedCloneProgress{cx.retained_progress}
+    /// 🔁️ The snapshot of the actual Source budget once bound and pinned by a live claim or held currency, which then cannot renew its turn.
+    pub fn return_source_pinned(cx:&StepContext<'_>)->Option<original_return_source::OriginalReturnBudgetSnapshot>{cx.return_budget.as_ref().filter(|budget|budget.get().is_bound()&&!budget.get().renewable()).map(|budget|budget.get().snapshot())}
     pub fn return_budget_snapshot(cx:&StepContext<'_>)->original_return_source::OriginalReturnBudgetSnapshot{cx.return_budget.as_ref().expect("actual original source budget").get().snapshot()}
     pub fn request_return_publisher(cx:&mut StepContext<'_>){if let Some(budget)=cx.return_budget.as_mut(){budget.get_mut().publisher_requested=true}}
     pub fn return_table_present(cx:&StepContext<'_>)->bool{cx.return_budget.as_ref().is_some_and(|budget|budget.get().table().is_some())}
@@ -629,4 +633,25 @@ impl OriginalRetirementTurn{
         let result=authority.with_loan(&mut OriginalJobWorkRecipient::new(&fuel,&mut ready),|loan|native.with_work_recipient(loan,|native|construction.with_loan(&mut physical,|loan|native.with_construction_recipient(loan,operation)).map_err(E::from).and_then(|result|result))).map_err(E::from).and_then(|result|result)?;
         self.fuel=self.fuel.saturating_sub(u64::try_from(native.actual_work().saturating_sub(before)).unwrap_or(u64::MAX));Ok(result)
     }
+}
+
+/// 🛫️ An owned snapshot of an original Job caller's Work for encoder hops that run apart from the context; [`NativeEncoderWork::performed`] is charged back to the caller with `StepContext::consume_fuel`.
+pub struct NativeEncoderWork{fuel:u64,deadline:u64,now:fn()->Option<u64>,cancel:CancelToken,performed:u64}
+impl NativeEncoderWork{
+    /// 🪢️ Loans the snapshot's Work to the supplied encoder for one hop and records the work the hop performed.
+    pub fn lend<T,E:From<ValueError>>(&mut self,native:&mut semio_framework_value::NativeEncodeControl<'_>,operation:impl FnOnce(&mut semio_framework_value::NativeEncodeControl<'_>)->Result<T,E>)->Result<T,E>{
+        let fuel=self.fuel.saturating_sub(self.performed);let deadline=self.deadline;let now=self.now;let cancel=&self.cancel;let mut ready=move||!cancel.is_cancelled_now()&&now().is_some_and(|value|value<deadline);
+        let before=native.actual_work();
+        let mut authority=semio_framework_value_control_contract::OriginalWorkAuthority::new(semio_framework_job_receiving::OriginalJobWorkDriver);
+        let result=authority.with_loan(&mut semio_framework_job_receiving::OriginalJobWorkRecipient::new(&fuel,&mut ready),|work_loan|native.with_work_recipient(work_loan,operation)).map_err(E::from)?;
+        let performed=native.actual_work().saturating_sub(before);self.performed=self.performed.saturating_add(u64::try_from(performed).unwrap_or(u64::MAX));result
+    }
+    /// 🧾️ The work every lent hop performed so far.
+    pub fn performed(&self)->u64{self.performed}
+}
+
+#[doc(hidden)]
+pub fn debug_probe(tag:&'static str,detail:String){
+ thread_local!{static LAST:std::cell::RefCell<std::collections::HashMap<&'static str,String>>=std::cell::RefCell::new(Default::default());}
+ let _=LAST.try_with(|last|{let mut last=last.borrow_mut();if last.get(tag)!=Some(&detail){eprintln!("[DEBUG] settle {tag}: {detail}");last.insert(tag,detail);}});
 }

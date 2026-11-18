@@ -1,0 +1,60 @@
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:39:43:1:45:%40semio-tech%2Fframework-os|project|45|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 39 of 43 projects · 1 running, longest 45 s: @semio-tech/framework-os (project, 45 s, 0 rows)
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:110:703:1:45:%40semio-tech%2Fframework-os|project|45|0","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[repo] still working after 7911 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[repository:command] still running after 7912 s
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:39:43:1:50:%40semio-tech%2Fframework-os|project|50|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 39 of 43 projects · 1 running, longest 50 s: @semio-tech/framework-os (project, 50 s, 0 rows)
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:110:703:1:50:%40semio-tech%2Fframework-os|project|50|0","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] build:command-source-packages · Resolving the packages of command sources
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:111:703:1:50:%40semio-tech%2Fframework-os|project|50|0","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:39:43","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 39 of 43 projects
+graph: headroom of 765 MB again (720 MB taken), resuming
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[repository:command] still running after 7922 s
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:40:43:1:5:%40semio-tech%2Fframework-os-kernel|language%3Acargo|5|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 40 of 43 projects · 1 running, longest 5 s: @semio-tech/framework-os-kernel (language:cargo, 5 s, 0 rows)
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:111:703:1:5:%40semio-tech%2Fframework-os-kernel|language%3Acargo|5|0","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[repository:command] still running after 7932 s
+[repo] still working after 7941 s; last phase started: source.served
+[repository:command] still running after 7942 s
+[repository:command] still running after 7952 s
+[repository:command] still running after 7962 s
+[repo] still working after 7971 s; last phase started: source.served
+[repository:command] still running after 7972 s
+[repository:command] still running after 7982 s
+[repository:command] still running after 7992 s

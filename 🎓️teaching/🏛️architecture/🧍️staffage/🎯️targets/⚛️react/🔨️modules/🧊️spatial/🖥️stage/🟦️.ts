@@ -30,6 +30,7 @@ export type StageOptions = SpatialRequest & {
   readonly preset: CameraPresetName;
   readonly background?: string | null;
   readonly toolbar?: boolean;
+  readonly framed?: boolean;
   readonly reducedMotion?: boolean;
   readonly onPreset?: (preset: CameraPresetName) => void;
   readonly onScale?: (scale: number) => void;
@@ -41,30 +42,34 @@ export type StageOptions = SpatialRequest & {
 };
 
 const STYLE = `
-.semio-stage{position:relative;display:flex;flex-direction:column;gap:.5rem;box-sizing:border-box;inline-size:100%;block-size:100%;min-block-size:var(--staffage-model-min-height,18rem);color:var(--staffage-model-foreground,inherit);font:inherit;font-size:.8125rem}
+.semio-stage{--semio-edge:var(--staffage-model-border,currentColor);position:relative;display:flex;flex-direction:column;gap:0;box-sizing:border-box;inline-size:100%;block-size:100%;min-block-size:var(--staffage-model-min-height,18rem);color:var(--staffage-model-foreground,inherit);font:inherit;font-size:.8125rem}
 .semio-stage *{box-sizing:border-box}
-.semio-stage-bar{display:flex;flex-wrap:wrap;gap:.375rem;align-items:center}
-.semio-stage-group{display:inline-flex;flex-wrap:wrap;gap:0;border:1px solid var(--staffage-model-border,currentColor)}
-.semio-stage button{min-block-size:var(--staffage-model-target,1.75rem);min-inline-size:var(--staffage-model-target,1.75rem);padding:.125rem .625rem;border:1px solid var(--staffage-model-border,currentColor);background:var(--staffage-model-panel,transparent);color:inherit;font:inherit;cursor:pointer}
-.semio-stage-group button{border:0;border-inline-start:1px solid var(--staffage-model-border,currentColor)}
-.semio-stage-group button:first-child{border-inline-start:0}
+.semio-stage[data-framed]{border:1px solid var(--semio-edge)}
+.semio-stage-row{display:flex;flex-wrap:wrap;align-items:stretch;clip-path:inset(1px 0 0 1px)}
+.semio-stage-block:not([hidden])~.semio-stage-row{clip-path:inset(0 0 0 1px)}
+.semio-stage-block:not([hidden])~.semio-stage-view{border-block-start:1px solid var(--semio-edge)}
+.semio-stage-group{display:flex;flex:1 1 auto;flex-wrap:wrap}
+.semio-stage-row>:is(button,.semio-stage-cell),.semio-stage-group>button{flex:1 1 auto;margin:0;border:0;border-inline-start:1px solid var(--semio-edge);border-block-start:1px solid var(--semio-edge);border-radius:0}
+.semio-stage-group:empty{display:none}
+.semio-stage button{min-block-size:var(--staffage-model-target,1.75rem);min-inline-size:var(--staffage-model-target,1.75rem);padding:.125rem .625rem;background:var(--staffage-model-panel,transparent);color:inherit;font:inherit;cursor:pointer}
+.semio-stage-cell{display:flex;align-items:center;padding:.375rem .5rem;background:var(--staffage-model-panel,transparent)}
 .semio-stage button:hover{background:color-mix(in srgb,var(--staffage-model-accent,currentColor) 18%,transparent)}
-.semio-stage button[aria-disabled="true"]{opacity:.65;border-style:dashed;cursor:not-allowed}
+.semio-stage button[aria-disabled="true"]{opacity:.65;cursor:not-allowed}
 .semio-stage button[aria-pressed="true"]{background:var(--staffage-model-accent,Highlight);color:var(--staffage-model-accent-foreground,HighlightText);font-weight:600}
-.semio-stage button:focus-visible,.semio-stage canvas:focus-visible{outline:2px solid var(--staffage-model-focus,var(--staffage-model-accent,Highlight));outline-offset:2px}
-.semio-stage-view{position:relative;flex:1 1 auto;min-block-size:12rem;border:1px solid var(--staffage-model-border,currentColor);background:var(--staffage-model-background,transparent)}
+.semio-stage button:focus-visible,.semio-stage canvas:focus-visible{outline:2px solid var(--staffage-model-focus,var(--staffage-model-accent,Highlight));outline-offset:-2px}
+.semio-stage-view{position:relative;flex:1 1 auto;min-block-size:12rem;background:var(--staffage-model-background,transparent)}
 .semio-stage[data-ground="transparent"] .semio-stage-view{background-color:#fff;background-image:conic-gradient(#c9c9c9 25%,transparent 0 50%,#c9c9c9 0 75%,transparent 0);background-size:16px 16px}
 .semio-stage canvas{display:block;inline-size:100%;block-size:100%;min-block-size:12rem;outline:none;--semio-viewer-background:var(--staffage-model-background,#f7f3e3)}
-.semio-stage-progress{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;padding:.375rem;border:1px solid var(--staffage-model-border,currentColor);background:var(--staffage-model-panel,transparent)}
-.semio-stage-progress progress{flex:1 1 8rem;min-inline-size:6rem;block-size:.5rem;accent-color:var(--staffage-model-accent,Highlight)}
-.semio-stage-notice{margin:0;padding:.375rem .5rem;border:1px dashed var(--staffage-model-border,currentColor)}
+.semio-stage-progress{align-items:stretch}
+.semio-stage-progress .semio-stage-cell:first-child{flex:1 1 8rem}
+.semio-stage-progress progress{flex:1 1 auto;min-inline-size:6rem;block-size:.5rem;accent-color:var(--staffage-model-accent,Highlight)}
 .semio-stage-notice b{display:block}
-.semio-stage-note{margin:0;font-size:.75rem;opacity:.85}
+.semio-stage-note{margin:0;padding:.375rem .5rem 0;font-size:.75rem;opacity:.85}
 .semio-stage [hidden]{display:none!important}
 .semio-stage .semio-sr{position:absolute;inline-size:1px;block-size:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
-@media (prefers-contrast:more){.semio-stage button,.semio-stage-view,.semio-stage-group{border-width:2px}}
+@media (prefers-contrast:more){.semio-stage{--semio-edge:CanvasText}}
 @media (prefers-reduced-motion:reduce){.semio-stage *{transition:none!important;animation:none!important}}
-@media (forced-colors:active){.semio-stage button[aria-pressed="true"]{forced-color-adjust:none;background:Highlight;color:HighlightText}.semio-stage-view,.semio-stage-group,.semio-stage button{border-color:CanvasText}.semio-stage canvas:focus-visible,.semio-stage button:focus-visible{outline-color:Highlight}}
+@media (forced-colors:active){.semio-stage button[aria-pressed="true"]{forced-color-adjust:none;background:Highlight;color:HighlightText}.semio-stage{--semio-edge:CanvasText}.semio-stage canvas:focus-visible,.semio-stage button:focus-visible{outline-color:Highlight}}
 `;
 
 const ZOOM_STEP = 1.25;
@@ -150,7 +155,7 @@ export class ModelStage {
     this.#root.className = "semio-stage";
     this.#root.setAttribute("part", "stage");
     this.#root.setAttribute("data-model-stage", "");
-    this.#bar = make("div", "semio-stage-bar", this.#root);
+    this.#bar = make("div", "semio-stage-block semio-stage-row semio-stage-bar", this.#root);
     this.#bar.setAttribute("part", "toolbar");
     this.#bar.setAttribute("role", "group");
     this.#scales = make("div", "semio-stage-group", this.#bar);
@@ -161,12 +166,12 @@ export class ModelStage {
     this.#modes.setAttribute("data-group", "mode");
     this.#presets = make("div", "semio-stage-group", this.#bar);
     this.#presets.setAttribute("role", "group");
-    this.#view = make("div", "semio-stage-view", this.#root);
-    this.#progress = make("div", "semio-stage-progress", this.#root);
-    this.#bar2 = make("progress", "", this.#progress);
+    this.#view = make("div", "semio-stage-block semio-stage-view", this.#root);
+    this.#progress = make("div", "semio-stage-block semio-stage-row semio-stage-progress", this.#root);
+    this.#bar2 = make("progress", "", make("div", "semio-stage-cell", this.#progress));
     this.#bar2.max = 100;
-    this.#progressText = make("span", "", this.#progress);
-    this.#notice = make("div", "semio-stage-notice", this.#root);
+    this.#progressText = make("span", "semio-stage-cell", this.#progress);
+    this.#notice = make("div", "semio-stage-block semio-stage-row semio-stage-notice", this.#root);
     this.#note = make("p", "semio-stage-note", this.#root);
     this.#note.setAttribute("role", "status");
     this.#description = make("div", "semio-sr", this.#root);
@@ -651,6 +656,7 @@ export class ModelStage {
       this.#progressText.textContent = `${this.#message === "" ? t("model.progress") : this.#message} · ${t("model.progressValue", { percent })}`;
     }
     this.#bar.hidden = options.toolbar === false;
+    this.#root.toggleAttribute("data-framed", options.framed !== false);
     this.#notice.hidden = phase === "preparing" || phase === "ready" || phase === "idle";
     const noticeKey = `${phase}|${this.#message}|${options.language}`;
     if (noticeKey !== this.#noticeKey) {
@@ -659,6 +665,7 @@ export class ModelStage {
       if (!this.#notice.hidden) {
         const doc = this.#host.ownerDocument;
         const box = doc.createElement("div");
+        box.className = "semio-stage-cell";
         const title = doc.createElement("b");
         const body = doc.createElement("span");
         box.setAttribute("role", phase === "error" ? "alert" : "status");

@@ -215,7 +215,7 @@
    "required": ["detail", "kind", "originId"],
    "properties": {
     "originId": {"$ref": "#/definitions/OriginId"},
-    "kind": {"enum": ["git-version", "volume", "over-budget", "symlinks", "code-fallback", "guards-unknown", "blobs", "no-checkpoints", "git-broken", "never-attested"]},
+    "kind": {"enum": ["git-version", "volume", "over-budget", "symlinks", "code-fallback", "guards-unknown", "blobs", "no-checkpoints", "git-broken", "stage", "never-attested"]},
     "detail": {"type": "string", "minLength": 1}
    }
   },

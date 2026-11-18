@@ -12,7 +12,7 @@ import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import stateSchema from "../💾️state/🧬️schema/🔣️.json" with {type:"json"};
 import {decodeRecordsV1,frameV1,payloadsV1,readCheckpointV1,scanWalV1,walHeaderV1} from "../💾️state/🟦️.ts";
 import {blobPathV1,foldEventsV1,formatHlcV1,readEventsV1,readHeadV1,readNewestSnapshotV1,type FleetEventV1,type FleetManifestEntryV1} from "../../📒️journal/🟦️.ts";
-import {checkpointReplicaV1,closeReplicaV1,CompactTableV1,compactV1,conflictWinnerV1,followOnceV1,foldStoreV1,homedOriginsV1,joinV1,localPathsV1,JoinRefusedV1,openReplicaV1,publishOnceV1,relayOnceV1,recallV1,relayV1,ReplicaBookV1,scanDelayV1,ReplicaBusyV1,ReplicaFoldsV1,requireReplicaShapeV1,runV1,seedV1,setSyncEnabledV1,snapshotV1,statusV1,syncEnabledV1,verifyV1,type ReplicaEventV1,type ReplicaOptionsV1,type ReplicaV1} from "../🟦️.ts";
+import {checkpointReplicaV1,closeReplicaV1,flushRefusalsV1,CompactTableV1,compactV1,conflictWinnerV1,followOnceV1,foldStoreV1,homedOriginsV1,joinV1,localPathsV1,JoinRefusedV1,openReplicaV1,publishOnceV1,relayOnceV1,recallV1,relayV1,ReplicaBookV1,scanDelayV1,ReplicaBusyV1,ReplicaFoldsV1,requireReplicaShapeV1,runV1,seedV1,setSyncEnabledV1,snapshotV1,statusV1,syncEnabledV1,verifyV1,type ReplicaEventV1,type ReplicaOptionsV1,type ReplicaV1} from "../🟦️.ts";
 
 const ajv=new Ajv({strict:true,allowUnionTypes:true}),validator=(definition:string)=>ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:`#/definitions/${definition}`}),headerValidator=ajv.compile({$schema:stateSchema.$schema,definitions:stateSchema.definitions,$ref:"#/definitions/Header"}),python=testPythonV1(),scratch:string[]=[];
 const oracle=join(import.meta.dirname,"🐍️.py"),fixturePath=join(import.meta.dirname,"🧫️fixtures","🔣️.json"),posixTest=process.platform==="win32"?test.skip:test;
@@ -594,6 +594,30 @@ test("a path longer than the limit is refused with a visible event when scanned 
  expect(report.ok).toBe(true);expect(report.refusedTotal).toBe(1);
  expect(report.refused[0]!.reason).toBe("too-long");expect(touched.startsWith(report.refused[0]!.path)).toBe(true);
  expect(validator("VerifyReport")(JSON.parse(JSON.stringify(report)))).toBe(true);
+});
+
+test("refused paths are on record for the operator: status shows them without a scan, the record outlives the daemon and a refused path is never carried to the others",async()=>{
+ const {machines}=await fleet(["a","b"]),[a,b]=machines as [Machine,Machine];
+ expect((await statusV1(a.options)).refusedPaths).toEqual({version:1,total:0,recent:[]});
+ const touched=`${longDirectory}/long.txt`,colon="workers/x.txt.sample-2026-11-15T01:45:25Z.txt";
+ write(a,"fine.txt","fine");write(a,touched,"too long");write(a,colon,"colon");
+ await publish(a);await follow(b);
+ expect(read(b,"fine.txt")).toBe("fine");expect(read(b,touched)).toBeUndefined();expect(read(b,colon)).toBeUndefined();
+ await flushRefusalsV1(a.replica!);
+ const status=await statusV1(a.options);
+ expect(status.refused).toBeNull();
+ const recorded=status.refusedPaths.recent;
+ expect(recorded.map(item=>item.reason).sort()).toEqual(["illegal-character","too-long"]);
+ expect(recorded.find(item=>item.reason==="illegal-character")!.path).toBe(colon);
+ expect(touched.startsWith(recorded.find(item=>item.reason==="too-long")!.path)).toBe(true);
+ expect(status.refusedPaths.total).toBe(2);
+ expect(validator("Status")(JSON.parse(JSON.stringify(status)))).toBe(true);
+ await shut(a);await shut(b);
+ const again=await statusV1(a.options);
+ expect(again.refusedPaths).toEqual(status.refusedPaths);
+ const reopened=await open(a);
+ expect(reopened.refusedPaths.record).toEqual(status.refusedPaths);
+ await shut(a);
 });
 
 test("status reports the lag per origin, the queues and the preserved losses in a closed shape",async()=>{

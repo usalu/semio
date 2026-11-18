@@ -1,0 +1,100 @@
+## /run/user/1000/semio-repo/1000/host-8305e5911097.log
+2026-11-15T14:53:00.497Z access-proof version=3 root=/home/deck/semio protected=no sample=ok reproof=off route=direct pid=815697 ppid=815629
+graph: No verified change journal cursor is recorded for generation 389; verifying the tree once.
+graph: memory readings: machine 15848 MB (physical 15848 MB, cgroup limit none), available 8535 MB
+graph: 703 stale projects, 0 taken from the fleet, 13 too heavy for this machine (semio-repo-test-host (about 21294 MB), repo-storybook (about 15772 MB), @semio-tech/repo-lib (about 9652 MB), semio-framework-2d (about 8614 MB), semio-framework-pixels (about 7780 MB), @semio-tech/framework-os-dev (about 7676 MB), and 7 more; it can give about 3298 MB per project), it can infer 192 of the others (48 per wave); asking the fleet for 703
+graph: the fleet cache cannot be reached, so 703 stale projects cannot be requested from it; this machine can infer 192
+graph: the fleet did not deliver 13 too heavy project(s) (semio-repo-test-host (about 21294 MB), repo-storybook (about 15772 MB), @semio-tech/repo-lib (about 9652 MB), semio-framework-2d (about 8614 MB), semio-framework-pixels (about 7780 MB), @semio-tech/framework-os-dev (about 7676 MB), and 7 more); this machine infers them itself, one at a time and alone after the others, each with up to about 8000 MB
+graph: the remote cache did not exchange the generation (Content store unreachable: http://192.168.178.70:6094: Unable to connect. Is the computer able to access the url?), going on without it
+graph: refreshing 703 projects (generation 390)
+graph: 983 stale facts (analysis 594, file 298, readdir 85, digest 4, readdirNames 1, stamp 1) leave 703 projects stale
+graph: test-s-plugins-norm-4e115d is stale: the workspace file ✏️s/🔌️plugins/📕️norm/🧪️tests/🌐️browser/📋️arguments/🟦️.ts was added
+graph: test-s-plugins-norm-4e115d is stale: the workspace file ✏️s/🔌️plugins/📕️norm/🧪️tests/🌐️browser/🟦️.ts was added
+graph: test-s-plugins-norm-4e115d is stale: the workspace file ✏️s/🔌️plugins/📕️norm/🧪️tests/🌐️browser/🧪️tests/🟦️.ts was added
+graph: test-s-plugins-norm-4e115d is stale: the workspace file ✏️s/🔌️plugins/📕️norm/🧪️tests/🌐️browser/🧭️journey/🟦️.ts was added
+graph: workspace is stale: the workspace file 🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/🎚️model-controls/🟦️.tsx was added
+graph: workspace is stale: the workspace file 🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/🎚️model-controls/🥒️.feature was added
+graph: workspace is stale: the workspace file 🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/📤️export/🗿️model/🏷️names/🟦️.ts was added
+graph: workspace is stale: the workspace file 🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/📤️export/🗿️model/🧩️scenes/🟦️.ts was added
+graph: workspace is stale: the workspace file 🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🧊️volumes-next-a/🌓️silhouette/🟦️.ts was added
+graph: workspace is stale: the workspace file 🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🧊️volumes-next-a/🟦️.ts was added
+graph: workspace is stale: the workspace file 🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🧊️volumes-next-a/🧮️measures/🟦️.ts was added
+graph: workspace is stale: the workspace file 🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🧊️volumes-next-a/🧱️lists/🟦️.ts was added
+graph: workspace is stale: the workspace file 🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🧊️volumes-next-a/🧱️rules/🟦️.ts was added
+graph: workspace is stale: the workspace file 🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🧊️volumes/🌓️silhouette/🟦️.ts was added
+graph: workspace is stale: the workspace file 🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🧊️volumes/🟦️.ts was added
+graph: workspace is stale: the workspace file 🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🧊️volumes/🧮️measures/🟦️.ts was added
+graph: 983 more stale inputs are not listed
+graph: plan stage inference starts (managed 1184 MB, resident 1230 MB)
+graph: inferring 48 projects in this process (memory)
+graph: waiting for memory headroom (531 of 909 MB reserved, 1 projects running): @semio-tech/async-slots-rs needs 531 MB and has waited 0 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (1063 of 1396 MB reserved, 2 projects running): @semio-tech/2d-path-flatten-rs needs 531 MB and has waited 0 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (1594 of 2372 MB reserved, 3 projects running): @semio-tech/2d-compute needs 1176 MB and has waited 4 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: project @semio-tech/2d-compute (project) grew by 1071 MB, more than the 1024 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: waiting for memory headroom (2770 of 3174 MB reserved, 4 projects running): @semio-tech/2d-regions-rs needs 531 MB and has waited 7 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (2126 of 2290 MB reserved, 4 projects running): @semio-tech/action-bus-rs needs 531 MB and has waited 0 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (2171 of 2408 MB reserved, 4 projects running): @semio-tech/filesystem-observation needs 1176 MB and has waited 4 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: headroom of 819 MB is below one project (1176 MB), inferring one project at a time
+graph: waiting for memory headroom (1176 of 1240 MB reserved, 1 projects running): @semio-tech/compiler-syntax-ecma-ts needs 1176 MB and has waited 2 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (1176 of 828 MB reserved, 1 projects running): @semio-tech/assets needs 1176 MB and has waited 3 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (1176 of 772 MB reserved, 1 projects running): @semio-tech/font-noto-emoji-nature-regular-rs needs 251 MB and has waited 7 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: headroom of 799 MB again (251 MB taken), resuming
+graph: waiting for memory headroom (609 of 738 MB reserved, 2 projects running): @semio-tech/font-noto-emoji-flags-regular-rs needs 251 MB and has waited 0 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (768 of 820 MB reserved, 3 projects running): @semio-tech/font-anta-latin-regular-rs needs 256 MB and has waited 4 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (294 of 823 MB reserved, 1 projects running): @semio-tech/canvas-react-renderer needs 1176 MB and has waited 3 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (1176 of 551 MB reserved, 1 projects running): @semio-tech/dsl-syntax-rs needs 531 MB and has waited 3 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (531 of 881 MB reserved, 1 projects running): @semio-tech/dsl-token-rs needs 531 MB and has waited 3 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (590 of 599 MB reserved, 1 projects running): @semio-tech/dsl-record-ownership-rs needs 590 MB and has waited 3 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (590 of 868 MB reserved, 1 projects running): @semio-tech/dsl-record-emission-rs needs 590 MB and has waited 1 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (590 of 930 MB reserved, 1 projects running): @semio-tech/artifact-reference-borrow-rs needs 590 MB and has waited 3 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (1596 of 1751 MB reserved, 2 projects running): @semio-tech/browser-actor-import-test needs 1176 MB and has waited 1 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (1176 of 618 MB reserved, 1 projects running): @semio-tech/dsl-derive-rs needs 256 MB and has waited 1 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: project @semio-tech/dsl-derive-rs (language:cargo) grew by 1057 MB, more than the 1024 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: waiting for memory headroom (2576 of 2055 MB reserved, 2 projects running): @semio-tech/component-deployment-contract needs 1176 MB and has waited 19 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: plan stage inference settled from 6872 to 5949 MB
+graph: plan stage inference (during inference) grew the plan by 4737 MB, more than the 2567 MB this machine allows for it; it is stopped before the host runs short of memory
+graph: plan stop detail {"stage":"inference","operation":"inference","memory":{"rss":4095,"heapTotal":346,"heapUsed":3098,"external":2823,"arrayBuffers":2217},"heap":{"heapMb":3098,"extraMb":2823,"objectCount":6150696,"objectTypes":[{"type":"string","count":3372960},{"type":"Array","count":794732},{"type":"Object","count":695457},{"type":"Set","count":156549},{"type":"WeakRef","count":100797},{"type":"Structure","count":38153},{"type":"Cell Butterfly","count":38094},{"type":"Function","count":25424}]},"resources":{},"recent":[{"atMs":246918,"heapUsed":1013,"external":777,"arrayBuffers":171,"rss":2062,"operation":"inference/inference"},{"atMs":247886,"heapUsed":1046,"external":784,"arrayBuffers":191,"rss":2053,"operation":"inference/inference"},{"atMs":250805,"heapUsed":959,"external":696,"arrayBuffers":120,"rss":2028,"operation":"inference/inference"},{"atMs":252914,"heapUsed":1005,"external":745,"arrayBuffers":153,"rss":2036,"operation":"inference/inference"},{"atMs":255165,"heapUsed":990,"external":726,"arrayBuffers":129,"rss":2127,"operation":"inference/inference"},{"atMs":272640,"heapUsed":995,"external":724,"arrayBuffers":176,"rss":2022,"operation":"inference/inference"},{"atMs":291456,"heapUsed":1620,"external":1372,"arrayBuffers":804,"rss":2666,"operation":"inference/inference"},{"atMs":292085,"heapUsed":1596,"external":1351,"arrayBuffers":804,"rss":2445,"operation":"inference/inference"},{"atMs":292494,"heapUsed":1596,"external":1354,"arrayBuffers":807,"rss":2501,"ope
+graph: project @semio-tech/browser-actor-import-test (project) grew by 4266 MB, more than the 1024 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: headroom of -3602 MB is below one project (1176 MB), inferring one project at a time
+graph: waiting for memory headroom (1176 of 761 MB reserved, 1 projects running): @semio-tech/cargo-workspaces needs 901 MB and has waited 5 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: plan answered, managed 104 MB, resident 197 MB (released 32 MB)
+graph: 703 stale projects, 0 taken from the fleet, 33 too heavy for this machine (@semio-tech/s-dev-composition (about 23386 MB), @semio-tech/2d-regions-rs (about 23376 MB), semio-repo-test-host (about 21240 MB), workspace (about 21118 MB), @semio-tech/framework-rs (about 18672 MB), repo-storybook (about 15732 MB), and 27 more; it can give about 3298 MB per project), it can infer 192 of the others (48 per wave); asking the fleet for 703
+graph: inferring 670 light projects here while the fleet works, continuously and lightest first (the server works heaviest first); what the fleet delivers meanwhile is taken and dropped here
+graph: 0 of 703 projects arrived from the fleet, 0 inferred here, 703 left
+graph: preparing 670 of the 670 open stale projects (1 compute slots), 0 of 670 already prepared
+graph: asking the host for up to 2 worker processes for 666 projects; the projects wait for them
+graph: inferring projects with 1 worker processes (1536 MB each)
+graph: waiting for memory headroom (1024 of 1216 MB reserved, 4 projects running): semio-framework-value-source-hold needs 256 MB and has waited 0 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: 0 of 703 projects arrived from the fleet, 9 inferred here, 694 left; the server last progressed 32 s ago, estimated time left: about 24 min
+graph: waiting for memory headroom (1176 of 1039 MB reserved, 1 projects running): repo-nx-output-custody needs 901 MB and has waited 3 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+## last 30 lines
+[script] build:projects · Inferring projects: 14 of 666 projects · 2 running, longest 0 s: semio-os-mcp-process-arena (language:cargo, 0 s, 0 rows), semio-framework-value-testing-effect-bank (language:cargo, 0 s, 0 rows)
+graph: headroom of 930 MB is below one project (1176 MB), inferring one project at a time
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[capacity] admitted exec: 1 job(s), 1536 MB reserved (7605 MB available, 1536 MB floor)
+graph: inferring projects with 1 worker processes (1536 MB each)
+graph: 0 of 703 projects arrived from the fleet, 17 inferred here, 686 left; the server last progressed 11 s ago, estimated time left: about 24 min
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:17:666:1:0:repo-policy|project|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 17 of 666 projects · 1 running, longest 0 s: repo-policy (project, 0 s, 0 rows)
+graph: waiting for memory headroom (1176 of 1045 MB reserved, 1 projects running): repo-nx-output-custody needs 901 MB and has waited 3 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+[repository:command] still running after 1680 s
+[repository:command] still running after 1690 s
+graph: plan stage inference settled from 6620 to 7488 MB
+Graph: Plan-Stufe inference beruhigt von 6620 auf 7488 MB
+[repo] still working after 1700 s; last phase started: source.served
+[repository:command] still running after 1700 s
+graph: plan answered, managed 103 MB, resident 179 MB (released 15 MB)
+[repository:command] still running after 1710 s
+[repository:command] still running after 1720 s
+[repo] still working after 1730 s; last phase started: source.served
+[repository:command] still running after 1730 s
+[repository:command] still running after 1740 s
+[repository:command] still running after 1750 s
+[repo] still working after 1760 s; last phase started: source.served
+[repository:command] still running after 1760 s

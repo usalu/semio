@@ -692,7 +692,7 @@
             {
               "id": "wall-far",
               "bone": "pot",
-              "role": "detail",
+              "role": "body",
               "z": 3.1,
               "filled": true,
               "tone": 0.55,
@@ -1155,7 +1155,7 @@
             {
               "id": "wall-far",
               "bone": "pot",
-              "role": "detail",
+              "role": "body",
               "z": 3.1,
               "filled": true,
               "tone": 0.55,
@@ -2189,6 +2189,8 @@
             "key": "heat",
             "heatW": 1173
           },
+          "ratedPowerW": 1200,
+          "ratedPowerBasis": "fuel-input",
           "source": "authored-estimate",
           "reference": "incropera-2018"
         }

@@ -5,7 +5,7 @@
  */
 import type { Asset, Slug } from "@teaching/staffage";
 import { compareToParams, type CompareState } from "../../🗺️routing/🟦️.ts";
-import type { ArchiveEvent, Playground, SavedCollection } from "../../💾️persistence/🟦️.ts";
+import { TRACK_DEFAULTS, type ArchiveEvent, type Playground, type SavedCollection } from "../../💾️persistence/🟦️.ts";
 
 /** 📏️ The gap between neighbours on the playground, metres. */
 export const PLACEMENT_GAP_M = 0.6;
@@ -23,7 +23,7 @@ export function placeAllEvents(assets: readonly Asset[], playground: Playground,
   const placed = assets.map((asset) => {
     const xM = cursor + asset.dimensions.widthM / 2;
     cursor += asset.dimensions.widthM + PLACEMENT_GAP_M;
-    return { id: newId(), asset: asset.id, xM, zM: 0, yawDeg: 0, pick: null, offsetS: 0, mirrored: false } as const;
+    return { id: newId(), asset: asset.id, xM, zM: 0, yawDeg: 0, pick: null, offsetS: 0, mirrored: false, ...TRACK_DEFAULTS } as const;
   });
   const events: ArchiveEvent[] = [];
   if (cursor > playground.lengthM) events.push({ type: "playground-configured", patch: { lengthM: Math.min(200, Math.ceil(cursor)) } });

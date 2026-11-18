@@ -1,0 +1,74 @@
+service log: /var/folders/xq/z6t8hmcd0qj871bx0sj7pbn80000gn/T//semio-repo/501/host-c5f9b6744aec.log
+closure entries before: 40553
+2026-11-15T16:32:06Z no slice worker
+2026-11-15T16:32:11Z no slice worker
+2026-11-15T16:32:16Z no slice worker
+2026-11-15T16:32:21Z no slice worker
+2026-11-15T16:32:26Z no slice worker
+2026-11-15T16:32:32Z no slice worker
+2026-11-15T16:32:37Z no slice worker
+2026-11-15T16:32:42Z no slice worker
+2026-11-15T16:32:47Z no slice worker
+2026-11-15T16:32:52Z no slice worker
+2026-11-15T16:32:57Z no slice worker
+2026-11-15T16:33:03Z no slice worker
+2026-11-15T16:33:08Z no slice worker
+2026-11-15T16:33:13Z no slice worker
+2026-11-15T16:33:19Z no slice worker
+2026-11-15T16:33:24Z pid=32229 rss=267MB footprint=[bun [32229]: 64-bit    Footprint: 87 MB (16384 bytes per page)] last=[graph: plan answered, managed 106 MB, resident 160 MB (released 0 MB)]
+2026-11-15T16:33:29Z pid=32229 rss=613MB footprint=[bun [32229]: 64-bit    Footprint: 237 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 222; verifying the tree once.]
+2026-11-15T16:33:34Z pid=32229 rss=909MB footprint=[bun [32229]: 64-bit    Footprint: 490 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 222; verifying the tree once.]
+2026-11-15T16:33:39Z pid=32229 rss=650MB footprint=[bun [32229]: 64-bit    Footprint: 617 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 222; verifying the tree once.]
+2026-11-15T16:33:45Z pid=32229 rss=632MB footprint=[bun [32229]: 64-bit    Footprint: 624 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 222; verifying the tree once.]
+2026-11-15T16:33:50Z pid=32229 rss=819MB footprint=[bun [32229]: 64-bit    Footprint: 437 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 222; verifying the tree once.]
+2026-11-15T16:33:55Z pid=32229 rss=1113MB footprint=[bun [32229]: 64-bit    Footprint: 467 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 222; verifying the tree once.]
+2026-11-15T16:34:00Z pid=32229 rss=1136MB footprint=[bun [32229]: 64-bit    Footprint: 485 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 222; verifying the tree once.]
+2026-11-15T16:34:05Z pid=32229 rss=1032MB footprint=[bun [32229]: 64-bit    Footprint: 590 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 222; verifying the tree once.]
+2026-11-15T16:34:10Z pid=32229 rss=959MB footprint=[bun [32229]: 64-bit    Footprint: 785 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 222; verifying the tree once.]
+2026-11-15T16:34:15Z pid=32229 rss=975MB footprint=[bun [32229]: 64-bit    Footprint: 679 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 222; verifying the tree once.]
+2026-11-15T16:34:20Z pid=32229 rss=993MB footprint=[bun [32229]: 64-bit    Footprint: 671 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 222; verifying the tree once.]
+2026-11-15T16:34:26Z pid=32229 rss=1052MB footprint=[bun [32229]: 64-bit    Footprint: 680 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 222; verifying the tree once.]
+2026-11-15T16:34:31Z pid=32229 rss=1054MB footprint=[bun [32229]: 64-bit    Footprint: 677 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 222; verifying the tree once.]
+2026-11-15T16:34:36Z pid=32229 rss=1084MB footprint=[bun [32229]: 64-bit    Footprint: 676 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 222; verifying the tree once.]
+2026-11-15T16:34:42Z pid=32229 rss=1022MB footprint=[bun [32229]: 64-bit    Footprint: 674 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 222; verifying the tree once.]
+2026-11-15T16:34:47Z pid=32229 rss=1239MB footprint=[bun [32229]: 64-bit    Footprint: 742 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 222; verifying the tree once.]
+2026-11-15T16:34:52Z pid=32229 rss=1248MB footprint=[bun [32229]: 64-bit    Footprint: 726 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 222; verifying the tree once.]
+2026-11-15T16:34:57Z pid=32229 rss=1294MB footprint=[bun [32229]: 64-bit    Footprint: 746 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 222; verifying the tree once.]
+2026-11-15T16:35:02Z pid=32229 rss=1451MB footprint=[bun [32229]: 64-bit    Footprint: 747 MB (16384 bytes per page)] last=[]
+2026-11-15T16:35:07Z pid=32229 rss=1709MB footprint=[bun [32229]: 64-bit    Footprint: 954 MB (16384 bytes per page)] last=[]
+2026-11-15T16:35:13Z pid=32229 rss=1909MB footprint=[bun [32229]: 64-bit    Footprint: 1217 MB (16384 bytes per page)] last=[]
+2026-11-15T16:35:18Z pid=32229 rss=1832MB footprint=[bun [32229]: 64-bit    Footprint: 1362 MB (16384 bytes per page)] last=[]
+2026-11-15T16:35:23Z pid=32229 rss=1812MB footprint=[bun [32229]: 64-bit    Footprint: 1452 MB (16384 bytes per page)] last=[]
+2026-11-15T16:35:28Z pid=32229 rss=1885MB footprint=[bun [32229]: 64-bit    Footprint: 1424 MB (16384 bytes per page)] last=[]
+2026-11-15T16:35:33Z pid=32229 rss=1950MB footprint=[bun [32229]: 64-bit    Footprint: 1374 MB (16384 bytes per page)] last=[]
+2026-11-15T16:35:38Z pid=32229 rss=1940MB footprint=[bun [32229]: 64-bit    Footprint: 1265 MB (16384 bytes per page)] last=[]
+2026-11-15T16:35:43Z pid=32229 rss=1950MB footprint=[bun [32229]: 64-bit    Footprint: 1017 MB (16384 bytes per page)] last=[]
+2026-11-15T16:35:49Z pid=32229 rss=1953MB footprint=[bun [32229]: 64-bit    Footprint: 1011 MB (16384 bytes per page)] last=[]
+2026-11-15T16:35:54Z pid=32229 rss=1952MB footprint=[bun [32229]: 64-bit    Footprint: 996 MB (16384 bytes per page)] last=[]
+2026-11-15T16:35:59Z pid=32229 rss=1951MB footprint=[bun [32229]: 64-bit    Footprint: 996 MB (16384 bytes per page)] last=[]
+2026-11-15T16:36:04Z pid=32229 rss=2341MB footprint=[bun [32229]: 64-bit    Footprint: 1072 MB (16384 bytes per page)] last=[]
+2026-11-15T16:36:09Z pid=32229 rss=1947MB footprint=[bun [32229]: 64-bit    Footprint: 1203 MB (16384 bytes per page)] last=[]
+2026-11-15T16:36:14Z pid=32229 rss=1973MB footprint=[bun [32229]: 64-bit    Footprint: 1283 MB (16384 bytes per page)] last=[]
+2026-11-15T16:36:20Z pid=32229 rss=1828MB footprint=[bun [32229]: 64-bit    Footprint: 939 MB (16384 bytes per page)] last=[graph: 0 of 703 projects arrived from the fleet, 0 inferred here, 703 left]
+2026-11-15T16:36:25Z pid=32229 rss=1838MB footprint=[bun [32229]: 64-bit    Footprint: 944 MB (16384 bytes per page)] last=[graph: 0 of 703 projects arrived from the fleet, 0 inferred here, 703 left]
+2026-11-15T16:36:30Z pid=32229 rss=1838MB footprint=[bun [32229]: 64-bit    Footprint: 940 MB (16384 bytes per page)] last=[graph: 0 of 703 projects arrived from the fleet, 0 inferred here, 703 left]
+2026-11-15T16:36:35Z pid=32229 rss=1837MB footprint=[bun [32229]: 64-bit    Footprint: 934 MB (16384 bytes per page)] last=[graph: 0 of 703 projects arrived from the fleet, 0 inferred here, 703 left]
+2026-11-15T16:36:41Z pid=32229 rss=1839MB footprint=[bun [32229]: 64-bit    Footprint: 921 MB (16384 bytes per page)] last=[graph: 0 of 703 projects arrived from the fleet, 0 inferred here, 703 left; the server last progressed 672 s ago, estimated time left: about 40 min]
+2026-11-15T16:36:46Z pid=32229 rss=1854MB footprint=[bun [32229]: 64-bit    Footprint: 932 MB (16384 bytes per page)] last=[graph: plan stage inference starts (managed 921 MB, resident 1852 MB)]
+2026-11-15T16:36:51Z pid=32229 rss=1882MB footprint=[bun [32229]: 64-bit    Footprint: 952 MB (16384 bytes per page)] last=[graph: 0 of 703 projects arrived from the fleet, 0 inferred here, 703 left; the server last progressed 683 s ago, estimated time left: about 40 min]
+2026-11-15T16:36:56Z pid=32229 rss=1924MB footprint=[bun [32229]: 64-bit    Footprint: 974 MB (16384 bytes per page)] last=[graph: inferring projects with 1 worker processes (1536 MB each)]
+2026-11-15T16:37:01Z pid=32229 rss=1908MB footprint=[bun [32229]: 64-bit    Footprint: 950 MB (16384 bytes per page)] last=[graph: 0 of 703 projects arrived from the fleet, 0 inferred here, 703 left; the server last progressed 694 s ago, estimated time left: about 40 min]
+2026-11-15T16:37:07Z pid=32229 rss=1918MB footprint=[bun [32229]: 64-bit    Footprint: 950 MB (16384 bytes per page)] last=[graph: 0 of 703 projects arrived from the fleet, 4 inferred here, 699 left; the server last progressed 699 s ago, estimated time left: about 40 min]
+2026-11-15T16:37:12Z pid=32229 rss=1924MB footprint=[bun [32229]: 64-bit    Footprint: 968 MB (16384 bytes per page)] last=[graph: 0 of 703 projects arrived from the fleet, 26 inferred here, 677 left; the server last progressed 705 s ago, estimated time left: about 40 min]
+2026-11-15T16:37:17Z pid=32229 rss=1947MB footprint=[bun [32229]: 64-bit    Footprint: 986 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (270 of 958 MB reserved, 1 projects running): @semio-tech/compiler-syntax-rust-ts needs 1225 MB and has waited 2 s; after 60 s it runs alone if it fits the 1756 MB one project is grante]
+2026-11-15T16:37:22Z pid=32229 rss=1879MB footprint=[bun [32229]: 64-bit    Footprint: 1034 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (388 of 1229 MB reserved, 1 projects running): @semio-tech/compiler-syntax-rust-ts needs 1225 MB and has waited 8 s; after 60 s it runs alone if it fits the 1756 MB one project is grant]
+2026-11-15T16:37:27Z pid=32229 rss=1743MB footprint=[bun [32229]: 64-bit    Footprint: 1138 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (923 of 1631 MB reserved, 1 projects running): @semio-tech/compiler-syntax-rust-ts needs 1225 MB and has waited 13 s; after 60 s it runs alone if it fits the 1756 MB one project is gran]
+2026-11-15T16:37:32Z pid=32229 rss=1736MB footprint=[bun [32229]: 64-bit    Footprint: 1164 MB (16384 bytes per page)] last=[graph: 0 of 703 projects arrived from the fleet, 38 inferred here, 665 left; the server last progressed 728 s ago, estimated time left: about 40 min]
+2026-11-15T16:37:37Z pid=32229 rss=1597MB footprint=[bun [32229]: 64-bit    Footprint: 1143 MB (16384 bytes per page)] last=[graph: 0 of 703 projects arrived from the fleet, 46 inferred here, 657 left; the server last progressed 732 s ago, estimated time left: about 40 min]
+2026-11-15T16:37:43Z pid=32229 rss=1468MB footprint=[bun [32229]: 64-bit    Footprint: 1215 MB (16384 bytes per page)] last=[graph: 0 of 703 projects arrived from the fleet, 51 inferred here, 652 left; the server last progressed 739 s ago, estimated time left: about 40 min]
+2026-11-15T16:37:48Z pid=32229 rss=1523MB footprint=[bun [32229]: 64-bit    Footprint: 1322 MB (16384 bytes per page)] last=[graph: 0 of 703 projects arrived from the fleet, 52 inferred here, 651 left; the server last progressed 742 s ago, estimated time left: about 40 min]
+2026-11-15T16:37:54Z pid=32229 rss=1711MB footprint=[bun [32229]: 64-bit    Footprint: 1718 MB (16384 bytes per page)] last=[graph: 0 of 703 projects arrived from the fleet, 52 inferred here, 651 left; the server last progressed 742 s ago, estimated time left: about 40 min]
+2026-11-15T16:37:59Z pid=32229 rss=2605MB footprint=[bun [32229]: 64-bit    Footprint: 7683 MB (16384 bytes per page)] last=[graph: 0 of 703 projects arrived from the fleet, 52 inferred here, 651 left; the server last progressed 742 s ago, estimated time left: about 40 min]
+2026-11-15T16:38:04Z no slice worker
+service log at the end: /var/folders/xq/z6t8hmcd0qj871bx0sj7pbn80000gn/T//semio-repo/501/host-c5f9b6744aec.log
+closure entries after: 40553

@@ -3,7 +3,7 @@
   "warmup": "boot",
   "shards": [
     { "id": "shared", "parallel": true, "projects": ["desktop", "phone", "layout", "pets"] },
-    { "id": "exclusive", "parallel": false, "projects": ["presence", "shortage", "away", "faults"] }
+    { "id": "exclusive", "parallel": false, "projects": ["presence", "shortage", "away", "faults", "chaos", "reconnect"] }
   ],
   "stacks": {
     "dev": [["shared"], ["exclusive"]],

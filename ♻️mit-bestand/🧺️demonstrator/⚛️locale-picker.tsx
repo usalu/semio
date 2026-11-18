@@ -2,9 +2,11 @@
 /** 🌐️ The explicit language choice of the landing page: shown while neither a stored choice nor the browser's preferred languages name a shipped locale, and as the switcher in the navbar. */
 // #endregion 🧲️Header
 
-import { cn, useLabel } from "@semio-tech/ui-react";
+import { LanguageChoice, useLabel, type LanguageChoiceOption } from "@semio-tech/ui-react";
 import { demonstratorUiLabel } from "./🔨️modules/🌐️locale/⚛️.ts";
 import { DEMONSTRATOR_LOCALES, DEMONSTRATOR_LOCALE_ENDONYMS, demonstratorText, type DemonstratorLocale } from "./🔨️modules/🌐️locale/🟦️.ts";
+
+const LOCALE_OPTIONS: readonly LanguageChoiceOption<DemonstratorLocale>[] = DEMONSTRATOR_LOCALES.map((value) => ({ value, endonym: DEMONSTRATOR_LOCALE_ENDONYMS[value] }));
 
 /** 🌐️ Every locale offered in its own words, none preselected, before the page has any language to speak in. */
 export function DemonstratorLocalePicker({ onChoose }: { readonly onChoose: (locale: DemonstratorLocale) => void }) {
@@ -18,36 +20,14 @@ export function DemonstratorLocalePicker({ onChoose }: { readonly onChoose: (loc
             </span>
           ))}
         </h1>
-        <div role="group" aria-labelledby="demonstrator-locale-picker-title" className="flex gap-double">
-          {DEMONSTRATOR_LOCALES.map((locale) => (
-            <button key={locale} type="button" lang={locale} data-locale={locale} onClick={() => onChoose(locale)} className="cursor-pointer rounded-sm border border-border px-double py-single text-sm hover:bg-hover-window">
-              {DEMONSTRATOR_LOCALE_ENDONYMS[locale]}
-            </button>
-          ))}
-        </div>
+        <LanguageChoice label={DEMONSTRATOR_LOCALES.map((locale) => demonstratorText("demonstrator.locale.choose", locale)).join(" / ")} options={LOCALE_OPTIONS} onChoose={onChoose} />
       </div>
     </main>
   );
 }
 
-/** 🔤️ The navbar switcher: one pressed-state button per locale, each in its own language, grouped under a localized name. */
+/** 🔤️ The navbar switcher: one radio per locale, each in its own language, grouped under a localized name. */
 export function DemonstratorLocaleSwitcher({ locale, onChoose }: { readonly locale: DemonstratorLocale; readonly onChoose: (locale: DemonstratorLocale) => void }) {
   const groupLabel = useLabel(demonstratorUiLabel("demonstrator.landing.language"));
-  return (
-    <div role="group" aria-label={groupLabel} data-slot="demonstrator-locale-switcher" className="pointer-events-auto inline-flex items-center gap-tiny">
-      {DEMONSTRATOR_LOCALES.map((candidate) => (
-        <button
-          key={candidate}
-          type="button"
-          lang={candidate}
-          data-locale={candidate}
-          aria-pressed={candidate === locale}
-          onClick={() => onChoose(candidate)}
-          className={cn("cursor-pointer rounded-sm px-single py-half text-xs transition-colors hover:bg-hover-window", candidate === locale ? "font-semibold text-foreground" : "text-muted-foreground hover:text-foreground")}
-        >
-          {DEMONSTRATOR_LOCALE_ENDONYMS[candidate]}
-        </button>
-      ))}
-    </div>
-  );
+  return <LanguageChoice label={groupLabel} options={LOCALE_OPTIONS} value={locale} onChoose={onChoose} className="pointer-events-auto" />;
 }

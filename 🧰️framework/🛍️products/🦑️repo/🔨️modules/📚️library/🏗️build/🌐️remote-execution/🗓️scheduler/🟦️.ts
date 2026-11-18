@@ -46,7 +46,7 @@ export class RemoteExecutionSchedulerV1{
  private timer?:ReturnType<typeof setInterval>;
  readonly startedAt:string;
 
- constructor(readonly options:RemoteExecutionSchedulerOptionsV1){
+ readonly options:RemoteExecutionSchedulerOptionsV1; constructor(options:RemoteExecutionSchedulerOptionsV1){this.options=options;
   this.clock=options.now??Date.now;this.startedAt=new Date(this.clock()).toISOString();this.load=new RemoteExecutionLoadTableV1(options.loadExpireSeconds*1000,this.clock);
   const every=options.sweepMilliseconds??1000;
   if(every>0){this.timer=setInterval(()=>{this.sweep();},every);this.timer.unref();}

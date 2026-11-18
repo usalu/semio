@@ -15,6 +15,7 @@ import { storeReceiptOutputV1 } from "../../../🧾️store-receipt/🟨️.mjs"
 import { withHostPlatformOutputsV1 } from "../../../🎯️host-platform/🟦️.ts";
 import { parserTypescriptV1 } from "../../../🚀️bootstrap/📦️parsers/🟨️.mjs";
 import { createHash } from "node:crypto";
+import { assertNotReadParentV1 } from "../../../../🏗️build/👁️observation/🚧️read-parent/🟨️.mjs";
 
 /** 🧭️ The workspace placeholder of an input path, compiled once. */
 const WORKSPACE_PLACEHOLDER_V1 = /^\{workspaceRoot\}\//u;
@@ -22,6 +23,7 @@ import { lstatSync as rawLstatSync, mkdirSync as rawMkdirSync, readFileSync as r
 import { brotliCompressSync, brotliDecompressSync, constants as zlibConstants } from "node:zlib";
 import { withBuildGraphOptionalPublicationV1 } from "../../../../🏗️build/📥️inputs/💾️storage/🟨️.mjs";
 import { observedTypeScriptHost } from "../../../../🏗️build/👁️observation/🟨️.mjs";
+import { sourceTreeFilterV1 } from "../../../../🏗️build/👁️observation/📂️source-names/🟨️.mjs";
 import { cargoManifestDirectoriesV1, deriveInputsV1, inputPrecisionDecisionV1, inputPrecisionLanguageV1, inputPrecisionTextV1, readInputPrecisionV1, selectRuleV1 } from "../../../📥️inputs/🎯️precision/🟦️.ts";
 import { ownerOfProjectV1, ownerViewV1 } from "../../../📥️inputs/🌳️owner-view/🟨️.mjs";
 import { cargoResolutionLanguageV1, cargoResolutionTextV1, readCargoResolutionPolicyV1, workspaceKeyViolationsV1 } from "../../../📥️inputs/🦀️resolution/🟦️.ts";
@@ -118,7 +120,7 @@ function precisionProgramHostV1(workspaceRoot, scripts, documentOf, compilerOf) 
     if (kind === "directory") return sys.directoryExists(path);
     if (kind === "text") { const text = sys.readFile(path); return text === undefined ? "!missing" : sha(text); }
     if (kind === "realpath") return sys.realpath?.(path) ?? null;
-    if (kind === "directories") return JSON.stringify(sys.getDirectories(path));
+    if (kind === "directories") return JSON.stringify(sourceTreeFilterV1(sys.getDirectories(path), name => name, () => true));
     try { return sha(readFileSync(path)); } catch { return null; }
   };
   const receipts = precisionReceiptsV1(workspaceRoot);
@@ -138,7 +140,7 @@ function precisionProgramHostV1(workspaceRoot, scripts, documentOf, compilerOf) 
         directoryExists: (path) => record("directory", path, base.directoryExists(path)),
         readFile: (path, encoding) => { const text = base.readFile(path, encoding); record("text", path, text === undefined ? "!missing" : sha(text)); return text; },
         realpath: base.realpath && ((path) => { const value = base.realpath(path); record("realpath", path, value ?? null); return value; }),
-        getDirectories: (path) => { const value = base.getDirectories(path); record("directories", path, JSON.stringify(value)); return value; },
+        getDirectories: (path) => { const value = base.getDirectories(path); record("directories", path, JSON.stringify(sourceTreeFilterV1(value, name => name, () => true))); return value; },
       };
       const cache = compiler.createModuleResolutionCache(workspaceRoot, (value) => value, options);
       for (const specifier of observedSourceAnalysisV1(analysis ??= prepareSourceAnalysesV1().module, source).imports) {
@@ -453,14 +455,15 @@ export async function projectWithDefaults(json, root, projectDir, workspaceRoot,
     const extra = generatorOutputCouplingInputs(name, target, declared, root, workspaceRoot);
     if (extra.length) normalized[name] = { ...target, inputs: [...target.inputs, ...extra] };
   }
-  const namedInputs = await projectInputs({ ...json, targets: normalized }, root, workspaceRoot, facts, scripts,sourceRepresentation,sourceGroups,inputNames,Object.fromEntries([...commandSourceGroups.values()].map(({name,inputs})=>[name,inputs])));
+  const providerGroups = json.metadata?.semio?.scriptProviders === undefined ? [] : await closures.sharedClosureGroups(root, json.metadata.semio.scriptProviders);
+  const namedInputs = await projectInputs({ ...json, targets: normalized }, root, workspaceRoot, facts, scripts,sourceRepresentation,sourceGroups,inputNames,{...Object.fromEntries(providerGroups.map(([name])=>[name,[]])),...Object.fromEntries([...commandSourceGroups.values()].map(({name,inputs})=>[name,inputs]))});
   const symbolicGroups = Object.entries(namedInputs).filter(([, inputs]) => Array.isArray(inputs) && inputs.some(closureMarkerV1)).map(([name]) => [name, true]);
   for (const { name, inputs } of commandSourceGroups.values()) {
     if (Object.hasOwn(namedInputs, name)) throw new Error(`Duplicate command source group ${name}`);
     if (inputs.some(closureMarkerV1)) { namedInputs[name] = inputs; symbolicGroups.push([name, false]); continue; }
     namedInputs[name] = sourceRepresentation === "source" ? loaded.deduplicateProjectInputs(inputs, root) : loaded.compactSourceInputs(inputs, workspaceRoot, root);
   }
-  if (json.metadata?.semio?.scriptProviders !== undefined) for (const [name, inputs] of await closures.sharedClosureGroups(root, json.metadata.semio.scriptProviders)) {
+  for (const [name, inputs] of providerGroups) {
     if (Object.hasOwn(namedInputs, name)) throw refuseBuildV1("invalid","assembly.duplicate-script-provider-group",{name});
     const handle = closureHandleOfV1(inputs);
     if (handle) { namedInputs[name] = [handle.marker]; symbolicGroups.push([name, false]); continue; }
@@ -483,12 +486,31 @@ function withClosureRecipesV1(project, symbolicGroups, closures) {
 
 /** 🔓️ Answers the questions of a project record: every command closure it names is brought up to date (its observations join the owner, not the record), the symbolic lists become the files of the closure and the symbolic groups are compacted exactly as the direct inference compacts them. Returns the project without its recipes, the observations of the closures it used and the derived facts that stand for the walks those closures reused; with a row `log` the observations and the supports are lists in that log (written once, read back in batches), never arrays. */
 export async function resolveClosureRefsV1(project, workspaceRoot, scripts, sourceRepresentation = "hash", log = undefined) {
+  assertNotReadParentV1("refs", project?.name ?? "");
   if (!project.closureRecipes) return { project, rows: [], derived: [] };
-  const { values, rows, derived } = await closureApiV1(scripts, workspaceRoot).resolve(Object.entries(project.closureRecipes), log), root = project.root;
+  const { values, rows, derived } = await closureApiV1(scripts, workspaceRoot).resolve(Object.entries(project.closureRecipes), log);
+  return { project: bindClosureRefsV1(project, values, workspaceRoot, sourceRepresentation), rows, derived };
+}
+
+/** 🪅️ The project with every closure reference replaced by the files of its closure and its symbolic groups compacted: the answer of {@link resolveClosureRefsV1} and of {@link resolveClosureRefsPlanV1}, one implementation. */
+function bindClosureRefsV1(project, values, workspaceRoot, sourceRepresentation) {
+  const root = project.root;
   const bind = (value) => Array.isArray(value) ? value.flatMap((item) => closureMarkerV1(item) ? values.get(item.closureRef) : [bind(item)]) : value !== null && typeof value === "object" ? Object.fromEntries(Object.entries(value).map(([key, item]) => [key, bind(item)])) : value;
   const { closureRecipes, closureInputs, symbolicGroups, ...rest } = project, bound = { ...rest, namedInputs: bind(rest.namedInputs), targets: bind(rest.targets) };
   for (const [name, dedupe] of symbolicGroups ?? []) { if (!Array.isArray(bound.namedInputs[name])) throw refuseBuildV1("invalid", "assembly.symbolic-group-without-list", { name: JSON.stringify(name), project: String(root), record: JSON.stringify(symbolicGroups) }); const list = dedupe || sourceRepresentation === "source" ? loaded.deduplicateProjectInputs(bound.namedInputs[name], root) : bound.namedInputs[name]; bound.namedInputs[name] = sourceRepresentation === "source" ? list : loaded.compactSourceInputs(list, workspaceRoot, root); }
-  return { project: mergeCommandSourceGroupsV1(bound), rows, derived };
+  return mergeCommandSourceGroupsV1(bound);
+}
+
+/** 🪅️ Resolves the closure references of a project in a process that writes no row log (a farm child): the resolved project and the plan its rows are listed from (see `closureApiV1(...).plan`); undefined when a layer of a closure is not stored, so the owner of the log resolves it itself. */
+export async function resolveClosureRefsPlanV1(project, workspaceRoot, scripts, sourceRepresentation = "hash") {
+  if (!project.closureRecipes) return { project, plan: null };
+  const planned = await closureApiV1(scripts, workspaceRoot).plan(Object.entries(project.closureRecipes));
+  return planned === undefined ? undefined : { project: bindClosureRefsV1(project, planned.values, workspaceRoot, sourceRepresentation), plan: planned.plan };
+}
+
+/** 🪅️ The rows and derived facts of a plan from {@link resolveClosureRefsPlanV1} as lists of `log`, read from the closure store: nothing is resolved, derived or parsed beyond the ids of the layers, once per log and layer. */
+export function adoptClosureRefsV1(plan, workspaceRoot, scripts, log) {
+  return plan === null ? { rows: [], derived: [] } : closureApiV1(scripts, workspaceRoot).adopt(plan, log);
 }
 
 /** 🔑️ The key of one input list, taken item by item through a table that names each distinct item once: equal lists have equal keys without the text of the list or a string per item ever being made, which for the thousands of command source groups of one project (each the files of a whole closure) is the difference between one pass and gigabytes of transient text; unequal lists may share a key, so a shared key is confirmed by {@link sameInputListV1}. */

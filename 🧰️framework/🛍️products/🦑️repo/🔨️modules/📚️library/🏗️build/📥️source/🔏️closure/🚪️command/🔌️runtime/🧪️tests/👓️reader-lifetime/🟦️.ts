@@ -13,12 +13,14 @@ import {captureCompilerBuildSourceClosureV1} from "../../../../🏗️compiler/�
 import {buildSourceClosureTextV1,buildSourceClosureStreamLoaderV1} from "../../../../🟦️.ts";
 import nativeSchema from "../../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🔣️.json" with {type:"json"};
+import{existsSync as existsRootV1}from"node:fs";import{dirname as dirnameRootV1,join as joinRootV1}from"node:path";
+const repositoryRootV1=(()=>{let directory=import.meta.dir;while(!existsRootV1(joinRootV1(directory,"MODULE.bazel"))&&dirnameRootV1(directory)!==directory)directory=dirnameRootV1(directory);return directory;})();
 
 declareLibraryBuildTestEnvelopeV1({suite:"build-source-closure",maximumElapsedMilliseconds:300000,scratch:"checkout"});
 
 /** 🧪️ Isolated genuine receivers expose the preparation-owner RED and clean every real charge before assertions. */
 test("consumer image and paid charge survive preparation cancellation and obey consumer cancellation",()=>withBuildTestInvocationV1(async original=>{
- const root=process.cwd(),control=createIssuedResourceControlV1(original,"test:native-reader-lifetime",280000),entry=relative(root,fileURLToPath(new URL("./📜️script.ts",import.meta.url))).replaceAll("\\","/"),snapshot=buildSourceClosureTextV1(await captureCompilerBuildSourceClosureV1(root,entry,original,control)),area=await mkdtemp(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"r")),database=new Database(":memory:"),policy=new Ajv({strict:false}).compile({...nativeSchema,$ref:"#/definitions/Policy"});
+ const root=repositoryRootV1,control=createIssuedResourceControlV1(original,"test:native-reader-lifetime",280000),entry=relative(root,fileURLToPath(new URL("./📜️script.ts",import.meta.url))).replaceAll("\\","/"),snapshot=buildSourceClosureTextV1(await captureCompilerBuildSourceClosureV1(root,entry,original,control)),area=await mkdtemp(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"r")),database=new Database(":memory:"),policy=new Ajv({strict:false}).compile({...nativeSchema,$ref:"#/definitions/Policy"});
  const invoke=async(directory:string,phase:string,id:string)=>{
   const chunks:{stdout:Buffer[];stderr:Buffer[]}={stdout:[],stderr:[]};let status:number|null=0,signal:string|null=null;
   try{await runOwnedCommand(process.execPath,["--eval",buildSourceClosureStreamLoaderV1,"--",snapshot.sha256,directory,phase,id],root,"test:reader-lifetime:"+phase,0,{control,signal:control.signal,input:"",env:scriptResourceProcessEnvironmentV1(control,{...process.env,BUN_RUNTIME_TRANSPILER_CACHE_PATH:"0"}),auxiliaryInput:{version:1,text:snapshot.text},output:{maximumBytes:1048576,maximumLines:8192},outputStyle:"static",outputConsumer:(bytes,stream)=>{chunks[stream].push(Buffer.from(bytes));}});}catch(error){if(!(error instanceof OwnedCommandFailure))throw error;status=error.outcome.status;signal=error.outcome.signal;}

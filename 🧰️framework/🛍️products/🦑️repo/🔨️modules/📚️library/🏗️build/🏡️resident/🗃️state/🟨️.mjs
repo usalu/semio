@@ -361,16 +361,15 @@ export function createWorkspaceStateV1(options){
  };
 }
 
-/** 🖊 Signature of a task's outputs by bounded stat; undefined when the output tree exceeds the bound. */
-export async function outputSignatureV1(root,outputs,maximumEntries){
- const rows=[];let budget=maximumEntries;
+/** 🖊 Signature of a task's outputs by stat, hashed row by row as the tree is walked, so no entry ceiling and no list of rows is needed however many files the outputs hold. */
+export async function outputSignatureV1(root,outputs){
+ const hash=createHash("sha256");let first=true;
+ const row=text=>{if(!first)hash.update("\n");first=false;hash.update(text);};
  const walk=async rel=>{
-  let status;try{status=await lstat(root+"/"+rel);}catch(error){if(missing(error)){rows.push(rel+"\0missing");return true;}throw error;}
-  rows.push(rel+"\0"+status.mtimeMs+"\0"+status.size+"\0"+status.ino);
-  if(--budget<0)return false;
-  if(status.isDirectory())for(const name of(await readdir(root+"/"+rel)).sort())if(!(await walk(rel+"/"+name)))return false;
-  return true;
+  let status;try{status=await lstat(root+"/"+rel);}catch(error){if(missing(error)){row(rel+"\0missing");return;}throw error;}
+  row(rel+"\0"+status.mtimeMs+"\0"+status.size+"\0"+status.ino);
+  if(status.isDirectory())for(const name of(await readdir(root+"/"+rel)).sort())await walk(rel+"/"+name);
  };
- for(const output of outputs)if(!(await walk(output)))return undefined;
- return sha(rows.join("\n"));
+ for(const output of outputs)await walk(output);
+ return hash.digest("hex");
 }

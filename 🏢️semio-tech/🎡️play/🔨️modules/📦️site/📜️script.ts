@@ -5,10 +5,10 @@ import { PLAY_HOST } from "../🧩️runtime/🟦️.ts";
 import { publishPlayPageCohortV1 } from "./📄pages/📦️publication/🟦️.ts";
 import { runBuildScript, runMapTilesScript, runBundleSiteScript, runVerifyScript } from "./🟦️.ts";
 
-/** 🚀️ `build`: the whole play release as ONE build driver — the components of every pane's closure in one Cargo pass per workspace, each streamed through
+/** 🚀️ `build`: the whole play release as ONE build driver, then the pages assembly — the components of every pane's closure in one Cargo pass per workspace, each streamed through
  * describe, transpile, `wasm-opt` and its module probe as it links; the descriptor emitter, fonts, browser support, map tiles and the wasm-bindgen engines as
- * jobs under the same jobserver (the engines in the `wasm-release` lane, before the component passes); the Vite bundle as soon as its engines exist; and the
- * pages assembly once every module is published. The pipeline is declared in this project's `build` target metadata.
+ * jobs under the same jobserver (the engines in the `wasm-release` lane, before the component passes); the Vite bundle as soon as its engines exist; and, once the
+ * driver has published every module, the pages assembly. The pipeline is declared in this project's `build` target metadata.
  * @see ../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts
  * @see ../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts */
 class BuildScript extends BundleScript {

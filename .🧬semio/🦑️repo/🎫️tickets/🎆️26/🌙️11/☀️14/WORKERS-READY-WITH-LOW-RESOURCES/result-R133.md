@@ -1,0 +1,45 @@
+# R133: the slice lab (living report)
+
+Scripts: `☀️13/FLEET-ONE-MACHINE-SHARED-HOT-CACHE-AND-REMOTE-EXECUTION/🧰️scripts/R133/` (`seam.mjs` the codemod and patch table, `window.sh` the landing, `land.mjs`/`restore.mjs`, `overlay.ts` the staged preload, `battery.sh`, `compare.py`, `exp1.sh` the first single-machine experiment).
+Code: `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🔬️slice-lab/` (library `🟦️.ts`, command `📜️script.ts`, machine driver `👷️machine`, `🧬️schema`, `🧪️tests`) and the resolver `🧰️framework/🔨️modules/🏃️process/🏗️build/🏠️machine-state/`.
+
+## Rerun (after the seam landing, see "State")
+
+```
+cd /Users/ueli/Documents/semio && .cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🔬️slice-lab/📜️script.ts" run --memory=16384 --cores=8 --out=<dir>
+```
+`--memory=8192 --cores=4`, `--machines=2`, `--slice=a,b,...`, `--target=build`, `--timeout=1800`, `--lang=de`, `--keep`.
+
+## How a slice is selected (finding)
+
+The pipeline already has a declared selection: `BuildGraphSelectionV1` in `🕸️graph/🚪️admission` (`{kind:"all"}`, `{kind:"owners",projects,exclude,targets}`, `{kind:"tasks"}`), derived from the arguments by `buildInvocationGraphSelectionV1`; `repo run-many --projects=<names> --targets=<t>` is the `owners` selection and the admission closes the dependency closure of the named owners (`closeBuildOwnerAdmissionV1`). So no new selection notion is needed: the lab's `workspace` stage is `repo run-many --projects=<slice> --targets=build --dry-run`, the same entry and read as `repo run workspace:setup` (a `tasks` selection whose closure is the whole workspace), without executing the tasks. `--dry-run` is the honest skip: `workspace:setup` depends on `deps-*` targets that download toolchains and build crates; the lab cannot exercise task execution.
+
+## Walls (numbered, evidence)
+
+1. **`Unknown message key host-plan-roster`** (live tree, found by the first lab experiment, `exp1.sh`, 14:22 UTC). `🏡️resident/🏛️service/🌐️host/🟨️.mjs:240` names `host-plan-roster` for a roster plan (`*:*` target); the message table of `🏡️resident/🧬️schema/🔣️.json` has `host-plan` but not `host-plan-roster`. The service dies on its first progress line of such a plan with `request-failed 5e493b95`. Fix (landing 1): the two texts and the law test `🏡️resident/🧪️tests/🔤️plan-keys` (red before: key missing in English and German).
+2. **The machine state is not injectable.** `<checkout>/.cache` is spelled at 163 sites of the build library and the process module, the partition directories come from `policy.partitions[id].directory`, ready/slice-report/graph-costs/cursor directories from schema constants. Fix (landing 1, step 1 of the seam): `machinePathV1(root, ...segments)` in `🏃️process/🏗️build/🏠️machine-state` (schema first), 110 files rewritten by an anchored script (`seam.mjs`), law test `🏠️machine-state/🧪️tests/🔒️spelling` (no `join/resolve(<root>, ".cache"|".nx")` outside the resolver, red before: 164 offenders).
+3. **The runtime directory of the resident service silently falls back to a shared one.** `hostEndpointsV1` (`🏡️resident/📨️protocol/📍️endpoint/🏠️host`) uses `$XDG_RUNTIME_DIR` or `$TMPDIR`, but when `<dir>/semio-repo/<uid>/h-<tag>.sock` exceeds 96 bytes it uses `/tmp/semio-repo/<uid>` (seen in `exp1`: the service log was under `/tmp/semio-repo/501/` although `XDG_RUNTIME_DIR` was set). The tag is the implementation digest, not the checkout or the state root: two machines (or a lab machine and a worker) of one implementation and one user that fall back share one service. The lab gives every machine a short runtime directory (`/tmp/sl-<id><n>`); the fallback itself is open.
+4. **The resident service outlives the command that started it** (`repo` started pid 38964 detached; it kept running after exit 1). The lab finds its processes by the environment marker `SEMIO_SLICE_LAB_ID` (`ps -E`) and stops them; open: a command that starts a service for a machine-scoped runtime directory should say so.
+5. **Files that are evaluated as standalone text cannot import the resolver.** `🔭️witness/🟨️.mjs` is injected into a world-witness child; the import made 10 of 13 of its tests fail (`machinePathV1 is not defined`). Its `.cache` is an ambient-tree exclusion, not a state path: exempt in the law test (`config.root`).
+6. **A staged preload cannot show the seam to the service.** The resident service loads the library through `semio-source:` (sealed sources), not through the Bun plugin, so a pre-landing run of the real path with the staged seam would have written the live checkout's state: the lab is only run after landing 1.
+7. **Load.** The machine had load averages 25 to 65 during the work (fleet of agents); tests with the 5000 ms default time out at random (`🏗️build/📊️reporting` 5 of 5 pass at 14:12, 2 of 6 at 14:35 on the unchanged tree). Battery comparisons need a retry of the files that look worse.
+
+8. **An empty state root fails before any owner: `ENOENT lstat <state>/b`.** The workspace stage assumes the `b/`, `b/c`, `f/` skeleton that the `native` stage creates; the lab (which does not run `native`) creates the skeleton (`provision` in its policy) and says so. Open: the resident service should create or refuse with a text instead of an internal error.
+9. **A selected scope never was a small read (the most important wall).** `loadBuildGraphOnceV1` cut every scope other than `all` from the sealed generation of the whole workspace and built that generation first: a 7-owner `run-many` on an empty machine admitted 4775 owners (run 4: 434 s, `taken 0 of 4775`, peak footprint 5333 MB of 6553 MB, load 30 to 40). Fixed in landing 2 (15:31 UTC): a selected scope is read over its owner closure alone by default (`graphSliceReadSelectedV1`; `SEMIO_BUILD_GRAPH_SLICE_READ=generation` restores the old cut for a staged rollout); test `🕸️graph/🧪️tests/🔪️slice-read`.
+   What the workers' `workspace` stage selects today: `repo run workspace:setup` is a `tasks` selection (`buildInvocationGraphSelectionV1`) whose task closure (`deps-*`, `repo-mcp:install`, `framework-os-mcp-rs:build`, ...) is, by the log, the whole workspace (4775 owners). After this change that selection is read over its admission closure alone, which is the same owners (it is not a smaller read for that target); the number g1-m10 really needs is the size of that closure, which the lab can now measure (`--slice=` with the same task is not expressible: `workspace:setup` is `run`, not `run-many`). Not measured yet.
+10. **Missing module in the stdio-ifc closure.** The service log of run 5 repeats `Cannot find module '.../🏗️ifc/📚️catalog/🛠️extract/🦀️render.ts'` (the directory has `📁️generate.ts`, `📦️pack.ts`, `📦️json-pack.ts`, `🏭️pack-all.ts`, `🟦️.ts`, no `🦀️render.ts`) during `command-source-packages`; the read retries it and goes on. Open (owner of the extract scripts).
+11. **The selected read spends its first 266+ s in `start` (source admission).** 144 `source-admission` and 9 `Resolving the packages of command sources` lines before the 415 s timeout, one capacity admission of 2048 MB at a time, no owner phase reached. The admission closure of `stdio-ifc-rs` (plus six more owners) inspects owners one by one. Not yet separated from machine load (30 to 41). Open: next lab runs with a smaller slice (norm crates only) to get past admission and reach the take pass.
+12. **Verdict assertions added.** All lab processes ran at nice 0 (spawned from the lab's own process, assertion in the verdict, 0 lowered); the live-state check reports only files the lab's processes hold open for writing (the shared `.cache/b/t` and `.cache/b/d` are opened read-only), 0 in run 5; images the machine attached are detached by the lab (4 left attached by the killed service in runs 4 and 5, detached by the lab, 0 afterwards).
+
+## Coordinator decisions of 15:3x and where they stand
+
+1. Selected read as real behaviour: done (wall 9). The switch stays only as the rollback.
+2. Slice assembly, validation, seal and publish: NOT done. The verdict prints "not exercised: assembly, validation, seal and publish of a slice generation, and a target run on the slice" on every run until it exists. Next step after the owner phase works on the lab.
+3. Normal priority: done (lab spawns from its own process; nice asserted 0 per sample).
+4. Runtime directory fallback and the service outliving its command: NOT done (walls 3 and 4 stay open; the lab works around both with a short per-machine runtime directory and marker-based stop).
+
+## State
+
+- Landed: 15:04 (seam, resolver, stage plan, host message, lab) and 15:31 (selected read). Entries in `landings.md`.
+- No lab run has reached the take pass of a slice yet; none reached `ready: true` with the real `workspace` stage. `--machines=2` runs with the trivial stage plan only.
+- Exposure through the `repo` catalogue (item 7) is not done: it needs the operations catalogue, the invocation schema, the memory-cut schema, the kernel list and the help snapshot together.

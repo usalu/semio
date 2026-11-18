@@ -64,6 +64,7 @@ impl<T: RetireOwned> RetirementCursor for HistoryPageRetirement<T> {
     semio_framework_value::native_retirement_reply!();
     fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{if let Some(active)=self.active.as_ref(){let mut demand=active.next_demand(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"history entry depth overflow"))?;return Ok(demand);}Ok(semio_framework_value::RetirementDemand {release_bytes:if self.original.is_empty(){self.original.next_empty_page_release_byte_demand().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"history backing extent unavailable"))?}else{0},depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
     fn terminal_is_empty(&self) -> bool { self.original.is_empty() && self.original.capacity() == 0 && self.active.is_none() }
+    fn next_computational_work(&self, body: usize) -> Result<u64, ValueError> { match self.active.as_ref() { Some(active) if !active.terminal_is_empty() => active.next_computational_work(body), _ => Ok(u64::from(!self.terminal_is_empty())) } }
     fn next_work_byte_demand(&self) -> Result<usize, ValueError> { self.active.as_ref().map_or(Ok(0), ControlledRetirement::next_copy_byte_demand) }
     fn next_birth_bytes(&self, copy: usize) -> Option<usize> { self.active.as_ref().map_or(Some(0), |active| active.next_capacity_byte_demand(copy).ok()) }
     fn next_close_byte_demand(&self) -> Option<usize> { self.active.as_ref().map_or_else(|| if self.original.is_empty() { self.original.next_empty_page_release_byte_demand() } else { Some(0) }, |active| active.next_release_byte_demand().ok()) }
@@ -114,6 +115,7 @@ impl RetirementCursor for GroupVisibilityRetirement {
     semio_framework_value::native_retirement_reply!();
     fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand {copy_bytes:usize::from(self.remaining!=0),depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
     fn terminal_is_empty(&self) -> bool { self.original.is_none() && self.remaining == 0 }
+    fn next_computational_work(&self, _: usize) -> Result<u64, ValueError> { Ok(u64::from(!self.terminal_is_empty())) }
     fn next_work_byte_demand(&self) -> Result<usize, ValueError> { Ok(usize::from(self.remaining != 0)) }
     fn next_birth_bytes(&self, _: usize) -> Option<usize> { Some(0) }
     fn next_close_byte_demand(&self) -> Option<usize> { Some(0) }

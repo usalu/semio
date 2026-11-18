@@ -5,7 +5,7 @@
     "FundingMovementProtocol": {
       "const": {
         "key": "caching.dependency-store.funding-moving",
-        "maximumReruns": 3,
+        "maximumMilliseconds": 7200000,
         "pausesMilliseconds": [2000, 8000, 30000],
         "signals": [
           "Original Bun dependency input changed during installation",

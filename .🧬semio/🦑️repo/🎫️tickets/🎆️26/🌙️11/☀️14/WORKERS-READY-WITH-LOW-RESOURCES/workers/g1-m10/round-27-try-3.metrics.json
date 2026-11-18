@@ -1,0 +1,29 @@
+{
+  "round": 27,
+  "try": 3,
+  "start": "2026-11-15T15:25:16+00:00",
+  "end": "2026-11-15T15:36:57+00:00",
+  "wall_seconds": 700.534006458,
+  "wrapper_rc": 0,
+  "native_rc": 75,
+  "native_rc_from_log": true,
+  "marker": false,
+  "ready": false,
+  "stop_reason": null,
+  "peak_run_rss_mib": 1070.578125,
+  "peak_slice_rss_mib": 2794.625,
+  "peak_system_rss_mib": 2280.21875,
+  "peak_at": {
+    "at": "2026-11-15T15:34:27+00:00",
+    "progress": "graph: waiting for memory headroom (1410 of 1488 MB reserved, 2 projects running): semio-framework-io-binary-source needs 701 MB and has waited 9 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75",
+    "run_mib": 53.421875,
+    "slice_mib": 2794.625
+  },
+  "closure_entries_before": 34989,
+  "closure_entries_after": 35031,
+  "dependency_wait_line": null,
+  "service_logs": [
+    "/var/folders/n2/f4tcy7ks04sb8njd18x7l1lh0000gn/T/semio-repo/501/host-6c83dc348341.log",
+    "/var/folders/n2/f4tcy7ks04sb8njd18x7l1lh0000gn/T/semio-repo/501/host-e9fb7654b9f7.log"
+  ]
+}

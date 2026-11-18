@@ -17,7 +17,7 @@ const edit=async(dir:string,count:number)=>{await sleep(20);for(let at=1;at<=cou
 
 test("the wave is a finite positive policy",()=>{expect(Number.isSafeInteger(GENERATION_POLICY_V1.ownerWave)).toBe(true);expect(GENERATION_POLICY_V1.ownerWave).toBeGreaterThan(0);});
 
-test("an uninterrupted refresh publishes one generation per wave and equals the oracle",async()=>{
+test("an uninterrupted refresh publishes one generation however many waves it derives and equals the oracle",async()=>{
  const dir=scratch();
  try{
   await seed(dir,ringFiles(COUNT+3));
@@ -28,7 +28,7 @@ test("an uninterrupted refresh publishes one generation per wave and equals the 
   world.log.length=0;
   const result=await world.refresh();
   expect(result.published).toBe(true);expect(result.computed).toBe(COUNT);
-  expect((await world.store.read())!.pointer.generation-before).toBe(3);
+  expect((await world.store.read())!.pointer.generation-before).toBe(1);
   expect(world.log.map(entry=>entry.full.length)).toEqual([GENERATION_POLICY_V1.ownerWave,GENERATION_POLICY_V1.ownerWave,7]);
   expect(new Set(world.log.flatMap(entry=>entry.full)).size).toBe(COUNT);
   const{generation:_g,membership:_m,...rest}=await world.store.assemble(result.current,{});
@@ -36,7 +36,7 @@ test("an uninterrupted refresh publishes one generation per wave and equals the 
  }finally{rmSync(dir,{recursive:true,force:true});}
 });
 
-test("the build tells the host the generation of every wave it published, in order, and a host that throws does not fail the build",async()=>{
+test("the build tells the host the generation it published once, the progress of every wave before it separately, and a host that throws does not fail the build",async()=>{
  const dir=scratch();
  try{
   await seed(dir,ringFiles(COUNT+3));
@@ -44,10 +44,10 @@ test("the build tells the host the generation of every wave it published, in ord
   await world.refresh();
   const before=(await world.store.read())!.pointer.generation,told:number[]=[];
   await edit(dir,COUNT);
-  const result=await world.refresh({published:generation=>{told.push(generation);if(told.length===2)throw new Error("host failed");}});
+  const result=await world.refresh({published:generation=>{told.push(generation);throw new Error("host failed");},wave:()=>{throw new Error("host failed");}});
   expect(result.published).toBe(true);
-  expect(told).toEqual([before+1,before+2,before+3]);
-  expect((await world.store.read())!.pointer.generation).toBe(before+3);
+  expect(told).toEqual([before+1]);
+  expect((await world.store.read())!.pointer.generation).toBe(before+1);
  }finally{rmSync(dir,{recursive:true,force:true});}
 });
 
@@ -62,10 +62,8 @@ test("a build cancelled after a wave keeps the finished wave and the next build 
   await edit(dir,COUNT);
   world.log.length=0;
   await expect(world.refresh({signal:controller.signal})).rejects.toThrow();
-  const kept=await world.store.read();
-  expect(kept!.pointer.generation-before).toBe(1);
-  expect(kept!.manifest!.built.dirty.length).toBe(GENERATION_POLICY_V1.ownerWave);
-  const finished=new Set(kept!.manifest!.built.dirty);
+  expect((await world.store.read())!.pointer.generation).toBe(before);
+  const finished=new Set(world.log.flatMap(entry=>entry.full).slice(0,GENERATION_POLICY_V1.ownerWave));
   world.log.length=0;
   const resumed=await world.refresh();
   expect(resumed.published).toBe(true);expect(resumed.computed).toBe(COUNT-GENERATION_POLICY_V1.ownerWave);
@@ -116,10 +114,10 @@ test("an implementation that changed while a read was cancelled after a wave res
    await world.refresh();calls=0;
    const before=(await world.store.read())!.pointer.generation;
    await edit(dir,COUNT);
+   world.log.length=0;
    await expect(world.refresh({signal:controller.signal})).rejects.toThrow();
-   const kept=await world.store.read();
-   expect(kept!.pointer.generation-before).toBe(1);
-   const finished=new Set(kept!.manifest!.built.dirty),log:Parameters<typeof createCompute>[1]=[];
+   expect((await world.store.read())!.pointer.generation).toBe(before);
+   const finished=new Set(world.log.flatMap(entry=>entry.full).slice(0,GENERATION_POLICY_V1.ownerWave)),log:Parameters<typeof createCompute>[1]=[];
    const resumed=await world.store.refresh({identity:IDENTITY,implementation,membership:createMembership(dir),compute:createCompute(dir,log)});
    expect(resumed.published).toBe(true);expect(resumed.computed).toBe(COUNT-GENERATION_POLICY_V1.ownerWave);
    expect(log.flatMap(entry=>entry.full).some(name=>finished.has(name))).toBe(false);

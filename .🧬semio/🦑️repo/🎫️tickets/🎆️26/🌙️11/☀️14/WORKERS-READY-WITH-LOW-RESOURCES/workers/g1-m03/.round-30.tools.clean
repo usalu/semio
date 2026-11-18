@@ -1,0 +1,1937 @@
+[capacity] admitted command: 1 job(s), 2048 MB reserved (7281 MB available, 2048 MB floor)
+[script] build:source-admission · Admitting the sources of the build
+[script] build:implementation-source · Reading the sources of the build implementation
+[repo] still working after 5 s; last phase started: source.served
+Funding the dependency store: the dependencies of every scope are installed into it now. A first funding takes many minutes on a small machine; the lines below report each scope
+[lease-order] Lock order violated: javascript-dependency-bindings:/Users/ueli/Documents/semio (namespace, rank 5) is requested while native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (image, rank 7) is held exclusive. Acquire locks in ascending rank or release native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d first.
+[repo] still working after 10 s; last phase started: source.served
+[repository:command] still running after 10 s
+[repo] still working after 20 s; last phase started: source.served
+[repository:command] still running after 20 s
+[repository:command] still running after 30 s
+[repository:command] still running after 40 s
+[script] repository:command · Checking declared package providers: 1 edges
+[script] repository:command · Checking declared package providers: 22 edges
+[script] repository:command · Checking declared package providers: 63 edges
+[script] repository:command · Checking declared package providers: 101 edges
+[script] repository:command · Checking declared package providers: 140 edges
+[script] repository:command · Checking declared package providers: 178 edges
+[script] repository:command · Checking declared package providers: 198 edges
+[script] repository:command · Checking declared package providers: 221 edges
+[script] repository:command · Checking declared package providers: 245 edges
+[script] repository:command · Checking declared package providers: 274 edges
+[script] repository:command · Checking declared package providers: 300 edges
+[repo] still working after 50 s; last phase started: source.served
+[script] repository:command · Checking declared package providers: 315 edges
+[script] repository:command · Checking declared package providers: 325 edges
+[script] repository:command · Checking declared package providers: 340 edges
+[script] repository:command · Checking declared package providers: 456 edges
+[script] repository:command · Checking declared package providers: 506 edges
+[script] repository:command · Checking declared package providers: 548 edges
+[script] repository:command · Checking declared package providers: 592 edges
+[script] repository:command · Checking declared package providers: 612 edges
+[script] repository:command · Checking declared package providers: 695 edges
+[script] repository:command · Checking declared package providers: 837 edges
+[script] repository:command · Checking declared package providers: 969 edges
+[repository:command] still running after 50 s
+[script] repository:command · Checking declared package providers: 1121 edges
+[script] repository:command · Checking declared package providers: 1186 edges
+[script] repository:command · Checking declared package providers: 1409 edges
+[script] repository:command · Checking declared package providers: 1541 edges
+[script] repository:command · Checking declared package providers: 1638 edges
+[script] repository:command · Checking declared package providers: 1673 edges
+[script] repository:command · Checking declared package providers: 1719 edges
+[script] repository:command · Checking declared package providers: 1781 edges
+[script] repository:command · Checking declared package providers: 1905 edges
+[script] repository:command · Checking declared package providers: 2060 edges
+[script] repository:command · Checking declared package providers: 2266 edges
+[script] repository:command · Checking declared package providers: 2427 edges
+[script] repository:command · Checking declared package providers: 2495 edges
+[script] repository:command · Checking declared package providers: 2521 edges
+[script] repository:command · Checking declared package providers: 2551 edges
+[script] repository:command · Checking declared package providers: 2618 edges
+[script] repository:command · Checking declared package providers: 2769 edges
+[script] repository:command · Checking declared package providers: 2945 edges
+[script] repository:command · Checking declared package providers: 3102 edges
+[script] repository:command · Checking declared package providers: 3298 edges
+[script] repository:command · Checking declared package providers: 3519 edges
+[script] repository:command · Checking declared package providers: 3613 edges
+[script] repository:command · Checking declared package providers: 3719 edges
+[script] repository:command · Checking declared package providers: 3889 edges
+[script] repository:command · Checking declared package providers: 3937 edges
+[script] repository:command · Checking declared package providers: 3965 edges
+[script] repository:command · Checking declared package providers: 4002 edges
+[script] repository:command · Checking declared package providers: 4058 edges
+[script] repository:command · Checking declared package providers: 4128 edges
+[script] repository:command · Checking declared package providers: 4270 edges
+[script] repository:command · Checking declared package providers: 4417 edges
+[script] repository:command · Checking declared package providers: 4633 edges
+[script] repository:command · Checking declared package providers: 4834 edges
+[script] repository:command · Checking declared package providers: 5058 edges
+[script] repository:command · Checking declared package providers: 5166 edges
+[script] repository:command · Checking declared package providers: 5357 edges
+[script] repository:command · Checking declared package providers: 5667 edges
+[script] repository:command · Checking declared package providers: 5848 edges
+[repository:command] still running after 60 s
+[script] repository:command · Checking declared package providers: 6047 edges
+[script] repository:command · Checking declared package providers: 6290 edges
+[script] repository:command · Checking declared package providers: 6465 edges
+[script] repository:command · Checking declared package providers: 6504 edges
+[script] repository:command · Checking declared package providers: 6544 edges
+[script] repository:command · Checking declared package providers: 6596 edges
+[script] repository:command · Checking declared package providers: 6650 edges
+[script] repository:command · Checking declared package providers: 6727 edges
+[script] repository:command · Checking declared package providers: 6756 edges
+[script] repository:command · Checking declared package providers: 6879 edges
+[script] repository:command · Checking declared package providers: 7181 edges
+[script] repository:command · Checking declared package providers: 7291 edges
+[script] repository:command · Checking declared package providers: 7391 edges
+[script] repository:command · Checking declared package providers: 7558 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[repository:command] still running after 70 s
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[repo] still working after 80 s; last phase started: source.served
+[repository:command] still running after 80 s
+[script] repository:command · Checking declared package providers: 1 edges
+[script] repository:command · Checking declared package providers: 39 edges
+[script] repository:command · Checking declared package providers: 89 edges
+[script] repository:command · Checking declared package providers: 111 edges
+[script] repository:command · Checking declared package providers: 150 edges
+[script] repository:command · Checking declared package providers: 191 edges
+[script] repository:command · Checking declared package providers: 243 edges
+[script] repository:command · Checking declared package providers: 272 edges
+[script] repository:command · Checking declared package providers: 302 edges
+[script] repository:command · Checking declared package providers: 321 edges
+[script] repository:command · Checking declared package providers: 339 edges
+[script] repository:command · Checking declared package providers: 487 edges
+[script] repository:command · Checking declared package providers: 524 edges
+[script] repository:command · Checking declared package providers: 596 edges
+[script] repository:command · Checking declared package providers: 641 edges
+[script] repository:command · Checking declared package providers: 769 edges
+[script] repository:command · Checking declared package providers: 955 edges
+[script] repository:command · Checking declared package providers: 1169 edges
+[script] repository:command · Checking declared package providers: 1227 edges
+[script] repository:command · Checking declared package providers: 1297 edges
+[script] repository:command · Checking declared package providers: 1339 edges
+[script] repository:command · Checking declared package providers: 1489 edges
+[script] repository:command · Checking declared package providers: 1670 edges
+[script] repository:command · Checking declared package providers: 1797 edges
+[script] repository:command · Checking declared package providers: 2013 edges
+[script] repository:command · Checking declared package providers: 2187 edges
+[script] repository:command · Checking declared package providers: 2228 edges
+[script] repository:command · Checking declared package providers: 2326 edges
+[script] repository:command · Checking declared package providers: 2427 edges
+[script] repository:command · Checking declared package providers: 2557 edges
+[script] repository:command · Checking declared package providers: 2711 edges
+[repository:command] still running after 90 s
+[script] repository:command · Checking declared package providers: 2937 edges
+[script] repository:command · Checking declared package providers: 3187 edges
+[script] repository:command · Checking declared package providers: 3456 edges
+[script] repository:command · Checking declared package providers: 3626 edges
+[script] repository:command · Checking declared package providers: 3891 edges
+[script] repository:command · Checking declared package providers: 3970 edges
+[script] repository:command · Checking declared package providers: 4053 edges
+[script] repository:command · Checking declared package providers: 4143 edges
+[script] repository:command · Checking declared package providers: 4208 edges
+[script] repository:command · Checking declared package providers: 4274 edges
+[script] repository:command · Checking declared package providers: 4388 edges
+[script] repository:command · Checking declared package providers: 4663 edges
+[script] repository:command · Checking declared package providers: 4965 edges
+[script] repository:command · Checking declared package providers: 5158 edges
+[script] repository:command · Checking declared package providers: 5392 edges
+[script] repository:command · Checking declared package providers: 5744 edges
+[script] repository:command · Checking declared package providers: 6032 edges
+[script] repository:command · Checking declared package providers: 6297 edges
+[script] repository:command · Checking declared package providers: 6502 edges
+[script] repository:command · Checking declared package providers: 6604 edges
+[script] repository:command · Checking declared package providers: 6757 edges
+[script] repository:command · Checking declared package providers: 7028 edges
+[script] repository:command · Checking declared package providers: 7291 edges
+[script] repository:command · Checking declared package providers: 7437 edges
+[script] repository:command · Checking declared package providers: 7587 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[repository:command] still running after 100 s
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[repo] still working after 110 s; last phase started: source.served
+[repository:command] still running after 110 s
+[repository:command] still running after 120 s
+[script] repository:command remains active on javascript-installed-paths:9019 (shared, 16 s)
+[script] repository:command remains active on javascript-installed-paths:11103 (shared, 21 s)
+[repository:command] still running after 130 s
+[script] repository:command remains active on javascript-installed-paths:14051 (shared, 26 s)
+[script] repository:command remains active on javascript-installed-paths:17119 (shared, 31 s)
+[repo] still working after 140 s; last phase started: source.served
+[repository:command] still running after 140 s
+[script] repository:command remains active on javascript-installed-paths:19965 (shared, 36 s)
+[script] repository:command remains active on javascript-installed-paths:23141 (shared, 41 s)
+[repository:command] still running after 150 s
+[script] repository:command remains active on javascript-installed-paths:26034 (shared, 46 s)
+[script] repository:command remains active on javascript-installed-paths:29212 (shared, 51 s)
+[repository:command] still running after 160 s
+[script] repository:command remains active on javascript-installed-paths:32171 (shared, 56 s)
+[script] repository:command remains active on javascript-installed-paths:35533 (shared, 61 s)
+[repo] still working after 170 s; last phase started: source.served
+[repository:command] still running after 170 s
+[script] repository:command remains active on javascript-installed-paths:38874 (shared, 66 s)
+[script] repository:command remains active on javascript-installed-paths:41553 (shared, 71 s)
+[repository:command] still running after 180 s
+[script] repository:command remains active on javascript-installed-paths:44421 (shared, 77 s)
+[script] repository:command remains active on javascript-installed-paths:47303 (shared, 82 s)
+[repository:command] still running after 190 s
+[script] repository:command remains active on javascript-installed-paths:49770 (shared, 87 s)
+[script] repository:command remains active on javascript-installed-paths:52942 (shared, 92 s)
+[repo] still working after 200 s; last phase started: source.served
+[repository:command] still running after 200 s
+[script] repository:command remains active on javascript-installed-paths:56037 (shared, 97 s)
+[script] repository:command remains active on javascript-installed-paths:59189 (shared, 102 s)
+[repository:command] still running after 210 s
+[script] repository:command remains active on javascript-installed-paths:62193 (shared, 107 s)
+[script] repository:command remains active on javascript-installed-paths:64998 (shared, 112 s)
+[repository:command] still running after 220 s
+[script] repository:command remains active on javascript-installed-paths:66686 (shared, 116 s)
+[script] repository:command · Checking declared package providers: 7748 edges
+[repo] still working after 230 s; last phase started: source.served
+[repository:command] still running after 230 s
+[repository:command] still running after 240 s
+[script] repository:command remains active on javascript-installed-paths:9004 (shared, 16 s)
+[script] repository:command remains active on javascript-installed-paths:11495 (shared, 21 s)
+[repository:command] still running after 250 s
+[script] repository:command remains active on javascript-installed-paths:14237 (shared, 26 s)
+[script] repository:command remains active on javascript-installed-paths:17047 (shared, 31 s)
+[repo] still working after 260 s; last phase started: source.served
+[repository:command] still running after 260 s
+[script] repository:command remains active on javascript-installed-paths:20114 (shared, 36 s)
+[script] repository:command remains active on javascript-installed-paths:23264 (shared, 41 s)
+[repository:command] still running after 270 s
+[script] repository:command remains active on javascript-installed-paths:26178 (shared, 46 s)
+[script] repository:command remains active on javascript-installed-paths:28897 (shared, 51 s)
+[repository:command] still running after 280 s
+[script] repository:command remains active on javascript-installed-paths:32028 (shared, 56 s)
+[script] repository:command remains active on javascript-installed-paths:35007 (shared, 61 s)
+[repo] still working after 290 s; last phase started: source.served
+[repository:command] still running after 290 s
+[script] repository:command remains active on javascript-installed-paths:37678 (shared, 66 s)
+[script] repository:command remains active on javascript-installed-paths:40395 (shared, 71 s)
+[repository:command] still running after 300 s
+[script] repository:command remains active on javascript-installed-paths:43299 (shared, 76 s)
+[script] repository:command remains active on javascript-installed-paths:46244 (shared, 81 s)
+[repository:command] still running after 310 s
+[script] repository:command remains active on javascript-installed-paths:49233 (shared, 86 s)
+[script] repository:command remains active on javascript-installed-paths:52015 (shared, 92 s)
+[repo] still working after 320 s; last phase started: source.served
+[repository:command] still running after 320 s
+[script] repository:command remains active on javascript-installed-paths:54483 (shared, 97 s)
+[script] repository:command remains active on javascript-installed-paths:57316 (shared, 102 s)
+[repository:command] still running after 330 s
+[script] repository:command remains active on javascript-installed-paths:60007 (shared, 107 s)
+[script] repository:command remains active on javascript-installed-paths:62756 (shared, 112 s)
+[repository:command] still running after 340 s
+[script] repository:command remains active on javascript-installed-paths:65510 (shared, 117 s)
+[repo] still working after 350 s; last phase started: source.served
+[script] repository:command remains active on javascript-installed-paths:66047 (shared, 118 s)
+[repository:command] still running after 350 s
+[repository:command] still running after 360 s
+[script] repository:command remains active on javascript-installed-paths:6898 (shared, 16 s)
+[repository:command] still running after 370 s
+[script] repository:command remains active on javascript-installed-paths:9643 (shared, 21 s)
+[script] repository:command remains active on javascript-installed-paths:12355 (shared, 26 s)
+[repo] still working after 380 s; last phase started: source.served
+[repository:command] still running after 380 s
+[script] repository:command remains active on javascript-installed-paths:14922 (shared, 31 s)
+[script] repository:command remains active on javascript-installed-paths:17925 (shared, 37 s)
+[repository:command] still running after 390 s
+[script] repository:command remains active on javascript-installed-paths:20114 (shared, 42 s)
+[script] repository:command remains active on javascript-installed-paths:22116 (shared, 47 s)
+[repository:command] still running after 400 s
+[script] repository:command remains active on javascript-installed-paths:24711 (shared, 52 s)
+[script] repository:command remains active on javascript-installed-paths:27404 (shared, 57 s)
+[repo] still working after 410 s; last phase started: source.served
+[repository:command] still running after 410 s
+[script] repository:command remains active on javascript-installed-paths:30369 (shared, 62 s)
+[script] repository:command remains active on javascript-installed-paths:32677 (shared, 67 s)
+[repository:command] still running after 420 s
+[script] repository:command remains active on javascript-installed-paths:35903 (shared, 72 s)
+[script] repository:command remains active on javascript-installed-paths:38782 (shared, 77 s)
+[repository:command] still running after 430 s
+[script] repository:command remains active on javascript-installed-paths:40948 (shared, 82 s)
+[script] repository:command remains active on javascript-installed-paths:43441 (shared, 87 s)
+[repo] still working after 440 s; last phase started: source.served
+[repository:command] still running after 440 s
+[script] repository:command remains active on javascript-installed-paths:46314 (shared, 92 s)
+[script] repository:command remains active on javascript-installed-paths:49292 (shared, 97 s)
+[repository:command] still running after 450 s
+[script] repository:command remains active on javascript-installed-paths:52243 (shared, 102 s)
+[script] repository:command remains active on javascript-installed-paths:55490 (shared, 107 s)
+[repository:command] still running after 460 s
+[script] repository:command remains active on javascript-installed-paths:57855 (shared, 112 s)
+[script] repository:command remains active on javascript-installed-paths:60267 (shared, 117 s)
+[repo] still working after 470 s; last phase started: source.served
+[repository:command] still running after 470 s
+[script] repository:command remains active on javascript-installed-paths:62780 (shared, 122 s)
+[script] repository:command remains active on javascript-installed-paths:65648 (shared, 128 s)
+[repository:command] still running after 480 s
+[script] repository:command remains active on javascript-installed-paths:66053 (shared, 128 s)
+[repository:command] still running after 490 s
+[repo] still working after 500 s; last phase started: source.served
+[repository:command] still running after 500 s
+[script] repository:command remains active on javascript-installed-paths:7639 (shared, 17 s)
+[script] repository:command remains active on javascript-installed-paths:10412 (shared, 22 s)
+[repository:command] still running after 510 s
+[script] repository:command remains active on javascript-installed-paths:12814 (shared, 27 s)
+[script] repository:command remains active on javascript-installed-paths:15747 (shared, 32 s)
+[repository:command] still running after 520 s
+[script] repository:command remains active on javascript-installed-paths:18731 (shared, 37 s)
+[script] repository:command remains active on javascript-installed-paths:21764 (shared, 42 s)
+[repo] still working after 530 s; last phase started: source.served
+[repository:command] still running after 530 s
+[script] repository:command remains active on javascript-installed-paths:24050 (shared, 47 s)
+[script] repository:command remains active on javascript-installed-paths:26556 (shared, 52 s)
+[repository:command] still running after 540 s
+[script] repository:command remains active on javascript-installed-paths:29220 (shared, 57 s)
+[script] repository:command remains active on javascript-installed-paths:32243 (shared, 62 s)
+[repository:command] still running after 550 s
+[script] repository:command remains active on javascript-installed-paths:35364 (shared, 68 s)
+[script] repository:command remains active on javascript-installed-paths:38644 (shared, 73 s)
+[repo] still working after 560 s; last phase started: source.served
+[repository:command] still running after 560 s
+[script] repository:command remains active on javascript-installed-paths:41760 (shared, 78 s)
+[script] repository:command remains active on javascript-installed-paths:44556 (shared, 83 s)
+[repository:command] still running after 570 s
+[script] repository:command remains active on javascript-installed-paths:47018 (shared, 88 s)
+[script] repository:command remains active on javascript-installed-paths:49731 (shared, 93 s)
+[repository:command] still running after 580 s
+[script] repository:command remains active on javascript-installed-paths:52858 (shared, 98 s)
+[repo] still working after 590 s; last phase started: source.served
+[script] repository:command remains active on javascript-installed-paths:55932 (shared, 103 s)
+[repository:command] still running after 590 s
+[script] repository:command remains active on javascript-installed-paths:59173 (shared, 108 s)
+[script] repository:command remains active on javascript-installed-paths:61906 (shared, 113 s)
+[repository:command] still running after 600 s
+[script] repository:command remains active on javascript-installed-paths:64225 (shared, 118 s)
+[repository:command] still running after 610 s
+[script] repository:command remains active on javascript-installed-paths:66012 (shared, 122 s)
+[repo] still working after 620 s; last phase started: source.served
+[repository:command] still running after 620 s
+[script] repository:command remains active on javascript-installed-paths:8299 (shared, 16 s)
+[repository:command] still running after 630 s
+[script] repository:command remains active on javascript-installed-paths:11556 (shared, 21 s)
+[script] repository:command remains active on javascript-installed-paths:14891 (shared, 26 s)
+[repository:command] still running after 640 s
+[script] repository:command remains active on javascript-installed-paths:18221 (shared, 31 s)
+[repo] still working after 650 s; last phase started: source.served
+[script] repository:command remains active on javascript-installed-paths:21062 (shared, 36 s)
+[repository:command] still running after 650 s
+[script] repository:command remains active on javascript-installed-paths:23561 (shared, 41 s)
+[repository:command] still running after 660 s
+[script] repository:command remains active on javascript-installed-paths:26656 (shared, 47 s)
+[script] repository:command remains active on javascript-installed-paths:30203 (shared, 52 s)
+[repository:command] still running after 670 s
+[script] repository:command remains active on javascript-installed-paths:33672 (shared, 57 s)
+[script] repository:command remains active on javascript-installed-paths:36525 (shared, 62 s)
+[repo] still working after 680 s; last phase started: source.served
+[repository:command] still running after 680 s
+[script] repository:command remains active on javascript-installed-paths:39659 (shared, 67 s)
+[script] repository:command remains active on javascript-installed-paths:42641 (shared, 72 s)
+[repository:command] still running after 690 s
+[script] repository:command remains active on javascript-installed-paths:45766 (shared, 77 s)
+[script] repository:command remains active on javascript-installed-paths:49092 (shared, 82 s)
+[repository:command] still running after 700 s
+[script] repository:command remains active on javascript-installed-paths:51879 (shared, 87 s)
+[script] repository:command remains active on javascript-installed-paths:54434 (shared, 93 s)
+[repo] still working after 710 s; last phase started: source.served
+[repository:command] still running after 710 s
+[script] repository:command remains active on javascript-installed-paths:56742 (shared, 98 s)
+[script] repository:command remains active on javascript-installed-paths:59624 (shared, 103 s)
+[repository:command] still running after 720 s
+[script] repository:command remains active on javascript-installed-paths:60934 (shared, 105 s)
+[repository:command] still running after 730 s
+[repo] still working after 740 s; last phase started: source.served
+[script] repository:command remains active on javascript-installed-paths:8994 (shared, 16 s)
+[repository:command] still running after 740 s
+[script] repository:command remains active on javascript-installed-paths:11699 (shared, 21 s)
+[script] repository:command remains active on javascript-installed-paths:14626 (shared, 26 s)
+[repository:command] still running after 750 s
+[script] repository:command remains active on javascript-installed-paths:17835 (shared, 31 s)
+[script] repository:command remains active on javascript-installed-paths:20788 (shared, 36 s)
+[repository:command] still running after 760 s
+[script] repository:command remains active on javascript-installed-paths:23750 (shared, 41 s)
+[repo] still working after 770 s; last phase started: source.served
+[script] repository:command remains active on javascript-installed-paths:26984 (shared, 46 s)
+[repository:command] still running after 770 s
+[script] repository:command remains active on javascript-installed-paths:29455 (shared, 51 s)
+[script] repository:command remains active on javascript-installed-paths:31694 (shared, 57 s)
+[repository:command] still running after 780 s
+[script] repository:command remains active on javascript-installed-paths:34362 (shared, 62 s)
+[script] repository:command remains active on javascript-installed-paths:37383 (shared, 67 s)
+[repository:command] still running after 790 s
+[script] repository:command remains active on javascript-installed-paths:40384 (shared, 72 s)
+[repo] still working after 800 s; last phase started: source.served
+[script] repository:command remains active on javascript-installed-paths:42898 (shared, 77 s)
+[repository:command] still running after 800 s
+[script] repository:command remains active on javascript-installed-paths:45891 (shared, 82 s)
+[repository:command] still running after 810 s
+[script] repository:command remains active on javascript-installed-paths:47717 (shared, 87 s)
+[script] repository:command remains active on javascript-installed-paths:49196 (shared, 92 s)
+[repository:command] still running after 820 s
+[script] repository:command remains active on javascript-installed-paths:51143 (shared, 97 s)
+[script] repository:command remains active on javascript-installed-paths:52911 (shared, 103 s)
+[repo] still working after 830 s; last phase started: source.served
+[repository:command] still running after 830 s
+[script] repository:command remains active on javascript-installed-paths:55182 (shared, 108 s)
+[script] repository:command remains active on javascript-installed-paths:57206 (shared, 113 s)
+[repository:command] still running after 840 s
+[script] repository:command remains active on javascript-installed-paths:59784 (shared, 118 s)
+[script] repository:command remains active on javascript-installed-paths:61583 (shared, 123 s)
+[repository:command] still running after 850 s
+[script] repository:command remains active on javascript-installed-paths:64005 (shared, 128 s)
+[repo] still working after 860 s; last phase started: source.served
+[repository:command] still running after 860 s
+[script] repository:command remains active on javascript-installed-paths:66249 (shared, 133 s)
+[repository:command] still running after 870 s
+[repository:command] still running after 880 s
+[repo] still working after 890 s; last phase started: source.served
+[repository:command] still running after 890 s
+[repository:command] still running after 900 s
+[repository:command] still running after 910 s
+[repo] still working after 920 s; last phase started: source.served
+[repository:command] still running after 920 s
+[script] repository:command · Checking declared package providers: 1 edges
+[script] repository:command · Checking declared package providers: 9 edges
+[script] repository:command · Checking declared package providers: 24 edges
+[script] repository:command · Checking declared package providers: 49 edges
+[script] repository:command · Checking declared package providers: 76 edges
+[script] repository:command · Checking declared package providers: 97 edges
+[script] repository:command · Checking declared package providers: 123 edges
+[script] repository:command · Checking declared package providers: 148 edges
+[script] repository:command · Checking declared package providers: 168 edges
+[script] repository:command · Checking declared package providers: 193 edges
+[script] repository:command · Checking declared package providers: 221 edges
+[script] repository:command · Checking declared package providers: 245 edges
+[script] repository:command · Checking declared package providers: 282 edges
+[script] repository:command · Checking declared package providers: 314 edges
+[script] repository:command · Checking declared package providers: 328 edges
+[script] repository:command · Checking declared package providers: 354 edges
+[script] repository:command · Checking declared package providers: 507 edges
+[script] repository:command · Checking declared package providers: 570 edges
+[script] repository:command · Checking declared package providers: 637 edges
+[script] repository:command · Checking declared package providers: 713 edges
+[script] repository:command · Checking declared package providers: 869 edges
+[script] repository:command · Checking declared package providers: 993 edges
+[script] repository:command · Checking declared package providers: 1179 edges
+[script] repository:command · Checking declared package providers: 1249 edges
+[repository:command] still running after 930 s
+[script] repository:command · Checking declared package providers: 1333 edges
+[script] repository:command · Checking declared package providers: 1393 edges
+[script] repository:command · Checking declared package providers: 1495 edges
+[script] repository:command · Checking declared package providers: 1664 edges
+[script] repository:command · Checking declared package providers: 1768 edges
+[script] repository:command · Checking declared package providers: 1918 edges
+[script] repository:command · Checking declared package providers: 2068 edges
+[script] repository:command · Checking declared package providers: 2259 edges
+[script] repository:command · Checking declared package providers: 2463 edges
+[script] repository:command · Checking declared package providers: 2528 edges
+[script] repository:command · Checking declared package providers: 2630 edges
+[script] repository:command · Checking declared package providers: 2740 edges
+[script] repository:command · Checking declared package providers: 2852 edges
+[script] repository:command · Checking declared package providers: 3045 edges
+[script] repository:command · Checking declared package providers: 3160 edges
+[script] repository:command · Checking declared package providers: 3288 edges
+[script] repository:command · Checking declared package providers: 3329 edges
+[script] repository:command · Checking declared package providers: 3410 edges
+[script] repository:command · Checking declared package providers: 3539 edges
+[script] repository:command · Checking declared package providers: 3602 edges
+[script] repository:command · Checking declared package providers: 3675 edges
+[script] repository:command · Checking declared package providers: 3891 edges
+[script] repository:command · Checking declared package providers: 3965 edges
+[script] repository:command · Checking declared package providers: 4047 edges
+[script] repository:command · Checking declared package providers: 4141 edges
+[script] repository:command · Checking declared package providers: 4270 edges
+[script] repository:command · Checking declared package providers: 4444 edges
+[script] repository:command · Checking declared package providers: 4725 edges
+[script] repository:command · Checking declared package providers: 5019 edges
+[script] repository:command · Checking declared package providers: 5153 edges
+[script] repository:command · Checking declared package providers: 5367 edges
+[script] repository:command · Checking declared package providers: 5744 edges
+[script] repository:command · Checking declared package providers: 6010 edges
+[script] repository:command · Checking declared package providers: 6234 edges
+[script] repository:command · Checking declared package providers: 6448 edges
+[script] repository:command · Checking declared package providers: 6484 edges
+[script] repository:command · Checking declared package providers: 6507 edges
+[script] repository:command · Checking declared package providers: 6527 edges
+[script] repository:command · Checking declared package providers: 6553 edges
+[repository:command] still running after 940 s
+[script] repository:command · Checking declared package providers: 6589 edges
+[script] repository:command · Checking declared package providers: 6648 edges
+[script] repository:command · Checking declared package providers: 6755 edges
+[script] repository:command · Checking declared package providers: 6858 edges
+[script] repository:command · Checking declared package providers: 6992 edges
+[script] repository:command · Checking declared package providers: 7155 edges
+[script] repository:command · Checking declared package providers: 7259 edges
+[script] repository:command · Checking declared package providers: 7347 edges
+[script] repository:command · Checking declared package providers: 7440 edges
+[script] repository:command · Checking declared package providers: 7631 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[repo] still working after 950 s; last phase started: source.served
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[repository:command] still running after 950 s
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[repository:command] still running after 960 s
+[repository:command] still running after 970 s
+[script] repository:command remains active on javascript-installed-paths:5808 (shared, 17 s)
+[script] repository:command remains active on javascript-installed-paths:7969 (shared, 22 s)
+[repo] still working after 980 s; last phase started: source.served
+[repository:command] still running after 980 s
+[script] repository:command remains active on javascript-installed-paths:9889 (shared, 27 s)
+[script] repository:command remains active on javascript-installed-paths:11966 (shared, 32 s)
+[repository:command] still running after 990 s
+[script] repository:command remains active on javascript-installed-paths:13501 (shared, 37 s)
+[script] repository:command remains active on javascript-installed-paths:15847 (shared, 42 s)
+[repository:command] still running after 1000 s
+[script] repository:command remains active on javascript-installed-paths:18380 (shared, 47 s)
+[repo] still working after 1010 s; last phase started: source.served
+[script] repository:command remains active on javascript-installed-paths:20184 (shared, 53 s)
+[repository:command] still running after 1010 s
+[script] repository:command remains active on javascript-installed-paths:22924 (shared, 58 s)
+[script] repository:command remains active on javascript-installed-paths:24938 (shared, 63 s)
+[repository:command] still running after 1020 s
+[script] repository:command remains active on javascript-installed-paths:27050 (shared, 68 s)
+[script] repository:command remains active on javascript-installed-paths:29288 (shared, 73 s)
+[repository:command] still running after 1030 s
+[script] repository:command remains active on javascript-installed-paths:31455 (shared, 78 s)
+[repo] still working after 1040 s; last phase started: source.served
+[script] repository:command remains active on javascript-installed-paths:33603 (shared, 84 s)
+[repository:command] still running after 1040 s
+[script] repository:command remains active on javascript-installed-paths:36431 (shared, 89 s)
+[script] repository:command remains active on javascript-installed-paths:39058 (shared, 94 s)
+[repository:command] still running after 1050 s
+[script] repository:command remains active on javascript-installed-paths:41037 (shared, 99 s)
+[script] repository:command remains active on javascript-installed-paths:42418 (shared, 104 s)
+[repository:command] still running after 1060 s
+[script] repository:command remains active on javascript-installed-paths:44566 (shared, 109 s)
+[repo] still working after 1070 s; last phase started: source.served
+[script] repository:command remains active on javascript-installed-paths:46966 (shared, 114 s)
+[repository:command] still running after 1070 s
+[script] repository:command remains active on javascript-installed-paths:49069 (shared, 119 s)
+[script] repository:command remains active on javascript-installed-paths:51386 (shared, 124 s)
+[repository:command] still running after 1080 s
+[script] repository:command remains active on javascript-installed-paths:54298 (shared, 129 s)
+[script] repository:command remains active on javascript-installed-paths:56582 (shared, 134 s)
+[repository:command] still running after 1090 s
+[script] repository:command remains active on javascript-installed-paths:58324 (shared, 139 s)
+[repo] still working after 1100 s; last phase started: source.served
+[script] repository:command remains active on javascript-installed-paths:60883 (shared, 145 s)
+[repository:command] still running after 1100 s
+[script] repository:command remains active on javascript-installed-paths:63499 (shared, 150 s)
+[script] repository:command remains active on javascript-installed-paths:66363 (shared, 155 s)
+[repository:command] still running after 1110 s
+[script] repository:command remains active on javascript-installed-paths:66686 (shared, 155 s)
+[script] repository:command · Checking declared package providers: 7748 edges
+[repository:command] still running after 1120 s
+[repo] still working after 1130 s; last phase started: source.served
+[repository:command] still running after 1130 s
+[script] repository:command remains active on javascript-installed-paths:5987 (shared, 16 s)
+[script] repository:command remains active on javascript-installed-paths:8706 (shared, 21 s)
+[repository:command] still running after 1140 s
+[script] repository:command remains active on javascript-installed-paths:10839 (shared, 26 s)
+[script] repository:command remains active on javascript-installed-paths:12444 (shared, 31 s)
+[repository:command] still running after 1150 s
+[script] repository:command remains active on javascript-installed-paths:14629 (shared, 36 s)
+[script] repository:command remains active on javascript-installed-paths:17319 (shared, 41 s)
+[repo] still working after 1160 s; last phase started: source.served
+[repository:command] still running after 1160 s
+[script] repository:command remains active on javascript-installed-paths:19403 (shared, 46 s)
+[script] repository:command remains active on javascript-installed-paths:21689 (shared, 51 s)
+[repository:command] still running after 1170 s
+[script] repository:command remains active on javascript-installed-paths:24152 (shared, 56 s)
+[script] repository:command remains active on javascript-installed-paths:26775 (shared, 61 s)
+[repository:command] still running after 1180 s
+[script] repository:command remains active on javascript-installed-paths:29137 (shared, 66 s)
+[script] repository:command remains active on javascript-installed-paths:31637 (shared, 72 s)
+[repo] still working after 1190 s; last phase started: source.served
+[repository:command] still running after 1190 s
+[script] repository:command remains active on javascript-installed-paths:33851 (shared, 77 s)
+[script] repository:command remains active on javascript-installed-paths:35947 (shared, 82 s)
+[repository:command] still running after 1200 s
+[script] repository:command remains active on javascript-installed-paths:38131 (shared, 87 s)
+[script] repository:command remains active on javascript-installed-paths:40938 (shared, 92 s)
+[repository:command] still running after 1210 s
+[script] repository:command remains active on javascript-installed-paths:43299 (shared, 97 s)
+[script] repository:command remains active on javascript-installed-paths:46114 (shared, 102 s)
+[repo] still working after 1220 s; last phase started: source.served
+[repository:command] still running after 1220 s
+[script] repository:command remains active on javascript-installed-paths:49041 (shared, 107 s)
+[script] repository:command remains active on javascript-installed-paths:51905 (shared, 112 s)
+[repository:command] still running after 1230 s
+[script] repository:command remains active on javascript-installed-paths:53987 (shared, 117 s)
+[script] repository:command remains active on javascript-installed-paths:56258 (shared, 122 s)
+[repository:command] still running after 1240 s
+[script] repository:command remains active on javascript-installed-paths:58393 (shared, 127 s)
+[repo] still working after 1250 s; last phase started: source.served
+[script] repository:command remains active on javascript-installed-paths:60657 (shared, 133 s)
+[repository:command] still running after 1250 s
+[script] repository:command remains active on javascript-installed-paths:63238 (shared, 138 s)
+[script] repository:command remains active on javascript-installed-paths:65571 (shared, 143 s)
+[repository:command] still running after 1260 s
+[script] repository:command remains active on javascript-installed-paths:66047 (shared, 144 s)
+[repository:command] still running after 1270 s
+[repo] still working after 1280 s; last phase started: source.served
+[repository:command] still running after 1280 s
+[script] repository:command remains active on javascript-installed-paths:7784 (shared, 16 s)
+[script] repository:command remains active on javascript-installed-paths:9643 (shared, 21 s)
+[repository:command] still running after 1290 s
+[script] repository:command remains active on javascript-installed-paths:12169 (shared, 26 s)
+[script] repository:command remains active on javascript-installed-paths:14974 (shared, 31 s)
+[repository:command] still running after 1300 s
+[script] repository:command remains active on javascript-installed-paths:17237 (shared, 36 s)
+[repo] still working after 1310 s; last phase started: source.served
+[script] repository:command remains active on javascript-installed-paths:20055 (shared, 41 s)
+[repository:command] still running after 1310 s
+[script] repository:command remains active on javascript-installed-paths:22474 (shared, 46 s)
+[script] repository:command remains active on javascript-installed-paths:24434 (shared, 52 s)
+[repository:command] still running after 1320 s
+[script] repository:command remains active on javascript-installed-paths:27145 (shared, 57 s)
+[script] repository:command remains active on javascript-installed-paths:30203 (shared, 62 s)
+[repository:command] still running after 1330 s
+[script] repository:command remains active on javascript-installed-paths:32973 (shared, 67 s)
+[repo] still working after 1340 s; last phase started: source.served
+[repository:command] still running after 1340 s
+[script] repository:command remains active on javascript-installed-paths:35759 (shared, 72 s)
+[script] repository:command remains active on javascript-installed-paths:38274 (shared, 77 s)
+[repository:command] still running after 1350 s
+[script] repository:command remains active on javascript-installed-paths:40948 (shared, 83 s)
+[script] repository:command remains active on javascript-installed-paths:43441 (shared, 88 s)
+[repository:command] still running after 1360 s
+[script] repository:command remains active on javascript-installed-paths:45462 (shared, 93 s)
+[script] repository:command remains active on javascript-installed-paths:47855 (shared, 98 s)
+[repo] still working after 1370 s; last phase started: source.served
+[repository:command] still running after 1370 s
+[script] repository:command remains active on javascript-installed-paths:50683 (shared, 103 s)
+[script] repository:command remains active on javascript-installed-paths:51959 (shared, 108 s)
+[repository:command] still running after 1380 s
+[script] repository:command remains active on javascript-installed-paths:53926 (shared, 113 s)
+[script] repository:command remains active on javascript-installed-paths:56481 (shared, 118 s)
+[repository:command] still running after 1390 s
+[script] repository:command remains active on javascript-installed-paths:59166 (shared, 123 s)
+[script] repository:command remains active on javascript-installed-paths:61581 (shared, 128 s)
+[repo] still working after 1400 s; last phase started: source.served
+[repository:command] still running after 1400 s
+[script] repository:command remains active on javascript-installed-paths:63772 (shared, 133 s)
+[repository:command] still running after 1410 s
+[script] repository:command remains active on javascript-installed-paths:66053 (shared, 138 s)
+[repository:command] still running after 1420 s
+[repo] still working after 1430 s; last phase started: source.served
+[script] repository:command remains active on javascript-installed-paths:7780 (shared, 16 s)
+[repository:command] still running after 1430 s
+[script] repository:command remains active on javascript-installed-paths:10119 (shared, 21 s)
+[script] repository:command remains active on javascript-installed-paths:12915 (shared, 26 s)
+[repository:command] still running after 1440 s
+[script] repository:command remains active on javascript-installed-paths:15883 (shared, 31 s)
+[script] repository:command remains active on javascript-installed-paths:18637 (shared, 36 s)
+[repository:command] still running after 1450 s
+[script] repository:command remains active on javascript-installed-paths:21192 (shared, 41 s)
+[repo] still working after 1460 s; last phase started: source.served
+[script] repository:command remains active on javascript-installed-paths:23951 (shared, 46 s)
+[repository:command] still running after 1460 s
+[script] repository:command remains active on javascript-installed-paths:26651 (shared, 51 s)
+[script] repository:command remains active on javascript-installed-paths:29398 (shared, 56 s)
+[repository:command] still running after 1470 s
+[script] repository:command remains active on javascript-installed-paths:32090 (shared, 62 s)
+[script] repository:command remains active on javascript-installed-paths:34911 (shared, 67 s)
+[repository:command] still running after 1480 s
+[script] repository:command remains active on javascript-installed-paths:37492 (shared, 72 s)
+[repo] still working after 1490 s; last phase started: source.served
+[repository:command] still running after 1490 s
+[script] repository:command remains active on javascript-installed-paths:40204 (shared, 77 s)
+[script] repository:command remains active on javascript-installed-paths:42853 (shared, 82 s)
+[repository:command] still running after 1500 s
+[script] repository:command remains active on javascript-installed-paths:44809 (shared, 87 s)
+[script] repository:command remains active on javascript-installed-paths:47138 (shared, 92 s)
+[repository:command] still running after 1510 s
+[script] repository:command remains active on javascript-installed-paths:49501 (shared, 97 s)
+[script] repository:command remains active on javascript-installed-paths:51370 (shared, 102 s)
+[repo] still working after 1520 s; last phase started: source.served
+[repository:command] still running after 1520 s
+[script] repository:command remains active on javascript-installed-paths:53608 (shared, 107 s)
+[script] repository:command remains active on javascript-installed-paths:56174 (shared, 113 s)
+[repository:command] still running after 1530 s
+[script] repository:command remains active on javascript-installed-paths:58388 (shared, 118 s)
+[script] repository:command remains active on javascript-installed-paths:59910 (shared, 124 s)
+[repository:command] still running after 1540 s
+[script] repository:command remains active on javascript-installed-paths:61346 (shared, 129 s)
+[script] repository:command remains active on javascript-installed-paths:62927 (shared, 134 s)
+[repo] still working after 1550 s; last phase started: source.served
+[repository:command] still running after 1550 s
+[script] repository:command remains active on javascript-installed-paths:64110 (shared, 139 s)
+[script] repository:command remains active on javascript-installed-paths:65814 (shared, 144 s)
+[repository:command] still running after 1560 s
+[repository:command] still running after 1570 s
+[script] repository:command remains active on javascript-installed-paths:66012 (shared, 145 s)
+[repo] still working after 1580 s; last phase started: source.served
+[repository:command] still running after 1580 s
+[script] repository:command remains active on javascript-installed-paths:4366 (shared, 17 s)
+[repository:command] still running after 1590 s
+[script] repository:command remains active on javascript-installed-paths:5832 (shared, 22 s)
+[script] repository:command remains active on javascript-installed-paths:7290 (shared, 27 s)
+[repository:command] still running after 1600 s
+[script] repository:command remains active on javascript-installed-paths:8603 (shared, 32 s)
+[repo] still working after 1610 s; last phase started: source.served
+[script] repository:command remains active on javascript-installed-paths:10098 (shared, 37 s)
+[repository:command] still running after 1610 s
+[script] repository:command remains active on javascript-installed-paths:11556 (shared, 42 s)
+[script] repository:command remains active on javascript-installed-paths:12782 (shared, 48 s)
+[repository:command] still running after 1620 s
+[script] repository:command remains active on javascript-installed-paths:14550 (shared, 53 s)
+[script] repository:command remains active on javascript-installed-paths:16801 (shared, 58 s)
+[repository:command] still running after 1630 s
+[script] repository:command remains active on javascript-installed-paths:19122 (shared, 63 s)
+[repo] still working after 1640 s; last phase started: source.served
+[script] repository:command remains active on javascript-installed-paths:21935 (shared, 68 s)
+[repository:command] still running after 1640 s
+[script] repository:command remains active on javascript-installed-paths:23831 (shared, 73 s)
+[script] repository:command remains active on javascript-installed-paths:25540 (shared, 78 s)
+[repository:command] still running after 1650 s
+[script] repository:command remains active on javascript-installed-paths:27888 (shared, 83 s)
+[script] repository:command remains active on javascript-installed-paths:29939 (shared, 88 s)
+[repository:command] still running after 1660 s
+[script] repository:command remains active on javascript-installed-paths:32509 (shared, 93 s)
+[repo] still working after 1670 s; last phase started: source.served
+[script] repository:command remains active on javascript-installed-paths:35211 (shared, 98 s)
+[repository:command] still running after 1670 s
+[script] repository:command remains active on javascript-installed-paths:37929 (shared, 103 s)
+[script] repository:command remains active on javascript-installed-paths:40483 (shared, 108 s)
+[repository:command] still running after 1680 s
+[script] repository:command remains active on javascript-installed-paths:43225 (shared, 113 s)
+[script] repository:command remains active on javascript-installed-paths:46069 (shared, 119 s)
+[repository:command] still running after 1690 s
+[script] repository:command remains active on javascript-installed-paths:48863 (shared, 124 s)
+[repo] still working after 1700 s; last phase started: source.served
+[script] repository:command remains active on javascript-installed-paths:51426 (shared, 129 s)
+[repository:command] still running after 1700 s
+[script] repository:command remains active on javascript-installed-paths:54434 (shared, 134 s)
+[script] repository:command remains active on javascript-installed-paths:57240 (shared, 139 s)
+[repository:command] still running after 1710 s
+[script] repository:command remains active on javascript-installed-paths:60718 (shared, 144 s)
+[script] repository:command remains active on javascript-installed-paths:60934 (shared, 145 s)
+[repository:command] still running after 1720 s
+[repo] still working after 1730 s; last phase started: source.served
+[repository:command] still running after 1730 s
+[script] repository:command remains active on javascript-installed-paths:7394 (shared, 16 s)
+[repository:command] still running after 1740 s
+[script] repository:command remains active on javascript-installed-paths:10013 (shared, 21 s)
+[script] repository:command remains active on javascript-installed-paths:12416 (shared, 27 s)
+[repository:command] still running after 1750 s
+[script] repository:command remains active on javascript-installed-paths:15130 (shared, 32 s)
+[script] repository:command remains active on javascript-installed-paths:18243 (shared, 37 s)
+[repo] still working after 1760 s; last phase started: source.served
+[repository:command] still running after 1760 s
+[script] repository:command remains active on javascript-installed-paths:20949 (shared, 42 s)
+[script] repository:command remains active on javascript-installed-paths:23415 (shared, 47 s)
+[repository:command] still running after 1770 s
+[script] repository:command remains active on javascript-installed-paths:26028 (shared, 52 s)
+[script] repository:command remains active on javascript-installed-paths:29196 (shared, 57 s)
+[repository:command] still running after 1780 s
+[script] repository:command remains active on javascript-installed-paths:32077 (shared, 62 s)
+[script] repository:command remains active on javascript-installed-paths:35155 (shared, 67 s)
+[repo] still working after 1790 s; last phase started: source.served
+[repository:command] still running after 1790 s
+[script] repository:command remains active on javascript-installed-paths:38034 (shared, 72 s)
+[script] repository:command remains active on javascript-installed-paths:40384 (shared, 77 s)
+[repository:command] still running after 1800 s
+[script] repository:command remains active on javascript-installed-paths:42261 (shared, 82 s)
+[script] repository:command remains active on javascript-installed-paths:44191 (shared, 87 s)
+[repository:command] still running after 1810 s
+[script] repository:command remains active on javascript-installed-paths:47000 (shared, 92 s)
+[script] repository:command remains active on javascript-installed-paths:49472 (shared, 97 s)
+[repo] still working after 1820 s; last phase started: source.served
+[repository:command] still running after 1820 s
+[script] repository:command remains active on javascript-installed-paths:51751 (shared, 103 s)
+[script] repository:command remains active on javascript-installed-paths:54290 (shared, 108 s)
+[repository:command] still running after 1830 s
+[script] repository:command remains active on javascript-installed-paths:56590 (shared, 113 s)
+[script] repository:command remains active on javascript-installed-paths:58697 (shared, 118 s)
+[repository:command] still running after 1840 s
+[script] repository:command remains active on javascript-installed-paths:61148 (shared, 123 s)
+[repo] still working after 1850 s; last phase started: source.served
+[script] repository:command remains active on javascript-installed-paths:64005 (shared, 129 s)
+[repository:command] still running after 1850 s
+[repository:command] still running after 1860 s
+[script] repository:command remains active on javascript-installed-paths:66249 (shared, 133 s)
+[repository:command] still running after 1870 s
+[repo] still working after 1880 s; last phase started: source.served
+[repository:command] still running after 1880 s
+[repository:command] still running after 1890 s
+[repository:command] still running after 1900 s
+[repo] still working after 1910 s; last phase started: source.served
+[repository:command] still running after 1910 s
+[repository:command] still running after 1920 s
+[repository:command] still running after 1930 s
+[repo] still working after 1940 s; last phase started: source.served
+[repository:command] still running after 1940 s
+[repository:command] still running after 1950 s
+[repository:command] still running after 1960 s
+[repo] still working after 1970 s; last phase started: source.served
+[repository:command] still running after 1970 s
+[script] repository:command · Checking declared package providers: 1 edges
+[script] repository:command · Checking declared package providers: 5 edges
+[script] repository:command · Checking declared package providers: 20 edges
+[script] repository:command · Checking declared package providers: 41 edges
+[script] repository:command · Checking declared package providers: 65 edges
+[script] repository:command · Checking declared package providers: 85 edges
+[script] repository:command · Checking declared package providers: 109 edges
+[script] repository:command · Checking declared package providers: 131 edges
+[script] repository:command · Checking declared package providers: 155 edges
+[script] repository:command · Checking declared package providers: 179 edges
+[script] repository:command · Checking declared package providers: 207 edges
+[script] repository:command · Checking declared package providers: 234 edges
+[script] repository:command · Checking declared package providers: 275 edges
+[script] repository:command · Checking declared package providers: 315 edges
+[script] repository:command · Checking declared package providers: 335 edges
+[script] repository:command · Checking declared package providers: 356 edges
+[script] repository:command · Checking declared package providers: 489 edges
+[script] repository:command · Checking declared package providers: 514 edges
+[script] repository:command · Checking declared package providers: 543 edges
+[script] repository:command · Checking declared package providers: 553 edges
+[script] repository:command · Checking declared package providers: 588 edges
+[repository:command] still running after 1980 s
+[script] repository:command · Checking declared package providers: 616 edges
+[script] repository:command · Checking declared package providers: 709 edges
+[script] repository:command · Checking declared package providers: 929 edges
+[script] repository:command · Checking declared package providers: 1137 edges
+[script] repository:command · Checking declared package providers: 1361 edges
+[script] repository:command · Checking declared package providers: 1517 edges
+[script] repository:command · Checking declared package providers: 1693 edges
+[script] repository:command · Checking declared package providers: 1789 edges
+[script] repository:command · Checking declared package providers: 1920 edges
+[script] repository:command · Checking declared package providers: 2096 edges
+[script] repository:command · Checking declared package providers: 2385 edges
+[script] repository:command · Checking declared package providers: 2524 edges
+[script] repository:command · Checking declared package providers: 2637 edges
+[script] repository:command · Checking declared package providers: 2794 edges
+[script] repository:command · Checking declared package providers: 2941 edges
+[script] repository:command · Checking declared package providers: 3075 edges
+[script] repository:command · Checking declared package providers: 3265 edges
+[script] repository:command · Checking declared package providers: 3435 edges
+[script] repository:command · Checking declared package providers: 3602 edges
+[script] repository:command · Checking declared package providers: 3748 edges
+[script] repository:command · Checking declared package providers: 3901 edges
+[script] repository:command · Checking declared package providers: 3954 edges
+[script] repository:command · Checking declared package providers: 4041 edges
+[script] repository:command · Checking declared package providers: 4122 edges
+[script] repository:command · Checking declared package providers: 4270 edges
+[script] repository:command · Checking declared package providers: 4448 edges
+[script] repository:command · Checking declared package providers: 4749 edges
+[script] repository:command · Checking declared package providers: 5038 edges
+[script] repository:command · Checking declared package providers: 5154 edges
+[script] repository:command · Checking declared package providers: 5300 edges
+[script] repository:command · Checking declared package providers: 5539 edges
+[script] repository:command · Checking declared package providers: 5787 edges
+[script] repository:command · Checking declared package providers: 6022 edges
+[script] repository:command · Checking declared package providers: 6234 edges
+[script] repository:command · Checking declared package providers: 6448 edges
+[script] repository:command · Checking declared package providers: 6498 edges
+[script] repository:command · Checking declared package providers: 6535 edges
+[script] repository:command · Checking declared package providers: 6563 edges
+[script] repository:command · Checking declared package providers: 6595 edges
+[script] repository:command · Checking declared package providers: 6613 edges
+[repository:command] still running after 1990 s
+[script] repository:command · Checking declared package providers: 6673 edges
+[script] repository:command · Checking declared package providers: 6835 edges
+[script] repository:command · Checking declared package providers: 7058 edges
+[script] repository:command · Checking declared package providers: 7247 edges
+[script] repository:command · Checking declared package providers: 7311 edges
+[script] repository:command · Checking declared package providers: 7395 edges
+[script] repository:command · Checking declared package providers: 7596 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[repo] still working after 2000 s; last phase started: source.served
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[repository:command] still running after 2000 s
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command remains active on javascript-current-bindings:retained:327543 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:327607 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:327671 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:327735 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:327799 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:327863 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:327927 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:327991 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:328055 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:328119 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:328183 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:328247 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:328311 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:328375 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:328439 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:328503 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:328567 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:328631 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:328695 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:328759 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:328823 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:328887 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:328951 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:329015 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:329079 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:329143 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:329207 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:329271 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:329397 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:329461 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:329525 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:329589 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:329653 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:329717 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:329781 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:329845 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:329909 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:329973 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:330037 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:330101 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:330165 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:330229 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:330293 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:330357 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:330421 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:330485 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:330549 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:330613 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:330677 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:330741 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:330805 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:330869 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:330933 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:330997 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:331061 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:331125 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:331251 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:331315 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:331379 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:331443 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:331507 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:331571 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:331635 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:331699 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:331763 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:331827 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:331891 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:331955 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:332019 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:332083 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:332147 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:332211 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:332275 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:332339 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:332403 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:332467 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:332531 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:332595 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:332659 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:332723 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:332787 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:332851 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:332915 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:332979 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:333105 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:333169 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:333233 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:333297 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:333361 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:333425 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:333489 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:333553 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:333617 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:333681 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:333745 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:333809 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:333873 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:333937 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:334001 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:334065 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:334129 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:334193 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:334257 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:334321 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:334385 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:334449 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:334513 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:334577 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:334641 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:334705 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:334769 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:334833 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:334959 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:335023 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:335087 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:335151 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:335215 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:335279 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:335343 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:335407 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:335471 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:335535 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:335599 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:335663 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:335727 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:335791 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:335855 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:335919 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:335983 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:336047 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:336111 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:336175 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:336239 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:336303 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:336367 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:336431 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:336495 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:336559 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:336623 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:336687 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:336813 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:336877 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:336941 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:337005 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:337069 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:337133 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:337197 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:337261 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:337325 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:337389 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:337453 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:337517 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:337581 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:337645 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:337709 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:337773 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:337837 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:337901 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:337965 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:338029 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:338093 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:338157 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:338221 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:338285 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:338349 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:338413 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:338477 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:338541 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:338667 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:338731 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:338795 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:338859 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:338923 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:338987 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:339051 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:339115 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:339179 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:339243 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:339307 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:339371 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:339435 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:339499 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:339563 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:339627 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:339691 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:339755 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:339819 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:339883 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:339947 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:340011 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:340075 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:340139 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:340203 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:340267 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:340331 (exclusive, 31 s)
+[script] repository:command remains active on javascript-current-bindings:retained:340395 (exclusive, 31 s)
+[script] repository:command · Checking declared package providers: 1 edges
+[script] repository:command · Checking declared package providers: 72 edges
+[script] repository:command · Checking declared package providers: 148 edges
+[script] repository:command · Checking declared package providers: 219 edges
+[script] repository:command · Checking declared package providers: 296 edges
+[script] repository:command · Checking declared package providers: 340 edges
+[script] repository:command · Checking declared package providers: 525 edges
+[script] repository:command · Checking declared package providers: 653 edges
+[script] repository:command · Checking declared package providers: 934 edges
+[script] repository:command · Checking declared package providers: 1097 edges
+[script] repository:command · Checking declared package providers: 1235 edges
+[script] repository:command · Checking declared package providers: 1401 edges
+[script] repository:command · Checking declared package providers: 1465 edges
+[script] repository:command · Checking declared package providers: 1573 edges
+[script] repository:command · Checking declared package providers: 1749 edges
+[script] repository:command · Checking declared package providers: 1897 edges
+[script] repository:command · Checking declared package providers: 1929 edges
+[script] repository:command · Checking declared package providers: 1985 edges
+[script] repository:command · Checking declared package providers: 2037 edges
+[script] repository:command · Checking declared package providers: 2205 edges
+[script] repository:command · Checking declared package providers: 2490 edges
+[script] repository:command · Checking declared package providers: 2609 edges
+[script] repository:command · Checking declared package providers: 2797 edges
+[script] repository:command · Checking declared package providers: 3060 edges
+[script] repository:command · Checking declared package providers: 3340 edges
+[script] repository:command · Checking declared package providers: 3602 edges
+[script] repository:command · Checking declared package providers: 3864 edges
+[script] repository:command · Checking declared package providers: 4000 edges
+[script] repository:command · Checking declared package providers: 4084 edges
+[script] repository:command · Checking declared package providers: 4182 edges
+[script] repository:command · Checking declared package providers: 4346 edges
+[script] repository:command · Checking declared package providers: 4410 edges
+[script] repository:command · Checking declared package providers: 4430 edges
+[script] repository:command · Checking declared package providers: 4452 edges
+[repository:command] still running after 2010 s
+[script] repository:command · Checking declared package providers: 4585 edges
+[script] repository:command · Checking declared package providers: 4921 edges
+[script] repository:command · Checking declared package providers: 5162 edges
+[script] repository:command · Checking declared package providers: 5465 edges
+[script] repository:command · Checking declared package providers: 5839 edges
+[script] repository:command · Checking declared package providers: 6135 edges
+[script] repository:command · Checking declared package providers: 6457 edges
+[script] repository:command · Checking declared package providers: 6552 edges
+[script] repository:command · Checking declared package providers: 6647 edges
+[script] repository:command · Checking declared package providers: 6834 edges
+[script] repository:command · Checking declared package providers: 7145 edges
+[script] repository:command · Checking declared package providers: 7307 edges
+[script] repository:command · Checking declared package providers: 7467 edges
+[script] repository:command · Checking declared package providers: 7600 edges
+[script] repository:command · Checking declared package providers: 7635 edges
+[script] repository:command · Checking declared package providers: 7731 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[repository:command] still running after 2020 s
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[repo] still working after 2030 s; last phase started: source.served
+[repository:command] still running after 2030 s
+[script] repository:command · Checking declared package providers: 1 edges
+[script] repository:command · Checking declared package providers: 67 edges
+[script] repository:command · Checking declared package providers: 135 edges
+[script] repository:command · Checking declared package providers: 200 edges
+[script] repository:command · Checking declared package providers: 264 edges
+[script] repository:command · Checking declared package providers: 321 edges
+[script] repository:command · Checking declared package providers: 456 edges
+[script] repository:command · Checking declared package providers: 551 edges
+[script] repository:command · Checking declared package providers: 653 edges
+[script] repository:command · Checking declared package providers: 761 edges
+[script] repository:command · Checking declared package providers: 841 edges
+[script] repository:command · Checking declared package providers: 939 edges
+[script] repository:command · Checking declared package providers: 1125 edges
+[script] repository:command · Checking declared package providers: 1371 edges
+[script] repository:command · Checking declared package providers: 1609 edges
+[script] repository:command · Checking declared package providers: 1781 edges
+[script] repository:command · Checking declared package providers: 2001 edges
+[repository:command] still running after 2040 s
+[script] repository:command · Checking declared package providers: 2325 edges
+[script] repository:command · Checking declared package providers: 2504 edges
+[script] repository:command · Checking declared package providers: 2628 edges
+[script] repository:command · Checking declared package providers: 2812 edges
+[script] repository:command · Checking declared package providers: 3071 edges
+[script] repository:command · Checking declared package providers: 3329 edges
+[script] repository:command · Checking declared package providers: 3578 edges
+[script] repository:command · Checking declared package providers: 3786 edges
+[script] repository:command · Checking declared package providers: 3971 edges
+[script] repository:command · Checking declared package providers: 4074 edges
+[script] repository:command · Checking declared package providers: 4215 edges
+[script] repository:command · Checking declared package providers: 4395 edges
+[script] repository:command · Checking declared package providers: 4682 edges
+[script] repository:command · Checking declared package providers: 4825 edges
+[script] repository:command · Checking declared package providers: 5000 edges
+[script] repository:command · Checking declared package providers: 5126 edges
+[script] repository:command · Checking declared package providers: 5282 edges
+[script] repository:command · Checking declared package providers: 5685 edges
+[script] repository:command · Checking declared package providers: 5990 edges
+[script] repository:command · Checking declared package providers: 6293 edges
+[script] repository:command · Checking declared package providers: 6493 edges
+[script] repository:command · Checking declared package providers: 6579 edges
+[script] repository:command · Checking declared package providers: 6660 edges
+[script] repository:command · Checking declared package providers: 6871 edges
+[script] repository:command · Checking declared package providers: 7207 edges
+[script] repository:command · Checking declared package providers: 7360 edges
+[script] repository:command · Checking declared package providers: 7615 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[repository:command] still running after 2050 s
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command remains active on javascript-current-bindings:retained:327543 (exclusive, 23 s)
+[script] repository:command remains active on javascript-current-bindings:retained:327607 (exclusive, 23 s)
+[script] repository:command remains active on javascript-current-bindings:retained:327671 (exclusive, 23 s)
+[script] repository:command remains active on javascript-current-bindings:retained:327735 (exclusive, 23 s)
+[script] repository:command remains active on javascript-current-bindings:retained:327799 (exclusive, 23 s)
+[script] repository:command remains active on javascript-current-bindings:retained:327863 (exclusive, 23 s)
+[script] repository:command remains active on javascript-current-bindings:retained:327927 (exclusive, 23 s)
+[script] repository:command remains active on javascript-current-bindings:retained:327991 (exclusive, 23 s)
+[script] repository:command remains active on javascript-current-bindings:retained:328055 (exclusive, 23 s)
+[script] repository:command remains active on javascript-current-bindings:retained:328119 (exclusive, 23 s)
+[script] repository:command remains active on javascript-current-bindings:retained:328183 (exclusive, 23 s)
+[script] repository:command remains active on javascript-current-bindings:retained:328247 (exclusive, 23 s)
+[script] repository:command remains active on javascript-current-bindings:retained:328311 (exclusive, 23 s)
+[script] repository:command remains active on javascript-current-bindings:retained:328375 (exclusive, 23 s)
+[script] repository:command remains active on javascript-current-bindings:retained:328439 (exclusive, 23 s)
+[script] repository:command remains active on javascript-current-bindings:retained:328503 (exclusive, 23 s)
+[script] repository:command remains active on javascript-current-bindings:retained:328567 (exclusive, 23 s)
+[script] repository:command remains active on javascript-current-bindings:retained:328631 (exclusive, 23 s)
+[script] repository:command remains active on javascript-current-bindings:retained:328695 (exclusive, 23 s)
+[script] repository:command remains active on javascript-current-bindings:retained:328759 (exclusive, 23 s)
+[script] repository:command remains active on javascript-current-bindings:retained:328823 (exclusive, 23 s)
+[script] repository:command remains active on javascript-current-bindings:retained:328887 (exclusive, 23 s)
+[script] repository:command remains active on javascript-current-bindings:retained:328951 (exclusive, 23 s)
+[script] repository:command remains active on javascript-current-bindings:retained:329015 (exclusive, 23 s)
+[script] repository:command remains active on javascript-current-bindings:retained:329079 (exclusive, 23 s)
+[script] repository:command remains active on javascript-current-bindings:retained:329143 (exclusive, 23 s)
+[script] repository:command remains active on javascript-current-bindings:retained:329207 (exclusive, 23 s)
+[script] repository:command remains active on javascript-current-bindings:retained:329271 (exclusive, 23 s)
+[script] repository:command remains active on javascript-current-bindings:retained:329397 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:329461 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:329525 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:329589 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:329653 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:329717 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:329781 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:329845 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:329909 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:329973 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:330037 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:330101 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:330165 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:330229 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:330293 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:330357 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:330421 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:330485 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:330549 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:330613 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:330677 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:330741 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:330805 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:330869 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:330933 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:330997 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:331061 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:331125 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:331251 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:331315 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:331379 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:331443 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:331507 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:331571 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:331635 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:331699 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:331763 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:331827 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:331891 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:331955 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:332019 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:332083 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:332147 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:332211 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:332275 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:332339 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:332403 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:332467 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:332531 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:332595 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:332659 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:332723 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:332787 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:332851 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:332915 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:332979 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:333105 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:333169 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:333233 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:333297 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:333361 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:333425 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:333489 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:333553 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:333617 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:333681 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:333745 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:333809 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:333873 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:333937 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:334001 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:334065 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:334129 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:334193 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:334257 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:334321 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:334385 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:334449 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:334513 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:334577 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:334641 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:334705 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:334769 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:334833 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:334959 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:335023 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:335087 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:335151 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:335215 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:335279 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:335343 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:335407 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:335471 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:335535 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:335599 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:335663 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:335727 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:335791 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:335855 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:335919 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:335983 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:336047 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:336111 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:336175 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:336239 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:336303 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:336367 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:336431 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:336495 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:336559 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:336623 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:336687 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:336813 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:336877 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:336941 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:337005 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:337069 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:337133 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:337197 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:337261 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:337325 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:337389 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:337453 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:337517 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:337581 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:337645 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:337709 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:337773 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:337837 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:337901 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:337965 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:338029 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:338093 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:338157 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:338221 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:338285 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:338349 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:338413 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:338477 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:338541 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:338667 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:338731 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:338795 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:338859 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:338923 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:338987 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:339051 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:339115 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:339179 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:339243 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:339307 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:339371 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:339435 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:339499 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:339563 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:339627 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:339691 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:339755 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:339819 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:339883 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:339947 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:340011 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:340075 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:340139 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:340203 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:340267 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:340331 (exclusive, 24 s)
+[script] repository:command remains active on javascript-current-bindings:retained:340395 (exclusive, 24 s)
+[script] repository:command · Checking declared package providers: 1 edges
+[repo] still working after 2060 s; last phase started: source.served
+[script] repository:command · Checking declared package providers: 67 edges
+[script] repository:command · Checking declared package providers: 124 edges
+[script] repository:command · Checking declared package providers: 150 edges
+[script] repository:command · Checking declared package providers: 164 edges
+[script] repository:command · Checking declared package providers: 191 edges
+[script] repository:command · Checking declared package providers: 225 edges
+[script] repository:command · Checking declared package providers: 232 edges
+[script] repository:command · Checking declared package providers: 236 edges
+[script] repository:command · Checking declared package providers: 255 edges
+[script] repository:command · Checking declared package providers: 310 edges
+[repository:command] still running after 2060 s
+[script] repository:command · Checking declared package providers: 341 edges
+[script] repository:command · Checking declared package providers: 515 edges
+[script] repository:command · Checking declared package providers: 610 edges
+[script] repository:command · Checking declared package providers: 751 edges
+[script] repository:command · Checking declared package providers: 981 edges
+[script] repository:command · Checking declared package providers: 1191 edges
+[script] repository:command · Checking declared package providers: 1397 edges
+[script] repository:command · Checking declared package providers: 1585 edges
+[script] repository:command · Checking declared package providers: 1725 edges
+[script] repository:command · Checking declared package providers: 1862 edges
+[script] repository:command · Checking declared package providers: 1967 edges
+[script] repository:command · Checking declared package providers: 2037 edges
+[script] repository:command · Checking declared package providers: 2074 edges
+[script] repository:command · Checking declared package providers: 2171 edges
+[script] repository:command · Checking declared package providers: 2345 edges
+[script] repository:command · Checking declared package providers: 2480 edges
+[script] repository:command · Checking declared package providers: 2551 edges
+[script] repository:command · Checking declared package providers: 2659 edges
+[script] repository:command · Checking declared package providers: 2807 edges
+[script] repository:command · Checking declared package providers: 3050 edges
+[script] repository:command · Checking declared package providers: 3260 edges
+[script] repository:command · Checking declared package providers: 3557 edges
+[script] repository:command · Checking declared package providers: 3749 edges
+[script] repository:command · Checking declared package providers: 3937 edges
+[script] repository:command · Checking declared package providers: 4040 edges
+[script] repository:command · Checking declared package providers: 4176 edges
+[script] repository:command · Checking declared package providers: 4350 edges
+[script] repository:command · Checking declared package providers: 4549 edges
+[script] repository:command · Checking declared package providers: 4756 edges
+[script] repository:command · Checking declared package providers: 4890 edges
+[script] repository:command · Checking declared package providers: 5030 edges
+[script] repository:command · Checking declared package providers: 5104 edges
+[script] repository:command · Checking declared package providers: 5146 edges
+[script] repository:command · Checking declared package providers: 5255 edges
+[script] repository:command · Checking declared package providers: 5442 edges
+[script] repository:command · Checking declared package providers: 5748 edges
+[script] repository:command · Checking declared package providers: 6020 edges
+[script] repository:command · Checking declared package providers: 6323 edges
+[script] repository:command · Checking declared package providers: 6482 edges
+[repository:command] still running after 2070 s
+[script] repository:command · Checking declared package providers: 6555 edges
+[script] repository:command · Checking declared package providers: 6628 edges
+[script] repository:command · Checking declared package providers: 6744 edges
+[script] repository:command · Checking declared package providers: 6869 edges
+[script] repository:command · Checking declared package providers: 7133 edges
+[script] repository:command · Checking declared package providers: 7248 edges
+[script] repository:command · Checking declared package providers: 7371 edges
+[script] repository:command · Checking declared package providers: 7533 edges
+[script] repository:command · Checking declared package providers: 7699 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[repository:command] still running after 2080 s
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[repo] still working after 2090 s; last phase started: source.served
+[repository:command] still running after 2090 s
+bun 1.4.2 already matches its pin.
+node 24.15.0 already matches its pin.
+rustup 1.29.0 already matches its pin.
+rust nightly-2026-07-20 already matches its pin.
+node-native-core 1 already matches its pin.
+[repository:command] still running after 2100 s
+go 1.26.9 already matches its pin.
+uv 0.11.6 already matches its pin.
+python-main 3.14.4 already matches its pin.
+python-oracle 3.12.13 already matches its pin.
+dotnet 8.0.421 already matches its pin.
+cmake 4.4.4 already matches its pin.
+ninja 1.13.2 already matches its pin.
+wasm-opt 130 already matches its pin.
+tectonic 0.16.9 already matches its pin.
+wasm-pack 0.15.0 already matches its pin.
+wasm-bindgen 0.2.129 already matches its pin.
+trunk 0.21.14 already matches its pin.
+cargo-nextest 0.9.140 already matches its pin.
+cargo-llvm-cov 0.8.7 already matches its pin.
+chromium 1248 already matches its pin.
+Preparing compiler-helpers: The memory-admitting rustc scheduler and the unit-cache compiler wrapper (a native executable on Windows) that every Cargo build starts with.
+note: The following environment variables may affect the loaded values.
+CARGO_BUILD_BUILD_DIR=/Users/ueli/Documents/semio/.cache/b/r/m/b/p
+CARGO_ENCODED_RUSTDOCFLAGS=''
+CARGO_ENCODED_RUSTFLAGS='-Zthreads=0'
+CARGO_HOME=/Users/ueli/Documents/semio/.cache/b/r/m/cargo/home
+CARGO_NET_OFFLINE=false
+CARGO_TARGET_DIR=/Users/ueli/Documents/semio/.cache/b/r/m/t/p
+[script] cargo:helpers · Checking source configuration: 1/1 semio-build-scheduler · 0 reads · 0 files · 0 bytes
+[script] cargo:helpers · Reading sources: 1/1 semio-build-scheduler · 0 reads · 0 files · 0 bytes
+[script] cargo:helpers · Source admitted: 1/1 semio-build-scheduler · 1 reads · 1 files · 33564 bytes
+compiler-helpers is ready.
+[repository:command] still running after 2110 s
+[script] repository:command · Planning build tool storage
+[script] repository:command · Planning build tool storage
+[script] repository:command · Reading build tool index
+[script] repository:command · Reading build tool index
+[script] repository:command · Reading build tool index
+[script] repository:command · Reading build tool index
+[repo] still working after 2120 s; last phase started: source.served
+[script] repository:command · Reading build tool index
+[script] repository:command · Reading build tool index
+[script] repository:command · Reading build tool index
+[script] repository:command · Reading build tool index
+[script] repository:command · Reading build tool index
+[script] repository:command · Reading build tool index
+[script] repository:command · Reading build tool index
+[script] repository:command · Reading build tool index
+[script] repository:command · Reading build tool index
+[script] repository:command · Reading build tool index
+[repository:command] still running after 2120 s
+[script] repository:command · Reading build tool index
+[script] repository:command · Reading build tool index
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[repository:command] still running after 2130 s
+[repository:command] still running after 2140 s
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[repo] still working after 2150 s; last phase started: source.served
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[repository:command] still running after 2150 s
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[repository:command] still running after 2160 s
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[repository:command] still running after 2170 s
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Preparing build tools
+[script] repository:command · Preparing build tools
+[script] repository:command · Preparing build tools
+[script] repository:command · Preparing build tools
+[script] repository:command · Preparing build tools
+[script] repository:command · Preparing build tools
+[script] repository:command · Preparing build tools
+[script] repository:command · Preparing build tools
+[script] repository:command · Preparing build tools
+[script] repository:command · Preparing build tools
+[script] repository:command · Preparing build tools
+[script] repository:command · Preparing build tools
+[script] repository:command · Preparing build tools
+[repo] still working after 2180 s; last phase started: source.served
+[script] repository:command · Preparing build tools
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[repository:command] still running after 2180 s
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tool integrity
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[repository:command] still running after 2190 s
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Preparing build tools
+[script] repository:command · Preparing build tools
+[script] repository:command · Preparing build tools
+[script] repository:command · Preparing build tools
+[script] repository:command · Preparing build tools
+[script] repository:command · Preparing build tools
+[script] repository:command · Preparing build tools
+[script] repository:command · Preparing build tools
+[script] repository:command · Preparing build tools
+[repository:command] still running after 2200 s
+[script] repository:command · Preparing build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[repo] still working after 2210 s; last phase started: source.served
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[repository:command] still running after 2210 s
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Verifying build tools
+[script] repository:command · Preparing build tools
+[script] repository:command · Preparing build tools
+[script] repository:command · Preparing build tools
+[script] repository:command · Preparing build tools
+[script] repository:command · Preparing build tools
+[script] repository:command · Preparing build tools
+[script] repository:command · Preparing build tools
+[script] repository:command · Preparing build tools
+Nx Version:
+- Local: v23.2.0
+- Global: Not found
+[script] repository:command · Preparing build tools
+[bazel] waiting 0/58602460
+[bazel] verifying 0/58602460
+[bazel] downloading 10% 5898240/58602460
+[bazel] downloading 20% 11730944/58602460
+[bazel] downloading 30% 17629184/58602460
+[bazel] downloading 40% 23461888/58602460
+[bazel] downloading 50% 29360128/58602460
+[bazel] downloading 60% 35192832/58602460
+[bazel] downloading 70% 41025536/58602460
+[bazel] downloading 80% 46923776/58602460
+[bazel] downloading 90% 52756480/58602460
+[bazel] downloading 100% 58602460/58602460
+[bazel] ready 58602460/58602460
+[bazel] preparing the fixed embedded module catalog
+Extracting Bazel installation...
+[repository:command] still running after 2220 s
+OpenJDK 64-Bit Server VM warning: Options -Xverify:none and -noverify were deprecated in JDK 13 and will likely be removed in a future release.
+Computing main repo mapping: 
+[bazel:module-setup] still running after 10 s
+Computing main repo mapping: 
+Computing main repo mapping: 
+[repository:command] still running after 2230 s
+Computing main repo mapping: 
+Computing main repo mapping: 
+Loading: 
+Loading: 0 packages loaded
+Analyzing: target //:setup (1 packages loaded, 0 targets configured)
+Analyzing: target //:setup (1 packages loaded, 0 targets configured)
+
+INFO: Analyzed target //:setup (5 packages loaded, 7 targets configured).
+INFO: Found 1 target...
+Target //:setup up-to-date:
+  bazel-bin/ready.txt
+INFO: Elapsed time: 9.513s, Critical Path: 0.06s
+INFO: 2 processes: 2 internal.
+INFO: Build completed successfully, 2 total actions
+[bazel] fixed module catalog ready blobs=156
+[bazel] ready binary=8.4.2 darwin/arm64 sha256=45e9388abf21d110 modules=156 blobs lock=06c085a17c9611ed
+[bazel] readiness {"version":1,"bazel":{"version":"8.4.2","platform":"darwin","arch":"arm64","sha256":"45e9388abf21d1107e146ea366ad080eb93cb6a5f3a4a3b048f78de0bc3faffa","executable":"/Users/ueli/Documents/semio/.cache/b/t/m/bazel/bin/45e9388abf21d110/bazel"},"modules":{"lockSha256":"06c085a17c9611edb2348fa8f6eb9726db9d85a5f3a9edebd2d2958c688d2df0","blobs":156}}
+[semio] The in-house build engine needs no external tool to provision.
+[semio] Die hauseigene Build-Engine benötigt kein externes Werkzeug.

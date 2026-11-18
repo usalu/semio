@@ -1,0 +1,12 @@
+== 2026-11-16T07:20:25Z ready.json of all origins (origin, platform, state, stage, attempts, exit, ready), read from /Volumes/semio-store/v1/origins/*/ready.json
+g1-m01 macos running workspace 16 75 ready=False
+g1-m02 macos running workspace 6 75 ready=False
+g1-m03 macos running workspace 13 75 ready=False
+g1-m04 linux backoff tools 20 1 ready=False
+g1-m05 windows running dependencies 10 1 ready=False
+g1-m06 macos running workspace 2 75 ready=False
+g1-m07 macos running workspace 8 75 ready=False
+g1-m08 macos running workspace 6 75 ready=False
+g1-m09 no ready.json
+g1-m10 macos running workspace 5 75 ready=False
+g1-server no ready.json

@@ -1,7 +1,7 @@
 {
  "$schema": "http://json-schema.org/draft-07/schema#",
  "title": "Early cutoff of derived facts in the graph fact index",
- "description": "A derived fact is a question put to a pure computation over raw facts (the closure of the files a command imports, say) and the digest of its answer. The fact index lists it as the row of kind `derived` (`path` is the canonical question, `fact` the digest of the answer): every project that consumed the answer holds this one row instead of the thousands of raw rows the computation read, and one pseudo owner named `@derived:` plus the first 32 hex digits of the sha256 of the canonical row holds the row together with those raw rows (its support). When a raw row of a support is stale the question is asked again; an equal answer keeps every consuming project valid (the support is replaced by the rows the new computation read), a different answer stales exactly the projects that hold the row. A derived row is never checked as a raw fact. A pseudo owner without a project that holds its row is removed.",
+ "description": "A derived fact is a question put to a pure computation over raw facts (the closure of the files a command imports, say) and the digest of its answer. The fact index lists it as the row of kind `derived` (`path` is the canonical question, `fact` the digest of the answer): every project that consumed the answer holds this one row instead of the thousands of raw rows the computation read, and one pseudo owner named `@derived:` plus the first 32 hex digits of the sha256 of the canonical row holds the row together with those raw rows (its support). When a raw row of a support is stale the question is asked again; an equal answer keeps every consuming project valid (the support is replaced by the rows the new computation read), a different answer stales exactly the projects that hold the row. A derived row is never checked as a raw fact. A pseudo owner without a project that holds its row is removed. EN: A closure part is decided from the dictionary ids of its rows: `partRowBatchRows` rows are probed per batch, every distinct row once per settle, and the settle reports `flush parts N of M` at least every `partProgressMilliseconds`. DE: Ein Closure-Teil wird aus den Dictionary-Ids seiner Zeilen entschieden: je Stapel werden `partRowBatchRows` Zeilen geprueft, jede verschiedene Zeile einmal je Abgleich, und der Abgleich meldet `flush parts N of M` mindestens alle `partProgressMilliseconds`.",
  "definitions": {
   "Policy": {
    "const": {
@@ -15,7 +15,9 @@
     "manifestSaveMilliseconds": 15000,
     "manifestSaveSpendRatio": 10,
     "vouchConcurrency": 64,
-    "maximumSuspects": 65536
+    "maximumSuspects": 131072,
+    "partRowBatchRows": 4096,
+    "partProgressMilliseconds": 5000
    }
   },
   "Row": {

@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Graph work cut / Schnitt der Graph-Arbeit",
+  "description": "EN: A graph read whose process tree grows past what the machine gives a plan is not refused: its work is cut smaller and it continues. The cut is a ladder of levels; level 0 is the usual work (no cap), every level halves the projects inferred at once (concurrency) and the owners of a wave (wave basis points), down to one project at a time and one owner per wave. Projects already inferred are persisted records, so a cut load repeats nothing. A load starts at the level its plan limit asks for (graphCutStartLevelV1: the footprint measured for unbounded work divided by the limit) and learns the level that worked. Only a load already at the last level, one project at a time, is refused. DE: Eine Graph-Lesung, deren Prozessbaum über das wächst, was die Maschine einem Plan gibt, wird nicht abgelehnt: ihre Arbeit wird kleiner geschnitten und läuft weiter. Der Schnitt ist eine Leiter von Stufen; Stufe 0 ist die übliche Arbeit (ohne Obergrenze), jede Stufe halbiert die gleichzeitig abgeleiteten Projekte (Nebenläufigkeit) und die Eigner einer Welle (Wellen-Basispunkte), bis zu einem Projekt zugleich und einem Eigner je Welle. Bereits abgeleitete Projekte sind gespeicherte Datensätze, ein geschnittener Ladevorgang wiederholt also nichts. Ein Ladevorgang beginnt bei der Stufe, die sein Plan-Limit verlangt (graphCutStartLevelV1: der für unbeschränkte Arbeit gemessene Platzbedarf geteilt durch das Limit), und lernt die Stufe, die gereicht hat. Nur ein Ladevorgang, der schon auf der letzten Stufe ist, ein Projekt zugleich, wird abgelehnt.",
+  "definitions": {
+    "Policy": {
+      "description": "EN: levels is the last level of the ladder; maximumConcurrency the projects inferred at once at level 0 (the cap of level k is maximumConcurrency / 2^k, at least 1); minimumWaveBasisPoints the narrowest wave share (the wave is never fewer than one owner); unboundedMegabytes the footprint measured for uncut work on a 16 GB Mac worker (10240 MB = 10 GiB, the 9966 MB measured on g1-m07 in rounds 28 and 29 of ticket WORKERS-READY-WITH-LOW-RESOURCES, rounded up), which fixes the start level of a machine with a plan limit; relaxBasisPoints the share of the limit under which the peak of a finished load lets the next load try one level less cut (above it the level that worked stays); concurrencyEnvironment is the variable the slice pool sets in the environment of a cut load and the inference reads; waveEnvironment the variable of the wave share. DE: levels ist die letzte Stufe der Leiter; maximumConcurrency die auf Stufe 0 gleichzeitig abgeleiteten Projekte (die Grenze der Stufe k ist maximumConcurrency / 2^k, mindestens 1); minimumWaveBasisPoints der schmalste Wellenanteil (eine Welle hat nie weniger als einen Eigner); unboundedMegabytes der für ungeschnittene Arbeit gemessene Platzbedarf auf einem 16-GB-Mac-Worker (10240 MB = 10 GiB, die auf g1-m07 in den Runden 28 und 29 des Tickets WORKERS-READY-WITH-LOW-RESOURCES gemessenen 9966 MB, aufgerundet), der die Startstufe einer Maschine mit Plan-Limit festlegt; relaxBasisPoints der Anteil des Limits, unter dem der Spitzenwert eines beendeten Ladevorgangs den nächsten eine Stufe weniger geschnitten versuchen lässt (darüber bleibt die Stufe, die gereicht hat); concurrencyEnvironment ist die Variable, die der Slice-Pool in die Umgebung eines geschnittenen Ladevorgangs setzt und die die Ableitung liest; waveEnvironment die Variable des Wellenanteils.",
+      "const": {
+        "version": 1,
+        "levels": 6,
+        "maximumConcurrency": 8,
+        "minimumWaveBasisPoints": 100,
+        "unboundedMegabytes": 10240,
+        "relaxBasisPoints": 5000,
+        "heavyHandoffs": 3,
+        "concurrencyEnvironment": "SEMIO_GRAPH_CUT_CONCURRENCY",
+        "waveEnvironment": "SEMIO_SLICE_WAVE_BASIS_POINTS"
+      }
+    },
+    "Cut": {
+      "description": "EN: One level of the ladder: concurrency is absent at level 0 (no cap); waveBasisPoints is 10000 at level 0. DE: Eine Stufe der Leiter: concurrency fehlt auf Stufe 0 (keine Obergrenze); waveBasisPoints ist auf Stufe 0 gleich 10000.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["level", "waveBasisPoints"],
+      "properties": {
+        "level": {"type": "integer", "minimum": 0, "maximum": 6},
+        "concurrency": {"type": "integer", "minimum": 1, "maximum": 8},
+        "waveBasisPoints": {"type": "integer", "minimum": 100, "maximum": 10000}
+      }
+    }
+  }
+}

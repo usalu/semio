@@ -11,7 +11,8 @@
         "maximumTextBytes": 67108864,
         "maximumReferences": 65536,
         "maximumInventoryBytes": 4294967296,
-        "maximumPathUnits": 256
+        "maximumPathUnits": 256,
+        "changeAttempts": 3
       }
     },
     "Value": {

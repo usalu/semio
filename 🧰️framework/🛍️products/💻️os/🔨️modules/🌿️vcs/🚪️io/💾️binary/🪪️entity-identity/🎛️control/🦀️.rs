@@ -14,18 +14,25 @@ pub type Observer<'a>=dyn FnMut(NativeEncodeProgress)->bool+'a;
 
 /// 🧵️ One caller observer and consuming ownership receipt fund every physical authoring stage.
 enum Receipt<'a>{Native(NativeEncodeContinuation),Forwarded(NativeForwardedEncodeContinuation<'a>),Retirement(NativeRetirementEncodeContinuation<'a>)}
-pub struct EntityIdentityAuthority<'a,O:FnMut(NativeEncodeProgress)->bool+?Sized=Observer<'a>>{continuation:Option<Receipt<'a>>,observer:&'a mut O}
+/// 🎟️ Lends the caller's original Work to each native hop of a local identity authority, so authored operation identities commit under the caller's own Work loan.
+pub trait IdentityWorkLender:Send{
+    /// 🪢️ Runs `operation` on `control` while the caller's Work loan is installed on it.
+    fn lend(&mut self,control:&mut NativeEncodeControl<'_>,operation:&mut dyn FnMut(&mut NativeEncodeControl<'_>)->Result<(),ValueError>)->Result<(),ValueError>;
+}
+pub struct EntityIdentityAuthority<'a,O:FnMut(NativeEncodeProgress)->bool+?Sized=Observer<'a>>{continuation:Option<Receipt<'a>>,observer:&'a mut O,work:Option<Box<dyn IdentityWorkLender+'a>>}
 impl<'a,O:FnMut(NativeEncodeProgress)->bool+?Sized> EntityIdentityAuthority<'a,O>{
     /// 🚦️ Starts admission with the caller's explicit ownership ceiling and cancellation authority.
-    pub fn new(maximum_bytes:usize,observer:&'a mut O)->Result<Self,ValueError>{let continuation=NativeEncodeControl::new(maximum_bytes,&mut |event|observer(event)).pause().map_err(|(error,_control)|error)?;Ok(Self{continuation:Some(Receipt::Native(continuation)),observer})}
+    pub fn new(maximum_bytes:usize,observer:&'a mut O)->Result<Self,ValueError>{let continuation=NativeEncodeControl::new(maximum_bytes,&mut |event|observer(event)).pause().map_err(|(error,_control)|error)?;Ok(Self{continuation:Some(Receipt::Native(continuation)),observer,work:None})}
     /// 🌉️ Retains the original receiving allocation port and observer through every guest authoring hop.
-    pub fn new_forwarded(maximum_bytes:usize,observer:&'a mut O,allocate:&'a mut (dyn NativeSendAllocationLoan+'a))->Result<Self,ValueError>{Ok(Self{continuation:Some(Receipt::Forwarded(NativeForwardedEncodeContinuation::new(maximum_bytes,allocate))),observer})}
+    pub fn new_forwarded(maximum_bytes:usize,observer:&'a mut O,allocate:&'a mut (dyn NativeSendAllocationLoan+'a))->Result<Self,ValueError>{Ok(Self{continuation:Some(Receipt::Forwarded(NativeForwardedEncodeContinuation::new(maximum_bytes,allocate))),observer,work:None})}
     /// 🔗️ Resumes the same caller allocation port and retirement recipient across an asynchronous hop.
-    pub fn resume_forwarded(continuation:NativeForwardedEncodeContinuation<'a>,observer:&'a mut O)->Self{Self{continuation:Some(Receipt::Forwarded(continuation)),observer}}
+    pub fn resume_forwarded(continuation:NativeForwardedEncodeContinuation<'a>,observer:&'a mut O)->Self{Self{continuation:Some(Receipt::Forwarded(continuation)),observer,work:None}}
+    /// 🎟️ Installs the caller's Work lender for every later local native hop of this authority.
+    pub fn with_work_lender(mut self,lender:Box<dyn IdentityWorkLender+'a>)->Self{self.work=Some(lender);self}
     /// ▶️ Continues the actual previously admitted operation with the current caller observer.
-    pub fn resume(continuation:NativeEncodeContinuation,observer:&'a mut O)->Self{Self{continuation:Some(Receipt::Native(continuation)),observer}}
+    pub fn resume(continuation:NativeEncodeContinuation,observer:&'a mut O)->Self{Self{continuation:Some(Receipt::Native(continuation)),observer,work:None}}
     /// 🫴️ Continues the original local receipt beside its caller-owned retirement recipient.
-    pub fn resume_retirement(continuation:NativeRetirementEncodeContinuation<'a>,observer:&'a mut O)->Self{Self{continuation:Some(Receipt::Retirement(continuation)),observer}}
+    pub fn resume_retirement(continuation:NativeRetirementEncodeContinuation<'a>,observer:&'a mut O)->Self{Self{continuation:Some(Receipt::Retirement(continuation)),observer,work:None}}
     /// ⏸️ Returns the original cumulative receipt to its next publication or authoring owner.
     pub fn pause(mut self)->Result<NativeEncodeContinuation,ValueError>{match self.continuation.take(){Some(Receipt::Native(receipt))=>Ok(receipt),_=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native identity authority lacks its original native receipt"))}}
     /// 🚚️ Returns the opaque original receiving port with all admitted guest ownership.
@@ -39,7 +46,14 @@ impl<'a,O:FnMut(NativeEncodeProgress)->bool+?Sized> EntityIdentityAuthority<'a,O
         if let Some(Receipt::Retirement(receipt))=self.continuation.as_mut(){return receipt.encode(&mut observer,|control|Ok(operation(control))).map_err(E::from)?;}
         let Some(Receipt::Native(receipt))=self.continuation.take()else{return Err(E::from(ValueError::literal(ValueRefusalKind::InvariantViolated,"identity authority lacks its cumulative receipt")))};
         let mut control=match NativeEncodeControl::resume(receipt,&mut observer){Ok(control)=>control,Err((error,receipt))=>{self.continuation=Some(Receipt::Native(receipt));return Err(E::from(error))}};
-        let result=control.scoped_stage(operation);
+        let result=match self.work.as_mut(){
+            Some(lender)=>{
+                let mut operation=Some(operation);let mut output=None;
+                let lent=lender.lend(&mut control,&mut |control|{output=Some(control.scoped_stage(operation.take().expect("identity hop runs once")));Ok(())});
+                match lent{Ok(())=>output.expect("lent identity hop ran"),Err(error)=>Err(E::from(error))}
+            }
+            None=>control.scoped_stage(operation),
+        };
         match control.pause(){Ok(receipt)=>{self.continuation=Some(Receipt::Native(receipt));result}Err((error,_control))=>Err(E::from(error))}
     }
 }

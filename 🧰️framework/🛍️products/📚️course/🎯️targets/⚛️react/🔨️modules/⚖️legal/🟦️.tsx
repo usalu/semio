@@ -9,6 +9,7 @@
  */
 
 import { useId, useState, type ReactElement, type ReactNode } from "react";
+import { useSharedBorderFrameRef } from "@semio-tech/ui-react/chrome";
 import type { CourseLabelKey, CourseLocale, CourseText } from "../🌐️i18n/🟦️.ts";
 import { CardAction, CardIcon, Dialog } from "../🪟️chrome/🟦️.tsx";
 import { EveryLanguage, everyLanguage } from "../🎛️preferences/🟦️.tsx";
@@ -95,12 +96,13 @@ export function PrivacyNotice(props: { readonly legal: CourseLegal | undefined; 
 export function LegalFooter(props: { readonly legal: CourseLegal | undefined; readonly locale: CourseLocale | undefined; readonly text: CourseText | undefined; readonly children?: ReactNode }): ReactElement | null {
   const { legal, locale, text } = props;
   const [reading, setReading] = useState(false);
+  const frame = useSharedBorderFrameRef<HTMLElement>();
   const imprint = legalLink(legal?.imprint);
   const policy = legalLink(legal?.privacy);
   const label = (key: CourseLabelKey): ReactNode => (text === undefined ? <EveryLanguage label={key} /> : text(key));
   if (text === undefined && imprint === undefined && policy === undefined) return null;
   return (
-    <footer className="course-footer flex shrink-0 flex-wrap items-center gap-x-double border-t border-normal px-double" lang={locale}>
+    <footer ref={frame} data-shared-border-frame="" data-shared-border-edges="top" className="course-footer relative flex shrink-0 flex-wrap items-center gap-x-double px-double" lang={locale}>
       {props.children}
       <nav className="ms-auto" aria-label={text === undefined ? everyLanguage("course.legal.label") : text("course.legal.label")}>
         <ul role="list" className="m-0 flex list-none flex-wrap items-center justify-end gap-x-double p-0">

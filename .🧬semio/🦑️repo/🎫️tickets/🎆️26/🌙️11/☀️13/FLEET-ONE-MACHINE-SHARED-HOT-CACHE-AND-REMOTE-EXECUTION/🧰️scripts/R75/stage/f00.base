@@ -1,0 +1,27 @@
+import{setPriority}from"node:os";
+import{runOwnerPoolV1}from"../../../🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🏃️runner/🟨️.mjs";
+import{acquireOwnerPoolGuardV1}from"../../../🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🔒️guard/🟦️.ts";
+import{createOwnerPoolStatusV1}from"../../../🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/📊️status/🟦️.ts";
+import{ownerPoolTargetV1,type OwnerPoolHostV1,type OwnerPoolTargetV1}from"../../../🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🟦️.ts";
+import{readRemoteExecutionHostViewV1,remoteExecutionOriginV1,type RemoteExecutionHostViewV1}from"../../🌡️load/🟦️.ts";
+import type{RemoteExecutionSidecarContextV1}from"../🧰️shared/🟦️.ts";
+
+/** 🏠️ What the host capacity gate says in the words of the pool: the machine's cores, memory, pressure, load and swap, and its own work (the grants of the gate, none of which is a pool child): the cores they book, the part of their reservations they have not touched yet whether anything waits and how long the oldest request of the machine's own work (not a farm worker) has waited, so the pool can yield to it. The pool children are processes of their own and appear in the load and the available memory, never in the grants. */
+export function ownerPoolHostOfV1(view:RemoteExecutionHostViewV1,nowMs:number=Date.now()):OwnerPoolHostV1{
+ const host=view.host,active=view.grants.filter(grant=>grant.lentSinceMs===undefined),own=view.waiters.filter(waiter=>waiter.request.label!=="graph-farm"&&waiter.request.priority!=="lent");
+ return{cores:Math.max(1,host.cores),totalMegabytes:host.totalMegabytes,availableMegabytes:host.availableMegabytes,pressure:host.pressure as OwnerPoolHostV1["pressure"],load:host.load,swapOutMegabytesPerSecond:host.swapOutMegabytesPerSecond,foreground:{cpu:active.reduce((sum,grant)=>sum+grant.cpu,0),unrealizedMegabytes:active.reduce((sum,grant)=>sum+Math.max(0,grant.reservedMegabytes-(grant.observedMegabytes??0)),0),waiters:view.waiters.length,oldestWaitMilliseconds:own.length===0?0:Math.max(0,nowMs-Math.min(...own.map(waiter=>waiter.arrivedAtMs)))}};
+}
+
+/** 🏊️ Runs the owner puller of this machine until the signal aborts: one pool process per machine (a pid file; an old process that is still alive is waited for and, when it stays, this one does not pull), at a low priority, with the cache the fleet announces (the explicit overrides of the cache are dropped, as for the graph server), as the supervisor of child processes: it runs as many children (one process, one owner at a time) as the cores and the free memory of the machine allow after its own work (`ownerPoolTargetV1` on the host view of the capacity gate: its grants book cores and untouched reservations, a waiting request keeps a share of the cores free, one child always runs unless the pressure is critical), and a child returns its memory to the system by ending itself when it passed its limit. Joins every wave of the owner pool that another machine publishes. */
+export async function runPool(context:RemoteExecutionSidecarContextV1):Promise<void>{
+ try{setPriority(10);}catch{}
+ const environment={...context.environment} as Record<string,string|undefined>;
+ for(const name of["SEMIO_REMOTE_CACHE_ENDPOINT","SEMIO_REMOTE_CACHE_ACCESS","SEMIO_REMOTE_CACHE_INSTANCE","SEMIO_REMOTE_CACHE_TOKEN","SEMIO_FLEET_CACHE_ENDPOINT"])delete environment[name];
+ const origin=remoteExecutionOriginV1(context.root,context.environment),status=createOwnerPoolStatusV1({store:context.environment.SEMIO_FLEET_STORE_ROOT,origin,role:"puller"});
+ const guard=await acquireOwnerPoolGuardV1({root:context.root,say:pid=>{context.write(`owner pool: another pool process of this machine (pid ${pid}) is alive, waiting for it / ein anderer Pool-Prozess dieser Maschine (pid ${pid}) lebt, warte auf ihn`);}});
+ if(!guard.acquired){status.update({state:"idle",siblings:1,lastError:`another pool process (pid ${guard.sibling}) is alive / ein anderer Pool-Prozess (pid ${guard.sibling}) lebt`});status.flush();return;}
+ const capacity=async(input:Readonly<{children:number;childMegabytes:number}>):Promise<OwnerPoolTargetV1>=>{try{return ownerPoolTargetV1({host:ownerPoolHostOfV1(await readRemoteExecutionHostViewV1(context.environment)),...input});}catch{return{children:1,reason:null};}};
+ try{
+  await(runOwnerPoolV1 as (input:Record<string,unknown>)=>Promise<void>)({root:context.root,environment,signal:context.signal,say:context.write,work:context.work,capacity,siblings:guard.sibling===undefined?0:1,status});
+ }finally{guard.release();}
+}

@@ -2197,8 +2197,9 @@
               "describe": [
                 "job:describe-tool"
               ],
-              "probe": [
-                "job:support"
+              "browser": [
+                "job:support",
+                "job:native-transpile"
               ]
             },
             "jobs": [
@@ -2210,6 +2211,22 @@
                   "./📜️script.ts",
                   "build",
                   "--host-platform={hostPlatform}"
+                ],
+                "after": [],
+                "profile": "release",
+                "target": "host",
+                "workerProtocol": "jobserver",
+                "policies": [
+                  "process",
+                  "cargo"
+                ]
+              },
+              {
+                "id": "native-transpile",
+                "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🦀️native-transpile",
+                "command": [
+                  "repo",
+                  "./📜️stage.ts"
                 ],
                 "after": [],
                 "profile": "release",
@@ -2297,6 +2314,7 @@
       "executor": "repo:script",
       "dependsOn": [
         "@semio-tech/os-plugin-describe-rs:build",
+        "@semio-tech/os-plugin-native-transpile-rs:build",
         "@semio-tech/framework-plugin-web:support"
       ],
       "options": {

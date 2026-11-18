@@ -46,13 +46,13 @@
     "bytes": "export const lazy = 19;\n"
   },
   "capacity": {
-    "maximumFiles": 2048,
+    "maximumFiles": 16384,
     "maximumResolutions": 256,
     "byteBudgets": {
-      "maximumSourceBytes": 20971520,
+      "maximumSourceBytes": 67108864,
       "maximumFileBytes": 4194304,
-      "maximumSnapshotBytes": 33554432,
-      "maximumOutputBytes": 8388608
+      "maximumSnapshotBytes": 100663296,
+      "maximumOutputBytes": 33554432
     },
     "cases": [
       {
@@ -60,11 +60,15 @@
         "accept": true
       },
       {
-        "files": 2048,
+        "files": 2049,
         "accept": true
       },
       {
-        "files": 2049,
+        "files": 16384,
+        "accept": true
+      },
+      {
+        "files": 16385,
         "accept": false
       }
     ]
@@ -78,12 +82,12 @@
     {
       "id": "schema-before",
       "fault": "schema-before",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "schema-after",
       "fault": "schema-after",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "undeclared",
@@ -103,27 +107,27 @@
     {
       "id": "reader-before",
       "fault": "reader-before",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "reader-after",
       "fault": "reader-after",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "reader-after-cached",
       "fault": "reader-after-cached",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "reader-policy-before",
       "fault": "reader-policy-before",
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "reader-policy-after",
       "fault": "reader-policy-after",
-      "accepted": false
+      "accepted": true
     }
   ],
   "runtimeCompanions": {

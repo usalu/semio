@@ -1,8 +1,14 @@
 /** 🔌 Binds the watcher provisioning to the tool registry: resolution through `resolveToolV1`, compilation through `runToolV1("cargo")`, the binary kept under the tools partition. Loads only where the tool interface exists. */
 import {dirname,join} from "node:path";
-import {ensureWatcherV1} from "../🟨️.mjs";
+import {ensureWatcherV1,findInstalledWatcherV1} from "../🟨️.mjs";
 import {findToolV1,resolveToolV1,runToolV1,systemToolHostV1,toolRootV1,TOOL_REGISTRY_V1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
+
+/** 🔎 The path of the installed watcher for a worktree, or `undefined` when none matches the pinned source: no compiler is needed to ask. */
+export async function findInstalledResidentWatcherV1(root=toolRootV1(),{environment=process.env}={}){
+ const entry=findToolV1("repo-watch",TOOL_REGISTRY_V1),host=systemToolHostV1(root,environment),pinPath=join(root,entry.pin.version.file),rust=dirname(pinPath);
+ return(await findInstalledWatcherV1({sourcePath:join(rust,"🦀️.rs"),pinPath:join(rust,"🔣️.json"),locate:async()=>resolveToolV1(entry,host,TOOL_REGISTRY_V1).command??undefined}))?.path;
+}
 
 /** 🔌 The path of the watcher for a worktree, building it once when no installed copy matches the pinned source. */
 export async function ensureResidentWatcherV1(root=toolRootV1(),{signal,progress,environment=process.env,writable,workRoot}={}){

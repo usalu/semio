@@ -94,6 +94,20 @@ pub fn paint_frame(buf: &mut CellBuffer, rect: Rect, theme: &Theme, surface: Sur
     }
 }
 
+/// ➖️ A horizontal rule across a framed surface at row `y`: `├` and `┤` replace the frame's `│` so the rule joins the frame instead of stopping against it.
+/// @see `⌨️tui/⚙️engine/🖌️paint-and-gutters/🦀️.rs`
+pub fn paint_frame_rule(buf: &mut CellBuffer, rect: Rect, y: u16, theme: &Theme, surface: Surface, rule: Role) {
+    if rect.width < 2 || y <= rect.y || y >= rect.y + rect.height - 1 {
+        return;
+    }
+    let bg = theme.surface(surface);
+    let border = theme.role(Role::BorderEmphasized);
+    buf.hline(Pos { x: rect.x + 1, y }, rect.width - 2, '\u{2500}', theme.role(rule), bg);
+    for (x, ch) in [(rect.x, '\u{251c}'), (rect.x + rect.width - 1, '\u{2524}')] {
+        buf.put(x, y, Cell { ch, fg: border, bg, attrs: 0, width: 1 });
+    }
+}
+
 fn inner_width(width: u16) -> u16 {
     width.saturating_sub(4).max(1)
 }

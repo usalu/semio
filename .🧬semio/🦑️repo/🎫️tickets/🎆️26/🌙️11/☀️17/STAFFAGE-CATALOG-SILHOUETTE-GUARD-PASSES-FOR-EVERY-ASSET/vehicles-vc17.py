@@ -1,0 +1,11 @@
+import sys, importlib
+sys.path.insert(0, ".")
+m = importlib.import_module("vehicles-lib")
+d = m.V("🚜️vehicles/vintage-car-1929")
+s = d.shape(200, "elevation", "fender-rear")
+d.sub(d.field(s, "d"), "M -0.98,0.47 C", "M -0.98,0.49 C")
+d.sub(d.field(s, "d"), "-1.03,0.64 -1.01,0.45 Z", "-1.03,0.64 -1.01,0.49 Z")
+s = d.shape(200, "elevation", "fender-front")
+d.sub(d.field(s, "d"), "M 0.96,0.47 C", "M 0.96,0.49 C")
+d.sub(d.field(s, "d"), "1.05,0.64 1.01,0.45 Z", "1.05,0.64 1.01,0.49 Z")
+d.commit()

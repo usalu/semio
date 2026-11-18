@@ -1,7 +1,7 @@
 import {spawnSync} from "node:child_process";
 import {test,expect} from "bun:test";
 import {mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync,existsSync,rmdirSync} from "node:fs";
-import {tmpdir} from "node:os";
+import {freemem,tmpdir} from "node:os";
 import {join} from "node:path";
 import {fileURLToPath} from "node:url";
 import Ajv from "ajv";
@@ -19,7 +19,7 @@ import fixture from "./🔣️.json";
 const python=testPythonV1()!,oracle=fileURLToPath(new URL("./🐍️.py",import.meta.url)),allocator=fileURLToPath(new URL("./🐍️allocator.py",import.meta.url));
 const model=(mode:string,cases:unknown):number[]=>{const done=Bun.spawnSync([python,"-I",oracle,mode,JSON.stringify(cases)]);if(done.exitCode!==0)throw Error(new TextDecoder().decode(done.stderr));return JSON.parse(new TextDecoder().decode(done.stdout));};
 const allocate=(allocation:{megabytes:number;stepMegabytes:number;holdMilliseconds:number})=>[allocator,String(allocation.megabytes),String(allocation.stepMegabytes),String(allocation.holdMilliseconds)];
-const available=():number=>Number(/MemAvailable:\s+(\d+)/u.exec(readFileSync("/proc/meminfo","utf8"))![1])/1024;
+const available=():number=>existsSync("/proc/meminfo")?Number(/MemAvailable:\s+(\d+)/u.exec(readFileSync("/proc/meminfo","utf8"))![1])/1024:freemem()/1048576;
 
 test("the fixture and the texts are closed, German mirrors English",()=>{
  const ajv=new Ajv({strict:false});

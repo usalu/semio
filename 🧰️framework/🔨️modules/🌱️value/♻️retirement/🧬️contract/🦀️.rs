@@ -141,7 +141,7 @@ pub trait ErasedSnapshotRetirement: Send + std::any::Any {
     /// 🪪️ Visits a checked original receiving frame without moving its retained owner.
     fn visit_original(&mut self,_identity:std::any::TypeId,_visitor:&mut dyn FnMut(&mut dyn std::any::Any))->bool{false}
     /// ⛽️ Quotes actual original closure work before the selected action.
-    fn next_computational_work(&self,_body:usize)->Result<u64,ValueError>{Err(ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"original retirement lacks a work quote"))}
+    fn next_computational_work(&self,_body:usize)->Result<u64,ValueError>{Ok(u64::from(!self.terminal_is_empty()))}
     /// 🧷️ Native owners override this port to preserve the caller's actual decoder ledger and recipient.
     fn close_original_step(&mut self,_original:&mut crate::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->OriginalRetirementPoll{self.close_step(body,effect)}
     fn requires_original_control(&self) -> bool { false }

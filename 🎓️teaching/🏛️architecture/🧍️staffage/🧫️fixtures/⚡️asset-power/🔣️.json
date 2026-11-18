@@ -1,0 +1,81 @@
+{
+  "description": "Hand-derived total power of catalog assets: the nameplate power each element states once (ratedPowerW, with its basis) plus the metabolic heat of every living body at the activity of the default pose, max(basal, met * W per m2 per met * skin area). A heat pump counts the electrical input of compressor and fan, not its heating capacity; heat emitters fed from elsewhere are passive (0 W). The arithmetic is written out so any implementation can check it.",
+  "toleranceW": 0.05,
+  "cases": [
+    {
+      "asset": "electric-kettle",
+      "derivation": "2 kW jug kettle: electrical input 2000 W",
+      "totalW": 2000,
+      "parts": [
+        [
+          "water",
+          2000
+        ]
+      ]
+    },
+    {
+      "asset": "person-cooking",
+      "derivation": "body 1.8 met * 58.15 W/m2/met * 1.675 m2 = 175.32 W; the hob under the pot draws 1500 W",
+      "totalW": 1675.32,
+      "parts": [
+        [
+          "pot",
+          1500
+        ],
+        [
+          "body",
+          175.32
+        ]
+      ]
+    },
+    {
+      "asset": "standing-adult",
+      "derivation": "body 1.2 met * 58.15 W/m2/met * 1.675 m2 = 116.88 W; no device",
+      "totalW": 116.88,
+      "parts": [
+        [
+          "body",
+          116.88
+        ]
+      ]
+    },
+    {
+      "asset": "heat-pump-outdoor-unit",
+      "derivation": "12 kW heating capacity at about COP 4.4: compressor input 2700 W + fan 150 W; the capacity itself is not counted",
+      "totalW": 2850,
+      "parts": [
+        [
+          "compressor-casing",
+          2700
+        ],
+        [
+          "coil-guard",
+          150
+        ]
+      ]
+    },
+    {
+      "asset": "wheel-loader",
+      "derivation": "20 t articulated loader: rated engine output 150 kW; the heat of its exhaust and tyres is not power",
+      "totalW": 150000,
+      "parts": [
+        [
+          "engine-bay",
+          150000
+        ]
+      ]
+    },
+    {
+      "asset": "panel-radiator",
+      "derivation": "a radiator draws nothing (its 1.2 kW is heat delivered by the circuit): passive, 0 W stated explicitly",
+      "totalW": 0,
+      "parts": []
+    },
+    {
+      "asset": "english-oak",
+      "derivation": "no living body and no rated element: 0 W",
+      "totalW": 0,
+      "parts": []
+    }
+  ]
+}

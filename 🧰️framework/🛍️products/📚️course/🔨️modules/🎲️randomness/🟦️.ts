@@ -85,3 +85,16 @@ export function shuffle<T>(random: RandomSource, items: readonly T[]): T[] {
   }
   return copy;
 }
+
+/** ⚖️ `count` distinct indices of `weights` in pick order, each pick proportional to the weight of the indices left and located by `next() / 2³²` of the remaining total, one draw per pick. */
+export function weightedSample(random: RandomSource, weights: readonly number[], count: number): number[] {
+  const remaining = weights.map((_, index) => index);
+  const picked: number[] = [];
+  while (picked.length < count && remaining.length > 0) {
+    let target = (random.next() / TWO_POW_32) * remaining.reduce((total, index) => total + weights[index]!, 0);
+    let position = 0;
+    while (position < remaining.length - 1 && target >= weights[remaining[position]!]!) target -= weights[remaining[position++]!]!;
+    picked.push(...remaining.splice(position, 1));
+  }
+  return picked;
+}

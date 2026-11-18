@@ -53,14 +53,16 @@ test("dependency immutable ancestry retains hostile identity and cancellation re
   }
 });
 
+let fileOpened: { path: string; run: () => Promise<void> } | undefined;
 const captureFunctions = async (admissions: Map<string, number>[]) => {
   const api = await import("@semio-tech/framework-filesystem/observation/descriptor");
   const contract = await import("../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts");
   const { createHash } = await import("node:crypto");
   const { join } = await import("node:path");
   const policy = JSON.parse(readFileSync(new URL("../../🧬️schema/📥️install.json", import.meta.url), "utf8"));
+  policy.$defs.SourceOwnerStoreProtocol.const.progressWorkUnits = 1;
   const source = readFileSync(new URL("../../🟦️.ts", import.meta.url), "utf8"), tree = ts.createSourceFile("capture.ts", source, ts.ScriptTarget.Latest, true);
-  const names = ["withJavascriptDependencyProducedDirectoryV1", "withJavascriptDependencyInputParentsV1", "captureJavascriptDependencyDescriptorInputsV1", "verifyJavascriptDependencyDescriptorGroupV1"];
+  const names = ["javascriptDependencyStoreWorkV1", "withJavascriptDependencyProducedDirectoryV1", "withJavascriptDependencyInputParentsV1", "captureJavascriptDependencyDescriptorInputsV1", "verifyJavascriptDependencyDescriptorGroupV1"];
   const nodes = tree.statements.filter((node): node is ts.FunctionDeclaration => ts.isFunctionDeclaration(node) && names.includes(node.name?.text ?? ""));
   const wrap = (directory: any, prefix: string[], observed: Map<string, number>): any => new Proxy(Object.create(null), { get(_target, key) { const target = directory;
     if (key === "withDirectoryPath") return async (parts: { name: string }[], body: (child: unknown) => Promise<unknown>) => {
@@ -69,10 +71,11 @@ const captureFunctions = async (admissions: Map<string, number>[]) => {
       return target.withDirectoryPath(parts, (child: unknown) => body(wrap(child, path, observed)));
     };
     if (key === "withDirectory") return async (name: string, body: (child: unknown) => Promise<unknown>) => { const path = [...prefix, name], nameKey = path.join("/"); observed.set(nameKey, (observed.get(nameKey) ?? 0) + 1); if (observed.get(nameKey)! > 1) throw Error("Immutable directory ancestry reacquired: " + nameKey); return target.withDirectory(name, (child: unknown) => body(wrap(child, path, observed))); };
+    if (key === "withFile") return async (name: string, body: (file: unknown) => Promise<unknown>) => target.withFile(name, async (file: unknown) => { const hook = fileOpened && fileOpened.path === [...prefix, name].join("/") ? fileOpened : undefined; if (hook) { fileOpened = undefined; await hook.run(); } return body(file); });
     const value = Reflect.get(target, key); return typeof value === "function" ? value.bind(target) : value;
   } });
   const ports = { Buffer, JSON, createHash, join, installSchema: policy, readNativeProtectedArtifactInputGroupV1: contract.readNativeProtectedArtifactInputGroupV1, withArtifactRelativeDirectoryV1: (path: string, check: () => void, body: (directory: unknown) => Promise<unknown>) => api.withArtifactRelativeDirectoryV1(path, check, actual => { const observed = new Map<string, number>(); admissions.push(observed); return body(wrap(actual, [], observed)); }) };
-  const run = new Function(...Object.keys(ports), ts.transpileModule(nodes.map(node => node.getText(tree)).join("\n") + ";return {capture:captureJavascriptDependencyDescriptorInputsV1,verify:verifyJavascriptDependencyDescriptorGroupV1};", { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText)(...Object.values(ports));
+  const run = new Function(...Object.keys(ports), ts.transpileModule(nodes.map(node => node.getText(tree).replace(/^export\s+/u, "")).join("\n") + ";return {capture:captureJavascriptDependencyDescriptorInputsV1,verify:verifyJavascriptDependencyDescriptorGroupV1};", { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText)(...Object.values(ports));
   return { ...run, api, policy };
 };
 
@@ -115,13 +118,14 @@ test("dependency immutable capture preserves native hostile Source and cancellat
   for (const mode of vectors.nativeRefusals) {
     const fixture = await nativeFixture(), run = await captureFunctions([]), baseline = run.api.artifactDescriptorCustodyV1(), first = fixture.group.batches[0]!, path = fixture.join(fixture.root, first.roots[0], first.files[0].path), parent = fixture.join(fixture.root, first.roots[0], "d0/d1/d2"), primary = Object.freeze({ reason: "original capture cancellation" });
     let failure: unknown, changed = false;
+    const opened = first.roots[0] + "/" + first.files[0].path;
+    if (mode === "file-hash") fileOpened = { path: opened, run: async () => { changed = true; await fixture.fs.writeFile(path, Buffer.alloc(first.files[0].bytes, 7)); } };
+    if (mode === "file-replacement") fileOpened = { path: opened, run: async () => { changed = true; await fixture.fs.rename(path, path + ".old"); await fixture.fs.writeFile(path, Buffer.from(first.files[0].data, "base64")); } };
+    if (mode === "parent-replacement") fileOpened = { path: opened, run: async () => { changed = true; await fixture.fs.rename(parent, parent + ".old"); await fixture.fs.mkdir(parent); await fixture.fs.writeFile(path, Buffer.from(first.files[0].data, "base64")); } };
     const check = () => { if (changed && mode === "cancel") throw primary; };
     const control = { publish: async () => {}, yieldContinuation: async () => {
-      if (changed || mode === "fresh-roster" || mode === "path-escape" || mode === "file-link" || mode === "parent-link") return;
+      if (changed || mode !== "cancel") return;
       changed = true;
-      if (mode === "file-hash") await fixture.fs.writeFile(path, Buffer.alloc(first.files[0].bytes, 7));
-      if (mode === "file-replacement") { await fixture.fs.rename(path, path + ".old"); await fixture.fs.writeFile(path, Buffer.from(first.files[0].data, "base64")); }
-      if (mode === "parent-replacement") { await fixture.fs.rename(parent, parent + ".old"); await fixture.fs.mkdir(parent); await fixture.fs.writeFile(path, Buffer.from(first.files[0].data, "base64")); }
     } };
     try {
       if (mode === "path-escape") first.files[0].path = "../outside";
@@ -134,7 +138,7 @@ test("dependency immutable capture preserves native hostile Source and cancellat
       expect(failure, mode).toBeDefined();
       if (mode === "cancel") expect(failure).toBe(primary);
       expect(run.api.artifactDescriptorCustodyV1(), mode).toEqual(baseline);
-    } finally { await fixture.fs.rm(fixture.root, { recursive: true, force: true }); }
+    } finally { fileOpened = undefined; await fixture.fs.rm(fixture.root, { recursive: true, force: true }); }
   }
 });
 

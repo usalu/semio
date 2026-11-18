@@ -1,0 +1,6 @@
+7a8
+> import{createBoundedCacheV1}from"../../../../🧊️bounded/🟨️.mjs";
+69c70
+< const preflights=new Map();
+---
+> const preflights=createBoundedCacheV1({name:"inference:tool-preflights",maxEntries:16,maxBytes:16384});

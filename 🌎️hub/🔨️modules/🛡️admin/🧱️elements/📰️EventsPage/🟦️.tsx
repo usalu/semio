@@ -8,6 +8,7 @@
 import * as React from "react";
 import { Button, Table, uiDataLabel, type TableColumn } from "@semio-tech/ui-react";
 import type { DirectoryEvent } from "@semio-tech/framework-os";
+import { AdminPage } from "../📄️AdminPage/🟦️.tsx";
 import { useAdminT } from "../📚️I18n/🟦️.tsx";
 import { useAdminSession } from "../🔑️AdminSession/🟦️.tsx";
 // #endregion 🔌️Adapters
@@ -44,12 +45,8 @@ export function EventsPage(): React.ReactElement {
   ];
 
   return (
-    <div className="flex h-full w-full flex-col gap-single overflow-auto p-single">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-emphasized">{t("admin.events.title")}</h1>
-        <Button id="admin-events-load-more" icon="save" text={t("admin.events.loadMore")} variant="ghost" onClick={load} />
-      </div>
+    <AdminPage title={t("admin.events.title")} data-slot="admin-events" actions={<Button id="admin-events-load-more" icon="save" text={t("admin.events.loadMore")} variant="ghost" onClick={load} />}>
       <Table columns={columns} data={events} emptyMessage={uiDataLabel(t("admin.events.empty"))} getRowId={(row) => `event:${row.id}`} />
-    </div>
+    </AdminPage>
   );
 }

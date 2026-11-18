@@ -1,6 +1,6 @@
 //! 🧭 Cursor roots and original retirement independent of Store execution.
 use semio_framework_value::{DslValue, FromValue, ToValue, ValueError, artifact_retire_struct};
-use semio_framework_value::retirement::{RetireOwned, RetirementCursor, sequence};
+use semio_framework_value::retirement::RetireOwned;
 use std::{mem::ManuallyDrop, sync::Arc};
 #[cfg(any(test, feature = "testkit"))]
 use serde::{Deserialize, Serialize};
@@ -38,7 +38,9 @@ pub struct ArtifactCursor {
     group: std::mem::ManuallyDrop<Option<ArtifactCursorGroupRoot>>,
 }
 
-struct ArtifactCursorGroupRoot {
+/// 🧭️ Names the staged group root inside the cursor's typed retirement frame; only the cursor constructs it.
+#[doc(hidden)]
+pub struct ArtifactCursorGroupRoot {
     visibility: semio_framework_value::retirement::arc_custody::ArcLease<semio_os_vcs::ArtifactGroupVisibility>,
     owners: ArtifactCursorOwners,
 }
@@ -175,13 +177,12 @@ impl Drop for ArtifactCursor {
 artifact_retire_struct!(ArtifactCursorOwners { applied_edit_ids, redo_edit_ids, checkpoint_id });
 artifact_retire_struct!(ArtifactCursorGroupRoot { visibility, owners });
 impl RetireOwned for ArtifactCursor {
-    type RetirementCursor = Box<dyn RetirementCursor>;
+    type RetirementCursor = semio_framework_value::retirement_fields_type!(ArtifactCursorOwners, Option<ArtifactCursorGroupRoot>);
     fn retirement_seed(self) -> Self::RetirementCursor {
         let mut original = ManuallyDrop::new(self);
         let owners = unsafe { ManuallyDrop::take(&mut original.owners) };
         let group = unsafe { ManuallyDrop::take(&mut original.group) };
-        sequence(vec![Box::new(semio_framework_value::retirement::deferred(owners)), Box::new(semio_framework_value::retirement::deferred(group))])
+        semio_framework_value::retirement_fields_seed!(owners, group)
     }
-    fn retirement_birth_bytes(&self) -> Option<usize> { semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&*self.owners), semio_framework_value::retirement::deferred_birth_bytes_for(&*self.group)]) }
     fn controlled_retirement_supported() -> bool { true }
 }

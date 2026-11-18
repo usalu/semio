@@ -2395,7 +2395,8 @@
         "fullFenceInterval": 64,
         "maximumWork": 16777216,
         "progressWorkUnits": 64,
-        "scanProgressWorkUnits": 4096
+        "scanProgressWorkUnits": 4096,
+        "scanCustodyMilliseconds": 20
       }
     },
     "InstalledPathCase": {

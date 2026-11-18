@@ -38,7 +38,7 @@ test("A run forecast to execute nothing answers beside a full machine with a sma
   expect(granted.handle!.reservedMegabytes).toBeLessThan(4096);
   expect(granted.args.at(-1),"the tool is told the full jobs").toBe("--parallel=2");
   await sleep(120);
- },{write:(line:string)=>lines.push(line)});
+ },{write:(line:string)=>lines.push(line),observe:async()=>Math.floor(buildPolicy.hostCapacity.estimates.quietReferenceMegabytes*1.2)});
  expect(lines.some(line=>/^\[capacity\] run: forecast quiet because the last run of its class executed nothing \(\d+ quiet run\(s\) behind its size, 100% of the recent runs\): \d+ MB reserved now, the full \d+ MB only if work has to run/u.test(line))).toBe(true);
  const store=readHostEstimateStoreV1(directory);
  expect(store.classes[`${leaf}~quiet`]!.samples.length).toBe(6);expect(store.classes[`${leaf}~busy`]).toBeUndefined();

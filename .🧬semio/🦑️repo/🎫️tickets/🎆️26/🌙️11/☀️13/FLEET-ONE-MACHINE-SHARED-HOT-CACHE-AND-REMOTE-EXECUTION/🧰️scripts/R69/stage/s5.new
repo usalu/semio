@@ -1,0 +1,146 @@
+{
+  "version": 1,
+  "id": "caching",
+  "languages": [
+    "en",
+    "de"
+  ],
+  "messages": {
+    "compiler.configuration-view-required": {
+      "en": "Cargo step admission requires a compiler configuration view",
+      "de": "Die Zulassung eines Cargo-Schritts erfordert eine Compiler-Konfigurationsansicht"
+    },
+    "compiler.live-configuration-view-required": {
+      "en": "Live issued Cargo configuration view required",
+      "de": "Eine aktuell ausgestellte Cargo-Konfigurationsansicht ist erforderlich"
+    },
+    "compiler.other-configuration-needs-scope": {
+      "en": "A Cargo step selecting another configuration requires its own input scope",
+      "de": "Ein Cargo-Schritt, der eine andere Konfiguration wählt, braucht seinen eigenen Eingabebereich"
+    },
+    "compiler.retained-store-required": {
+      "en": "The compiler store is no longer retained by the run that opened it",
+      "de": "Der Compiler-Speicher wird vom Lauf, der ihn geöffnet hat, nicht mehr gehalten"
+    },
+    "daemon.root-released": {
+      "en": "Original daemon root released",
+      "de": "Ursprüngliche Daemon-Wurzel freigegeben"
+    },
+    "daemon.service-required": {
+      "en": "Original acquired daemon service required",
+      "de": "Ursprünglich erworbener Daemon-Dienst erforderlich"
+    },
+    "daemon.slots-exhausted": {
+      "en": "Nx daemon slots exhausted ({kind} limit {limit})",
+      "de": "Nx-Daemon-Slots erschöpft ({kind}-Obergrenze {limit})"
+    },
+    "dependency-store.ancestor-holds": {
+      "en": "Process {pid} ({command}) started this command and has held the dependency store since {since}; it cannot let go while this command runs, so waiting for it would never end ({seconds} s). Run the setup of the dependency store outside that process",
+      "de": "Der Prozess {pid} ({command}) hat diesen Befehl gestartet und hält den Abhängigkeitsspeicher seit {since}; er kann ihn nicht freigeben, solange dieser Befehl läuft, das Warten darauf würde nie enden ({seconds} s). Die Einrichtung des Abhängigkeitsspeichers muss außerhalb dieses Prozesses laufen"
+    },
+    "dependency-store.busy-timeout": {
+      "en": "The dependency store stayed busy for {seconds} s; the other process did not finish in time",
+      "de": "Der Abhängigkeitsspeicher blieb {seconds} s belegt; der andere Prozess wurde nicht rechtzeitig fertig"
+    },
+    "dependency-store.current-under-ancestor": {
+      "en": "Process {pid} ({command}) holds the dependency store since {since} and the funding is already current; continuing under that hold without exclusive access",
+      "de": "Der Prozess {pid} ({command}) hält den Abhängigkeitsspeicher seit {since} und die Finanzierung ist bereits aktuell; es wird unter dieser Haltung ohne exklusiven Zugriff fortgefahren"
+    },
+    "dependency-store.funding-moving": {
+      "en": "The {what} of the dependency funding moved while it ran ({path})",
+      "de": "{what} der Abhängigkeitsfüllung hat sich während des Laufs verändert ({path})"
+    },
+    "dependency-store.funding-rerun": {
+      "en": "The {what} of the dependency funding moved ({path}); running it again, attempt {attempt} of {limit}, in {seconds} s",
+      "de": "{what} der Abhängigkeitsfüllung hat sich verändert ({path}); sie läuft erneut, Versuch {attempt} von {limit}, in {seconds} s"
+    },
+    "dependency-store.moving": {
+      "en": "The {what} of the dependency funding kept moving ({path}) and held still in none of {attempts} attempts; try again when the files it reads (manifests, lockfiles, patches) are not being edited",
+      "de": "{what} der Abhängigkeitsfüllung hat sich immer wieder verändert ({path}) und blieb in keinem von {attempts} Versuchen stabil; erneut versuchen, wenn die gelesenen Dateien (Manifeste, Sperrdateien, Patches) nicht bearbeitet werden"
+    },
+    "dependency-store.holder-gone": {
+      "en": "Process {pid} ({command}) held the dependency store since {since} but no longer exists; its claim was removed",
+      "de": "Der Prozess {pid} ({command}) hielt den Abhängigkeitsspeicher seit {since}, existiert aber nicht mehr; sein Anspruch wurde entfernt"
+    },
+    "dependency-store.preparing": {
+      "en": "Funding the dependency store: the dependencies of every scope are installed into it now. A first funding takes many minutes on a small machine; the lines below report each scope",
+      "de": "Der Abhängigkeitsspeicher wird gefüllt: die Abhängigkeiten aller Bereiche werden jetzt darin installiert. Eine erste Füllung dauert auf einem kleinen Rechner viele Minuten; die Zeilen darunter melden jeden Bereich"
+    },
+    "dependency-store.funding-scope-restored": {
+      "en": "Scope {scope}: restored from the fleet ({entries} entries, host class {class}, state {key}); nothing was installed here",
+      "de": "Bereich {scope}: aus der Flotte wiederhergestellt ({entries} Einträge, Rechnerklasse {class}, Stand {key}); hier wurde nichts installiert"
+    },
+    "dependency-store.funding-scope-installed-published": {
+      "en": "Scope {scope}: installed here ({entries} entries, host class {class}, state {key}) and published to the fleet, so the next machine of this class restores it",
+      "de": "Bereich {scope}: hier installiert ({entries} Einträge, Rechnerklasse {class}, Stand {key}) und in die Flotte veröffentlicht, die nächste Maschine dieser Klasse stellt ihn wieder her"
+    },
+    "dependency-store.funding-scope-installed": {
+      "en": "Scope {scope}: installed here ({entries} entries, host class {class}, state {key}); the fleet did not receive it (no fleet store, no identity, or it could not be published)",
+      "de": "Bereich {scope}: hier installiert ({entries} Einträge, Rechnerklasse {class}, Stand {key}); die Flotte hat ihn nicht erhalten (kein Flottenspeicher, keine Identität oder nicht veröffentlichbar)"
+    },
+    "dependency-store.retiring": {
+      "en": "Retiring obsolete dependency generation {prefix} ({retired} retired so far)",
+      "de": "Veraltete Abhängigkeitsgeneration {prefix} wird entfernt (bisher {retired} entfernt)"
+    },
+    "dependency-store.stale-generation": {
+      "en": "Retained dependency generation {prefix} cannot be read with the current field set (file {file}; missing {missing}, unexpected {unexpected}; {reason}); it was written by older code and is retired as obsolete",
+      "de": "Die behaltene Abhängigkeitsgeneration {prefix} lässt sich mit dem aktuellen Feldsatz nicht lesen (Datei {file}; fehlend {missing}, unerwartet {unexpected}; {reason}); sie stammt von älterem Code und wird als veraltet entfernt"
+    },
+    "dependency-store.retirement-deferred": {
+      "en": "The dependency store stayed busy for {seconds} s while obsolete generations were retired ({retired} retired); the rest is retired by the next setup",
+      "de": "Der Abhängigkeitsspeicher blieb {seconds} s belegt, während veraltete Generationen entfernt wurden ({retired} entfernt); der Rest wird vom nächsten Setup entfernt"
+    },
+    "dependency-store.retirement-plan-incomplete": {
+      "en": "The dependency store returned no complete retirement plan ({reason}, {bytes} bytes, first violation: {violation}); nothing was retired. Run the setup again; if this repeats, the dependency store image is damaged and must be reset",
+      "de": "Der Abhängigkeitsspeicher lieferte keinen vollständigen Entfernungsplan ({reason}, {bytes} Bytes, erste Verletzung: {violation}); nichts wurde entfernt. Das Setup erneut ausführen; wiederholt sich dies, ist das Abbild des Abhängigkeitsspeichers beschädigt und muss zurückgesetzt werden"
+    },
+    "dependency-store.retirement-settlement-incomplete": {
+      "en": "The dependency store did not settle the {operation} of generation {prefix} completely ({violation}); this step left the store unchanged. Run the setup again",
+      "de": "Der Abhängigkeitsspeicher hat das Vorgehen {operation} der Generation {prefix} nicht vollständig abgeschlossen ({violation}); dieser Schritt hat den Speicher unverändert gelassen. Das Setup erneut ausführen"
+    },
+    "dependency-store.waiting": {
+      "en": "Another process holds the dependency store; waiting for it ({seconds} s of at most {limit} s)",
+      "de": "Ein anderer Prozess hält den Abhängigkeitsspeicher; es wird darauf gewartet ({seconds} s von höchstens {limit} s)"
+    },
+    "dependency-store.waiting-for-holder": {
+      "en": "Process {pid} ({command}) holds the dependency store since {since}; waiting for it ({seconds} s of at most {limit} s)",
+      "de": "Der Prozess {pid} ({command}) hält den Abhängigkeitsspeicher seit {since}; es wird darauf gewartet ({seconds} s von höchstens {limit} s)"
+    },
+    "headroom.retention-ledger-invalid": {
+      "en": "The retained snapshot ledger row needs exactly a byte count and a time",
+      "de": "Die Zeile der Schnappschuss-Bilanz braucht genau eine Bytezahl und einen Zeitpunkt"
+    },
+    "lane.provenance-changed": {
+      "en": "Lane provenance file changed while it was retained: {file}",
+      "de": "Die Herkunftsdatei der Lane hat sich während der Aufbewahrung geändert: {file}"
+    },
+    "layout.root-and-workspace-required": {
+      "en": "Canonical absolute repository root and workspace required",
+      "de": "Kanonische absolute Repository-Wurzel und Workspace erforderlich"
+    },
+    "orchestration.caller-repository-root-refused": {
+      "en": "Original native caller repository root refused",
+      "de": "Repository-Wurzel des ursprünglichen nativen Aufrufers abgelehnt"
+    },
+    "orchestration.child-deadline-exhausted": {
+      "en": "Original finite native child deadline exhausted",
+      "de": "Endliche Frist des ursprünglichen nativen Kindprozesses erschöpft"
+    },
+    "reset.current-intent-changed": {
+      "en": "Current reset intent changed",
+      "de": "Die aktuelle Absicht des Zurücksetzens hat sich geändert"
+    },
+    "reset.intent-changed": {
+      "en": "Original reset intent changed",
+      "de": "Die ursprüngliche Absicht des Zurücksetzens hat sich geändert"
+    },
+    "reset.residue-retained": {
+      "en": "Unknown reset residue retained",
+      "de": "Unbekannter Rest des Zurücksetzens bleibt erhalten"
+    },
+    "wasm-bindgen.lock-drift": {
+      "en": "wasm-bindgen lock drift:\n{mismatches}",
+      "de": "wasm-bindgen-Lock weicht ab:\n{mismatches}"
+    }
+  }
+}

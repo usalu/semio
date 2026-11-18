@@ -500,10 +500,6 @@ export const Scene: React.FC<SceneProps> = ({
  **/
 export const SceneSkeleton: React.FC = () => (
   <div className={cn("h-full w-full flex items-center justify-center", surfaceClass, loadingBorderClass)}>
-    <div className="relative w-32 h-32 animate-pulse">
-      <div className="absolute inset-0 border-4 border-muted-foreground/20 rounded-lg" />
-      <div className="absolute inset-2 border-2 border-muted-foreground/20 rounded-lg" />
-      <div className="absolute inset-4 border border-muted-foreground/20 rounded-lg" />
-    </div>
+    <div data-border-probe-art="" className="w-32 h-32 animate-pulse border-4 border-muted-foreground/20" />
   </div>
 );

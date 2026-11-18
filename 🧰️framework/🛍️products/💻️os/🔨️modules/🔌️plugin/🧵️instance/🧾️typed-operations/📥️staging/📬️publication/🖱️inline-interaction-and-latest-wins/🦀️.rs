@@ -57,7 +57,11 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         }
         if !pending.closing{
             let before=cx.retained_progress();
-            match self.stores.window_config_store.ensure_for_view(pending.metadata()?.view_state.as_deref(),cx){
+            let ensured=match pending.metadata(){
+                Ok(metadata)=>self.stores.window_config_store.ensure_for_view(metadata.view_state.as_deref(),cx),
+                Err(error)=>{self.tools.latest_wins_commands.insert_admitted(operation_id,pending);return Err(error.into());},
+            };
+            match ensured{
                 Ok(true) if cx.retained_progress()==before=>{},
                 Ok(_)=>{self.tools.latest_wins_commands.insert_admitted(operation_id,pending);return Ok(());},
                 Err(error)=>{self.tools.latest_wins_commands.insert_admitted(operation_id,pending);return Err(error.into());},
@@ -85,16 +89,18 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         }
         if ready && !pending.closing {
             if pending.context_phase<3{let result=pending.prepare_context_metadata(cx);self.tools.latest_wins_commands.insert_admitted(operation_id,pending);result?;return Ok(())}
+            if !pending.construction.terminal_is_empty(){let result=semio_plugin_job::original_steps::unbuilt(cx,&mut pending.construction);self.tools.latest_wins_commands.insert_admitted(operation_id,pending);result?;return Ok(())}
             let started=self.as_dispatch().start_typed_command_operation(&mut pending,cx).await;
             match started{
                 Ok(true)=>{assert_eq!(self.tools.latest_wins_order.pop(),Some(operation_id));}
                 Ok(false)=>{self.tools.latest_wins_commands.insert_admitted(operation_id,pending);}
-                Err(fault)=>{self.tools.typed_operation_reservations[operation_id as usize % ARTIFACT_LIVE_OUTPUT_SLOTS]=None;return Err(fault.into())}
+                Err(fault)=>{self.tools.typed_operation_reservations[operation_id as usize % ARTIFACT_LIVE_OUTPUT_SLOTS]=None;self.tools.latest_wins_commands.insert_admitted(operation_id,pending);return Err(fault.into())}
             }
             return Ok(());
         }
         if pending.closing && pending.command_owners_are_empty() {
             pending.validate_original(cx)?;
+            if !pending.construction.terminal_is_empty(){let result=semio_plugin_job::original_steps::unbuilt(cx,&mut pending.construction);self.tools.latest_wins_commands.insert_admitted(operation_id,pending);result?;return Ok(())}
 
             let mut demand=MountedTypedCommandFullOperation::<A>::original_emission_birth_demands();
             demand.copy_bytes+=2*size_of::<semio_plugin_retained_command::typed_operation::pending_result_page::PublicationPagePlan>();

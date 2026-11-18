@@ -1,17 +1,18 @@
 /** 🔎️ Search, filters and sorting over catalog rows, with accent folding in both languages.
  * @see ./🥒️.feature — the scenarios */
 import { describe, expect, it } from "vitest";
+import { totalPowerW } from "@teaching/staffage";
 import type { Asset, ManifestEntry } from "@teaching/staffage";
 import walkerDocument from "../../../../🧫️fixtures/🚶️reference-walker/🔣️.json";
-import { NO_FILTERS, filterAndSort, hasRootMotion, matches, needsAssets, normalize, rowCompletion, type Row } from "../../🔨️modules/🔎️search/🟦️.ts";
+import { NO_FILTERS, filterAndSort, hasRootMotion, matches, needsAssets, normalize, rowCompletion, rowPowerW, formatPowerW, type Row } from "../../🔨️modules/🔎️search/🟦️.ts";
 
 const walker = walkerDocument as unknown as Asset;
-const entry = (id: string, category: ManifestEntry["category"], en: string, de: string, heightM: number, analytics: ManifestEntry["analytics"] = ["thermal", "structural"]): ManifestEntry => ({ id, category, title: { en, de }, heightM, widthM: 1, poses: [], clips: [], representations: { "500": "unavailable", "200": "unavailable", "100": "authored", "50": "unavailable" }, symbols: [], analytics, exports: ["svg"], distinction: { en: `${en} distinction`, de: `${de} Unterschied` }, completion: "planned" });
+const entry = (id: string, category: ManifestEntry["category"], en: string, de: string, heightM: number, analytics: ManifestEntry["analytics"] = ["thermal", "structural"], powerW = 0): ManifestEntry => ({ id, category, title: { en, de }, heightM, widthM: 1, powerW, poses: [], clips: [], representations: { "500": "unavailable", "200": "unavailable", "100": "authored", "50": "unavailable" }, symbols: [], analytics, exports: ["svg"], distinction: { en: `${en} distinction`, de: `${de} Unterschied` }, completion: "planned" });
 const rows: readonly Row[] = [
-  { entry: entry("english-oak", "vegetation", "English Oak", "Stieleiche", 18), status: "pending" },
-  { entry: entry("park-bench", "objects", "Park Bench", "Parkbank", 0.85, ["structural"]), status: "pending" },
-  { entry: entry("walking-commuter", "humans", "Walking Commuter", "Pendler zu Fuß", 1.78), status: "ready", asset: { ...walker, id: "walking-commuter", tags: ["walker", "commuter"], summary: { en: "An adult walking to work", de: "Ein Erwachsener auf dem Weg zur Arbeit" }, completion: "authored", dimensions: { ...walker.dimensions, massKg: 75 } } },
-  { entry: entry("tower-crane", "vehicles", "Tower Crane", "Turmdrehkran", 40), status: "missing" },
+  { entry: entry("english-oak", "vegetation", "English Oak", "Stieleiche", 18, ["thermal", "structural"], 0), status: "pending" },
+  { entry: entry("park-bench", "objects", "Park Bench", "Parkbank", 0.85, ["structural"], 2000), status: "pending" },
+  { entry: entry("walking-commuter", "humans", "Walking Commuter", "Pendler zu Fuß", 1.78, ["thermal", "structural"], 110), status: "ready", asset: { ...walker, id: "walking-commuter", tags: ["walker", "commuter"], summary: { en: "An adult walking to work", de: "Ein Erwachsener auf dem Weg zur Arbeit" }, completion: "authored", dimensions: { ...walker.dimensions, massKg: 75 } } },
+  { entry: entry("tower-crane", "vehicles", "Tower Crane", "Turmdrehkran", 40, ["thermal", "structural"], 7750), status: "missing" },
 ];
 const ids = (list: readonly Row[]): string[] => list.map((row) => row.entry.id);
 
@@ -40,6 +41,30 @@ describe("filters", () => {
     expect(ids(filterAndSort(rows, { ...NO_FILTERS, analytics: ["thermal"] }, "en"))).toEqual(["english-oak", "tower-crane", "walking-commuter"]);
     expect(ids(filterAndSort(rows, { ...NO_FILTERS, heightMinM: 1, heightMaxM: 20 }, "en"))).toEqual(["english-oak", "walking-commuter"]);
     expect(ids(filterAndSort(rows, { ...NO_FILTERS, completion: ["authored"] }, "en"))).toEqual(["walking-commuter"]);
+  });
+
+  it("narrows by total power, taking the loaded asset over the manifest", () => {
+    const loaded = totalPowerW(rows[2]!.asset!);
+    expect(loaded).toBeGreaterThan(50);
+    expect(loaded).toBeLessThan(1000);
+    expect(rowPowerW(rows[2]!)).toBe(loaded);
+    expect(rowPowerW(rows[1]!)).toBe(2000);
+    expect(ids(filterAndSort(rows, { ...NO_FILTERS, powerMinW: 1000 }, "en"))).toEqual(["park-bench", "tower-crane"]);
+    expect(ids(filterAndSort(rows, { ...NO_FILTERS, powerMaxW: 1000 }, "en"))).toEqual(["english-oak", "walking-commuter"]);
+    expect(ids(filterAndSort(rows, { ...NO_FILTERS, powerMinW: 0, powerMaxW: 0 }, "en"))).toEqual(["english-oak"]);
+  });
+
+  it("writes power in watts below 1 kW and in kilowatts of three significant digits above, in the reader's number format", () => {
+    expect(formatPowerW(0, "en")).toBe("0 W");
+    expect(formatPowerW(2.4, "en")).toBe("2.4 W");
+    expect(formatPowerW(2.4, "de")).toBe("2,4 W");
+    expect(formatPowerW(183.9, "en")).toBe("184 W");
+    expect(formatPowerW(999.4, "de")).toBe("999 W");
+    expect(formatPowerW(1675.3, "en")).toBe("1.68 kW");
+    expect(formatPowerW(1675.3, "de")).toBe("1,68 kW");
+    expect(formatPowerW(12000, "de")).toBe("12,0 kW");
+    expect(formatPowerW(150000, "en")).toBe("150 kW");
+    expect(formatPowerW(495000, "de")).toBe("495 kW");
   });
 
   it("filters by root motion from the loaded clips only", () => {
@@ -74,6 +99,12 @@ describe("sorting", () => {
   it("puts rows without a mass last in either direction", () => {
     expect(ids(filterAndSort(rows, { ...NO_FILTERS, sort: "mass" }, "en"))[0]).toBe("walking-commuter");
     expect(ids(filterAndSort(rows, { ...NO_FILTERS, sort: "mass", descending: true }, "en"))[0]).toBe("walking-commuter");
+  });
+
+  it("orders by power with explicit zeros, in both directions", () => {
+    expect(ids(filterAndSort(rows, { ...NO_FILTERS, sort: "power" }, "en"))).toEqual(["english-oak", "walking-commuter", "park-bench", "tower-crane"]);
+    expect(ids(filterAndSort(rows, { ...NO_FILTERS, sort: "power", descending: true }, "en"))).toEqual(["tower-crane", "park-bench", "walking-commuter", "english-oak"]);
+    expect(needsAssets({ ...NO_FILTERS, sort: "power" })).toBe(false);
   });
 
   it("orders by category in archive order", () => {

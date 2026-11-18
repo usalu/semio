@@ -1,0 +1,22 @@
+{
+  "title": "Set Up Windows Workstation as Fleet Worker G1 M05 and Collaborate With the Coordinator",
+  "emoji": "🛬",
+  "status": "open",
+  "description": "Setup this machine properly and collaborate with the coordinator. This machine (DESKTOP-6NSLEUO, Windows 11, origin g1-m05, group g1) already joined the fleet at C:\\semio; the completion marker of the native bootstrap is absent and the automatic ready runner stands at stage dependencies (stage-timeout). Follow the worker readiness protocol of ticket 26/11/14/WORKERS-READY-WITH-LOW-RESOURCES at the current round (31): run no setup command, observe every 10 minutes, report into workers/g1-m05 of that ticket, change no build code, until the worker is ready or the protocol says stop.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "42349b9f-86c8-4b80-a0bf-838711e3c344"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-16 01:52:00",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Setup this machine properly and collaborate with the coordinator.",
+      "llm": "fable-5-2"
+    }
+  ]
+}

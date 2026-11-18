@@ -27,6 +27,8 @@ export function closureHandleOfV1(value: unknown): ScriptInputsValueV1;
 export function registerClosureQueryV1(name: string, query: ScriptInputsValueV1): void;
 export function bindClosureScriptsV1(workspaceRoot: string, scripts: ScriptInputsValueV1): void;
 export function resetClosureEntriesV1(entryBytes?: number): void;
+export function mergeWalkMembersV1(table: { get(key: string): string[] | undefined; set(key: string, value: string[]): unknown }, digest: string, members: string[]): boolean;
+export function closureCollectionsV1(): { name: string; entries: number; bytes: number }[];
 export function closureEntryCountsV1(): { derived: number; loaded: number; stale: number; checked: number };
 export function closureStoreDirectoryV1(workspaceRoot: string): string | undefined;
 export function bindClosureStoreV1(workspaceRoot: string, directory: string, writable?: boolean): void;
@@ -35,7 +37,9 @@ export function derivedWalkAnswerV1(value: unknown): string;
 export function expandedCommandInputsV1<T>(value: T, workspaceRoot: string, scripts?: ScriptInputsValueV1): Promise<T>;
 export function resolveCommandWalkV1(workspaceRoot: string, entries: readonly string[], cache: ScriptInputsValueV1): Promise<{ readonly value: readonly string[]; readonly rows: readonly ScriptInputsValueV1[]; readonly derived: readonly { readonly row: ScriptInputsValueV1; readonly support: readonly ScriptInputsValueV1[] }[] }>;
 export function yieldInferenceV1(context: ScriptInputsValueV1, phase: string, index: number, force?: boolean): Promise<void>;
-export function withClosurePassV1<T>(compute:()=>Promise<T>|T):Promise<T>;
+export function withClosurePassV1<T>(compute:()=>Promise<T>|T,options?:{verdicts?:string}):Promise<T>;
+export function closureVerdictScopeV1():string|undefined;
+export function closureVerdictCountsV1():{read:number;written:number;waited:number};
 
 /** 📋️ The recipes every owner reads and none depends on its own target. */
 export function sharedClosureRecipesV1(scripts: ScriptInputsValueV1): readonly Record<string, unknown>[];
@@ -43,9 +47,19 @@ export function sharedClosureRecipesV1(scripts: ScriptInputsValueV1): readonly R
 export function primeSharedClosuresV1(workspaceRoot: string, scripts: ScriptInputsValueV1, options?: { signal?: AbortSignal; progress?: (event: { done: number; total: number }) => unknown; recipes?: readonly Record<string, unknown>[] }): Promise<{ recipes: number; derived: number; loaded: number; stale: number }>;
 
 /** 🚚️ The closure entries of a project record as portable bundles and back. */
-export const closureTravelV1: Readonly<{ export(workspaceRoot: string, image: string): Promise<readonly Readonly<{ recipeKey: string; bundle: unknown }>[]>; import(workspaceRoot: string, bundles: readonly Readonly<{ recipeKey: string; bundle: unknown }>[]): Promise<number> }>;
+export const closureTravelV1: Readonly<{ export(workspaceRoot: string, image: string): Promise<readonly Readonly<{ recipeKey: string; stamp?: string; bundle: unknown }>[]>; import(workspaceRoot: string, bundles: readonly Readonly<{ recipeKey: string; bundle: unknown; source?: string; neutral?: string }>[]): Promise<number>; held(workspaceRoot: string, source: string, neutral?: string, refusedMilliseconds?: number): Promise<string | undefined>; claim(workspaceRoot: string, neutral: string, staleMilliseconds: number): Promise<(() => Promise<void>) | undefined>; claimed(workspaceRoot: string, neutral: string): Promise<boolean> }>;
 
 /** 🫧️ Releases what one finished owner left in the shared script input cache. */
 export function closureEntriesWithLayersV1(): number;
 export function chargedToSharedV1<T>(cache: object, work: () => Promise<T>): Promise<T>;
-export function releaseOwnerStateV1(scripts: ScriptInputsValueV1, options?: { shrink?: boolean; gate?: { grantBytes(): number | undefined; footprintBytes(): number } }): void;
+export function releaseOwnerStateV1(scripts: ScriptInputsValueV1, options?: { shrink?: boolean; now?: boolean; gate?: { grantBytes(): number | undefined; footprintBytes(): number } }): void;
+/** 📈️ Whether a look releases the shared cache: the managed memory grew `lookReleaseGrowthBytes` beyond its lowest reading, or the host is short. */
+export function lookReleaseDueV1(lowestBytes: number, managedBytes: number, options?: { shrink?: boolean; limits?: { lookReleaseGrowthBytes: number } }): boolean;
+/** 🪤️ Runs a take look in which no closure entry is derived: a missing or stale entry ends it with `BUILD_TAKE_MISS`. */
+export function runClosureTakeV1<T>(body: () => Promise<T>): Promise<T>;
+export function releaseAfterTakeLookV1(scripts: ScriptInputsValueV1 | undefined, options?: { shrink?: boolean; gate?: { grantBytes(): number | undefined; footprintBytes(): number } }): void;
+/** 🛃️ Walks every declared tool closure and provider port once and returns the refusals. */
+export function preflightToolClosuresV1(workspaceRoot: string, scripts: ScriptInputsValueV1): Promise<{ checked: number; refused: readonly { name: string; version: 1; code: string; key: string; values: Record<string, string | number> }[] }>;
+
+export function closureLayerListV1(log: unknown, view: { key: unknown; digest?: string; store?: unknown; rows?: unknown }): any;
+export function layerVerdictCountsV1(): { hits: number; joined: number; checked: number; indexed: number; milliseconds: number };

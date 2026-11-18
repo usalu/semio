@@ -93,7 +93,7 @@ test("Law: the Rust compile view leaves every file of the new domains, which the
  const scripts=await import(join(root,"🧭️script-inputs","🟨️.mjs")) as any;
  const raw=(await scripts.relativeScriptInputs([join(checkout,corpus.cargoScript)],checkout,inference.createScriptInputCache({workspaceRoot:checkout}))).filter((row:unknown)=>typeof row==="string").map((row:string)=>row.slice("{workspaceRoot}/".length)) as string[];
  const leaving=raw.filter(path=>covered(path,added));
- expect(leaving.length,"files of the new domains in the real closure").toBeGreaterThanOrEqual(corpus.minimumLeaving);
+ for(const row of declared.domains.filter(row=>corpus.introduced.includes(row.id)))expect(leaving.some(path=>covered(path,row.prefixes)),"the real closure holds files of "+row.id).toBe(true);
  for(const path of leaving)expect(existsSync(join(checkout,path)),path).toBe(true);
  expect(relative(checkout,join(checkout,corpus.cargoScript)).length).toBeGreaterThan(0);
 },180000);

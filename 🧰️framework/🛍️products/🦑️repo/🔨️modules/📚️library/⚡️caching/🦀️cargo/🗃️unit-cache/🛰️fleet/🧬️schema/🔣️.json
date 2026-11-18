@@ -7,7 +7,7 @@
       "const": {
         "version": 1,
         "namespace": "semio.cargo.unit-cache.fleet/v1",
-        "layout": { "state": "fl", "spool": "up", "costs": "cost", "down": "down", "denied": "denied", "noClaims": "noclaims", "reachable": "reachable", "uploader": "uploader.lock", "spawned": "uploader.spawned" },
+        "layout": { "state": "fl", "fallbacks": "fb", "spool": "up", "costs": "cost", "down": "down", "denied": "denied", "noClaims": "noclaims", "reachable": "reachable", "uploader": "uploader.lock", "spawned": "uploader.spawned" },
         "tokens": { "cwd": "@@semio-cwd@@", "workspace": "@@semio-ws@@" },
         "slotType": "type.semio.tech/semio.cargo.unit-cache.slot.v1",
         "worker": "semio-unit-cache",
@@ -25,7 +25,7 @@
           "rideThroughMaximumMilliseconds": 2000
         },
         "breaker": { "downFaults": 2, "downMilliseconds": 15000, "deniedMilliseconds": 15000, "noClaimsMilliseconds": 600000, "reachableMilliseconds": 300000 },
-        "claim": { "ttlMilliseconds": 30000, "heartbeatMilliseconds": 8000, "finalTtlMilliseconds": 90000, "minimumWaitMilliseconds": 30000, "maximumWaitMilliseconds": 1200000, "defaultExpectedMilliseconds": 90000, "waitFactor": 2, "maximumRounds": 40 },
+        "claim": { "ttlMilliseconds": 30000, "heartbeatMilliseconds": 8000, "finalTtlMilliseconds": 90000, "minimumWaitMilliseconds": 30000, "maximumWaitMilliseconds": 1200000, "defaultExpectedMilliseconds": 90000, "waitFactor": 2, "maximumRounds": 40, "retries": 2, "retryBackoffMilliseconds": 750 },
         "limits": { "maximumEntryBytes": 268435456, "maximumBlobBytes": 268435456, "maximumBlobs": 64, "maximumManifestBytes": 4194304, "maximumDownloadConcurrency": 4, "maximumUploadConcurrency": 3, "maximumSpool": 512 },
         "uploader": { "heartbeatMilliseconds": 2000, "staleMilliseconds": 10000, "idleMilliseconds": 15000, "pollMilliseconds": 200, "spawnThrottleMilliseconds": 3000, "jobMilliseconds": 120000, "maximumJobAgeMilliseconds": 600000, "maximumAttempts": 4, "retryBackoffMilliseconds": 15000 },
         "linkedCrateTypes": ["proc-macro", "bin", "cdylib", "dylib", "staticlib"],

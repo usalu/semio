@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {realpathSync} from "node:fs";
 import {dirname,isAbsolute,join,relative,resolve,sep} from "node:path";
 import {fileURLToPath} from "node:url";
@@ -13,7 +14,7 @@ export const testToolchainDirectoryV1=()=>privateRepositoryStartDirectoryV1;
 /** 🏠️ The checkout holding the code under test: read its sources, never its store. */
 export const testCheckoutRootV1=()=>repositoryCheckoutRootV1(dirname(fileURLToPath(import.meta.url)))!;
 /** 🧰️ The immutable Nx toolkit the test runner granted (`SEMIO_NX_TOOLING_IDENTITY`), read in place from the checkout's tools image like any installed toolchain: the one sanctioned read of the live store, which no test writes, leases or measures. */
-export const testNxToolkitDirectoryV1=(identity:string)=>join(testCheckoutRootV1(),".cache/b/t/m/nx",identity);
+export const testNxToolkitDirectoryV1=(identity:string)=>machinePathV1(testCheckoutRootV1(),".cache/b/t/m/nx",identity);
 /** 🔒️ Whether one directory lies strictly below another. */
 const strictlyInsideV1=(parent:string,child:string)=>{const distance=relative(parent,child);return distance!==""&&distance!==".."&&!distance.startsWith(".."+sep)&&!isAbsolute(distance);};
 let pinsV1=0;
@@ -24,7 +25,7 @@ export type PrivateRepositoryProfileV1="store"|"graph";
 /** 📍️ The scratch parents a private repository may live below, in preference order: an explicit parent, the checkout's own test sandbox, the test artifact directory and, for a graph repository, a short system scratch (`/tmp/sg`, Windows `<temp>/sg`). */
 export function privateRepositoryParentsV1(checkout:string|null,profile:PrivateRepositoryProfileV1):string[]{
  const explicit=process.env.SEMIO_PRIVATE_REPOSITORY_PARENT,artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;
- return[...(explicit?[explicit]:[]),...(checkout!==null?[join(checkout,".cache","test-sandbox")]:[]),...(artifacts?[artifacts]:[]),...(profile==="graph"?[join(process.platform==="win32"?tmpdir():"/tmp","sg")]:[])].map(path=>{try{return realpathSync(resolve(path));}catch{return resolve(path);}});
+ return[...(explicit?[explicit]:[]),...(checkout!==null?[machinePathV1(checkout,".cache","test-sandbox")]:[]),...(artifacts?[artifacts]:[]),...(profile==="graph"?[join(process.platform==="win32"?tmpdir():"/tmp","sg")]:[])].map(path=>{try{return realpathSync(resolve(path));}catch{return resolve(path);}});
 }
 /** 📏️ The length of the deepest path a profile writes below a repository root, which must fit 256 units: the deepest graph inference directory, or for `graph` its observation staging file (pid of up to 7 and a millisecond clock of 13 digits). */
 export const privateRepositoryDeepestV1=(root:string,profile:PrivateRepositoryProfileV1)=>(root+"/.cache/b/g/m/inference/contexts/"+"0".repeat(64)+"/inference/ob/"+"0".repeat(64)+(profile==="graph"?".br."+"9".repeat(7)+"."+"9".repeat(13)+".tmp":"")).length;

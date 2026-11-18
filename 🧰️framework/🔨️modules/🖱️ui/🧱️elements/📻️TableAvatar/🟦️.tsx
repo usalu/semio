@@ -54,6 +54,7 @@ export const TableAvatar = reactHostPort.forwardRef<HTMLSpanElement, TableAvatar
     <span
       ref={ref}
       data-slot="avatar"
+      data-border-probe-art=""
       id={id}
       style={style}
       className={cn(
@@ -62,8 +63,8 @@ export const TableAvatar = reactHostPort.forwardRef<HTMLSpanElement, TableAvatar
         !isFullSize && "border",
         !isSizeClass && !hasExplicitSize && tableAvatarSizeClassName,
         className,
-        isSelected && "ring-1 ring-[color:var(--active-base)]",
-        isHovered && "ring-1 ring-[color:var(--hover-base)]",
+        !isFullSize && isSelected && "border-[color:var(--active-base)]",
+        !isFullSize && isHovered && !isSelected && "border-[color:var(--hover-base)]",
       )}
       {...props}
     >

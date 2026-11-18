@@ -1,0 +1,484 @@
+{
+ "cases": [
+  {
+   "name": "a dead owner is removed, a live one kept",
+   "own": "/tmp/semio-owner-pool-own",
+   "directories": [
+    {
+     "name": "semio-owner-pool-dead",
+     "owner": {
+      "pid": 4001,
+      "startTime": "Mon Nov 16 04:17:00 2026"
+     },
+     "alive": false,
+     "ageMilliseconds": 3600000
+    },
+    {
+     "name": "semio-owner-pool-live",
+     "owner": {
+      "pid": 4002,
+      "startTime": "Mon Nov 16 04:18:00 2026"
+     },
+     "alive": true,
+     "ageMilliseconds": 3600000
+    }
+   ],
+   "removed": [
+    "semio-owner-pool-dead"
+   ]
+  },
+  {
+   "name": "the directory of the caller is never removed even when its owner file is stale",
+   "own": "/tmp/semio-owner-pool-own",
+   "directories": [
+    {
+     "name": "semio-owner-pool-own",
+     "owner": {
+      "pid": 1
+     },
+     "alive": false,
+     "ageMilliseconds": 9999999
+    }
+   ],
+   "removed": []
+  },
+  {
+   "name": "a directory without an owner file goes only after the grace",
+   "own": "/tmp/semio-owner-pool-own",
+   "directories": [
+    {
+     "name": "semio-owner-pool-born",
+     "ageMilliseconds": 5000
+    },
+    {
+     "name": "semio-owner-pool-old",
+     "ageMilliseconds": 120001
+    },
+    {
+     "name": "semio-owner-pool-edge",
+     "ageMilliseconds": 120000
+    }
+   ],
+   "removed": [
+    "semio-owner-pool-old"
+   ]
+  },
+  {
+   "name": "names that are not staging directories are never touched",
+   "own": "/tmp/semio-owner-pool-own",
+   "directories": [
+    {
+     "name": "claude-501",
+     "ageMilliseconds": 99999999
+    },
+    {
+     "name": "semio-owner-poolx",
+     "ageMilliseconds": 99999999
+    },
+    {
+     "name": "my-semio-owner-pool-1",
+     "ageMilliseconds": 99999999
+    }
+   ],
+   "removed": []
+  },
+  {
+   "name": "39 tries leave 39 dead directories that the next try removes",
+   "own": "/tmp/semio-owner-pool-own",
+   "directories": [
+    {
+     "name": "semio-owner-pool-t00",
+     "owner": {
+      "pid": 5000,
+      "startTime": "s0"
+     },
+     "alive": false,
+     "ageMilliseconds": 0
+    },
+    {
+     "name": "semio-owner-pool-t01",
+     "owner": {
+      "pid": 5001,
+      "startTime": "s1"
+     },
+     "alive": false,
+     "ageMilliseconds": 1000
+    },
+    {
+     "name": "semio-owner-pool-t02",
+     "owner": {
+      "pid": 5002,
+      "startTime": "s2"
+     },
+     "alive": false,
+     "ageMilliseconds": 2000
+    },
+    {
+     "name": "semio-owner-pool-t03",
+     "owner": {
+      "pid": 5003,
+      "startTime": "s3"
+     },
+     "alive": false,
+     "ageMilliseconds": 3000
+    },
+    {
+     "name": "semio-owner-pool-t04",
+     "owner": {
+      "pid": 5004,
+      "startTime": "s4"
+     },
+     "alive": false,
+     "ageMilliseconds": 4000
+    },
+    {
+     "name": "semio-owner-pool-t05",
+     "owner": {
+      "pid": 5005,
+      "startTime": "s5"
+     },
+     "alive": false,
+     "ageMilliseconds": 5000
+    },
+    {
+     "name": "semio-owner-pool-t06",
+     "owner": {
+      "pid": 5006,
+      "startTime": "s6"
+     },
+     "alive": false,
+     "ageMilliseconds": 6000
+    },
+    {
+     "name": "semio-owner-pool-t07",
+     "owner": {
+      "pid": 5007,
+      "startTime": "s7"
+     },
+     "alive": false,
+     "ageMilliseconds": 7000
+    },
+    {
+     "name": "semio-owner-pool-t08",
+     "owner": {
+      "pid": 5008,
+      "startTime": "s8"
+     },
+     "alive": false,
+     "ageMilliseconds": 8000
+    },
+    {
+     "name": "semio-owner-pool-t09",
+     "owner": {
+      "pid": 5009,
+      "startTime": "s9"
+     },
+     "alive": false,
+     "ageMilliseconds": 9000
+    },
+    {
+     "name": "semio-owner-pool-t10",
+     "owner": {
+      "pid": 5010,
+      "startTime": "s10"
+     },
+     "alive": false,
+     "ageMilliseconds": 10000
+    },
+    {
+     "name": "semio-owner-pool-t11",
+     "owner": {
+      "pid": 5011,
+      "startTime": "s11"
+     },
+     "alive": false,
+     "ageMilliseconds": 11000
+    },
+    {
+     "name": "semio-owner-pool-t12",
+     "owner": {
+      "pid": 5012,
+      "startTime": "s12"
+     },
+     "alive": false,
+     "ageMilliseconds": 12000
+    },
+    {
+     "name": "semio-owner-pool-t13",
+     "owner": {
+      "pid": 5013,
+      "startTime": "s13"
+     },
+     "alive": false,
+     "ageMilliseconds": 13000
+    },
+    {
+     "name": "semio-owner-pool-t14",
+     "owner": {
+      "pid": 5014,
+      "startTime": "s14"
+     },
+     "alive": false,
+     "ageMilliseconds": 14000
+    },
+    {
+     "name": "semio-owner-pool-t15",
+     "owner": {
+      "pid": 5015,
+      "startTime": "s15"
+     },
+     "alive": false,
+     "ageMilliseconds": 15000
+    },
+    {
+     "name": "semio-owner-pool-t16",
+     "owner": {
+      "pid": 5016,
+      "startTime": "s16"
+     },
+     "alive": false,
+     "ageMilliseconds": 16000
+    },
+    {
+     "name": "semio-owner-pool-t17",
+     "owner": {
+      "pid": 5017,
+      "startTime": "s17"
+     },
+     "alive": false,
+     "ageMilliseconds": 17000
+    },
+    {
+     "name": "semio-owner-pool-t18",
+     "owner": {
+      "pid": 5018,
+      "startTime": "s18"
+     },
+     "alive": false,
+     "ageMilliseconds": 18000
+    },
+    {
+     "name": "semio-owner-pool-t19",
+     "owner": {
+      "pid": 5019,
+      "startTime": "s19"
+     },
+     "alive": false,
+     "ageMilliseconds": 19000
+    },
+    {
+     "name": "semio-owner-pool-t20",
+     "owner": {
+      "pid": 5020,
+      "startTime": "s20"
+     },
+     "alive": false,
+     "ageMilliseconds": 20000
+    },
+    {
+     "name": "semio-owner-pool-t21",
+     "owner": {
+      "pid": 5021,
+      "startTime": "s21"
+     },
+     "alive": false,
+     "ageMilliseconds": 21000
+    },
+    {
+     "name": "semio-owner-pool-t22",
+     "owner": {
+      "pid": 5022,
+      "startTime": "s22"
+     },
+     "alive": false,
+     "ageMilliseconds": 22000
+    },
+    {
+     "name": "semio-owner-pool-t23",
+     "owner": {
+      "pid": 5023,
+      "startTime": "s23"
+     },
+     "alive": false,
+     "ageMilliseconds": 23000
+    },
+    {
+     "name": "semio-owner-pool-t24",
+     "owner": {
+      "pid": 5024,
+      "startTime": "s24"
+     },
+     "alive": false,
+     "ageMilliseconds": 24000
+    },
+    {
+     "name": "semio-owner-pool-t25",
+     "owner": {
+      "pid": 5025,
+      "startTime": "s25"
+     },
+     "alive": false,
+     "ageMilliseconds": 25000
+    },
+    {
+     "name": "semio-owner-pool-t26",
+     "owner": {
+      "pid": 5026,
+      "startTime": "s26"
+     },
+     "alive": false,
+     "ageMilliseconds": 26000
+    },
+    {
+     "name": "semio-owner-pool-t27",
+     "owner": {
+      "pid": 5027,
+      "startTime": "s27"
+     },
+     "alive": false,
+     "ageMilliseconds": 27000
+    },
+    {
+     "name": "semio-owner-pool-t28",
+     "owner": {
+      "pid": 5028,
+      "startTime": "s28"
+     },
+     "alive": false,
+     "ageMilliseconds": 28000
+    },
+    {
+     "name": "semio-owner-pool-t29",
+     "owner": {
+      "pid": 5029,
+      "startTime": "s29"
+     },
+     "alive": false,
+     "ageMilliseconds": 29000
+    },
+    {
+     "name": "semio-owner-pool-t30",
+     "owner": {
+      "pid": 5030,
+      "startTime": "s30"
+     },
+     "alive": false,
+     "ageMilliseconds": 30000
+    },
+    {
+     "name": "semio-owner-pool-t31",
+     "owner": {
+      "pid": 5031,
+      "startTime": "s31"
+     },
+     "alive": false,
+     "ageMilliseconds": 31000
+    },
+    {
+     "name": "semio-owner-pool-t32",
+     "owner": {
+      "pid": 5032,
+      "startTime": "s32"
+     },
+     "alive": false,
+     "ageMilliseconds": 32000
+    },
+    {
+     "name": "semio-owner-pool-t33",
+     "owner": {
+      "pid": 5033,
+      "startTime": "s33"
+     },
+     "alive": false,
+     "ageMilliseconds": 33000
+    },
+    {
+     "name": "semio-owner-pool-t34",
+     "owner": {
+      "pid": 5034,
+      "startTime": "s34"
+     },
+     "alive": false,
+     "ageMilliseconds": 34000
+    },
+    {
+     "name": "semio-owner-pool-t35",
+     "owner": {
+      "pid": 5035,
+      "startTime": "s35"
+     },
+     "alive": false,
+     "ageMilliseconds": 35000
+    },
+    {
+     "name": "semio-owner-pool-t36",
+     "owner": {
+      "pid": 5036,
+      "startTime": "s36"
+     },
+     "alive": false,
+     "ageMilliseconds": 36000
+    },
+    {
+     "name": "semio-owner-pool-t37",
+     "owner": {
+      "pid": 5037,
+      "startTime": "s37"
+     },
+     "alive": false,
+     "ageMilliseconds": 37000
+    },
+    {
+     "name": "semio-owner-pool-t38",
+     "owner": {
+      "pid": 5038,
+      "startTime": "s38"
+     },
+     "alive": false,
+     "ageMilliseconds": 38000
+    }
+   ],
+   "removed": [
+    "semio-owner-pool-t00",
+    "semio-owner-pool-t01",
+    "semio-owner-pool-t02",
+    "semio-owner-pool-t03",
+    "semio-owner-pool-t04",
+    "semio-owner-pool-t05",
+    "semio-owner-pool-t06",
+    "semio-owner-pool-t07",
+    "semio-owner-pool-t08",
+    "semio-owner-pool-t09",
+    "semio-owner-pool-t10",
+    "semio-owner-pool-t11",
+    "semio-owner-pool-t12",
+    "semio-owner-pool-t13",
+    "semio-owner-pool-t14",
+    "semio-owner-pool-t15",
+    "semio-owner-pool-t16",
+    "semio-owner-pool-t17",
+    "semio-owner-pool-t18",
+    "semio-owner-pool-t19",
+    "semio-owner-pool-t20",
+    "semio-owner-pool-t21",
+    "semio-owner-pool-t22",
+    "semio-owner-pool-t23",
+    "semio-owner-pool-t24",
+    "semio-owner-pool-t25",
+    "semio-owner-pool-t26",
+    "semio-owner-pool-t27",
+    "semio-owner-pool-t28",
+    "semio-owner-pool-t29",
+    "semio-owner-pool-t30",
+    "semio-owner-pool-t31",
+    "semio-owner-pool-t32",
+    "semio-owner-pool-t33",
+    "semio-owner-pool-t34",
+    "semio-owner-pool-t35",
+    "semio-owner-pool-t36",
+    "semio-owner-pool-t37",
+    "semio-owner-pool-t38"
+   ]
+  }
+ ]
+}

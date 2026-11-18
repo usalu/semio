@@ -1,5 +1,5 @@
 /** 🏪️ Marketplace chrome panel: the plugin and extension entries, the marketplace host api, the status labels, the marketplace tree and the Marketplace panel tab. */
-import { Button, type PanelTabNode, type TreeDataItem, type TreeDataSection, type TreePanelConfig, type UiLabel, singleTreeLeaf } from "@semio-tech/ui-react";
+import { Button, SharedBorderRow, type PanelTabNode, type TreeDataItem, type TreeDataSection, type TreePanelConfig, type UiLabel, singleTreeLeaf } from "@semio-tech/ui-react";
 import { type PluginPanelStatus } from "../../🐚️Shell/📦️program-sessions/🟦️.ts";
 import { shellLabel, shellTabIcon } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 
@@ -55,7 +55,7 @@ function marketplaceExtensionItem(entry: MarketplaceExtensionEntry, host: Market
     label: `${entry.label}${entry.version ? ` · ${entry.version}` : ""} · ${entry.enabled ? shellLabel("ui.plugins.extension.enabled") : shellLabel("ui.plugins.extension.disabled")}`,
     loading: entry.status === "installing" || entry.status === "reloading",
     control: (
-      <div className="flex items-center gap-1">
+      <SharedBorderRow className="shrink-0">
         <Button icon={entry.enabled ? "eye-off" : "eye"}
           id={`framework.marketplace.extension.${entry.extensionId}.enable`}
           text={entry.enabled ? shellLabel("ui.plugins.extension.disable") : shellLabel("ui.plugins.extension.enable")}
@@ -68,7 +68,7 @@ function marketplaceExtensionItem(entry: MarketplaceExtensionEntry, host: Market
           disabled={entry.status === "installing" || entry.status === "reloading"}
           onClick={() => host.uninstallExtension(entry.extensionId)}
         />
-      </div>
+      </SharedBorderRow>
     ),
   };
 }
@@ -84,7 +84,7 @@ function marketplacePluginItem(entry: MarketplacePluginEntry, extensions: readon
       entry.status === "available" || entry.status === "failed" ? (
         <Button icon="download" id={`framework.marketplace.plugin.${entry.pluginId}.install`} text={shellLabel("ui.plugins.action.install")} onClick={() => host.installPlugin(entry.pluginId)} />
       ) : (
-        <div className="flex items-center gap-1">
+        <SharedBorderRow className="shrink-0">
           <Button icon="rotate-ccw"
             id={`framework.marketplace.plugin.${entry.pluginId}.reload`}
             text={shellLabel("ui.plugins.action.reload")}
@@ -97,7 +97,7 @@ function marketplacePluginItem(entry: MarketplacePluginEntry, extensions: readon
             disabled={!entry.canUninstall || entry.status !== "loaded"}
             onClick={() => host.uninstallPlugin(entry.pluginId)}
           />
-        </div>
+        </SharedBorderRow>
       ),
   };
 }

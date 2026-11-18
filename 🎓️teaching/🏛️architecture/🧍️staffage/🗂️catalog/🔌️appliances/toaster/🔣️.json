@@ -1798,6 +1798,8 @@
             "key": "elements",
             "heatW": 95
           },
+          "ratedPowerW": 900,
+          "ratedPowerBasis": "electrical-input",
           "source": "authored-estimate",
           "reference": "iec-60335-2-9"
         },

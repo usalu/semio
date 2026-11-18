@@ -2390,6 +2390,8 @@
             "key": "duty",
             "heatW": 340
           },
+          "ratedPowerW": 0,
+          "ratedPowerBasis": "passive",
           "source": "authored-estimate",
           "reference": "incropera-2018"
         },

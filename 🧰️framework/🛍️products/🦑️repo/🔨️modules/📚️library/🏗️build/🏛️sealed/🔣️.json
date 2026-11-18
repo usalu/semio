@@ -180,8 +180,8 @@
       "de": "[implementation] Der erfasste Befehl überschreitet die Grenze seiner Veröffentlichung."
     },
     "compilerClosureBounded": {
-      "en": "[implementation] The admitted compiler closure exceeds its bound.",
-      "de": "[implementation] Der zugelassene Compiler-Abschluss überschreitet seine Grenze."
+      "en": "[implementation] The admitted compiler closure exceeds its bound. Drop the import that pulls the largest subtree into the entry, or raise the Policy of build/source/closure/schema (files, source bytes and snapshot bytes together).",
+      "de": "[implementation] Der zugelassene Compiler-Abschluss überschreitet seine Grenze. Entferne den Import, der den größten Teilbaum in den Einstieg zieht, oder erhöhe die Policy von build/source/closure/schema (Dateien, Quellbytes und Snapshot-Bytes gemeinsam)."
     },
     "compilerImageBounded": {
       "en": "[implementation] The admitted compiler image exceeds its bound.",

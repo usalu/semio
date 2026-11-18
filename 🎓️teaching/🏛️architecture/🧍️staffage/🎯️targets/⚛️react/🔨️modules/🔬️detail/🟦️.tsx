@@ -12,7 +12,7 @@ import { useClock } from "../⏱️clock/🟦️.ts";
 import { ViewerBoundary } from "../🎛️viewer/🛡️boundary/🟦️.tsx";
 import { Viewer, type ViewerFrame } from "../🎛️viewer/🟦️.tsx";
 import { useArchive, useLocal, useRows } from "../🧭️context/🟦️.tsx";
-import { Button, ButtonLink, Notice, PageFrame, Tag } from "../🪟️chrome/🟦️.tsx";
+import { Button, ButtonLink, Cell, Notice, PageFrame, Tag } from "../🪟️chrome/🟦️.tsx";
 import type { PaneView } from "../🥞️levels/🟦️.tsx";
 import { FavoriteButton, RowFacts } from "../🗃️browse/🟦️.tsx";
 import { UnavailableNotice } from "../🖼️previews/🟦️.tsx";
@@ -77,7 +77,7 @@ export function AssetPage(props: { readonly row: Row; readonly view: PaneView })
   };
   const actions = (
     <>
-      <FavoriteButton asset={row.entry.id} title={title} className="border border-border" />
+      <FavoriteButton grouped asset={row.entry.id} title={title} className="border-0" />
       {asset === undefined ? null : (
         <>
           <ButtonLink href={formatAddress({ page: "compare" }, compareToParams(comparisonOf(asset.id, viewer)))} icon="combine">{t("detail.compare")}</ButtonLink>
@@ -92,12 +92,12 @@ export function AssetPage(props: { readonly row: Row; readonly view: PaneView })
       <p role="status" className="sr-only">{announce}</p>
       {active ? addressProblems(address.params, "asset").map((problem) => <Notice key={problem.en} kind="info" compact title={problem[language]} />) : null}
       {copied === "idle" ? null : <Notice kind="info" compact title={t(copied === "done" ? "detail.shareDone" : "detail.shareBlocked")} />}
-      <div className="flex flex-wrap items-center gap-single">
+      <Cell className="items-center">
         <RowFacts row={row} />
         {asset === undefined ? null : asset.tags.map((tag) => <Tag key={tag}>{tag.replaceAll("-", " ")}</Tag>)}
         <Tag>{t(`completion.${asset?.completion ?? row.entry.completion}`)}</Tag>
         {row.entry.analytics.map((analytic) => <Tag key={analytic}>{t(`analytic.${analytic}`)}</Tag>)}
-      </div>
+      </Cell>
       {asset === undefined ? (
         <>
           <UnavailableNotice row={row} />
@@ -109,10 +109,8 @@ export function AssetPage(props: { readonly row: Row; readonly view: PaneView })
           <ViewerBoundary resetKey={asset}>
             <Viewer asset={asset} viewer={viewer} onChange={change} onFrame={setFrame} />
           </ViewerBoundary>
-          <section aria-labelledby={`poses-${asset.id}`} className="flex flex-col gap-double">
-            <PosesAndClips asset={asset} selection={viewer.selection} onSelect={(selection) => change({ selection, timeS: null })} />
-            <Timeline asset={asset} frame={frame} viewer={viewer} onSeek={(timeS) => change({ timeS })} />
-          </section>
+          <PosesAndClips asset={asset} selection={viewer.selection} onSelect={(selection) => change({ selection, timeS: null })} />
+          <Timeline asset={asset} frame={frame} viewer={viewer} onSeek={(timeS) => change({ timeS })} />
           <DimensionsSection asset={asset} row={row} />
           <ModelSection asset={asset} state={frame?.state ?? null} thermal={frame?.thermal ?? null} structure={frame?.structure ?? null} environment={frame?.environment ?? asset.thermal.environment} language={language} />
           <ProvenanceSection asset={asset} />

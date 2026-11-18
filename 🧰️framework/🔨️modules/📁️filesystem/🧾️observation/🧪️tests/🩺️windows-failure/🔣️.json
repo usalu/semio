@@ -1,0 +1,9 @@
+{
+  "rows": [
+    {"operation": "open", "code": 5, "origin": "win32", "context": {"root": "C:\\semio\\node_modules", "name": "C:\\", "role": "root", "access": 2147483648}, "name": "ERROR_ACCESS_DENIED", "message": "Windows relative open failed (status 0x5; ERROR_ACCESS_DENIED; win32; root C:\\semio\\node_modules; name C:\\; role root; access 0x80000000)"},
+    {"operation": "open", "code": 3221225506, "origin": "nt", "context": {"root": "E:\\store", "name": "p", "role": "directory", "access": 3222274048}, "name": "STATUS_ACCESS_DENIED", "message": "Windows relative open failed (status 0xc0000022; STATUS_ACCESS_DENIED; nt; root E:\\store; name p; role directory; access 0xc0100000)"},
+    {"operation": "open", "code": 3221225539, "origin": "nt", "context": {"root": "C:\\semio", "name": "node_modules", "role": "delete", "access": 1114112}, "name": "STATUS_SHARING_VIOLATION", "message": "Windows relative open failed (status 0xc0000043; STATUS_SHARING_VIOLATION; nt; root C:\\semio; name node_modules; role delete; access 0x110000)"},
+    {"operation": "close", "code": 6, "origin": "win32", "context": {"root": "C:\\a\u0001b"}, "name": null, "message": "Windows relative close failed (status 0x6; win32; root C:\\a?b)"},
+    {"operation": "open", "code": 4294967295, "origin": "nt", "context": {"root": "C:\\x"}, "name": null, "message": "Windows relative open failed (status 0xffffffff; nt; root C:\\x)"}
+  ]
+}

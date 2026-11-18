@@ -230,7 +230,7 @@ export const LayeredCardHost = /* @__PURE__ */ React.memo(function LayeredCardHo
       data-reveal={props.source ?? undefined}
       data-cleared={props.cleared ? "" : undefined}
       data-layered-cell={props.placement === null ? undefined : pane.id}
-      className={props.placement === null ? "contents" : "pointer-events-none flex min-h-0 min-w-0 items-center-safe justify-center overflow-y-auto px-[36px] [:where(&)_*]:touch-pinch-zoom"}
+      className={props.placement === null ? "contents" : "pointer-events-none flex min-h-0 min-w-0 items-stretch justify-center overflow-y-auto [:where(&)_*]:touch-pinch-zoom"}
       style={props.placement?.style}
       onPointerOver={(event) => {
         if (event.pointerType !== "mouse" || zoomTrigger(event.target, event.currentTarget) === null) return;

@@ -35,7 +35,8 @@
         "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🟦️.ts",
         "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧬️schema/🔣️.json",
         "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🪞️profile/🟦️.ts",
-        "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts"
+        "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts"
       ]
     },
     {
@@ -87,7 +88,8 @@
         "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts",
         "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
         "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
-        "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts"
+        "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/📥️json/🟦️.ts"
       ]
     },
     {
@@ -140,7 +142,9 @@
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📖️texts/🟦️.ts",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📖️texts/🟦️.ts",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️texts/🟦️.ts",
-        "🧰️framework/📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts"
+        "🧰️framework/📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/📖️texts/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/📖️catalog/🟦️.ts"
       ]
     },
     {

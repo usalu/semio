@@ -1,11 +1,25 @@
 {
   "title": "Build Semio Tech Play For CDN Deployment",
   "emoji": "🚀️",
-  "status": "closed",
+  "status": "open",
   "description": "Build semio-tech play (`@semio-tech/semio-tech-play:build`) successfully into a static `dist/site` so it can be deployed on a CDN; fix whatever blocks the release build and verify the static output boots.",
+  "summary": "Closed on user request ('Finish'). Final fresh build #10 runs on the optimized pipeline (⚡️cache/fChPzBn, log play-fleet/coordinator/fresh-10.*); release gates pending its exit 0. os-kernel 1465/1465, editor_catalog 177/177, warnings −95%, all 222 plugin manifests compile. See 📓️2026-10-12-final-summary.md.",
   "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
   "parent": "26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP",
-  "sessions": [],
-  "note": "Ticket bookkeeping manual on disk: repo MCP ticket_open returned 'invalid tool params' on 2026-09-23. ticket_close via repo MCP returned a malformed result (structuredContent null) twice on 2026-10-12 without effect; closed manually on disk. Reopened manually 2026-10-12 16:35 for the user's build-pipeline optimization request (CPU underuse, ~3/10 cores). Closed manually again 2026-10-12 23:50 (repo MCP ticket_close still malformed).",
-  "summary": "Closed on user request ('Finish'). Final fresh build #10 runs on the optimized pipeline (⚡️cache/fChPzBn, log play-fleet/coordinator/fresh-10.*); release gates pending its exit 0. os-kernel 1465/1465, editor_catalog 177/177, warnings −95%, all 222 plugin manifests compile. See 📓️2026-10-12-final-summary.md."
+  "sessions": [
+    "d6eb76f7-2bfc-454d-9cc8-7540b88fcc51"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-17 18:05:23",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Redeploy round 2026-11-17: get semio-tech play ready to be redeployed on a CDN as fast as possible. Bugs are acceptable; every app pane must boot from the static output. Fall back to native tools whenever the shared work fleet or build graph stalls.",
+      "llm": "opus-5-5",
+      "effort": "medium"
+    }
+  ]
 }

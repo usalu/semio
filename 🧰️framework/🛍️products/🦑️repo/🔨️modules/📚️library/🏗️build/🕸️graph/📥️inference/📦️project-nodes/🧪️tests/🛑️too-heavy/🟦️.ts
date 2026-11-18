@@ -23,25 +23,27 @@ test("the governor of the inference is told the limit and the recorder, every ow
  expect(source).toMatch(/governor\.run\(async\(\{away,scope\}\)=>/u);expect(source).toContain("runInOwnerScopeV1(scope,");expect(source).toContain("key:job.name");
  expect(source).toContain("catch(error){if(ownerTooHeavyOfV1(error)===undefined)throw error;}");
  expect(source.indexOf("enforcement.recorder?.flush()")).toBeGreaterThan(source.indexOf("graphWaveMeterV1.parent("));
- const refusal=source.indexOf('refuseBuildV1("unserved","graph.owner-too-heavy"');
+ const refusal=source.indexOf("refuseHeavyOwnerV1(",source.indexOf("if(tooHeavy.size>0)"));
+ expect(source.indexOf("if(tooHeavy.size>0)")).toBeGreaterThan(source.indexOf('phases?.end("inference"'));
  expect(refusal).toBeGreaterThan(source.indexOf('phases?.end("inference"'));expect(refusal).toBeLessThan(source.indexOf("if (collector) await collector.finish"));
 });
 
 test("the yield points of the inference stop an owner the governor marked, before any other work",()=>{
  const inputs=readFileSync(new URL("../../../🧭️script-inputs/🟨️.mjs",import.meta.url),"utf8");
- expect(inputs).toMatch(/export async function yieldInferenceV1\(context,phase,index,force=false\)\{\n throwIfOwnerExceededV1\(\);\n if\(!context\.invocation\)return;/u);
+ const start=inputs.indexOf("export async function yieldInferenceV1(context,phase,index,force=false){"),stop=inputs.indexOf("throwIfOwnerExceededV1();",start),invocation=inputs.indexOf("if(!context.invocation)return;",start),throttle=inputs.indexOf("requireIssuedResourceControlInvocationV1(",start);
+ expect(start).toBeGreaterThan(-1);expect(stop).toBeGreaterThan(start);expect(stop).toBeLessThan(invocation);expect(invocation).toBeLessThan(throttle);
 });
 
-test("a 16 GB machine may give one project 1756 managed MB, an 8 GB machine its parent budget, a serving machine no limit; the recorder is there in every case",async()=>{
+test("a 16 GB machine may give one project 2048 managed MB, an 8 GB machine its parent budget, a serving machine no limit; the recorder is there in every case",async()=>{
  const root=mkdtempSync(join(tmpdir(),"too-heavy-"));scratch.push(root);
  const sixteen=await withTotal(16384,()=>graphOwnerEnforcementV1(root,process.env,1024*MB,()=>7,undefined,()=>16384));
- expect(sixteen.limitBytes).toBe(1756*MB);expect(sixteen.recorder).toBeDefined();
+ expect(sixteen.limitBytes,"(8192 admitted - 3072 parent floor) / factor 2 / margin 1.25").toBe(Math.floor((8192-3072)/2/1.25)*MB);expect(sixteen.recorder).toBeDefined();
  expect((await withTotal(8192,()=>graphOwnerEnforcementV1(root,process.env,1024*MB,undefined,undefined,()=>8192))).limitBytes).toBe(1024*MB);
  const serving=await withTotal(32768,()=>graphOwnerEnforcementV1(root,process.env,1536*MB,undefined,undefined,()=>32768));
  expect(serving.limitBytes).toBeUndefined();expect(serving.recorder).toBeDefined();
  expect(await withTotal(16384,()=>graphOwnerEnforcementV1(root,{SEMIO_GRAPH_OWNER_LIMIT:"off"},1024*MB))).toEqual({});
  sixteen.recorder!.record({key:"@semio-tech/s-dev-composition",kind:"project",takenBytes:2500*MB,seconds:9,stopped:true});
- expect(readOwnerCostFileV1(join(root,".cache/f/graph-costs/owner-costs.json")).owners["@semio-tech/s-dev-composition"]).toMatchObject({kind:"project",rows:7,samples:[{megabytes:2500,stopped:true}]});
+ expect(readOwnerCostFileV1(join(root,".cache/f/graph-costs/owner-costs.3.json")).owners["@semio-tech/s-dev-composition"]).toMatchObject({kind:"project",rows:7,samples:[{megabytes:2500,stopped:true}]});
 });
 
 test("the real yield point of the inference throws inside the scope of a stopped owner at once and stays silent for the owner beside it and outside any scope",async()=>{
@@ -55,17 +57,17 @@ test("the real yield point of the inference throws inside the scope of a stopped
 
 test("a limited machine reads alone: the owners whose recorded cost passes the share are named heavy, they get the solo grant of the memory available when they start (never less than the share), a serving machine has no heavy owners",async()=>{
  const root=mkdtempSync(join(tmpdir(),"solo-"));scratch.push(root);
- recordOwnerCostFileV1(join(root,".cache/f/graph-costs/owner-costs.json"),{name:"@semio-tech/framework-os-kernel",kind:"project",megabytes:3492,seconds:90,rows:10,stopped:false,atMs:Date.now()});
+ recordOwnerCostFileV1(join(root,".cache/f/graph-costs/owner-costs.3.json"),{name:"@semio-tech/framework-os-kernel",kind:"project",megabytes:3492,seconds:90,rows:10,stopped:false,atMs:Date.now()});
  let available=12000*MB;
  const sixteen=await withTotal(16384,()=>graphOwnerEnforcementV1(root,process.env,1024*MB,undefined,()=>available,()=>16384));
  expect(sixteen.heavy!(["@semio-tech/light","@semio-tech/framework-os-kernel","@semio-tech/other"])).toEqual(["@semio-tech/framework-os-kernel"]);
  expect(sixteen.heavy!(["@semio-tech/light"])).toEqual([]);
  expect(sixteen.soloLimitBytes!()).toBe(Math.floor((12000-2048)/2/1.25)*MB);
  available=7599*MB;expect(sixteen.soloLimitBytes!()).toBe(Math.floor((7599-2048)/2/1.25)*MB);
- available=1000*MB;expect(sixteen.soloLimitBytes!()).toBe(1756*MB);
- available=40000*MB;expect(sixteen.soloLimitBytes!()).toBe(Math.floor((16384-2048-3800)/2/1.25)*MB);
+ available=1000*MB;expect(sixteen.soloLimitBytes!(),"never below the limit of an owner beside others").toBe(Math.floor((8192-3072)/2/1.25)*MB);
+ available=40000*MB;expect(sixteen.soloLimitBytes!()).toBe(Math.floor((16384-2048-3072)/2/1.25)*MB);
  const small=await withTotal(8192,()=>graphOwnerEnforcementV1(root,process.env,1024*MB,undefined,()=>available,()=>8192));
- expect(small.soloLimitBytes!()).toBe(1024*MB);
+ expect(small.soloLimitBytes!(),"an 8 GB host: 8192 less the system reserve 1536 less the parent floor 3072, by factor and margin").toBe(Math.floor((8192-1536-3072)/2/1.25)*MB);
 });
 
 test("the inference runs the heavy owners alone after the light ones: sorted last, one at a time with the solo limit of the moment, a light owner stopped at the share is run again alone when the solo limit is larger, and only a stop at the solo limit ends the read with the refusal",()=>{

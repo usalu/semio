@@ -13,6 +13,9 @@ export function sidecarImportsV1(source:string):readonly Readonly<{specifier:str
  return [...found].map(([specifier,dynamic])=>({specifier,dynamic}));
 }
 
+/** 🔇️ Whether a file of the closure only carries words for people (the text catalogues below a `📖️texts` folder, edited by everyone every few seconds): a role shows its old words until it restarts for other reasons, so such a file never makes a role restart. */
+export const sidecarClosureIgnoredV1=(path:string):boolean=>/[\\/]📖️texts[\\/]/u.test(path);
+
 /** 🧩️ What a closure is made of: each file below the root with the SHA-256 of its bytes. */
 export type SidecarClosureV1=Readonly<{files:ReadonlyMap<string,string>;digest:string}>;
 
@@ -39,15 +42,15 @@ export function createSidecarClosureWatchV1(entries:readonly string[],staticOnly
    files.set(path,item.sha256);
    for(const row of item.imports){if(row.dynamic&&skip.has(path))continue;const next=resolveOf(path,row.specifier);if(next!==undefined&&!files.has(next))stack.push(next);}
   }
-  const lines=[...files].map(([path,sha256])=>`${path.startsWith(root)?path.slice(root.length):path} ${sha256}`).sort();
+  const lines=[...files].filter(([path])=>!sidecarClosureIgnoredV1(path)).map(([path,sha256])=>`${path.startsWith(root)?path.slice(root.length):path} ${sha256}`).sort();
   return {files,digest:createHash("sha256").update(lines.join("\n")).digest("hex")};
  };
  const first=build();
  const relative=(path:string):string=>path.startsWith(root)?path.slice(root.length).replace(/^[\\/]+/u,""):path;
  const changes=():readonly string[]=>{
   const now=build().files,names:string[]=[];
-  for(const [path,sha256] of now)if(first.files.get(path)!==sha256)names.push(relative(path));
-  for(const path of first.files.keys())if(!now.has(path))names.push(relative(path));
+  for(const [path,sha256] of now)if(!sidecarClosureIgnoredV1(path)&&first.files.get(path)!==sha256)names.push(relative(path));
+  for(const path of first.files.keys())if(!sidecarClosureIgnoredV1(path)&&!now.has(path))names.push(relative(path));
   return names.sort();
  };
  return Object.freeze({baseline:first.digest,closure:build,changed:()=>build().digest!==first.digest,changes});

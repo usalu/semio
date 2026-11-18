@@ -4,6 +4,8 @@ import{readFileSync}from"node:fs";
 import{renderCargoProfileConfigurationV1}from"../../../../../🎚️mode/🦀️profile/🟦️.ts";
 import{projectCargoRlibProfileV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🕸️units/📐️profile/🟦️.ts";
 import{readRustBuildIntentV1}from"../../🟦️.ts";
+import{existsSync as existsRootV1}from"node:fs";import{dirname as dirnameRootV1,join as joinRootV1}from"node:path";
+const repositoryRootV1=(()=>{let directory=import.meta.dir;while(!existsRootV1(joinRootV1(directory,"MODULE.bazel"))&&dirnameRootV1(directory)!==directory)directory=dirnameRootV1(directory);return directory;})();
 
 const profile={name:"prototype",opt_level:"0",lto:"off",codegen_backend:null,codegen_units:256,debuginfo:1,split_debuginfo:"unpacked",debug_assertions:true,overflow_checks:true,rpath:false,incremental:true,panic:"unwind" as const,strip:{resolved:"None" as const}},context={edition:"2021",kind:"library",operation:"build",roles:["target"],triple:"aarch64-apple-darwin"};
 
@@ -15,7 +17,7 @@ test("the repository policy trims object paths and the direct rlib mapper refuse
 });
 
 test("every declared bounded Cargo fallback admits the typed effective-profile refusal of a trimmed workspace library",()=>{
- const listed=Bun.spawnSync(["git","ls-files","--","*📋️project.json"],{cwd:process.cwd()}).stdout.toString().split("\n").filter(Boolean),declared:string[]=[];
+ const listed=Bun.spawnSync(["git","ls-files","--","*📋️project.json"],{cwd:repositoryRootV1}).stdout.toString().split("\n").filter(Boolean),declared:string[]=[];
  for(const path of listed){let text:string;try{text=readFileSync(path,"utf8");}catch{continue;}if(!text.includes('"bounded-cargo"'))continue;
   const project=JSON.parse(text) as {targets?:Record<string,{metadata?:{semio?:{rustBuildIntent?:unknown}}}>};
   for(const target of Object.values(project.targets??{})){const row=target.metadata?.semio?.rustBuildIntent;if(row===undefined)continue;const intent=readRustBuildIntentV1(row);if(intent.fallback){declared.push(path);expect(intent.fallback.adapters,path).toContain("effective-profile");}}

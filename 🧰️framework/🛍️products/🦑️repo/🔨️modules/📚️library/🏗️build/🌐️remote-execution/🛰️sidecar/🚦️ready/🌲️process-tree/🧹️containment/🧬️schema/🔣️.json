@@ -1,0 +1,127 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:remote-execution:sidecar:ready:process-tree:containment:v1",
+  "title": "How every process a setup stage starts is stopped as one unit, how the leftovers of a stopped try are reaped, and what the worker says about it",
+  "description": "A stage starts processes that outlive their parents: a launcher exits after it started a detached child, a door script starts `repo show projects`, a resident service child lives on. The stage is therefore contained by a roster, not by a parent chain: while it runs the process table is sampled by parent chain every `fastSampleMilliseconds` during the first `fastWindowMilliseconds` and every `slowSampleMilliseconds` after that, and every member (pid, creation time, program name) is kept in `<stage>.tree.json` until the stage ended well. A stop ends the roster (on Windows `taskkill /PID <pid> /T /F` per recorded member that is still there with its recorded creation time, on POSIX the signal to the process group and to each member), reads the table again and repeats up to `stopAttempts` times; what is still alive afterwards is reported by program name in `ready.json` (`containment`, English and German) and stays in the roster, so the next start stops it again. No Windows Job Object is used: the helper that owns one needs a Rust compiler, which a worker does not have before its tools stage, and a job that kills on close would also kill the resident service a successful stage leaves running. A process whose parent was a roster member that has exited since the previous sample, and that started after both, joins the roster (`readyHeirsV1`): Windows keeps the dead parent's pid in the child, so a launcher that exits after it started a detached child does not lose the child. Before a stage starts, and while it waits on a holder, the `ready` child reaps orphans that no roster knows: a process of the lease registry (`<registry>/<folder>/<pid>-<startMs>.json`) is an orphan only by proof of ownership, never by the time it started: it is alive with the registered start time (identity is always pid and start time), its entry carries the owner token (`ownerEnvironment`, `ready:<hash of the checkout>:<stage>:<start of the try>`) of a stopped try of this worker (stalled, stage-timeout or interrupted), which the stage runner puts into the environment of every process it starts and every descendant inherits; a process of another agent, another checkout or a person has no such token and is never a victim. It is no resident service (`sharedCommandPattern`: the graph service serves every agent and is spared with everything below it), it did not start in the working window of a person (`human.json`, `edgeToleranceMilliseconds` before their start) and it is neither in the tree of the current stage nor below a member of it. A stop asks first: SIGTERM, then `terminateGraceMilliseconds` (polled every `terminatePollMilliseconds`) for the process to end by itself, only then SIGKILL; every signal sent by the runner is written in English and German to `killRecordName` (and to the log of the stage) with the killer, the stage, the owner and the reason, so a victim's log says who stopped it. Every reap is said in English and German.",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "fastSampleMilliseconds": 1000,
+        "fastWindowMilliseconds": 60000,
+        "slowSampleMilliseconds": 5000,
+        "stopAttempts": 4,
+        "settleMilliseconds": 1000,
+        "killTimeoutMilliseconds": 15000,
+        "terminateGraceMilliseconds": 10000,
+        "terminatePollMilliseconds": 250,
+        "killRecordName": "kills.log",
+        "ownerEnvironment": "SEMIO_LEASE_OWNER",
+        "edgeToleranceMilliseconds": 2000,
+        "sharedCommandPattern": "^[0-9a-f]{64}\\s+service\\s+host\\s+run(?:\\s|$)",
+        "holderReapMilliseconds": 15000,
+        "humanWindowMilliseconds": 7200000,
+        "registryEntryLimit": 20000,
+        "registryFileName": "^\\d+-\\d+\\.json$",
+        "stoppedOutcomes": ["stalled", "stage-timeout", "interrupted"]
+      }
+    },
+    "Texts": {
+      "const": {
+        "en": {
+          "reaped-roster": "Stopped process {pid} ({name}) that an earlier try of stage {stage} left behind; it was in the roster of that try.",
+          "reaped-registry": "Stopped orphan {pid} ({name}), started at {started}; its lease registry entry carries the owner token of a stopped try of this worker ({owner}) and no live process of the current stage is its ancestor.",
+          "reaped-holder": "Stage {stage} was waiting for process {pid} ({name}); it is an orphan of a stopped try and was stopped at once instead of waiting.",
+          "survivor": "Process {pid} ({name}) is still alive after {passes} stop pass(es).",
+          "kill-record": "Process {pid} ({name}) received {signal} from the ready stage runner of this worker (runner process {killer}, stage {stage}, owner {owner}): {reason}",
+          "reason-orphan": "it is an orphan that carries the owner token of a stopped try of this stage, and nothing else.",
+          "reason-holder": "a stage was waiting for it and it is an orphan that carries the owner token of a stopped try.",
+          "reason-roster": "it stood in the roster of an earlier try of this stage.",
+          "reason-stall": "the stage showed no output and no processor time for {seconds} second(s) and was stopped as a whole.",
+          "reason-restart": "the stage waited for a holder while its code changed and was stopped as a whole to start again with the new code.",
+          "reason-timeout": "the stage ran past its time cap and was stopped as a whole.",
+          "reason-cancel": "the stage was cancelled and stopped as a whole.",
+          "reason-settle": "it was left over after the stage ended.",
+          "summary-reaped": "Stopped {count} leftover process(es) of earlier tries: {names}.",
+          "summary-survivors": "Stage {stage} was stopped but {count} process(es) are still alive: {names}; they are stopped again before the next stage starts."
+        },
+        "de": {
+          "reaped-roster": "Prozess {pid} ({name}) beendet, den ein früherer Versuch der Stufe {stage} zurückließ; er stand in der Liste dieses Versuchs.",
+          "reaped-registry": "Verwaisten Prozess {pid} ({name}) beendet, gestartet um {started}; sein Eintrag im Lease-Register trägt das Besitzer-Zeichen eines gestoppten Versuchs dieses Arbeiters ({owner}) und kein lebender Prozess der laufenden Stufe ist sein Vorfahre.",
+          "reaped-holder": "Stufe {stage} wartete auf Prozess {pid} ({name}); er ist ein Waise eines gestoppten Versuchs und wurde sofort beendet, statt zu warten.",
+          "survivor": "Prozess {pid} ({name}) lebt nach {passes} Stopp-Durchgang/Durchgängen noch.",
+          "kill-record": "Prozess {pid} ({name}) erhielt {signal} vom Stufen-Läufer dieses Arbeiters (Läufer-Prozess {killer}, Stufe {stage}, Besitzer {owner}): {reason}",
+          "reason-orphan": "er ist ein Waise, der das Besitzer-Zeichen eines gestoppten Versuchs dieser Stufe trägt, und sonst nichts.",
+          "reason-holder": "eine Stufe wartete auf ihn und er ist ein Waise, der das Besitzer-Zeichen eines gestoppten Versuchs trägt.",
+          "reason-roster": "er stand in der Liste eines früheren Versuchs dieser Stufe.",
+          "reason-stall": "die Stufe zeigte seit {seconds} Sekunde(n) weder Ausgabe noch Prozessorzeit und wurde als Ganzes gestoppt.",
+          "reason-restart": "die Stufe wartete auf einen Halter, während sich ihr Code änderte, und wurde als Ganzes gestoppt, um mit dem neuen Code neu zu starten.",
+          "reason-timeout": "die Stufe überschritt ihre Zeitgrenze und wurde als Ganzes gestoppt.",
+          "reason-cancel": "die Stufe wurde abgebrochen und als Ganzes gestoppt.",
+          "reason-settle": "er blieb nach dem Ende der Stufe übrig.",
+          "summary-reaped": "{count} übrig gebliebene(n) Prozess(e) früherer Versuche beendet: {names}.",
+          "summary-survivors": "Stufe {stage} wurde gestoppt, aber {count} Prozess(e) leben noch: {names}; sie werden vor dem Start der nächsten Stufe erneut gestoppt."
+        }
+      }
+    },
+    "Containment": {
+      "description": "`containment` of `ready.json`: what the last stage run reaped and what survived its stop, in English and German; `null` when there was nothing to say.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stage", "reaped", "survivors", "en", "de"],
+      "properties": {
+        "stage": {"type": "string"},
+        "reaped": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["pid", "name", "kind"], "properties": {"pid": {"type": "integer", "minimum": 1}, "name": {"type": "string"}, "kind": {"enum": ["roster", "registry", "holder"]}}}},
+        "survivors": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["pid", "name"], "properties": {"pid": {"type": "integer", "minimum": 1}, "name": {"type": "string"}}}},
+        "en": {"type": "string"},
+        "de": {"type": "string"}
+      }
+    },
+    "RegistryEntry": {
+      "description": "The part of a lease registry entry (`<registry>/<folder>/<pid>-<startedAtMs>.json`) that the reaper reads.",
+      "type": "object",
+      "required": ["pid", "startedAtMs", "command", "directory"],
+      "properties": {"pid": {"type": "integer", "minimum": 1}, "startedAtMs": {"type": "integer", "minimum": 0}, "command": {"type": "string"}, "directory": {"type": "string"}, "session": {"type": "string"}, "owner": {"type": "string"}, "holds": {"type": "array", "items": {"type": "object", "required": ["resource"], "properties": {"resource": {"type": "string"}, "sinceMs": {"type": "integer"}}}}}
+    },
+    "Window": {"type": "object", "additionalProperties": false, "required": ["stage", "startedMs", "endedMs"], "properties": {"stage": {"type": "string"}, "startedMs": {"type": "integer"}, "endedMs": {"type": "integer"}}},
+    "OwnerCase": {"type": "object", "additionalProperties": false, "required": ["root", "stage", "startedMs", "token"], "properties": {"root": {"type": "string"}, "stage": {"type": "string"}, "startedMs": {"type": "integer"}, "token": {"type": "string"}}},
+    "DelayCase": {"type": "object", "additionalProperties": false, "required": ["elapsedMs", "delayMs"], "properties": {"elapsedMs": {"type": "integer", "minimum": 0}, "delayMs": {"type": "integer"}}},
+    "WindowCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "runs", "windows"],
+      "properties": {"name": {"type": "string"}, "runs": {"type": "array", "items": {"type": "object", "required": ["stage", "startedMs", "endedMs", "outcome"], "properties": {"stage": {"type": "string"}, "startedMs": {"type": "integer"}, "endedMs": {"type": "integer"}, "outcome": {"type": "string"}}}}, "windows": {"type": "array", "items": {"$ref": "#/definitions/Window"}}}
+    },
+    "OrphanCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "root", "entries", "table", "windows", "human", "self", "stage", "orphans"],
+      "properties": {
+        "name": {"type": "string"},
+        "root": {"type": "string"},
+        "entries": {"type": "array", "items": {"$ref": "#/definitions/RegistryEntry"}},
+        "table": {"type": "array", "items": {"type": "object", "required": ["pid", "ppid", "startMs"], "properties": {"pid": {"type": "integer"}, "ppid": {"type": "integer"}, "startMs": {"type": "integer"}, "name": {"type": "string"}}}},
+        "windows": {"type": "array", "items": {"$ref": "#/definitions/Window"}},
+        "human": {"type": ["object", "null"], "properties": {"pid": {"type": "integer"}, "startedMs": {"type": "integer"}}},
+        "self": {"type": "integer"},
+        "stage": {"type": ["object", "null"], "properties": {"root": {"type": "object"}, "known": {"type": "array"}}},
+        "orphans": {"type": "array", "items": {"type": "integer"}}
+      }
+    },
+    "HeirCase": {
+      "description": "The previous roster, the moment of the previous sample, the table now and the pids that the roster adopts because their parent was a roster member that is gone.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "previous", "sinceMs", "table", "heirs"],
+      "properties": {"name": {"type": "string"}, "previous": {"type": "array", "items": {"type": "object"}}, "sinceMs": {"type": "integer"}, "table": {"type": "array", "items": {"type": "object", "required": ["pid", "ppid", "startMs"], "properties": {"pid": {"type": "integer"}, "ppid": {"type": "integer"}, "startMs": {"type": "integer"}, "name": {"type": "string"}}}}, "heirs": {"type": "array", "items": {"type": "integer"}}}
+    },
+    "TaskkillCase": {"type": "object", "additionalProperties": false, "required": ["pid", "arguments"], "properties": {"pid": {"type": "integer"}, "arguments": {"type": "array", "items": {"type": "string"}}}},
+    "Fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["delay", "window", "orphan", "taskkill", "heir", "owner"],
+      "properties": {"owner": {"type": "array", "items": {"$ref": "#/definitions/OwnerCase"}}, "delay": {"type": "array", "items": {"$ref": "#/definitions/DelayCase"}}, "window": {"type": "array", "items": {"$ref": "#/definitions/WindowCase"}}, "orphan": {"type": "array", "items": {"$ref": "#/definitions/OrphanCase"}}, "taskkill": {"type": "array", "items": {"$ref": "#/definitions/TaskkillCase"}}, "heir": {"type": "array", "items": {"$ref": "#/definitions/HeirCase"}}}
+    }
+  },
+  "oneOf": [{"$ref": "#/definitions/Policy"}]
+}

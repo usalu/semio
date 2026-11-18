@@ -5,7 +5,7 @@ import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {EventEmitter} from "node:events";
 import {openProjectFarmV1} from "../../🟨️.mjs";
-import {inferenceRecordIdentityV1} from "/Users/Shared/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs";
+import {inferenceRecordIdentityV1} from "../../../../../../👁️observation/🟨️.mjs";
 import {graphFarmIdentityV1} from "../../🪆️captured/🟨️.mjs";
 import {GRAPH_FARM_POLICY_V1} from "../../🏊️pool/🟨️.mjs";
 import {farmGrantEnvironmentV1} from "../🧫️fixtures/🎟️grant/🟨️.mjs";

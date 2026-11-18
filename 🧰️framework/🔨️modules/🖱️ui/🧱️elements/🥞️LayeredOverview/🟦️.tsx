@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
+import { useCardInterlock } from "../🃏️CardStack/🟦️.tsx";
 import { type LayeredDirection } from "../../🔨️modules/🥞️layered-overview-geometry/🟦️.ts";
 import type { LayeredOverviewProps } from "./📋️types/🟦️.ts";
 import { LayeredNeighbourHints } from "./💡️hints/🟦️.tsx";
@@ -34,6 +35,9 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
   const { focusView, follow, requestOpen, moveTo, reveal, conceal, press, release, cardCallback, close, stripCallback, veilCallback, cardStripCallback } = useMoveState({ layoutRef, logicalRestingRef, targetRef, offsetRef, latest, stop, driveRef, paint, settleGhost, run, runningRef, aim, finishGhost, rootRef, interactive, swiping, opened, stripRef, repaint, veilRef, cardStripRef, cardElements, openedRef, revealedRef, pressedRef, setPressed, pressed, cellList, sourceRef, setRevealSource, setRevealedId, touch, props, revealedId, setOwnOpened, deepLink });
   const { restedOn, stripStyle, paneView, cellStyles, cardHost, neighbours, insets, goTo, chrome } = usePaneStylesState({ previousOpened, opened, openedRef, interactive, routing, deepLink, latest, revealedRef, setRevealedId, sourceRef, setRevealSource, finishGhost, focusView, container, rootRef, cardElements, props, revealedId, touch, repaint, mode, pan, reduced, stop, targetRef, paint, follow, cellList, ids, aim, driveRef, cells, requestOpen, panning, swiping, resting, live, lifecycle, warm, panes, paneAt, moveTo, grid, windowBox, booted, posters, labels, registerContainer, markDirty, revealSource, reveal, conceal, press, release, clearedId, cardCallback, renderCard });
   const { overviewButton } = buildOverviewButton({ interactive, opened, labels, close });
+  const [overlayElement, setOverlayElement] = React.useState<HTMLElement | null>(null);
+  const overlayCallback = React.useCallback((node: HTMLDivElement | null) => { setOverlayElement(node); if (swiping) cardStripCallback(node); }, [swiping, cardStripCallback]);
+  useCardInterlock(swiping ? null : overlayElement);
   return (
     <div
       ref={rootRef}
@@ -46,13 +50,13 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
       style={swiping && opened === null ? { touchAction: "pinch-zoom" } : undefined}
     >
       {overviewButton}
-      <div ref={stripCallback} data-layered-strip="" className="grid will-change-transform" style={stripStyle}>
+      <div ref={stripCallback} data-layered-strip="" data-layered-backdrop={opened === null ? "" : undefined} className="grid will-change-transform" style={stripStyle}>
         {panes.map(paneView)}
       </div>
       {opened === null ? (
         <>
           <div ref={veilCallback} data-layered-veil="" data-level="dialog" className="ui-veil pointer-events-none absolute inset-0 z-30" />
-          <div ref={swiping ? cardStripCallback : undefined} data-layered-overlay="" role="group" aria-label={labels.grid} tabIndex={interactive ? -1 : undefined} inert={!interactive} className={swiping ? "pointer-events-none absolute left-0 top-0 z-[31] grid outline-none will-change-transform" : cn("pointer-events-auto absolute inset-0 z-[31] overflow-x-hidden overflow-y-auto outline-none", props.overlayClassName)} style={swiping ? stripStyle : props.overlayStyle}>
+          <div ref={overlayCallback} data-layered-overlay="" data-card-grid={swiping ? undefined : ""} role="group" aria-label={labels.grid} tabIndex={interactive ? -1 : undefined} inert={!interactive} className={swiping ? "pointer-events-none absolute left-0 top-0 z-[31] grid outline-none will-change-transform" : cn("pointer-events-auto absolute inset-0 z-[31] overflow-x-hidden overflow-y-auto outline-none", props.overlayClassName)} style={swiping ? stripStyle : props.overlayStyle}>
             {panes.map((pane) => cardHost(pane, swiping ? { onCell: cellRefs.get(pane.id), style: cellStyles.get(pane.id) } : null))}
           </div>
           {swiping ? <LayeredNeighbourHints neighbours={neighbours} moving={resting === null} insets={insets} label={labels.neighbour} onGo={goTo} /> : null}

@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {createHash,randomBytes} from "node:crypto";
 import {existsSync,mkdirSync,readFileSync,statSync,writeFileSync} from "node:fs";
 import {mkdir,readFile,rename,rm,symlink,writeFile} from "node:fs/promises";
@@ -9,6 +10,7 @@ import {FLEET_FETCH_POLICY_V1 as policy,type FleetFetchContextV1} from "../🟦�
 import {blobPathOf,extractFleetPackUnitsV1,packFleetUnitV1,placeBlobV1,planFleetInstallPackV1,poolV1,readUnitCache,unitCachePath,writeUnitCache} from "../📦️install/🟦️.ts";
 import {createFleetRegistryV1,readFleetMachineV1,signFleetDocumentV1,verifyFleetDocumentV1} from "../../../../🏗️build/🌐️remote-cache/🛰️fleet/🪪️identity/🟦️.ts";
 import {setupClassV1,setupHostV1,setupTextV1,type SetupHostV1} from "../🧰️setup/🟦️.ts";
+import {claimFleetWorkV1,type WorkClaimV1} from "../🎟️work-claim/🟦️.ts";
 
 /** 🐍️ One wheel the lock pins: its normalized name, the cache stem (`<version>-<tags>`) and the SHA-256 the lock records. */
 export type FleetUvWheelV1=Readonly<{name:string;stem:string;sha256:string}>;
@@ -99,7 +101,7 @@ export async function fleetUvRestoreV1(context:FleetFetchContextV1,input:Readonl
  try{
   manifest=JSON.parse(await readFile(join(directory,fleetUvManifestNameV1(lockSha256,input.host)),"utf8")) as FleetUvManifestV1;guard("UvManifest",manifest);
   if(manifest.lockSha256!==lockSha256)return 0;
-  const registry=createFleetRegistryV1({storeRoot:machine.storeRoot,group:machine.group,pinsPath:join(context.root,".cache","f","identity","pins-uv.json")}),{publisher,...bare}=manifest;
+  const registry=createFleetRegistryV1({storeRoot:machine.storeRoot,group:machine.group,pinsPath:machinePathV1(context.root,".cache","f","identity","pins-uv.json")}),{publisher,...bare}=manifest;
   if(!await verifyFleetDocumentV1(registry,publisher.origin,"cache-write","uv-seed",signedText(bare,publisher.origin),publisher.signature)){input.event?.({stage:"skip",detail:"the seed is not signed by a registered fleet origin"});return 0;}
   const bytes=await readFile(blobPathOf(directory,manifest.index.sha256));
   if(bytes.byteLength!==manifest.index.bytes||createHash("sha256").update(bytes).digest("hex")!==manifest.index.sha256)return 0;
@@ -129,12 +131,21 @@ export async function fleetUvRestoreV1(context:FleetFetchContextV1,input:Readonl
  }
 }
 
+/** 🎟️ Takes the fleet claim of one uv seed (the lock and the host class): `ready` as soon as a seed manifest for them is in the group store, `granted` to exactly one machine that then syncs and publishes the seed before it releases, `alone` without a group store or a reachable claim route. */
+export async function fleetUvClaimV1(context:FleetFetchContextV1,lock:string,host:SetupHostV1=setupHostV1(),options:Readonly<{check?:()=>void}>={}):Promise<WorkClaimV1>{
+ const directory=directoryOf(context),lockSha256=createHash("sha256").update(lock).digest("hex");
+ if(directory===undefined)return Object.freeze({outcome:"alone",key:"",waitedMilliseconds:0,release:async()=>{}});
+ const manifest=join(directory,fleetUvManifestNameV1(lockSha256,host));
+ return claimFleetWorkV1(context,{kind:"uv",identity:`${lockSha256}\n${setupClassV1("host",host)?.tag??"unclassified"}`,ready:async()=>existsSync(manifest),...(options.check===undefined?{}:{check:options.check})});
+}
+
 /** 🔌️ The fleet seam of the uv manager for `ensureGenerationV1` and the Python branch of the native dependency sync: restores the cache (`UV_CACHE_DIR` of the sync environment) from the fleet before `uv sync --locked`, publishes it afterwards; never throws, and says what it did in both languages. */
 export function fleetUvPortV1(context:FleetFetchContextV1,lock:string,say:(line:string)=>void=()=>{},host:SetupHostV1=setupHostV1(),environment:Readonly<Record<string,string|undefined>>=process.env):Readonly<{before(environment:Readonly<Record<string,string>>):Promise<void>;after(environment:Readonly<Record<string,string>>):Promise<void>}>{
  const tag=setupClassV1("host",host)?.tag??"unclassified";
+ let claim:WorkClaimV1|undefined;
  return {
-  before:async cache=>{const cacheDirectory=cache.UV_CACHE_DIR;if(cacheDirectory===undefined)return;const count=await fleetUvRestoreV1(context,{cacheDirectory,lock,host}).catch(()=>0);say(count>0?setupTextV1("uvRestored",{count},environment):setupTextV1("uvMiss",{class:tag},environment));},
-  after:async cache=>{const cacheDirectory=cache.UV_CACHE_DIR;if(cacheDirectory===undefined)return;const count=await fleetUvPublishV1(context,{cacheDirectory,lock,host}).catch(()=>undefined);if(count!==undefined&&count>0)say(setupTextV1("uvPublished",{count,class:tag},environment));},
+  before:async cache=>{const cacheDirectory=cache.UV_CACHE_DIR;if(cacheDirectory===undefined)return;claim=await fleetUvClaimV1(context,lock,host).catch(()=>undefined);const count=await fleetUvRestoreV1(context,{cacheDirectory,lock,host}).catch(()=>0);say(count>0?setupTextV1("uvRestored",{count},environment):setupTextV1("uvMiss",{class:tag},environment));},
+  after:async cache=>{const cacheDirectory=cache.UV_CACHE_DIR;try{if(cacheDirectory===undefined)return;const count=await fleetUvPublishV1(context,{cacheDirectory,lock,host}).catch(()=>undefined);if(count!==undefined&&count>0)say(setupTextV1("uvPublished",{count,class:tag},environment));}finally{const held=claim;claim=undefined;await held?.release().catch(()=>{});}},
  };
 }
 

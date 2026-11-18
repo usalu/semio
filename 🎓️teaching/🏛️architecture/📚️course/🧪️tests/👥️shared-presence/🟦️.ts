@@ -7,6 +7,7 @@
  * proctor, so the counts are exact.
  * @see ../../🎭️e2e/🎚️config/🟦️.ts — why this spec runs after the others
  * @see ../../🎭️e2e/🚶️learner/🟦️.ts — the learners these specs drive */
+import type { Locator } from "@playwright/test";
 import { COURSE, answerRun, boxOf, card, classify, count, enter, expect, goHome, handle, itemBoxes, openTaskById, pane, playQuiz, primary, quizOf, restingPage, screen, shownItems, shownTask, submitRun, test, touchSwipe, swipeTo, type Device } from "../../🎭️e2e/🚶️learner/🟦️.ts";
 
 /** 🔢️ How many learners the device counts online. */
@@ -404,14 +405,14 @@ test("cooperative mobile swipe", async ({ device }) => {
   });
   await expect.poll(observedPage).toBe("learner");
   await touchSwipe(ben.page, 240, 0);
-  await expect.poll(() => restingPage(ben.page)).toBe("board");
-  await expect.poll(observedPage).toBe("board");
+  await expect.poll(() => restingPage(ben.page)).toBe("assignments");
+  await expect.poll(observedPage).toBe("assignments");
   await touchSwipe(ben.page, -240, 0);
   await expect.poll(() => restingPage(ben.page)).toBe("learner");
   await expect.poll(observedPage).toBe("learner");
   await touchSwipe(ben.page, 0, 325);
-  await expect.poll(() => restingPage(ben.page)).toBe("badges");
-  await expect.poll(observedPage).toBe("badges");
+  await expect.poll(() => restingPage(ben.page)).toBe("prefs");
+  await expect.poll(observedPage).toBe("prefs");
   await ben.page.evaluate(() => { window.location.hash = "quizzes"; });
   await expect(ben.page.locator('[data-course-grid="quizzes"][data-grid-active]')).toBeVisible();
   await expect.poll(() => restingPage(ben.page)).not.toBeNull();
@@ -428,6 +429,20 @@ test("cooperative mobile swipe", async ({ device }) => {
   expect(await savedRuns(anna)).toEqual(before);
 });
 
+/** 📜️ Reads or sets the scroll of the box inside `cell` (or the cell) that really scrolls (overflow auto or scroll) furthest and is not inert, hidden or aria-hidden below it — a card that fills its page scrolls itself, and a page whose cards all fit scrolls as a whole around it: its overflow in pixels by default, its position as a fraction of the overflow for `"fraction"`, and moves it to that fraction when given a number. */
+async function scrolled(cell: Locator, how: "overflow" | "fraction" | number = "overflow"): Promise<number> {
+  return cell.evaluate((page, mode) => {
+    const shown = (element: Element): boolean => { for (let node: Element | null = element; node !== null && node !== page; node = node.parentElement) if (node.hasAttribute("inert") || node.hasAttribute("hidden") || node.getAttribute("aria-hidden") === "true") return false; return true; };
+    const range = (element: Element): number => (/auto|scroll/u.test(getComputedStyle(element).overflowY) ? element.scrollHeight - element.clientHeight : 0);
+    const inside = [page, ...[...page.querySelectorAll("*")].filter(shown)].reduce((largest, element) => (range(element) > range(largest) ? element : largest));
+    const around = (): Element => { for (let node = page.parentElement; node !== null; node = node.parentElement) if (range(node) > 0) return node; return inside; };
+    const scroller = range(inside) > 0 ? inside : around();
+    const overflow = range(scroller);
+    if (typeof mode === "number") scroller.scrollTop = overflow * mode;
+    return mode === "overflow" ? overflow : scroller.scrollTop / Math.max(1, overflow);
+  }, how);
+}
+
 test("cooperative card scroll", async ({ device }) => {
   const [annaName, benName] = [handle("Scroll Observer"), handle("Scroll Player")];
   const anna = await device("en");
@@ -442,12 +457,11 @@ test("cooperative card scroll", async ({ device }) => {
   const selector = '[data-course-grid="root"][data-grid-active] > [data-layered-overview] > [data-layered-overlay] > [data-layered-cell="badges"]';
   const owner = ben.page.locator(selector);
   const observed = anna.page.locator("[data-follow-screen]").locator(selector);
-  await expect.poll(() => owner.evaluate((element) => element.scrollHeight - element.clientHeight)).toBeGreaterThan(1);
-  await expect.poll(() => observed.evaluate((element) => element.scrollHeight - element.clientHeight)).toBeGreaterThan(1);
-  await owner.evaluate((element) => { element.scrollTop = (element.scrollHeight - element.clientHeight) * 0.65; });
-  const fraction = (element: Element) => element.scrollTop / Math.max(1, element.scrollHeight - element.clientHeight);
-  await expect.poll(() => owner.evaluate(fraction)).toBeCloseTo(0.65, 1);
-  await expect.poll(() => observed.evaluate(fraction)).toBeCloseTo(await owner.evaluate(fraction), 1);
+  await expect.poll(() => scrolled(owner)).toBeGreaterThan(1);
+  await expect.poll(() => scrolled(observed)).toBeGreaterThan(1);
+  await scrolled(owner, 0.65);
+  await expect.poll(() => scrolled(owner, "fraction")).toBeCloseTo(0.65, 1);
+  await expect.poll(() => scrolled(observed, "fraction")).toBeCloseTo(await scrolled(owner, "fraction"), 1);
   await swipeTo(ben, "board");
   const boardSelector = selector.replace('data-layered-cell="badges"', 'data-layered-cell="board"');
   const observedBoard = anna.page.locator("[data-follow-screen]").locator(boardSelector);

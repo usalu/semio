@@ -54,7 +54,7 @@ export function remoteExecutionOperationV1(snapshot:RemoteExecutionSnapshotV1):P
 
 class Queue<T>{
  private items:T[]=[];private waiting?:()=>void;private space?:()=>void;private closed=false;
- constructor(private readonly bound:number){}
+ private readonly bound:number; constructor(bound:number){this.bound=bound;}
  async push(item:T):Promise<void>{while(this.items.length>=this.bound)await new Promise<void>(resolve=>{this.space=resolve;});this.items.push(item);this.waiting?.();}
  end():void{this.closed=true;this.waiting?.();}
  async *drain():AsyncGenerator<T>{

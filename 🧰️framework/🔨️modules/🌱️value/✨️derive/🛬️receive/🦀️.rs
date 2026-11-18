@@ -47,23 +47,11 @@ pub fn expand(input:&DeriveInput)->syn::Result<proc_macro2::TokenStream>{
  let field_plans=indices.iter().map(|i|{
   let ty=types[*i];let slot=&slots[*i];let default=&defaults[*i];let flat=flattened[*i];
   let getter=if flat{quote!(|original|Ok(original.as_source()))}else{quote!(|original|#get_child)};
-  let present=quote!{match self.stage{
-   0=>{let index=self.positions[#i].ok_or_else(#tree::invalid)?;let child=input.try_project::<dyn #tree::NativeValueSource,#value::ValueError,_>(if #flat{usize::MAX-#i}else{index},#getter)?;Ok((self.projection.demand(child)?,self.projection.work_demand(child)?,23))}
-   8=>Ok((self.projection.take_demand()?,self.projection.take_work_demand()?,24)),
-   1=>if self.#slot.ready(){Ok((#tree::fixed(::std::mem::size_of::<u8>()),1,13))}else{let source=self.source.as_ref().ok_or_else(#tree::invalid)?.borrow()?;Ok((self.#slot.demands(source,body,maximum)?,1,14))},
-   2=>{let mut d=self.#slot.take_demand()?;d.copy_bytes=d.copy_bytes.checked_add(::std::mem::size_of::<Option<#ty>>()+::std::mem::size_of::<u8>()).ok_or_else(#tree::invalid)?;Ok((d,#tree::work_sum(self.#slot.take_work_demand()?,2)?,13))},
-   3=>{let mut d=#owner::NativeRecordStorage::<#name>::field_demand::<#ty>(0)?;d.copy_bytes=d.copy_bytes.checked_add(::std::mem::size_of::<bool>()+::std::mem::size_of::<u8>()).ok_or_else(#tree::invalid)?;Ok((d,#tree::work_sum(1,2)?,13))},
-   4=>if self.#slot.terminal_is_empty()||self.#slot.is_closing(){Ok((#tree::fixed(::std::mem::size_of::<u8>()),1,13))}else{Ok((self.#slot.begin_close_demand()?,self.#slot.begin_close_work_demand()?,21))},7=>if self.#slot.terminal_is_empty(){Ok((#tree::fixed(::std::mem::size_of::<u8>()),1,13))}else{Ok((self.#slot.close_demands(body)?,self.#slot.close_work_demand(body)?,15))},
-   5=>if let Some(source)=self.source.as_ref(){if source.terminal_is_empty(){Ok((#tree::fixed(::std::mem::size_of::<Option<#value::retained_clone::RetainedOwnedProjection<dyn #tree::NativeValueSource>>>()),1,13))}else{Ok((source.close_demand(body)?,source.close_work_demand(body)?,16))}}else{Ok((#tree::fixed(::std::mem::size_of::<u8>()),1,13))},
-   6=>Ok((#tree::fixed(::std::mem::size_of::<usize>()+::std::mem::size_of::<u8>()),2,13)),_=>Err(#tree::invalid())}};
-  let missing=if required[*i]{quote!(Err(#tree::invalid()))}else{quote!{match self.stage{
-   0=>Ok((#tree::fixed(::std::mem::size_of::<u8>()),1,13)),
-   1=>if self.#default.ready(){Ok((#tree::fixed(::std::mem::size_of::<u8>()),1,13))}else{Ok((self.#default.demands(body,maximum)?,1,14))},
-   2=>{let mut d=self.#default.take_demand()?;d.copy_bytes=d.copy_bytes.checked_add(::std::mem::size_of::<Option<#ty>>()+::std::mem::size_of::<u8>()).ok_or_else(#tree::invalid)?;Ok((d,#tree::work_sum(self.#default.take_work_demand()?,2)?,13))},
-   3=>{let mut d=#owner::NativeRecordStorage::<#name>::field_demand::<#ty>(0)?;d.copy_bytes=d.copy_bytes.checked_add(::std::mem::size_of::<bool>()+::std::mem::size_of::<u8>()).ok_or_else(#tree::invalid)?;Ok((d,#tree::work_sum(1,2)?,13))},
-   4=>if self.#default.terminal_is_empty()||self.#default.is_closing(){Ok((#tree::fixed(::std::mem::size_of::<u8>()),1,13))}else{Ok((self.#default.begin_close_demand()?,self.#default.begin_close_work_demand()?,21))},7=>if self.#default.terminal_is_empty(){Ok((#tree::fixed(::std::mem::size_of::<u8>()),1,13))}else{Ok((self.#default.close_demands(body)?,self.#default.close_work_demand(body)?,15))},
-   5=>Ok((#tree::fixed(::std::mem::size_of::<u8>()),1,13)),
-   6=>Ok((#tree::fixed(::std::mem::size_of::<usize>()+::std::mem::size_of::<u8>()),2,13)),_=>Err(#tree::invalid())}}};
+  let option_bytes=quote!(::std::mem::size_of::<Option<#ty>>());
+  let stage=|slot:&syn::Ident,present:bool|quote!(#tree::plan_field_stage(self.stage,#present,&self.#slot,&self.source,&self.projection,body,maximum,#option_bytes,#owner::NativeRecordStorage::<#name>::field_demand::<#ty>));
+  let present_stage=stage(slot,true);let missing_stage=stage(default,false);
+  let present=quote!{if self.stage==0{let index=self.positions[#i].ok_or_else(#tree::invalid)?;let child=input.try_project::<dyn #tree::NativeValueSource,#value::ValueError,_>(if #flat{usize::MAX-#i}else{index},#getter)?;Ok((self.projection.demand(child)?,self.projection.work_demand(child)?,23))}else{#present_stage}};
+  let missing=if required[*i]{quote!(Err(#tree::invalid()))}else{missing_stage};
   quote!(#i=>if self.positions[#i].is_some(){#present}else{#missing})
  }).collect::<Vec<_>>();
 

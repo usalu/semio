@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {randomUUID} from "node:crypto";
 import {chmod,mkdir,readFile,rename,rm,stat,writeFile} from "node:fs/promises";
 import {hostname,networkInterfaces} from "node:os";
@@ -26,7 +27,7 @@ export function fleetCacheEndpointsV1(port:number,given:readonly string[]=[],fal
 export type FleetPublisherV1=Readonly<{directory:string;port:number;host:string}>;
 
 /** 🚫 Raised when a publisher must not touch the facts: another identity, a lower generation, or a caller without the admin signing key of the group server. */
-export class FleetPublicationRefusedV1 extends Error{constructor(readonly reason:string){super(`Fleet cache facts publication refused: ${reason}`);}}
+export class FleetPublicationRefusedV1 extends Error{readonly reason:string; constructor(reason:string){super(`Fleet cache facts publication refused: ${reason}`);this.reason=reason;}}
 
 const TOPOLOGY="🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🗺️topology/🔣️.json";
 
@@ -36,7 +37,7 @@ export type FleetGroupViewV1=Readonly<{id:string;network:string|undefined;enforc
 /** 🔎️ Reads the topology row of the group named by `.cache/f/machine.json`; `undefined` when the machine or the topology is unreadable. */
 export async function fleetGroupViewV1(root:string,environment:Readonly<Record<string,string|undefined>>):Promise<FleetGroupViewV1|undefined>{
  try{
-  const id=(JSON.parse(await readFile(join(root,".cache","f","machine.json"),"utf8")) as {groupId?:string}).groupId,{readTopologyV1,peerStorePathV1}=await import("../../../../../🤝️shared-worktree/🗺️topology/🟦️.ts"),topology=readTopologyV1(JSON.parse(await readFile(join(root,TOPOLOGY),"utf8"))),group=topology.groups.find(row=>row.id===id);
+  const id=(JSON.parse(await readFile(machinePathV1(root,".cache","f","machine.json"),"utf8")) as {groupId?:string}).groupId,{readTopologyV1,peerStorePathV1}=await import("../../../../../🤝️shared-worktree/🗺️topology/🟦️.ts"),topology=readTopologyV1(JSON.parse(await readFile(join(root,TOPOLOGY),"utf8"))),group=topology.groups.find(row=>row.id===id);
   if(group===undefined)return undefined;
   const named=environment.SEMIO_FLEET_NETWORK;
   return {id:group.id,network:named!==undefined&&named!==""?named:group.server.network,enforceNetwork:group.access?.enforceNetwork===true,ports:group.ports,advertise:group.server.advertise??[],inGroup:group.access?.transport?.inGroup??"sealed",links:group.links??{},peerStores:Object.fromEntries(Object.keys(group.peers).map(peer=>[peer,peerStorePathV1(topology,group,peer)]))};

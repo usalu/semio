@@ -1,0 +1,10 @@
+import{readRemoteExecutionHostViewV1}from"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🌡️load/🟦️.ts";
+import{ownerPoolHostOfV1}from"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🏊️pool/🟦️.ts";
+import{ownerPoolSizingV1,OWNER_POOL_POLICY_V1 as P}from"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🟦️.ts";
+const view=await readRemoteExecutionHostViewV1(process.env);
+console.log(JSON.stringify(view.host));
+for(const g of view.grants)console.log("grant",g.label,g.holder??"",g.cpu,"cpu reserved",g.reservedMegabytes,"observed",g.observedMegabytes,g.lentSinceMs?"lent":"");
+for(const w of view.waiters)console.log("waiter",w.request.label,w.request.priority,w.arrivedAtMs);
+const host=ownerPoolHostOfV1(view);console.log(JSON.stringify(host));
+for(const cm of [800,1064,1800])console.log(cm,JSON.stringify(ownerPoolSizingV1({host:{...host,idleCores:0},children:Number(process.argv[2]??1),childMegabytes:cm})));
+console.log(JSON.stringify(P));

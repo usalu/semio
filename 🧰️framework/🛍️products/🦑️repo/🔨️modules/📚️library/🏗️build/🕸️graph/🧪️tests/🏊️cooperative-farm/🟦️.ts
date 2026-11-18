@@ -4,6 +4,7 @@ import{expect,test}from"bun:test";
 import{readFileSync}from"node:fs";
 import{PLAN_STAGE_POLICY_V1,planFarmWorkersV1}from"../../../🧠️memory/🪜️plan-stage/🟨️.mjs";
 import{GRAPH_FARM_POLICY_V1,planGraphFarmV1}from"../../📥️inference/📦️project-nodes/🏊️project-farm/🏊️pool/🟨️.mjs";
+import{orderOwnerJobsV1}from"../../📥️inference/📦️project-nodes/🟨️.mjs";
 import{inferRunV1,type OwnerHooksV1}from"../../🤝️prefetch/🟦️.ts";
 
 const text=(path:string)=>readFileSync(new URL(path,import.meta.url),"utf8"),MAC={hostMegabytes:16384,environment:{}},WORKER=GRAPH_FARM_POLICY_V1.workerMegabytes;
@@ -51,7 +52,7 @@ test("the batches run as the plan stage inference, the farm is sized by the plan
  expect(PLAN_STAGE_POLICY_V1.stages[0]).toBe("inference");
  const nodes=text("../../📥️inference/📦️project-nodes/🟨️.mjs");
  expect(nodes).toContain("maximumWorkers:planFarmWorkersV1({workerMegabytes:GRAPH_FARM_POLICY_V1.workerMegabytes})");
- expect(nodes).toContain("if(options?.skipOwner?.(job.name)===true){finished++;continue;}");expect(nodes).toContain("(rank===undefined?0:rank(a.name)-rank(b.name))");
+ expect(nodes).toContain("if(options?.skipOwner?.(job.name)===true){finished++;continue;}");const order=(jobs:string[],rank?:(name:string)=>number)=>orderOwnerJobsV1(jobs.map(name=>({name})),{alone:new Set(["z"]),slow:new Set(["s"]),...(rank?{rank}:{})}).map(job=>job.name);expect(order(["z","s","b","a"])).toEqual(["b","a","s","z"]);expect(order(["z","s","b","a"],name=>name==="a"?0:1)).toEqual(["a","b","s","z"]);
  expect(part).toContain("hooks.done?.(name)");expect(part).toContain("skipOwner:hooks.skip");expect(part).toContain("ownerRank:hooks.rank");
  const host=text("../../🕰️host/🟦️.ts");
  expect(host).toContain("infer:({names,skip,done})=>inferRunV1({request,names,skip,done,prefetch:(next,hooks)=>this.prefetch(next,{hooks}),release:closeProjectFarmsV1})");

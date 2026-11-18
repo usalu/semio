@@ -8,7 +8,7 @@ import {remoteExecutionDiskSlotsV1,remoteExecutionFreeBytesV1,type RemoteExecuti
 
 /** ⚙️ A build agent: the worker and the load reporter of one machine, one process. */
 export type RemoteExecutionAgentOptionsV1=Readonly<Omit<RemoteExecutionWorkerOptionsV1,"admit"|"observe"|"origin"|"capacity"|"properties"|"platform">&{
- root:string;environment?:Readonly<Record<string,string|undefined>>;origin?:string;extraProperties?:readonly RemoteExecutionPropertyV1[];loadIntervalSeconds:number;worker?:boolean;drain?:AbortSignal;why?:RemoteExecutionWorkerWhyV1;retryWorkerSeconds?:number;disk?:RemoteExecutionWorkerDiskV1;freeBytes?:()=>number|undefined;
+ root:string;environment?:Readonly<Record<string,string|undefined>>;origin?:string;extraProperties?:readonly RemoteExecutionPropertyV1[];loadIntervalSeconds:number;worker?:boolean;drain?:AbortSignal;onRunning?:(running:number)=>void;why?:RemoteExecutionWorkerWhyV1;retryWorkerSeconds?:number;disk?:RemoteExecutionWorkerDiskV1;freeBytes?:()=>number|undefined;
  view?:()=>Promise<RemoteExecutionHostViewV1>;ready?:()=>boolean;policy?:HostCapacityPolicyV1;now?:()=>number;onReport?:(event:RemoteExecutionReporterEventV1)=>void;
 }>;
 
@@ -56,7 +56,7 @@ export async function runRemoteExecutionAgentV1(options:RemoteExecutionAgentOpti
  const capacity=await view().then(first=>({cores:Math.max(1,first.host.cores),memoryMegabytes:Math.max(1,first.host.totalMegabytes)}),()=>undefined);
  const properties=[...remoteExecutionHostPropertiesV1(osPlatform(),process.arch,toolchain),...options.extraProperties??[]];
  const reporter=runRemoteExecutionReporterV1({scheduler:options.scheduler,token:options.token,fetch:options.fetch,intervalSeconds:options.loadIntervalSeconds,signal:controller.signal,report,...options.onReport?{onEvent:options.onReport}:{}});
- const remember=(next:RemoteExecutionWorkerStateV1):void=>{state=next;if(next.state!=="absent")why=undefined;};
+ const remember=(next:RemoteExecutionWorkerStateV1):void=>{state=next;options.onRunning?.(next.running);if(next.state!=="absent")why=undefined;};
  const onEvent=(event:RemoteExecutionWorkerEventV1):void=>{
   if(event.stage==="registered")why=undefined;
   else if(event.stage==="reconnecting"){why=remoteExecutionWorkerWhyOfMessageV1(event.detail);state={...state,state:"absent",running:0};}

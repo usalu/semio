@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Shared Border Snap Cases",
+  "type": "object",
+  "required": ["schema", "cases"],
+  "properties": {
+    "schema": { "const": "shared-border-snap/v1" },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "xs", "ys", "queries"],
+        "properties": {
+          "name": { "type": "string" },
+          "xs": { "type": "array", "items": { "type": "number" } },
+          "ys": { "type": "array", "items": { "type": "number" } },
+          "queries": { "type": "array", "items": { "type": "object", "required": ["axis", "value", "expected"], "properties": { "axis": { "enum": ["x", "y"] }, "value": { "type": "number" }, "expected": { "type": "number" } }, "additionalProperties": false } }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

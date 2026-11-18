@@ -36,11 +36,10 @@
       "const": 1
     },
     "body": {
-      "const": 64
+      "const": 10
     },
     "remaining": {
       "const": [
-        2,
         1,
         0
       ]

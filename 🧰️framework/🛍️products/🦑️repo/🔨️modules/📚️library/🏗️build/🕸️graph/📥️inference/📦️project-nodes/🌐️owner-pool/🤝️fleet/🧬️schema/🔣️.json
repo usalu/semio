@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Owner pool fleet view",
+  "definitions": {
+    "Policy": {
+      "const": { "aliveMilliseconds": 60000, "turnMilliseconds": 6000 }
+    },
+    "Machine": {
+      "description": "One machine of the fleet as its pool status says: its size, the memory one child may hold, whether it is alive and how loaded it is.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["origin", "totalMegabytes", "grantMegabytes", "state", "rssMegabytes", "updatedMs"],
+      "properties": {
+        "origin": { "type": "string" },
+        "totalMegabytes": { "type": "integer", "minimum": 0 },
+        "grantMegabytes": { "type": "integer", "minimum": 0 },
+        "state": { "type": "string" },
+        "rssMegabytes": { "type": "integer", "minimum": 0 },
+        "updatedMs": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "Texts": {
+      "const": {
+        "en": { "noProducer": "no machine of the fleet can hold {need} MB for one owner; alive: {sizes}", "sizes": "{count} x {gigabytes} GB (one owner up to {grant} MB)", "none": "no machine reports a pool" },
+        "de": { "noProducer": "keine Maschine der Flotte kann {need} MB für einen Owner halten; aktiv: {sizes}", "sizes": "{count} x {gigabytes} GB (ein Owner bis {grant} MB)", "none": "keine Maschine meldet einen Pool" }
+      }
+    }
+  }
+}

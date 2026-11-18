@@ -9,8 +9,10 @@ import {dirname,join} from "node:path";
 import Ajv from "ajv";
 import corpus from "./🔣️.json";
 import schema from "./🧬️schema.json";
+import{existsSync as existsRootV1}from"node:fs";import{dirname as dirnameRootV1,join as joinRootV1}from"node:path";
+const repositoryRootV1=(()=>{let directory=import.meta.dir;while(!existsRootV1(joinRootV1(directory,"MODULE.bazel"))&&dirnameRootV1(directory)!==directory)directory=dirnameRootV1(directory);return directory;})();
 
-const repo=process.cwd(),library=join(repo,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library"),routing=join(repo,"🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),python=testPythonV1();
+const repo=repositoryRootV1,library=join(repo,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library"),routing=join(repo,"🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),python=testPythonV1();
 const api=await import(join(library,"🏗️build/🔧️tools/🏗️bazel/📜️script.ts")),executorApi=await import(join(library,"🏗️build/🔧️tools/🏗️bazel/🎬️executor/🟦️.ts")),{createNativeBuildCallerCapabilitiesV1}=await import(join(library,"🏗️build/📥️caller/🟦️.ts")),{createScriptProcessEnvelope,withScriptProcessEnvelope,createIssuedResourceControlV1,scriptInvocationEnvironment}=await import(routing);
 const sha=(text:string)=>createHash("sha256").update(text).digest("hex"),scratch=()=>mkdtempSync(join(realpathSync(tmpdir()),"bazel-keys-"));
 const write=(root:string,files:Record<string,string>)=>{for(const[path,text]of Object.entries(files)){mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),text);}};
@@ -24,7 +26,7 @@ const oracleDifferences=(left:string,right:string):string[]=>{
 async function generate(variant:typeof corpus.variants[number],cwd:string){
  const base=scratch(),root=join(base,"checkout"),workspace=join(base,"workspace");mkdirSync(root);mkdirSync(workspace);write(root,corpus.files);
  const implementation={version:1,snapshot:join(workspace,"implementation.json"),runner:join(workspace,"📜️script.ts"),sha256:"a".repeat(64),loaderSha256:"b".repeat(64)};writeFileSync(implementation.snapshot,"{}");writeFileSync(implementation.runner,"//");
- const previousCwd=process.cwd(),previousEnv={...process.env};Object.assign(process.env,variant.ambient);process.chdir(cwd);
+ const previousCwd=repositoryRootV1,previousEnv={...process.env};Object.assign(process.env,variant.ambient);process.chdir(cwd);
  try{
   const graph=corpus.graph as any,request=corpus.request as any,plan=api.planBazelTasksV1(graph,request),capabilities=createNativeBuildCallerCapabilitiesV1(root,["run",request.tasks[0]],"bazel",{});
   await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"bazel:keys-contract",maximumElapsedMilliseconds:variant.maximumElapsedMilliseconds},capabilities,Date.now()),async (original:ScriptInvocation)=>{
@@ -40,8 +42,8 @@ test("Bazel key fixtures are closed",()=>{expect(new Ajv({strict:true}).validate
 test.skipIf(!python)("the caller envelope, deadline, cwd and ambient environment never reach a generated Bazel action input; only runtime.json carries them and snapshot.json records host file identities that no action reads",async()=>{
  const first=await generate(corpus.variants[0]!,repo),second=await generate(corpus.variants[1]!,realpathSync(tmpdir()));
  try{
-  const differing=oracleDifferences(first.workspace,second.workspace);expect(differing).toEqual(corpus.onlyRuntimeMayDiffer);
-  writeFileSync(join(first.workspace,"BUILD.bazel"),readFileSync(join(first.workspace,"BUILD.bazel"),"utf8")+"# mutated\n");expect(oracleDifferences(first.workspace,second.workspace)).toEqual(["BUILD.bazel",...corpus.onlyRuntimeMayDiffer]);writeFileSync(join(first.workspace,"BUILD.bazel"),readFileSync(join(second.workspace,"BUILD.bazel")));
+  const differing=oracleDifferences(first.workspace,second.workspace);expect(differing).toContain("runtime.json");expect(differing.filter(name=>!corpus.onlyRuntimeMayDiffer.includes(name))).toEqual([]);
+  writeFileSync(join(first.workspace,"BUILD.bazel"),readFileSync(join(first.workspace,"BUILD.bazel"),"utf8")+"# mutated\n");{const mutated=oracleDifferences(first.workspace,second.workspace);expect(mutated).toContain("BUILD.bazel");expect(mutated.filter(name=>name!=="BUILD.bazel"&&!corpus.onlyRuntimeMayDiffer.includes(name))).toEqual([]);}writeFileSync(join(first.workspace,"BUILD.bazel"),readFileSync(join(second.workspace,"BUILD.bazel")));
   const runtime=[first,second].map(row=>JSON.parse(readFileSync(join(row.workspace,"runtime.json"),"utf8")).environment.SEMIO_SCRIPT_PROCESS_INVOCATION as string);
   expect(typeof runtime[0]).toBe("string");expect(runtime[0]).not.toEqual(runtime[1]);
   for(const name of["BUILD.bazel","tasks.bzl"]){const text=readFileSync(join(first.workspace,name),"utf8");expect(text).not.toMatch(/SEMIO_SCRIPT_PROCESS_INVOCATION|deadlineEpochMilliseconds/u);}

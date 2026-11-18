@@ -1,8 +1,8 @@
 import {afterAll,expect,setDefaultTimeout,test} from "bun:test";
-import {existsSync,mkdtempSync,readFileSync,readdirSync,rmSync,writeFileSync} from "node:fs";
+import {existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
-import {gitBrokenV1,repairGitConfigV1} from "../🟦️.ts";
+import {gitBrokenV1,normaliseGitConfigV1,repairGitConfigV1} from "../🟦️.ts";
 
 setDefaultTimeout(120_000);
 const scratch:string[]=[];
@@ -32,4 +32,21 @@ posix("a sound config, an absent config and a repository without git are left al
  expect(await repairGitConfigV1(root,2)).toBe(false);
  expect(existsSync(join(root,".cache","f","lost"))).toBe(false);
  expect(readdirSync(join(root,".git")).includes("config")).toBe(false);
+});
+
+posix("machine-local ignore rules in .git/info/exclude are emptied, kept once under lost, and a view no longer differs from a machine without them",async()=>{
+ const root=repository(),exclude=join(root,".git","info","exclude");
+ mkdirSync(join(root,".git","info"),{recursive:true});
+ writeFileSync(exclude,"# comment\nscratch/\n*.sample\n");
+ writeFileSync(join(root,"b.sample"),"x\n");mkdirSync(join(root,"scratch"));writeFileSync(join(root,"scratch","y.txt"),"y\n");
+ const hidden=run(root,"status","--porcelain");
+ expect(hidden).not.toContain("b.sample");
+ expect(await normaliseGitConfigV1(root)).toContain("info/exclude");
+ expect(run(root,"status","--porcelain")).toContain("b.sample");
+ expect(run(root,"status","--porcelain")).toContain("scratch/");
+ const kept=readdirSync(join(root,".cache","f","lost")).filter(name=>name.endsWith("-info-exclude"));
+ expect(kept).toHaveLength(1);
+ expect(readFileSync(join(root,".cache","f","lost",kept[0]!),"utf8")).toBe("# comment\nscratch/\n*.sample\n");
+ expect(await normaliseGitConfigV1(root)).not.toContain("info/exclude");
+ expect(readdirSync(join(root,".cache","f","lost")).filter(name=>name.endsWith("-info-exclude"))).toHaveLength(1);
 });

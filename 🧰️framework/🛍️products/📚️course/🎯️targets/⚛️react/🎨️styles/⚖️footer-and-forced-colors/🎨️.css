@@ -3,6 +3,16 @@
 /* ⚖️ The footer: one quiet row under every screen. */
 .course-footer {
   background: var(--base);
+  height: calc-size(auto, round(up, size, var(--device-pixel)));
+}
+
+/* 🐾️ The ground of the pets: a screen whose one card fills the whole room leaves only the sliver between the card and the
+   footer, too low for any pet, so while pets are shown the main area keeps a free strip above the footer — a pet stands
+   on the footer line, in front of the page background and never in front of a card. Forced colours show no pets. */
+@media not (forced-colors: active) {
+  .course-app:not([data-pets="off"]) > #course-main {
+    padding-bottom: 48px;
+  }
 }
 
 /* 🔲️ Forced colours (Windows high contrast): backgrounds, shadows and custom colours are replaced by system colours,
@@ -22,6 +32,7 @@
 
   .course-drop-active {
     outline: 2px dashed Highlight;
+    outline-offset: -2px;
   }
 
   .course-online,

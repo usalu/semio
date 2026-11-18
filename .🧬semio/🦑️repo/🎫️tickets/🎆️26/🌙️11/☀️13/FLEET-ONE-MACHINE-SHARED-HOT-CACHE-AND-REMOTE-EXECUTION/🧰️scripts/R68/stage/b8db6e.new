@@ -1,0 +1,399 @@
+import {ROSTER_RULES_V1} from "../../🧭️roster/🟨️.mjs";
+import {isOpaqueSourcePathV1} from "../../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
+import{applyBuildGeneratedTaskDependenciesV1,buildInputSourceRoleV1,buildNativeSourceObservationV1}from"../../🚪️admission/🟦️.ts";
+import managersV1 from "../../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs";
+const javascriptManagerV1 = managersV1.selectedManagerV1("javascript");
+/** 📦️ Infers every project node of one workspace snapshot with bounded concurrency and settlement. */
+import { advanceScriptInvocation } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { availableParallelism } from "node:os";
+import { AsyncResource } from "node:async_hooks";
+import { createHash } from "node:crypto";
+import { dirname, join, relative } from "node:path";
+import { inferenceInventoryReferencesHoldV1 } from "../../../../🏗️build/👁️observation/📥️reuse/🟨️.mjs";
+import { OBSERVATION_LIMITS_V1, detachedFailureV1, memoizedObservedAsyncComputationV1, observeInferenceSnapshotV1, observeProjectInferenceV1, observedFs, observedInferenceRowsV1, forgetObservedInferenceRowsV1, projectInferenceObservationsV1, releaseProjectInferenceRetentionV1, useProjectFleetV1 } from "../../../../🏗️build/👁️observation/🟨️.mjs";
+import { statSync as rawStatSync, readFileSync as rawReadFileSync } from "node:fs";
+import { INFERENCE_LIMITS_V1 } from "../🧬️schema/🟨️.mjs";
+const { existsSync, readFileSync } = observedFs;
+
+/** 🏷️ Names this component as its roster entry does. */
+export const component = "project-nodes";
+
+import { inferenceRecordIdentityV1 } from "../../../../🏗️build/👁️observation/🟨️.mjs";
+import { createGraphPhaseClockV1, writeGraphPhaseRowV1, writeGraphSettleRowV1 } from "../../⏱️phases/🟨️.mjs";
+import { createGraphOwnerPeaksFileV1, createGraphParentMemoryGovernorV1, createMemoryPortsV1, createParentCollectorV1, graphMemoryAllocationV1, graphParentManagedBytesV1, hostMemoryMegabytesV1, selectGraphMemoryLanguagesV1 } from "../../../🧠️memory/🟨️.mjs";
+import { ownerTooHeavyOfV1, runInOwnerScopeV1 } from "../../../🧠️memory/🎯️owner-scope/🟨️.mjs";
+import { useEnvironmentGateV1, noteSlowV1, createOwnerClockV1 } from "../../../🧠️memory/🦶️footprint/🟨️.mjs";
+import { planFarmWorkersV1 } from "../../../🧠️memory/🪜️plan-stage/🟨️.mjs";
+import { graphCutConcurrencyV1 } from "../../../🧠️memory/✂️cut/🟨️.mjs";
+import { createErrorCollectorFromEnvV1 } from "../../🧾️collect-errors/🟨️.mjs";
+import { openProjectFarmV1 } from "./🏊️project-farm/🟨️.mjs";
+import { ownerRecordKeyV1, ownerRecordsPresentTextV1, ownerRecordsPresentV1 } from "./📋️present/🟨️.mjs";
+import observationSchemaV1 from "../../../👁️observation/🧬️schema/🔣️.json" with { type: "json" };
+import { TAKE_POLICY_V1, createTakeLedgerV1, takePassV1, takePollV1 } from "./📥️take/🟨️.mjs";
+import { graphWaveMeterV1 } from "../../📈️wave-row/🟨️.mjs";
+import { awaitGrowingV1, GRAPH_FARM_POLICY_V1 } from "./🏊️project-farm/🏊️pool/🟨️.mjs";
+import {refuseBuildV1} from "../../../📖️texts/🟦️.ts";
+let withClosurePassV1, primeSharedClosuresInChildV1, preflightToolClosuresInChildV1, releaseOwnerStateV1, primeSharedClosuresV1, askHeavyQuestionV1, isHeavyQuestionV1, closureStoreDirectoryV1, bindClosureStoreV1, closureApiV1, closureHandleOfV1, closureHandleFromRecipeV1, deriveClosureFactV1, resolveClosureRefsV1, inferenceCandidates,readBuildProducedCompileOutputV1,buildPath, yieldInferenceV1, catalogBuildContributionsV1, createScriptInputCache, POLICY, nativeCommandInputs, readTaxonomyProjectionV1, collectPlaygroundCatalog, PROJECT_BASENAME, playgroundSessionTargets, playgroundPreparationTargets, playgroundSiteTargetsForAdmissionV1, readToml, cargoTargets, componentBuildTargets, componentCrateRoots, projectAssemblyAuthorityV1, workspaceDataDirectory, projectWithDefaults, withNativePreparation, withReleasePipelinePreparation, loaded, readBunLockGraph, projectStampPathsV1;
+
+/** 🔌️ Binds this component's dependencies from the revision registry once its needs are wired. */
+export function wire(registry) {
+  ({inferenceCandidates,readBuildProducedCompileOutputV1}=registry.ownerDiscovery);
+  ({ buildPath, POLICY, PROJECT_BASENAME, workspaceDataDirectory } = registry.coordinates);
+  ({ withClosurePassV1, primeSharedClosuresInChildV1, preflightToolClosuresInChildV1, releaseOwnerStateV1, primeSharedClosuresV1, yieldInferenceV1, createScriptInputCache, nativeCommandInputs, closureApiV1, closureHandleOfV1, closureHandleFromRecipeV1, deriveClosureFactV1, closureStoreDirectoryV1, bindClosureStoreV1, askHeavyQuestionV1, isHeavyQuestionV1 } = registry.scriptInputs);
+  ({ catalogBuildContributionsV1, projectAssemblyAuthorityV1 } = registry.ownerDiscovery);
+  ({ readTaxonomyProjectionV1 } = registry.sourceAnalyses);
+  ({ collectPlaygroundCatalog, playgroundSessionTargets, playgroundPreparationTargets, playgroundSiteTargetsForAdmissionV1 } = registry.playgroundTargets);
+  ({ readToml, withNativePreparation } = registry.nativeManifests);
+  ({ cargoTargets, componentBuildTargets, componentCrateRoots, withReleasePipelinePreparation } = registry.componentTargets);
+  ({ projectWithDefaults, resolveClosureRefsV1 } = registry.projectAssembly);
+  ({ loaded } = registry.bootstrap);
+  ({ readBunLockGraph } = registry.bunLock);
+  ({ projectStampPathsV1 } = registry.stamps);
+}
+
+/** ⏱️ A source modified this recently may be half-written, so its parse failure is retried by settlement instead of withholding its project (the observation racy rule). */
+const UNSETTLED_SOURCE_MS = OBSERVATION_LIMITS_V1.racyMilliseconds;
+
+/** 🕸️ How often the projects being inferred are named again while none finishes, so a heavy project stays visible with its running seconds. */
+const RUNNING_TICK_MS = INFERENCE_LIMITS_V1.runningTickMilliseconds;
+
+/** 🚧️ Withholds one project whose consumed source does not parse, naming the exact bytes the snapshot observed; a freshly modified source rethrows so settlement waits for it. */
+function unavailableProjectV1(root, project, workspaceRoot, error) {
+  let modified = Infinity;
+  try { modified = rawStatSync(error.source).mtimeMs; } catch {}
+  if (modified >= Date.now() - UNSETTLED_SOURCE_MS) throw error;
+  return { root, ...(project ? { project } : {}), source: buildPath(relative(workspaceRoot, error.source)), sha256: error.sha256, reason: String(error.message).slice(0, 2048) };
+}
+
+/** 🧷️ Reads the withholding source inside the observation of the project it withholds and refuses a withholding that rests on other bytes than the ones the project now holds: the project then stays stale until exactly that file changes, and a read that disagrees with the failure is a half-written source that settlement retries. */
+function observeWithheldSourceV1(error) {
+  let digest;
+  try { digest = createHash("sha256").update(readFileSync(error.source)).digest("hex"); } catch { throw error; }
+  if (digest !== error.sha256) throw error;
+}
+
+/** 🧾️ The facts that withhold one project outside its own observation: what the failed computation read, then the bytes of the source it names. */
+function withheldRowsV1(error) {
+  const failure = detachedFailureV1(error), rows = failure ? [...failure.rows, ...failure.layers.flat()] : [];
+  const stat = rawStatSync(error.source), bytes = readFileSync(error.source);
+  if (createHash("sha256").update(bytes).digest("hex") !== error.sha256) throw error;
+  rows.push({ kind: "file", path: error.source, fact: { ctimeMs: stat.ctimeMs, ino: stat.ino, mtimeMs: stat.mtimeMs, sha256: error.sha256, size: stat.size } });
+  return rows;
+}
+
+/** 📛️ Names the project a failing inference belongs to without replacing the error, so a repeated settlement round says which project stops the build. */
+async function tagProjectFailureV1(root, run) {
+  try { return await run(); }
+  catch (error) { if (error !== null && typeof error === "object" && !Object.hasOwn(error, "semioProject") && Object.isExtensible(error)) Object.defineProperty(error, "semioProject", { value: root, configurable: true }); throw error; }
+}
+
+/** 🗝️ The key of the project record of one owner root. */
+function ownerCacheKeyV1(root) { return ownerRecordKeyV1(root); }
+
+/** 🗂️ The project record path of one owner root, where its observations are recorded while it runs. */
+function ownerCachePathV1(workspaceRoot, root) { return join(workspaceDataDirectory(workspaceRoot), "np", ownerCacheKeyV1(root) + ".json"); }
+
+/** 🏷️ The owner kind whose memory peak is learned: the language tag of the project, else `language:cargo` for a project with a Cargo manifest at its native root (read outside the observation), else `project`; the root project of the repository (`.`) is a kind of its own (`root:` before the kind), because the closures of all its targets make it far larger than any crate and its cost must not decide for them. */
+function ownerKindV1(json, workspaceRoot) { const kind = json.tags?.find(tag => tag.startsWith("language:")) ?? (rawStatSync(join(workspaceRoot, json.metadata?.nativeRoot ?? json.root, "Cargo.toml"), { throwIfNoEntry: false }) !== undefined ? "language:cargo" : "project"); return json.root === "." ? "root:" + kind : kind; }
+
+/** 🧵️ Bounds concurrently inferred projects; one worker is the serial reference order. */
+export function projectConcurrencyV1(options, environment = process.env) {
+  const value = Math.min(options?.projectConcurrency ?? Math.max(1, Math.min(8, availableParallelism())), graphCutConcurrencyV1(environment));
+  if (!Number.isSafeInteger(value) || value < 1 || value > 64) throw Error("Build project inference concurrency must be an integer from 1 to 64");
+  return value;
+}
+
+/** 🪨️ Reports and cancels inference settlement rounds through the original invocation. */
+export function settlementOptionsV1(context) {
+  return { signal: context.phaseControl?.signal, onRound: async round => { writeGraphSettleRowV1(round); await yieldInferenceV1(context,"build:settle",0,true); } };
+}
+
+/** 📜️ The generator contracts of the workspace taxonomy, read through the observed source analysis in the scope of the caller: a graph construction reads them once and keys every project record with their digest. */
+export function projectGeneratorContractsV1(workspaceRoot) {
+  const contractPath = join(workspaceRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json");
+  return existsSync(contractPath) ? readTaxonomyProjectionV1(contractPath).generatorContracts : {};
+}
+
+
+
+/** 🧱️ Builds, from plain data, what the inference of one project shares across the projects of a graph construction; a worker process opens the session its parent describes, the generator contracts included: they are no fact of a project record but part of its key, so a worker that read them again after a peer edit would write content of other contracts under the key of its parent. */
+export function createProjectInferenceEnvironmentV1(session) {
+  const { workspaceRoot, registry, projectsByRoot, componentRoots, contracts } = session;
+  if (typeof session.closureStore === "string") bindClosureStoreV1(workspaceRoot, session.closureStore);
+  const context = { workspaceRoot, registry, lateClosures: session.lateClosures === true }, scripts = createScriptInputCache(context), commandInputs = session.commandInputs?.closureRecipe ? closureHandleFromRecipeV1(session.commandInputs.closureRecipe) : session.commandInputs;
+  if (contracts === null || typeof contracts !== "object" || Array.isArray(contracts)) throw refuseBuildV1("invalid","graph.generator-contracts-required");
+  scripts.generatedOutput = path => readBuildProducedCompileOutputV1(path, workspaceRoot, contracts, registry);
+  return { workspaceRoot, contracts, commandInputs, scripts, projectsByRoot: new Map(projectsByRoot), componentRoots, nativeCache: new Map(), nativeClosures: new Map(), context };
+}
+
+/** 🌐️ Infers the node of one project: its defaults, its native or release preparation and its build modes; a source that does not parse withholds the project instead of failing the graph. */
+export async function inferProjectBodyV1(environment, job, admission) {
+  const { workspaceRoot, contracts, commandInputs, scripts, projectsByRoot, componentRoots, nativeCache, nativeClosures, context } = environment, { name, root, json, native, pipeline, selectedTargets, selectedInputs } = job, began = performance.now();
+  try {
+    await yieldInferenceV1(context, "build:project-assembly", 0);
+    const project = await projectWithDefaults(json, root, join(workspaceRoot, root), workspaceRoot, contracts, new Map(), commandInputs, scripts, undefined, "hash", admission ? selectedTargets ?? [] : undefined, selectedInputs);
+    const prepare = (apply, predicate) => { const preparing = admission ? { ...project, targets: Object.fromEntries(Object.entries(project.targets).filter(([, target]) => predicate(target))) } : project; apply(preparing); project.targets = { ...project.targets, ...preparing.targets }; if (preparing.metadata !== undefined) project.metadata = preparing.metadata; };
+    if (native) prepare(project => withNativePreparation(project, workspaceRoot, contracts, nativeCache, projectsByRoot, nativeClosures), target => target.metadata?.semio?.execution?.kind !== "source");
+    if (pipeline) prepare(project => withReleasePipelinePreparation(project, workspaceRoot, contracts, componentRoots, nativeCache, nativeClosures), target => Boolean(target.metadata?.semio?.release));
+    for (const [targetName, target] of Object.entries(project.targets)) project.targets[targetName] = loaded.targetBuildModes(targetName, target);
+    return project;
+  } catch (error) { if (error?.code !== "BUILD_SOURCE_UNPARSEABLE") throw error; const unavailable = unavailableProjectV1(root, name, workspaceRoot, error); observeWithheldSourceV1(error); return { unavailable }; }
+  finally { environment.clock?.add(name, "inline", performance.now() - began); }
+}
+
+/** ♻️ Whether a stored project record may be reused: a failure is never reused, because a record that withholds its project rests on a source the failure may not have named completely, and the new inference costs one cached walk. */
+export const projectRecordReusableV1 = value => value?.unavailable === undefined;
+
+/** 🔑️ The key a project record is stored under: what the graph shares across projects, then everything the project itself is made of. */
+export const projectRecordKeyV1 = (head, root, json, selectedTargets, selectedInputs) => [...head, root, json, selectedTargets ?? null, selectedInputs];
+
+/** 🔑️ The key text a project record is filed under in the fleet cache by every machine that reads a graph: a graph read runs its owners inside a settlement round, where `observeInferenceComputationV1` files a nested project by the record stamp and not by the revision of the observation module, so a machine that pulls owners for the fleet must claim and publish under this text too: under the text of the revision its records were filed where no reader looked (the cache held a record of 366 of 424 owners under the revision key and the readers asked for the stamp key). @see ./📥️take/🧪️tests */
+export const ownerRecordKeyTextV1 = key => JSON.stringify([observationSchemaV1.$defs.record.const.stamp, null, key]);
+
+/** ✍️ Writes the persisted record of one project into the graph directories the running body is staged to, under the key and the observation scope the parent uses, so the parent finds it valid once it adopted the leaves. The project is inferred inside one closure pass, as the parent does for the whole of its discovery: a shared closure entry is verified once for the project, so a peer that changes a provider file while the project is inferred cannot make the entry hold when it is admitted and not hold when it is expanded (`closure.provider-entry-stale` of a worker); the parent verifies the record it adopts. */
+export async function produceProjectRecordV1(environment, job) {
+  const cachePath = join(workspaceDataDirectory(environment.workspaceRoot), "np", job.cacheKey + ".json");
+  await withClosurePassV1(() => observeInferenceSnapshotV1(() => observeProjectInferenceV1({ cachePath, key: projectRecordKeyV1(job.head, job.root, job.json, undefined, job.selectedInputs), owner: job.root, stamps: projectStampPathsV1({ native: job.native }), reusable: projectRecordReusableV1 }, () => inferProjectBodyV1(environment, job, undefined))));
+}
+
+/** 🏷️ The job of one owner of a wave that is inferred without an admission selection, from its project JSON and the head parts the wave shares: the same fields the wave computes for the owner it infers itself (native or release preparation, the assembly authority, the head of the record key and the record file name), so a machine that pulls the owner from the fleet pool files its record under the key the machine that runs the wave looks up. `environment` is the one of {@link createProjectInferenceEnvironmentV1}. */
+export function ownerJobV1(environment, globals, { name, json }) {
+  const { workspaceRoot, projectsByRoot, componentRoots, nativeCache, nativeClosures } = environment, root = json.root, nativeRoot = json.metadata?.nativeRoot ?? root, selectedInputs = [];
+  const nativeTargets = Object.entries(json.targets ?? {}).filter(([, target]) => target.metadata?.semio?.execution?.kind !== "source");
+  const native = existsSync(join(workspaceRoot, nativeRoot, "Cargo.toml")) || nativeTargets.some(([, target]) => target.options?.command?.includes("⚡️caching/🦀️cargo/📜️script.ts")), pipeline = Object.values(json.targets ?? {}).some(target => target.metadata?.semio?.release);
+  const assemblyAuthority = native || pipeline ? projectAssemblyAuthorityV1(workspaceRoot, native ? nativeRoot : undefined, projectsByRoot, pipeline ? componentRoots : undefined, nativeCache, nativeClosures) : null;
+  const head = [globals.projectAuthority, globals.registryDigest, native ? globals.commandRevision : null, native || pipeline ? assemblyAuthority : null, ...(globals.late ? ["closure-references/4"] : [])];
+  return { name, root, json, native, pipeline, nativeRoot, selectedInputs, head, cacheKey: ownerCacheKeyV1(root) };
+}
+
+/** 🔁️ Opens the answer of derived facts for a generation: the same inference environment as a build, so asking a command walk again reads the live files exactly as the inference that recorded it did; every question runs in its own observation snapshot. */
+export async function openGenerationDeriverV1({ workspaceRoot, registry }) {
+  const environment = await observeInferenceSnapshotV1(() => createProjectInferenceEnvironmentV1({ workspaceRoot, registry, contracts: projectGeneratorContractsV1(workspaceRoot), projectsByRoot: [], componentRoots: [], commandInputs: null, lateClosures: false }));
+  const derive = (row, signal, pass) => { signal?.throwIfAborted(); return isHeavyQuestionV1(row) ? askHeavyQuestionV1(row, { workspaceRoot, signal }) : observeInferenceSnapshotV1(() => deriveClosureFactV1(row, environment.scripts, pass)); };
+  return Object.defineProperty(derive, "scripts", { value: environment.scripts });
+}
+
+/** 🧰️ Walks every declared tool closure in the capped child first (a refused closure ends the read here, in seconds, with its code and values), then derives the shared closure entries of a workspace in the capped child before the load state grows, when the process has a durable closure store to hand them over through; the owners and a later process read the stored entries. */
+export async function primeSharedClosuresOfWorkspaceV1({ workspaceRoot, signal }) {
+  await preflightToolClosuresInChildV1({ workspaceRoot, signal });
+  const storeDirectory = closureStoreDirectoryV1(workspaceRoot);
+  if (storeDirectory !== undefined) await primeSharedClosuresInChildV1({ workspaceRoot, storeDirectory, signal });
+}
+
+/** 🧺️ Runs the whole-workspace setup of an inference once per share: a later call of the same command (the build after the prefetch) reuses it while every observation it was made from still holds, replays those observations into its own capture, and counts `computed` and `reused` on the share. */
+export async function sharedSetupV1(share, key, compute, checkpoint) {
+  const before = share.computed;
+  const value = await memoizedObservedAsyncComputationV1(share.cache, key, async () => { share.computed++; return compute(); }, checkpoint);
+  if (share.computed === before) share.reused++;
+  return value;
+}
+
+/** 🐌️ The recorded seconds from which an owner counts as slow: it runs after the owners that take seconds, so the minutes of its synchronous stretches never hold back the light owners and their workers. */
+export const OWNER_SLOW_SECONDS_V1 = 120;
+
+/** ⏲️ The farm with its wait charged to the owner clock under `farm` (the same farm when there is none). */
+export function timedFarmV1(farm, clock) {
+  if (farm === undefined) return undefined;
+  return Object.freeze({ ...farm, prepare: async job => { const at = performance.now(); try { return await farm.prepare(job); } finally { clock.add(job.name, "farm", performance.now() - at); } } });
+}
+
+const PARKED_SECONDS_V1 = 120, PARKED_REPEAT_SECONDS_V1 = 60;
+const STAGE_INFER_V1 = { en: "inferring: in a farm child, queued for one, waiting for the memory governor to let the owner back into the process, or in this process", de: "Inferenz: in einem Farm-Kindprozess, in der Warteschlange dafür, wartet darauf, dass die Speichersteuerung den Owner wieder in den Prozess lässt, oder in diesem Prozess" }, STAGE_REFS_V1 = { en: "resolving closure references in the parent (a first derivation of a shared closure runs on the one thread)", de: "löst Closure-Referenzen im Elternprozess auf (die erste Ableitung einer geteilten Closure läuft im einen Thread)" }, STAGE_ROWS_V1 = { en: "recording the observations of the owner", de: "zeichnet die Beobachtungen des Owners auf" };
+const stagesV1 = new Map();
+const stageV1 = (name, text) => { stagesV1.set(name, text); };
+
+/** 🅿️ The owners of a wave that have run for `PARKED_SECONDS_V1` with no observation row and why: the stage they are in (a farm child, the memory governor, the closure derivation of the parent, the recording of rows), one bilingual line per owner at most every `PARKED_REPEAT_SECONDS_V1`. `say` writes a line; `told` remembers when a name was last named. */
+export function reportParkedOwnersV1(list, told, say, now = performance.now()) {
+  for (const row of list) {
+    if (!(row.seconds >= PARKED_SECONDS_V1) || (row.rows ?? 0) > 0 || now - (told.get(row.name) ?? -Infinity) < PARKED_REPEAT_SECONDS_V1 * 1000) continue;
+    told.set(row.name, now);
+    const stage = stagesV1.get(row.name) ?? STAGE_INFER_V1;
+    say(`graph: ${row.name} has run ${Math.round(row.seconds)} s with 0 rows and is parked: ${stage.en} / Graph: ${row.name} läuft seit ${Math.round(row.seconds)} s ohne Zeile und ist geparkt: ${stage.de}`);
+  }
+}
+
+/** 🧭️ The order owners start in: the owners the cost table says need a solo grant (`alone`) last, before them the ones recorded as slow (`slow`), the held requests first (`rank`) within each class, then the owners whose stored record is present (`present`, names) before those without one, so the cheap ones finish and publish first; the order inside a class is kept. */
+export function orderOwnerJobsV1(jobs, { alone = new Set(), slow = new Set(), rank, present } = {}) {
+  const tier = job => alone.has(job.name) ? 2 : slow.has(job.name) ? 1 : 0, cold = job => present === undefined || present.has(job.name) ? 0 : 1;
+  return jobs.sort((a, b) => tier(a) - tier(b) || (rank === undefined ? 0 : rank(a.name) - rank(b.name)) || cold(a) - cold(b));
+}
+
+/** 🪙️ What one project may take on this machine and where the cost of every owner is recorded: the limit is the grant of the machine for one project (`ownerGrantV1` of half its memory, never below the growth budget of the parent), none on a serving machine or with `SEMIO_GRAPH_OWNER_LIMIT=off`; a cost module that cannot be loaded enforces nothing and records nothing (a read never depends on it). A limited machine can read alone: `heavy(names)` names the owners whose recorded cost does not fit that grant, which the inference runs one at a time after the others, and `soloLimitBytes()` is the grant of one owner while nothing else runs (`soloGrantV1` of the memory available at that moment, never below the limit), taken when the solo owner starts. @param {(() => number | undefined) | undefined} availableBytes the available memory of the host in bytes */
+export async function graphOwnerEnforcementV1(workspaceRoot, environment, budgetBytes, rowsOf, availableBytes, hostMegabytes) {
+  if (environment.SEMIO_GRAPH_OWNER_LIMIT === "off") return {};
+  try {
+    const [cost, wanted, sampling] = await Promise.all([import("../../../🪪️graph-state/🙋️wanted/💰️cost/🟦️.ts"), import("../../../🪪️graph-state/🙋️wanted/🟦️.ts"), import("../../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts")]);
+    const host = (hostMegabytes ?? hostMemoryMegabytesV1)(), grant = cost.ownerGrantV1(Math.floor(host / 2), wanted.wantedPolicyV1), context = cost.ownerCostContextV1(), recorder = cost.createOwnerCostRecorderV1({ path: cost.ownerCostPathV1(workspaceRoot), rowsOf, ceilingMegabytes: context.ceilingMegabytes });
+    const slow = names => { const owners = recorder.table().owners ?? {}; return names.filter(name => (owners[name]?.seconds ?? 0) >= OWNER_SLOW_SECONDS_V1); };
+    if (!Number.isFinite(grant.managedMegabytes)) return { cost, recorder, limitBytes: undefined, slow };
+    const limitBytes = Math.max(grant.managedMegabytes * 1048576, budgetBytes), available = availableBytes ?? sampling.hostAvailableBytesV1;
+    return {
+      cost, recorder, limitBytes,
+      slow,
+      recordedBytes: name => { const row = cost.estimateOwnerCostV1(recorder.table(), name, undefined, undefined, { ceilingMegabytes: context.ceilingMegabytes, nowMs: Date.now() }); return row.source === "recorded" ? row.megabytes * 1048576 : undefined; },
+      heavy: names => cost.classifyOwnersV1(names, name => cost.estimateOwnerCostV1(recorder.table(), name, undefined, undefined, { ceilingMegabytes: context.ceilingMegabytes, nowMs: Date.now() }), grant).heavy.map(row => row.name),
+      soloLimitBytes: () => { const bytes = available(); return Math.max(limitBytes, cost.soloGrantV1({ hostMegabytes: host, ...(bytes === undefined ? {} : { availableMegabytes: Math.floor(bytes / 1048576) }) }, wanted.wantedPolicyV1).managedMegabytes * 1048576); },
+    };
+  } catch { return {}; }
+}
+
+/** 🛡️ Infers the project nodes of every authored emoji-named project config. Nx's native walker sometimes hands back lossy paths with U+FFFD where a multi-byte emoji used to be: those are unopenable duplicates of a real file and are skipped. */
+export async function emojiProjectJsonNodes(configFiles, options, context) {
+  const { workspaceRoot } = context, unavailable = new Map(), wantedRoots = options?.ownerRoots, wanted = root => !wantedRoots || wantedRoots.has(root), enteredMs = performance.now();
+  const collector = createErrorCollectorFromEnvV1({ workspaceRoot, signal: context.invocation?.control.signal }), clock = createOwnerClockV1();
+  const isAuthoredProjectConfigV1 = configFile => ROSTER_RULES_V1.isAuthoredProjectConfig(configFile);
+  const sharedSetup=!options?.ownerAdmission&&context.setupShare?.cache instanceof Map?context.setupShare:undefined;
+  const setupPass=async()=>{
+    const catalog=await catalogBuildContributionsV1(workspaceRoot,options?.catalogProviders??[]);
+    const found={files:inferenceCandidates(options?.ownerAdmission?configFiles:[...configFiles,...configFiles.filter(file=>file.endsWith("Cargo.toml")).map(file=>buildPath(join(dirname(file),PROJECT_BASENAME)))],workspaceRoot),nativeCache:new Map(),nativeClosures:new Map()},texts=new Map();
+    for(const file of found.files.filter(isAuthoredProjectConfigV1)){const abs=join(workspaceRoot,file);texts.set(file,existsSync(abs)?readFileSync(abs):null);}
+    return{catalog,files:found.files,nativeCache:found.nativeCache,nativeClosures:found.nativeClosures,playground:collectPlaygroundCatalog(found.files,workspaceRoot,catalog),texts};
+  };
+  let setupSteps=0;
+  const setup=sharedSetup?await sharedSetupV1(sharedSetup,JSON.stringify([workspaceRoot,options?.catalogProviders??[],createHash("sha256").update(configFiles.join("\0")).digest("hex")]),setupPass,(force=false)=>yieldInferenceV1(context,"build:cargo-owners",++setupSteps,force)):await setupPass();
+  const catalogContributions=setup.catalog,nativeCache=new Map(setup.nativeCache),nativeClosures=new Map(setup.nativeClosures);configFiles=setup.files;
+  const late = !options?.ownerAdmission && options?.snapshot === true && typeof options?.onOwnerObservations === "function", rootsByName = new Map(), scripts = createScriptInputCache({ ...context, lateClosures: late });
+  const contracts = projectGeneratorContractsV1(workspaceRoot);
+  scripts.generatedOutput=path=>readBuildProducedCompileOutputV1(path,workspaceRoot,contracts,context.registry);
+  if(context.invocation)await advanceScriptInvocation(context.invocation,"build:commands","running");
+  const commandInputs = !options?.ownerAdmission&&configFiles.some((path) => !isOpaqueSourcePathV1(path) && path.endsWith("Cargo.toml") && !path.includes(".🧬semio") && !POLICY.generatedDirectories.some((name) => path.split("/").includes(name))) ? await closureApiV1(scripts, workspaceRoot).nativeCommandInputs() : undefined;
+  if(context.invocation)await advanceScriptInvocation(context.invocation,"build:commands","complete");
+  const projectAuthority=createHash("sha256").update(JSON.stringify([contracts])).digest("hex");
+  const commandRevision=createHash("sha256").update(JSON.stringify(closureHandleOfV1(commandInputs)?.key??commandInputs??null)).digest("hex"),registryDigest=createHash("sha256").update(JSON.stringify(options?.ownerAdmission?context.registry??null:context.registry?.catalogProviders?.map(({ownerRoot,sourcePath})=>[ownerRoot,sourcePath])??null)).digest("hex");
+  const playgroundCatalog = setup.playground;
+
+  const results = (await Promise.all(configFiles
+    .filter(isAuthoredProjectConfigV1)
+    .map(async (configFile) => {
+      const abs = join(workspaceRoot, configFile), bytes = setup.texts.get(configFile);
+      if (!bytes) return null;
+      let json;
+      try {
+        json = JSON.parse(bytes.toString("utf8"));
+      } catch (error) {
+        const root = buildPath(relative(workspaceRoot, dirname(abs))) || ".";
+        unavailable.set(root, unavailableProjectV1(root, undefined, workspaceRoot, Object.assign(Error(`Invalid Build project metadata ${configFile}: ${error.message}`), { code: "BUILD_SOURCE_UNPARSEABLE", source: abs, sha256: createHash("sha256").update(bytes).digest("hex") })));
+        return null;
+      }
+      const name = json.name;
+      if (!name) throw new Error(`Build project metadata ${configFile} requires a name`);
+      const projectDir = dirname(abs);
+      const root = buildPath(relative(workspaceRoot, projectDir)) || ".";
+      const prior = rootsByName.get(name);
+      if (prior !== undefined && prior !== root) throw new Error(`Duplicate Build project ${name}: ${prior} and ${root}`);
+      if (prior === undefined) rootsByName.set(name, root);
+      if (name === "@semio-tech/plugin-registry") json.targets = { ...json.targets, ...playgroundSessionTargets(configFiles, workspaceRoot,catalogContributions) };
+      if (name === "@semio-tech/framework-os-dev") json.targets = { ...json.targets, ...await playgroundPreparationTargets(configFiles, workspaceRoot, root, contracts,catalogContributions,context) };
+      if (playgroundCatalog.some(row => row.cratePath === root)) {
+        json.targets = { ...playgroundSiteTargetsForAdmissionV1(root,playgroundCatalog,workspaceRoot,context.registry,options?.ownerAdmission?options.ownerAdmission.targets[name]??[]:undefined), ...json.targets };
+      }
+      const canonicalConfig = buildPath(relative(workspaceRoot, join(projectDir, PROJECT_BASENAME)));
+      return [canonicalConfig, { projects: { [name]: {...json,root} } }];
+    })))
+    .filter(Boolean);
+  const declaredRoots = new Set([...rootsByName.values()]);let cargoIndex=0;
+  for (const configFile of configFiles.filter((file) => file.endsWith("Cargo.toml"))) {
+    await yieldInferenceV1(context,"build:cargo-targets",++cargoIndex);
+    if (!ROSTER_RULES_V1.admitsManifest(configFile)) continue;
+    if (!existsSync(join(workspaceRoot, configFile))) continue;
+    const projectDir = dirname(join(workspaceRoot, configFile));
+    const root = buildPath(relative(workspaceRoot, projectDir)) || ".";
+    if (declaredRoots.has(root)) continue;
+    let manifest;
+    try { manifest = readToml(join(projectDir, "Cargo.toml")); }
+    catch (error) { if (error?.code !== "BUILD_SOURCE_UNPARSEABLE") throw error; unavailable.set(root, unavailableProjectV1(root, undefined, workspaceRoot, error)); continue; }
+    if (!manifest.package?.name) continue;
+    const name = manifest.package.name;
+    if (rootsByName.has(name)) throw new Error(`Duplicate Build project ${name}: ${rootsByName.get(name)} and ${root}`);
+    rootsByName.set(name, root);
+    if (!wanted(root)) { results.push([configFile, { projects: { [name]: { name, root, projectType: "library", targets: {} } } }]); continue; }
+    const build = async () => {
+    const targets = await cargoTargets(root, workspaceRoot, commandInputs,scripts);
+    const project = { name, root, projectType: "library", tags: ["language:cargo", "discovery:manifest"], targets: { ...targets, ...componentBuildTargets(root, workspaceRoot), ...playgroundSiteTargetsForAdmissionV1(root,playgroundCatalog,workspaceRoot,context.registry,options?.ownerAdmission?options.ownerAdmission.targets[name]??[]:undefined) } };
+    results.push([configFile, { projects: { [name]: project } }]);
+    };
+    if (collector) await collector.guard({ project: name, root, phase: "cargo-targets" }, build); else await build();
+  }
+  const projects = results.flatMap(([, result]) => Object.values(result.projects));
+  const projectsByRoot = new Map(projects.flatMap(project=>[[project.root,project.name],...(project.metadata?.nativeRoot?[[project.metadata.nativeRoot,project.name]]:[])]));
+  const componentRoots = componentCrateRoots(configFiles, workspaceRoot);
+  const projectEnvironment = { workspaceRoot, contracts, commandInputs, scripts, projectsByRoot, componentRoots, nativeCache, nativeClosures, context, clock };
+
+  const jobs=results.flatMap(([,result])=>Object.entries(result.projects).map(([name,json])=>({result,name,json}))).filter(job=>wanted(job.json.root));let projectIndex=0,cursor=0,stopped=false,takeScope,released;const missed=new Set();const taken=new Set(),inflight=new Map(),ledger=createTakeLedgerV1(jobs.length),resolved=new Promise(resolve=>{released=resolve;});
+  const inferProject=async({result,name,json},away=work=>work())=>{
+    if(options?.ownerAdmission?.generatedDependencies?.[name])json=applyBuildGeneratedTaskDependenciesV1(json,options.ownerAdmission.generatedDependencies[name]);
+    const started=performance.now();
+    await yieldInferenceV1(context,"build:projects",++projectIndex);
+    const inactive=options?.ownerAdmission?Object.fromEntries(Object.entries(json.targets??{}).filter(([name])=>!options.ownerAdmission.targets[json.name]?.includes(name))):{};
+    const selectedTargets=options?.ownerAdmission?.targets[json.name],selectedInputs=[...new Set(options?.ownerAdmission?.inputs?.[json.name]??[])].sort(),activeJson=options?.ownerAdmission?{...json,targets:Object.fromEntries(Object.entries(json.targets??{}).filter(([name])=>selectedTargets?.includes(name)))}:json;
+    const root=json.root,nativeRoot=json.metadata?.nativeRoot??root,nativeTargets=Object.entries(activeJson.targets??{}).filter(([,target])=>target.metadata?.semio?.execution?.kind!=="source"),nativeCandidate=existsSync(join(workspaceRoot,nativeRoot,"Cargo.toml"))||nativeTargets.some(([,target])=>target.options?.command?.includes("⚡️caching/🦀️cargo/📜️script.ts")),native=options?.ownerAdmission?buildNativeSourceObservationV1({selectedSource:Object.values(activeJson.targets??{}).some(target=>target.metadata?.semio?.execution?.kind==="source"),selectedNative:nativeCandidate&&nativeTargets.length>0,requestedInputs:selectedInputs.length>0,dependencyInputs:false,inputRole:buildInputSourceRoleV1(Object.keys(activeJson.targets??{}).length>0,false,Object.values(activeJson.targets??{}).map(target=>target.metadata?.semio?.sourceInputObservation))})==="compile":nativeCandidate,pipeline=Object.values(activeJson.targets??{}).some(target=>target.metadata?.semio?.release);
+    const assemblyAuthority=native||pipeline?projectAssemblyAuthorityV1(workspaceRoot,native?nativeRoot:undefined,projectsByRoot,pipeline?componentRoots:undefined,nativeCache,nativeClosures):null;
+    const authorityMilliseconds=performance.now()-started;clock.add(name,"authority",authorityMilliseconds);
+    const cacheKey=ownerCacheKeyV1(root),cachePath=ownerCachePathV1(workspaceRoot,root),head=[projectAuthority,registryDigest,native?commandRevision:null,native||pipeline?assemblyAuthority:null,...(late?["closure-references/4"]:[])];
+    const inferStartedAt=Date.now();stageV1(name,STAGE_INFER_V1);result.projects[name]=await tagProjectFailureV1(root,()=>observeProjectInferenceV1({cachePath,fleet:root,key:projectRecordKeyV1(head,root,json,selectedTargets,selectedInputs),owner:root,stamps:projectStampPathsV1({native}),reusable:value=>projectRecordReusableV1(value)&&inferenceInventoryReferencesHoldV1(workspaceRoot,value,context.phaseControl),prepare:farm?()=>{missed.add(name);return away(()=>farm.prepare({name,root,json,native,pipeline,nativeRoot,selectedInputs,head,cacheKey}));}:away.take===true?()=>away():undefined},()=>{missed.add(name);return inferProjectBodyV1(projectEnvironment,{name,root,json,native,pipeline,nativeRoot,selectedTargets,selectedInputs},options?.ownerAdmission);}));
+    clock.add(name,"observe",Math.max(0,Date.now()-inferStartedAt-clock.get(name,"farm")-clock.get(name,"inline")));noteSlowV1("owner-inference "+name,inferStartedAt,10000);stageV1(name,STAGE_REFS_V1);let rows=projectInferenceObservationsV1(cachePath)??[],derived=[];
+    if(late&&!result.projects[name].unavailable){
+      try{const resolved=await tagProjectFailureV1(root,async()=>{const startedAt=Date.now();try{return await resolveClosureRefsV1(result.projects[name],workspaceRoot,scripts,"hash",options.rowLog);}finally{clock.add(name,"refs",Date.now()-startedAt);noteSlowV1("resolve-closure-refs "+name,startedAt,5000);}});result.projects[name]=resolved.project;const extra=[...rows,...resolved.derived.map(fact=>fact.row)];rows=options.rowLog?resolved.rows.concat(extra):[...extra.slice(0,rows.length),...resolved.rows,...extra.slice(rows.length)];derived=resolved.derived;}
+      catch(error){if(error?.code!=="BUILD_SOURCE_UNPARSEABLE")throw error;const unavailable=unavailableProjectV1(root,name,workspaceRoot,error);rows=[...rows,...withheldRowsV1(error)];result.projects[name]={unavailable};}
+    }
+    stageV1(name,STAGE_ROWS_V1);{const at=performance.now();options?.onOwnerObservations?.(name,rows,derived);clock.add(name,"observations",performance.now()-at);}releaseProjectInferenceRetentionV1(cachePath);
+    if(result.projects[name].unavailable){unavailable.set(root,result.projects[name].unavailable);delete result.projects[name];return;}
+    result.projects[name].targets={...inactive,...result.projects[name].targets};
+  };
+  const phases=context.invocation?createGraphPhaseClockV1({publish:async resource=>{context.invocation.control.signal.throwIfAborted();await context.invocation.control.publish({owner:context.invocation.policy.owner,command:"build:projects",stage:"running",activity:{resource,mode:"shared",elapsedMs:0}});},write:writeGraphPhaseRowV1}):undefined;let finished=0;
+  await phases?.begin("inference",jobs.length);
+  let fleetPort;if(!options?.ownerAdmission){try{const records=await import("../../../🪪️graph-state/📦️project-records/🟦️.ts");fleetPort=records.createProjectFleetPortV1({root:workspaceRoot,environment:process.env});if(fleetPort!==undefined)takeScope={run:records.runTakeLookV1};}catch{}useProjectFleetV1(fleetPort);}
+  const farm=timedFarmV1(options?.ownerAdmission?undefined:openProjectFarmV1({workspaceRoot,context,contracts,closureStore:closureStoreDirectoryV1(workspaceRoot),projects:jobs.length,lateClosures:late,commandInputs:closureHandleOfV1(commandInputs)?{closureRecipe:closureHandleOfV1(commandInputs).recipe}:commandInputs,projectsByRoot,componentRoots,signal:context.invocation?.control.signal,processed:()=>projectIndex,maximumWorkers:planFarmWorkersV1({kind:"project-farm",workerMegabytes:GRAPH_FARM_POLICY_V1.workerMegabytes}),engage:options?.coldInference===true||wantedRoots!==undefined}),clock);
+  useEnvironmentGateV1();
+  const memoryPorts=createMemoryPortsV1(),parentBytes=graphParentManagedBytesV1(process.env),parentBaseline=memoryPorts.sample(),parentCollector=createParentCollectorV1({ports:memoryPorts,budgetBytes:parentBytes,baselineBytes:parentBaseline});
+  const rowCounts=new Map(),tooHeavy=new Map(),enforcement=await graphOwnerEnforcementV1(workspaceRoot,process.env,parentBytes,key=>rowCounts.get(key)??0);
+  const alone=new Set(enforcement.heavy?.(jobs.map(job=>job.name))??[]);const rank=options?.ownerRank;const census=ownerRecordsPresentV1(join(workspaceDataDirectory(workspaceRoot),"np"),jobs.map(job=>job.json.root)),present=new Set(jobs.filter(job=>census.present.has(job.json.root)).map(job=>job.name));try{for(const language of selectGraphMemoryLanguagesV1(process.env))process.stderr.write("[owners] "+ownerRecordsPresentTextV1(language,census)+"\n");}catch{}orderOwnerJobsV1(jobs,{alone,slow:new Set(enforcement.slow?.(jobs.map(job=>job.name))??[]),rank,present});const lightEnd=jobs.length-jobs.filter(job=>alone.has(job.name)).length;
+  let ownerPool;if(!options?.ownerAdmission){try{ownerPool=(await import("./🌐️owner-pool/📣️publisher/🟦️.ts")).createOwnerPoolPublisherV1({workspaceRoot,environment:process.env,identity:inferenceRecordIdentityV1(),globals:{projectAuthority,registryDigest,commandRevision,late},session:()=>({version:3,workspaceRoot,closureStore:closureStoreDirectoryV1(workspaceRoot),registry:context.registry??null,contracts,commandInputs:closureHandleOfV1(commandInputs)?{closureRecipe:closureHandleOfV1(commandInputs).recipe}:commandInputs??null,lateClosures:late,projectsByRoot:[...projectsByRoot],componentRoots}),units:()=>{const slow=new Set(enforcement.slow?.(jobs.map(job=>job.name))??[]);return jobs.filter(job=>!taken.has(job.name)).map(job=>({name:job.name,kind:ownerKindV1(job.json,workspaceRoot),expectedMilliseconds:slow.has(job.name)?OWNER_SLOW_SECONDS_V1*2000:60000,json:job.json}));},say:line=>process.stderr.write("[fleet] "+line+"\n"),store:process.env.SEMIO_FLEET_STORE_ROOT,origin:(()=>{try{return JSON.parse(rawReadFileSync(join(workspaceRoot,".cache","f","machine.json"),"utf8")).originId;}catch{return undefined;}})()});}catch{}}
+  const limit=Math.min(projectConcurrencyV1(options),jobs.length),governor=limit>0?createGraphParentMemoryGovernorV1({workers:limit,ports:memoryPorts,budgetBytes:parentBytes,baselineBytes:parentBaseline,peaks:createGraphOwnerPeaksFileV1(join(workspaceDataDirectory(workspaceRoot),"np","owner-peaks.json")),...enforcement.limitBytes===undefined?{}:{ownerLimitBytes:enforcement.limitBytes},...enforcement.recorder===undefined?{}:{costs:enforcement.recorder},...enforcement.recordedBytes===undefined?{}:{estimate:enforcement.recordedBytes},measured:name=>farm?.peakOf?.(name),signal:context.phaseControl?.signal,decide:event=>{decision=event;},report:line=>process.stderr.write(line+"\n"),environment:process.env}):undefined;
+  const collectResident=()=>{parentCollector.afterProject();};
+  let decision;const parkedTold=new Map(),active=new Map(),publishRunning=()=>{ownerPool?.miss(missed.size);graphWaveMeterV1.observe(memoryPorts.sample(),active.keys());const at=performance.now(),list=[...active].sort((a,b)=>a[1].since-b[1].since).map(([name,row])=>({name,seconds:(at-row.since)/1000,...(row.kind===undefined?{}:{kind:row.kind,rows:observedInferenceRowsV1(row.cachePath)})}));reportParkedOwnersV1(list,parkedTold,line=>process.stderr.write(line+"\n"));options?.onOwnerRunning?.(list,decision);return phases?.running("inference",list,decision);};
+  const loop=async end=>{await resolved;while(!stopped&&cursor<Math.min(end,jobs.length)){{const job=jobs[cursor++],solo=alone.has(job.name);let again=false;if(taken.has(job.name))continue;if(inflight.has(job.name)){await inflight.get(job.name).catch(()=>undefined);if(taken.has(job.name))continue;}if(options?.skipOwner?.(job.name)===true){finished++;continue;}clock.begin(job.name);const requested=performance.now();ledger.run(1);try{await governor.run(async({away,scope})=>{clock.add(job.name,"queue",performance.now()-requested);decision=undefined;active.set(job.name,{since:performance.now(),kind:ownerKindV1(job.json,workspaceRoot),cachePath:ownerCachePathV1(workspaceRoot,job.json.root)});{const at=performance.now();await publishRunning();clock.add(job.name,"publish",performance.now()-at);}try{try{await runInOwnerScopeV1(scope,()=>collector?collector.guard({project:job.name,root:job.json.root,phase:"project"},()=>inferProject(job,away)):inferProject(job,away));}catch(error){if(ownerTooHeavyOfV1(error)===undefined)throw error;}if(scope.exceeded!==undefined){if(!solo&&enforcement.soloLimitBytes!==undefined&&enforcement.soloLimitBytes()>scope.exceeded.limitBytes){alone.add(job.name);jobs.push(job);again=true;}else tooHeavy.set(job.name,{...scope.exceeded,name:job.name});}}finally{rowCounts.set(job.name,observedInferenceRowsV1(ownerCachePathV1(workspaceRoot,job.json.root)));forgetObservedInferenceRowsV1(ownerCachePathV1(workspaceRoot,job.json.root));active.delete(job.name);decision=undefined;{const at=performance.now();releaseOwnerStateV1(scripts,{shrink:governor.pressure()});clock.add(job.name,"release",performance.now()-at);}}},{kind:ownerKindV1(job.json,workspaceRoot),key:job.name,...solo?{limitBytes:enforcement.soloLimitBytes()}:{}});}finally{ledger.run(-1);}clock.finish(job.name,{running:active.size});if(!again){finished++;ledger.mark(job.name,"inferred");}}await publishRunning();await phases?.advance("inference",finished);collectResident();await new Promise(resolve=>setTimeout(resolve,0));}};
+  if(late){const since=performance.now();let shown;try{await primeSharedClosuresV1(workspaceRoot,scripts,{signal:context.phaseControl?.signal,progress:async({done,total})=>{active.delete(shown);shown="shared closures "+done+"/"+total;active.set(shown,{since});await publishRunning();}});}finally{active.delete(shown);}}
+  const ticker=phases?setInterval(()=>{Promise.resolve(publishRunning()).catch(()=>{});},RUNNING_TICK_MS):undefined;ticker?.unref?.();
+  const takeSay=text=>{try{for(const language of selectGraphMemoryLanguagesV1(process.env))process.stderr.write("[owners] "+text(language)+"\n");}catch{}};
+  const byName=new Map(jobs.map(job=>[job.name,job])),polling=new AbortController(),lookProject=inferProject,takeAway=Object.assign(()=>{throw Object.assign(Error("not stored here or in the fleet cache"),{code:"BUILD_TAKE_MISS"});},{take:true});let poll=Promise.resolve();
+  const look=job=>{
+    if(taken.has(job.name))return Promise.resolve("present");
+    const running=inflight.get(job.name);if(running!==undefined)return running;
+    const work=(async()=>{
+      try{const outcome=await takeScope.run(async looked=>{try{await lookProject(job,takeAway);}catch(error){if(error?.code==="BUILD_TAKE_MISS"){missed.delete(job.name);error.outcome=looked.outcome;}throw error;}return looked.outcome==="fetched"?"fetched":"present";});taken.add(job.name);return outcome;}
+      catch(error){if(context.phaseControl?.signal?.aborted)throw error;return error?.code==="BUILD_TAKE_MISS"?error.outcome==="fetched"?"stale":error.outcome==="fault"?"fault":"miss":"miss";}
+      finally{inflight.delete(job.name);}
+    })();
+    inflight.set(job.name,work);return work;
+  };
+  const resolveOwners=async()=>{
+    if(takeScope===undefined||jobs.length===0||process.env.SEMIO_GRAPH_TAKE==="off")return;
+    const stopper=new AbortController(),bound=setTimeout(()=>stopper.abort(),TAKE_POLICY_V1.passBoundMilliseconds),signal=context.phaseControl?.signal===undefined?stopper.signal:AbortSignal.any([context.phaseControl.signal,stopper.signal]),reporter=setInterval(()=>{takeSay(language=>ledger.line(language));Promise.resolve(phases?.advance("inference",finished)).catch(()=>{});},TAKE_POLICY_V1.progressMilliseconds);
+    bound.unref?.();reporter.unref?.();
+    try{
+      const names=jobs.filter(job=>options?.skipOwner?.(job.name)!==true).map(job=>job.name);
+      await takePassV1({names,attempt:name=>look(byName.get(name)),signal,mark:(name,outcome)=>{ledger.mark(name,outcome);if(outcome==="present"||outcome==="fetched")finished++;}});
+      await phases?.advance("inference",finished);
+      const missing=jobs.filter(job=>!taken.has(job.name)&&options?.skipOwner?.(job.name)!==true);
+      if(ownerPool!==undefined&&missing.length>0){ledger.want(missing.map(job=>job.name));ownerPool.miss(missing.length);takeSay(language=>ledger.waveLine(language));}
+      takeSay(language=>ledger.line(language));
+      if(missing.length>0)poll=takePollV1({queue:()=>jobs.slice(cursor).filter(job=>!taken.has(job.name)&&!inflight.has(job.name)).map(job=>job.name),attempt:name=>look(byName.get(name)),arrived:name=>{ledger.mark(name,"fetched");finished++;},stop:()=>stopped||polling.signal.aborted,signal:polling.signal}).catch(()=>undefined);
+    }catch(error){if(context.phaseControl?.signal?.aborted)throw error;takeSay(()=>"the take pass failed and every owner takes the normal path / der Durchgang ist gescheitert und jedes Projekt nimmt den normalen Weg: "+String(error?.message??error).replace(/\s+/gu," ").slice(0,160));}
+    finally{clearTimeout(bound);clearInterval(reporter);}
+  };
+  const loopStartedMs=performance.now();
+  const workers=Array.from({length:limit},()=>loop(lightEnd)),grow=AsyncResource.bind(()=>loop(lightEnd));
+  farm?.onReady(loops=>{for(let extra=loops-workers.length;extra>0&&!stopped&&cursor<lightEnd;extra--)workers.push(grow());});
+  try{await resolveOwners();released();await awaitGrowingV1(workers);if(!stopped&&cursor<jobs.length){memoryPorts.collect();await loop(Infinity);}}catch(error){stopped=true;released();await Promise.allSettled(workers);throw error;}finally{clearInterval(ticker);polling.abort();await poll;takeSay(language=>ledger.line(language));governor?.dispose();await farm?.close();if(fleetPort){useProjectFleetV1(undefined);try{process.stderr.write("[fleet] "+await fleetPort.flush()+"\n");}catch{}try{ownerPool?.finish({owners:jobs.length,seconds:(performance.now()-loopStartedMs)/1000,consumedByHost:fleetPort.producers?.()??{}});}catch{}}}
+  options?.onPhases?.({setup:Math.round(loopStartedMs-enteredMs),projects:Math.round(performance.now()-loopStartedMs)});options?.onInferred?.(missed.size);
+  graphWaveMeterV1.parent(parentCollector.finish());
+  enforcement.recorder?.flush();
+  await phases?.end("inference",{projects:jobs.length,...(governor?{memory:governor.stats()}:{})});
+  if(tooHeavy.size>0){const heavy=[...tooHeavy.values()].sort((a,b)=>b.takenBytes-a.takenBytes).map(row=>({name:row.name,megabytes:Math.round(row.takenBytes/1048576),source:"recorded"}));throw refuseBuildV1("unserved","graph.owner-too-heavy",{named:enforcement.cost.describeHeavyV1(heavy,selectGraphMemoryLanguagesV1(process.env)[0]),limit:Math.round(Math.max(...[...tooHeavy.values()].map(row=>row.limitBytes))/1048576*enforcement.cost.ownerCostPolicyV1.footprintFactor)});}
+  if (collector) await collector.finish({ projects: jobs.length });
+  if(wantedRoots)for(const entry of results)entry[1].projects=Object.fromEntries(Object.entries(entry[1].projects??{}).filter(([,project])=>wanted(project.root)));
+  for(const row of [...unavailable.values()].sort((a,b)=>a.root<b.root?-1:a.root>b.root?1:0))results.push([row.source,{projects:{},unavailable:[row]}]);
+  if (options?.analyzeLockfile && existsSync(join(workspaceRoot, javascriptManagerV1.primaryLockName))) results.push([javascriptManagerV1.primaryLockName, { externalNodes: readBunLockGraph(workspaceRoot).externalNodes }]);
+  return results;
+}

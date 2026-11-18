@@ -126,7 +126,7 @@
                     },
                     "modules": {
                       "type": "array",
-                      "maxItems": 2048,
+                      "maxItems": 16384,
                       "items": {
                         "type": "string",
                         "minLength": 1,
@@ -135,7 +135,7 @@
                     },
                     "reads": {
                       "type": "array",
-                      "maxItems": 2048,
+                      "maxItems": 16384,
                       "items": {
                         "type": "string",
                         "minLength": 1,
@@ -144,7 +144,7 @@
                     },
                     "physical": {
                       "type": "array",
-                      "maxItems": 2048,
+                      "maxItems": 16384,
                       "items": {
                         "type": "string",
                         "minLength": 1,

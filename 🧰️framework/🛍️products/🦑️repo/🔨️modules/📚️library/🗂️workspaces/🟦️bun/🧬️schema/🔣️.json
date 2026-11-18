@@ -247,7 +247,7 @@
       }
     },
     "OwnershipSelection": {
-      "description": "Explicit whole-repository or one authored installation owner. A scoped operation reads only its selected Source membership and admission, excluding separate installation owners; topology, manifest and original-control guards remain mandatory.",
+      "description": "Explicit whole-repository, one authored installation owner, or the closure of the root owner and the named owners over the deepest declaring owner of their members. A scoped operation reads only its selected Source membership and admission, excluding separate installation owners; a closure walks the members of the root owner, the named owners and every owner reached from them, never those of other owners; topology, manifest and original-control guards remain mandatory.",
       "oneOf": [
         {
           "type": "object",
@@ -275,6 +275,28 @@
             "owner": {
               "type": "string",
               "pattern": "^(?:\\.|[^./\\\\:\\u0000][^/\\\\:\\u0000]*)$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "roots"
+          ],
+          "properties": {
+            "kind": {
+              "const": "closure"
+            },
+            "roots": {
+              "type": "array",
+              "uniqueItems": true,
+              "maxItems": 256,
+              "items": {
+                "type": "string",
+                "pattern": "^(?:\\.|[^./\\\\:\\u0000][^/\\\\:\\u0000]*)$"
+              }
             }
           }
         }

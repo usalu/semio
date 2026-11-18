@@ -147,6 +147,7 @@ pub(super) fn layout_affecting_change(previous: &UiNode, next: &UiNode) -> bool 
         (UiNode::Slider(p), UiNode::Slider(n)) => p.unit_label() != n.unit_label(),
         (UiNode::Field(p), UiNode::Field(n)) => p.label != n.label || p.description != n.description || p.error != n.error,
         (UiNode::Section(p), UiNode::Section(n)) => p.label != n.label || p.children.len() != n.children.len(),
+        (UiNode::OverviewCard(p), UiNode::OverviewCard(n)) => p.title != n.title || p.footer != n.footer,
         _ => false,
     }
 }

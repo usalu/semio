@@ -6,9 +6,7 @@
 // #region 🔌️Adapters
 import {
   Button,
-  borderNormalClass,
   Checkbox,
-  cn,
   Input,
   reactHostPort,
   Select,
@@ -16,6 +14,10 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  SharedBorderRow,
+  SharedBorderRowCell,
+  SharedBorderRowField,
+  SharedBorderRowLabel,
   Fragment,
   type ReactNode
 } from "@semio-tech/ui-react";
@@ -48,16 +50,16 @@ export function SelectionAttributesPane({ model, activeModelDefinitionId, select
   const definitions = reactHostPort.useMemo(() => (target ? listAttributeDefinitionsForModelDefinitionEntity(activeModelDefinitionId, target.kind) : []), [activeModelDefinitionId, target]);
   if (!target) {
     return (
-      <p className="text-muted-foreground text-xs leading-snug">
+      <SharedBorderRowCell className="text-muted-foreground block text-xs leading-snug">
         Select a primitive or object to edit attributes for <code className="text-foreground">{activeModelDefinitionId}</code>.
-      </p>
+      </SharedBorderRowCell>
     );
   }
   if (!definitions.length) {
     return (
-      <p className="text-muted-foreground text-xs leading-snug">
+      <SharedBorderRowCell className="text-muted-foreground block text-xs leading-snug">
         No attribute definitions for <code className="text-foreground">{target.kind}</code> on this model definition.
-      </p>
+      </SharedBorderRowCell>
     );
   }
   const fields = model.metadata.get(target.id) ?? {};
@@ -71,26 +73,26 @@ export function SelectionAttributesPane({ model, activeModelDefinitionId, select
     model.metadata.deleteField(target.id, defn.field);
     onModelChange(model);
   };
-  const fieldRow = (defn: AttributeDefinitionSpec, current: unknown, control: ReactNode) => (
-    <div key={defn.id} className="flex flex-col gap-half">
-      <div className="flex items-center justify-between gap-single">
-        <span className="text-xs font-medium">{defn.label}</span>
-        {current !== undefined ? (
-          <Button id={`cad.attribute.${defn.id}.clear`} type="button" variant="outline" icon="x" className="h-auto px-half py-0 text-2xs" aria-label={labels.clearField(defn.label)} onClick={() => clearField(defn)}>
-            {labels.clear}
-          </Button>
-        ) : null}
-      </div>
+  const fieldRow = (defn: AttributeDefinitionSpec, current: unknown, control: ReactNode, controlId: string) => (
+    <SharedBorderRow key={defn.id}>
+      <SharedBorderRowLabel htmlFor={controlId}>{defn.label}</SharedBorderRowLabel>
       {control}
-    </div>
+      {current !== undefined ? (
+        <Button id={`cad.attribute.${defn.id}.clear`} type="button" variant="outline" icon="x" className="flex-none h-auto px-half py-0 text-2xs" aria-label={labels.clearField(defn.label)} onClick={() => clearField(defn)}>
+          {labels.clear}
+        </Button>
+      ) : null}
+    </SharedBorderRow>
   );
   return (
-    <div className="flex flex-col gap-single text-xs">
-      <span className="text-foreground text-sm font-semibold">{labels.attributes}</span>
-      <span className="text-muted-foreground text-2xs">
-        {target.kind} · <code className="text-foreground">{target.id}</code>
-        {count > 1 ? ` · ${labels.selected(count)}` : ""}
-      </span>
+    <SharedBorderRow orientation="vertical" className="text-xs">
+      <SharedBorderRowCell className="block">
+        <span className="text-foreground block text-sm font-semibold">{labels.attributes}</span>
+        <span className="text-muted-foreground block text-2xs">
+          {target.kind} · <code className="text-foreground">{target.id}</code>
+          {count > 1 ? ` · ${labels.selected(count)}` : ""}
+        </span>
+      </SharedBorderRowCell>
       {definitions.map((defn) => {
         const editor = attributeDefinitionEditorKind(defn);
         const current = fields[defn.field];
@@ -107,7 +109,7 @@ export function SelectionAttributesPane({ model, activeModelDefinitionId, select
                 else setField(defn, value);
               }}
             >
-              <SelectTrigger className={cn(cadFieldClass, "rounded-md border px-single py-half", borderNormalClass)}>
+              <SelectTrigger className={`${cadFieldClass} flex-1`}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -119,6 +121,7 @@ export function SelectionAttributesPane({ model, activeModelDefinitionId, select
                 ))}
               </SelectContent>
             </Select>,
+            `cad.attribute.${defn.id}-trigger`,
           );
         }
         if (editor === "number") {
@@ -135,16 +138,18 @@ export function SelectionAttributesPane({ model, activeModelDefinitionId, select
                 else setField(defn, Number(e.target.value));
               }}
             />,
+            `cad.attribute.${defn.id}`,
           );
         }
         if (editor === "boolean") {
           return fieldRow(
             defn,
             current,
-            <label className="flex items-center gap-single">
-              <Checkbox checked={current === true} onChange={(event) => setField(defn, event.target.checked)} />
-              <span>{labels.enabled}</span>
-            </label>,
+            <SharedBorderRowField>
+              <Checkbox id={`cad.attribute.${defn.id}`} checked={current === true} onChange={(event) => setField(defn, event.target.checked)} />
+              {labels.enabled}
+            </SharedBorderRowField>,
+            `cad.attribute.${defn.id}`,
           );
         }
         return fieldRow(
@@ -160,9 +165,10 @@ export function SelectionAttributesPane({ model, activeModelDefinitionId, select
               else setField(defn, e.target.value);
             }}
           />,
+          `cad.attribute.${defn.id}`,
         );
       })}
-    </div>
+    </SharedBorderRow>
   );
 }
 

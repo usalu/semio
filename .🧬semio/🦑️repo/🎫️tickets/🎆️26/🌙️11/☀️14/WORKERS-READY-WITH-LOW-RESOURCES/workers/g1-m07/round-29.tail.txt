@@ -1,0 +1,104 @@
+#### round-29
+Reading the project graph slice (2042 s): flush 1 of 1.
+Reading the project graph slice (2044 s): flush 1 of 1.
+Reading the project graph slice (2046 s): flush 1 of 1.
+[repo] still working after 2060 s; last phase started: door.script
+Reading the project graph slice (2048 s): flush 1 of 1.
+Reading the project graph slice (2050 s): flush 1 of 1.
+Reading the project graph slice (2052 s): flush 1 of 1.
+Reading the project graph slice (2054 s): flush 1 of 1.
+Reading the project graph slice (2056 s): flush 1 of 1.
+Reading the project graph slice (2058 s): flush 1 of 1.
+Reading the project graph slice (2060 s): flush 1 of 1.
+Reading the project graph slice (2062 s): flush 1 of 1.
+Reading the project graph slice (2064 s): flush 1 of 1.
+Reading the project graph slice (2066 s): flush 1 of 1.
+Reading the project graph slice (2068 s): flush 1 of 1.
+Reading the project graph slice (2070 s): flush 1 of 1.
+Reading the project graph slice (2072 s): flush 1 of 1.
+Reading the project graph slice (2074 s): flush 1 of 1.
+Reading the project graph slice (2076 s): flush 1 of 1.
+[repo] still working after 2090 s; last phase started: door.script
+Reading the project graph slice (2078 s): flush 1 of 1.
+Reading the project graph slice (2080 s): flush 1 of 1.
+The project graph could not be read on this machine yet: the plan stage inference (during inference) grew to 8679 MB, more than the 6553 MB this machine gives a plan, and only 2252 MB of memory were available (at least 2048 MB are kept in reserve) after it gave back what it could. It was stopped before the host ran short of memory. Nothing is wrong with your tree; run the command again when a machine with free memory serves the graph, or read the graph on a larger machine.
+end 2026-11-15T16:10:58Z
+native_rc=75
+#### round-29-try-2
+Reading the project graph slice (509 s): flush 1 of 1.
+Reading the project graph slice (511 s): flush 1 of 1.
+Reading the project graph slice (513 s): flush 1 of 1.
+Reading the project graph slice (515 s): flush 1 of 1.
+Reading the project graph slice (517 s): flush 1 of 1.
+Reading the project graph slice (519 s): flush 1 of 1.
+[repo] still working after 530 s; last phase started: door.script
+Reading the project graph slice (521 s): flush 1 of 1.
+Reading the project graph slice (523 s): flush 1 of 1.
+Reading the project graph slice (525 s): flush 1 of 1.
+Reading the project graph slice (527 s): flush 1 of 1.
+Reading the project graph slice (529 s): flush 1 of 1.
+Reading the project graph slice (531 s): flush 1 of 1.
+Reading the project graph slice (533 s): flush 1 of 1.
+Reading the project graph slice (535 s): flush 1 of 1.
+Reading the project graph slice (537 s): flush 1 of 1.
+Reading the project graph slice (539 s): flush 1 of 1.
+Reading the project graph slice (541 s): flush 1 of 1.
+Reading the project graph slice (543 s): flush 1 of 1.
+Reading the project graph slice (545 s): flush 1 of 1.
+Reading the project graph slice (547 s): flush 1 of 1.
+Reading the project graph slice (549 s): flush 1 of 1.
+The project graph could not be read on this machine yet: the plan stage inference (during inference) grew to 10219 MB, more than the 6553 MB this machine gives a plan, and only 2871 MB of memory were available (at least 2048 MB are kept in reserve) after it gave back what it could. It was stopped before the host ran short of memory. Nothing is wrong with your tree; run the command again when a machine with free memory serves the graph, or read the graph on a larger machine.
+end 2026-11-15T16:26:43Z
+native_rc=75
+#### round-29-try-3
+Reading the project graph slice (240 s): flush 1 of 1.
+Reading the project graph slice (242 s): flush 1 of 1.
+Reading the project graph slice (244 s): flush 1 of 1.
+Reading the project graph slice (246 s): flush 1 of 1.
+Reading the project graph slice (248 s): flush 1 of 1.
+Reading the project graph slice (250 s): flush 1 of 1.
+Reading the project graph slice (252 s): flush 1 of 1.
+Reading the project graph slice (254 s): flush 1 of 1.
+Reading the project graph slice (256 s): flush 1 of 1.
+Reading the project graph slice (258 s): flush 1 of 1.
+[repo] still working after 260 s; last phase started: door.script
+Reading the project graph slice (260 s): flush 1 of 1.
+Reading the project graph slice (262 s): flush 1 of 1.
+Reading the project graph slice (264 s): flush 1 of 1.
+Reading the project graph slice (266 s): flush 1 of 1.
+Reading the project graph slice (268 s): flush 1 of 1.
+Reading the project graph slice (270 s): flush 1 of 1.
+Reading the project graph slice (272 s): flush 1 of 1.
+Reading the project graph slice (274 s): flush 1 of 1.
+Reading the project graph slice (276 s): flush 1 of 1.
+Reading the project graph slice (278 s): flush 1 of 1.
+Reading the project graph slice (280 s): flush 1 of 1.
+The project graph could not be read on this machine yet: the plan stage inference (during inference) grew to 9884 MB, more than the 6553 MB this machine gives a plan, and only 2639 MB of memory were available (at least 2048 MB are kept in reserve) after it gave back what it could. It was stopped before the host ran short of memory. Nothing is wrong with your tree; run the command again when a machine with free memory serves the graph, or read the graph on a larger machine.
+end 2026-11-15T16:38:01Z
+native_rc=75
+#### round-29-try-4
+Reading the project graph slice (330 s): flush 1 of 1.
+Reading the project graph slice (332 s): flush 1 of 1.
+Reading the project graph slice (334 s): flush 1 of 1.
+Reading the project graph slice (336 s): flush 1 of 1.
+Reading the project graph slice (338 s): flush 1 of 1.
+Reading the project graph slice (340 s): flush 1 of 1.
+Reading the project graph slice (342 s): flush 1 of 1.
+Reading the project graph slice (344 s): flush 1 of 1.
+Reading the project graph slice (346 s): flush 1 of 1.
+Reading the project graph slice (348 s): flush 1 of 1.
+[repo] still working after 350 s; last phase started: door.script
+Reading the project graph slice (350 s): flush 1 of 1.
+Reading the project graph slice (352 s): flush 1 of 1.
+Reading the project graph slice (354 s): flush 1 of 1.
+Reading the project graph slice (356 s): flush 1 of 1.
+Reading the project graph slice (358 s): flush 1 of 1.
+Reading the project graph slice (360 s): flush 1 of 1.
+Reading the project graph slice (362 s): flush 1 of 1.
+Reading the project graph slice (364 s): flush 1 of 1.
+Reading the project graph slice (366 s): flush 1 of 1.
+Reading the project graph slice (368 s): flush 1 of 1.
+Reading the project graph slice (370 s): flush 1 of 1.
+The project graph could not be read on this machine yet: the plan stage inference (during inference) grew to 9948 MB, more than the 6553 MB this machine gives a plan, and only 2558 MB of memory were available (at least 2048 MB are kept in reserve) after it gave back what it could. It was stopped before the host ran short of memory. Nothing is wrong with your tree; run the command again when a machine with free memory serves the graph, or read the graph on a larger machine.
+end 2026-11-15T16:50:12Z
+native_rc=75

@@ -7,10 +7,15 @@ import type {RemoteExecutionSidecarContextV1,RemoteExecutionSidecarRoleV1,Sideca
 export {remoteExecutionPortsV1,remoteExecutionSchedulerEndpointV1,remoteExecutionWorkerApiV1} from "./🧰️shared/🟦️.ts";
 export type {RemoteExecutionSidecarContextV1,RemoteExecutionSidecarRoleV1,SidecarWorkV1} from "./🧰️shared/🟦️.ts";
 
-const ROLE_MODULES:Readonly<Record<RemoteExecutionSidecarRoleV1,string>>={agent:"👷️agent",scheduler:"🗓️scheduler",cache:"🗄️cache",graph:"🕸️graph"};
+const ROLE_MODULES:Readonly<Record<RemoteExecutionSidecarRoleV1,string>>={agent:"👷️agent",scheduler:"🗓️scheduler",cache:"🗄️cache",graph:"🕸️graph",pool:"🏊️pool",ready:"🚦️ready"};
 
 /** 🕰️ The measured numbers of a restart: how often the closure is looked at, the quiet period, the maximum deferral and the grace for the work in flight. See `./🧬️schema/🔣️.json`. */
 export const sidecarRestartPolicyV1=Object.freeze({...schema.definitions.Restart.const});
+
+/** ♻️ The restart numbers of one role: the common ones, overridden by the role's own entry (`pool` restarts within seconds, `ready` never defers for its stage in flight because the next child adopts it). */
+export function sidecarRestartPolicyForV1(role:string):typeof sidecarRestartPolicyV1&Readonly<{serveDeferralMilliseconds:number}>{
+ return role==="pool"?{...sidecarRestartPolicyV1,...sidecarRestartPolicyV1.pool}:role==="ready"?{...sidecarRestartPolicyV1,...sidecarRestartPolicyV1.ready}:role==="agent"?{...sidecarRestartPolicyV1,...sidecarRestartPolicyV1.agent}:sidecarRestartPolicyV1;
+}
 
 const REASON_KEYS:Readonly<Record<string,"reasonQuiet"|"reasonMaximum"|"reasonServed"|"reasonServeMaximum">>={quiet:"reasonQuiet",maximum:"reasonMaximum",served:"reasonServed",serveMaximum:"reasonServeMaximum"};
 
@@ -21,13 +26,13 @@ export function sidecarRestartTextV1(key:keyof typeof schema.definitions.Texts.c
 }
 
 /** ♻️ Everything the restart of a sidecar needs: the watch over its closure, the policy, what to do when the restart is due (`begin`, then `drain` and a later `abort` for the agent, `abort` at once for the others) and where to say it. */
-export type SidecarRestartInputV1=Readonly<{role:RemoteExecutionSidecarRoleV1;watch:Pick<ReturnType<typeof createSidecarClosureWatchV1>,"baseline"|"closure"|"changes">;policy:SidecarRestartPolicyV1&Readonly<{graceMilliseconds:number;serveDeferralMilliseconds?:number}>;work?:SidecarWorkV1;begin():void;drain():void;abort():void;write(line:string):void;now?:()=>number;after?:(milliseconds:number,run:()=>void)=>void}>;
+export type SidecarRestartInputV1=Readonly<{role:RemoteExecutionSidecarRoleV1;watch:Pick<ReturnType<typeof createSidecarClosureWatchV1>,"baseline"|"closure"|"changes">;policy:SidecarRestartPolicyV1&Readonly<{graceMilliseconds:number;serveDeferralMilliseconds?:number;minimumIntervalMilliseconds?:number;drainMaximumMilliseconds?:number;drainPollMilliseconds?:number}>;work?:SidecarWorkV1;begin():void;drain():void;abort():void;write(line:string):void;now?:()=>number;after?:(milliseconds:number,run:()=>void)=>void}>;
 
-/** ♻️ Decides, one `tick` at a time, when a sidecar restarts for new code: the closure must differ from the one it started with, stay quiet for the policy's time (a closure edited without a pause restarts after the maximum deferral), then the agent stops taking new work (`drain`) and is aborted when the work in flight is done or after the grace, the other roles are aborted at once. The graph role, which passes `work`, is different: a code change is not urgent for a process in the middle of a long computation whose results are keyed by the implementation that produced them, so while `work.busy` the restart waits (`work.restartPending` tells the role to take no new work), for `serveDeferralMilliseconds` at the latest counted from the first change, and happens at once when the role calls `work.wake` after the work ended. It says once that a restart is waiting, with the files, and once why and after how long it restarts. */
+/** ♻️ Decides, one `tick` at a time, when a sidecar restarts for new code: the closure must differ from the one it started with, stay quiet for the policy's time (a closure edited without a pause restarts after the maximum deferral), then the agent stops taking new work (`drain`) and is aborted when the work in flight is done; after the grace it is aborted only if it serves nothing for other agents, otherwise it waits for those actions to end by their own deadline (`drainMaximumMilliseconds` bounds a leaked flag, never a running action's own timeout), the other roles are aborted at once. The graph role, which passes `work`, is different: a code change is not urgent for a process in the middle of a long computation whose results are keyed by the implementation that produced them (the read itself runs under a detached runner and survives any restart; the wait only keeps the server from claiming new work meanwhile), so while `work.busy` the restart waits (`work.restartPending` tells the role to take no new work), for `serveDeferralMilliseconds` at the latest counted from the first change, and happens at once when the role calls `work.wake` after the work ended. It says once that a restart is waiting, with the files, and once why and after how long it restarts. A graph read in flight is not touched by any of this: it runs under a detached runner (`./🕸️graph/🏃️runner`) and the restarted graph server attaches to it again. */
 export function createSidecarRestartV1(input:SidecarRestartInputV1):Readonly<{tick():void}>{
  const now=input.now??Date.now,debounce=createSidecarRestartDebounceV1(input.policy,now),after=input.after??((milliseconds,run)=>{setTimeout(run,milliseconds).unref();});
- const work=input.role==="graph"?input.work:undefined,serveMaximum=input.policy.serveDeferralMilliseconds??sidecarRestartPolicyV1.serveDeferralMilliseconds;
- let announced=false,finished=false,waiting=false;
+ const work=input.role==="graph"||input.role==="ready"?input.work:undefined,serveMaximum=input.policy.serveDeferralMilliseconds??sidecarRestartPolicyV1.serveDeferralMilliseconds;
+ const created=now();let announced=false,finished=false,waiting=false;
  const files=():string=>{const names=input.watch.changes();return names.slice(0,6).join(", ")+(names.length>6?`, +${names.length-6}`:"");};
  const wait=():void=>{waiting=true;work!.restartPending=true;input.write(sidecarRestartTextV1("waitingForServe",{role:input.role,files:files(),minutes:Math.round(serveMaximum/60000)}));};
  const tick=():void=>{
@@ -38,19 +43,32 @@ export function createSidecarRestartV1(input:SidecarRestartInputV1):Readonly<{ti
   if(verdict.state==="deferred"&&!over){
    if(!announced){
     announced=true;
-    if(work?.busy===true)wait();
+    if(work?.busy===true&&serveMaximum>0)wait();
+    else if(work!==undefined){work.restartPending=true;input.write(sidecarRestartTextV1("deferred",{role:input.role,files:files(),quiet:Math.round(input.policy.quietMilliseconds/1000),maximum:Math.round(input.policy.maximumDeferralMilliseconds/1000)}));}
     else input.write(sidecarRestartTextV1("deferred",{role:input.role,files:files(),quiet:Math.round(input.policy.quietMilliseconds/1000),maximum:Math.round(input.policy.maximumDeferralMilliseconds/1000)}));
    }
    return;
   }
+  if(verdict.state==="due"&&(input.policy.minimumIntervalMilliseconds??0)>now()-created)return;
   if(verdict.state==="due"&&work?.busy===true&&verdict.deferredMilliseconds<serveMaximum){if(!waiting)wait();return;}
   finished=true;
-  const reason=work!==undefined&&(waiting||work.busy)?work.busy?"serveMaximum":"served":verdict.reason!;
+  const reason=work!==undefined&&serveMaximum>0&&(waiting||work.busy)?work.busy?"serveMaximum":"served":verdict.reason!;
   input.write(sidecarRestartTextV1("restarting",{role:input.role,files:files(),deferred:Math.round(verdict.deferredMilliseconds/1000),reason}));
   input.begin();
   if(input.role!=="agent"){input.abort();return;}
   input.write(sidecarRestartTextV1("draining",{role:input.role,grace:Math.round(input.policy.graceMilliseconds/1000)}));
-  input.drain();after(input.policy.graceMilliseconds,input.abort);
+  input.drain();
+  const served=input.work,bound=now()+(input.policy.drainMaximumMilliseconds??sidecarRestartPolicyV1.agent.drainMaximumMilliseconds),poll=input.policy.drainPollMilliseconds??sidecarRestartPolicyV1.agent.drainPollMilliseconds;
+  let told=false;
+  const retire=():void=>{
+   if(served?.busy===true&&now()<bound){
+    if(!told){told=true;input.write(sidecarRestartTextV1("drainingServed",{role:input.role,running:served.running??"?",minutes:Math.round((bound-now())/60000)}));}
+    after(poll,retire);return;
+   }
+   if(served?.busy===true)input.write(sidecarRestartTextV1("drainBounded",{role:input.role,running:served!.running??"?",minutes:Math.round((input.policy.drainMaximumMilliseconds??sidecarRestartPolicyV1.agent.drainMaximumMilliseconds)/60000)}));
+   input.abort();
+  };
+  after(input.policy.graceMilliseconds,retire);
  };
  if(work!==undefined)work.wake=tick;
  return Object.freeze({tick});
@@ -61,6 +79,8 @@ export async function runRemoteExecutionSidecarV1(role:RemoteExecutionSidecarRol
  if(role==="agent")return (await import("./👷️agent/🟦️.ts")).runAgent(context);
  if(role==="cache")return (await import("./🗄️cache/🟦️.ts")).runCache(context);
  if(role==="graph")return (await import("./🕸️graph/🟦️.ts")).superviseGraphServerV1(context);
+ if(role==="pool")return (await import("./🏊️pool/🟦️.ts")).runPool(context);
+ if(role==="ready")return (await import("./🚦️ready/🟦️.ts")).runReady(context);
  return (await import("./🗓️scheduler/🟦️.ts")).runScheduler(context);
 }
 
@@ -98,7 +118,7 @@ export async function runRemoteExecutionSidecarLauncherV1(role:RemoteExecutionSi
  for(;;){
   const started=Date.now();
   let code=1;
-  try{child=Bun.spawn([process.execPath,entry,role],{stdin:"ignore",stdout:"inherit",stderr:"inherit",env:{...environment,SEMIO_SIDECAR_CHILD:"1"}});alive=true;code=await child.exited;}catch{}
+  try{child=Bun.spawn([process.execPath,entry,role],{windowsHide:true,stdin:"ignore",stdout:"inherit",stderr:"inherit",env:{...environment,SEMIO_SIDECAR_CHILD:"1"}});alive=true;code=await child.exited;}catch{}
   alive=false;
   if(stopping)process.exit(code===75?0:code);
   if(code===75){delay=restart.initialMilliseconds;await Bun.sleep(500);continue;}
@@ -111,15 +131,15 @@ export async function runRemoteExecutionSidecarLauncherV1(role:RemoteExecutionSi
 
 if(import.meta.main){
  const role=process.argv[2];
- if(role!=="agent"&&role!=="scheduler"&&role!=="cache"&&role!=="graph"){process.stderr.write("usage: sidecar agent|scheduler|cache|graph\n");process.exit(2);}
+ if(role!=="agent"&&role!=="scheduler"&&role!=="cache"&&role!=="graph"&&role!=="pool"&&role!=="ready"){process.stderr.write("usage: sidecar agent|scheduler|cache|graph|pool|ready\n");process.exit(2);}
  if(process.env.SEMIO_SIDECAR_CHILD!=="1")await runRemoteExecutionSidecarLauncherV1(role,import.meta.path,process.env);
  const controller=new AbortController(),launcher=process.ppid,watch=remoteExecutionSidecarWatchV1(role),work:SidecarWorkV1={busy:false,restartPending:false};
  let changed=false;
- const drain=new AbortController(),override=(name:string,fallback:number):number=>Number(process.env[name])||fallback,restart=sidecarRestartPolicyV1;
- const restarting=createSidecarRestartV1({role,watch,work,policy:{quietMilliseconds:override("SEMIO_SIDECAR_QUIET_MILLISECONDS",restart.quietMilliseconds),maximumDeferralMilliseconds:override("SEMIO_SIDECAR_MAXIMUM_DEFERRAL_MILLISECONDS",restart.maximumDeferralMilliseconds),graceMilliseconds:override("SEMIO_SIDECAR_GRACE_MILLISECONDS",restart.graceMilliseconds),serveDeferralMilliseconds:override("SEMIO_SIDECAR_SERVE_DEFERRAL_MILLISECONDS",restart.serveDeferralMilliseconds)},begin:()=>{changed=true;},drain:()=>{drain.abort();},abort:()=>{controller.abort();},write:line=>{process.stderr.write(`${new Date().toISOString()} ${line}\n`);}});
+ const drain=new AbortController(),override=(name:string,fallback:number):number=>Number(process.env[name])||fallback,restart=sidecarRestartPolicyForV1(role);
+ const restarting=createSidecarRestartV1({role,watch,work,policy:{quietMilliseconds:override("SEMIO_SIDECAR_QUIET_MILLISECONDS",restart.quietMilliseconds),maximumDeferralMilliseconds:override("SEMIO_SIDECAR_MAXIMUM_DEFERRAL_MILLISECONDS",restart.maximumDeferralMilliseconds),graceMilliseconds:override("SEMIO_SIDECAR_GRACE_MILLISECONDS",restart.graceMilliseconds),serveDeferralMilliseconds:override("SEMIO_SIDECAR_SERVE_DEFERRAL_MILLISECONDS",restart.serveDeferralMilliseconds),minimumIntervalMilliseconds:override("SEMIO_SIDECAR_MINIMUM_INTERVAL_MILLISECONDS",restart.minimumIntervalMilliseconds),drainMaximumMilliseconds:override("SEMIO_SIDECAR_DRAIN_MAXIMUM_MILLISECONDS",sidecarRestartPolicyV1.agent.drainMaximumMilliseconds),drainPollMilliseconds:override("SEMIO_SIDECAR_DRAIN_POLL_MILLISECONDS",sidecarRestartPolicyV1.agent.drainPollMilliseconds)},begin:()=>{changed=true;},drain:()=>{drain.abort();},abort:()=>{controller.abort();},write:line=>{process.stderr.write(`${new Date().toISOString()} ${line}\n`);}});
  setInterval(()=>{restarting.tick();},override("SEMIO_SIDECAR_WATCH_MILLISECONDS",restart.watchMilliseconds)).unref();
- for(const name of ["SIGTERM","SIGINT"] as const)process.on(name,()=>{controller.abort();});
- setInterval(()=>{if(process.ppid!==launcher)controller.abort();},2000).unref();
+ if(role!=="pool")for(const name of ["SIGTERM","SIGINT"] as const)process.on(name,()=>{controller.abort();});
+ setInterval(()=>{if(process.ppid!==launcher)role==="pool"?process.exit(0):controller.abort();},2000).unref();
  const root=process.env.SEMIO_FLEET_ROOT??process.cwd();
  try{
   await runRemoteExecutionSidecarV1(role,{root,environment:process.env,signal:controller.signal,drain:drain.signal,work,write:line=>{process.stderr.write(`${new Date().toISOString()} ${line}\n`);}});

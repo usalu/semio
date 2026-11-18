@@ -571,7 +571,7 @@ const SelectContent = React.forwardRef<HTMLDivElement, SelectContentProps>(funct
       });
       setFramePosition(frame.position);
       const relativeTrigger = { top: triggerRect.top - frame.originTop, right: triggerRect.right - frame.originLeft, bottom: triggerRect.bottom - frame.originTop, left: triggerRect.left - frame.originLeft, width: triggerRect.width, height: triggerRect.height };
-      const gap = sideOffset ?? (trigger.closest("[data-window-silhouette]") ? 0 : 4);
+      const gap = sideOffset ?? 0;
       setPlacement(resolveSelectPlacement(relativeTrigger, content.getBoundingClientRect(), { width: frame.viewportWidth, height: frame.viewportHeight }, side, align, gap, Math.max(0, collisionPadding), context.direction === "rtl"));
     };
     measure();

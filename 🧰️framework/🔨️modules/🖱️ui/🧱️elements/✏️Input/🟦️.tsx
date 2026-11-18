@@ -358,12 +358,14 @@ interface InputProps extends Omit<React.ComponentProps<"input">, "value" | "onCh
   placeholderId?: string;
   showLabel?: boolean;
   mixed?: boolean;
+  rootClassName?: string;
+  rootStyle?: React.CSSProperties;
 }
 
 /**
  * 📦️ Input holds the data fields for a Input record.
  **/
-function Input({ className, type, lazy, value: externalValue, defaultValue, onChange, onLazyChange, onFocus, onBlur, onKeyDown, interactionId, id, placeholderId, placeholder, showLabel, mixed, ...props }: InputProps) {
+function Input({ className, type, lazy, value: externalValue, defaultValue, onChange, onLazyChange, onFocus, onBlur, onKeyDown, interactionId, id, placeholderId, placeholder, showLabel, mixed, rootClassName, rootStyle, ...props }: InputProps) {
   const isInPropertyValueColumn = reactHostPort.useContext(PropertyValueColumnContext);
   const scalarInputValue = (value: string | number | readonly string[] | undefined): string | number => {
     if (typeof value === "number") return value;
@@ -486,7 +488,7 @@ function Input({ className, type, lazy, value: externalValue, defaultValue, onCh
   const inputEmptyOpacity = isInPropertyValueColumn && !inputDisplayValue && !isFocused ? 0.6 : 1;
 
   const inputElement = (
-    <div ref={borderRef} data-slot="input-root" data-shared-border-frame="" data-shared-border-edges="top right bottom left" aria-disabled={props.disabled || undefined} data-detail-panel-control="fill" data-dim className="relative flex min-w-0 w-full flex-1 items-stretch" style={{ opacity: inputEmptyOpacity, transition: "opacity 150ms" }}>
+    <div ref={borderRef} data-slot="input-root" data-shared-border-frame="" data-shared-border-edges="top right bottom left" aria-disabled={props.disabled || undefined} data-detail-panel-control="fill" data-dim className={cn("relative flex min-w-0 w-full flex-1 items-stretch", rootClassName)} style={{ opacity: inputEmptyOpacity, transition: "opacity 150ms", ...rootStyle }}>
       {showCollapsedDisplay ? (
         <CollapsedFieldDisplay
           allowStackedOverflow={allowStackedOverflow}

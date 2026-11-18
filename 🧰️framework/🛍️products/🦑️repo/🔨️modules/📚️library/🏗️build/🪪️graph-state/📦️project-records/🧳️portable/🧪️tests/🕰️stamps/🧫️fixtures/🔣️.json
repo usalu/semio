@@ -1,0 +1,50 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "name": "posix and windows roots, other stamps",
+   "roots": [
+    {
+     "root": "/Users/ueli/Documents/semio",
+     "style": "posix"
+    },
+    {
+     "root": "/home/runner/work/semio",
+     "style": "posix"
+    },
+    {
+     "root": "C:/Users/ci/semio",
+     "style": "windows"
+    },
+    {
+     "root": "D:/work/semio",
+     "style": "windows"
+    }
+   ],
+   "hash": "",
+   "stamps": [
+    [
+     1794158822901.4556,
+     1794261689905.541,
+     1795501
+    ],
+    [
+     1792003925231.3357,
+     1794367624649.145,
+     649480115
+    ],
+    [
+     1,
+     2,
+     3
+    ],
+    [
+     1794530050654.3464,
+     1794530051063.5383,
+     656359922
+    ]
+   ]
+  }
+ ],
+ "expected": "1c4cbed8d474dfacbadb8b59abf338219c7de29ba6ed60eb84aa7db0ef1a6cbf"
+}

@@ -162,7 +162,7 @@
       }
     },
     "foreignLibraryFacts": {
-      "const": 0
+      "const": 1
     },
     "retirement": {
       "type": "object",

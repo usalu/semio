@@ -11,6 +11,7 @@ import {
   UI_AVAILABLE_HEIGHT,
   UI_MOBILE_MEDIA_QUERY,
   UI_TABLET_MEDIA_QUERY,
+  CardStack,
   bootstrapElementsSurfaceChromeDocument,
   elementsSurfaceDeviceForLayout,
   elementsSurfaceDeviceForMatches,
@@ -35,7 +36,8 @@ import { NavigationControls, placeName, useAddress } from "../🚏️navigation/
 import type { RunScreen } from "../▶️run/🟦️.tsx";
 import type { ResultsScreen } from "../🏁️results/🟦️.tsx";
 import { LegalFooter, type CourseLegal } from "../⚖️legal/🟦️.tsx";
-import { BodyButton, CardAction, CardIcon, ProblemNote, CourseCard, cn, playTappedIcons } from "../🪟️chrome/🟦️.tsx";
+import { ClipPostersProvider, type ClipPosters } from "../🎬️clips/🟦️.tsx";
+import { BodyButton, CardAction, CardIcon, CardSection, ProblemNote, CourseCard, cn, playTappedIcons } from "../🪟️chrome/🟦️.tsx";
 import { PresenceFooter, PresenceOverlay, PresenceProvider, useDocumentVisible, usePresencePointer } from "../👥️presence/🟦️.tsx";
 import { CoursePresence, presencePlace, presenceDrafts, sheetItemLabels } from "../👥️presence/🧭️rooms/🟦️.ts";
 import { presenceSelf, presenceView } from "../👥️presence/👁️view/🟦️.ts";
@@ -51,7 +53,8 @@ import "../../🎨️.css";
  * site's material (the course and its quizzes: with it the course shows at once and the device decides by itself
  * while the proctor is away; handed in as a {@link CourseMaterialSource} it is fetched while the client already shows,
  * and the device decides by itself from the moment it has arrived), the site's logo URL for the navbar, the site's legal pages for the footer
- * and the site's pets (where its menagerie comes from; fetched only for a learner who wants pets). The optional seams
+ * and the site's pets (where its menagerie comes from; fetched only for a learner who wants pets) and the site's posters (the
+ * built URL of the poster file each learning clip names). The optional seams
  * replace the network, the presence sockets, the storage, the browser's language list and the retry timing. */
 export interface CourseOptions {
   readonly proctor: string;
@@ -60,6 +63,7 @@ export interface CourseOptions {
   readonly logo?: string;
   readonly legal?: CourseLegal;
   readonly pets?: CoursePetsSource;
+  readonly posters?: ClipPosters;
   readonly transport?: ProctorConnect;
   readonly presence?: PresenceConnect;
   readonly storage?: StorageArea;
@@ -127,12 +131,14 @@ function Waiting(props: { readonly connection: CourseConnection; readonly notice
   const waiting = waitingMessage(connection, notice, text, screenFailed);
   return (
     <div aria-busy="true" className="min-w-0">
-      <CourseCard id="course-waiting" card="waiting" headingLevel={1} focusableHeading icon={<CardIcon icon="info" />} title={text("course.app.loading")}>
-        <p role="status" className="m-0 text-sm">
-          {waiting.message}
-        </p>
-        {waiting.retry ? <BodyButton onClick={onRetry}>{text("course.app.retry")}</BodyButton> : null}
-        {waiting.reload ? <BodyButton onClick={reloadPage}>{text("course.app.reload")}</BodyButton> : null}
+      <CourseCard flush id="course-waiting" card="waiting" headingLevel={1} focusableHeading icon={<CardIcon icon="info" />} title={text("course.app.loading")}>
+        <CardSection>
+          <p role="status" className="m-0 text-sm">
+            {waiting.message}
+          </p>
+        </CardSection>
+        {waiting.retry ? <BodyButton row onClick={onRetry}>{text("course.app.retry")}</BodyButton> : null}
+        {waiting.reload ? <BodyButton row onClick={reloadPage}>{text("course.app.reload")}</BodyButton> : null}
       </CourseCard>
     </div>
   );
@@ -161,7 +167,7 @@ export class ScreenBoundary extends Component<{ readonly text: CourseText; reado
       <Page>
         <ProblemNote problem={{ message: text("course.app.crashed"), detail: error.message }} text={text} id="course-crashed">
           <BodyButton onClick={() => this.setState({ error: undefined })}>{text("course.app.retry")}</BodyButton>
-          <BodyButton onClick={reloadPage}>{text("course.app.reload")}</BodyButton>
+          <BodyButton cell onClick={reloadPage}>{text("course.app.reload")}</BodyButton>
         </ProblemNote>
       </Page>
     );
@@ -194,10 +200,10 @@ export function documentTitle(state: CourseState, locale: CourseLocale | undefin
  * its results) takes the room of a large screen for its panes side by side. */
 function Page(props: { readonly wide?: boolean; readonly children: ReactNode }): ReactElement {
   return (
-    <div className="relative min-h-0 flex-1 overflow-auto p-double">
-      <div className={cn("course-page mx-auto w-full", props.wide ? "max-w-[100rem]" : "max-w-6xl")}>
+    <div className="course-page-scroll relative min-h-0 flex-1 overflow-auto">
+      <CardStack className="course-page" maxWidth={props.wide ? "100rem" : "72rem"}>
         {props.children}
-      </div>
+      </CardStack>
     </div>
   );
 }
@@ -451,19 +457,19 @@ function Client(props: ClientProps): ReactElement {
         </header>
         <main id="course-main" ref={main} tabIndex={-1} className="flex min-h-0 flex-1 flex-col outline-none">
           {connection.contract === "newer" ? (
-            <ProblemNote problem={{ message: text("course.app.outdated") }} text={text} className="m-double mb-0" id="course-outdated">
-              <BodyButton onClick={reloadPage}>{text("course.app.reload")}</BodyButton>
+            <ProblemNote problem={{ message: text("course.app.outdated") }} text={text} band id="course-outdated">
+              <BodyButton cell onClick={reloadPage}>{text("course.app.reload")}</BodyButton>
             </ProblemNote>
           ) : null}
           {unavailable === undefined ? null : (
-            <ProblemNote problem={{ message: text("course.app.languageUnavailable", { language: text(LOCALE_NAMES[unavailable]), current: text(LOCALE_NAMES[locale]) }) }} text={text} className="m-double mb-0" id="course-language-unavailable">
-              <BodyButton onClick={onRetryLocale}>{text("course.app.retry")}</BodyButton>
-              <BodyButton onClick={onDismissLocale}>{text("course.app.dismiss")}</BodyButton>
+            <ProblemNote problem={{ message: text("course.app.languageUnavailable", { language: text(LOCALE_NAMES[unavailable]), current: text(LOCALE_NAMES[locale]) }) }} text={text} band id="course-language-unavailable">
+              <BodyButton cell onClick={onRetryLocale}>{text("course.app.retry")}</BodyButton>
+              <BodyButton cell onClick={onDismissLocale}>{text("course.app.dismiss")}</BodyButton>
             </ProblemNote>
           )}
           {state.notice === undefined ? null : (
-            <ProblemNote problem={noticeProblem(state.notice, text)} text={text} className="m-double mb-0">
-              <BodyButton onClick={() => session.dismissNotice()}>{text("course.app.dismiss")}</BodyButton>
+            <ProblemNote problem={noticeProblem(state.notice, text)} text={text} band>
+              <BodyButton cell onClick={() => session.dismissNotice()}>{text("course.app.dismiss")}</BodyButton>
             </ProblemNote>
           )}
           <div inert={remote !== undefined} hidden={remote !== undefined} className={remote === undefined ? "contents" : "hidden"}>
@@ -599,7 +605,9 @@ export function CourseApp(options: CourseOptions): ReactElement {
   if (locale !== undefined)
     return (
       <CoursePetsProvider source={options.pets} choice={shownPreferences.pets} chosen={shownPreferences.petsChosen} play={shownPreferences.petsPlay} mischief={shownPreferences.petsMischief} state={observedScene?.state ?? state} locale={observedScene?.locale ?? locale}>
-        <Client options={options} session={session} presence={presence} state={state} connection={connection} locale={locale} preferences={preferences} onPreferences={change} unavailable={unavailable} onRetryLocale={retryLanguage} onDismissLocale={() => setUnavailable(undefined)} onObservedPreferences={setObservedPreferences} onObservedScene={setObservedScene} />
+        <ClipPostersProvider posters={options.posters}>
+          <Client options={options} session={session} presence={presence} state={state} connection={connection} locale={locale} preferences={preferences} onPreferences={change} unavailable={unavailable} onRetryLocale={retryLanguage} onDismissLocale={() => setUnavailable(undefined)} onObservedPreferences={setObservedPreferences} onObservedScene={setObservedScene} />
+        </ClipPostersProvider>
       </CoursePetsProvider>
     );
   return (

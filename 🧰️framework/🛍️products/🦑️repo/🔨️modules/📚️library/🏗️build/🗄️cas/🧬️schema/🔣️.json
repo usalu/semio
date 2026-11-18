@@ -37,6 +37,15 @@
         ]
       }
     },
+    "Budget": {
+      "$comment": "EN: The disk budget of the partition that holds the store, derived from the partition size instead of fixed shares: a command may start while its need plus the cushion is free, a collection starts while its need plus the reserve is not free, and a collection goes on until the hysteresis more is free. The reserve is the largest declared need of any stage times the safety factor of the workspace scale family, so no disk stranded by a fixed percentage. A partition below minimumTotalFactor times reserve plus hysteresis keeps the fixed shares of Policy.partition. DE: Das Plattenbudget der Partition des Speichers, aus der Partitionsgröße abgeleitet statt aus festen Anteilen: ein Befehl darf starten, solange sein Bedarf plus Puffer frei ist, eine Sammlung startet, solange sein Bedarf plus Reserve nicht frei ist, und läuft weiter, bis die Hysterese mehr frei ist. Die Reserve ist der größte deklarierte Bedarf einer Stufe mal Sicherheitsfaktor der Familie der Arbeitsbereichsgröße, damit keine Platte durch einen festen Prozentsatz gestrandet wird. Eine Partition unter minimumTotalFactor mal Reserve plus Hysterese behält die festen Anteile von Policy.partition.",
+      "const": {
+        "version": 1,
+        "largestNeedBytes": 6442450944,
+        "cushionDivisor": 4,
+        "minimumTotalFactor": 2
+      }
+    },
     "Digest": {
       "type": "string",
       "pattern": "^[0-9a-f]{64}$"

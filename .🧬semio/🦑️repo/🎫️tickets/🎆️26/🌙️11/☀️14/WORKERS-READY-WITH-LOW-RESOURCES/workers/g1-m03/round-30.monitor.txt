@@ -1,0 +1,19 @@
+step 0 (repo tools setup all) started pid=15846 2026-11-15T17:04:58Z
+step 0 ended 2026-11-15T17:42:22Z exit=0 wall=2244s sigint=0
+try 1 started pid=43128 2026-11-15T17:42:25Z log=/Users/ueli/native-bootstrap-round-30.log
+try 1 ended 2026-11-15T18:09:41Z native_rc=75 stopped=0 failed=[] other=[The project graph could not be read on this machine yet: the plan stage inference (during inference) grew to N MB, more than the N MB this m]
+try 1: next try after 300 s
+try 2 started pid=74861 2026-11-15T18:14:41Z log=/Users/ueli/native-bootstrap-round-30-try-2.log
+try 2 no new progress line and no new graph line for 15 minutes (last: [semio] Installing|34|336|) 2026-11-15T18:30:16Z; one SIGINT to process group 74861
+try 2 ended 2026-11-15T18:30:49Z native_rc=130 stopped=2 failed=[] other=[]
+try 2: next try after 300 s
+runner 15834 replaced 2026-11-15T18:33:15Z between tries (progress signature now counts every bootstrap line that is not a heartbeat); try 3 starts 18:35:50Z
+try 3 started pid=92893 2026-11-15T18:35:54Z log=/Users/ueli/native-bootstrap-round-30-try-3.log
+try 3 ended 2026-11-15T19:19:53Z native_rc=75 stopped=0 failed=[] other=[The project graph could not be read on this machine yet: the plan stage inference (during inference) grew to N MB, more than the N MB this m]
+try 3: next try after 300 s
+try 4 started pid=45995 2026-11-15T19:24:53Z log=/Users/ueli/native-bootstrap-round-30-try-4.log
+other build work of the fleet agent seen during try 4 at 2026-11-15T19:39:44Z: see round-30.other-work.txt
+try 4 ended 2026-11-15T19:45:10Z native_rc=1 stopped=0 failed=[] other=[The resident service met an unexpected failure (); try again, the details under that reference are in the service log /var/folders/wg/5s85qz]
+try 4: next try after 300 s
+try 5 started pid=73150 2026-11-15T19:50:10Z log=/Users/ueli/native-bootstrap-round-30-try-5.log
+round 31 read 2026-11-15T20:52:45Z: runner 90651 ended (TERM), one SIGINT to process group 73150 of try 5; no further try

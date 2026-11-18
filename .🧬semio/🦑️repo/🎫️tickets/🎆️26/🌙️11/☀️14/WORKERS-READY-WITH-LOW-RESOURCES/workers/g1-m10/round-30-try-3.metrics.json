@@ -1,0 +1,29 @@
+{
+  "round": 30,
+  "try": 3,
+  "start": "2026-11-15T20:20:37+00:00",
+  "end": "2026-11-15T22:10:52+00:00",
+  "wall_seconds": 6615.155219042,
+  "wrapper_rc": 0,
+  "native_rc": 7,
+  "native_rc_from_log": true,
+  "marker": false,
+  "ready": false,
+  "stop_reason": "resident-above-8GiB",
+  "peak_run_rss_mib": 910.203125,
+  "peak_slice_rss_mib": 8210.328125,
+  "peak_system_rss_mib": 7839.140625,
+  "peak_at": {
+    "at": "2026-11-15T22:10:52+00:00",
+    "progress": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:111:703:1:5:%40semio-tech%2Fframework-os-kernel|language%3Acargo|5|0\",\"mode\":\"shared\",\"elapsedMs\":0}}",
+    "run_mib": 55.109375,
+    "slice_mib": 8210.328125
+  },
+  "closure_entries_before": 34968,
+  "closure_entries_after": 35262,
+  "dependency_wait_line": null,
+  "service_logs": [
+    "/var/folders/n2/f4tcy7ks04sb8njd18x7l1lh0000gn/T/semio-repo/501/host-f13cda8149a9.log",
+    "/var/folders/n2/f4tcy7ks04sb8njd18x7l1lh0000gn/T/semio-repo/501/host-7b4d4d6cd27b.log"
+  ]
+}

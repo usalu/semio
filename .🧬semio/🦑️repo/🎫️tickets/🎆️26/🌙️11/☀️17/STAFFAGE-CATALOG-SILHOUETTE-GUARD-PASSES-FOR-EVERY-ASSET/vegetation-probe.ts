@@ -1,0 +1,12 @@
+import type { Asset } from "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍️staffage/🧬️schema/🟦️.ts";
+import { assetPathsFromFiles, readStreamedAsset } from "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/📥️files/🟦️.ts";
+import { evaluate } from "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🧮️evaluation/🟦️.ts";
+const [name, scale, view, id] = process.argv.slice(2) as string[];
+const entry = (await assetPathsFromFiles()).find((e) => e.folder === name)!;
+const { asset } = (await readStreamedAsset(entry)) as { asset: Asset };
+const state = evaluate(asset, { kind: "pose", pose: asset.presentation.defaultPose }, { kind: "scale", scale: { denominator: Number(scale) } }) as any;
+console.log(Object.keys(state));
+for (const b of Object.keys(state.bones)) console.log(b, JSON.stringify(state.bones[b].frame));
+const list = state.views?.[view] ?? state.geometry?.[view] ?? state.shapes?.[view];
+console.log(Object.keys(state.views ?? {}), list?.length);
+for (const s of list ?? []) if (s.shape.id === id) console.log(JSON.stringify(s.shape).slice(0, 400), JSON.stringify(s.rings[0]?.slice(0, 4)), s.closed);

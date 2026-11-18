@@ -10,6 +10,7 @@ import { TableAvatar, tableAvatarSizeClassName, tableAvatarTextClassName } from 
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
 import { useLabel } from "../🏷️Label/🟦️.tsx";
+import { SharedBorderRow, SharedBorderRowCell } from "../🪢️SharedBorderRow/🟦️.tsx";
 import { currentStylingAppearanceName } from "@semio-tech/ui-styling";
 import { presencePaint } from "../../🔨️modules/👥️presence-presentation/🟦️.ts";
 // #endregion 🔌️Adapters
@@ -89,13 +90,13 @@ export const PresenceBar: React.FC<PresenceBarProps> = ({ peers, max = PRESENCE_
   }
 
   return (
-    <div id={id} role="list" aria-label={rosterLabel} className={cn("flex items-center gap-single", className)}>
+    <SharedBorderRow id={id} role="list" aria-label={rosterLabel} data-slot="presence-bar" className={cn("w-fit", className)}>
       {visible.map((peer) => {
         const roleLabel = peer.role === "author" ? authorRoleLabel : peer.role === "spectator" ? spectatorRoleLabel : undefined;
         const qualifiers = [peer.isAgent === true ? agentKindLabel : undefined, roleLabel, peer.activity?.text].filter((value): value is string => value !== undefined);
         const peerTitle = qualifiers.length > 0 ? `${peer.label} (${qualifiers.join(", ")})` : peer.label;
         return (
-          <div
+          <SharedBorderRowCell
             key={peer.actor}
             role="listitem"
             data-row-id={`peer:${peer.actor}`}
@@ -104,15 +105,15 @@ export const PresenceBar: React.FC<PresenceBarProps> = ({ peers, max = PRESENCE_
             tabIndex={0}
             title={peerTitle}
             aria-label={peerTitle}
-            className="relative rounded-full"
+            className="relative justify-center p-tiny"
           >
-            <TableAvatar name={peer.label} style={{ borderColor: presencePaint(peer.color, appearance), borderWidth: 2 }} />
+            <TableAvatar name={peer.label} className="border-0" style={{ boxShadow: `0 0 0 2px ${presencePaint(peer.color, appearance)}` }} />
             {peer.isAgent === true ? (
               <span
                 aria-hidden="true"
                 data-row-id={`peer-agent-badge:${peer.actor}`}
-                className={cn(surfaceClass, "pointer-events-none absolute -bottom-0.5 -right-0.5 flex size-3 items-center justify-center rounded-full border text-[0.5rem] leading-none")}
-                style={{ borderColor: presencePaint(peer.color, appearance) }}
+                className={cn(surfaceClass, "pointer-events-none absolute bottom-0 right-0 flex size-3 items-center justify-center rounded-full text-[0.5rem] leading-none")}
+                style={{ boxShadow: `0 0 0 1px ${presencePaint(peer.color, appearance)}` }}
               >
                 🤖
               </span>
@@ -121,28 +122,28 @@ export const PresenceBar: React.FC<PresenceBarProps> = ({ peers, max = PRESENCE_
               <span
                 aria-hidden="true"
                 data-row-id={`peer-activity-badge:${peer.actor}`}
-                className={cn(surfaceClass, "pointer-events-none absolute -top-0.5 -right-0.5 flex size-3 items-center justify-center rounded-full border text-[0.5rem] leading-none")}
-                style={{ borderColor: presencePaint(peer.color, appearance) }}
+                className={cn(surfaceClass, "pointer-events-none absolute top-0 right-0 flex size-3 items-center justify-center rounded-full text-[0.5rem] leading-none")}
+                style={{ boxShadow: `0 0 0 1px ${presencePaint(peer.color, appearance)}` }}
               >
                 {peer.activity.badge}
               </span>
             )}
-          </div>
+          </SharedBorderRowCell>
         );
       })}
       {overflowCount > 0 ? (
-        <div
+        <SharedBorderRowCell
           role="listitem"
           data-row-id="peer:overflow"
           tabIndex={0}
           title={overflowLabel}
           aria-label={overflowLabel}
-          className={cn(surfaceClass, tableAvatarSizeClassName, tableAvatarTextClassName, "flex shrink-0 items-center justify-center rounded-full border font-medium text-muted-foreground")}
+          className={cn(surfaceClass, tableAvatarSizeClassName, tableAvatarTextClassName, "shrink-0 justify-center p-tiny font-medium text-muted-foreground box-content")}
         >
           +{overflowCount}
-        </div>
+        </SharedBorderRowCell>
       ) : null}
-    </div>
+    </SharedBorderRow>
   );
 };
 PresenceBar.displayName = "PresenceBar";

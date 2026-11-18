@@ -17,6 +17,8 @@ pub enum ContainerRole {
     Form,
     Toolbar,
     Sheet,
+    CardStack,
+    Card,
 }
 
 /// ⌨️ The closed set of input kinds. Grepped from the fleet's actual `UiInputNode.input_kind` string [Design notes](README.md#source-notes-22).

@@ -1,0 +1,41 @@
+## last 40 lines of /home/deck/native-bootstrap-round-29-try-7.log
+[repo] still working after 5420 s; last phase started: door.script
+[repo] still working after 5450 s; last phase started: door.script
+[repo] still working after 5480 s; last phase started: door.script
+[repo] still working after 5510 s; last phase started: door.script
+[repo] still working after 5540 s; last phase started: door.script
+[repo] still working after 5570 s; last phase started: door.script
+[repo] still working after 5600 s; last phase started: door.script
+[repo] still working after 5633 s; last phase started: door.script
+[repo] still working after 5663 s; last phase started: door.script
+[repo] still working after 5693 s; last phase started: door.script
+[repo] still working after 5723 s; last phase started: door.script
+[repo] still working after 5753 s; last phase started: door.script
+[repo] still working after 5783 s; last phase started: door.script
+[repo] still working after 5813 s; last phase started: door.script
+[repo] still working after 5843 s; last phase started: door.script
+[repo] still working after 5873 s; last phase started: door.script
+[repo] still working after 5903 s; last phase started: door.script
+[repo] still working after 5933 s; last phase started: door.script
+[repo] still working after 5963 s; last phase started: door.script
+[repo] still working after 5993 s; last phase started: door.script
+[repo] still working after 6023 s; last phase started: door.script
+[repo] still working after 6053 s; last phase started: door.script
+[repo] still working after 6083 s; last phase started: door.script
+[repo] still working after 6113 s; last phase started: door.script
+[repo] still working after 6143 s; last phase started: door.script
+[repo] still working after 6173 s; last phase started: door.script
+[repo] still working after 6203 s; last phase started: door.script
+[repo] still working after 6233 s; last phase started: door.script
+[repo] still working after 6263 s; last phase started: door.script
+[repo] still working after 6293 s; last phase started: door.script
+[repo] still working after 6323 s; last phase started: door.script
+[repo] still working after 6353 s; last phase started: door.script
+[repo] still working after 6383 s; last phase started: door.script
+[repo] still working after 6413 s; last phase started: door.script
+[repo] still working after 6443 s; last phase started: door.script
+[repo] still working after 6473 s; last phase started: door.script
+[repo] still working after 6503 s; last phase started: door.script
+The resident service met an unexpected failure (reference 7e3ceb77); try again, the details under that reference are in the service log /run/user/1000/semio-repo/1000/host-9a98371c2d16.log.
+end 2026-11-15T18:46:08Z
+native_rc=1

@@ -1,14 +1,14 @@
 import {createHash,timingSafeEqual} from "node:crypto";
 import {createFleetGateV1,type FleetAccessV1,type FleetGateV1} from "../🛰️fleet/🪪️identity/🛂️gate/🟦️.ts";
 import {readFleetOriginPrivateV1,createFleetRegistryV1,createFleetVerifierV1,fleetContentHashV1,FLEET_CONTENT_HEADER_V1} from "../🛰️fleet/🪪️identity/🟦️.ts";
-import {openProvenanceV1,provenanceFingerprintV1,type DivergenceV1,type ProvenanceV1} from "../🧾️provenance/🟦️.ts";
+import {openProvenanceV1,PROVENANCE_VOLATILE_OUTPUTS_V1,provenanceFingerprintV1,type ConsumptionV1,type DivergenceV1,type ProvenanceV1} from "../🧾️provenance/🟦️.ts";
 import {createMirrorHandlerV1} from "../🪞️mirror/🟦️.ts";
 import {createSealedHandlerV1,exchangePrivateKeyV1,isSealedRequestV1} from "../🔐️sealed/🟦️.ts";
 import {FLEET_HOP_HEADER_V1,type FleetPeerCountersV1,type FleetPeerReadThroughV1} from "../🧭️peers/🟦️.ts";
 import {runtimeFileV1,runtimeServeV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🌍️serve/🟦️.ts";
 import {mkdir,stat} from "node:fs/promises";
 import {join} from "node:path";
-import {parseRemoteCacheActionResultV1,validateRemoteCacheActionResultV1,type RemoteCacheValidationV1} from "../🔬️action-result/🟦️.ts";
+import {parseRemoteCacheActionResultV1,parseRemoteCacheStableResultV1,validateRemoteCacheActionResultV1,type RemoteCacheValidationV1} from "../🔬️action-result/🟦️.ts";
 import {acquireRemoteCacheLockV1,REMOTE_CACHE_COLLECTOR_LOCK_V1,REMOTE_CACHE_SERVER_LOCK_V1} from "../🧹️collector/🟦️.ts";
 import {RemoteCacheStoreV1,type RemoteCacheKindV1,type RemoteCachePutModeV1,type RemoteCacheStoreEventV1} from "../💾️store/🟦️.ts";
 import {isSlotIdV1,requireSlotShapeV1,SLOT_HEADER_V1} from "../../🪢️slots/🟦️.ts";
@@ -28,7 +28,7 @@ export type RemoteCacheFleetStatusV1=Readonly<{origins:Readonly<Record<string,nu
 export type RemoteCacheCountersV1=Record<RemoteCacheKindV1,{hits:number;misses:number;puts:number;conflicts:number;rejected:number;stale:number}>;
 
 /** 📊️ The JSON document `GET /status` answers. */
-export type RemoteCacheServerStatusV1=Readonly<{version:1;protocols:readonly ["bazel-http","nx-self-hosted"];entries:number;bytes:number;evicted?:Readonly<{entries:number;bytes:number}>;reservedBytes:number;maximumBytes:number;maximumEntryBytes:number;readOnly:boolean;validation:RemoteCacheValidationV1;counters:RemoteCacheCountersV1;startedAt:string;fleet?:RemoteCacheFleetStatusV1|null;divergences?:Readonly<{count:number;recent:readonly DivergenceV1[]}>;claims?:ClaimSummaryV1;peers?:FleetPeerCountersV1}>;
+export type RemoteCacheServerStatusV1=Readonly<{version:1;protocols:readonly ["bazel-http","nx-self-hosted"];entries:number;bytes:number;evicted?:Readonly<{entries:number;bytes:number}>;reservedBytes:number;maximumBytes:number;maximumEntryBytes:number;readOnly:boolean;validation:RemoteCacheValidationV1;counters:RemoteCacheCountersV1;startedAt:string;fleet?:RemoteCacheFleetStatusV1|null;divergences?:Readonly<{count:number;recent:readonly DivergenceV1[];since?:number;byClass?:Readonly<Record<string,number>>}>;consumption?:ConsumptionV1;claims?:ClaimSummaryV1;peers?:FleetPeerCountersV1}>;
 
 /** 📜️ One answered request, published after the response head is decided. */
 export type RemoteCacheRequestEventV1=Readonly<{stage:"request";method:string;path:string;status:number;milliseconds:number}>;
@@ -122,7 +122,7 @@ export function createRemoteCacheHandlerV1(options:RemoteCacheHandlerOptionsV1):
   if(url.pathname==="/healthz")return method==="GET"||method==="HEAD"?new Response(method==="GET"?'{"status":"ok"}\n':null,{headers:{"content-type":"application/json"}}):text(405,"Method not allowed",{allow:"GET, HEAD"});
   if(url.pathname==="/status"){
    const guard=await authenticate(request,url,peer,false);if("denied" in guard)return guard.denied;
-   const usage=options.store.usage(),status:RemoteCacheServerStatusV1={version:1,protocols:["bazel-http","nx-self-hosted"],entries:usage.entries,bytes:usage.bytes,evicted:{entries:usage.evictedEntries,bytes:usage.evictedBytes},reservedBytes:usage.reservedBytes,maximumBytes:usage.maximumBytes,maximumEntryBytes:usage.maximumEntryBytes,readOnly,validation,counters,startedAt,fleet:options.fleetStatus?.()??null,divergences:options.provenance?.summary()??{count:0,recent:[]},claims:claims.summary(),...(options.peers===undefined?{}:{peers:options.peers.counters()})};
+   const usage=options.store.usage(),status:RemoteCacheServerStatusV1={version:1,protocols:["bazel-http","nx-self-hosted"],entries:usage.entries,bytes:usage.bytes,evicted:{entries:usage.evictedEntries,bytes:usage.evictedBytes},reservedBytes:usage.reservedBytes,maximumBytes:usage.maximumBytes,maximumEntryBytes:usage.maximumEntryBytes,readOnly,validation,counters,startedAt,fleet:options.fleetStatus?.()??null,divergences:options.provenance?.summary()??{count:0,recent:[],since:0,byClass:{}},consumption:options.provenance?.consumption()??{since:0,total:0,pairs:{}},claims:claims.summary(),...(options.peers===undefined?{}:{peers:options.peers.counters()})};
    return Response.json(status);
   }
   const claimAddress=parseClaimPathV1(url.pathname,options.defaultInstance);
@@ -151,11 +151,12 @@ export function createRemoteCacheHandlerV1(options:RemoteCacheHandlerOptionsV1):
   if(!address)return text(404,"Not found");
   if(method==="GET"||method==="HEAD"){
    const guard=await authenticate(request,url,peer,false);if("denied" in guard)return guard.denied;
-   if(address.kind==="ac")return readResult(address.namespace,address.key,method,request);
+   if(address.kind==="ac"){const answered=await readResult(address.namespace,address.key,method,request);if(method==="GET"&&answered.status===200)options.provenance?.consume(address.namespace,"ac",address.key,guard.access===undefined?"anonymous":guard.access.role==="static"?"static":guard.access.origin);return answered;}
    const entry=await options.store.read(address.namespace,address.kind,address.key),counter=counters[address.kind];
    if(!entry){const near=await throughPeers(request,address);if(near)return near;counter.misses++;return text(404,"Not found");}
    const whole=method==="GET"?await readRemoteCacheEntryV1(entry.path,entry.size):null;
    if(whole===undefined){counter.misses++;return text(404,"Not found");}
+   if(method==="GET"&&address.kind==="nx")options.provenance?.consume(address.namespace,"nx",address.key,guard.access===undefined?"anonymous":guard.access.role==="static"?"static":guard.access.origin);
    counter.hits++;const headers={"content-type":"application/octet-stream","content-length":String(entry.size)};
    return new Response(whole==="lazy"?runtimeFileV1(entry.path).body():whole,{headers});
   }
@@ -170,7 +171,7 @@ export function createRemoteCacheHandlerV1(options:RemoteCacheHandlerOptionsV1):
   if(address.kind==="nx"&&length===null)return text(411,"Content-Length required");
   const declared=length===null?undefined:Number(length);
   if(declared!==undefined&&!Number.isSafeInteger(declared))return text(400,"Content-Length invalid");
-  let source:AsyncIterable<Uint8Array>=body.chunks,known=declared,fingerprint:string|undefined,prior:ReturnType<ProvenanceV1["of"]>;
+  let source:AsyncIterable<Uint8Array>=body.chunks,known=declared,fingerprint:string|undefined,unitShaped=false,prior:ReturnType<ProvenanceV1["of"]>;
   if(address.kind==="ac"&&validation!=="off"){
    if(declared!==undefined&&declared>limit){counter.rejected++;return text(413,"Action result exceeds the maximum size");}
    const parts:Uint8Array[]=[];let size=0;
@@ -181,13 +182,14 @@ export function createRemoteCacheHandlerV1(options:RemoteCacheHandlerOptionsV1):
    const verdict=await validateRemoteCacheActionResultV1(bytes,validation,blobs(address.namespace));
    if(!verdict.valid){counter.rejected++;return text(400,`Invalid action result: ${verdict.reason}`);}
    if(signed&&options.provenance!==undefined){
-    const parsed=parseRemoteCacheActionResultV1(bytes);fingerprint=provenanceFingerprintV1([...parsed.references,...parsed.trees].map(row=>row.hash));
-    const held=await options.store.readBytes(address.namespace,"ac",address.key,limit),before=options.provenance.of(address.namespace,"ac",address.key);
-    if(held!==undefined&&before?.origin!==access!.origin){
-     let kept=before?.fingerprint;
-     if(kept===undefined)try{const old=parseRemoteCacheActionResultV1(held);kept=provenanceFingerprintV1([...old.references,...old.trees].map(row=>row.hash));}catch{kept=undefined;}
+    const parsed=parseRemoteCacheStableResultV1(bytes,PROVENANCE_VOLATILE_OUTPUTS_V1);fingerprint=provenanceFingerprintV1([...parsed.stable,...parsed.trees].map(row=>row.hash));unitShaped=parsed.manifest;
+    const held=await options.store.readBytes(address.namespace,"ac",address.key,limit),before=options.provenance.of(address.namespace,"ac",address.key),expect=request.headers.get("x-semio-expect");
+    if(expect!==null&&held!==undefined&&expect!==createHash("sha256").update(held).digest("hex")){counter.conflicts++;return text(409,"Conflict: the head moved since it was read");}
+    if(held!==undefined&&expect===null&&before?.origin!==access!.origin){
+     let kept:string|undefined;
+     try{const old=parseRemoteCacheStableResultV1(held,PROVENANCE_VOLATILE_OUTPUTS_V1);kept=provenanceFingerprintV1([...old.stable,...old.trees].map(row=>row.hash));}catch{kept=before?.fingerprint;}
      if(kept!==undefined&&kept!==fingerprint){
-      options.provenance.diverged({namespace:address.namespace,kind:"ac",key:address.key,keptOrigin:before?.origin??"unknown",keptSha256:kept,refusedOrigin:access!.origin,refusedSha256:fingerprint});
+      options.provenance.diverged({namespace:address.namespace,kind:"ac",key:address.key,keptOrigin:before?.origin??"unknown",keptSha256:kept,refusedOrigin:access!.origin,refusedSha256:fingerprint},parsed.paths.includes("record.br")?"project-inference":parsed.manifest?"unit":parsed.paths.some(path=>path.startsWith("closure-"))?"closure":"other");
       counter.conflicts++;return text(409,"Conflict: another origin stored a different result for this key");
      }
     }
@@ -199,7 +201,7 @@ export function createRemoteCacheHandlerV1(options:RemoteCacheHandlerOptionsV1):
   if(address.kind==="nx"&&signed&&access!.content!=="-"){const hash=nxHash=createHash("sha256"),chunks=body.chunks;source=(async function*(){for await(const chunk of chunks){hash.update(chunk);yield chunk;}})();}
   const outcome=await options.store.put(address.namespace,address.kind,address.key,source,{mode:mode(address.kind),verify:address.kind==="cas",declaredLength:known,...(slotHeader!==null&&address.kind!=="cas"?{slot:{slot:slotHeader}}:{})});
   if(nxHash!==undefined&&(outcome==="created"||outcome==="replaced")&&nxHash.digest("hex")!==access!.content){await options.store.remove(address.namespace,"nx",address.key);counter.rejected++;return text(400,"Content hash mismatch");}
-  if(signed&&options.provenance!==undefined&&(outcome==="created"||outcome==="replaced")&&(prior===undefined||prior.origin===access!.origin||outcome==="created"))options.provenance.record(address.namespace,address.kind,address.key,access!.origin,fingerprint);
+  if(signed&&options.provenance!==undefined&&(outcome==="created"||outcome==="replaced")&&(prior===undefined||prior.origin===access!.origin||outcome==="created"))options.provenance.record(address.namespace,address.kind,address.key,access!.origin,fingerprint,unitShaped);
   switch(outcome){
    case "created":case "replaced":counter.puts++;if(address.kind!=="cas")claims.stored(address.namespace,address.kind,address.key);return text(200,"Stored");
    case "exists":if(address.kind==="nx"){counter.conflicts++;return text(409,"Conflict: cannot overwrite an existing cache entry");}if(address.kind!=="cas")claims.stored(address.namespace,address.kind,address.key);return text(200,"Stored");
@@ -229,7 +231,7 @@ export type RemoteCacheServerOptionsV1=Readonly<{fleet?:RemoteCacheFleetOptionsV
 export interface RemoteCacheServerV1{readonly url:string;readonly port:number;readonly store:RemoteCacheStoreV1;readonly claims:ClaimTableV1;readonly stopped:Promise<void>;stop():Promise<void>}
 
 /** 🚧️ Raised when another living server already owns the store directory. */
-export class RemoteCacheDirectoryBusyV1 extends Error{constructor(readonly directory:string){super(`Another remote cache server uses ${directory}`);}}
+export class RemoteCacheDirectoryBusyV1 extends Error{readonly directory:string; constructor(directory:string){super(`Another remote cache server uses ${directory}`);this.directory=directory;}}
 
 const LOOPBACK=new Set(["127.0.0.1","localhost","::1","[::1]"]),WILDCARD=new Set(["0.0.0.0","::","[::]"]);
 

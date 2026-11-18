@@ -18,6 +18,8 @@ import {
   DndCSS,
   DragHandle,
   Icon,
+  SharedBorderRow,
+  SharedBorderRowCell,
   SortableContext,
   useLabel,
   useNativeDragArm,
@@ -48,12 +50,12 @@ function dispatchBlockListAction(onAction: (action: ActionDescriptor) => void, c
 
 //#region SortableRow
 /** 🧩️ Wraps a row in dnd-kit's sortable machinery so it can be reordered within its enclosing `SortableContext`. */
-function SortableRow({ id, children }: { readonly id: string; readonly children: (dragHandleProps: { readonly attributes: React.HTMLAttributes<HTMLElement>; readonly listeners: Record<string, unknown> | undefined; readonly style: React.CSSProperties }) => React.ReactNode }) {
+function SortableRow({ id, cell = false, children }: { readonly id: string; readonly cell?: boolean; readonly children: (dragHandleProps: { readonly attributes: React.HTMLAttributes<HTMLElement>; readonly listeners: Record<string, unknown> | undefined; readonly style: React.CSSProperties }) => React.ReactNode }) {
   const surfaceDrag = useUiDriverDragSurface();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
   const style: React.CSSProperties = { transform: DndCSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
   return (
-    <div ref={setNodeRef} style={style} {...(surfaceDrag ? { ...attributes, ...listeners } : {})}>
+    <div ref={setNodeRef} style={style} data-shared-border-cell={cell ? "" : undefined} {...(surfaceDrag ? { ...attributes, ...listeners } : {})}>
       {children({ attributes, listeners: surfaceDrag ? undefined : listeners, style })}
     </div>
   );
@@ -78,16 +80,18 @@ function BlockCard({ block, stepId, controllerId, onAction, selection }: { reado
   const surfaceDrag = useUiDriverDragSurface();
   const deleteLabel = useLabel("ui.common.delete");
   return (
-    <SortableRow id={block.id}>
+    <SortableRow id={block.id} cell>
       {({ attributes, listeners }) => (
-        <div className={cn("semio-block-card flex items-center gap-2 rounded border border-border bg-background p-single", selection.selectedId === block.id && "border-accent", surfaceDrag && "cursor-grab active:cursor-grabbing")} data-block-id={block.id}>
-          {!surfaceDrag ? <DragHandle labelId="ui.tree.drag.sort" attributes={attributes} listeners={listeners} onClick={(event) => event.stopPropagation()} /> : <Icon icon="grip-vertical" size="small" />}
-          <SelectionLabel id={block.id} target={block.target} selection={selection} controllerId={controllerId} onAction={onAction}>
-            <span className="block truncate text-xs font-medium">{block.label}</span>
-            <span aria-hidden="true" className="block truncate text-xs text-muted-foreground">{block.kind}</span>
-          </SelectionLabel>
-          <Button aria-label={`${deleteLabel}: ${block.label}`} className="h-medium shrink-0 px-2" icon="trash-2" type="button" variant="outline" onClick={() => dispatchBlockListAction(onAction, controllerId, "removeBlock", { stepId, blockId: block.id })} />
-        </div>
+        <SharedBorderRow framed={false} className={cn("semio-block-card bg-background", selection.selectedId === block.id && "bg-accent/10", surfaceDrag && "cursor-grab active:cursor-grabbing")} data-block-id={block.id}>
+          <SharedBorderRowCell className="min-w-0 flex-1 gap-2 p-single">
+            {!surfaceDrag ? <DragHandle labelId="ui.tree.drag.sort" attributes={attributes} listeners={listeners} onClick={(event) => event.stopPropagation()} /> : <Icon icon="grip-vertical" size="small" />}
+            <SelectionLabel id={block.id} target={block.target} selection={selection} controllerId={controllerId} onAction={onAction}>
+              <span className="block truncate text-xs font-medium">{block.label}</span>
+              <span aria-hidden="true" className="block truncate text-xs text-muted-foreground">{block.kind}</span>
+            </SelectionLabel>
+          </SharedBorderRowCell>
+          <Button aria-label={`${deleteLabel}: ${block.label}`} className="shrink-0 px-2" icon="trash-2" type="button" variant="outline" onClick={() => dispatchBlockListAction(onAction, controllerId, "removeBlock", { stepId, blockId: block.id })} />
+        </SharedBorderRow>
       )}
     </SortableRow>
   );
@@ -109,10 +113,12 @@ function StepCard({ step, palette, controllerId, onAction, selection }: { readon
   }
 
   return (
-    <SortableRow id={step.id}>
+    <SortableRow id={step.id} cell>
       {({ attributes, listeners }) => (
-        <div
-          className={cn("semio-step-card flex flex-col gap-2 rounded border border-border bg-background p-single", selection.selectedId === step.id && "border-accent", surfaceDrag && "cursor-grab active:cursor-grabbing")}
+        <SharedBorderRow
+          orientation="vertical"
+          framed={false}
+          className={cn("semio-step-card bg-background", selection.selectedId === step.id && "bg-accent/10", surfaceDrag && "cursor-grab active:cursor-grabbing")}
           data-step-id={step.id}
           onDragOver={(event) => {
             event.preventDefault();
@@ -125,24 +131,28 @@ function StepCard({ step, palette, controllerId, onAction, selection }: { readon
             dispatchBlockListAction(onAction, controllerId, "addBlock", { stepId: step.id, kind });
           }}
         >
-          <div className="flex items-center gap-2">
-            {!surfaceDrag ? <DragHandle labelId="ui.tree.drag.sort" attributes={attributes} listeners={listeners} onClick={(event) => event.stopPropagation()} /> : <Icon icon="grip-vertical" size="small" />}
-            <SelectionLabel id={step.id} target={step.target} selection={selection} controllerId={controllerId} onAction={onAction}>
-              <span className="block truncate text-sm font-medium">{step.title}</span>
-            </SelectionLabel>
-            <Button aria-label={`${deleteLabel}: ${step.title}`} className="h-medium shrink-0 px-2" icon="trash-2" type="button" variant="outline" onClick={() => dispatchBlockListAction(onAction, controllerId, "removeStep", { stepId: step.id })} />
-          </div>
-          {step.description && <div className="text-xs text-muted-foreground">{step.description}</div>}
+          <SharedBorderRow>
+            <SharedBorderRowCell className="min-w-0 flex-1 gap-2 p-single">
+              {!surfaceDrag ? <DragHandle labelId="ui.tree.drag.sort" attributes={attributes} listeners={listeners} onClick={(event) => event.stopPropagation()} /> : <Icon icon="grip-vertical" size="small" />}
+              <SelectionLabel id={step.id} target={step.target} selection={selection} controllerId={controllerId} onAction={onAction}>
+                <span className="block truncate text-sm font-medium">{step.title}</span>
+              </SelectionLabel>
+            </SharedBorderRowCell>
+            <Button aria-label={`${deleteLabel}: ${step.title}`} className="shrink-0 px-2" icon="trash-2" type="button" variant="outline" onClick={() => dispatchBlockListAction(onAction, controllerId, "removeStep", { stepId: step.id })} />
+          </SharedBorderRow>
+          {step.description && <SharedBorderRowCell className="p-single text-xs text-muted-foreground">{step.description}</SharedBorderRowCell>}
           <DndContext collisionDetection={closestCenter} onDragEnd={handleBlockDragEnd}>
             <SortableContext items={blockIds} strategy={verticalListSortingStrategy}>
-              <div className="flex flex-col gap-1">
-                {step.blocks.map((block) => (
-                  <BlockCard key={block.id} block={block} stepId={step.id} controllerId={controllerId} onAction={onAction} selection={selection} />
-                ))}
-              </div>
+              {step.blocks.length > 0 ? (
+                <SharedBorderRow orientation="vertical" framed={false}>
+                  {step.blocks.map((block) => (
+                    <BlockCard key={block.id} block={block} stepId={step.id} controllerId={controllerId} onAction={onAction} selection={selection} />
+                  ))}
+                </SharedBorderRow>
+              ) : null}
             </SortableContext>
           </DndContext>
-        </div>
+        </SharedBorderRow>
       )}
     </SortableRow>
   );
@@ -165,7 +175,8 @@ function PaletteEntryRow({ entry, targetStepId, controllerId, onAction }: { read
         event.dataTransfer.setData(PALETTE_DRAG_MIME, entry.blockKind);
         event.dataTransfer.effectAllowed = "copy";
       }}
-      className={cn("flex items-center gap-1 rounded border border-border p-single text-xs", enabled && surfaceDrag && "cursor-grab active:cursor-grabbing")}
+      data-shared-border-cell=""
+      className={cn("flex items-center gap-1 border-0 p-single text-xs", enabled && surfaceDrag && "cursor-grab active:cursor-grabbing")}
     >
       {!surfaceDrag && enabled ? <DragHandle labelId="ui.tree.drag.transfer" iconKind="move" onPointerDown={arm} onClick={(event) => event.stopPropagation()} /> : null}
       <button
@@ -192,11 +203,11 @@ function PaletteEntryRow({ entry, targetStepId, controllerId, onAction }: { read
 
 function PalettePanel({ palette, targetStepId, controllerId, onAction }: { readonly palette: readonly BlockListPaletteEntry[]; readonly targetStepId?: string; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void }) {
   return (
-    <div className="semio-palette flex shrink-0 flex-col gap-1 border-l border-border p-single">
+    <SharedBorderRow orientation="vertical" framed={false} className="semio-palette shrink-0">
       {palette.map((entry) => (
         <PaletteEntryRow key={entry.blockKind} entry={entry} targetStepId={targetStepId} controllerId={controllerId} onAction={onAction} />
       ))}
-    </div>
+    </SharedBorderRow>
   );
 }
 //#endregion Palette
@@ -261,22 +272,20 @@ export function BlockListHost({ node, onAction, requestContextMenu }: ComponentS
   }
 
   return (
-    <div className="semio-block-list-host flex h-full min-h-0 w-full" data-surface-id={node.surfaceId} onContextMenu={onContextMenu}>
-      <div className="flex min-w-0 flex-1 flex-col gap-2 overflow-auto p-single">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">{stepsLabel}</span>
-          <Button className="h-medium shrink-0 px-2" icon="plus" text={addStepLabel} type="button" variant="outline" onClick={() => dispatchBlockListAction(onAction, node.controllerId, "addStep", {})} />
-        </div>
+    <SharedBorderRow className="semio-block-list-host h-full min-h-0 w-full" data-surface-id={node.surfaceId} onContextMenu={onContextMenu}>
+      <SharedBorderRow orientation="vertical" framed={false} className="min-w-0 flex-1 overflow-auto">
+        <SharedBorderRow>
+          <SharedBorderRowCell className="flex-1 text-sm font-medium">{stepsLabel}</SharedBorderRowCell>
+          <Button className="shrink-0 px-2" icon="plus" text={addStepLabel} type="button" variant="outline" onClick={() => dispatchBlockListAction(onAction, node.controllerId, "addStep", {})} />
+        </SharedBorderRow>
         <DndContext collisionDetection={closestCenter} onDragEnd={handleStepDragEnd}>
           <SortableContext items={stepIds} strategy={verticalListSortingStrategy}>
-            <div className="flex flex-col gap-2">
-              {steps.map((step) => (
-                <StepCard key={step.id} step={step} palette={palette} controllerId={node.controllerId} onAction={onAction} selection={{ domainId: scene.domainId, selectedId: scene.selectedId }} />
-              ))}
-            </div>
+            {steps.map((step) => (
+              <StepCard key={step.id} step={step} palette={palette} controllerId={node.controllerId} onAction={onAction} selection={{ domainId: scene.domainId, selectedId: scene.selectedId }} />
+            ))}
           </SortableContext>
         </DndContext>
-      </div>
+      </SharedBorderRow>
       <PalettePanel palette={palette} targetStepId={paletteTargetStepId} controllerId={node.controllerId} onAction={onAction} />
       <ContextMenuController
         title={contextMenuTitleLabel}
@@ -287,7 +296,7 @@ export function BlockListHost({ node, onAction, requestContextMenu }: ComponentS
           if (!open) setContextMenu(null);
         }}
       />
-    </div>
+    </SharedBorderRow>
   );
 }
 //#endregion Component

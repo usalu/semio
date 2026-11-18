@@ -8,6 +8,7 @@ import "@semio-tech/framework-os-dev";
 
 import { resolvePlaygroundBoot } from "@semio-tech/framework";
 import { composeSpecificOsCatalogV1 } from "../../🟦️.ts";
+import { Button, SharedBorderRow, SharedBorderRowCell } from "@semio-tech/ui-react";
 import { FrameworkOsShell } from "@semio-tech/framework-renderer-react";
 import { createFrameworkOsHostPortsV1 } from "@semio-tech/framework-os-dev/host-ports";
 import * as React from "react";
@@ -38,14 +39,14 @@ function MultiShellHarnessPane({ pane }: { readonly pane: MultiHarnessPane }): R
   const boot = React.useMemo(() => resolvePlaygroundBoot(catalog, pane.variant), [catalog, pane.variant]);
   return (
     <div style={{ display: "flex", flexDirection: "column", flex: "1 1 0", minWidth: 0 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 8px", background: "#111827", color: "#e5e7eb", fontFamily: "monospace", fontSize: 12 }}>
-        <span>
+      <SharedBorderRow style={{ background: "#111827", color: "#e5e7eb", fontFamily: "monospace", fontSize: 12 }}>
+        <SharedBorderRowCell className="flex-1">
           {pane.shellId} · {pane.variant} · {pane.locale} · {pane.appearance}
-        </span>
-        <button type="button" onClick={() => setMounted((value) => !value)}>
+        </SharedBorderRowCell>
+        <Button type="button" variant="outline" icon={mounted ? "x" : "arrow-right"} className="flex-none" onClick={() => setMounted((value) => !value)}>
           {mounted ? "unmount" : "mount"}
-        </button>
-      </div>
+        </Button>
+      </SharedBorderRow>
       <div style={{ flex: "1 1 0", minHeight: 0, position: "relative" }}>
         {mounted ? (
           <FrameworkOsShell catalog={catalog} shellId={pane.shellId} storageNamespace={pane.shellId} pluginFilter={boot.variant} plugins={boot.plugins} appId={boot.defaultAppId} appRole={MULTI_HARNESS_APP_ROLE} locks={{ locale: pane.locale, appearance: pane.appearance }} hostPorts={MULTI_HARNESS_HOST_PORTS} />

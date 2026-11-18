@@ -251,6 +251,28 @@ test("nothing is written while the store is unreachable and the attestation is w
  expect((await readAttestationV1(store,"a1"))!.files).toBe(3);
 });
 
+test("a self-check that only timed out is repeated after a pause and the machine restarts once it passes, while a check that blames the code is never repeated",async()=>{
+ const snapshot={sync:true,files:1,manifest:"1".repeat(64),cursors:{},incoming:0,hlc:"0000001000000-000000-a1"};
+ const run=async(label:string,first:string,retry:number)=>{
+  const root=code(label);
+  let clock=1_000_000,calls=0;
+  const attester=createAttesterV1({storeRoot:temp("store"),originId:"a1",groupId:"g1",platform:"linux",now:()=>clock,heartbeatMilliseconds:5000,stableMilliseconds:5000,retryMilliseconds:retry,jitterSpanMilliseconds:0,minimumUptimeMilliseconds:0,codeRoot:root,git:async()=>git,reachable:async()=>true,check:async()=>{calls++;return calls===1?{ok:false as const,reason:first}:{ok:true as const};}});
+  await attester.start();
+  writeFileSync(join(root,"x","🟦️.ts"),"export const a=2;\n");
+  const answers:string[]=[];
+  for(let step=0;step<200;step++){clock+=5000;answers.push(await attester.tick(snapshot));await Bun.sleep(1);if(answers.includes("restart"))break;}
+  return {calls,answers,pending:attester.pending()};
+ };
+ const slow=await run("slow-check","self-check timed out after 180000 ms",60_000);
+ expect(slow.answers).toContain("restart");
+ expect(slow.calls).toBe(2);
+ expect(slow.pending).toBeNull();
+ const blamed=await run("blamed-check","self-check exited with 1: SyntaxError",60_000);
+ expect(blamed.answers).not.toContain("restart");
+ expect(blamed.calls).toBe(1);
+ expect(blamed.pending).toMatchObject({ok:false,reason:"self-check exited with 1: SyntaxError"});
+});
+
 test("the daemon restarts exactly once after the code changed and stayed the same, and not while it still changes",async()=>{
  const store=temp("store"),root=code("code"),who=runner("a1",store,{codeRoot:root,restartStableMilliseconds:600});
  writeFileSync(join(who.options.worktree,"a.txt"),"alpha\n");
@@ -285,7 +307,8 @@ test("the relay copies attest.json with the head and a compaction keeps it",asyn
   await relayOnceV1(two,one,await homedOriginsV1(one,"g1"));
   const copied=await readAttestationV1(two,"a1");
   expect(copied).toBeDefined();
-  expect(readFileSync(attestPathV1(two,"a1"),"utf8")).toBe(readFileSync(attestPathV1(one,"a1"),"utf8"));
+  const text=readFileSync(attestPathV1(two,"a1"),"utf8");
+  expect(JSON.parse(text)).toMatchObject({originId:"a1",wallMs:copied!.wallMs,head:copied!.head,indexTree:copied!.indexTree});
   const before=copied!.wallMs;
   await until(async()=>(await readAttestationV1(one,"a1"))!.wallMs>before);
   await relayOnceV1(two,one,await homedOriginsV1(one,"g1"));
@@ -811,6 +834,23 @@ test("workers that cannot resolve HEAD while another origin has one are diverged
  expect(alone.rows.find(row=>row.originId==="b")!.verdict).toBe("diverged");
  const noGit=judgeFleetV1({now:base.now,heads:base.heads,attestations:{a:{...server,view},b:{...one,indexTree:null},c:{...two,head:{ref:"refs/heads/main",commit},indexTree:tree}},retirements:{}});
  expect(noGit.warnings.filter(item=>item.kind==="git-broken")).toEqual([]);
+});
+
+test("a machine whose index tree differs from the others is diverged in indexTree and head, and the reason its stage waits for is a warning that names it",()=>{
+ const base=fixture.verdicts[0]!,attestations={...base.attestations} as unknown as Record<string,FleetAttestationV1>,commit="1".repeat(40),tree="2".repeat(40),other="3".repeat(40);
+ const view={staged:0,modified:0,deleted:0,untracked:0,digest:"a".repeat(64)},head={ref:"refs/heads/main",commit};
+ const members={a:{...attestations.a!,head,indexTree:tree,view},b:{...attestations.b!,head,indexTree:tree,view},c:{...attestations.c!,head,indexTree:other,view,failures:[{kind:"stage-objects-missing",count:1,lastMs:attestations.c!.wallMs-1000}]}};
+ const report=judgeFleetV1({now:base.now,heads:base.heads,attestations:members,retirements:{}});
+ expect(report.ok).toBe(false);
+ expect(report.rows.find(row=>row.originId==="c")).toMatchObject({verdict:"diverged",differs:["indexTree"]});
+ expect(report.differing.filter(item=>item.field==="indexTree").map(item=>[item.originId,item.value,item.expected])).toEqual([["c",other,tree]]);
+ expect(report.warnings.filter(item=>item.kind==="stage").map(item=>[item.originId,item.detail])).toEqual([["c","objects-missing"]]);
+ expect(validator("Report")(report)).toBe(true);
+ const behind=judgeFleetV1({now:base.now,heads:base.heads,attestations:{...members,c:{...members.c,indexTree:tree,head:{ref:"refs/heads/main",commit:"4".repeat(40)},failures:undefined}},retirements:{}});
+ expect(behind.rows.find(row=>row.originId==="c")).toMatchObject({verdict:"diverged",differs:["head.commit"]});
+ const agreed=judgeFleetV1({now:base.now,heads:base.heads,attestations:{...members,c:{...members.c,indexTree:tree,failures:undefined}},retirements:{}});
+ expect(agreed.rows.map(row=>row.verdict)).toEqual(["ok","ok","ok"]);
+ expect(agreed.warnings.filter(item=>item.kind==="stage")).toEqual([]);
 });
 
 test("the relay copies view.txt with attest.json and a compaction keeps it",async()=>{

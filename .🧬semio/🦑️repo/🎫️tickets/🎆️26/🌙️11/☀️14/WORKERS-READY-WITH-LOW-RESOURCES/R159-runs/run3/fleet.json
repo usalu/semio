@@ -1,0 +1,10 @@
+{
+ "slice-lab-4f7b-m1 cas GET 404": 12,
+ "slice-lab-4f7b-m1 ac GET 404": 172,
+ "slice-lab-4f7b-m1 claim POST 200": 53,
+ "slice-lab-4f7b-m1 cas HEAD 404": 52,
+ "slice-lab-4f7b-m1 cas PUT 200": 52,
+ "slice-lab-4f7b-m1 ac PUT 200": 52,
+ "slice-lab-4f7b-m1 other POST 200": 59,
+ "slice-lab-4f7b-m1 other GET 404": 6
+}

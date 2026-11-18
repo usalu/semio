@@ -3294,7 +3294,6 @@
             "material": "hdpe-plastic",
             "role": "detail",
             "tone": 0.15,
-            "region": "bin-hdpe",
             "size": [0.05, 0.008, 0.05],
             "cornerRadius": 0.002,
             "transform": {
@@ -3308,7 +3307,6 @@
             "material": "hdpe-plastic",
             "role": "detail",
             "tone": 0.15,
-            "region": "bin-hdpe",
             "size": [0.05, 0.008, 0.05],
             "cornerRadius": 0.002,
             "transform": {
@@ -3322,7 +3320,6 @@
             "material": "hdpe-plastic",
             "role": "detail",
             "tone": 0.15,
-            "region": "bin-hdpe",
             "size": [0.05, 0.008, 0.05],
             "cornerRadius": 0.002,
             "transform": {
@@ -3336,7 +3333,6 @@
             "material": "hdpe-plastic",
             "role": "detail",
             "tone": 0.15,
-            "region": "bin-hdpe",
             "size": [0.05, 0.008, 0.05],
             "cornerRadius": 0.002,
             "transform": {
@@ -3350,7 +3346,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.42,
-            "region": "bin-hdpe",
             "size": [0.4, 0.021, 0.4],
             "cornerRadius": 0.0085,
             "transform": {
@@ -3364,7 +3359,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.42,
-            "region": "bin-hdpe",
             "profile": [
               [0.17, -0.2],
               [0.17776, -0.19898],
@@ -3439,7 +3433,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.42,
-            "region": "bin-hdpe",
             "profile": [
               [0.17795, -0.20935],
               [0.18608, -0.20828],
@@ -3514,7 +3507,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.42,
-            "region": "bin-hdpe",
             "profile": [
               [0.18679, -0.21975],
               [0.19532, -0.21863],
@@ -3589,7 +3581,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.42,
-            "region": "bin-hdpe",
             "profile": [
               [0.19548, -0.22998],
               [0.20441, -0.2288],
@@ -3664,7 +3655,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.42,
-            "region": "bin-hdpe",
             "profile": [
               [0.20411, -0.24013],
               [0.21343, -0.2389],
@@ -3739,8 +3729,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.42,
-            "region": "bin-ribs",
-            "layer": "hdpe-wall",
             "profile": [
               [0.17571, -0.20871],
               [0.18425, -0.20759],
@@ -3816,8 +3804,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.42,
-            "region": "bin-ribs",
-            "layer": "hdpe-wall",
             "profile": [
               [0.18897, -0.22432],
               [0.19812, -0.22311],
@@ -3893,8 +3879,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.42,
-            "region": "bin-ribs",
-            "layer": "hdpe-wall",
             "profile": [
               [0.20066, -0.23807],
               [0.21034, -0.2368],
@@ -3970,8 +3954,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.42,
-            "region": "bin-ribs",
-            "layer": "hdpe-wall",
             "profile": [
               [0.20821, -0.24695],
               [0.21823, -0.24563],
@@ -4047,7 +4029,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.42,
-            "region": "bin-hdpe",
             "profile": [
               [0.21, -0.255],
               [0.22035, -0.25364],
@@ -4121,7 +4102,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.42,
-            "region": "bin-hdpe",
             "size": [0.026, 0.065, 0.06],
             "cornerRadius": 0.004,
             "transform": {
@@ -4135,7 +4115,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.42,
-            "region": "bin-hdpe",
             "size": [0.026, 0.065, 0.06],
             "cornerRadius": 0.004,
             "transform": {
@@ -4149,7 +4128,6 @@
             "material": "hdpe-plastic",
             "role": "detail",
             "tone": 0.3,
-            "region": "bin-hdpe",
             "profile": [[0, 0.006], [0.44, 0.006]],
             "axis": [0, 0, 1],
             "origin": [-0.255, 0.984, -0.22]
@@ -4202,7 +4180,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.55,
-            "region": "lid-hdpe",
             "profile": [
               [0.52, 0.0],
               [0.52, 0.006],
@@ -4264,7 +4241,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.55,
-            "region": "lid-hdpe",
             "profile": [
               [0.52, 0.0],
               [0.52, 0.006],
@@ -4302,7 +4278,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.55,
-            "region": "lid-hdpe",
             "profile": [
               [0.52, 0.0],
               [0.52, 0.006],
@@ -4340,7 +4315,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.45,
-            "region": "lid-hdpe",
             "profile": [
               [0.238, 0.0],
               [0.24111, 0.00041],
@@ -4414,7 +4388,6 @@
             "material": "hdpe-plastic",
             "role": "detail",
             "tone": 0.35,
-            "region": "lid-hdpe",
             "profile": [
               [0.38, 0.036],
               [0.38, 0.038],
@@ -4439,7 +4412,6 @@
             "material": "hdpe-plastic",
             "role": "detail",
             "tone": 0.25,
-            "region": "lid-hdpe",
             "profile": [[0, 0.014], [0.26, 0.014]],
             "axis": [0, 0, 1],
             "origin": [0.0, 0.004, -0.13]
@@ -5364,7 +5336,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.42,
-            "region": "bin-hdpe",
             "size": [0.4, 0.025, 0.4],
             "cornerRadius": 0.0085,
             "transform": {
@@ -5378,7 +5349,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.42,
-            "region": "bin-hdpe",
             "profile": [
               [0.17, -0.2],
               [0.17776, -0.19898],
@@ -5453,8 +5423,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.42,
-            "region": "bin-ribs",
-            "layer": "hdpe-wall",
             "profile": [
               [0.17557, -0.20856],
               [0.18411, -0.20743],
@@ -5530,8 +5498,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.42,
-            "region": "bin-ribs",
-            "layer": "hdpe-wall",
             "profile": [
               [0.18895, -0.2243],
               [0.1981, -0.22309],
@@ -5607,8 +5573,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.42,
-            "region": "bin-ribs",
-            "layer": "hdpe-wall",
             "profile": [
               [0.20099, -0.23846],
               [0.21069, -0.23718],
@@ -5684,7 +5648,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.42,
-            "region": "bin-hdpe",
             "profile": [
               [0.21, -0.255],
               [0.22035, -0.25364],
@@ -5758,7 +5721,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.42,
-            "region": "bin-hdpe",
             "size": [0.026, 0.065, 0.06],
             "cornerRadius": 0.004,
             "transform": {
@@ -5772,7 +5734,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.42,
-            "region": "bin-hdpe",
             "size": [0.026, 0.065, 0.06],
             "cornerRadius": 0.004,
             "transform": {
@@ -5786,7 +5747,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.55,
-            "region": "lid-hdpe",
             "profile": [
               [0.52, 0.0],
               [0.52, 0.006],
@@ -5848,7 +5808,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.55,
-            "region": "lid-hdpe",
             "profile": [
               [0.52, 0.0],
               [0.52, 0.006],
@@ -5886,7 +5845,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.55,
-            "region": "lid-hdpe",
             "profile": [
               [0.52, 0.0],
               [0.52, 0.006],
@@ -5924,7 +5882,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.45,
-            "region": "lid-hdpe",
             "profile": [
               [0.238, 0.0],
               [0.24111, 0.00041],
@@ -5998,7 +5955,6 @@
             "material": "hdpe-plastic",
             "role": "detail",
             "tone": 0.35,
-            "region": "lid-hdpe",
             "profile": [
               [0.38, 0.036],
               [0.38, 0.038],
@@ -6596,7 +6552,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.42,
-            "region": "bin-hdpe",
             "size": [0.4, 0.03, 0.4],
             "cornerRadius": 0.0085,
             "transform": {
@@ -6610,7 +6565,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.42,
-            "region": "bin-hdpe",
             "profile": [
               [0.17026, -0.20026],
               [0.17803, -0.19924],
@@ -6685,7 +6639,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.42,
-            "region": "bin-hdpe",
             "profile": [
               [0.21, -0.255],
               [0.22035, -0.25364],
@@ -6759,7 +6712,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.55,
-            "region": "lid-hdpe",
             "profile": [
               [0.52, -0.02],
               [0.52, 0.0],
@@ -6823,7 +6775,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.55,
-            "region": "lid-hdpe",
             "profile": [
               [0.52, 0.0],
               [0.52, 0.006],
@@ -6861,7 +6812,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.55,
-            "region": "lid-hdpe",
             "profile": [
               [0.52, 0.0],
               [0.52, 0.006],
@@ -7495,7 +7445,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.42,
-            "region": "bin-hdpe",
             "size": [0.4, 0.075, 0.4],
             "cornerRadius": 0.012,
             "transform": {
@@ -7509,7 +7458,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.42,
-            "region": "bin-hdpe",
             "profile": [
               [0.173, -0.203],
               [0.18076, -0.20198],
@@ -7584,7 +7532,6 @@
             "material": "hdpe-plastic",
             "role": "body",
             "tone": 0.55,
-            "region": "lid-hdpe",
             "size": [0.52, 0.04, 0.5],
             "transform": {
               "translation": [0.26, 0.02, 0.0]

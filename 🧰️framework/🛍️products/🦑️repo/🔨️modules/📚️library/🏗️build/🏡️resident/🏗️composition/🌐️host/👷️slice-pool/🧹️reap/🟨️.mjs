@@ -9,7 +9,7 @@ export const SLICE_GRACE_MILLISECONDS_V1=2000;
 /** 🏷 A unique token for one load of the service `pid`. */
 export const sliceJobTokenV1=(pid,index,random=Math.random().toString(36).slice(2,10))=>pid+"."+index+"."+random;
 
-const PATTERN=new RegExp("(?:^|[\\0 ])"+SLICE_JOB_VARIABLE_V1+"=([0-9]+\\.[0-9]+\\.[a-z0-9]+)","u");
+const SERVICE=/(?:^|[\s\0])service[\s\0]host[\s\0]run(?:[\s\0]|$)/u,PATTERN=new RegExp("(?:^|[\\0 ])"+SLICE_JOB_VARIABLE_V1+"=([0-9]+\\.[0-9]+\\.[a-z0-9]+)","u");
 
 /** 📋 Every process of this user as `{pid,ppid,token?}` (the token only where the platform shows environments). */
 export function listProcessesV1(platform=process.platform){
@@ -20,12 +20,12 @@ export function listProcessesV1(platform=process.platform){
    if(!/^[0-9]+$/u.test(name))continue;
    try{
     const stat=readFileSync("/proc/"+name+"/stat","utf8"),fields=stat.slice(stat.lastIndexOf(")")+2).split(" "),ppid=Number(fields[1]);if(fields[0]==="Z")continue;
-    let token;try{token=PATTERN.exec(readFileSync("/proc/"+name+"/environ","utf8"))?.[1];}catch{}
-    rows.push({pid:Number(name),ppid,...token===undefined?{}:{token}});
+    let token,service=false;try{token=PATTERN.exec(readFileSync("/proc/"+name+"/environ","utf8"))?.[1];}catch{}try{service=SERVICE.test(readFileSync("/proc/"+name+"/cmdline","utf8"));}catch{}
+    rows.push({pid:Number(name),ppid,...token===undefined?{}:{token},...service?{service}:{}});
    }catch{}
   }
  }else if(platform==="darwin"){
-  try{for(const line of execFileSync("ps",["-Eww","-A","-o","pid=,ppid=,command="],{encoding:"utf8",maxBuffer:64*1024*1024}).split("\n")){const[pid,ppid]=line.trim().split(/\s+/u).map(Number),token=PATTERN.exec(line)?.[1];if(Number.isInteger(pid)&&Number.isInteger(ppid))rows.push({pid,ppid,...token===undefined?{}:{token}});}}catch{}
+  try{for(const line of execFileSync("ps",["-Eww","-A","-o","pid=,ppid=,command="],{encoding:"utf8",maxBuffer:64*1024*1024}).split("\n")){const[pid,ppid]=line.trim().split(/\s+/u).map(Number),token=PATTERN.exec(line)?.[1],service=SERVICE.test(line.replace(/ [A-Z][A-Z0-9_]*=.*$/u,""));if(Number.isInteger(pid)&&Number.isInteger(ppid))rows.push({pid,ppid,...token===undefined?{}:{token},...service?{service}:{}});}}catch{}
  }else if(platform==="win32"){
   try{for(const line of execFileSync("powershell.exe",["-NoProfile","-NonInteractive","-Command","Get-CimInstance Win32_Process | ForEach-Object { \"$($_.ProcessId) $($_.ParentProcessId)\" }"],{encoding:"utf8",windowsHide:true,maxBuffer:64*1024*1024}).split(/\r?\n/u)){const[pid,ppid]=line.trim().split(/\s+/u).map(Number);if(Number.isInteger(pid)&&Number.isInteger(ppid))rows.push({pid,ppid});}}catch{}
  }
@@ -46,12 +46,15 @@ export function withDescendantsV1(table,roots){
  return found;
 }
 
-/** 🧹 A reaper over a process table; `list` and `send` are injectable (tests, platforms). */
+/** 🧹 A reaper over a process table; a graph service or its launcher (`repo service host run` in its command line), other than the one this pool belongs to, and everything below it is never a victim, even when it was started by a command a slice worker ran and so carries the token of that load and sits in its process tree: a service outlives the load that happened to start it. `list` and `send` are injectable (tests, platforms). */
 export function createReaperV1({list=listProcessesV1,send=signalProcessTreeV1,graceMilliseconds=SLICE_GRACE_MILLISECONDS_V1,alive=pid=>{try{process.kill(pid,0);return true;}catch(error){return error?.code==="EPERM";}}}={}){
  const victims=(table,scope)=>{
   const present=new Set(table.map(row=>row.pid)),roots=new Set([...scope.pids??[]].filter(pid=>present.has(pid)&&pid!==process.pid));
   for(const row of table)if(row.pid!==process.pid&&scope.match?.(row))roots.add(row.pid);
-  return[...withDescendantsV1(table,roots)].filter(pid=>pid!==process.pid);
+  const parents=new Map(table.map(row=>[row.pid,row.ppid])),mine=new Set();
+  for(let pid=process.pid;pid>1&&!mine.has(pid);pid=parents.get(pid))mine.add(pid);
+  const foreign=withDescendantsV1(table,table.filter(row=>row.service===true&&!mine.has(row.pid)).map(row=>row.pid));
+  return[...withDescendantsV1(table,roots)].filter(pid=>pid!==process.pid&&!foreign.has(pid));
  };
  return{
   victims:scope=>victims(list(),scope),

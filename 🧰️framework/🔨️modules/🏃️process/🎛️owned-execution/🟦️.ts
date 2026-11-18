@@ -9,7 +9,7 @@ import {routeRegisteredCommandV1} from "../🧰️tools/🔌️funnel/🟦️.ts
 import {tmpdir} from "node:os";
 import {prepareTestCommandV1,testProtocolMessageV1} from "../🧪️testing/🚦️protocol/🟦️.ts";
 export {withOwnedCommandChannelV1,readOwnedCommandChannelLineV1,readOwnedCommandChannelTerminalV1,writeOwnedCommandChannelV1,closeOwnedCommandChannelV1,readOwnedCommandChannelDiagnosticsV1,type OwnedCommandChannelV1,type OwnedCommandTerminalV1,writeOwnedCommandOutputV1,type OwnedCommandOutputSinkV1,captureOwnedCommandResultV1,readOwnedCommandEncodingContextV1,readOwnedCommandCaptureV1,type OwnedCommandCaptureV1,type OwnedCommandCaptureOptionsV1,type OwnedCommandSpawnHookV1,type OwnedCommandInputV1} from "./📥️capture/🟦️.ts";
-import { terminateOwnedChildTree } from "../🪓️termination/🟦️.ts";
+import { ownedKillRecordLineV1, terminateOwnedChildTreeGracefullyV1 } from "../🪓️termination/🟦️.ts";
 import { checkResourceLeaseControl, watchResourceLeaseControlDeadlineV1, type ResourceLeaseControl } from "../🔒️leases/🟦️.ts";
 import { StringDecoder } from "node:string_decoder";
 import { spawn } from "node:child_process";
@@ -118,7 +118,7 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
   const terminate = (reason: string, refusal?: RepoErrorV1): void => {
     if (!stopped) { stopped = reason; stopRefusal = refusal; }
     interruptPublication();
-    if (!closed) terminateOwnedChildTree(child);
+    if (!closed) void terminateOwnedChildTreeGracefullyV1(child, { record: (row, signal) => { const line = ownedKillRecordLineV1({ pid: row.pid, signal, killer: process.pid, label, reason: stopped }); process.stderr.write(`${line}\n`); } }).catch(() => undefined);
   };
   const release = ceiling !== undefined && child.pid !== undefined ? ceiling(child.pid, terminate) : undefined;
   const abort = (): void => commandSignal?.reason instanceof ProgressDeadlineExpiredV1 ? terminate(commandSignal.reason.message, refuseProcessV1("timeout", "execution.progress-expired", { label, notice: commandSignal.reason.message })) : terminate("cancelled", stopRefusalV1(label, "cancelled"));

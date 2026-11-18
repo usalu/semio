@@ -21,7 +21,6 @@
   display: flex;
   min-inline-size: 0;
   flex-direction: column;
-  gap: var(--spacing-double);
 }
 
 .course-result > * {
@@ -32,53 +31,19 @@
   .course-result[data-crowd] {
     display: grid;
     grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-    align-items: start;
-    column-gap: calc(2 * var(--spacing-double));
+  }
+
+  .course-result[data-crowd][data-shared-border-group][data-orientation="vertical"] > [data-shared-border-cell]:first-child {
+    border-block-end-width: 0;
+    border-inline-end: var(--stroke-hairline) solid var(--border-normal-color);
   }
 }
 
-/* 🎛️ The preferences: the name of each above its control in a narrow card; from 28rem the names stand in a column of
-   their own on the left and every control starts on the same line right of it. A narrow card's choices are as wide as
-   the card, so every option is a target of its full share. */
-.course-settings {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--spacing-double);
-}
-
+/* 🎛️ The preferences: a column of cells, the name of each setting above its choice as wide as the card, so every
+   option is a target of its full share and every divider is the one of the shared-border group. */
+.course-settings,
 .course-setting {
-  display: flex;
   min-inline-size: 0;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--spacing-single);
-}
-
-.course-setting > [role="group"] {
-  inline-size: 100%;
-}
-
-@container course-card (min-width: 28rem) {
-  .course-settings {
-    grid-template-columns: max-content minmax(0, 1fr);
-    column-gap: var(--spacing-double);
-  }
-
-  .course-setting {
-    display: grid;
-    grid-column: 1 / -1;
-    grid-template-columns: subgrid;
-    align-items: center;
-  }
-
-  .course-setting > :not(.course-setting-name),
-  .course-settings > :not(.course-setting) {
-    grid-column: 2;
-  }
-
-  .course-setting > [role="group"] {
-    inline-size: fit-content;
-  }
 }
 
 /* 🪪️ The ways to appear: below each other in a narrow card, side by side as three columns from 44rem. */
@@ -95,7 +60,7 @@
   }
 }
 
-/* 🎚️ A segmented choice that does not fit one line wraps, and every line fills the width of the choice. */
+/* 🎚️ A segmented choice is one row of cells that share their dividers; in a room too narrow for its labels they wrap inside their cells, every cell as wide as the others' share of the choice, and where a single word no longer fits a cell the cells wrap onto further rows instead of spilling out of the card. */
 .course-segment {
   flex: 1 1 auto;
 }
@@ -108,12 +73,12 @@
 
 /* ⚠️ Errors and notices: a warning bar besides the words. */
 .course-alert {
-  border-inline-start: 4px solid var(--color-warning);
+  box-shadow: inset 4px 0 0 var(--color-warning);
   background: color-mix(in srgb, var(--color-warning) 12%, transparent);
 }
 
 .course-note {
-  border-color: var(--color-secondary);
+  background: color-mix(in srgb, var(--color-secondary) 14%, transparent);
 }
 
 .course-progress {
@@ -138,6 +103,19 @@
   font: inherit;
 }
 
+.course-field {
+  display: flex;
+  min-width: 0;
+  align-items: stretch;
+}
+
+.course-field > input.course-input {
+  min-width: 0;
+  flex: 1 1 auto;
+  border: 0;
+  padding: var(--spacing-single) var(--spacing-double);
+}
+
 .course-input:focus-visible,
 .course-app select:focus-visible {
   outline: var(--stroke-default) solid var(--active-base);
@@ -149,4 +127,20 @@
   -webkit-backdrop-filter: blur(0.5rem) saturate(1.45);
   backdrop-filter: blur(0.5rem) saturate(1.45);
   overscroll-behavior: contain;
+}
+
+/* 🎖️ The badge strip of the overview's card: one row of equal cells that share their dividers and the card's edges. */
+.course-badge-strip {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+}
+
+/* 📄️ A short page still ends on its footer line: the stack fills its scrollport and its last card takes the room left, so no empty band lies between the last card's bottom line and the footer. */
+:is(.course-page-frame, .course-page-scroll) > [data-card-stack] {
+  min-height: 100%;
+}
+
+:is(.course-page-frame, .course-page-scroll) > [data-card-stack] > [data-overview-card]:last-child {
+  flex: 1 1 auto;
 }

@@ -1,0 +1,11 @@
+import sys, importlib
+sys.path.insert(0, ".")
+m = importlib.import_module("vehicles-lib")
+d = m.V("🚜️vehicles/motor-scooter")
+s = d.shape(50, "plan", "engine-cover")
+o = d.obj(s)
+d.replace_shape(s, {"kind": "ellipse", "cx": -0.43, "cy": -0.185, "rx": 0.11, "ry": 0.03, **{k: v for k, v in o.items() if k not in ("kind", "x", "y", "w", "h", "r")}})
+b = d.shape(50, "front", "body")
+o = d.obj(b)
+d.insert_shape_after(b, {"kind": "ellipse", "cx": -0.185, "cy": 0.52, "rx": 0.03, "ry": 0.09, "id": "engine-cover", "bone": o["bone"], "role": "body", "filled": True})
+d.commit()

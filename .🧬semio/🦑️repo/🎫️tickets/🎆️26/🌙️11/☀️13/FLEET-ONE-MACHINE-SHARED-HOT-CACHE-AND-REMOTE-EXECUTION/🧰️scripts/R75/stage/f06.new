@@ -1,0 +1,71 @@
+import hashlib, json, math, sys
+
+def clamp(v, lo, hi):
+    return max(lo, min(hi, v))
+
+def target(case, p):
+    h = case["host"]
+    floor = clamp(h["totalMegabytes"] * p["floorShareBasisPoints"] // 10000, p["floorMinimumMegabytes"], p["floorMaximumMegabytes"])
+    if h["pressure"] == "critical" or (h["swapOutMegabytesPerSecond"] is not None and h["swapOutMegabytesPerSecond"] > 64):
+        return {"children": 0, "reason": "pressure"}
+    fg = h["foreground"]
+    waited = fg.get("oldestWaitMilliseconds", 0)
+    if fg["waiters"] > 0 and p["yieldAfterMilliseconds"] <= waited < p["yieldUntilMilliseconds"]:
+        return {"children": 0, "reason": "waiting"}
+    reserved = math.ceil(h["cores"] * p["foregroundCoreShareBasisPoints"] / 10000) if fg["waiters"] > 0 else 0
+    by_cores = max(0, h["cores"] - fg["cpu"] - reserved)
+    external = 0 if h["load"] is None else max(0, h["load"] - case["children"])
+    by_load = math.floor(h["cores"] * p["loadCeilingBasisPointsPerCore"] / 10000 - external)
+    spare = h["availableMegabytes"] - floor - fg["unrealizedMegabytes"]
+    by_memory = case["children"] + math.floor(spare / max(1, case["childMegabytes"]))
+    children = min(by_cores, by_load, by_memory, p["maximumChildren"])
+    if h["pressure"] == "warn":
+        children = min(children, max(1, case["children"]))
+    wanted = min(h["cores"], p["maximumChildren"])
+    if children < 1:
+        return {"children": 1, "reason": "nothing-fits" if by_memory < 1 else "yielding"}
+    reason = None
+    if children < wanted:
+        reason = "nothing-fits" if by_memory <= min(by_cores, by_load) else "yielding"
+    return {"children": children, "reason": reason}
+
+def limits(total, p):
+    return {"recycleMegabytes": clamp(total * p["childRecycleShareBasisPoints"] // 10000, p["childRecycleMinimumMegabytes"], p["childRecycleMaximumMegabytes"]),
+            "hardMegabytes": max(p["childHardMinimumMegabytes"], total * p["childHardShareBasisPoints"] // 10000)}
+
+def child_megabytes(samples, p):
+    recent = sorted([s for s in samples if s > 0][-p["peakSamples"]:])
+    if not recent:
+        return p["childMegabytesDefault"]
+    return math.ceil(recent[max(0, math.ceil(len(recent) * p["peakPercentile"] / 100) - 1)] * (100 + p["peakMarginPercent"]) / 100)
+
+def recycle(case, p):
+    return case["rss"] > case["recycleMegabytes"] and case["rss"] >= case["readyRss"] + p["recycleGrowthMegabytes"]
+
+def seed(text):
+    return int(hashlib.sha256(text.encode("utf8")).hexdigest()[:8], 16)
+
+def mulberry(state):
+    state = (state + 0x6D2B79F5) & 0xFFFFFFFF
+    t = state
+    t = ((t ^ (t >> 15)) * (t | 1)) & 0xFFFFFFFF
+    t ^= (t + (((t ^ (t >> 7)) * (t | 61)) & 0xFFFFFFFF)) & 0xFFFFFFFF
+    return ((t ^ (t >> 14)) & 0xFFFFFFFF) / 4294967296, state
+
+def walk(case):
+    state = seed(case["puller"])
+    out = []
+    for _ in range(case["draws"]):
+        v, state = mulberry(state)
+        out.append(int(v * case["n"]))
+    return out
+
+doc = json.load(open(sys.argv[1], encoding="utf8"))
+p = doc["policy"]
+print(json.dumps({
+    "target": [target(c, p) for c in doc["target"]],
+    "limits": [limits(c["total"], p) for c in doc["limits"]],
+    "childMegabytes": [child_megabytes(c["samples"], p) for c in doc["childMegabytes"]],
+    "recycle": [recycle(c, p) for c in doc["recycle"]],
+    "walk": [walk(c) for c in doc["walk"]],
+}, ensure_ascii=False))

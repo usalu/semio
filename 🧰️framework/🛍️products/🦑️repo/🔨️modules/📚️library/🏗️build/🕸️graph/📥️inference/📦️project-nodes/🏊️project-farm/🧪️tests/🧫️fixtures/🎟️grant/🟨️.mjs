@@ -7,5 +7,5 @@ export function farmGrantEnvironmentV1(root, id, extra = {}) {
   const capacity = join(root, "capacity"), plan = JSON.stringify({ version: 1, id, jobs: 1, cpu: 1, memoryMegabytes: 2048, fixedMegabytes: 1536, floorMegabytes: 1981 });
   mkdirSync(join(capacity, "grants"), { recursive: true });
   writeFileSync(join(capacity, "grants", id + ".json"), JSON.stringify({ id, operation: "run", jobs: 1, cpu: 1, reservedMegabytes: 7168, admittedAtMs: Date.now(), observedMegabytes: null, pid: process.pid, bootAtMs: Math.round((Date.now() - uptime() * 1000) / 1000) * 1000 }));
-  return { LANG: "en_US.UTF-8", SEMIO_HOST_CAPACITY_DIRECTORY: capacity, SEMIO_HOST_CAPACITY_PLAN: plan, ...extra };
+  return { LANG: "en_US.UTF-8", SEMIO_SLICE_LEAN: "off", SEMIO_HOST_CAPACITY_DIRECTORY: capacity, SEMIO_HOST_CAPACITY_PLAN: plan, ...extra };
 }

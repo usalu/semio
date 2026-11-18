@@ -1,6 +1,8 @@
 // #region 🔌️Adapters
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import * as React from "react";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { OverviewCard, OverviewCardAction, OverviewCardOpenChip } from "../../🟦️.tsx";
 // #endregion 🔌️Adapters
@@ -9,6 +11,31 @@ import { OverviewCard, OverviewCardAction, OverviewCardOpenChip } from "../../�
 /** 🃏️ The card's DOM contract: a dialog-level, never-active window chrome whose stack stays transparent, the title in the
  * cap chip, the body in `<slot>-content`, and — by shape — either a named region with real footer buttons or one button. */
 describe("OverviewCard", () => {
+  it("makes a flush card's content a vertical shared-border group without body padding", () => {
+    render(
+      <OverviewCard as="section" slot="quiz-card" headingId="flush-title" icon={null} title="Flush" flush>
+        <div data-shared-border-cell="">one</div>
+        <div data-shared-border-cell="">two</div>
+      </OverviewCard>,
+    );
+    const region = screen.getByRole("region", { name: "Flush" });
+    const content = region.querySelector('[data-slot="quiz-card-content"]')!;
+    expect(content.getAttribute("data-shared-border-group")).toBe("");
+    expect(content.getAttribute("data-orientation")).toBe("vertical");
+    expect(region.querySelector('[data-slot="window-chrome-body"]')?.className ?? "").not.toContain("p-double");
+  });
+
+  it("leaves an ordinary card padded and ungrouped", () => {
+    render(
+      <OverviewCard as="section" slot="quiz-card" headingId="plain-title" icon={null} title="Plain">
+        <p>text</p>
+      </OverviewCard>,
+    );
+    const content = screen.getByRole("region", { name: "Plain" }).querySelector('[data-slot="quiz-card-content"]')!;
+    expect(content.hasAttribute("data-shared-border-group")).toBe(false);
+    expect(content.hasAttribute("data-orientation")).toBe(false);
+  });
+
   it("renders a section named by its heading, with the chrome at dialog level and real footer buttons", () => {
     const onStart = vi.fn();
     const onLast = vi.fn();
@@ -54,7 +81,7 @@ describe("OverviewCard", () => {
     expect(buttons[1]!.getAttribute("data-overview-card-action")).toBe("primary");
     expect(buttons[1]!.querySelector('[data-icon="chevron-right"]')).not.toBeNull();
     expect(buttons[0]!.querySelector('[data-icon="chevron-right"]')).toBeNull();
-    expect(buttons[1]!.style.minHeight).toContain("1.5rem");
+    expect(buttons[1]!.style.minHeight).toBe("var(--chip-row-height)");
     fireEvent.click(buttons[1]!);
     fireEvent.click(buttons[0]!);
     expect(onStart).toHaveBeenCalledTimes(1);
@@ -92,7 +119,7 @@ describe("OverviewCard", () => {
     expect(button.hasAttribute("data-play-pane-card")).toBe(true);
     expect(screen.queryByRole("heading")).toBeNull();
     expect(button.querySelector('[data-slot="play-pane-card-open-chip"]')?.textContent?.trim()).toBe("Open");
-    expect(button.className).not.toContain(" -translate-y-0.5");
+    expect(button.querySelector("[data-overview-card-paint]")?.className.split(" ")).not.toContain("-translate-y-0.5");
     fireEvent.click(button);
     expect(onClick).toHaveBeenCalledTimes(1);
     rerender(
@@ -100,7 +127,14 @@ describe("OverviewCard", () => {
         <span>Every app in one place</span>
       </OverviewCard>,
     );
-    expect(screen.getByRole("button").className.split(" ")).toContain("-translate-y-0.5");
+    expect(screen.getByRole("button").querySelector("[data-overview-card-paint]")?.className.split(" ")).toContain("-translate-y-0.5");
+  });
+
+  it("never lifts a card tiled in a stack or grid, so hover cannot break a shared line", () => {
+    const css = readFileSync(resolve(import.meta.dirname, "../../../../🎨️styling/🖌️ui/🎨️.css"), "utf8");
+    const rule = css.match(/:is\(\[data-card-stack\], \[data-card-grid\]\) \[data-overview-card-paint\] \{([^}]*)\}/u);
+    expect(rule?.[1]).toMatch(/translate: none !important/u);
+    expect(rule?.[1]).toMatch(/transform: none !important/u);
   });
 });
 // #endregion 🃏️OverviewCardAnatomy

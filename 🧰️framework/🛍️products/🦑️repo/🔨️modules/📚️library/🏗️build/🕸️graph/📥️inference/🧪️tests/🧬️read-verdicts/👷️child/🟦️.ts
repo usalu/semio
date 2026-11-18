@@ -1,0 +1,10 @@
+const B=process.env.R119_B!;
+const inference=await import(B+"/🕸️graph/📥️inference/🟨️.mjs") as any;await inference.libraryBootstrap;
+const SI=await import(B+"/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs") as any;
+const OB=await import(B+"/👁️observation/🟨️.mjs") as any;
+const{root,store,dir,recipes}=JSON.parse(process.env.R119_JOB!);
+SI.resetClosureEntriesV1();SI.bindClosureStoreV1(root,store,false);
+const before=OB.observationProbeCountsV1().readdir;
+await SI.withClosurePassV1(()=>SI.primeSharedClosuresV1(root,{},{recipes}),dir===""?{}:{verdicts:dir});
+console.log("CHILD "+JSON.stringify({probes:OB.observationProbeCountsV1().readdir-before,layers:SI.layerVerdictCountsV1(),entries:SI.closureEntryCountsV1(),verdicts:SI.closureVerdictCountsV1?.()}));
+process.exit(0);

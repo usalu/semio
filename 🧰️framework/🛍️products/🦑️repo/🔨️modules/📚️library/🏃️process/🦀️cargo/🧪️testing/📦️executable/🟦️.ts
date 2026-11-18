@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import{withCompilerWorkspaceSharedWriteV1}from"../../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
 import {createHash} from "node:crypto";
 import {lstatSync} from "node:fs";
@@ -37,7 +38,7 @@ function cargoTestRuntimeEnvironmentV1(compiler:Readonly<Record<string,string|un
 }
 /** 🏪️ Builds, immutably pins and executes one selected test under complete genuine compiler, registry and artifact custody. */
 export async function runRepositoryCargoTestExecutableV1(value:CargoExecutableTestRequestV1,workspace:string,invocation:ScriptInvocation,consumerEnvironment:Readonly<Record<string,string|undefined>>={}):Promise<void>{
- const request=readCargoExecutableTestRequestV1(value),root=resolve(workspace),manifest=resolve(root,request.manifest),mode=readBuildMode(process.env.SEMIO_BUILD_MODE),control=scriptCompilerAdmissionControlV1(invocation,"cargo:test-executable",0),network=repositoryCargoNetworkV1(invocation,root),leaseDirectory=join(root,".cache/b/l/m/data");
+ const request=readCargoExecutableTestRequestV1(value),root=resolve(workspace),manifest=resolve(root,request.manifest),mode=readBuildMode(process.env.SEMIO_BUILD_MODE),control=scriptCompilerAdmissionControlV1(invocation,"cargo:test-executable",0),network=repositoryCargoNetworkV1(invocation,root),leaseDirectory=machinePathV1(root,".cache/b/l/m/data");
  if(manifest.length>256)throw Error("Bounded Cargo test manifest required");
  await withRepositoryCompilerLaneV1(root,mode,control,scriptInvocationEnvironment(invocation,process.env),{crates:[request.package]},async (store,control)=>{
   for(let directory=dirname(manifest);;directory=dirname(directory)){const facts=lstatSync(directory);if(!facts.isDirectory()||facts.isSymbolicLink())throw Error("Physical Cargo test manifest ancestry required");if(directory===root)break;}const manifestFacts=lstatSync(manifest);if(!manifestFacts.isFile()||manifestFacts.isSymbolicLink()||manifestFacts.nlink!==1||manifestFacts.size>store.sourceBoundary.maxSourceBytes)throw Error("Bounded physical Cargo test manifest required");

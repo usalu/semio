@@ -163,7 +163,7 @@ export const TRUSTED_BOOTSTRAP_DEFAULT_PACKAGES = "stdio,gis,note";
 /** 🌎️ Every selectable `s` plugin package — the top-level plugins and the stdio family components right after the `stdio`
  * package they depend on — in publication order: a host after every owner it hosts kinds of (the publisher binds a hosted row to
  * the owner's already-published codec rows), so `demonstrator` comes last. */
-const TRUSTED_BOOTSTRAP_ALL_PACKAGES = "stdio,stdio-image,stdio-media,stdio-cad,stdio-bim,stdio-mesh,stdio-pdf,stdio-office,stdio-semio,stdio-binary,gis,animate,architect,bim,block,cad,dag,draw,energy,fem,flow,forms,imperative,layout,lowpoly,mathematical,norm,note,playbook,procedural,process,puzzle,raster,reasoning,remodel,sequence,shooting,sourcing,space,trinity,vcs,wfc,writer,demonstrator";
+const TRUSTED_BOOTSTRAP_ALL_PACKAGES = "stdio,stdio-image,stdio-media,stdio-cad,stdio-bim,stdio-mesh,stdio-pdf,stdio-office,stdio-semio,stdio-binary,gis,animate,architect,bim,block,cad,dag,draw,energy,fem,flow,forms,imperative,layout,lowpoly,mathematical,norm,norm-eurocode,norm-eurocode-materials,note,playbook,procedural,process,puzzle,raster,reasoning,remodel,sequence,shooting,sourcing,space,trinity,vcs,wfc,writer,demonstrator";
 
 /** 🔗️ The closure every gate, rotation and process law in this file proves: exactly the packages
  * this hub binary links Rust codecs for. They keep minting `local-stdio-gis-open-v1`, so the hub's
@@ -199,6 +199,8 @@ const TRUSTED_BOOTSTRAP_PACKAGES: readonly TrustedBootstrapPackageSpecV1[] = Obj
   Object.freeze({ pluginId: "lowpoly", cargoPackage: "semio-hub-lowpoly-component", componentPackageId: "semio:lowpoly", outputName: "semio_hub_lowpoly_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
   Object.freeze({ pluginId: "mathematical", cargoPackage: "semio-hub-mathematical-component", componentPackageId: "semio:mathematical", outputName: "semio_hub_mathematical_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
   Object.freeze({ pluginId: "norm", cargoPackage: "semio-hub-norm-component", componentPackageId: "semio:norm", outputName: "semio_hub_norm_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "norm-eurocode", cargoPackage: "semio-hub-norm-eurocode-component", componentPackageId: "semio:norm-eurocode", outputName: "semio_hub_norm_eurocode_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "norm-eurocode-materials", cargoPackage: "semio-hub-norm-eurocode-materials-component", componentPackageId: "semio:norm-eurocode-materials", outputName: "semio_hub_norm_eurocode_materials_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
   Object.freeze({ pluginId: "note", cargoPackage: "semio-hub-note-component", componentPackageId: "semio:note", outputName: "semio_hub_note_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
   Object.freeze({ pluginId: "playbook", cargoPackage: "semio-hub-playbook-component", componentPackageId: "semio:playbook", outputName: "semio_hub_playbook_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
   Object.freeze({ pluginId: "procedural", cargoPackage: "semio-hub-procedural-component", componentPackageId: "semio:procedural", outputName: "semio_hub_procedural_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),

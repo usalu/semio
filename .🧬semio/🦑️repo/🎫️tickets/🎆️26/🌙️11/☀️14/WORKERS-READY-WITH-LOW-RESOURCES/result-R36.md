@@ -66,3 +66,32 @@ Owners per minute before 2.7 (41 owners in 15 min, read 81001), after 2.2 (23 in
 - Closure production (import-graph walks, `targetScriptSources`, TypeScript module resolution) runs in the parent, serially, and takes 1 to 3 minutes per heavy owner; moving it to the idle workers or sharing parsed `SourceFile`s across programs is the next package. The first 20 owners are the heaviest by design (held requests first).
 - Whether the 5 000 light owners run at seconds each is unmeasured.
 - The R33 overrun stop and the gate now work on the right process, but a single synchronous stretch can still pass the grant (17.9 GB once).
+
+# Part 3 (12:57Z to 14:17Z): the owner caches, shared TypeScript files, farm engagement
+
+Landed in four steps (`edits_h.py` .. `edits.py` in `T/🧰️scripts/R36`, originals in `T/🗑️generated/R36-landing*`, `landings.md`). Neighbour suites after each landing: footprint 42 pass, script-inputs 4, `walk-maps` 1, `program-reads` 4, sealed trampoline, manifest, cutoff, wave-row green; red only what was red before (`the process tree reader ...` in memory; 2 in `generation-protocol`).
+
+## 1. Why the existing caches did not give "a lookup" (answer to the coordinator's question)
+
+`environment.scripts` (`files`, `closures`, `commandDependencies`, `declared`, `walkNodes`, `reachState`) is content-checked (`walkPartsHoldV1` per pass) and shared by all owners, but `releaseOwnerStateV1(scripts,{shrink:governor.pressure()})` ran after EVERY owner and `governor.pressure()` is `headroom() < 1536 MB`, where `headroom` is the garbage-inflated managed measure. So the caches were declared "under memory pressure" permanently: `files`, `closures` and `commandDependencies` were cleared after each owner, and `reachState`/`walkNodes`/`declared`/`toolGroups` (the whole module graph) every 8 owners, 32 without pressure; the next owner rebuilt the import walk and the TypeScript module resolution from scratch (the 28.9 s stretches). Also each owner is a new pass, so the whole graph is revalidated per owner (O(nodes), not measured separately).
+
+## 2. What landed
+
+1. `releaseOwnerStateV1` decides by the physical footprint of the gate: below the soft limit (60 % of the grant) nothing is cleared at all, the garbage-based flag is ignored; in the soft band the periodic release stays (every 32 owners); at the hard limit (85 %) the per-owner shrink applies. Law test with a fake gate at 30 / 70 / 90 %.
+2. Shared parsed TypeScript source files (`createSharedSourceFilesV1`, `♨️reuse`): the programs of all owners share the parsed `SourceFile`s per compiler-options set (config-path keys removed from the key), reused only when the text equals the text read now, bounded at 8 000 files, cleared with the owner state. Law test: the second owner's program parses neither `shared.ts` nor `other.ts`; after `shared.ts` gains an import exactly `shared.ts` is parsed again, the closure contains the new `extra.ts` and `other.ts` is still not parsed (a changed import invalidates exactly the affected file).
+3. Farm engagement: `coldInference` was read by `openProjectFarmV1` (`engage`) but set by NOBODY, so the farm opened only after 24 misses and 25 % of the started projects; with the heaviest owners first, the parent inferred the 24 heaviest serially while its 4 to 8 workers (1.3 GB RSS, 0 % CPU) slept. `partInferenceEngagementV1` now passes `coldInference:true` for a cold part. Law test: a cold part opens the farm request at the first miss, a not engaged farm asks nothing before the 24th miss.
+4. Self-timing of the heavy synchronous stretches in the trace (`slow typescript-program|module-globs|resolve-closure-refs|owner-inference <name> <ms>`, `noteSlowV1`), because the pulse cannot speak inside code that calls no instrumented function.
+Not done: item 3 of the brief beyond the engagement (moving closure production itself to the workers), item 4 beyond what already exists (held requests first via `priority.json`; I did not verify that an answer is published before the end of the generation: no `are fresh` line appeared in any watched read).
+
+## 3. Measured (read 36133, started 13:40Z, owners from 14:00:26Z, all three first landings active except the farm engagement, which landed 13:29Z but was deferred into this read only partly: the `slow` lines show the engagement was in)
+
+- Self-timing (new): `owner-inference workspace` 216 s, `framework-rs` 248 s, `s-dev-composition` 321 s (concurrent, started together at 14:00:26), `resolve-closure-refs` only 16 to 24 s; small rust crates 12 to 66 s each (`abi-rs` 33 s, `font-noto-emoji-flags-regular-rs` 66 s) while the parent process stood at 21 % CPU on a machine whose `git`, `nfsd`, `mds` and replica work took the rest: the owner time is now mostly waiting, not computing.
+- Owners per minute: first 5 min (heavy three) 0; afterwards 25 owners in 6 minutes (4.2 per minute: 14:04:39 owner 0, 14:05:48 owner 7, 14:06:52 owner 17, 14:09:24 owner 20, 14:10:41 owner 25). Over the whole first 10 minutes 2.5 per minute; before Part 3: 2.2 to 3.1 per minute (reads 11430, 23465 over 8 to 20 min).
+- Peak footprint of the owners wave 19.1 GB once (grant 14.3 GB; the earlier reads 17.9 to 26 GB), median 3.7 GB.
+- First `... of ... projects of <origin> are fresh` answer: NONE. The read was restarted at 14:12Z (a code change by another landing in the closure, `graph code changed`) at owner 25, so no 20 minute window of one read exists with the final code; the cold read of 5102 owners did not finish in 30 minutes.
+
+## 4. Open / next
+
+- The three heaviest owners take 4 to 5 minutes together before the first light owner publishes, and every other restart (several per hour from landings of other agents) returns to that point; persisting the closure entries these three produce (they are in the node store, but the read verifies 8 129 closures for 13 to 15 min before the owners start) is the next lever, which is R41's incremental start verification.
+- Parent time per light owner is 12 to 66 s under host load; whether the workers took the leaves (farm `finished` line) is not in the trace: the farm lines go to the read's stderr only.
+- Throughput target (5102 owners in 30 min) NOT reached; at 4 owners per minute the cold read needs about 21 hours.

@@ -12,6 +12,7 @@ import { useSyncExternalStore } from "react";
 import { PLANAR_VIEWPOINTS } from "@teaching/staffage";
 import type { Language, Slug, Text, View, PlanarViewpoint } from "@teaching/staffage";
 import { isLanguage } from "../🌐️i18n/🟦️.ts";
+import { DEFAULT_CAMERA, isCameraPreset, type CameraPresetName } from "../🧊️spatial/🟦️.ts";
 
 /** 🔖️ The version of the stored document; a different version is dropped, not migrated. */
 export const STORAGE_VERSION = 1;
@@ -65,11 +66,26 @@ export type Background = (typeof BACKGROUNDS)[number];
 /** 🎯️ What a placed or compared figure shows: a static pose, or a clip with a phase offset in seconds. */
 export type Selection = { readonly kind: "pose"; readonly pose: Slug } | { readonly kind: "clip"; readonly clip: Slug };
 
-/** 📍️ One asset on the playground's ground line: `xM` metres along the line from its left end, `zM` metres sideways (the asset's left is +), `yawDeg` its turn about the vertical axis. Every viewpoint projects this one position. */
-export type Placement = { readonly id: string; readonly asset: Slug; readonly xM: number; readonly zM: number; readonly yawDeg: number; readonly pick: Selection | null; readonly offsetS: number; readonly mirrored: boolean };
+/** 🔭️ The viewpoints of the section playground: the side elevation and the front elevation; the plan and the 3D model have playgrounds of their own. */
+export const SECTION_VIEWPOINTS = ["elevation", "front"] as const;
 
-/** 🧪️ The playground composition: shared scale, view and ground, plus its placements. */
-export type Playground = { readonly scale: number; readonly view: View; readonly viewpoint: PlanarViewpoint; readonly background: Background; readonly lengthM: number; readonly placements: readonly Placement[] };
+/** 📤️ One of {@link SECTION_VIEWPOINTS}. */
+export type SectionViewpoint = (typeof SECTION_VIEWPOINTS)[number];
+
+/** 🎞️ How one placement plays on the shared timeline: `startS` where its window begins, `durationS` how long the window lasts (`null` = to the end of the timeline), `speed` the clip seconds per timeline second, `loop` whether the clip repeats inside the window (else it holds its last frame), `holdS` a clip time the placement is paused at (`null` = it plays). */
+export type Track = { readonly startS: number; readonly durationS: number | null; readonly speed: number; readonly loop: boolean; readonly holdS: number | null };
+
+/** 🌱️ A placement that plays from the start of the timeline to its end, at normal speed, looping. */
+export const TRACK_DEFAULTS: Track = { startS: 0, durationS: null, speed: 1, loop: true, holdS: null };
+
+/** 🎚️ The bounds of the track values. */
+export const TRACK_LIMITS = { speed: { min: 0.05, max: 8 }, durationS: { min: 0.1, max: 3600 }, startS: { max: 3600 } } as const;
+
+/** 📍️ One asset in the shared scene: `xM` metres ahead from the left end of the ground, `zM` metres sideways from the middle (the asset's left is +), `yawDeg` its turn about the vertical axis, `pick` its pose or clip, `offsetS` the clip time its window starts at, and the {@link Track} that plays it. Every playground projects this one position and this one state. */
+export type Placement = Track & { readonly id: string; readonly asset: Slug; readonly xM: number; readonly zM: number; readonly yawDeg: number; readonly pick: Selection | null; readonly offsetS: number; readonly mirrored: boolean };
+
+/** 🧪️ The shared scene of the three playgrounds: scale, representation and ground (`lengthM` ahead, `depthM` sideways), the section viewpoint, the 3D camera, the timeline length (`null` = the longest window), and the placements. */
+export type Playground = { readonly scale: number; readonly view: View; readonly viewpoint: SectionViewpoint; readonly camera: CameraPresetName; readonly background: Background; readonly lengthM: number; readonly depthM: number; readonly timelineS: number | null; readonly placements: readonly Placement[] };
 
 /** 📚️ A collection the reader saved. */
 export type SavedCollection = { readonly id: string; readonly name: string; readonly assets: readonly Slug[] };
@@ -85,7 +101,7 @@ export type ArchiveEvent =
   | { readonly type: "favorite-removed"; readonly asset: Slug }
   | { readonly type: "collection-saved"; readonly collection: SavedCollection }
   | { readonly type: "collection-removed"; readonly id: string }
-  | { readonly type: "playground-configured"; readonly patch: Partial<Pick<Playground, "scale" | "view" | "viewpoint" | "background" | "lengthM">> }
+  | { readonly type: "playground-configured"; readonly patch: Partial<Pick<Playground, "scale" | "view" | "viewpoint" | "camera" | "background" | "lengthM" | "depthM" | "timelineS">> }
   | { readonly type: "placement-added"; readonly placement: Placement }
   | { readonly type: "placement-changed"; readonly id: string; readonly patch: Partial<Omit<Placement, "id">> }
   | { readonly type: "placement-duplicated"; readonly id: string; readonly newId: string }
@@ -97,17 +113,36 @@ export type ArchiveEvent =
 /** 📏️ The playground's default ground length in metres. */
 export const DEFAULT_LENGTH_M = 24;
 
+/** 📏️ The playground's default ground depth in metres. */
+export const DEFAULT_DEPTH_M = 12;
+
 /** 🌱️ The state of a reader who has chosen nothing. */
 export const INITIAL_STATE: ArchiveState = {
   preferences: { theme: "system", motion: "system", textSize: "normal", playful: true, previewViewpoint: "elevation" },
   favorites: [],
   collections: [],
-  playground: { scale: 100, view: "dark-line", viewpoint: "elevation", background: "paper", lengthM: DEFAULT_LENGTH_M, placements: [] },
+  playground: { scale: 100, view: "dark-line", viewpoint: "elevation", camera: DEFAULT_CAMERA, background: "paper", lengthM: DEFAULT_LENGTH_M, depthM: DEFAULT_DEPTH_M, timelineS: null, placements: [] },
 };
 
-function clampZ(playground: Playground, zM: number): number {
-  return Math.min(Math.max(zM, -playground.lengthM / 2), playground.lengthM / 2);
+function clampZ(playground: Pick<Playground, "depthM">, zM: number): number {
+  return Math.min(Math.max(zM, -playground.depthM / 2), playground.depthM / 2);
 }
+
+const within = (value: number, low: number, high: number): number => Math.min(Math.max(value, low), high);
+
+/** 🎞️ A track with every member inside its bounds. */
+export function clampTrack(track: Track): Track {
+  return {
+    startS: within(track.startS, 0, TRACK_LIMITS.startS.max),
+    durationS: track.durationS === null ? null : within(track.durationS, TRACK_LIMITS.durationS.min, TRACK_LIMITS.durationS.max),
+    speed: within(track.speed, TRACK_LIMITS.speed.min, TRACK_LIMITS.speed.max),
+    loop: track.loop,
+    holdS: track.holdS === null ? null : Math.max(0, track.holdS),
+  };
+}
+
+/** ⏲️ The length of the timeline when the reader sets it, inside its bounds. */
+export const clampTimeline = (timelineS: number | null): number | null => (timelineS === null ? null : within(timelineS, 1, 3600));
 
 /** 🔄️ A yaw wrapped to -180 to 180 degrees. */
 export const wrapYaw = (yawDeg: number): number => ((((yawDeg + 180) % 360) + 360) % 360) - 180;
@@ -135,13 +170,13 @@ export function reduce(state: ArchiveState, event: ArchiveEvent): ArchiveState {
     case "collection-removed":
       return { ...state, collections: state.collections.filter((collection) => collection.id !== event.id) };
     case "playground-configured": {
-      const next = { ...playground, ...event.patch };
+      const next = { ...playground, ...event.patch, timelineS: clampTimeline(event.patch.timelineS === undefined ? playground.timelineS : event.patch.timelineS) };
       return { ...state, playground: { ...next, placements: next.placements.map((placement) => ({ ...placement, xM: clampX(next, placement.xM), zM: clampZ(next, placement.zM) })) } };
     }
     case "placement-added":
-      return { ...state, playground: { ...playground, placements: [...playground.placements, { ...event.placement, xM: clampX(playground, event.placement.xM), zM: clampZ(playground, event.placement.zM), yawDeg: wrapYaw(event.placement.yawDeg) }] } };
+      return { ...state, playground: { ...playground, placements: [...playground.placements, { ...event.placement, ...clampTrack(event.placement), xM: clampX(playground, event.placement.xM), zM: clampZ(playground, event.placement.zM), yawDeg: wrapYaw(event.placement.yawDeg) }] } };
     case "placement-changed":
-      return { ...state, playground: { ...playground, placements: playground.placements.map((placement) => (placement.id === event.id ? { ...placement, ...event.patch, mirrored: (event.patch.mirrored ?? placement.mirrored) && (event.patch.mirrored === undefined || playground.viewpoint === "elevation"), xM: clampX(playground, event.patch.xM ?? placement.xM), zM: clampZ(playground, event.patch.zM ?? placement.zM), yawDeg: wrapYaw(event.patch.yawDeg ?? placement.yawDeg) } : placement)) } };
+      return { ...state, playground: { ...playground, placements: playground.placements.map((placement) => (placement.id === event.id ? { ...placement, ...event.patch, ...clampTrack({ ...placement, ...event.patch }), xM: clampX(playground, event.patch.xM ?? placement.xM), zM: clampZ(playground, event.patch.zM ?? placement.zM), yawDeg: wrapYaw(event.patch.yawDeg ?? placement.yawDeg) } : placement)) } };
     case "placement-duplicated": {
       const source = playground.placements.find((placement) => placement.id === event.id);
       return source === undefined ? state : { ...state, playground: { ...playground, placements: [...playground.placements, { ...source, id: event.newId, xM: clampX(playground, source.xM + 0.6), zM: source.zM, yawDeg: source.yawDeg }] } };
@@ -176,6 +211,7 @@ export function sanitize(value: unknown, views: readonly View[]): ArchiveState {
   const prefs = isRecord(preferences) ? preferences : {};
   const ground = isRecord(playground) ? playground : {};
   const lengthM = Math.min(Math.max(finite(ground.lengthM, DEFAULT_LENGTH_M), 4), 200);
+  const depthM = Math.min(Math.max(finite(ground.depthM, DEFAULT_DEPTH_M), 2), 200);
   return {
     preferences: {
       ...(isLanguage(prefs.language) ? { language: prefs.language } : {}),
@@ -192,13 +228,16 @@ export function sanitize(value: unknown, views: readonly View[]): ArchiveState {
     playground: {
       scale: Math.max(1, finite(ground.scale, 100)),
       view: oneOf(ground.view, views, "dark-line"),
-      viewpoint: oneOf(ground.viewpoint, PLANAR_VIEWPOINTS, "elevation"),
+      viewpoint: oneOf(ground.viewpoint, SECTION_VIEWPOINTS, "elevation"),
+      camera: isCameraPreset(typeof ground.camera === "string" ? ground.camera : null) ? (ground.camera as CameraPresetName) : DEFAULT_CAMERA,
       background: oneOf(ground.background, BACKGROUNDS, "paper"),
       lengthM,
+      depthM,
+      timelineS: typeof ground.timelineS === "number" && Number.isFinite(ground.timelineS) ? clampTimeline(ground.timelineS) : null,
       placements: Array.isArray(ground.placements)
         ? ground.placements.flatMap((item) =>
             isRecord(item) && typeof item.id === "string" && isSlug(item.asset)
-              ? [{ id: item.id, asset: item.asset, xM: Math.min(Math.max(finite(item.xM, 0), 0), lengthM), zM: Math.min(Math.max(finite(item.zM, 0), -lengthM / 2), lengthM / 2), yawDeg: wrapYaw(finite(item.yawDeg, 0)), pick: sanitizePick(item.pick), offsetS: finite(item.offsetS, 0), mirrored: item.mirrored === true }]
+              ? [{ id: item.id, asset: item.asset, xM: Math.min(Math.max(finite(item.xM, 0), 0), lengthM), zM: Math.min(Math.max(finite(item.zM, 0), -depthM / 2), depthM / 2), yawDeg: wrapYaw(finite(item.yawDeg, 0)), pick: sanitizePick(item.pick), offsetS: finite(item.offsetS, 0), mirrored: item.mirrored === true, ...clampTrack({ startS: finite(item.startS, TRACK_DEFAULTS.startS), durationS: typeof item.durationS === "number" && Number.isFinite(item.durationS) ? item.durationS : null, speed: finite(item.speed, TRACK_DEFAULTS.speed), loop: item.loop !== false, holdS: typeof item.holdS === "number" && Number.isFinite(item.holdS) ? item.holdS : null }) }]
               : [],
           )
         : [],
@@ -210,8 +249,11 @@ export function sanitize(value: unknown, views: readonly View[]): ArchiveState {
 export function storedProblems(value: unknown): readonly Text[] {
   if (!isRecord(value) || value.version !== STORAGE_VERSION || !isRecord(value.state)) return [];
   const { preferences, playground } = value.state;
-  const named = [isRecord(preferences) ? preferences.previewViewpoint : undefined, isRecord(playground) ? playground.viewpoint : undefined];
-  return named.flatMap((viewpoint) => (viewpoint === undefined || (PLANAR_VIEWPOINTS as readonly unknown[]).includes(viewpoint) ? [] : [{ en: `The saved viewpoint "${String(viewpoint)}" is unknown; the side elevation is used instead.`, de: `Die gespeicherte Blickrichtung "${String(viewpoint)}" ist unbekannt; stattdessen wird die Seitenansicht verwendet.` }]));
+  const named = [
+    { viewpoint: isRecord(preferences) ? preferences.previewViewpoint : undefined, known: PLANAR_VIEWPOINTS as readonly unknown[] },
+    { viewpoint: isRecord(playground) ? playground.viewpoint : undefined, known: SECTION_VIEWPOINTS as readonly unknown[] },
+  ];
+  return named.flatMap(({ viewpoint, known }) => (viewpoint === undefined || known.includes(viewpoint) ? [] : [{ en: `The saved viewpoint "${String(viewpoint)}" is unknown; the side elevation is used instead.`, de: `Die gespeicherte Blickrichtung "${String(viewpoint)}" ist unbekannt; stattdessen wird die Seitenansicht verwendet.` }]));
 }
 
 /** 📦️ Whether what the store holds survives a reload. */

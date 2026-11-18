@@ -129,10 +129,22 @@ def generation_tokens(rows):
 def neutral_way(root,keys):return {"keys":keys,"owner":owner_neutral,"path":lambda x:neutral_path(x,root),"text":lambda x:neutral_text(x,root)}
 def local_way(root,keys,providers):return {"keys":keys,"owner":owner_local(providers),"path":lambda x:local_path(x,root),"text":lambda x:local_text(x,root)}
 
+def zero_stamps(fact):return {k:(P["stampValue"] if k in P["stampFields"] and isinstance(v,(int,float)) and not isinstance(v,bool) else v) for k,v in fact.items()}
+
+def unstamp(row):
+    fact=row.get("fact");row=dict(row)
+    if not isinstance(fact,dict):return row
+    if row["kind"]=="file" and "error" not in fact:row["fact"]=zero_stamps(fact);return row
+    if row["kind"]!="analysis":return row
+    fact=dict(fact)
+    if isinstance(fact.get("source"),dict):fact["source"]=zero_stamps(fact["source"])
+    if isinstance(fact.get("nestedObservations"),list):fact["nestedObservations"]=[unstamp(x) for x in fact["nestedObservations"]]
+    row["fact"]=fact;return row
+
 def neutral_rows(rows,root,keys):
     way=neutral_way(root,keys)
     kept=[r for r in rows if not (r["kind"] in P["locationKinds"] and r.get("fact")=="directory" and above(r["path"],root))]
-    return generation_tokens([convert_row(r,way) for r in kept])
+    return generation_tokens([unstamp(convert_row(r,way)) for r in kept])
 
 def local_rows(rows,root,keys,providers,generation):
     way=local_way(root,keys,providers);put=generation if generation is not None else UNAVAILABLE

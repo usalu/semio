@@ -15,6 +15,14 @@ export function graphDigestV1(graph){return createHash("sha256").update(canonica
 /** 🎯 The task reference that selects every task of the loaded slice (roster commands carry no literal task). */
 export const ALL_TARGETS_V1="*:*";
 
+/** 🎯 The tasks a roster request (`*:*`) names in a slice: for the owner selection of an invocation with literal projects and targets (`run-many`) exactly those projects times those targets that exist (what they need follows from the plan walk), for every other selection every task of the slice. A selected project without the target contributes nothing, as the tool skips it too.
+ * @see ../../🧪️tests/🎯️roster-scope/🟦️.ts */
+export function rosterTaskIdsV1(selection,tasks){
+ if(selection?.kind!=="owners"||!Array.isArray(selection.targets)||selection.targets.length===0)return[...tasks.keys()];
+ const excluded=new Set(selection.exclude??[]);
+ return selection.projects.filter(name=>!excluded.has(name)).flatMap(name=>selection.targets.map(target=>name+":"+target)).filter(id=>tasks.has(id));
+}
+
 /** 📏 The resident size of a loaded graph, estimated from at most 64 evenly spread project records and doubled for the interned copy: serialising the whole graph for its size allocated a string as large as the graph (1.2 GB of JSON for 4748 projects) on every load. */
 export function estimatedGraphBytesV1(graph){
  const names=Object.keys(graph.projects??{});if(!names.length)return 0;
@@ -40,7 +48,7 @@ export function createGraphPlannerPortV1({loadGraph,loadSlice,identify,bytesOf=e
   },
   async plan({index,targets,revision,parent,dirty,cursor,agent,signal,workspace,root,arguments:invocation,tool,graphPolicy,progress}){
    const sliceLoad=()=>loadSlice({root,workspace,arguments:invocation,tool,graphPolicy,signal,onProgress:progress}),captured=loadSlice&&invocation&&capture?await capture({root,workspace,agent,parent,dirty,cursor,signal},sliceLoad):undefined,slice=captured?captured.result:loadSlice&&invocation?await sliceLoad():undefined,tasks=slice?indexOf(slice.graph):index.value.tasks,order=[],seen=new Set(),visiting=new Set();
-   if(slice&&targets.includes(ALL_TARGETS_V1))targets=[...tasks.keys()];
+   if(slice&&targets.includes(ALL_TARGETS_V1))targets=rosterTaskIdsV1(slice.graph.admission?.selection,tasks);
    for(const target of targets)if(!tasks.has(target))throw new UnknownTargetErrorV1(target);
    const visit=id=>{
     if(seen.has(id)||visiting.has(id))return;

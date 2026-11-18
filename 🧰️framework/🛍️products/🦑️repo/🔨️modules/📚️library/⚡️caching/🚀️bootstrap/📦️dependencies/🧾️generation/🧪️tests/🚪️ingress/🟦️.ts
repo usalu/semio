@@ -90,7 +90,7 @@ test("ingress files: evidence of every size is written through the real bounded 
    expect(generationSha256V1(readFileSync(path)),String(size)).toBe(oracle("digest",String(size)));
   }
   const failing=generationSha256V1("fail")+".execution.ndjson";let calls=0;
-  await expect(glue.writeJavascriptDependencyGenerationFilesV1(root,[{name:failing,bytes:pattern(300000)}],()=>{},async()=>{if(++calls===3)throw Error("cancelled mid write");})).rejects.toThrow("cancelled mid write");
+  await expect(glue.writeJavascriptDependencyGenerationFilesV1(root,[{name:failing,bytes:pattern(25000000)}],()=>{},async()=>{if(++calls===3)throw Error("cancelled mid write");})).rejects.toThrow("cancelled mid write");
   expect(readdirSync(join(root,protocol.directory))).not.toContain(failing);
   const name=generationSha256V1("size65536")+".frontier.ndjson";
   await expect(glue.writeJavascriptDependencyGenerationFilesV1(root,[{name,bytes:pattern(10)}],()=>{},async()=>{})).rejects.toThrow("Existing immutable generation file changed");

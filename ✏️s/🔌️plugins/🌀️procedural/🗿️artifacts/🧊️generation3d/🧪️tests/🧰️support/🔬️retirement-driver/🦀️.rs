@@ -36,7 +36,7 @@ pub fn drive_erased_released(owner: &mut dyn store::ErasedSnapshotRetirement, la
             return released;
         }
         let grant = exact_grant(erased_demand(owner).unwrap_or_else(|error| panic!("{label} refused its close quote: {error}")));
-        let step = owner.close_step(grant).result.unwrap_or_else(|error| panic!("{label} retirement faulted: {error}"));
+        let step = paid(grant, |effect| owner.close_step(grant.maximum_copy_bytes, effect), label);
         admit_retained_clone_close(grant, step, owner.terminal_is_empty(), "driven test retirement").unwrap_or_else(|error| panic!("{label} overspent its grant: {error}"));
         released += step.progress().released_bytes;
         if matches!(step, RetainedCloneStep::Complete(_)) {
@@ -47,23 +47,36 @@ pub fn drive_erased_released(owner: &mut dyn store::ErasedSnapshotRetirement, la
     panic!("{label} did not reach its terminal-empty close witness")
 }
 
-/// 🎟️ Admits `value` as an owned retirement under a grant that pays exactly its frame birth.
-pub fn retire_owned_for_test<T: semio_framework_value::retirement::RetireOwned>(value: T, label: &str) -> Box<dyn store::ErasedSnapshotRetirement> {
-    let birth = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: semio_framework_value::retirement::owned_retirement_birth_bytes::<T>(), maximum_release_bytes: 0, maximum_depth: 2 };
-    match semio_framework_value::retirement::admit_owned_retirement(value, birth).result {
-        Ok((owner, _)) => owner,
-        Err((error, _)) => panic!("{label} refused its own birth: {error}"),
+/// 🪙️ Runs one effect-shaped retirement step inside a finite wallet of exactly `grant`; a pending or unaffordable step paid nothing.
+fn paid(grant: RetainedCloneGrant, run: impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::RetainedWorkPoll<RetainedCloneStep, semio_framework_value::OriginalRetirementFailure>, label: &str) -> RetainedCloneStep {
+    match semio_plugin::artifact_app_laws::run_fixture_effect(grant, run) {
+        Some(semio_framework_value::RetainedWorkPoll::Complete(turn)) => turn.result.unwrap_or_else(|error| panic!("{label} retirement faulted: {error:?}")),
+        Some(semio_framework_value::RetainedWorkPoll::Pending { .. }) | None => RetainedCloneStep::Progress(Default::default()),
     }
 }
 
-/// 🔗️ Admits `value` as a shared (`Arc`) retirement under a grant that pays exactly its frame birth.
-pub fn retire_shared_for_test<T: semio_framework_value::retirement::RetireOwned + Sync>(value: std::sync::Arc<T>, label: &str) -> Box<dyn store::ErasedSnapshotRetirement> {
-    let factory = semio_framework_value::SharedValueRetirementFactory::<T>::default();
-    let birth = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: store::SnapshotRetirementFactory::retirement_birth_bytes(&factory, &value), maximum_release_bytes: 0, maximum_depth: 2 };
-    match store::SnapshotRetirementFactory::retire(&factory, value, birth).result {
-        Ok((owner, _)) => owner,
-        Err((error, _)) => panic!("{label} refused its own birth: {error}"),
+/// 🎟️ Admits a pending value as an owned retirement, each admission turn paying exactly its quoted frame birth.
+fn admit_birth<T>(mut pending: Option<T>, demand: impl Fn(&Option<T>) -> Result<RetirementDemand, ValueError>, admit: impl Fn(&mut Option<T>, &mut Option<Box<dyn store::ErasedSnapshotRetirement>>, &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::RetainedWorkOutcome, label: &str) -> Box<dyn store::ErasedSnapshotRetirement> {
+    let mut active = None;
+    for _ in 0..64 {
+        let grant = exact_grant(demand(&pending).unwrap_or_else(|error| panic!("{label} refused its own birth quote: {error}")));
+        let grant = RetainedCloneGrant { maximum_depth: grant.maximum_depth.max(2), ..grant };
+        semio_plugin::artifact_app_laws::run_fixture_effect(grant, |effect| admit(&mut pending, &mut active, effect).result.unwrap_or_else(|error| panic!("{label} refused its own birth: {error}")));
+        if let Some(owner) = active.take() {
+            return owner;
+        }
     }
+    panic!("{label} never admitted its own birth")
+}
+
+/// 🎟️ Admits `value` as an owned retirement under a grant that pays exactly its frame birth.
+pub fn retire_owned_for_test<T: semio_framework_value::retirement::RetireOwned>(value: T, label: &str) -> Box<dyn store::ErasedSnapshotRetirement> {
+    admit_birth(Some(value), store::os_store::snapshot_read::artifact_retirement_owned_birth_demands, store::os_store::snapshot_read::artifact_retirement_admit_owned, label)
+}
+
+/// 🔗️ Admits `value` as a shared (`Arc`) retirement lease under a grant that pays exactly its frame birth.
+pub fn retire_shared_for_test<T: semio_framework_value::retirement::RetireOwned + Sync>(value: std::sync::Arc<T>, label: &str) -> Box<dyn store::ErasedSnapshotRetirement> {
+    admit_birth(Some(value), store::os_store::snapshot_read::artifact_retirement_shared_lease_birth_demands, store::os_store::snapshot_read::artifact_retirement_admit_shared_lease, label)
 }
 
 /// 📏️ The next close grant of one interactive job.

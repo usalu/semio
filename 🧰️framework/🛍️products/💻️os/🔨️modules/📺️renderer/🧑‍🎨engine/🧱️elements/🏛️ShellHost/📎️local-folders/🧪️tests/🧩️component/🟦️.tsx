@@ -97,11 +97,12 @@ describe("local folder reconnect band", () => {
     view.unmount();
   });
 
-  it("fits a phone: the band wraps within 90 % of the viewport and both actions are touch-size targets", () => {
+  it("is one shared-border row on a phone: within 90 % of the viewport, the message and both framework buttons as cells, no native border or gap", () => {
     syncShellLabelLocale("en");
     const view = render(band(false, vi.fn(), vi.fn()));
     const region = view.getByRole("status");
-    expect([region.classList.contains("max-w-[90vw]"), region.classList.contains("flex-wrap"), [...region.querySelectorAll("button")].map((button) => button.classList.contains("min-h-medium"))]).toEqual([true, true, [true, true]]);
+    expect([region.classList.contains("max-w-[90vw]"), region.hasAttribute("data-shared-border-frame"), region.classList.contains("border"), region.classList.contains("gap-single")]).toEqual([true, true, false, false]);
+    expect([...region.querySelectorAll("button")].map((button) => button.closest("[data-slot='button-group']")?.parentElement === region)).toEqual([true, true]);
     view.unmount();
   });
 

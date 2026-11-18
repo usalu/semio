@@ -122,6 +122,16 @@
             "maxLength": 256
           }
         },
+        "observedFiles": {
+          "description": "File facts of other owners that this owner only reads as inputs (for example the Cargo manifests a plugin catalog consumer hashes): members of the closure whose change invalidates it, never a reason to admit the owner that holds them. A real dependency edge or an entry of files admits.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
         "dependencies": {
           "type": "array",
           "uniqueItems": true,
@@ -789,6 +799,17 @@
       "maxItems": 65536
     },
     "files": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "maxItems": 1048576
+    },
+    "observedFiles": {
+      "description": "The members of files that admit no owner: file facts of foreign owners, observed with their digest, invalidating, never admitting.",
       "type": "array",
       "uniqueItems": true,
       "items": {

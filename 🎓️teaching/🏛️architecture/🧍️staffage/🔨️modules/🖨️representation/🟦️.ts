@@ -102,7 +102,7 @@ function measureDrawn(asset: Asset, rep: Drawn, selector: RepresentationSelector
     const boxMinOf = (p: (typeof prepared)[number]): number => Math.min(p.box.maxX - p.box.minX, p.box.maxY - p.box.minY);
     const measured = profile.minFeatureMm > 0 ? prepared.filter((p) => p.closed && p.shape.filled && p.shape.role !== "ground") : [];
     for (const p of measured.sort((a, b) => boxMinOf(a) - boxMinOf(b))) {
-      const covers = process.env.DEBUG_FW3_WHOLE === "1" ? [] : prepared.flatMap((q) => (q.occluder !== null && q.order > p.order && q.box.minX <= p.box.maxX && p.box.minX <= q.box.maxX && q.box.minY <= p.box.maxY && p.box.minY <= q.box.maxY ? [{ rings: q.occluder.rings, penMm: q.weightMm }] : []));
+      const covers = prepared.flatMap((q) => (q.occluder !== null && q.order > p.order && q.box.minX <= p.box.maxX && p.box.minX <= q.box.maxX && q.box.minY <= p.box.maxY && p.box.minY <= q.box.maxY ? [{ rings: q.occluder.rings, penMm: q.weightMm }] : []));
       const atLeast = Math.max(minFeature, profile.minFeatureMm) - p.weightMm + 1e-9;
       let raw: number;
       let boxMin: number;

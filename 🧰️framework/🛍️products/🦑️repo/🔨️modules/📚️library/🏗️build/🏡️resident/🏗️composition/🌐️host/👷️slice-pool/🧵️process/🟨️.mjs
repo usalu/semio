@@ -11,18 +11,31 @@ import {SLICE_GRACE_MILLISECONDS_V1,signalProcessTreeV1} from "../🧹️reap/�
 export const SLICE_REQUEST_VARIABLE_V1="SEMIO_SLICE_REQUEST";
 export const SLICE_SPOOL_VARIABLE_V1="SEMIO_SLICE_SPOOL";
 
+/** 🧾 How much of a worker's last words the pool keeps, and how long it waits for them after the exit (a farm child that inherited the pipe may hold it open). */
+const STDERR_TAIL_CHARACTERS_V1=4096,STDERR_DRAIN_MILLISECONDS_V1=500,CAUSE_CHARACTERS_V1=300;
+
+/** 🗣 The line of a worker's last words that says why it ended: the last line that names an error, else the last line, without colour codes and at most 300 characters; nothing when the worker said nothing. */
+export function workerCauseV1(text){
+ const lines=String(text??"").replace(/\u001b\[[0-9;]*m/gu,"").split("\n").map(line=>line.trim()).filter(line=>line!=="");
+ const named=[...lines].reverse().find(line=>/error|cannot find|not found|failed|unexpected|fehler/iu.test(line));
+ return (named??lines.at(-1)??"").slice(0,CAUSE_CHARACTERS_V1);
+}
+
 /** 📦 Why the result travels as a file: measured on generated graphs, JSON over the IPC pipe cost 0.9 s for 50 MB, 4 s for 200 MB and 43 s (2 GB peak in both processes) for 600 MB; stringifying into a file in the child and parsing it in the service cost 0.9 s, 2.9 s and 9.5 s.
  * 🚀 Starts the load script at `url` as a process with the request in its environment and an IPC channel; answers a `Worker`-shaped handle (`on("message"|"error"|"exit")`, `pid`, `terminate()`). */
 export function createProcessWorkerV1(url,data,env,{spawn=fork,graceMilliseconds=SLICE_GRACE_MILLISECONDS_V1,platform=process.platform}={}){
  const spool=createScratchDirectoryV1("slice");
  let child;
- try{child=spawn(url instanceof URL?fileURLToPath(url):String(url),[],{execPath:process.execPath,env:{...env,[SLICE_REQUEST_VARIABLE_V1]:JSON.stringify(data),[SLICE_SPOOL_VARIABLE_V1]:spool},detached:platform!=="win32",windowsHide:true,stdio:["ignore","ignore","inherit","ipc"]});}catch(error){removeScratchDirectoryV1(spool);throw error;}
+ try{child=spawn(url instanceof URL?fileURLToPath(url):String(url),[],{execPath:process.execPath,env:{...env,[SLICE_REQUEST_VARIABLE_V1]:JSON.stringify(data),[SLICE_SPOOL_VARIABLE_V1]:spool},detached:platform!=="win32",windowsHide:true,stdio:["ignore","ignore","pipe","ipc"]});}catch(error){removeScratchDirectoryV1(spool);throw error;}
  const pending=new Set();
+ let tail="";
+ child.stderr?.on("data",chunk=>{try{process.stderr.write(chunk);}catch{}tail=(tail+chunk.toString("utf8")).slice(-STDERR_TAIL_CHARACTERS_V1);});
  let exited=child.exitCode!==null||child.signalCode!==null;
  const gone=new Promise(resolve=>{if(exited)resolve();else child.once("exit",()=>{exited=true;resolve();});});
  void gone.then(()=>Promise.allSettled([...pending])).then(()=>removeScratchDirectoryV1(spool));
  return{
   pid:child.pid,
+  stderrTail:()=>tail,
   send:message=>{try{return child.connected&&child.send(message);}catch{return false;}},
   on:(event,listener)=>{
    if(event==="message")child.on("message",message=>{
@@ -31,7 +44,7 @@ export function createProcessWorkerV1(url,data,env,{spawn=fork,graceMilliseconds
     const reading=readFile(graphFile,"utf8").then(text=>listener({...rest,graph:JSON.parse(text)}),error=>listener({type:"error",message:"Slice result unreadable: "+String(error?.message??error)}));
     pending.add(reading);void reading.finally(()=>pending.delete(reading));
    });
-   else if(event==="exit")child.on("exit",code=>{void Promise.allSettled([...pending]).then(()=>listener(code));});
+   else if(event==="exit")child.on("exit",code=>{void Promise.race([new Promise(done=>child.once("close",done)),new Promise(done=>setTimeout(done,STDERR_DRAIN_MILLISECONDS_V1).unref?.())]).then(()=>Promise.allSettled([...pending])).then(()=>listener(code));});
    else child.on(event==="error"?event:"never",listener);
   },
   /** 🛑 SIGINT to the group, SIGKILL after the grace period whether or not the process answered; resolves when the process is gone. */

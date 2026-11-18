@@ -1,5 +1,6 @@
 /* 🖥 Bounded, keyboard-scrollable reference workspaces using the learner's palette. */
 .course-mockup { grid-column: 1 / -1; min-width: 0; max-width: 100%; margin: 0.5rem 0 0; font-size: 0.75rem; font-weight: normal; }
+.course-chip > .course-mockup, .course-sort > .course-mockup, .course-slot > .course-mockup { margin: 0; padding: var(--spacing-single); border-block-start: var(--stroke-hairline) solid var(--border-normal-color); }
 .course-mockup figcaption { margin-bottom: 0.35rem; font-weight: 600; }
 .course-mockup-scroll { max-width: 100%; overflow: auto; contain: layout paint; overscroll-behavior-inline: contain; border: 1px solid var(--border-normal-color); border-radius: 0.25rem; }
 .course-mockup-scroll:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }

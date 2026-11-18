@@ -57,8 +57,8 @@
     },
     "dimensions": {
       "heightM": 2.46,
-      "widthM": 2.6,
-      "depthM": 2.6,
+      "widthM": 2.59,
+      "depthM": 2.59,
       "massKg": 66.7
     },
     "materials": [
@@ -1356,6 +1356,22 @@
               "material": "concrete"
             },
             {
+              "id": "base-plate",
+              "bone": "base",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "rect",
+              "x": -0.14,
+              "y": 0.2,
+              "w": 0.28,
+              "h": 0.015,
+              "r": 0.002,
+              "region": "base-concrete",
+              "material": "concrete"
+            },
+            {
               "id": "base-socket",
               "bone": "base",
               "role": "body",
@@ -1372,22 +1388,17 @@
               "bone": "mast",
               "role": "body",
               "z": 3,
-              "filled": false,
               "tone": 0.45,
-              "kind": "poly",
-              "points": [
-                [
-                  0.1,
-                  0
-                ],
-                [
-                  2.25,
-                  0
-                ]
-              ],
-              "closed": false,
               "region": "frame-alu",
-              "material": "aluminium-anodised"
+              "material": "aluminium-anodised",
+              "filled": true,
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0,
+              "x1": 2.15,
+              "y1": 0,
+              "r0": 0.026,
+              "r1": 0.021
             },
             {
               "id": "crown-hub",
@@ -1397,10 +1408,25 @@
               "filled": true,
               "tone": 0.35,
               "kind": "rect",
-              "x": -0.06,
+              "x": -0.07,
               "y": -0.045,
               "w": 0.14,
-              "h": 0.09,
+              "h": 0.095,
+              "region": "frame-alu",
+              "material": "aluminium-anodised"
+            },
+            {
+              "id": "crown-finial",
+              "bone": "crown",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.0125,
+              "y": 0.05,
+              "w": 0.025,
+              "h": 0.061,
               "region": "frame-alu",
               "material": "aluminium-anodised"
             },
@@ -1648,7 +1674,7 @@
               "filled": false,
               "tone": 0.3,
               "kind": "path",
-              "d": "M 1.2374 0 Q 1.2712 0.0662 1.3339 0.0264",
+              "d": "M 1.2374 0 L 1.3339 0.0264",
               "region": "canopy-top",
               "material": "polyester-canvas"
             },
@@ -1660,7 +1686,7 @@
               "filled": false,
               "tone": 0.3,
               "kind": "path",
-              "d": "M 1.2374 0 Q 1.1747 0.0399 1.141 -0.0264",
+              "d": "M 1.2374 0 L 1.141 -0.0264",
               "region": "canopy-top",
               "material": "polyester-canvas"
             },
@@ -1672,7 +1698,7 @@
               "filled": false,
               "tone": 0.3,
               "kind": "path",
-              "d": "M 1.2374 0 Q 1.2712 -0.0662 1.3339 -0.0264",
+              "d": "M 1.2374 0 L 1.3339 -0.0264",
               "region": "canopy-top",
               "material": "polyester-canvas"
             },
@@ -1684,7 +1710,7 @@
               "filled": false,
               "tone": 0.3,
               "kind": "path",
-              "d": "M 1.2374 0 Q 1.1747 -0.0399 1.141 0.0264",
+              "d": "M 1.2374 0 L 1.141 0.0264",
               "region": "canopy-top",
               "material": "polyester-canvas"
             },
@@ -1767,6 +1793,22 @@
               "material": "concrete"
             },
             {
+              "id": "base-plate",
+              "bone": "base",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "rect",
+              "x": -0.14,
+              "y": 0.2,
+              "w": 0.28,
+              "h": 0.015,
+              "r": 0.002,
+              "region": "base-concrete",
+              "material": "concrete"
+            },
+            {
               "id": "base-socket",
               "bone": "base",
               "role": "body",
@@ -1783,16 +1825,31 @@
               "bone": "mast",
               "role": "body",
               "z": 3,
-              "filled": true,
               "tone": 0.45,
-              "kind": "rect",
-              "x": -0.025,
-              "y": 0.2,
-              "w": 0.05,
-              "h": 2.25,
               "region": "frame-alu",
               "material": "aluminium-anodised",
-              "followTip": true
+              "followTip": true,
+              "filled": true,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.026,
+                  0.2
+                ],
+                [
+                  0.026,
+                  0.2
+                ],
+                [
+                  0.021,
+                  2.35
+                ],
+                [
+                  -0.021,
+                  2.35
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "crown-hub",
@@ -1805,7 +1862,22 @@
               "x": -0.07,
               "y": 2.305,
               "w": 0.14,
-              "h": 0.09,
+              "h": 0.095,
+              "region": "frame-alu",
+              "material": "aluminium-anodised"
+            },
+            {
+              "id": "crown-finial",
+              "bone": "crown",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.0125,
+              "y": 2.4,
+              "w": 0.025,
+              "h": 0.061,
               "region": "frame-alu",
               "material": "aluminium-anodised"
             },
@@ -1831,10 +1903,56 @@
               "z": 2,
               "filled": true,
               "tone": 0.82,
-              "kind": "path",
-              "d": "M 0 0 C 0.3465 0.115 0.8909 0.1035 1.2374 0 L 1.3339 0.0264 Z",
+              "kind": "poly",
               "region": "canopy-top",
               "material": "polyester-canvas",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.10949,
+                  0.03074
+                ],
+                [
+                  0.22848,
+                  0.05409
+                ],
+                [
+                  0.3546,
+                  0.07027
+                ],
+                [
+                  0.48547,
+                  0.07948
+                ],
+                [
+                  0.6187,
+                  0.08192
+                ],
+                [
+                  0.75194,
+                  0.07781
+                ],
+                [
+                  0.8828,
+                  0.06735
+                ],
+                [
+                  1.00891,
+                  0.05076
+                ],
+                [
+                  1.12791,
+                  0.02823
+                ],
+                [
+                  1.23741,
+                  -4e-05
+                ]
+              ],
+              "closed": true,
               "solid": {
                 "kind": "revolved",
                 "axisBone": "mast",
@@ -1846,7 +1964,7 @@
             {
               "id": "rib-front",
               "bone": "rib-right",
-              "role": "detail",
+              "role": "texture",
               "z": 2.5,
               "filled": false,
               "tone": 0.35,
@@ -1875,7 +1993,7 @@
             {
               "id": "rib-oblique-b",
               "bone": "rib-b",
-              "role": "detail",
+              "role": "texture",
               "z": 2.5,
               "filled": false,
               "tone": 0.35,
@@ -1904,7 +2022,7 @@
             {
               "id": "rib-oblique-d",
               "bone": "rib-d",
-              "role": "detail",
+              "role": "texture",
               "z": 2.5,
               "filled": false,
               "tone": 0.35,
@@ -1939,7 +2057,7 @@
               "filled": false,
               "tone": 0.3,
               "kind": "path",
-              "d": "M 1.2374 0 Q 1.2712 0.0662 1.3339 0.0264",
+              "d": "M 1.2374 0 L 1.3339 0.0264",
               "region": "canopy-top",
               "material": "polyester-canvas",
               "solid": {
@@ -1958,7 +2076,7 @@
               "filled": false,
               "tone": 0.3,
               "kind": "path",
-              "d": "M 1.2374 0 Q 1.1747 0.0399 1.141 -0.0264",
+              "d": "M 1.2374 0 L 1.141 -0.0264",
               "region": "canopy-top",
               "material": "polyester-canvas",
               "solid": {
@@ -1970,33 +2088,21 @@
               }
             },
             {
-              "id": "stretcher",
+              "id": "stretcher-right",
               "bone": "stretch-right",
-              "role": "detail",
+              "role": "body",
               "z": 2.4,
-              "filled": false,
+              "filled": true,
               "tone": 0.4,
-              "kind": "poly",
-              "points": [
-                [
-                  0.0,
-                  0.0
-                ],
-                [
-                  0.55,
-                  0.0
-                ]
-              ],
-              "closed": false,
+              "kind": "capsule",
               "region": "frame-alu",
               "material": "aluminium-anodised",
-              "solid": {
-                "kind": "revolved",
-                "axisBone": "mast",
-                "axis": "u",
-                "axisX": 0,
-                "mirror": true
-              }
+              "x0": 0,
+              "y0": 1.9574,
+              "x1": 0,
+              "y1": 2.2245,
+              "r0": 0.0075,
+              "r1": 0.0075
             }
           ],
           "plan": [
@@ -2606,12 +2712,12 @@
             {
               "id": "rib-right-scallop-a",
               "bone": "rib-right",
-              "role": "detail",
+              "role": "texture",
               "z": 2.7,
               "filled": false,
               "tone": 0.3,
               "kind": "path",
-              "d": "M 1.2374 0.0000 Q 1.2712 0.0662 1.3339 0.0264",
+              "d": "M 1.2374 0.0000 L 1.3339 0.0264",
               "region": "canopy-top",
               "material": "polyester-canvas",
               "penMm": 0.25
@@ -2619,12 +2725,12 @@
             {
               "id": "rib-right-scallop-b",
               "bone": "rib-right",
-              "role": "detail",
+              "role": "texture",
               "z": 2.7,
               "filled": false,
               "tone": 0.3,
               "kind": "path",
-              "d": "M 1.2374 0.0000 Q 1.1747 0.0399 1.1410 -0.0264",
+              "d": "M 1.2374 0.0000 L 1.1410 -0.0264",
               "region": "canopy-top",
               "material": "polyester-canvas",
               "penMm": 0.25
@@ -2680,12 +2786,12 @@
             {
               "id": "rib-b-scallop-a",
               "bone": "rib-b",
-              "role": "detail",
+              "role": "texture",
               "z": 2.7,
               "filled": false,
               "tone": 0.3,
               "kind": "path",
-              "d": "M 1.2374 -0 Q 1.27218 0.0713 1.38591 0.0434",
+              "d": "M 1.2374 -0 L 1.38591 0.0434",
               "region": "canopy-top",
               "material": "polyester-canvas",
               "penMm": 0.25,
@@ -2699,12 +2805,12 @@
             {
               "id": "rib-b-scallop-b",
               "bone": "rib-b",
-              "role": "detail",
+              "role": "texture",
               "z": 2.7,
               "filled": false,
               "tone": 0.3,
               "kind": "path",
-              "d": "M 1.2374 -0 Q 1.12383 0.0278 1.08889 -0.0434",
+              "d": "M 1.2374 -0 L 1.08889 -0.0434",
               "region": "canopy-top",
               "material": "polyester-canvas",
               "penMm": 0.25,
@@ -2766,12 +2872,12 @@
             {
               "id": "rib-c-scallop-a",
               "bone": "rib-c",
-              "role": "detail",
+              "role": "texture",
               "z": 2.7,
               "filled": false,
               "tone": 0.3,
               "kind": "path",
-              "d": "M 1.2374 0 Q 1.01072 0.008 1.05673 0.0808",
+              "d": "M 1.2374 0 L 1.05673 0.0808",
               "region": "canopy-top",
               "material": "polyester-canvas",
               "penMm": 0.25,
@@ -2785,12 +2891,12 @@
             {
               "id": "rib-c-scallop-b",
               "bone": "rib-c",
-              "role": "detail",
+              "role": "texture",
               "z": 2.7,
               "filled": false,
               "tone": 0.3,
               "kind": "path",
-              "d": "M 1.2374 0 Q 1.19139 -0.0728 1.41807 -0.0808",
+              "d": "M 1.2374 0 L 1.41807 -0.0808",
               "region": "canopy-top",
               "material": "polyester-canvas",
               "penMm": 0.25,
@@ -2852,12 +2958,12 @@
             {
               "id": "rib-d-scallop-a",
               "bone": "rib-d",
-              "role": "detail",
+              "role": "texture",
               "z": 2.7,
               "filled": false,
               "tone": 0.3,
               "kind": "path",
-              "d": "M 1.2374 -0 Q 1.16233 -0.037 1.1266 0.0307",
+              "d": "M 1.2374 -0 L 1.1266 0.0307",
               "region": "canopy-top",
               "material": "polyester-canvas",
               "penMm": 0.283,
@@ -2871,12 +2977,12 @@
             {
               "id": "rib-d-scallop-b",
               "bone": "rib-d",
-              "role": "detail",
+              "role": "texture",
               "z": 2.7,
               "filled": false,
               "tone": 0.3,
               "kind": "path",
-              "d": "M 1.2374 -0 Q 1.27313 -0.0677 1.3482 -0.0307",
+              "d": "M 1.2374 -0 L 1.3482 -0.0307",
               "region": "canopy-top",
               "material": "polyester-canvas",
               "penMm": 0.25,
@@ -2924,12 +3030,12 @@
             {
               "id": "rib-left-scallop-a",
               "bone": "rib-left",
-              "role": "detail",
+              "role": "texture",
               "z": 2.7,
               "filled": false,
               "tone": 0.3,
               "kind": "path",
-              "d": "M 1.2374 0.0000 Q 1.1747 -0.0399 1.1410 0.0264",
+              "d": "M 1.2374 0.0000 L 1.1410 0.0264",
               "region": "canopy-top",
               "material": "polyester-canvas",
               "penMm": 0.25
@@ -2937,12 +3043,12 @@
             {
               "id": "rib-left-scallop-b",
               "bone": "rib-left",
-              "role": "detail",
+              "role": "texture",
               "z": 2.7,
               "filled": false,
               "tone": 0.3,
               "kind": "path",
-              "d": "M 1.2374 0.0000 Q 1.2712 -0.0662 1.3339 -0.0264",
+              "d": "M 1.2374 0.0000 L 1.3339 -0.0264",
               "region": "canopy-top",
               "material": "polyester-canvas",
               "penMm": 0.25
@@ -2998,12 +3104,12 @@
             {
               "id": "rib-f-scallop-a",
               "bone": "rib-f",
-              "role": "detail",
+              "role": "texture",
               "z": 2.7,
               "filled": false,
               "tone": 0.3,
               "kind": "path",
-              "d": "M 1.2374 -0 Q 1.12383 -0.0278 1.08889 0.0434",
+              "d": "M 1.2374 -0 L 1.08889 0.0434",
               "region": "canopy-top",
               "material": "polyester-canvas",
               "penMm": 0.25,
@@ -3017,12 +3123,12 @@
             {
               "id": "rib-f-scallop-b",
               "bone": "rib-f",
-              "role": "detail",
+              "role": "texture",
               "z": 2.7,
               "filled": false,
               "tone": 0.3,
               "kind": "path",
-              "d": "M 1.2374 -0 Q 1.27218 -0.0713 1.38591 -0.0434",
+              "d": "M 1.2374 -0 L 1.38591 -0.0434",
               "region": "canopy-top",
               "material": "polyester-canvas",
               "penMm": 0.25,
@@ -3084,12 +3190,12 @@
             {
               "id": "rib-g-scallop-a",
               "bone": "rib-g",
-              "role": "detail",
+              "role": "texture",
               "z": 2.7,
               "filled": false,
               "tone": 0.3,
               "kind": "path",
-              "d": "M 1.2374 0 Q 1.19139 0.0728 1.41807 0.0808",
+              "d": "M 1.2374 0 L 1.41807 0.0808",
               "region": "canopy-top",
               "material": "polyester-canvas",
               "penMm": 0.25,
@@ -3103,12 +3209,12 @@
             {
               "id": "rib-g-scallop-b",
               "bone": "rib-g",
-              "role": "detail",
+              "role": "texture",
               "z": 2.7,
               "filled": false,
               "tone": 0.3,
               "kind": "path",
-              "d": "M 1.2374 0 Q 1.01072 -0.008 1.05673 -0.0808",
+              "d": "M 1.2374 0 L 1.05673 -0.0808",
               "region": "canopy-top",
               "material": "polyester-canvas",
               "penMm": 0.25,
@@ -3170,12 +3276,12 @@
             {
               "id": "rib-h-scallop-a",
               "bone": "rib-h",
-              "role": "detail",
+              "role": "texture",
               "z": 2.7,
               "filled": false,
               "tone": 0.3,
               "kind": "path",
-              "d": "M 1.2374 0 Q 1.27313 0.0677 1.3482 0.0307",
+              "d": "M 1.2374 0 L 1.3482 0.0307",
               "region": "canopy-top",
               "material": "polyester-canvas",
               "penMm": 0.25,
@@ -3189,12 +3295,12 @@
             {
               "id": "rib-h-scallop-b",
               "bone": "rib-h",
-              "role": "detail",
+              "role": "texture",
               "z": 2.7,
               "filled": false,
               "tone": 0.3,
               "kind": "path",
-              "d": "M 1.2374 0 Q 1.16233 0.037 1.1266 -0.0307",
+              "d": "M 1.2374 0 L 1.1266 -0.0307",
               "region": "canopy-top",
               "material": "polyester-canvas",
               "penMm": 0.283,
@@ -3515,11 +3621,81 @@
               "z": 2,
               "filled": true,
               "tone": 0.82,
-              "kind": "path",
-              "d": "M 0 0 C 0.3465 0.115 0.8909 0.1035 1.2374 0 L 1.3339 0.0264 Z",
+              "kind": "poly",
               "region": "canopy-top",
               "material": "polyester-canvas",
               "penMm": 0.5,
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.06719,
+                  0.02009
+                ],
+                [
+                  0.13844,
+                  0.03726
+                ],
+                [
+                  0.21318,
+                  0.05157
+                ],
+                [
+                  0.2908,
+                  0.06306
+                ],
+                [
+                  0.37074,
+                  0.07179
+                ],
+                [
+                  0.45244,
+                  0.07781
+                ],
+                [
+                  0.53528,
+                  0.08117
+                ],
+                [
+                  0.6187,
+                  0.08192
+                ],
+                [
+                  0.70213,
+                  0.0801
+                ],
+                [
+                  0.78498,
+                  0.07578
+                ],
+                [
+                  0.86666,
+                  0.06901
+                ],
+                [
+                  0.94661,
+                  0.05981
+                ],
+                [
+                  1.02423,
+                  0.04826
+                ],
+                [
+                  1.09896,
+                  0.0344
+                ],
+                [
+                  1.17021,
+                  0.01828
+                ],
+                [
+                  1.23741,
+                  -4e-05
+                ]
+              ],
+              "closed": true,
               "solid": {
                 "kind": "revolved",
                 "axisBone": "mast",
@@ -3569,7 +3745,7 @@
             {
               "id": "rib-front",
               "bone": "rib-right",
-              "role": "body",
+              "role": "texture",
               "z": 2.5,
               "filled": true,
               "tone": 0.35,
@@ -3582,7 +3758,7 @@
               "r1": 0.007,
               "region": "frame-alu",
               "material": "aluminium-anodised",
-              "penMm": 0.4,
+              "penMm": 0.1,
               "solid": {
                 "kind": "revolved",
                 "axisBone": "mast",
@@ -3594,7 +3770,7 @@
             {
               "id": "rib-front-tip",
               "bone": "rib-right",
-              "role": "detail",
+              "role": "texture",
               "z": 2.6,
               "filled": true,
               "tone": 0.2,
@@ -3617,7 +3793,7 @@
             {
               "id": "rib-oblique-b",
               "bone": "rib-b",
-              "role": "body",
+              "role": "texture",
               "z": 2.5,
               "filled": true,
               "tone": 0.35,
@@ -3630,7 +3806,7 @@
               "r1": 0.007,
               "region": "frame-alu",
               "material": "aluminium-anodised",
-              "penMm": 0.25,
+              "penMm": 0.1,
               "solid": {
                 "kind": "revolved",
                 "axisBone": "mast",
@@ -3642,7 +3818,7 @@
             {
               "id": "rib-oblique-b-tip",
               "bone": "rib-b",
-              "role": "detail",
+              "role": "texture",
               "z": 2.6,
               "filled": true,
               "tone": 0.2,
@@ -3665,7 +3841,7 @@
             {
               "id": "rib-oblique-d",
               "bone": "rib-d",
-              "role": "body",
+              "role": "texture",
               "z": 2.5,
               "filled": true,
               "tone": 0.35,
@@ -3678,7 +3854,7 @@
               "r1": 0.007,
               "region": "frame-alu",
               "material": "aluminium-anodised",
-              "penMm": 0.25,
+              "penMm": 0.1,
               "solid": {
                 "kind": "revolved",
                 "axisBone": "mast",
@@ -3690,7 +3866,7 @@
             {
               "id": "rib-oblique-d-tip",
               "bone": "rib-d",
-              "role": "detail",
+              "role": "texture",
               "z": 2.6,
               "filled": true,
               "tone": 0.2,
@@ -3713,12 +3889,12 @@
             {
               "id": "scallop-a",
               "bone": "rib-right",
-              "role": "detail",
+              "role": "texture",
               "z": 2.7,
               "filled": false,
               "tone": 0.3,
               "kind": "path",
-              "d": "M 1.2374 0.0000 Q 1.2712 0.0662 1.3339 0.0264",
+              "d": "M 1.2374 0.0000 L 1.3339 0.0264",
               "region": "canopy-top",
               "material": "polyester-canvas",
               "penMm": 0.25,
@@ -3733,12 +3909,12 @@
             {
               "id": "scallop-b",
               "bone": "rib-right",
-              "role": "detail",
+              "role": "texture",
               "z": 2.7,
               "filled": false,
               "tone": 0.3,
               "kind": "path",
-              "d": "M 1.2374 0.0000 Q 1.1747 0.0399 1.1410 -0.0264",
+              "d": "M 1.2374 0.0000 L 1.1410 -0.0264",
               "region": "canopy-top",
               "material": "polyester-canvas",
               "penMm": 0.25,
@@ -3751,7 +3927,7 @@
               }
             },
             {
-              "id": "stretcher",
+              "id": "stretcher-right",
               "bone": "stretch-right",
               "role": "body",
               "z": 2.4,
@@ -3759,20 +3935,13 @@
               "tone": 0.4,
               "kind": "capsule",
               "x0": 0,
-              "y0": 0,
-              "x1": 0.55,
-              "y1": 0,
+              "y0": 1.9574,
+              "x1": 0,
+              "y1": 2.2245,
               "r0": 0.006,
               "r1": 0.006,
               "region": "frame-alu",
-              "material": "aluminium-anodised",
-              "solid": {
-                "kind": "revolved",
-                "axisBone": "mast",
-                "axis": "u",
-                "axisX": 0,
-                "mirror": true
-              }
+              "material": "aluminium-anodised"
             }
           ],
           "plan": [

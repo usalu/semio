@@ -22,7 +22,7 @@ export type ComponentProfilePolicyV1 = Readonly<{ directory: string; maximumByte
 /** 📏️ The schema-owned profile policy table (`ComponentProfilePolicies`). */
 export const COMPONENT_PROFILE_POLICIES = Object.freeze(Object.fromEntries(Object.entries(schema.$defs.ComponentProfilePolicies.const).map(([profile, policy]) => [profile, Object.freeze({ directory: policy.directory, maximumBytes: policy.maximumBytes, shipped: policy.shipped })]))) as Readonly<Record<ComponentProfileV1, ComponentProfilePolicyV1>>;
 
-/** 🧱️ The 256 MiB bound every shipped component meets before it reaches a receipt. */
+/** 🧱️ The 1 GiB bound (the browser engines' WebAssembly module size limit) every shipped component meets before it reaches a receipt. */
 export const SHIPPED_COMPONENT_MAX_BYTES = COMPONENT_PROFILE_POLICIES["release"].maximumBytes;
 
 /** 🧯️ The local-only 512 MiB cap of an unoptimized, unstripped `prototype` link. */

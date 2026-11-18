@@ -107,14 +107,14 @@ export function courseSiteTopology(proctorOrigin: string): CourseSiteTopology {
 }
 
 /** 📑️ `_headers` for CDNs that honour it (Cloudflare Pages, Netlify): every response hardened (the frame ban a `meta`
- * policy cannot carry included), hashed assets immutable, documents revalidated. No two rules set the same header for
+ * policy cannot carry included: other origins never frame the site, but its own pages frame its assignment PDFs), hashed assets immutable, documents revalidated. No two rules set the same header for
  * one path, because those CDNs join the values of every matching rule. GitHub Pages ignores the file. */
 export const COURSE_SITE_HEADERS =
   [
     "/*",
     "  X-Content-Type-Options: nosniff",
-    "  X-Frame-Options: DENY",
-    "  Content-Security-Policy: frame-ancestors 'none'",
+    "  X-Frame-Options: SAMEORIGIN",
+    "  Content-Security-Policy: frame-ancestors 'self'",
     "  Referrer-Policy: no-referrer",
     "/assets/*",
     "  Cache-Control: public, max-age=31536000, immutable",

@@ -4,7 +4,8 @@ import { repositoryCachePartitionRootDataV1 } from "../../../../🧰️framework
 import {flowBrowserDeliveryV1} from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/📋️contract/🟦️.ts";
 import {defineOwnedBuildConfigFactory,uiReactBuildPlugin,uiTailwindBuildPlugins} from "../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🛠️build-tooling/🟦️.ts";
 import {runtimeAssetDeliveries} from "../../../../🧰️framework/🔨️modules/🖼️canvas/📦️packages/🟦️typescript/🔌️runtime-assets/🟦️.ts";
-import { canonicalWasmBuildVitePlugin, viteCacheDirectory } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
+import { canonicalWasmBuildVitePlugin } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/⚡️caching/🌐️vite/🕸️wasm/🟦️.ts";
+import { viteCacheDirectory } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/⚡️caching/🌐️vite/📂️paths/🟦️.ts";
 import { buildModePolicy, readBuildMode } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { builtPluginModulesRootIn } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/♻️activation/🟦️.ts";
 import path from "node:path";
@@ -28,7 +29,7 @@ import { playGisMapTileServeMode } from "../../🔨️modules/📦️site/🗺�
 import { playDevStaticDirMounts } from "../../🔨️modules/🧩️runtime/📦️assets/🟦️.ts";
 import { playActivationComponents, playExtensionDirectory, readPlayActivation } from "../../🔨️modules/🧩️runtime/♻️activation/🟦️.ts";
 import { playUnionReceiptVitePlugin } from "../../🔨️modules/🧩️runtime/♻️activation/🌐️vite/🟦️.ts";
-import { PLAY_HOST, PLAY_RUNTIME_TARGETS, playRuntimeModuleLayout } from "../../🔨️modules/🧩️runtime/🟦️.ts";
+import { PLAY_HOST, playRuntimeModuleLayout, playScopeTargets } from "../../🔨️modules/🧩️runtime/🟦️.ts";
 import { playPageOrigins } from "../../🔨️modules/📦️site/📄pages/🟦️.ts";
 
 const playDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -38,15 +39,14 @@ const repoRoot = path.resolve(playDir, "../..");
 const FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE = ["@semio-tech/framework-surface-rs", "@semio-tech/framework-editor-rs", "@semio-tech/framework-os-node-graph-rs", "@semio-tech/puzzle-wasm", "@semio-tech/flow-core"];
 
 /** 🎡️ Static assets every pane declares (meshes, map tiles, CAD examples). */
-const pane = process.env.SEMIO_TECH_PLAY_PANE;
-const runtimeTargets = pane === undefined ? PLAY_RUNTIME_TARGETS : PLAY_RUNTIME_TARGETS.filter(target => target.variant === pane);
-if (runtimeTargets.length === 0) throw new Error(`Unknown Play pane: ${pane}`);
-const engineFacet = pane === undefined ? "play" : "renderer";
+const scope = process.env.SEMIO_TECH_PLAY_SCOPE;
+const runtimeTargets = playScopeTargets(scope);
+const engineFacet = scope === undefined ? "play" : "renderer";
 const resolvedPlaygroundAssets = runtimeTargets.flatMap(target => target.assets);
 const { extensionModuleDirNames } = playRuntimeModuleLayout(runtimeTargets);
 
 export default defineOwnedBuildConfigFactory(({ command, mode }) => {
-  const development = command === "serve" ? readPlayActivation(repoRoot, pane) : undefined;
+  const development = command === "serve" ? readPlayActivation(repoRoot, scope) : undefined;
   const pluginModulesDir = builtPluginModulesRootIn(repoRoot, readBuildMode(mode));
   const installedExtensionsDir = development?.extensionsDirectory ?? pluginModulesDir;
   const extensionDir = (name: string): string => playExtensionDirectory(name, pluginModulesDir, development?.extensionDirectories);
@@ -57,7 +57,7 @@ export default defineOwnedBuildConfigFactory(({ command, mode }) => {
     publicDir: path.join(playDir, "🌐️public"),
     assetsInclude: ["**/*.wasm"],
     worker: { format: "es" },
-    define: { "import.meta.vitest": "undefined", ...(command === "build" ? { "import.meta.env.SEMIO_PLAY_PAGE_ORIGINS": JSON.stringify(JSON.stringify(playPageOrigins(PLAY_HOST))) } : {}) },
+    define: { "import.meta.vitest": "undefined", "import.meta.env.SEMIO_TECH_PLAY_SCOPE": JSON.stringify(scope ?? ""), ...(command === "build" ? { "import.meta.env.SEMIO_PLAY_PAGE_ORIGINS": JSON.stringify(JSON.stringify(playPageOrigins(PLAY_HOST))) } : {}) },
     resolve: {
       alias: [
         ...playgroundSceneHostResolveAliases(repoRoot),
@@ -92,7 +92,7 @@ export default defineOwnedBuildConfigFactory(({ command, mode }) => {
       playgroundFlowWasmDevStubPlugin(repoRoot,flowBrowserDeliveryV1(repoRoot,repositoryCachePartitionRootDataV1(repoRoot,"products"),{version:1,mode:readBuildMode(mode),command})),
       semioBackboneVitePlugin(),
       semioBlobVitePlugin(),
-      ...(development && pane === undefined ? [playUnionReceiptVitePlugin({ workspace: repoRoot })] : []),
+      ...(development && scope === undefined ? [playUnionReceiptVitePlugin({ workspace: repoRoot })] : []),
       ...(development ? [semioActivationVitePlugin({ receiptDirectory: development.receiptDirectory, moduleRoot: pluginModulesDir, installRoot: installedExtensionsDir, components: playActivationComponents(repoRoot, development.extensionDirectories, development.receipt.plugins.map(plugin => plugin.pluginId)) })] : []),
       ...(command === "serve" ? [semioExtensionStoreVitePlugin({ installRoot: installedExtensionsDir, repoRoot, streams: devStreamMuxServer })] : []),
       ...semioAssetsVitePlugin(repoRoot),

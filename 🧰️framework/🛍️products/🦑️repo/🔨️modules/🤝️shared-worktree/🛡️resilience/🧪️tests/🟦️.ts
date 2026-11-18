@@ -7,7 +7,7 @@ import {testPythonV1} from "../../../../../../🔨️modules/🏃️process/📦
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import {codeDigestV1} from "../../🩺️attest/🟦️.ts";
-import {codeDirectoryV1,createFailuresV1,createStoreGuardV1,healthPathV1,importClosureV1,listCodeSnapshotsV1,moduleSourcesV1,pruneCodeSnapshotsV1,pruneLostV1,readHealthV1,requireResilienceShapeV1,restartJitterMillisecondsV1,rotateLogV1,runSelfCheckV1,sealCodeV1,selfCheckV1,StoreStalledV1,textsProblemV1,verifyCodeSnapshotV1,writeHealthV1,type StoreStateV1} from "../🟦️.ts";
+import {codeDirectoryV1,createFailuresV1,noteRefusedPathV1,NO_REFUSED_PATHS_V1,readRefusedPathsV1,refusedPathsPathV1,REFUSED_PATH_LIMIT_V1,writeRefusedPathsV1,createStoreGuardV1,healthPathV1,importClosureV1,listCodeSnapshotsV1,moduleSourcesV1,pruneCodeSnapshotsV1,pruneLostV1,readHealthV1,requireResilienceShapeV1,restartJitterMillisecondsV1,rotateLogV1,runSelfCheckV1,sealCodeV1,selfCheckV1,StoreStalledV1,textsProblemV1,verifyCodeSnapshotV1,writeHealthV1,type StoreStateV1} from "../🟦️.ts";
 
 import {activityNamesV1,activityV1,blockedFailuresV1,installBootStageV1,listStoreCodeV1,publishCodeSnapshotV1,pruneStoreCodeV1,readBeatV1,readFallbackV1,storeCodeDirectoryV1,verifyCodeSnapshotV1,yieldingV1} from "../🟦️.ts";
 import {createHash} from "node:crypto";
@@ -414,4 +414,28 @@ test.skipIf(process.platform==="win32")("a seal records the execute bit of every
  expect((await sealCodeV1({root,moduleRoot,digest,digestOf})).created).toBe(true);
  expect(bits()).toEqual({"m/a/🟦️.ts":false,"m/b/📜️script.ts":false});
  expect(() => requireResilienceShapeV1("SealedCode",{version:1,digest,createdMs:1,moduleRoot:"m",files:[{path:"m/a/🟦️.ts",bytes:1,sha256:digest}]},"seal")).toThrow();
+});
+
+test("the refused-path record keeps the 200 newest distinct paths exactly like an independent model, survives a write and a read, and rejects a torn or oversized file",async()=>{
+ let seed=7;const next=():number=>{seed=(Math.imul(seed,1103515245)+12345)>>>0;return seed;};
+ let record=NO_REFUSED_PATHS_V1;const model:{path:string;reason:string;wallMs:number}[]=[];let total=0;
+ for(let step=0;step<1500;step++){
+  const path=`tickets/${(next()>>>8)%350}/file.txt`,reason=["too-long","illegal-character","unsafe-link"][(next()>>>8)%3]!,wallMs=1_000+step;
+  record=noteRefusedPathV1(record,path,reason,wallMs);
+  const index=model.findIndex(item=>item.path===path);
+  if(index>=0)model.splice(index,1);else total++;
+  model.push({path,reason,wallMs});
+  if(model.length>REFUSED_PATH_LIMIT_V1)model.shift();
+ }
+ expect(record.recent).toEqual(model);expect(record.total).toBe(total);expect(record.recent.length).toBe(REFUSED_PATH_LIMIT_V1);
+ expect(NO_REFUSED_PATHS_V1).toEqual({version:1,total:0,recent:[]});
+ const root=temp("refusals");
+ expect(await readRefusedPathsV1(root)).toBeUndefined();
+ await writeRefusedPathsV1(root,record);
+ expect(await readRefusedPathsV1(root)).toEqual(record);
+ writeFileSync(refusedPathsPathV1(root),"{\"version\":1,\"total\":");
+ expect(await readRefusedPathsV1(root)).toBeUndefined();
+ expect(()=>requireResilienceShapeV1("RefusedPaths",{version:1,total:0,recent:Array.from({length:201},(_,index)=>({path:`p${index}`,reason:"too-long",wallMs:1}))},"x")).toThrow();
+ expect(()=>requireResilienceShapeV1("RefusedPaths",{version:1,total:0,recent:[{path:"",reason:"too-long",wallMs:1}]},"x")).toThrow();
+ expect(noteRefusedPathV1(NO_REFUSED_PATHS_V1,"p".repeat(5000),"r".repeat(500),1).recent[0]).toEqual({path:"p".repeat(4096),reason:"r".repeat(200),wallMs:1});
 });

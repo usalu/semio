@@ -16,6 +16,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
+import { Button, SharedBorderRow } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useCallback, useMemo, useState, type ReactElement } from "react";
 
@@ -68,22 +69,22 @@ function Fem2dModelStoryHost({ initialExampleId, locale }: { readonly initialExa
 
   return (
     <div style={{ display: "flex", height: "100%", width: "100%", flexDirection: "column" }}>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 4, padding: 4 }}>
-        <button type="button" data-testid="fem2d-load-example" onClick={() => dispatch("setActiveExample", { exampleId: FEM2D_STORY_EXAMPLE_ID })}>
+      <SharedBorderRow wrap>
+        <Button variant="outline" icon="arrow-right" type="button" data-testid="fem2d-load-example" onClick={() => dispatch("setActiveExample", { exampleId: FEM2D_STORY_EXAMPLE_ID })}>
           {femStoryLabel("loadExample", state.locale)}
-        </button>
-        <button type="button" data-testid="fem2d-clear-example" onClick={() => dispatch("setActiveExample", { exampleId: FEM2D_CLEARED_EXAMPLE_ID })}>
+        </Button>
+        <Button variant="outline" icon="arrow-right" type="button" data-testid="fem2d-clear-example" onClick={() => dispatch("setActiveExample", { exampleId: FEM2D_CLEARED_EXAMPLE_ID })}>
           {femStoryLabel("clearExample", state.locale)}
-        </button>
-        <button type="button" data-testid="fem2d-add-node" onClick={() => dispatch("addNode", { x: 4, y: 9 })}>
+        </Button>
+        <Button variant="outline" icon="arrow-right" type="button" data-testid="fem2d-add-node" onClick={() => dispatch("addNode", { x: 4, y: 9 })}>
           {femStoryLabel("addNode", state.locale)}
-        </button>
+        </Button>
         {FEM_STORY_LOCALES.map((tag) => (
-          <button key={tag} type="button" data-testid={`fem2d-set-locale-${tag}`} aria-pressed={state.locale === tag} onClick={() => setState((current) => ({ ...current, locale: tag }))}>
+          <Button variant="outline" icon="arrow-right" key={tag} type="button" data-testid={`fem2d-set-locale-${tag}`} aria-pressed={state.locale === tag} onClick={() => setState((current) => ({ ...current, locale: tag }))}>
             {femStoryLabel("language", state.locale)}: {tag}
-          </button>
+          </Button>
         ))}
-      </div>
+      </SharedBorderRow>
       <div style={{ position: "relative", flex: "1 1 auto", minHeight: 0 }} data-testid="fem2d-model-canvas">
         <Canvas2dHost node={node} onAction={onAction} />
       </div>

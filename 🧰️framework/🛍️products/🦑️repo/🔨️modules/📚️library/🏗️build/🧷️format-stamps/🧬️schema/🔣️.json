@@ -98,6 +98,12 @@
           ]
         },
         "reexecutionEnvironment": "SEMIO_STALE_REEXEC",
+        "movedLiveEnvironment": "SEMIO_STALE_REEXEC_LIVE",
+        "movedSinceEnvironment": "SEMIO_STALE_REEXEC_SINCE",
+        "movedPatienceMilliseconds": 1800000,
+        "movedProgressMilliseconds": 60000,
+        "movedFollowMaximum": 30,
+        "movedFollowedEnvironment": "SEMIO_STALE_REEXEC_FOLLOWED",
         "causeEnvironment": "SEMIO_STALE_REEXEC_CAUSE",
         "admissionGuardRegistry": "semio.resourceLeaseAdmissionGuards.v1",
         "maximumSchemaBytes": 1048576,

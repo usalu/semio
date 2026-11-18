@@ -1,0 +1,63 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-hub-norm-eurocode-materials-component"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "The `norm-eurocode-materials` plugin component: the one cdylib of `semio-hub-norm-eurocode-materials`, holding only its entry point"
+
+[lints]
+workspace = true
+
+[package.metadata.component]
+package = "semio:norm-eurocode-materials"
+
+[package.metadata.semio]
+role = "hub"
+deployment-directory = "📙️norm-eurocode-materials"
+component-kind = "plugin"
+
+[[package.metadata.semio.playground]]
+variant = "en1992"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
+app = "s.norm.en1992@1/*#editor"
+ports = { react = 6096, wgpu = 6196 }
+
+[[package.metadata.semio.playground]]
+variant = "en1993"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
+app = "s.norm.en1993@1/*#editor"
+ports = { react = 6097, wgpu = 6197 }
+
+[[package.metadata.semio.playground]]
+variant = "en1994"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
+app = "s.norm.en1994@1/*#editor"
+ports = { react = 6098, wgpu = 6198 }
+
+[[package.metadata.semio.playground]]
+variant = "en1995"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
+app = "s.norm.en1995@1/*#editor"
+ports = { react = 6099, wgpu = 6199 }
+
+[[package.metadata.semio.playground]]
+variant = "en1996"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
+app = "s.norm.en1996@1/*#editor"
+ports = { react = 6100, wgpu = 6200 }
+
+[[package.metadata.semio.playground]]
+variant = "en1999"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
+app = "s.norm.en1999@1/*#editor"
+ports = { react = 6103, wgpu = 6203 }
+
+[lib]
+crate-type = ["cdylib"]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-pack = { path = "../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
+semio-hub-norm-eurocode-materials = { path = "../../../📦️packages/🦀️rust" }
+semio-plugin = { workspace = true }

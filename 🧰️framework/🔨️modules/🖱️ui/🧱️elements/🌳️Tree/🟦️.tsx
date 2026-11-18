@@ -39,6 +39,7 @@ import { getTreeItemOrderedIds } from "./🎨️chrome/🟦️.tsx";
 import { getTreeDropData } from "./📄️row/🟦️.tsx";
 import { useTreeHoverPathRootHandlers, useTreeSelectionPathSync } from "./🧷️path-marking/🟦️.ts";
 import { TreeHoverPathRefreshContext } from "./🌲️branch/🟦️.tsx";
+import { useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
 import { type TreeComponent, TreeDataSectionView } from "./🪢️views/🟦️.tsx";
 
 /** 👆️ The row height of a `touch` tree: 44 px (WCAG 2.5.5), the twin of the Rust `TREE_ROW_TOUCH_MIN_PX`; a theme whose workbench row is taller keeps it. */
@@ -579,7 +580,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({ node, currentPath, onNaviga
   const hasChildren = node.children && node.children.length > 0;
   const Icon = node.isFolder ? FolderIcon : DocumentIcon;
 
-  const baseClasses = "flex items-center gap-single text-sm rounded-small cursor-selectable select-none transition-colors hover:bg-hover-interactive-fill";
+  const baseClasses = "flex items-center gap-single py-single pe-medium text-sm cursor-selectable select-none transition-colors hover:bg-hover-interactive-fill";
   const stateClasses = isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-emphasized";
   const itemClasses = `${baseClasses} ${stateClasses}`;
   const handleClick = (e: React.MouseEvent) => {
@@ -601,6 +602,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({ node, currentPath, onNaviga
 
   const sharedProps = {
     className: itemClasses,
+    "data-shared-border-cell": "",
     style: { paddingInlineStart: `${detailPanelIndentPx(level, indentMultiplier) + 12}px` },
     onClick: handleClick,
   };
@@ -633,16 +635,19 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({ node, currentPath, onNaviga
 };
 
 const TreeFiles: React.FC<TreeFilesProps> = ({ title, nodes, currentPath, onNavigate, as = "a", className = "" }) => {
+  const frameRef = useSharedBorderFrameRef<HTMLDivElement>();
   return (
     <TreeStateProvider>
-      <div className={`not-prose my-medium p-medium rounded-lg border bg-card ${className}`}>
-        {title && <h3 className="text-lg font-semibold mb-4">{title}</h3>}
+      <div ref={frameRef} data-slot="tree-files" data-shared-border-frame="" data-shared-border-edges="top right bottom left" data-orientation="vertical" className={`not-prose relative flex flex-col border bg-card ${className}`}>
+        {title && (
+          <h3 data-shared-border-cell="" className="text-lg font-semibold p-medium">
+            {title}
+          </h3>
+        )}
         <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: false, isTree: true, indentMultiplier: 1 }}>
-          <div className="flex flex-col gap-single">
-            {nodes.map((node, idx) => (
-              <FileTreeItem key={idx} node={node} currentPath={currentPath} onNavigate={onNavigate} as={as} />
-            ))}
-          </div>
+          {nodes.map((node, idx) => (
+            <FileTreeItem key={idx} node={node} currentPath={currentPath} onNavigate={onNavigate} as={as} />
+          ))}
         </TreeContext.Provider>
       </div>
     </TreeStateProvider>

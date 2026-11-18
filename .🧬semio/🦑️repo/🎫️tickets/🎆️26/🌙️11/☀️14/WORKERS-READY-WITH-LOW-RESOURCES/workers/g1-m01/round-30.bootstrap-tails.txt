@@ -1,0 +1,42 @@
+
+##### try 2 native_rc=1: last 40 lines of the bootstrap log
+Reading the project graph slice (1113 s).
+Reading the project graph slice (1115 s).
+Reading the project graph slice (1117 s).
+Reading the project graph slice (1119 s).
+Reading the project graph slice (1121 s).
+Reading the project graph slice (1123 s).
+Reading the project graph slice (1125 s).
+Reading the project graph slice (1127 s).
+Reading the project graph slice (1129 s).
+Reading the project graph slice (1131 s).
+Reading the project graph slice (1133 s).
+Reading the project graph slice (1135 s).
+[repo] still working after 1190 s; last phase started: door.script
+Reading the project graph slice (1137 s).
+Reading the project graph slice (1139 s).
+Reading the project graph slice (1141 s).
+Reading the project graph slice (1143 s).
+Reading the project graph slice (1145 s).
+Reading the project graph slice (1147 s).
+Reading the project graph slice (1149 s).
+Reading the project graph slice (1151 s).
+Reading the project graph slice (1153 s).
+Reading the project graph slice (1155 s).
+Reading the project graph slice (1157 s).
+Reading the project graph slice (1159 s).
+Reading the project graph slice (1161 s).
+Reading the project graph slice (1163 s).
+Reading the project graph slice (1165 s).
+[repo] still working after 1220 s; last phase started: door.script
+Reading the project graph slice (1167 s).
+Reading the project graph slice (1169 s).
+Reading the project graph slice (1171 s).
+Reading the project graph slice (1173 s).
+Reading the project graph slice (1175 s).
+Reading the project graph slice (1177 s).
+Reading the project graph slice (1179 s).
+Reading the project graph slice (1181 s).
+The resident service met an unexpected failure (reference bd0b2e16); try again, the details under that reference are in the service log /var/folders/gd/byw98s3s0p95zhdpzyv769740000gn/T/semio-repo/501/host-f13cda8149a9.log.
+end 2026-11-15T20:29:36Z
+native_rc=1

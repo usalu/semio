@@ -72,7 +72,7 @@ fn clicking_a_window_focuses_its_first_widget_and_names_the_window() {
     tui.render_full();
     let (second, second_window) = (widgets[1], built.windows[1].1);
     let rect = tui.scene.rect(second_window);
-    let signals = tui.dispatch(&down(rect.x + 1, rect.y + rect.height - 1));
+    let signals = tui.dispatch(&down(rect.x + rect.width - 1, rect.y + rect.height / 2));
     assert_eq!(tui.focus(), Some(second), "the wall of a window focuses the widget inside it");
     assert_eq!(signals, vec![(second_window, WidgetSignal::WindowFocus)]);
     assert_eq!(tui.focused_window(), Some(second_window));
@@ -347,7 +347,9 @@ fn dragging_a_tab_between_groups_previews_and_commits_a_docking_signal() {
     assert_eq!(semio_ui_tui_frame::chrome::window_tab_rect(state, tui.scene.rect(source), state.active_stack_tab), Some(preview));
     for yy in preview.y..preview.y + preview.height {
         for xx in preview.x..preview.x + preview.width {
-            assert_eq!(ghost.get(xx, yy).unwrap().ch, tui.frame().get(xx, yy).unwrap().ch);
+            let (ghost_ch, final_ch) = (ghost.get(xx, yy).unwrap().ch, tui.frame().get(xx, yy).unwrap().ch);
+            let junction = |ch: char| "─│┌┐└┘├┤┬┴┼".contains(ch);
+            assert!(ghost_ch == final_ch || (junction(ghost_ch) && junction(final_ch)), "the ghost shows the chip the commit paints; only shared-border junction glyphs may differ: {ghost_ch:?} vs {final_ch:?} at {xx},{yy}");
         }
     }
 }

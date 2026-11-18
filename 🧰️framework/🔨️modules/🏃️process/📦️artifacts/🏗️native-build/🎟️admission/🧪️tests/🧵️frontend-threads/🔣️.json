@@ -159,6 +159,76 @@
     "opt-level=0",
     "threads=0.rs"
    ]
+  },
+  {
+   "id": "cdylib-final-separate",
+   "args": [
+    "--crate-type",
+    "cdylib",
+    "-Z",
+    "threads=0",
+    "a.rs"
+   ],
+   "tokens": 8,
+   "note": "a cdylib final gets one front-end thread whatever the grant",
+   "expected": [
+    "--crate-type",
+    "cdylib",
+    "-Z",
+    "threads=1",
+    "a.rs"
+   ]
+  },
+  {
+   "id": "cdylib-final-joined",
+   "args": [
+    "--crate-type=cdylib",
+    "-Zthreads=4",
+    "a.rs"
+   ],
+   "tokens": 8,
+   "note": "the joined crate-type spelling is a cdylib final too",
+   "expected": [
+    "--crate-type=cdylib",
+    "-Zthreads=1",
+    "a.rs"
+   ]
+  },
+  {
+   "id": "lib-keeps-grant",
+   "args": [
+    "--crate-type",
+    "lib",
+    "-Z",
+    "threads=0",
+    "a.rs"
+   ],
+   "tokens": 8,
+   "note": "a library keeps the admitted grant",
+   "expected": [
+    "--crate-type",
+    "lib",
+    "-Z",
+    "threads=8",
+    "a.rs"
+   ]
+  },
+  {
+   "id": "cdylib-no-grant",
+   "args": [
+    "--crate-type",
+    "cdylib",
+    "-Z",
+    "threads=0"
+   ],
+   "tokens": null,
+   "note": "without a grant nothing changes, a cdylib final included",
+   "expected": [
+    "--crate-type",
+    "cdylib",
+    "-Z",
+    "threads=0"
+   ]
   }
  ]
 }

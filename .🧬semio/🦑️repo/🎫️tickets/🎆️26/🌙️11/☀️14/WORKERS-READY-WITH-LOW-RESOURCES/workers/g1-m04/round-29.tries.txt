@@ -1,0 +1,9 @@
+try 1: start 2026-11-15T15:22:59Z end 2026-11-15T15:28:02Z native_rc=7 ended at 2026-11-15T15:29:02Z peak_rss_kib=9482796 slice_peak_mb=9243 stop=process of the run above 8 GB resident (9484696 KiB)
+try 2: start 2026-11-15T15:34:02Z end 2026-11-15T15:39:05Z native_rc=7 ended at 2026-11-15T15:40:05Z peak_rss_kib=9288616 slice_peak_mb=9064 stop=process of the run above 8 GB resident (9288580 KiB)
+try 3: start 2026-11-15T15:45:05Z end 2026-11-15T15:50:08Z native_rc=7 ended at 2026-11-15T15:51:08Z peak_rss_kib=8688340 slice_peak_mb=8473 stop=process of the run above 8 GB resident (8708332 KiB)
+try 4: start 2026-11-15T15:56:08Z end 2026-11-15T16:07:45Z native_rc=1 ended at 2026-11-15T16:07:46Z peak_rss_kib=6168928 slice_peak_mb=7404 stop=none
+try 5: start 2026-11-15T16:12:46Z end 2026-11-15T16:32:45Z native_rc=1 ended at 2026-11-15T16:32:49Z peak_rss_kib=6945064 slice_peak_mb=7815 stop=none
+try 6: start 2026-11-15T16:37:49Z end 2026-11-15T16:48:56Z native_rc=1 ended at 2026-11-15T16:49:01Z peak_rss_kib=6526032 slice_peak_mb=8977 stop=none
+try 7: start 2026-11-15T16:54:01Z end 2026-11-15T18:46:08Z native_rc=1 ended at 2026-11-15T18:46:10Z peak_rss_kib=6875716 slice_peak_mb=9347 stop=none
+ROUND.md names round 30
+round 29 finished at 2026-11-15T18:46:11Z

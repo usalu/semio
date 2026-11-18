@@ -310,7 +310,7 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
       body.style.paddingBottom = paddingBottom;
       setFusionOffsets((previous) => contextMenuFusionOffsetsEqual(previous, next) ? previous : next);
       chrome.style.left = `${position.x}px`;
-      chrome.style.top = `calc(${position.y}px - var(--size-medium))`;
+      chrome.style.top = `calc(${position.y}px - var(--chip-row-height))`;
       const rect = chrome.getBoundingClientRect();
       if (rect.width > 0 && rect.height > 0) {
         const left = Math.min(Math.max(rect.left, 0), Math.max(0, window.innerWidth - rect.width));
@@ -352,14 +352,14 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
     registerRow,
   };
   return renderPortalInto(
-    <ContextMenuChrome ref={chromeRef} style={{ left: position.x, position: "fixed", top: `calc(${position.y}px - var(--size-medium))` }} title={title} icon={titleIcon}>
+    <ContextMenuChrome ref={chromeRef} style={{ left: position.x, position: "fixed", top: `calc(${position.y}px - var(--chip-row-height))` }} title={title} icon={titleIcon}>
       <div
         data-slot="context-menu-fusion-body"
         dir={flow.inline === "rtl" ? "rtl" : undefined}
         onContextMenu={(event) => event.preventDefault()}
         ref={fusionBodyRef}
         className="relative w-fit max-w-none overflow-auto"
-        style={{ maxWidth: "calc(100vw - 2px)", maxHeight: "calc(100dvh - var(--size-medium) - 2px)" }}
+        style={{ maxWidth: "calc(100vw - 2px)", maxHeight: "calc(100dvh - var(--chip-row-height) - 2px)" }}
       >
         <div aria-label={title} data-slot="context-menu-fusion-primary" ref={menuRef} role="menu" tabIndex={-1} className="w-max shrink-0">
           {renderFixedContextMenuItems(items, [], renderOptions)}

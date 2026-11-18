@@ -10,11 +10,12 @@ const repoRoot = join(plugin, "../../..");
 
 test("the runner resolves the deployed descriptor and all declared suites", () => {
   const actual = normPackageTestPlan(plugin, repoRoot);
-  expect(actual.descriptor).toBe(join(repoRoot, plan.descriptor));
+  expect(actual.descriptors).toEqual(plan.descriptors.map(path => join(repoRoot, path)));
   expect(actual.suites).toEqual(plan.suites.map(path => join(plugin, path)));
   expect(actual.suites.every(existsSync)).toBe(true);
-  const descriptor = JSON.parse(readFileSync(actual.descriptor, "utf8"));
-  const editors = descriptor.manifest.apps.filter((app: { role: string }) => app.role === "editor");
+  const descriptors = actual.descriptors.map(path => JSON.parse(readFileSync(path, "utf8")));
+  expect(descriptors).toHaveLength(3);
+  const editors = descriptors.flatMap(descriptor => descriptor.manifest.apps).filter((app: { role: string }) => app.role === "editor");
   expect(editors).toHaveLength(plan.expectedEditors);
   const cohort = JSON.parse(readFileSync(join(plugin, "📇️registry/🧬️contract/🧪️tests/🧫️fixtures/🧫️retained-command-dispositions/🔣️.json"), "utf8"));
   for (const app of cohort.apps) {

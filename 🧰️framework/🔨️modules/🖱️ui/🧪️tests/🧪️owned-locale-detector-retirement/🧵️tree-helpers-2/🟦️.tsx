@@ -142,7 +142,7 @@ describe("tree helpers", () => {
         expect(markup).toContain('data-slot="tree-gutter"');
         expect(markup).toContain("grid-template-columns:calc(");
         expect(markup).toContain("minmax(0, 1fr)");
-        expect(markup).toContain('data-slot="property-label-tree" class="min-w-0"');
+        expect(markup).toContain('data-slot="property-label-tree" class="flex min-w-0 items-center"');
         expect(markup).toContain('data-slot="property-row"');
         expect(markup).toContain("margin-inline-start:calc(-1 *");
         expect(markup).toContain("var(--layout-label)");
@@ -456,8 +456,10 @@ describe("tree helpers", () => {
           </TreeStateProvider>,
         );
   
-        const objectBranch = markup.split('data-slot="tree-item-content"')[1]?.slice(0, 1_500) ?? "";
-        expect(objectBranch.match(/data-tree-guide-line/g)?.length ?? 0).toBe(2);
+        const objectBranch = markup.split('data-slot="tree-item-content"')[1]?.slice(0, 12_000) ?? "";
+        expect(objectBranch.match(/data-slot="tree-parent-guide"/g)?.length ?? 0).toBe(2);
+        expect(objectBranch.match(/data-slot="tree-parent-guide"[^>]*style="top:0;bottom:0;/g)?.length ?? 0).toBe(1);
+        expect(objectBranch.match(/data-slot="tree-parent-guide"[^>]*style="top:0;bottom:calc\(100% - /g)?.length ?? 0).toBe(1);
         expect(objectBranch.match(/inset-inline-start:/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
         expect(objectBranch).not.toMatch(/(?:^|;)left:/);
       });

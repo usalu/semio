@@ -111,6 +111,7 @@ beforeEach(() => {
   const observer = (globalThis as { ResizeObserver?: unknown }).ResizeObserver;
   (globalThis as { ResizeObserver?: unknown }).ResizeObserver = class {
     observe(): void {}
+    unobserve(): void {}
     disconnect(): void {}
   };
   restore.push(() => {

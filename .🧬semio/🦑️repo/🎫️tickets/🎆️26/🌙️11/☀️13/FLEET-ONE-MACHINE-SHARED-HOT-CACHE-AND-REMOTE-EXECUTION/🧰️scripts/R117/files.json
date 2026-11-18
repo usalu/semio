@@ -1,0 +1,46 @@
+{
+ "step1": [
+  [
+   "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts",
+   "decision.ts"
+  ],
+  [
+   "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧬️schema/🔣️.json",
+   "hc-schema.json"
+  ],
+  [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🟦️.ts",
+   "hc.ts"
+  ],
+  [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🟨️.mjs",
+   "farm.mjs"
+  ],
+  [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🟨️.d.mts",
+   "farm.d.mts"
+  ],
+  [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs",
+   "nodes.mjs"
+  ],
+  [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🧪️tests/🟦️.ts",
+   "farmtest.ts"
+  ]
+ ],
+ "tests1": [
+  [
+   "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🥇️essential/🟦️.ts",
+   "tests/essential.test.ts"
+  ],
+  [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🧪️tests/🥇️first-child/🟦️.ts",
+   "tests/firstchild.test.ts"
+  ],
+  [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧠️memory/🧪️tests/🪶️owner-retained/🟦️.ts",
+   "tests/retained.test.ts"
+  ]
+ ]
+}

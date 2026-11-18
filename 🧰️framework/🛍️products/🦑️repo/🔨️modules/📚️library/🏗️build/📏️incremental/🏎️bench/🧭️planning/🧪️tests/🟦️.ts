@@ -24,7 +24,7 @@ test("every path in the scenarios stays under 256 characters",()=>{
 });
 
 test("recorded plan lines split into phases and counters like the Python oracle",()=>{
- const oracle=spawnSync("/home/deck/semio/.venv/bin/python",["-I",join(here,"🐍️oracle","🐍️.py"),join(here,"..","🎯️scenarios","🔣️.json"),join(here,"🧫️fixtures","🔣️.json")],{encoding:"utf8"});
+ const oracle=spawnSync(process.env.SEMIO_TEST_PYTHON_BINARY??"python3",["-I",join(here,"🐍️oracle","🐍️.py"),join(here,"..","🎯️scenarios","🔣️.json"),join(here,"🧫️fixtures","🔣️.json")],{encoding:"utf8"});
  expect(oracle.status).toBe(0);
  const other=JSON.parse(oracle.stdout) as Record<string,unknown>;
  for(const row of fixture.cases){

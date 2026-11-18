@@ -1,4 +1,5 @@
 import {existsSync} from "node:fs";
+import {detachDiskImagesUnderV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🖼️images/🟦️.ts";
 import {readdir,rm} from "node:fs/promises";
 import {join,resolve} from "node:path";
 import {repositoryCacheBudgetV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts";
@@ -27,5 +28,6 @@ export async function retirePrivateRepositoryRootV1(root:string,original:ScriptI
  const budget=repositoryCacheBudgetV1(workspace),retire=async(partition:any,options:object)=>{if(!existsSync(join(partition.directory,"image.json")))return;await retirePrivatePartitionV1({...partition,maximumPhysicalBytes:partition.capacityBytes,control,...options});};
  for(const[id,partition]of Object.entries(budget.partitions)){if(id==="leases")continue;await retire(partition,{leaseDirectory:repositoryLeaseDirectoryV1(workspace)});}
  await retire(budget.partitions.leases,{maximumLeaseDatabaseBytes:16384,leaseDirectory:budget.controlDirectory});
+ detachDiskImagesUnderV1(workspace);
  await rm(workspace,{recursive:true,force:true});
 }

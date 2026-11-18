@@ -687,6 +687,8 @@ pub enum ContainerRole {
     Form,
     Toolbar,
     Sheet,
+    CardStack,
+    Card,
 }
 }
 semio_framework_value::native_json_codec!{

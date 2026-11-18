@@ -1,0 +1,25 @@
+[
+  {
+    "scope": "forms",
+    "variants": ["forms"],
+    "components": ["forms", "playbook", "playbook-module-procedural"],
+    "activations": ["@semio-tech/framework-os-dev:activate-forms-react-prototype"],
+    "prepare": "prepare-forms-e2e",
+    "serve": "serve-forms-e2e",
+    "test": "test-e2e-forms"
+  },
+  {
+    "scope": "standards",
+    "variants": ["din4108", "din16798", "din18599", "en1990", "en1991", "en1992", "en1993", "en1994", "en1995", "en1996", "en1997", "en1998", "en1999", "iso16757", "vdi3805"],
+    "components": ["norm", "norm-eurocode", "norm-eurocode-materials"],
+    "activations": [
+      "@semio-tech/framework-os-dev:activate-din4108-react-prototype",
+      "@semio-tech/framework-os-dev:activate-en1990-react-prototype",
+      "@semio-tech/framework-os-dev:activate-en1992-react-prototype"
+    ],
+    "dev": "serve-standards",
+    "prepare": "prepare-standards-e2e",
+    "serve": "serve-standards-e2e",
+    "test": "test-e2e-standards"
+  }
+]

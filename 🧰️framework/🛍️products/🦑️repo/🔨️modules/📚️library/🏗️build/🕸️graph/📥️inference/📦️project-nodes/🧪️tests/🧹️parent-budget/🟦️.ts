@@ -14,7 +14,8 @@ test("the governor of a call gets the managed budget of the parent and the ports
 });
 
 test("the collection never follows the resident set and every finished project is offered to the collector",()=>{
- expect(source).not.toContain("memoryUsage().rss");expect(source).not.toContain("collectAbove");
+ const all=calls();for(const call of all.filter(row=>["createParentCollectorV1","createGraphParentMemoryGovernorV1","collectResident"].includes(row.callee)))expect(call.text).not.toMatch(/memoryUsage|\.rss|maxRSS/u);
+ expect(source).toContain("const collectResident=()=>{parentCollector.afterProject();};");expect(source).not.toContain("collectAbove");
  const offers=calls().filter(call=>call.callee==="parentCollector.afterProject");
  expect(offers.length).toBeGreaterThanOrEqual(1);
  expect(source).toMatch(/const loop=async[^\n]*=>\{[^\n]*collectResident\(\)/u);

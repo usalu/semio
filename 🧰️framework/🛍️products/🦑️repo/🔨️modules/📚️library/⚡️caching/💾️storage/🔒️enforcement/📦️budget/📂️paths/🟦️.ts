@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {isAbsolute,join,resolve} from "node:path";
 import type {RepositoryCachePartitionIdV1} from "../🟦️.ts";
 import policy from "../🔣️policy.json" with {type:"json"};
@@ -6,5 +7,5 @@ import native from "../../../../../../../../../🔨️modules/🏃️process/�
 /** 🗺️ Names one authored mounted partition as DATA without opening storage or issuing custody. */
 export function repositoryCachePartitionRootDataV1(workspace:string,id:RepositoryCachePartitionIdV1):string{
  if(typeof workspace!=="string"||!isAbsolute(workspace)||resolve(workspace)!==workspace||/[\u0000-\u001f\u007f]/u.test(workspace)||!Object.hasOwn(policy.partitions,id))throw Error("Canonical workspace and declared cache partition required");
- const directory=join(workspace,policy.partitions[id].directory,native.definitions.ImageProtocol.const.mountDirectory);if(directory.length>256)throw Error("Finite mounted partition path required");return directory;
+ const directory=machinePathV1(workspace,policy.partitions[id].directory,native.definitions.ImageProtocol.const.mountDirectory);if(directory.length>256)throw Error("Finite mounted partition path required");return directory;
 }

@@ -8,7 +8,7 @@
 
 // #endregion 🧲️Header
 
-import { Button, Input, Popover, PopoverContent, PopoverTrigger } from "@semio-tech/ui-react";
+import { Button, Input, Popover, PopoverContent, PopoverTrigger, SharedBorderRow, SharedBorderRowCell, SharedBorderRowLabel } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "../../../🧪️tests/📚️storybook-types/🟦️.ts";
 
@@ -37,20 +37,24 @@ export const Default: Story = {
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80" side="bottom" align="start">
-        <div className="space-y-4">
-          <div className="space-y-2">
+        <SharedBorderRow orientation="vertical" framed={false}>
+          <SharedBorderRowCell className="flex-col items-start">
             <h4 className="font-medium text-sm">Connection Parameters</h4>
             <p className="text-sm text-muted-foreground">Configure spatial relationship between pieces.</p>
-          </div>
-          <div className="grid gap-double">
-            <Input id="gap-input" showLabel defaultValue="0" type="number" />
-            <Input id="rotation-input" showLabel defaultValue="0" type="number" min={0} max={360} />
-          </div>
-          <div className="flex justify-end gap-double">
+          </SharedBorderRowCell>
+          <SharedBorderRow framed={false} data-shared-border-cell="">
+            <SharedBorderRowLabel htmlFor="gap-input">Gap</SharedBorderRowLabel>
+            <Input id="gap-input" aria-label="Gap" defaultValue="0" type="number" />
+          </SharedBorderRow>
+          <SharedBorderRow framed={false} data-shared-border-cell="">
+            <SharedBorderRowLabel htmlFor="rotation-input">Rotation</SharedBorderRowLabel>
+            <Input id="rotation-input" aria-label="Rotation" defaultValue="0" type="number" min={0} max={360} />
+          </SharedBorderRow>
+          <SharedBorderRow framed={false} data-shared-border-cell="" className="justify-end">
             <Button variant="default" icon="x">Cancel</Button>
             <Button icon="save">Save</Button>
-          </div>
-        </div>
+          </SharedBorderRow>
+        </SharedBorderRow>
       </PopoverContent>
     </Popover>
   ),

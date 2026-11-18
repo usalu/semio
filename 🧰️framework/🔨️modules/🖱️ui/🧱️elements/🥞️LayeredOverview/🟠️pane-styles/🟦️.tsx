@@ -1,6 +1,6 @@
 /** 🟠️ The pane styles phase of LayeredOverview. */
 import * as React from "react";
-import { cellOffset, clampOffset, inWindow, layeredZoomArm, layeredZoomMove, neighbourWarmBoot, pointerOffset, swipeNeighbours, type LayeredZoomHold } from "../../../🔨️modules/🥞️layered-overview-geometry/🟦️.ts";
+import { cellOffset, clampOffset, inWindow, layeredZoomArm, layeredZoomMove, neighbourWarmBoot, pointerOffset, swipeNeighbours, type LayeredDirection, type LayeredZoomHold } from "../../../🔨️modules/🥞️layered-overview-geometry/🟦️.ts";
 import type { LayeredOverviewProps, LayeredPane } from "../📋️types/🟦️.ts";
 import { FOCUSABLE, FOLLOW, requireCell, syncHash } from "../🧰️pane-helpers/🟦️.ts";
 import { LayeredCardHost, LayeredPaneView } from "../🧵️pane/🟦️.tsx";
@@ -136,7 +136,17 @@ export function usePaneStylesState({ previousOpened, opened, openedRef, interact
   const insetTop = props.insets?.top ?? "0px";
   const insetBottom = props.insets?.bottom ?? "0px";
   const insets = React.useMemo(() => ({ top: insetTop, bottom: insetBottom }), [insetTop, insetBottom]);
-  const cellStyles = React.useMemo(() => new Map([...paneStyles].map(([id, style]) => [id, { ...style, touchAction: "pinch-zoom", paddingTop: `calc(${insets.top} + 44px)`, paddingBottom: `calc(${insets.bottom} + 44px)` }])), [paneStyles, insets]);
+  const cellStyles = React.useMemo(
+    () =>
+      new Map(
+        [...paneStyles].map(([id, style], index) => {
+          const near = new Set(swipeNeighbours(cellList[index]!, cellList).map(({ direction }) => direction));
+          const band = (direction: LayeredDirection, inset = "0px") => (near.has(direction) ? `calc(${inset} + 28px)` : inset);
+          return [id, { ...style, touchAction: "pinch-zoom", paddingTop: band("up", insets.top), paddingBottom: band("down", insets.bottom), paddingLeft: band("left"), paddingRight: band("right") }];
+        }),
+      ),
+    [paneStyles, insets, cellList],
+  );
   const restedOn = React.useRef(resting);
   if (resting !== null) restedOn.current = resting;
   const hintFrom = restedOn.current !== null && ids.includes(restedOn.current) ? restedOn.current : ids[0] ?? null;

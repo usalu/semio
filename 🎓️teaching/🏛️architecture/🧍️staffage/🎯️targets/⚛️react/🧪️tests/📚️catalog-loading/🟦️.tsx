@@ -6,7 +6,7 @@ import walkerDocument from "../../../../🧫️fixtures/🚶️reference-walker/
 import { bundledCatalog, CatalogStore, type CatalogSource, type CategoryDocument } from "../../🔨️modules/📚️catalog/🟦️.ts";
 
 const walker = walkerDocument as unknown as Asset;
-const entry = (id: string): ManifestEntry => ({ id, category: "humans", title: walker.title, heightM: 1.7, widthM: 0.5, poses: [], clips: [], representations: { "500": "unavailable", "200": "unavailable", "100": "authored", "50": "unavailable" }, symbols: [], analytics: ["thermal"], exports: ["svg"], distinction: walker.summary, completion: "planned" });
+const entry = (id: string): ManifestEntry => ({ id, category: "humans", title: walker.title, heightM: 1.7, widthM: 0.5, powerW: 0, poses: [], clips: [], representations: { "500": "unavailable", "200": "unavailable", "100": "authored", "50": "unavailable" }, symbols: [], analytics: ["thermal"], exports: ["svg"], distinction: walker.summary, completion: "planned" });
 const categoryEntry = (id: "humans" | "objects") => ({ id, emoji: "x", title: { en: id, de: id }, description: { en: id, de: id }, folder: id });
 const manifest = { $schema: "", version: "semio.staffage/v2", categories: [categoryEntry("humans"), categoryEntry("objects")], collections: [], entries: [entry("good-one"), entry("bad-one"), entry("never-authored")] } as unknown as Manifest;
 const document = (assets: Asset[]): CategoryDocument => ({ assets, revisions: Object.fromEntries(assets.map((asset) => [asset.id, revisionOfText(asset.id)])) });

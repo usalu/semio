@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {access,stat} from "node:fs/promises";
 import {constants} from "node:fs";
 import {delimiter,dirname,join,resolve} from "node:path";
@@ -44,7 +45,7 @@ export function buildPreflightProblemsV1(requirements:unknown,facts:unknown):str
 }
 /** 🚧️ Carries observation failures without changing cancellation or tool-scope errors. */
 export class BuildPreflightRefusalV1 extends Error {
- constructor(readonly problems:readonly string[]){super("Repository preflight refused:\n"+problems.join("\n"));}
+ readonly problems:readonly string[]; constructor(problems:readonly string[]){super("Repository preflight refused:\n"+problems.join("\n"));this.problems=problems;}
 }
 /** 🪜️ Admits physical host facts before entering a tool scope; observations remain DATA, never compiler authority. */
 export async function runBuildPreflightPhasesV1(requirements:unknown,facts:unknown,withTools:(observe:(tools:readonly string[])=>void)=>Promise<void>,check:()=>void):Promise<void>{
@@ -65,7 +66,7 @@ export async function runBuildPreflightV1(root:string,args:readonly string[],inv
  const platform=process.platform,rows=readBuildPreflightPolicyV1().platforms as Record<string,BuildPreflightPlatformV1>,required=rows[platform];
  if(!required)throw Error(`Repository preflight refused before store allocation:\nplatform ${platform} is not supported`);
  await advanceScriptInvocation(invocation,"preflight","running");
- const cache=resolve(root,".cache");let host=cache;for(;;){try{await stat(host);break;}catch{const parent=dirname(host);if(parent===host)break;host=parent;}}
+ const cache=machinePathV1(root,".cache");let host=cache;for(;;){try{await stat(host);break;}catch{const parent=dirname(host);if(parent===host)break;host=parent;}}
  const availableBytes=nativeDirectoryHostAvailableBytesV1(host);let exchange:BuildPreflightFactsV1["exchange"]="unprobed",caseSensitive:BuildPreflightFactsV1["caseSensitive"]="unprobed";
  if(required.exchange){const port=nativeDirectorySystemPortV1(),observed=probeBuildPreflightFilesystemV1(platform,port.kind,{exchange:()=>probeNativeDirectoryExchangeV1(host,port),caseSensitive:()=>probeNativeDirectoryCaseCapabilityV1(host,port),check:()=>checkScriptInvocation(invocation)});exchange=observed.exchange;caseSensitive=observed.caseSensitive;}
  checkScriptInvocation(invocation);const facts:BuildPreflightFactsV1={platform,architecture:process.arch,availableBytes,tools:[],exchange,caseSensitive};let reportedFacts=facts;

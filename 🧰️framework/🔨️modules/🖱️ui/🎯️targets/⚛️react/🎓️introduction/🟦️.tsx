@@ -17,7 +17,7 @@ import { DragHandle } from "@semio-tech/ui/elements/DragHandle";
 import { CloseIcon, Icon } from "@semio-tech/ui/elements/Icons";
 import { Button } from "@semio-tech/ui/elements/Button";
 import { createPortal } from "react-dom";
-import { type IntroductionInfoBoxPosition, clampIntroductionInfoBoxPosition, introductionRectRelativeToHost, resolveIntroductionPlacement, splitIntroductionBodyParagraphs, useIntroductionAnchorRect, useIntroductionElevation } from "../📐️introduction-geometry/🟦️.ts";
+import { type IntroductionInfoBoxPosition, clampIntroductionInfoBoxPosition, clearIntroductionInfoBoxNearMisses, dockIntroductionInfoBox, introductionRectRelativeToHost, resolveIntroductionPlacement, splitIntroductionBodyParagraphs, useIntroductionAnchorRect, useIntroductionElevation } from "../📐️introduction-geometry/🟦️.ts";
 import { INTRODUCTION_DEMO_NEXT_BUTTON_DEMONSTRATION, IntroductionDemonstrationOverlay } from "../🎬️introduction-demo/🟦️.tsx";
 import { celebrateElement } from "../🧬️element-state/🟦️.ts";
 
@@ -85,6 +85,49 @@ function IntroductionLogoRow({ logos }: { readonly logos: readonly IntroductionL
       })}
     </div>
   );
+}
+
+/** 🧲️ How far (px) the info box reaches to dock onto a border line beneath it. */
+const INTRODUCTION_DOCK_REACH_PX = 40;
+
+/** 🌬️ How far (px) the info box may slide to keep its own lines clear of the chips beneath. */
+const INTRODUCTION_CLEAR_RANGE_PX = 120;
+
+/** 🧲️ The vertical and horizontal border lines of the elements matching `selector` beneath the info box, relative to the overlay host (the box itself and its ancestors are left out). */
+function borderLines(selector: string, host: DOMRect, box: HTMLElement | null): { readonly xs: readonly number[]; readonly ys: readonly number[] } {
+  const xs = new Set<number>();
+  const ys = new Set<number>();
+  for (const element of document.querySelectorAll<HTMLElement>(selector)) {
+    if (box?.contains(element) || element.contains(box) || element.closest("[data-slot^='introduction-']")) continue;
+    const rect = element.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) continue;
+    for (const x of [rect.left, rect.right]) xs.add(Math.round((x - host.left) * 2) / 2);
+    for (const y of [rect.top, rect.bottom]) ys.add(Math.round((y - host.top) * 2) / 2);
+  }
+  return { xs: [...xs], ys: [...ys] };
+}
+
+/** 🧲️ The frames the info box docks onto. */
+const underlyingBorderLines = (host: DOMRect, box: HTMLElement | null) => borderLines("[data-window-silhouette], [data-shared-border-frame]", host, box);
+
+/** 🧲️ Every chip and frame line beneath the box, which the box keeps clear of. */
+const underlyingChipLines = (host: DOMRect, box: HTMLElement | null) => borderLines("[data-window-silhouette], [data-shared-border-frame], [data-window-silhouette-chip], [data-window-silhouette-gap], [data-slot^='demonstrator-pane-card'], [data-overview-card] *", host, box);
+
+/** 🧲️ The info box's own chip and edge lines relative to its origin. */
+function ownBorderLines(box: HTMLElement | null): { readonly xs: readonly number[]; readonly ys: readonly number[] } {
+  const xs = new Set<number>([0]);
+  const ys = new Set<number>([0]);
+  if (!box) return { xs: [0], ys: [0] };
+  const origin = box.getBoundingClientRect();
+  xs.add(origin.width);
+  ys.add(origin.height);
+  for (const element of box.querySelectorAll<HTMLElement>("[data-window-silhouette-chip], [data-slot^='window-chrome-']")) {
+    const rect = element.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) continue;
+    for (const x of [rect.left, rect.right]) xs.add(Math.round((x - origin.left) * 2) / 2);
+    for (const y of [rect.top, rect.bottom]) ys.add(Math.round((y - origin.top) * 2) / 2);
+  }
+  return { xs: [...xs], ys: [...ys] };
 }
 
 /** 🎓️ Full-screen first-run walkthrough: a single fullscreen glass veil covers the screen, the
@@ -176,7 +219,7 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
   reactHostPort.useEffect(() => {
     const el = boxRef.current;
     if (!el) return;
-    const measure = () => setBoxSize({ width: el.offsetWidth, height: el.offsetHeight });
+    const measure = () => setBoxSize((previous) => ({ width: el.style.width !== "" ? previous.width : el.offsetWidth, height: el.offsetHeight }));
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(el);
@@ -265,7 +308,12 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
   const bodyParagraphs = splitIntroductionBodyParagraphs(resolveUiLocalizedText(step.body, terminology, locale));
   const hostRect = overlayHost?.getBoundingClientRect() ?? null;
   const placementAnchor = introduceRect && hostRect ? introductionRectRelativeToHost(introduceRect, hostRect) : introduceRect;
-  const boxPosition = resolveIntroductionPlacement(step.placement, placementAnchor, boxSize, viewport);
+  const placed = resolveIntroductionPlacement(step.placement, placementAnchor, boxSize, viewport);
+  const docked = typeof document !== "undefined" ? dockIntroductionInfoBox(placed, boxSize, underlyingBorderLines(hostRect ?? new DOMRect(0, 0, window.innerWidth, window.innerHeight), boxRef.current), INTRODUCTION_DOCK_REACH_PX) : { ...placed, ...boxSize };
+  const clearHost = hostRect ?? new DOMRect(0, 0, window.innerWidth, window.innerHeight);
+  const boxPosition = typeof document !== "undefined" && Math.abs(docked.width - boxSize.width) < 0.5
+    ? clampIntroductionInfoBoxPosition(clearIntroductionInfoBoxNearMisses({ top: docked.top, left: docked.left }, ownBorderLines(boxRef.current), underlyingChipLines(clearHost, boxRef.current), INTRODUCTION_DOCK_REACH_PX, INTRODUCTION_CLEAR_RANGE_PX), boxSize, viewport, 0)
+    : { top: docked.top, left: docked.left };
   dragLayoutRef.current = { placement: boxPosition, boxSize, viewport };
   const position = dragPosition ?? boxPosition;
   const overlayPositionClass = overlayPositioned ? "absolute" : "fixed";
@@ -289,7 +337,7 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
         borderKind={introductionActivated ? undefined : "introduced"}
         level="dialog"
         className={cn("pointer-events-auto z-tutorial w-fit max-w-[calc(100vw-2rem)] bg-transparent", overlayPositionClass)}
-        style={{ top: position.top, left: position.left, zIndex: "calc(var(--z-tutorial) + 2)" }}
+        style={{ top: position.top, left: position.left, width: dragPosition === null && Math.abs(docked.width - boxSize.width) > 0.5 ? docked.width : undefined, maxWidth: dragPosition === null && Math.abs(docked.width - boxSize.width) > 0.5 ? "none" : undefined, zIndex: "calc(var(--z-tutorial) + 2)" }}
         titleChips={
           <div data-hover-scope data-slot="introduction-info-box-chip" className={cn(windowChromeTitleChipClass, "!h-auto max-w-none shrink overflow-visible whitespace-normal")}>
             <span data-slot="introduction-info-box-title" className="min-w-0 flex-1 break-words whitespace-normal text-sm leading-normal font-medium">
@@ -359,8 +407,8 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
             </span>
           </div>
         }
-        footerLeftChips={stepIndex > 0 ? <Button id="ui.introduction.back" variant="ghost" icon="chevron-left" text={backLabel} onClick={back} /> : undefined}
-        footerRightChips={advanceByButton ? <Button id="ui.introduction.next" icon={isLast ? "check" : "chevron-right"} text={isLast ? doneLabel : nextLabel} onClick={next} /> : undefined}
+        footerLeftChips={stepIndex > 0 ? <div data-shared-border-cells="" className="flex items-stretch"><Button id="ui.introduction.back" variant="ghost" icon="chevron-left" text={backLabel} onClick={back} /></div> : undefined}
+        footerRightChips={advanceByButton ? <div data-shared-border-cells="" className="flex items-stretch"><Button id="ui.introduction.next" icon={isLast ? "check" : "chevron-right"} text={isLast ? doneLabel : nextLabel} onClick={next} /></div> : undefined}
         bodyClassName="p-double shadow-lg"
       />
       {effectiveDemonstrations.length > 0 && <IntroductionDemonstrationOverlay key={step.id} demonstrations={effectiveDemonstrations} />}

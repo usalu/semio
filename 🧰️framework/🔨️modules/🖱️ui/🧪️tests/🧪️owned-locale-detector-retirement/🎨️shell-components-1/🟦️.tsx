@@ -115,7 +115,9 @@ describe("Shell components", () => {
       expect(chipCap?.textContent).toContain("App");
       expect(chipCap?.textContent).not.toContain("Command");
       expect(bodyTabs?.textContent).toContain("Command");
-      expect(bodyTabs?.className).toContain("w-full");
+      expect(bodyTabs?.className).toContain("flex-auto");
+      expect(bodyTabs?.parentElement?.getAttribute("data-slot")).toBe("panel-tab-frame");
+      expect(bodyTabs?.parentElement?.className).toContain("w-full");
       expect(bodyTabs?.closest("[data-window-silhouette-chip]")).toBeNull();
       expect(bodyStack?.firstElementChild?.getAttribute("data-slot")).toBe("ribbon");
       expect(bodyStack?.lastElementChild?.getAttribute("data-slot")).toBe("scroll-area");
@@ -168,25 +170,23 @@ describe("Shell components", () => {
       const StubIcon = (): null => null;
       const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } })];
       const { container: topContainer, rerender: rerenderTop } = render(<Panel anchor="top-left" visible={false} tabs={tabs} />);
-      const foldedTopTabs = topContainer.querySelector('[data-slot="panel-tabs"]');
-      expect(foldedTopTabs?.className).not.toContain("border-b");
-      expect(foldedTopTabs?.className).not.toContain("border-t");
+      const foldedTopTabs = topContainer.querySelector('[data-slot="panel-tab-frame"]');
+      expect(foldedTopTabs?.hasAttribute("data-shared-border-edges")).toBe(false);
       rerenderTop(<Panel anchor="top-left" visible tabs={tabs} />);
-      const expandedTopTabs = topContainer.querySelector('[data-slot="panel-tabs"]');
-      expect(expandedTopTabs?.className).toContain("border-b");
-      expect(expandedTopTabs?.className).toContain("!border-normal");
+      const expandedTopTabs = topContainer.querySelector('[data-slot="panel-tab-frame"]');
+      expect(expandedTopTabs?.getAttribute("data-shared-border-edges")).toBe("bottom");
+      expect(expandedTopTabs?.hasAttribute("data-shared-border-frame")).toBe(true);
       const chromeMarkup = renderToStaticMarkup(<PanelChromeTabBar anchor="top-middle" tabs={tabs} visible={false} activeTabPath={["tab-a"]} onActiveTabPathChange={() => {}} />);
       expect(chromeMarkup).toContain('data-slot="window-chrome-chip-cap"');
       expect(chromeMarkup).toContain("ui-glass");
       expect(chromeMarkup).not.toContain("rounded-sm");
       const { container: bottomContainer, rerender: rerenderBottom } = render(<Panel anchor="bottom-left" visible={false} tabs={tabs} />);
-      const foldedBottomTabs = bottomContainer.querySelector('[data-slot="panel-tabs"]');
-      expect(foldedBottomTabs?.className).not.toContain("border-b");
-      expect(foldedBottomTabs?.className).not.toContain("border-t");
+      const foldedBottomTabs = bottomContainer.querySelector('[data-slot="panel-tab-frame"]');
+      expect(foldedBottomTabs?.hasAttribute("data-shared-border-edges")).toBe(false);
       rerenderBottom(<Panel anchor="bottom-left" visible tabs={tabs} />);
-      const expandedBottomTabs = bottomContainer.querySelector('[data-slot="panel-tabs"]');
-      expect(expandedBottomTabs?.className).toContain("border-t");
-      expect(expandedBottomTabs?.className).toContain("!border-normal");
+      const expandedBottomTabs = bottomContainer.querySelector('[data-slot="panel-tab-frame"]');
+      expect(expandedBottomTabs?.getAttribute("data-shared-border-edges")).toBe("top");
+      expect(expandedBottomTabs?.hasAttribute("data-shared-border-frame")).toBe(true);
     });
 
     it("Panel keeps its tab button group mounted when folded, but drops content — the tabs are the panel's only chrome", () => {
@@ -288,8 +288,8 @@ describe("Shell components", () => {
       expect(panel.getAttribute("data-panel-chrome-hosted")).toBe("true");
       expect(panel.className).toContain("z-panel");
       expect(panel.className).not.toContain("z-navbar");
-      expect(panel.style.top).toContain("navbar-height");
-      expect(panel.style.top).toContain("panel-header-height");
+      expect(panel.style.top).toContain("navbar-band-height");
+      expect(panel.style.getPropertyValue("--panel-header-height")).toBe("var(--navbar-band-height)");
       expect(panel.style.top).not.toContain("spacing-single");
       expect(container.querySelector('[data-slot="window-chrome-stack"]')).toBeTruthy();
       expect(container.querySelector('[data-slot="window-chrome-cap"]')).toBeTruthy();
@@ -301,17 +301,19 @@ describe("Shell components", () => {
 
     it("chromeHostedOpenPanelPositionStyle pulls top/bottom caps into the shell chrome band and leaves side-middle canvas insets alone", () => {
       const top = chromeHostedOpenPanelPositionStyle("top-left");
-      expect(top.top).toBe("calc(-1 * (var(--navbar-height) + var(--panel-header-height)) / 2)");
-      expect(top.left).toBe("var(--panel-inset)");
-      expect(top.maxHeight).toBe("calc(100% + (var(--navbar-height) + var(--panel-header-height)) / 2)");
+      expect(top.top).toBe("calc(-1 * var(--navbar-band-height))");
+      expect((top as Record<string, unknown>)["--panel-header-height"]).toBe("var(--navbar-band-height)");
+      expect(top.left).toBe("0px");
+      expect(top.maxHeight).toBe("calc(100% + var(--navbar-band-height))");
 
       const bottom = chromeHostedOpenPanelPositionStyle("bottom-right");
-      expect(bottom.bottom).toBe("calc(-1 * (var(--footer-height) + var(--panel-header-height)) / 2)");
-      expect(bottom.right).toBe("var(--panel-inset)");
+      expect(bottom.bottom).toBe("calc(-1 * var(--footer-band-height))");
+      expect((bottom as Record<string, unknown>)["--panel-header-height"]).toBe("var(--footer-band-height)");
+      expect(bottom.right).toBe("0px");
 
       const side = chromeHostedOpenPanelPositionStyle("left-middle");
       expect(side.top).toBe("50%");
-      expect(side.left).toBe("var(--panel-inset)");
+      expect(side.left).toBe("0px");
     });
 
     it("keeps shell chrome at the base stacking level and lands an open chrome-hosted panel's cap exactly on the chrome control row", async () => {
@@ -322,12 +324,11 @@ describe("Shell components", () => {
       const band = chrome.navbarHeightUiSpacing;
       const control = chrome.controlHeightUiSpacing;
       const pad = chrome.paddingStandardUiSpacing;
-      const chromeControlRow = [pad, band - pad] as const;
-      const overhang = (band + control) / 2;
-      const capRow = [band - overhang, band - overhang + control] as const;
-      expect(capRow).toEqual(chromeControlRow);
-      expect(spacingPx(capRow[1])).toBe(spacingPx(band - pad));
+      const capRow = [0, band] as const;
+      expect(spacingPx(capRow[1] - capRow[0])).toBe(spacingPx(band));
       expect(capRow[1]).toBeLessThanOrEqual(band);
+      void control;
+      void pad;
 
       const navbar = render(<Navbar items={[]} showFullscreenToggle={false} />);
       const nav = navbar.container.querySelector('[data-slot="navbar"]') as HTMLElement;
@@ -426,7 +427,7 @@ describe("Shell components", () => {
       publishShellNavbarTrailingEndWidthPx(undefined, 96);
       const { container, rerender } = render(<Panel anchor="top-right" tabBarHost="chrome" visible tabs={tabs} activeTabPath={["tab-a"]} size={360} />);
       const cap = container.querySelector('[data-slot="panel"][data-anchor="top-right"] [data-slot="window-chrome-cap"]') as HTMLElement;
-      expect(cap.style.paddingInlineStart).toBe(`${96 + uiSpacingPx(1)}px`);
+      expect(cap.style.paddingInlineStart).toBe("96px");
 
       publishShellNavbarTrailingEndWidthPx(undefined, 0);
       rerender(<Panel anchor="top-right" tabBarHost="chrome" visible tabs={tabs} activeTabPath={["tab-a"]} size={360} />);

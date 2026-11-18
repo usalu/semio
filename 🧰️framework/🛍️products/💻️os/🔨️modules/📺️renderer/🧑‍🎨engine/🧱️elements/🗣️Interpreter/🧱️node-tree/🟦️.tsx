@@ -20,6 +20,7 @@ import {
   Tree,
   borderNormalTopClass,
   catalogueTreeDragController,
+  SharedBorderRowCell,
   cn,
   treeRowHeightPx,
   treeWindowDomAttributes,
@@ -89,13 +90,38 @@ import {
 
 //#region 🔖️UiInterpreter
 //#region ComponentRenderers
+const FRAMED_CONTROL_TYPES: ReadonlySet<string> = new Set(["button", "input", "select", "toggle", "numberStepper", "iconSelect"]);
+
+/** 🪢️ True when a container renders as one shared-border row: a section, group or field, or a stack that directly holds a bordered control or such a row. */
+function containerIsRow(state: UiDocumentState, record: UiNodeRecord): boolean {
+  const component = record.component;
+  if (component.type !== "container" || (record.bindings ?? []).some(binding => binding.trigger === "activate")) return false;
+  const children = record.children ?? [];
+  if (component.role === "section" || component.role === "group" || component.role === "field") return true;
+  return record.layout.kind === "stack" && children.some(id => { const child = state.nodes.get(id); return child !== undefined && childIsFramed(state, child); });
+}
+
+function childIsFramed(state: UiDocumentState, record: UiNodeRecord): boolean {
+  const component = record.component;
+  if (component.type === "toggle") return component.appearance !== "checkbox";
+  return component.type === "table" || FRAMED_CONTROL_TYPES.has(component.type) || containerIsRow(state, record);
+}
+
 function ContainerView({ store, record, context }: { readonly store: UiDocumentStore; readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const presence = usePresenceOverlayEntry(record.key);
   const childIds = record.children ?? [];
-  const keys = uiChildReactKeys(store.getState(), childIds);
-  const children = childIds.map((id, index) => <UiNodeView key={keys[index]} store={store} id={id} context={context} />);
+  const state = store.getState();
+  const keys = uiChildReactKeys(state, childIds);
+  const row = containerIsRow(state, record);
+  const children = childIds.map((id, index) => {
+    const view = <UiNodeView key={keys[index]} store={store} id={id} context={context} />;
+    if (!row) return view;
+    const child = state.nodes.get(id);
+    if (child === undefined || child.component.type === "separator") return null;
+    return childIsFramed(state, child) ? view : <SharedBorderRowCell key={keys[index]}>{view}</SharedBorderRowCell>;
+  });
   const activate = (record.bindings ?? []).some(binding => binding.trigger === "activate");
-  return <UiContainerFrame record={record} id={nodeDomId(store, record, context.domScope)} selected={presence.selected} hovered={presence.hovered} onActivate={activate ? event => { event.stopPropagation(); dispatchTrigger(context, record, "activate"); } : undefined}>{children}</UiContainerFrame>;
+  return <UiContainerFrame record={record} id={nodeDomId(store, record, context.domScope)} selected={presence.selected} hovered={presence.hovered} row={row} onActivate={activate ? event => { event.stopPropagation(); dispatchTrigger(context, record, "activate"); } : undefined}>{children}</UiContainerFrame>;
 }
 
 //#region Tree
@@ -369,7 +395,7 @@ function TableView({ store, record, context }: { readonly store: UiDocumentStore
           className="min-w-0"
           style={{ width: columnWindow ? columnTotal * TABLE_COLUMN_WINDOW_WIDTH_PX : undefined }}
         >
-          <div role="row" aria-rowindex={1} className={cn("sticky top-0 z-10 grid min-w-0 bg-background text-2xs font-semibold uppercase tracking-wide text-muted-foreground", borderNormalTopClass)} style={{ gridTemplateColumns: template, height: rowPx }}>
+          <div role="row" aria-rowindex={1} data-shared-border-frame="" data-shared-border-edges="bottom" className="sticky top-0 z-10 grid min-w-0 bg-background text-2xs font-semibold uppercase tracking-wide text-muted-foreground" style={{ gridTemplateColumns: template, height: rowPx }}>
             {columnLeading > 0 ? <div aria-hidden="true" data-table-column-spacer="leading" /> : null}
             {component.columns.map((column, position) => {
               const logicalColumn = columnLeading + position;
@@ -421,7 +447,8 @@ function TableView({ store, record, context }: { readonly store: UiDocumentStore
                     if (!(event.target as HTMLElement).closest("input, textarea, select, button, [contenteditable='true'], [role='button'], [role='textbox']")) activateRow(row);
                   }}
                   onKeyDown={(event) => onRowKeyDown(event, row, index)}
-                  className="grid min-w-0 cursor-default border-b border-border/40 text-xs outline-none hover:bg-muted/40 focus-visible:bg-muted/60 focus-visible:ring-1 focus-visible:ring-primary"
+                  data-shared-border-frame="" data-shared-border-edges="bottom"
+                  className="grid min-w-0 cursor-default text-xs outline-none hover:bg-muted/40 focus-visible:bg-muted/60 focus-visible:ring-1 focus-visible:ring-primary"
                   style={{ gridTemplateColumns: template, minHeight: rowPx, height: cellNodes.length > 0 ? undefined : rowPx }}
                 >
                   {columnLeading > 0 ? <div aria-hidden="true" data-table-column-spacer="leading" /> : null}

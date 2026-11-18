@@ -302,6 +302,7 @@ members = [
     "🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🔤️typography/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🔨️modules/📏️border-presentation/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🖌️render/✨️shader-contract/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🖌️render/🎯️targets/🌋️vulkan/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🖌️render/🎯️targets/🍎️metal/📦️packages/🦀️rust",

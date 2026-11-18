@@ -16,7 +16,7 @@ export type SealedRequestV1=Readonly<{method:string;target:string;headers:Readon
 export type SealedReplyV1=Readonly<{status:number;headers:Readonly<Record<string,string>>;body:Uint8Array}>;
 
 /** 🚫️ Why a sealed message was refused: `malformed` (not the wire format), `clock` (outside the skew), `replay` (seen before), `decrypt` (not from the holder of the key, or changed on the way), `large` (above the bound). */
-export class SealedErrorV1 extends Error{constructor(readonly code:"malformed"|"clock"|"replay"|"decrypt"|"large"){super(`Sealed exchange refused: ${code}`);this.name="SealedErrorV1";}}
+export class SealedErrorV1 extends Error{readonly code:"malformed"|"clock"|"replay"|"decrypt"|"large";constructor(code:"malformed"|"clock"|"replay"|"decrypt"|"large"){super(`Sealed exchange refused: ${code}`);this.code=code;this.name="SealedErrorV1";}}
 
 const REQUEST_INFO="semio-fleet-sealed/1 request",REPLY_INFO="semio-fleet-sealed/1 reply",AAD_LABEL="semio-fleet-sealed/1",P=(1n<<255n)-19n;
 const ED_PUBLIC_PREFIX=Buffer.from("302a300506032b6570032100","hex"),ED_PRIVATE_PREFIX=Buffer.from("302e020100300506032b657004220420","hex"),X_PRIVATE_PREFIX=Buffer.from("302e020100300506032b656e04220420","hex"),X_PUBLIC_PREFIX=Buffer.from("302a300506032b656e032100","hex");

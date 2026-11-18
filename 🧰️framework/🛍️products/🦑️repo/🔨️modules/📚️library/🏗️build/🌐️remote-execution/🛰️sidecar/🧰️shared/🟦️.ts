@@ -2,13 +2,13 @@ import {readFleetExecutionV1} from "../../../🌐️remote-cache/🛰️fleet/�
 import {readRemoteExecutionPolicyV1} from "../../🟦️.ts";
 
 /** 🎭️ The two roles the replica daemon supervises: the agent (build worker and load reporter) and the graph server of every machine and, on the group server, the scheduler and the cache. */
-export type RemoteExecutionSidecarRoleV1="agent"|"scheduler"|"cache"|"graph";
+export type RemoteExecutionSidecarRoleV1="agent"|"scheduler"|"cache"|"graph"|"pool"|"ready";
 
 /** 🧰️ What a sidecar needs: the worktree, the environment the replica daemon hands over (`SEMIO_FLEET_ORIGIN`, `SEMIO_FLEET_GROUP`, `SEMIO_FLEET_STORE_ROOT`), cancellation and a log sink. */
 export type RemoteExecutionSidecarContextV1=Readonly<{root:string;environment:Readonly<Record<string,string|undefined>>;signal:AbortSignal;drain?:AbortSignal;write:(line:string)=>void;work?:SidecarWorkV1}>;
 
-/** 🧵️ What a role that holds a long computation tells its restart and hears back: `busy` while it serves (the restart of a code change waits for the end of it), `restartPending` while the restart waits (the role takes no new work) and `wake`, which the role calls when `busy` turns false so that the restart happens at once. */
-export type SidecarWorkV1={busy:boolean;restartPending:boolean;wake?:()=>void};
+/** 🧵️ What a role that holds a long computation tells its restart and hears back: `busy` while it serves (the restart of a code change waits for the end of it), `restartPending` while the restart waits (the role takes no new work) and `running`, how many actions the agent serves for other agents, and `wake`, which the role calls when `busy` turns false so that the restart happens at once. */
+export type SidecarWorkV1={busy:boolean;running?:number;restartPending:boolean;wake?:()=>void};
 
 export const sleep=(milliseconds:number,signal:AbortSignal):Promise<void>=>new Promise<void>(done=>{
  if(signal.aborted)return done();

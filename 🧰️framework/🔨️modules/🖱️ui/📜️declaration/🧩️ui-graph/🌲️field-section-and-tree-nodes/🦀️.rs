@@ -48,6 +48,42 @@ pub struct UiSectionNode {
     pub children: Vec<UiNode>,
 }
 
+/// 🃏️ A column of [`UiOverviewCardNode`]s that interlock: no gap, one shared line between neighbours.
+/// @see `🧱️elements/🃏️CardStack/🟦️.tsx`
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub struct UiCardStackNode {
+    pub id: String,
+    #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+    #[value(default, skip_serializing_if = "UiPresence::is_default")]
+    pub presence: UiPresence,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub menu: Option<UiMenuRef>,
+    pub children: Vec<UiNode>,
+}
+
+/// 🃏️ One card of a stack: a title chip in its cap row, an optional footer chip in its footer row and a body of children.
+/// @see `🧱️elements/🃏️OverviewCard/🟦️.tsx`
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub struct UiOverviewCardNode {
+    pub id: String,
+    pub title: Label,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub footer: Option<String>,
+    #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+    #[value(default, skip_serializing_if = "UiPresence::is_default")]
+    pub presence: UiPresence,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub menu: Option<UiMenuRef>,
+    pub children: Vec<UiNode>,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Default, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]

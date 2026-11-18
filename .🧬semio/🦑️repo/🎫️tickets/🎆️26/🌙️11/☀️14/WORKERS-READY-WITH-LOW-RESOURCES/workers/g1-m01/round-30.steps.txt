@@ -1,0 +1,45 @@
+
+##### try 1 native_rc=130
+Reading the project graph slice (0 s): the slice worker grew to 9927 MB, more than the 6553 MB a plan may take on this machine, so the work is cut smaller (step 2 of 6: fewer projects at once and smaller waves) and continues; projects already inferred are kept and nothing is repeated.
+Reading the project graph slice (0 s): the slice worker grew to 6642 MB, more than the 6553 MB a plan may take on this machine, so the work is cut smaller (step 3 of 6: fewer projects at once and smaller waves) and continues; projects already inferred are kept and nothing is repeated.
+Reading the project graph slice (0 s): the slice worker grew to 8271 MB, more than the 6553 MB a plan may take on this machine, so the work is cut smaller (step 4 of 6: fewer projects at once and smaller waves) and continues; projects already inferred are kept and nothing is repeated.
+Reading the project graph slice (0 s): the slice worker grew to 9868 MB, more than the 6553 MB a plan may take on this machine, so the work is cut smaller (step 5 of 6: fewer projects at once and smaller waves) and continues; projects already inferred are kept and nothing is repeated.
+highest step: step 5 of 6
+largest fleet wait: 
+slice worker peak rss: 7002 MB
+final lines:
+[repo] still working after 8781 s; last phase started: door.script
+[repo] still working after 8811 s; last phase started: door.script
+SIGINT received: the running work is cancelled and its leases are released; this process exits after 10 s at the latest.
+Cancelled (SIGINT); leases released.
+end 2026-11-15T20:05:31Z
+native_rc=130
+
+##### try 2 native_rc=1
+highest step: 
+largest fleet wait: 
+slice worker peak rss: 3681 MB
+final lines:
+[repo] still working after 1160 s; last phase started: door.script
+[repo] still working after 1190 s; last phase started: door.script
+[repo] still working after 1220 s; last phase started: door.script
+The resident service met an unexpected failure (reference bd0b2e16); try again, the details under that reference are in the service log /var/folders/gd/byw98s3s0p95zhdpzyv769740000gn/T/semio-repo/501/host-f13cda8149a9.log.
+end 2026-11-15T20:29:36Z
+native_rc=1
+
+##### try 3 native_rc=75
+Reading the project graph slice (0 s): the slice worker grew to 7935 MB, more than the 6553 MB a plan may take on this machine, so the work is cut smaller (step 2 of 6: fewer projects at once and smaller waves) and continues; projects already inferred are kept and nothing is repeated.
+Reading the project graph slice (0 s): the slice worker grew to 8190 MB, more than the 6553 MB a plan may take on this machine, so the work is cut smaller (step 3 of 6: fewer projects at once and smaller waves) and continues; projects already inferred are kept and nothing is repeated.
+Reading the project graph slice (0 s): the slice worker grew to 10048 MB, more than the 6553 MB a plan may take on this machine, so the work is cut smaller (step 4 of 6: fewer projects at once and smaller waves) and continues; projects already inferred are kept and nothing is repeated.
+Reading the project graph slice (0 s): the slice worker grew to 10159 MB, more than the 6553 MB a plan may take on this machine, so the work is cut smaller (step 5 of 6: fewer projects at once and smaller waves) and continues; projects already inferred are kept and nothing is repeated.
+Reading the project graph slice (0 s): the slice worker grew to 8928 MB, more than the 6553 MB a plan may take on this machine, so the work is cut smaller (step 6 of 6: fewer projects at once and smaller waves) and continues; projects already inferred are kept and nothing is repeated.
+highest step: step 6 of 6
+largest fleet wait: 
+slice worker peak rss: 6766 MB
+final lines:
+[repo] still working after 11151 s; last phase started: door.script
+[repo] still working after 11181 s; last phase started: door.script
+[repo] still working after 11211 s; last phase started: door.script
+The project graph could not be read on this machine yet: the plan stage inference (during inference) grew to 9545 MB, more than the 6553 MB this machine gives a plan, and only 1663 MB of memory were available (at least 2048 MB are kept in reserve) after it gave back what it could. It was stopped before the host ran short of memory. Nothing is wrong with your tree; run the command again when a machine with free memory serves the graph, or read the graph on a larger machine.
+end 2026-11-15T23:43:54Z
+native_rc=75

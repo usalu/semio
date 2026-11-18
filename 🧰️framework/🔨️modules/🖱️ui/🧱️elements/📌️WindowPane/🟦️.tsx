@@ -1,5 +1,4 @@
 /** 📑 Owns the window pane host and the resizable pane that window chrome stacks above the body. */
-import { uiSpacingPx } from "@semio-tech/ui-styling";
 import * as React from "react";
 import { type IconName } from "@semio-tech/assets";
 import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
@@ -149,7 +148,7 @@ export interface PaneProps {
   readonly inlineEdgeReservePx?: number;
   /** 🔗️ Explicit bounds for panes mounted beside, rather than inside, their host context. */
   readonly hostRef?: React.RefObject<HTMLElement | null>;
-  /** 🕳️ Minimum displacement-axis clearance from shell panels in CSS pixels. */
+  /** 🕳️ Displacement-axis clearance from shell panels in CSS pixels. The safe-area offset rounds outward to whole pixels, so the default half pixel of overlap centres the residual (at most half a pixel either way) inside the compositor's snap tolerance: the pane and the panel it yields to meet on one line. */
   readonly chromePanelGapPx?: number;
   readonly zIndex?: 10 | 20 | 30 | 40;
   readonly className?: string;
@@ -186,7 +185,7 @@ export const Pane: React.FC<PaneProps> = ({
   overlayRef,
   stackSlot = "window-chrome-stack",
   bodySlot = "pane-body",
-  bodyClassName = "overflow-y-auto p-single",
+  bodyClassName = "ui-scrollbar-hidden overflow-y-auto p-single",
   bodyStyle,
   stackClassName,
   stackDataAttrs,
@@ -197,7 +196,7 @@ export const Pane: React.FC<PaneProps> = ({
   order = 0,
   inlineEdgeReservePx = 0,
   hostRef,
-  chromePanelGapPx = uiSpacingPx(1),
+  chromePanelGapPx = -0.5,
   zIndex,
   className = "",
   children,

@@ -1,0 +1,130 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "semio.build.inputs.interface/v1",
+ "title": "Interface closure of check-class Rust targets: a dependency crate of a check task is keyed by what a type check can observe of its sources, never by their bytes. A closure that lists the marker is such a closure.",
+ "definitions": {
+  "Policy": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "version",
+    "namespace",
+    "group",
+    "marker",
+    "members",
+    "targets",
+    "reads"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "namespace": {
+     "type": "string"
+    },
+    "group": {
+     "type": "string"
+    },
+    "marker": {
+     "type": "string"
+    },
+    "members": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "minItems": 1,
+     "uniqueItems": true
+    },
+    "targets": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "names",
+      "scope",
+      "dependencyInput",
+      "sourceGroup"
+     ],
+     "properties": {
+      "names": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      },
+      "scope": {
+       "type": "string"
+      },
+      "dependencyInput": {
+       "type": "string"
+      },
+      "sourceGroup": {
+       "type": "string"
+      }
+     }
+    },
+    "reads": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "extension"
+     ],
+     "properties": {
+      "extension": {
+       "type": "string"
+      }
+     }
+    }
+   },
+   "const": {
+    "version": 1,
+    "namespace": "semio.build.inputs.interface/v1",
+    "group": "nativeInterface",
+    "marker": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️interface/🧬️schema/🔣️.json",
+    "members": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️interface/🧬️schema/🔣️.json",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️interface/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🔭️interface/🧬️schema/🔣️.json",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🔭️interface/🟦️.ts"
+    ],
+    "targets": {
+     "names": [
+      "check"
+     ],
+     "scope": "production",
+     "dependencyInput": "^nativeSources",
+     "sourceGroup": "nativeSources"
+    },
+    "reads": {
+     "extension": ".rs"
+    }
+   }
+  },
+  "Facts": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "masked",
+    "bodies",
+    "void",
+    "splice"
+   ],
+   "properties": {
+    "masked": {
+     "type": "string",
+     "pattern": "^[0-9a-f]{64}$"
+    },
+    "bodies": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "void": {
+     "type": "boolean"
+    },
+    "splice": {
+     "type": "boolean"
+    }
+   }
+  }
+ }
+}

@@ -16,8 +16,8 @@ test("releasing the inference caches empties every cache a construction filled",
 
 test("the generation load releases once after assembling, on the verified path and on the built path",()=>{
  const text=readFileSync(fileURLToPath(new URL("../../../🕸️graph/🕰️generations/🔌️load/🟨️.mjs",import.meta.url)),"utf8");
- expect(text).toContain("if(!first.needsBuild){await host.release?.();return{graph:first.graph,stats:first.stats};}");
- expect(text.indexOf("const built=await host.withBuilder")).toBeLessThan(text.indexOf("await host.release?.();\n return{graph:built.graph,stats:built.stats};"));
+ expect(text).toContain("if(!first.needsBuild){await host.release?.();");expect(text.indexOf("await host.release?.();",text.indexOf("if(!first.needsBuild){"))).toBeLessThan(text.indexOf("return{graph:first.graph,stats:first.stats};"));
+ const builderAt=text.indexOf("built=await host.withBuilder"),graphAt=text.indexOf("return{graph:built.graph,stats:built.stats};");expect(builderAt).toBeGreaterThan(-1);expect(text.indexOf("await host.release?.();",builderAt)).toBeGreaterThan(builderAt);expect(text.indexOf("await host.release?.();",builderAt)).toBeLessThan(graphAt);
  const host=graphSourceV1();
- expect(host).toContain("release:async()=>{observationV1.releaseInferenceMemoryV1();");
+ expect(host).toContain("release:async(options?:{more?:boolean})=>{observationV1.releaseInferenceMemoryV1(");
 });

@@ -22,3 +22,9 @@ test("a live identity is stable, differs by root and seal, includes the code rev
  expect(live).toBe(createHash("sha256").update("live\0/r\0\0"+hostServiceRevisionV1()).digest("hex"));
  const sealed="a".repeat(64);expect(hostImplementationV1("/r",{SEMIO_SEALED_DOOR_DIGEST:sealed})).toBe(sealed);
 });
+
+test("a file only a slice worker loads is not part of the service identity: the pool starts a fresh worker with the current code, so an edit of it must not retire the service and cancel the plans it runs",()=>{
+ const files=HOST_POLICY_V1.serviceRevisionFiles as string[];
+ expect(files.filter(path=>path.endsWith("slice-pool/\u{1F477}\uFE0Fworker.ts"))).toEqual([]);
+ for(const path of files)expect(path.endsWith(".ts")||path.endsWith(".mjs")||path.endsWith(".json")).toBe(true);
+});

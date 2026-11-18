@@ -97,7 +97,7 @@ test("the wiring stays in place: lease admission and wait hook, owner declaratio
  expect(leases).toContain('Symbol.for("'+protocol.admissionGuardRegistry+'")');
  expect(leases).toContain('runAdmissionGuardsV1(options,"waiting")');expect(leases).toContain("return admitResourceLeaseV1(options,upgraded)");expect(leases).toContain("return admitResourceLeaseV1(options,await acquire())");expect(leases).toContain("return admitResourceLeaseV1(options,lease)");
  const graph=["🔐️authority","🕰️host","🧭️discovery"].map(name=>text("🏗️build","🕸️graph",name,"🟦️.ts")).join("\n");
- expect(graph).toContain('declareFormatStampV1("graph.generation",generationSchemaV1)');expect(graph).toContain('requireCurrentFormatStampsV1(graphFormatStampsV1,"graph generation","refuse")');expect(graph).toContain('requireCurrentFormatStampsV1(graphFormatStampsV1,"graph generation");return discoverBuildGraphPartV1');
+ expect(graph).toContain('declareFormatStampV1("graph.generation",generationSchemaV1)');expect(graph).toContain('requireCurrentFormatStampsV1(graphFormatStampsV1,"graph generation","refuse")');const guard='requireCurrentFormatStampsV1(graphFormatStampsV1,"graph generation");const offerStartedMs';expect(graph).toContain(guard);expect(graph.indexOf(guard)).toBeLessThan(graph.indexOf("await discoverBuildGraphPartV1(root"));
  expect(text("🏗️build","👁️observation","🟨️.mjs")).toContain('declareFormatStampV1("graph.record",sourceAnalysisSchemaV1)');
  expect(text("🏗️build","🕸️graph","📥️inference","🔖️stamps","🟨️.mjs")).toContain('declareFormatStampV1("graph.inferrers", schema)');
  expect(text("⚡️caching","🚀️bootstrap","📦️dependencies","🚦️concurrent","🟦️.ts")).toContain('declareFormatStampV1("dependency.walk",generationSchema)');
@@ -106,7 +106,7 @@ test("the wiring stays in place: lease admission and wait hook, owner declaratio
  const format=text("⚡️caching","💾️storage","🔒️enforcement","📦️budget","📥️opening","🏪️store","📇️format","🟦️.ts");
 const opening=text("⚡️caching","💾️storage","🔒️enforcement","📦️budget","📥️opening","🟦️.ts");expect(opening).toContain('declareFormatStampV1("native.publication",nativeStorageSchema)');expect(opening).toContain('export async function openRepositoryCachePartitionAttemptV1(');const recovering=text("⚡️caching","💾️storage","🔒️enforcement","📦️budget","📥️opening","♻️reset","🟦️.ts");expect(recovering).toContain('openRepositoryCachePartitionAttemptV1(workspace,id,control,()=>openRepositoryCachePartitionV1(workspace,"leases",control))');
  expect(format).toContain('declareFormatStampV1("cache.graph-image",schema)');expect(format).toContain('requireCurrentFormatStampsV1(["cache.graph-image"],"graph cache image","refuse")');
- expect(text("🏗️build","⌨️command","📥️entry","🟦️.ts")).toContain("exitIfStaleImplementationV1(error);throw error;}");
+ expect(text("🏗️build","⌨️command","📥️entry","🟦️.ts")).toContain("exitIfStaleImplementationV1(error);const{reportBoundaryErrorV1}");
  const script=text("🏗️build","📜️script.ts");
  expect(text("🏗️build","🚪️door","🔄️restart","🟦️.ts")).toContain("outermost=environment[invocationEnvironmentV1]===undefined");expect(script).toContain("if(isMainModuleV1(import.meta.url)){");expect(script).toContain("runBuildMainV1(findWorkspaceRoot(import.meta.dirname)");
  expect(text("🏗️build","🕸️graph","📥️inference","🔖️stamps","🧬️schema","🔣️.json")).toContain('"🏗️build/🧷️format-stamps/"');
@@ -240,4 +240,36 @@ test("a reader whose own source changed on disk after it loaded it is a stale im
  expect(calls[0]!.environment.SEMIO_STALE_REEXEC).toBe("1");expect(written.join("")).toContain("Stale loaded Source revision reader; restart required");expect(written.join("")).toContain("(1 of "+protocol.maximumReexecutions+")");
  expect(await runWithStaleReexecV1(async()=>{throw error;},{...options,environment:{SEMIO_LANGUAGE:"en",SEMIO_STALE_REEXEC:String(protocol.maximumReexecutions)}})).toEqual({status:"exhausted",code:75});
  expect(calls.length).toBe(1);
+});
+
+test("a restart that finds the stamps moved to other values than before followed a moving tree and does not count; the same values again are bounded; the patience is bounded",async()=>{
+ const stale=(live:string)=>new StaleImplementationErrorV1([{id:"x.y",own:"1",live}],{languages:["en"]});
+ const calls:{environment:Record<string,string|undefined>}[]=[];
+ const launch=async(row:{environment:Record<string,string|undefined>})=>{calls.push(row);return 0;};
+ let environment:Record<string,string|undefined>={SEMIO_LANGUAGE:"en"};let clock=1000;
+ const step=async(live:string)=>{const result=await runWithStaleReexecV1(async()=>{throw stale(live);},{environment,argv:["bun","/repo/script.ts","repo","show"],execPath:"bun",execArgv:[],launch,write:()=>undefined,outermost:true,now:()=>clock});environment=calls.at(-1)?.environment??environment;clock+=1000;return result;};
+ for(let at=0;at<protocol.maximumReexecutions*3;at++)expect((await step("v"+at)).status).toBe("reexecuted");
+ expect(Number(environment.SEMIO_STALE_REEXEC)).toBeLessThanOrEqual(2);
+ let status="reexecuted";for(let at=0;at<protocol.maximumReexecutions+3&&status==="reexecuted";at++)status=(await step("same")).status;
+ expect(status).toBe("exhausted");
+ environment={SEMIO_LANGUAGE:"en"};clock=1000;calls.length=0;await step("a");
+ clock+=protocol.movedPatienceMilliseconds+1;environment={...environment,SEMIO_STALE_REEXEC:String(protocol.maximumReexecutions)};
+ expect((await step("b")).status).toBe("exhausted");
+});
+
+test("a restart is bounded: identical moved values count even after a long run, and quick restarts that follow a moving tree stop at the follow cap while long ones are progress",async()=>{
+ const stale=(live:string)=>new StaleImplementationErrorV1([{id:"x.y",own:"1",live}],{languages:["en"]});
+ const calls:{environment:Record<string,string|undefined>}[]=[];
+ const launch=async(row:{environment:Record<string,string|undefined>})=>{calls.push(row);return 0;};
+ const make=(ran:number)=>{let environment:Record<string,string|undefined>={SEMIO_LANGUAGE:"en"};let clock=1000;
+  return async(live:string)=>{const result=await runWithStaleReexecV1(async()=>{throw stale(live);},{environment,argv:["bun","/repo/script.ts","repo","show"],execPath:"bun",execArgv:[],launch,write:()=>undefined,outermost:true,now:()=>clock,ranMilliseconds:ran});environment=calls.at(-1)?.environment??environment;clock+=1000;return result;};};
+ const long=make(protocol.progressMilliseconds+1);let status="reexecuted",count=0;
+ while(status==="reexecuted"&&count<protocol.maximumReexecutions*4){status=(await long("same")).status;count++;}
+ expect(status,"identical values after 10 minute runs").toBe("exhausted");expect(count).toBeLessThanOrEqual(protocol.maximumReexecutions+2);
+ const quick=make(1000);status="reexecuted";count=0;
+ while(status==="reexecuted"&&count<protocol.movedFollowMaximum*3){status=(await quick("v"+count)).status;count++;}
+ expect(status,"flapping values that never get anywhere").toBe("exhausted");expect(count).toBeLessThanOrEqual(protocol.movedFollowMaximum+2);
+ const progress=make(protocol.movedProgressMilliseconds+1);status="reexecuted";
+ for(let at=0;at<protocol.movedFollowMaximum*3;at++)status=(await progress("p"+at)).status;
+ expect(status,"every restart ran a minute: that is progress").toBe("reexecuted");
 });

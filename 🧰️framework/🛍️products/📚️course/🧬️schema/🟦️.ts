@@ -99,8 +99,11 @@ export type SortingItem = { readonly id: Slug; readonly label: Text; readonly sh
 /** 🧷️ An item to match together with its true value per dimension id; `familiar` marks an everyday thing a compare hint prefers as its reference (never presented). */
 export type MatchingItem = { readonly id: Slug; readonly label: Text; readonly short?: ShortText; readonly icon?: Icon; readonly mockup?: Mockup; readonly values: Readonly<Record<Slug, number>>; readonly familiar?: boolean; readonly explanation?: Text };
 
-/** 🧺️ Fixed semantic slots with rotating variants and a per-question time budget. */
-export type QuestionPool = { readonly seconds: number; readonly slots: readonly (readonly Slug[])[] };
+/** 📉️ How a pool draws fewer slots than it has: Zipf over the slots ranked ascending by magnitude, each pick proportional to `1 / rank^exponent` among the slots left. */
+export type Distribution = { readonly kind: "zipf"; readonly exponent: number };
+
+/** 🧺️ Fixed semantic slots with rotating variants, a per-question time budget and an optional distribution over the slots a sheet draws. */
+export type QuestionPool = { readonly seconds: number; readonly slots: readonly (readonly Slug[])[]; readonly distribution?: Distribution };
 
 /** 🗃️ Assign every item to one category; a wrong category with a profile earns partial credit by profile similarity. */
 export type ClassificationTask = {
@@ -200,7 +203,7 @@ export type Badge = { readonly id: Slug; readonly emoji: string; readonly label:
 export type Introduction = { readonly title: Text; readonly paragraphs: readonly Text[] };
 
 /** 🧭️ Page names reserved for the course's root navigation. */
-export const COURSE_ROOT_IDS = ["home", "identity", "introduction", "learner", "intro", "board", "badges", "prefs", "quizzes", "run", "results"] as const;
+export const COURSE_ROOT_IDS = ["home", "identity", "introduction", "learner", "intro", "board", "badges", "prefs", "quizzes", "assignments", "clips", "run", "results"] as const;
 
 /** 👥️ An ordered course group; an empty quiz list marks a placeholder. */
 export type Topic = { readonly id: Slug; readonly emoji: string; readonly title: Text; readonly quizzes: readonly Slug[] };
@@ -217,9 +220,19 @@ export type AssignmentDocuments = { readonly en: AssignmentDocument; readonly de
 /** ✍️ An ungraded topic exercise with a printable PDF in every supported language. */
 export type Assignment = { readonly id: Slug; readonly topic: Slug; readonly emoji: string; readonly title: Text; readonly description: Text; readonly documents: AssignmentDocuments };
 
+/** 🖼️ The still frame of a clip: a PNG the site builds into its hashed assets, identified by file name. */
+export type ClipPoster = { readonly file: string };
+
+/** 🔗️ Where a clip is hosted per language; a language without an address has no hosted clip yet. */
+export type ClipUrls = { readonly en?: string; readonly de?: string };
+
+/** 🎬️ A learning clip of one topic: its poster now and, once it is hosted elsewhere, its address per language. */
+export type Clip = { readonly id: Slug; readonly topic: Slug; readonly emoji: string; readonly title: Text; readonly description: Text; readonly poster: ClipPoster; readonly urls?: ClipUrls };
+
 /** 📚️ Authored course material, quizzes and badges. */
 export type Course = {
   readonly assignments?: readonly Assignment[];
+  readonly clips?: readonly Clip[];
   readonly unlocks?: Unlocks;
   readonly $schema?: string;
   readonly schema: "semio.course/v1";
@@ -431,7 +444,7 @@ export type CourseQuizView = { readonly id: Slug; readonly emoji: string; readon
 export type CourseBadgeView = { readonly id: Slug; readonly emoji: string; readonly label: Text; readonly description: Text };
 
 /** 📖️ The solution-free course a client renders. */
-export type CourseView = { readonly assignments?: readonly Assignment[]; readonly unlocks?: Unlocks; readonly id: Slug; readonly title: Text; readonly short?: ShortText; readonly introduction: Introduction; readonly quizzes: readonly CourseQuizView[]; readonly topics?: readonly Topic[]; readonly badges: readonly CourseBadgeView[] };
+export type CourseView = { readonly assignments?: readonly Assignment[]; readonly clips?: readonly Clip[]; readonly unlocks?: Unlocks; readonly id: Slug; readonly title: Text; readonly short?: ShortText; readonly introduction: Introduction; readonly quizzes: readonly CourseQuizView[]; readonly topics?: readonly Topic[]; readonly badges: readonly CourseBadgeView[] };
 
 /** 🚥️ The states of a run. */
 export const RUN_STATUSES = ["open", "submitted", "voided"] as const;

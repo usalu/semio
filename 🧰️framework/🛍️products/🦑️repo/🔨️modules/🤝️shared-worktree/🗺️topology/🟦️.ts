@@ -256,6 +256,7 @@ const agentOf=(label:string,directory:string,program:readonly string[],schedule:
 const KEEP_ALIVE=["<key>RunAtLoad</key><true/>","<key>KeepAlive</key><true/>","<key>ThrottleInterval</key><integer>5</integer>","<key>ExitTimeOut</key><integer>30</integer>"],
  UNLIMITED_STARTS="StartLimitIntervalSec=0",
  STOP_BOUND=["KillMode=mixed","TimeoutStopSec=30"];
+/** 🙈️ One Windows scheduled task of the signed-in user. The action runs under `conhost.exe --headless`: an interactive task that starts a console program directly opens a terminal window on every start (once a minute for the mount task), and the headless host gives the program and its children one console without a window. See https://learn.microsoft.com/windows/console/creating-a-pseudoconsole-session */
 const taskOf=(description:string,trigger:string,settings:string,directory:string,executable:string,args:string):string=>[
  '<?xml version="1.0" encoding="UTF-16"?>',
  '<Task version="1.3" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">',
@@ -263,7 +264,7 @@ const taskOf=(description:string,trigger:string,settings:string,directory:string
  `<Triggers>${trigger}</Triggers>`,
  '<Principals><Principal id="Author"><LogonType>InteractiveToken</LogonType><RunLevel>LeastPrivilege</RunLevel></Principal></Principals>',
  `<Settings><MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy><DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries><StopIfGoingOnBatteries>false</StopIfGoingOnBatteries><StartWhenAvailable>true</StartWhenAvailable><RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable><AllowStartOnDemand>true</AllowStartOnDemand><WakeToRun>false</WakeToRun>${settings}</Settings>`,
- '<Actions Context="Author"><Exec>',`<Command>${executable}</Command>`,`<Arguments>${xml(args)}</Arguments>`,...directory===""?[]:[`<WorkingDirectory>${directory}</WorkingDirectory>`],"</Exec></Actions>",
+ '<Actions Context="Author"><Exec>',"<Command>conhost.exe</Command>",`<Arguments>${xml(`--headless ${executable} ${args}`)}</Arguments>`,...directory===""?[]:[`<WorkingDirectory>${directory}</WorkingDirectory>`],"</Exec></Actions>",
  "</Task>"
 ].join("\n");
 const MOUNT_LIMIT="<ExecutionTimeLimit>PT5M</ExecutionTimeLimit>";

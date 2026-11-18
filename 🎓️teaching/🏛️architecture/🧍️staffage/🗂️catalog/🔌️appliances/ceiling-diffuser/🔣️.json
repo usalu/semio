@@ -1710,6 +1710,8 @@
             "key": "supply",
             "heatW": -25
           },
+          "ratedPowerW": 0,
+          "ratedPowerBasis": "passive",
           "source": "authored-estimate",
           "reference": "incropera-2018"
         },

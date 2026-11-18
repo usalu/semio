@@ -33,6 +33,7 @@ semio-framework-value-paged-list = { path="../../../📋️list/📦️packages/
 
 [dev-dependencies]
 semio-framework-value-testing-effect-bank = { path="../../../🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
+semio-framework-value-clone-source = { path = "../../../🧬️retained-clone/🔗️source/📦️packages/🦀️rust" }
 semio-framework-value-clone-source-testing = { path = "../../../🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-value-factory = { path="../../🏭️factory/📦️packages/🦀️rust" }

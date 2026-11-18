@@ -7,7 +7,7 @@ import { SessionAuthorityNotice } from "./🔖️session-notice/🟦️.tsx";
 import * as React from "../⚛️react-port/🟦️.ts";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "../⚛️react-port/🟦️.ts";
 import { localeRequestToApply } from "./🌐️locale-request/🟦️.ts";
-import { type Anchor, ANCHORS, CanvasSkeleton, cn, ContextMenuController, ContextMenuTriggerButton, createShellScope, detectShellLocale, disposeShellI18nInstance, Footer, Layout, LevelProvider, Navbar, PanelDockProvider, type ShellScope, ShellScopeProvider, TextSelectionContextMenuHost, TutorialBar, UIIntroduction, UiKeybindingsProvider } from "@semio-tech/ui-react";
+import { type Anchor, ANCHORS, Button, CanvasSkeleton, cn, ContextMenuController, ContextMenuTriggerButton, createShellScope, detectShellLocale, disposeShellI18nInstance, Footer, Layout, LevelProvider, Navbar, PanelDockProvider, type ShellScope, SharedBorderRow, SharedBorderRowCell, ShellScopeProvider, TextSelectionContextMenuHost, TutorialBar, UIIntroduction, UiKeybindingsProvider } from "@semio-tech/ui-react";
 import { commitUiPreferencesConfigMutation, readUiPreferences } from "../🎚️UiPreferences/🟦️.ts";
 import { setLocale } from "@semio-tech/framework/config/mutations";
 import type { ShellLocale } from "@semio-tech/framework";
@@ -19,6 +19,7 @@ import { SpaceAdministrationPane } from "../🛂️SpaceAdministration/🟦️.t
 import { HubWorkspace } from "../🔗️HubConnection/🏛️workspace/🟦️.tsx";
 import { BoardSessionFactoryContext, registerWasmBindingsV1 } from "../🪪️WasmSessionLoader/🟦️.tsx";
 import { isEphemeralShellBrand } from "../🐚️Shell/🔒️boot-and-locks/🟦️.ts";
+import { FloatingPane, NoticeActionRow, NoticeCell, NoticeStack } from "./🧱️notice-bands/🟦️.tsx";
 import { ShellFaultBoundary } from "../🐚️Shell/🧯️fault-boundary/🟦️.tsx";
 import { registerElementHostsV1 } from "../🪢️ElementHosts/🟦️.ts";
 import { pluginInstallBandTextV1, pluginInstallCancelTextV1 } from "../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
@@ -214,31 +215,31 @@ function FrameworkOsShellInner(props: FrameworkOsShellInnerProps) {
         >
           {hubEnv && hubSessionCapability !== null && verifiedSessionAuthority === null ? <SessionAuthorityNotice state={identityOffline ? "unavailable" : "pending"} locale={uiLocale} onCancel={cancelSessionAuthorityBootstrap} /> : null}
           {Object.values(bootstrapUiByDocument).length > 0 ? (
-            <div className="pointer-events-auto absolute top-workbench left-1/2 z-50 flex -translate-x-1/2 flex-col gap-single rounded-sm border bg-base px-double py-single text-sm shadow-sm">
+            <NoticeStack data-semio-notice-stack="bootstrap" className="top-workbench left-1/2 -translate-x-1/2">
               {Object.entries(bootstrapUiByDocument).map(([runtimeKey, status]) => (
-                <BootstrapStatusNotice key={runtimeKey} status={status} locale={uiLocale} onCancel={() => closeDocument(runtimeKey)} />
+                <NoticeCell key={runtimeKey}><BootstrapStatusNotice status={status} locale={uiLocale} onCancel={() => closeDocument(runtimeKey)} /></NoticeCell>
               ))}
-            </div>
+            </NoticeStack>
           ) : null}
           {Object.values(executionTargetUiByDocument).length > 0 ? (
-            <div className="pointer-events-auto absolute top-workbench left-1/2 z-50 mt-double flex -translate-x-1/2 flex-col gap-single rounded-sm border bg-base px-double py-single text-sm shadow-sm">
+            <NoticeStack data-semio-notice-stack="execution-target" className="top-workbench left-1/2 mt-double -translate-x-1/2">
               {Object.entries(executionTargetUiByDocument).map(([runtimeKey, status]) => (
-                <ExecutionTargetStatusNotice key={runtimeKey} status={status} locale={uiLocale} onCancel={() => closeDocument(runtimeKey)} />
+                <NoticeCell key={runtimeKey}><ExecutionTargetStatusNotice status={status} locale={uiLocale} onCancel={() => closeDocument(runtimeKey)} /></NoticeCell>
               ))}
-            </div>
+            </NoticeStack>
           ) : null}
           {Object.values(spaceArtifactCreationUi).length > 0 || spaceArtifactCreationCatalogUi !== null ? (
-            <div className="pointer-events-auto absolute top-workbench left-double z-50 flex max-w-[28rem] flex-col gap-single rounded-sm border bg-base px-double py-single text-sm shadow-sm">
-              {spaceArtifactCreationCatalogUi === null ? null : <ArtifactCreationCatalogNotice status={spaceArtifactCreationCatalogUi} locale={uiLocale} />}
+            <NoticeStack data-semio-notice-stack="artifact-creation" className="top-workbench left-double max-w-[28rem]">
+              {spaceArtifactCreationCatalogUi === null ? null : <NoticeCell><ArtifactCreationCatalogNotice status={spaceArtifactCreationCatalogUi} locale={uiLocale} /></NoticeCell>}
               {Object.values(spaceArtifactCreationUi).map((status) => (
-                <ArtifactCreationProgressNotice key={status.requestId} state={status} locale={uiLocale} onCancel={cancelSpaceArtifactCreation} onOpen={openReadySpaceArtifactCreation} />
+                <NoticeCell key={status.requestId}><ArtifactCreationProgressNotice state={status} locale={uiLocale} onCancel={cancelSpaceArtifactCreation} onOpen={openReadySpaceArtifactCreation} /></NoticeCell>
               ))}
-            </div>
+            </NoticeStack>
           ) : null}
           {inferencePortRuntimeKey !== null && inferencePort !== undefined && documentServices.some((entry) => entry.owner === inferencePort.owner && entry.serviceId === inferencePort.serviceId) ? (
-            <div className="pointer-events-auto absolute top-workbench left-1/2 z-50 w-[28rem] -translate-x-1/2 rounded-sm border bg-base px-double py-single text-sm shadow-sm">
+            <FloatingPane data-semio-floating-pane="installed-service" className="top-workbench left-1/2 w-[28rem] -translate-x-1/2 text-sm" scrollClassName="px-double py-single">
               <InstalledServicePanelV1 presentation={documentServices.find((entry) => entry.owner === inferencePort.owner && entry.serviceId === inferencePort.serviceId)!} status={inferencePort} locale={uiLocale === "de" ? "de" : "en"} onAction={(action) => dispatchInferencePortIntent(inferencePortRuntimeKey, action)} />
-            </div>
+            </FloatingPane>
           ) : null}
           {directoryBootstrapUi.kind !== "idle" ? (
             <div className="pointer-events-auto absolute top-workbench right-double z-50 rounded-sm border bg-base px-double py-single text-sm shadow-sm">
@@ -246,7 +247,7 @@ function FrameworkOsShellInner(props: FrameworkOsShellInnerProps) {
             </div>
           ) : null}
           {hubWorkspaceOpen ? (
-            <div data-elevation-root="" className="pointer-events-auto absolute top-workbench left-1/2 z-50 max-h-[80vh] w-full max-w-[44rem] -translate-x-1/2 overflow-auto rounded-sm border bg-base shadow-sm">
+            <FloatingPane data-elevation-root="" data-semio-floating-pane="hub-workspace" className="top-workbench left-1/2 max-h-[80vh] w-full max-w-[44rem] -translate-x-1/2">
               <HubWorkspace
                 port={hubConnectionPort}
                 locale={uiLocale === "de" ? "de" : "en"}
@@ -258,10 +259,10 @@ function FrameworkOsShellInner(props: FrameworkOsShellInnerProps) {
                   if (hostMode) navigateHistory(sessionRouteRef.current ?? "/");
                 }}
               />
-            </div>
+            </FloatingPane>
           ) : null}
           {spaceAdministration !== null ? (
-            <div className="pointer-events-auto absolute top-workbench left-1/2 z-50 max-h-[70vh] w-[36rem] -translate-x-1/2 overflow-auto rounded-sm border bg-base shadow-sm">
+            <FloatingPane data-semio-floating-pane="space-administration" className="top-workbench left-1/2 max-h-[70vh] w-[36rem] -translate-x-1/2">
               <SpaceAdministrationPane
                 spaceId={spaceAdministration.spaceId}
                 phase={spaceAdministration.phase}
@@ -272,59 +273,50 @@ function FrameworkOsShellInner(props: FrameworkOsShellInnerProps) {
                 inviteCapabilityStatus={spaceAdministration.inviteCapabilityStatus}
                 onIntent={dispatchSpaceAdministrationIntent}
               />
-            </div>
+            </FloatingPane>
           ) : null}
           {routeAdmissionNotice === null ? null : (
-            <div role="status" aria-live="polite" data-semio-route-admission={routeAdmission} className="pointer-events-auto absolute bottom-double left-1/2 z-40 flex max-w-[90vw] -translate-x-1/2 flex-wrap items-center gap-single rounded-sm border bg-base px-double py-single text-sm shadow-sm">
-              <span>{routeAdmissionNotice.text}</span>
+            <NoticeStack orientation="horizontal" role="status" aria-live="polite" data-semio-route-admission={routeAdmission} className="bottom-[var(--footer-band-height)] left-1/2 z-40 max-w-[90vw] -translate-x-1/2">
+              <NoticeCell>{routeAdmissionNotice.text}</NoticeCell>
               {routeAdmissionNotice.action === null ? null : (
-                <button type="button" data-semio-route-admission-action="" className="underline" onClick={openHubWorkspace}>
+                <Button icon="arrow-right" type="button" variant="outline" data-semio-route-admission-action="" onClick={openHubWorkspace}>
                   {routeAdmissionNotice.action}
-                </button>
+                </Button>
               )}
-            </div>
+            </NoticeStack>
           )}
           {closePrompt === null ? null : <DocumentCloseDialog name={closePrompt.name} locale={uiLocale} failure={closePrompt.failure} saving={closePrompt.phase === "saving"} onKeep={closePrompt.onKeep} onDiscard={closePrompt.onDiscard} />}
           {transientNotice ? <TransientNotice notice={transientNotice} closeLabel={shellLabel("ui.common.close")} onClose={() => dispatch({ type: "SET_TRANSIENT_NOTICE", value: null })} /> : null}
-          {installingPluginIds.length > 0 ? (
-            <div
-              role="status"
-              aria-live="polite"
-              data-semio-plugin-install=""
-              data-plugin-install-ids={installingPluginIds.join(",")}
-              className="pointer-events-auto absolute top-workbench left-1/2 z-50 mt-double -translate-x-1/2 rounded-sm border border-normal bg-menu px-double py-single text-sm shadow-sm"
-            >
-              {pluginInstallBandTextV1(installingPluginIds.map((programId) => parseHubProgramIdV1(programId)?.pluginId ?? programId), uiLocale, pluginInstallProgress)}
-              {pluginInstallProgress ? (
-                <progress
-                  className="ml-single align-middle"
-                  data-semio-plugin-install-progress=""
-                  value={pluginInstallProgress.completedBytes}
-                  max={pluginInstallProgress.totalBytes}
-                  aria-label={pluginInstallBandTextV1(installingPluginIds, uiLocale, pluginInstallProgress)}
-                />
-              ) : null}
-              <button type="button" className="ml-single underline" data-semio-plugin-install-cancel="" onClick={cancelPluginInstalls}>
-                {pluginInstallCancelTextV1(uiLocale)}
-              </button>
-            </div>
-          ) : null}
-          {commandStalls.length > 0 ? (
-            <div
-              role="status"
-              aria-live="polite"
-              data-semio-command-stall=""
-              className={cn("pointer-events-auto absolute top-workbench left-1/2 z-50 mt-double -translate-x-1/2 rounded-sm border border-normal bg-menu px-double py-single text-sm shadow-sm", installingPluginIds.length > 0 && "translate-y-full")}
-            >
-              {commandStalls.map((stall) => (
-                <div key={stall.id} data-semio-command-stall-id={stall.id} data-command-id={stall.commandId ?? ""}>
-                  {commandStallLineV1(stall, loadedPlugins, panel?.spawnedApps ?? [], uiTerminology, uiLocale, commandStallClockMs)}
-                  <button type="button" className="ml-single underline" data-semio-command-stall-cancel="" onClick={() => commandStallWatch.cancel(stall.id)}>
-                    {commandStallCancelTextV1(uiLocale)}
-                  </button>
-                </div>
-              ))}
-            </div>
+          {installingPluginIds.length > 0 || commandStalls.length > 0 ? (
+            <NoticeStack data-semio-notice-stack="install" className="top-[var(--navbar-band-height)] left-1/2 max-w-[90vw] -translate-x-1/2 bg-menu">
+              {installingPluginIds.length === 0 ? null : (
+                <NoticeActionRow
+                  role="status"
+                  aria-live="polite"
+                  data-semio-plugin-install=""
+                  data-plugin-install-ids={installingPluginIds.join(",")}
+                  text={pluginInstallBandTextV1(installingPluginIds.map((programId) => parseHubProgramIdV1(programId)?.pluginId ?? programId), uiLocale, pluginInstallProgress)}
+                  action={{ label: pluginInstallCancelTextV1(uiLocale), onPress: cancelPluginInstalls }}
+                  actionProps={{ "data-semio-plugin-install-cancel": "" }}
+                >
+                  {pluginInstallProgress ? <progress className="ml-single align-middle" data-semio-plugin-install-progress="" value={pluginInstallProgress.completedBytes} max={pluginInstallProgress.totalBytes} aria-label={pluginInstallBandTextV1(installingPluginIds, uiLocale, pluginInstallProgress)} /> : null}
+                </NoticeActionRow>
+              )}
+              {commandStalls.length === 0 ? null : (
+                <SharedBorderRow orientation="vertical" role="status" aria-live="polite" data-semio-command-stall="">
+                  {commandStalls.map((stall) => (
+                    <NoticeActionRow
+                      key={stall.id}
+                      data-semio-command-stall-id={stall.id}
+                      data-command-id={stall.commandId ?? ""}
+                      text={commandStallLineV1(stall, loadedPlugins, panel?.spawnedApps ?? [], uiTerminology, uiLocale, commandStallClockMs)}
+                      action={{ label: commandStallCancelTextV1(uiLocale), onPress: () => commandStallWatch.cancel(stall.id) }}
+                      actionProps={{ "data-semio-command-stall-cancel": "" }}
+                    />
+                  ))}
+                </SharedBorderRow>
+              )}
+            </NoticeStack>
           ) : null}
           <PanelDockProvider dock={dock} onTabDockDrop={handleTabDockDrop} onTreeUnitDockDrop={handleTreeUnitDockDrop}>
             <Layout
@@ -364,7 +356,7 @@ function FrameworkOsShellInner(props: FrameworkOsShellInnerProps) {
               footer={<Footer items={footerItems} />}
               subfooter={
                 focusedTimeTravel !== null || focusedReprojection !== null || currentCheckIn !== undefined || folderReconnectOffer !== null ? (
-                  <div data-semio-bottom-bands="" className="flex flex-col items-center gap-single px-double py-single">
+                  <div data-semio-bottom-bands="" className="flex w-full flex-col items-stretch">
                     {folderReconnectOffer === null ? null : (
                       <LocalFolderReconnectBand
                         label={String(shellLabel("ui.sync.reconnect.label"))}
@@ -379,21 +371,25 @@ function FrameworkOsShellInner(props: FrameworkOsShellInnerProps) {
                     {focusedTimeTravel === null || focusedApp === null ? null : <TimeTravelBand session={focusedTimeTravel} terminology={uiTerminology} locale={uiLocale} controllerId={focusedApp.controllerId} onAction={onActionStable} />}
                     {focusedReprojection === null || focusedApp === null ? null : <HistoryReprojectionStatus reprojection={focusedReprojection} locale={uiLocale} sessionOpen={focusedTimeTravel !== null} controllerId={focusedApp.controllerId} onAction={onActionStable} />}
                     {currentCheckIn === undefined || currentDocumentRuntimeKey === null ? null : (
-                      <div role="status" aria-live="polite" data-semio-checkin-band={currentCheckIn.status.phase} className="pointer-events-auto flex flex-wrap items-center gap-single rounded-sm border border-normal bg-menu px-double py-single text-sm shadow-sm">
-                        <span id="s-checkin-status">{checkinStatusText(currentCheckIn.status, uiLocale)}</span>
+                      <SharedBorderRow role="status" aria-live="polite" data-semio-checkin-band={currentCheckIn.status.phase} className="bg-menu text-sm">
+                        <NoticeCell className="flex-row items-center"><span id="s-checkin-status">{checkinStatusText(currentCheckIn.status, uiLocale)}</span></NoticeCell>
                         {isTerminalDocumentCheckInPhaseV1(currentCheckIn.status.phase) ? (
-                          <button type="button" id="s-checkin-dismiss" className="underline" onClick={() => dismissHubCheckIn(currentDocumentRuntimeKey)}>
+                          <Button icon="x" type="button" variant="outline" id="s-checkin-dismiss" onClick={() => dismissHubCheckIn(currentDocumentRuntimeKey)}>
                             {shellLabel("ui.common.close")}
-                          </button>
+                          </Button>
                         ) : (
                           <>
-                            {currentCheckIn.status.progress.totalUnits > 0 ? <progress value={currentCheckIn.status.progress.completedUnits} max={currentCheckIn.status.progress.totalUnits} aria-label={checkinStatusText(currentCheckIn.status, uiLocale)} /> : null}
-                            <button type="button" id="s-checkin-abort" className="underline" onClick={() => cancelHubCheckIn(currentDocumentRuntimeKey)}>
+                            {currentCheckIn.status.progress.totalUnits > 0 ? (
+                              <SharedBorderRowCell>
+                                <progress value={currentCheckIn.status.progress.completedUnits} max={currentCheckIn.status.progress.totalUnits} aria-label={checkinStatusText(currentCheckIn.status, uiLocale)} />
+                              </SharedBorderRowCell>
+                            ) : null}
+                            <Button icon="x" type="button" variant="outline" id="s-checkin-abort" onClick={() => cancelHubCheckIn(currentDocumentRuntimeKey)}>
                               {checkinAbortText(uiLocale)}
-                            </button>
+                            </Button>
                           </>
                         )}
-                      </div>
+                      </SharedBorderRow>
                     )}
                   </div>
                 ) : undefined
@@ -413,7 +409,7 @@ function FrameworkOsShellInner(props: FrameworkOsShellInnerProps) {
         <UIFind open={findOpen} onOpenChange={(value) => dispatch({ type: "SET_FIND_OPEN", value })} />
         {session ? (
           <ContextMenuTriggerButton
-            className="fixed bottom-2 right-2 z-50 border bg-background/80"
+            className="fixed bottom-[var(--footer-band-height)] right-0 z-50 border-l border-t bg-background/80"
             resolveTarget={(button) => {
               const selection = typeof window === "undefined" ? null : window.getSelection();
               return selection !== null && selection.toString() !== "" ? (selection.anchorNode?.parentElement ?? button) : button;

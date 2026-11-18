@@ -1,0 +1,26 @@
+{
+ "cases": [
+  {"name": "no answer in time is transient", "answer": "timeout", "expect": {"code": "no-answer", "transient": true, "deterministic": false, "stored": false}},
+  {"name": "no connection is transient", "answer": "network", "expect": {"code": "unreachable", "transient": true, "deterministic": false, "stored": false}},
+  {"name": "an open breaker is transient", "answer": "breaker", "expect": {"code": "breaker-open", "transient": true, "deterministic": false, "stored": false}},
+  {"name": "a lapsed claim is transient", "answer": "claim-lost", "expect": {"code": "claim-lost", "transient": true, "deterministic": false, "stored": false}},
+  {"name": "a machine without upload rights is not a wall for others", "answer": "no-upload", "expect": {"code": "no-upload", "transient": false, "deterministic": false, "stored": false}},
+  {"name": "a document above the limit is a wall for everybody", "answer": "limit-document", "expect": {"code": "limit-document", "transient": false, "deterministic": true, "stored": false}},
+  {"name": "an entry above the limit is a wall for everybody", "answer": "limit-entry", "expect": {"code": "limit-entry", "transient": false, "deterministic": true, "stored": false}},
+  {"name": "too many documents is a wall for everybody", "answer": "limit-documents", "expect": {"code": "limit-documents", "transient": false, "deterministic": true, "stored": false}},
+  {"name": "a divergence means the key is stored", "answer": 409, "body": "Conflict: another origin stored a different result for this key", "expect": {"code": "diverged", "transient": false, "deterministic": false, "stored": true}},
+  {"name": "a moved head is transient", "answer": 409, "body": "Conflict: the head moved since it was read", "expect": {"code": "head-moved", "transient": true, "deterministic": false, "stored": false}},
+  {"name": "any other conflict is transient", "answer": 409, "body": "Conflict: cannot overwrite an existing cache entry", "expect": {"code": "conflict", "transient": true, "deterministic": false, "stored": false}},
+  {"name": "401 is denied", "answer": 401, "body": "Unauthorized", "expect": {"code": "denied", "transient": true, "deterministic": false, "stored": false}},
+  {"name": "403 is denied", "answer": 403, "body": "Forbidden", "expect": {"code": "denied", "transient": true, "deterministic": false, "stored": false}},
+  {"name": "404 is unsupported", "answer": 404, "body": "", "expect": {"code": "unsupported", "transient": false, "deterministic": false, "stored": false}},
+  {"name": "413 is a wall for everybody", "answer": 413, "body": "Entry exceeds the maximum entry size", "expect": {"code": "too-large", "transient": false, "deterministic": true, "stored": false}},
+  {"name": "a result that names a vanished blob is transient", "answer": 400, "body": "Invalid action result: blob 00 is not in the content store", "expect": {"code": "blob-missing", "transient": true, "deterministic": false, "stored": false}},
+  {"name": "any other 400 is a wall for everybody", "answer": 400, "body": "Invalid action result: truncated varint", "expect": {"code": "malformed", "transient": false, "deterministic": true, "stored": false}},
+  {"name": "499 is transient", "answer": 499, "body": "Client closed request", "expect": {"code": "aborted", "transient": true, "deterministic": false, "stored": false}},
+  {"name": "507 is transient", "answer": 507, "body": "Insufficient storage", "expect": {"code": "capacity", "transient": true, "deterministic": false, "stored": false}},
+  {"name": "500 is transient", "answer": 500, "body": "", "expect": {"code": "server-error", "transient": true, "deterministic": false, "stored": false}},
+  {"name": "503 is transient", "answer": 503, "body": "", "expect": {"code": "server-error", "transient": true, "deterministic": false, "stored": false}},
+  {"name": "an unknown status is transient", "answer": 418, "body": "", "expect": {"code": "rejected", "transient": true, "deterministic": false, "stored": false}}
+ ]
+}

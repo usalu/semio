@@ -8,7 +8,9 @@
     "markerOnly",
     "fractional",
     "disabled",
-    "nativeSeams"
+    "nativeSeams",
+    "cellFrames",
+    "interlock"
   ],
   "additionalProperties": false,
   "properties": {
@@ -178,6 +180,229 @@
           },
           "secondContent": {
             "type": "string"
+          }
+        }
+      }
+    },
+    "cellFrames": {
+      "type": "object",
+      "required": [
+        "row",
+        "cells",
+        "expectedOverlays",
+        "rowPaths",
+        "seams"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "row": {
+          "type": "object",
+          "required": [
+            "width",
+            "height"
+          ],
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "cells": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "expectedOverlays": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "rowPaths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 4
+        },
+        "seams": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "orientation",
+              "dir",
+              "first",
+              "second",
+              "color"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "orientation": {
+                "enum": [
+                  "horizontal",
+                  "vertical"
+                ]
+              },
+              "dir": {
+                "enum": [
+                  "ltr",
+                  "rtl"
+                ]
+              },
+              "first": {
+                "type": "string"
+              },
+              "second": {
+                "type": "string"
+              },
+              "color": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "interlock": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "windows",
+          "lines"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "windows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "left",
+                "top",
+                "width",
+                "height",
+                "topEdge",
+                "bottomEdge"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "left": {
+                  "type": "number"
+                },
+                "top": {
+                  "type": "number"
+                },
+                "width": {
+                  "type": "number"
+                },
+                "height": {
+                  "type": "number"
+                },
+                "topEdge": {
+                  "type": "object",
+                  "required": [
+                    "depth",
+                    "chips"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "depth": {
+                      "type": "number"
+                    },
+                    "chips": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "left",
+                          "right"
+                        ],
+                        "additionalProperties": false,
+                        "properties": {
+                          "left": {
+                            "type": "number"
+                          },
+                          "right": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "bottomEdge": {
+                  "type": "object",
+                  "required": [
+                    "depth",
+                    "chips"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "depth": {
+                      "type": "number"
+                    },
+                    "chips": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "left",
+                          "right"
+                        ],
+                        "additionalProperties": false,
+                        "properties": {
+                          "left": {
+                            "type": "number"
+                          },
+                          "right": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "axis",
+                "at",
+                "from",
+                "to"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "axis": {
+                  "enum": [
+                    "h",
+                    "v"
+                  ]
+                },
+                "at": {
+                  "type": "number"
+                },
+                "from": {
+                  "type": "number"
+                },
+                "to": {
+                  "type": "number"
+                }
+              }
+            }
           }
         }
       }

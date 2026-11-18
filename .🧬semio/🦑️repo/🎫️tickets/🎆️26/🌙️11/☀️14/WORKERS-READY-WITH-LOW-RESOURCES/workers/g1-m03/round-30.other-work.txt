@@ -1,0 +1,12 @@
+== 2026-11-15T19:39:44Z other build work on this machine during try 4 (not started by me, not touched)
+try 4 line: [script] repository:command · Waiting for access to semio.compiler.cpu-picker/v1 (exclusive): position 2 of 2, behind the request of process 45891 (exclusive, queued 860 s ago) · holder: progressing, semio.compiler.host-capacity/v1
+process 45891 descends from the fleet replica agent (pid 49594 /bin/sh …/semio/fleet/entry/boot.sh run, started 18:48:41 local 17:48:41Z): 49594 > 49610 > 51497 > 51970 > 24719 > 35938 > 40272 > 40274 > 45826 > 45872 'bun repo run repo-mcp:build…' > 45875 > 45891
+also running: pid 40973 'cargo test --no-fail-…' under 39852 under 37249 (parent 1, started 19:17:17Z)
+   RSS   PID  PPID     ELAPSED COMMAND
+970768 62697 62696       00:23 rustc --crate-name semio_os_flow_host_core --edition=2021 /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-
+949440 51497 49610    01:48:34 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /User
+827344 62942 62938       00:12 rustc --crate-name semio_s_artifact_stdio_semio_base --edition=2021 /Users/ueli/Documents/semio/M-bM^\M^OM-oM-8M^Os/M-p
+731888 63141 63136       00:08 rustc --crate-name semio_s_artifact_stdio_dwg --edition=2021 /Users/ueli/Documents/semio/M-bM^\M^OM-oM-8M^Os/M-pM^_M^TM
+692000 62940 62939       00:12 rustc --crate-name semio_s_artifact_stdio_binary_snapshot --edition=2021 /Users/ueli/Documents/semio/M-bM^\M^OM-oM-8M^O
+645904 77937 89541    11:35:52 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --typ
+543360 63219 63217       00:04 rustc --crate-name semio_s_artifact_stdio_semio_mesh_snapshot --edition=2021 /Users/ueli/Documents/semio/M-bM^\M^OM-oM-

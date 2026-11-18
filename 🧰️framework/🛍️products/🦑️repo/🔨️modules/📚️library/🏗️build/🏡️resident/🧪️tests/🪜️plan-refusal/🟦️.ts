@@ -43,5 +43,5 @@ test("the service maps the stop of the pool (code plan-memory) to the same refus
  const service=readFileSync(new URL("../../🏛️service/🌐️host/🟨️.mjs",import.meta.url),"utf8");
  expect(service).toContain('error?.code==="plan-memory"');expect(service).toContain('log("graph-plan-too-heavy",JSON.stringify({stage:error.stage,operation:error.operation,megabytes:error.currentMegabytes,limit:error.limitMegabytes,available:error.availableMegabytes,reserve:error.reserveMegabytes,reason:error.reason,worker:error.sample}))');expect(service).toContain('"unserved","host-graph-plan-too-heavy",{stage:error.stage,operation:error.operation,megabytes:error.currentMegabytes,limit:error.limitMegabytes,available:error.availableMegabytes,reserve:error.reserveMegabytes},"later"');
  const pool=readFileSync(new URL("../../🏗️composition/🌐️host/👷️slice-pool/🟨️.mjs",import.meta.url),"utf8"),worker=readFileSync(new URL("../../🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts",import.meta.url),"utf8");
- expect(pool).toContain('message?.type==="stage"');expect(worker).toContain("onPlanStageV1(event=>parentPort!.postMessage(event))");
+ expect(pool).toContain('message?.type==="stage"');expect(worker).toMatch(/onPlanStageV1\(event=>\{[^\n]*parentPort!\.postMessage\(event\)/u);
 });

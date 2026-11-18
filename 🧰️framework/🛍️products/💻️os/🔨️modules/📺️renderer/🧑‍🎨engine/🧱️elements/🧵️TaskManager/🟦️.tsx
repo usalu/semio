@@ -447,8 +447,10 @@ export function TaskManagerPanel({ rows, onAction, runtimeAttached = true }: Tas
     {
       id: "actions",
       header: labels.columns.actions,
+      className: "!px-0",
+      headerClassName: "px-single",
       accessor: (row) => (
-        <div className="flex items-center gap-1">
+        <div className="flex h-full items-stretch">
           <Button type="button" variant="outline" icon="pause" aria-label={`${labels.actions.suspend}: ${row.actorId}`} onClick={() => onAction("suspend", row.actorId)} />
           <Button type="button" variant="outline" icon="play" aria-label={`${labels.actions.resume}: ${row.actorId}`} onClick={() => onAction("resume", row.actorId)} />
           <Button type="button" variant="outline" icon="square" aria-label={`${labels.actions.cancel}: ${row.actorId}`} onClick={() => onAction("cancel", row.actorId)} />
@@ -682,14 +684,14 @@ function TaskManagerTaskRow({ task, nowMs, controls }: { readonly task: TaskMana
   const suspended = task.state === "suspended";
   const determinate = task.progress !== null && task.progress.total !== null && task.progress.total > 0 ? Math.min(100, Math.round((task.progress.completed / task.progress.total) * 100)) : null;
   return (
-    <li data-semio-task-manager-task={task.id} data-semio-task-manager-lane={task.lane} data-semio-task-manager-state={task.state} className="flex min-w-0 flex-col gap-single py-single">
-      <div className="flex min-w-0 items-baseline justify-between gap-single">
+    <li data-shared-border-frame="" data-shared-border-edges="bottom" data-semio-task-manager-task={task.id} data-semio-task-manager-lane={task.lane} data-semio-task-manager-state={task.state} className="flex min-w-0 flex-col">
+      <div className="flex min-w-0 items-baseline justify-between gap-single px-single pt-single">
         <span className="min-w-0 truncate text-xs font-medium" title={task.title}>
           {task.title}
         </span>
         <span className="shrink-0 text-2xs text-muted-foreground">{stateLabels[task.state]}</span>
       </div>
-      <div className="flex min-w-0 items-center gap-single text-2xs text-muted-foreground">
+      <div className="flex min-w-0 items-center gap-single px-single text-2xs text-muted-foreground">
         <span className="shrink-0">{laneLabels[task.lane]}</span>
         {task.owner ? <span className="min-w-0 truncate">· {task.owner}</span> : null}
       </div>
@@ -702,7 +704,7 @@ function TaskManagerTaskRow({ task, nowMs, controls }: { readonly task: TaskMana
         aria-valuenow={determinate ?? undefined}
         aria-busy={!cancelling && !suspended}
         data-semio-task-manager-progress={task.progress !== null ? task.progress.completed : (task.steps ?? "")}
-        className="relative h-1 w-full min-w-0 overflow-hidden rounded-full bg-muted"
+        className="relative mx-single my-single h-1 min-w-0 overflow-hidden rounded-full bg-muted"
       >
         {determinate === null ? (
           <div className={`absolute inset-y-0 w-1/3 rounded-full bg-emphasized ${cancelling || suspended ? "opacity-40" : "animate-pulse"}`} />
@@ -710,9 +712,9 @@ function TaskManagerTaskRow({ task, nowMs, controls }: { readonly task: TaskMana
           <div className={`absolute inset-y-0 left-0 rounded-full bg-emphasized ${cancelling || suspended ? "opacity-40" : ""}`} style={{ width: `${determinate}%` }} />
         )}
       </div>
-      <div data-slot="task-manager-task-footer" className="flex min-w-0 flex-wrap items-center gap-single">
-        <span data-slot="task-manager-task-progress-text" className="min-w-0 flex-1 basis-40 break-words text-2xs tabular-nums text-muted-foreground">{progressText}</span>
-        <div data-slot="task-manager-task-actions" className="ms-auto flex shrink-0 items-center gap-single">
+      <div data-slot="task-manager-task-footer" className="flex min-w-0 flex-wrap items-stretch">
+        <span data-slot="task-manager-task-progress-text" className="min-w-0 flex-1 basis-40 break-words px-single py-single text-2xs tabular-nums text-muted-foreground">{progressText}</span>
+        <div data-slot="task-manager-task-actions" className="ms-auto flex shrink-0 items-stretch">
           {task.suspendable && !suspended ? (
             <Button type="button" variant="ghost" icon="pause" id={`os.task-manager.suspend.${task.id}`} data-semio-task-manager-suspend={task.id} aria-label={suspendTaskLabel} title={suspendTaskLabel} text={suspendLabel} disabled={cancelling} onClick={() => controls.onSuspend(task)} />
           ) : null}
@@ -739,14 +741,14 @@ export function TaskManagerTasksPanel({ tasks, controls }: { readonly tasks: rea
     return () => window.clearInterval(ticker);
   }, [tasks.length]);
   return (
-    <section aria-label={title} data-semio-task-manager-tasks={tasks.length} className="flex min-w-0 flex-col gap-single px-single">
-      <h3 className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</h3>
+    <section aria-label={title} data-semio-task-manager-tasks={tasks.length} className="flex min-w-0 flex-col">
+      <h3 className="px-single py-single text-2xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</h3>
       {tasks.length === 0 ? (
-        <p data-semio-task-manager-tasks-empty="" className="text-xs text-muted-foreground">
+        <p data-semio-task-manager-tasks-empty="" className="px-single pb-single text-xs text-muted-foreground">
           {empty}
         </p>
       ) : (
-        <ul aria-live="polite" className="flex min-w-0 flex-col divide-y divide-border">
+        <ul aria-live="polite" className="flex min-w-0 flex-col">
           {tasks.map((task) => (
             <TaskManagerTaskRow key={task.id} task={task} nowMs={nowMs} controls={controls} />
           ))}

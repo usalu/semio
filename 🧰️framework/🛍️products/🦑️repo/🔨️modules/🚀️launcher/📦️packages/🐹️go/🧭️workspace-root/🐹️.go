@@ -106,3 +106,42 @@ func IsRootNotFound(err error) bool {
 }
 
 // #endregion 🧭️Root
+
+// #region 🏠️MachineState
+
+const machineStateEnvironment = "SEMIO_MACHINE_STATE_DIRECTORY"
+
+const machineStateMaximumCharacters = 120
+
+type machineStateMove struct {
+	prefix string
+	to     []string
+}
+
+var machineStateMoved = []machineStateMove{{".cache", nil}, {".nx", []string{"nx"}}}
+
+// 🗂️machineStateDirectory answers the declared state directory, or "" when none is declared: a relative, empty or overlong declaration is no declaration.
+func machineStateDirectory(env Environment) string {
+	named := env(machineStateEnvironment)
+	if named == "" || !filepath.IsAbs(named) || len(named) > machineStateMaximumCharacters {
+		return ""
+	}
+	return filepath.Clean(named)
+}
+
+// 🧭️MachinePath is `filepath.Join(root, segments...)` with the machine state moved; without a declaration it is exactly that join.
+func MachinePath(env Environment, root string, segments ...string) string {
+	directory := machineStateDirectory(env)
+	if directory == "" {
+		return filepath.Join(append([]string{root}, segments...)...)
+	}
+	parts := strings.Split(filepath.Join(append([]string{"."}, segments...)...), string(filepath.Separator))
+	for _, move := range machineStateMoved {
+		if move.prefix == parts[0] {
+			return filepath.Join(append(append([]string{directory}, move.to...), parts[1:]...)...)
+		}
+	}
+	return filepath.Join(append([]string{root}, segments...)...)
+}
+
+// #endregion 🏠️MachineState

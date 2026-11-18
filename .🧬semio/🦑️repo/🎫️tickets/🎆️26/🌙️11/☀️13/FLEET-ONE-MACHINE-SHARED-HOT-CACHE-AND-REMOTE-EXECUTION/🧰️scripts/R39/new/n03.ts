@@ -18,7 +18,7 @@ afterAll(()=>{if(!process.env.SEMIO_TEST_KEEP)for(const path of scratch)rmSync(p
 
 function findRustc():string[]|undefined{
  if(process.env.SEMIO_TEST_RUSTC)return[process.env.SEMIO_TEST_RUSTC];
- const roots=[process.env.SEMIO_TEST_CHECKOUT,"/Users/Shared/semio",resolve(here,"../../../../../../../../../..")].filter((root):root is string=>root!==undefined);
+ const roots=[process.env.SEMIO_TEST_CHECKOUT,"/Users/ueli/Documents/semio",resolve(here,"../../../../../../../../../..")].filter((root):root is string=>root!==undefined);
  for(const root of roots){
   try{
    const channel=/^channel\s*=\s*"([^"]+)"/mu.exec(readFileSync(join(root,"rust-toolchain.toml"),"utf8"))?.[1];if(channel===undefined)continue;

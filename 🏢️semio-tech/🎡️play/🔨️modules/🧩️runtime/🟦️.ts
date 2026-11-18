@@ -45,6 +45,14 @@ export const PLAY_RUNTIME_TARGETS: readonly PlaygroundBuildTarget[] = PLAY_RUNTI
   return target;
 });
 
+/** 🔭️ The registry rows one play scope serves: a pane variant or a group id; no scope serves every pane. */
+export function playScopeTargets(scope?: string): readonly PlaygroundBuildTarget[] {
+  if (scope === undefined) return PLAY_RUNTIME_TARGETS;
+  const targets = PLAY_RUNTIME_TARGETS.filter((target, index) => target.variant === scope || PLAY_RUNTIME_PANES[index]!.group === scope);
+  if (targets.length === 0) throw new Error(`Unknown Play scope: ${scope}`);
+  return targets;
+}
+
 /** 🧩️ One pane's closure ROOT. A pane boots exactly ONE app, so a registry row naming an `app`
  * never pulls the whole catalog in even when its crate is the OS host (`🪐️space`'s Home and Space). */
 export function playPaneClosureRoot(row: PlaygroundBuildTarget): { readonly id: string; readonly appScoped: boolean } {

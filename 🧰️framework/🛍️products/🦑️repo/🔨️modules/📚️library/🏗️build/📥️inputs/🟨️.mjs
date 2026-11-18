@@ -1,4 +1,5 @@
 import {isOpaqueSourcePathV1,opaqueSourceInputExclusionsV1} from "../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
+import { buildSchedulingDomainOfV1 } from "../📥️source/🔏️closure/🗓️scheduling/🟦️.ts";
 import{REVISION_POLICY_V1,physicalSourceOriginV1}from"./🔏️revision/🟨️.mjs";
 import limitsSchema from"./🧬️schema/🔣️.json"with{type:"json"};
 import managersV1 from "../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs";
@@ -20,6 +21,7 @@ import { adoptVerifiedBlockV1, observedFs } from "../👁️observation/🟨️.
 import { ownerOfProjectV1, ownerTreeGlobsV1, ownerViewV1 } from "./🌳️owner-view/🟨️.mjs";
 import { toolchainsActivatedByV1 } from "./🪛️toolchain-activation/🟨️.mjs";
 import { GRAPH_MEMORY_POLICY_V1 } from "../🧠️memory/🟨️.mjs";
+import { interfaceClosureFilesV1 } from "./🔭️interface/🟦️.ts";
 
 const { existsSync, readdirSync } = observedFs;
 
@@ -198,8 +200,16 @@ function chunkEndsAfterV1(file) {
   return ends;
 }
 
+/** 🧱️ The files whose bytes a compacted group names besides its exact files, because the value of a closure token is computed by their code: the inventory admission and reader, the digest and the lock reader with their schemas. The module that composes the groups is not among them (its output is the inventory, which names the token), and a file a scheduling domain declares output-neutral is filtered by `compactionHelperPathsV1`, so the group obeys the same table as every command closure. */
+const COMPACTION_HELPERS_V1 = Object.freeze(["./🔏️revision/🟨️.mjs", "./🔏️revision/🧬️schema/🔣️.json", "./📋️data/🟨️.mjs", "./📋️data/📥️load/🟨️.mjs", "./📋️data/🧬️schema/🔣️.json", "./🧮️digest/📥️read/🟨️.mjs", "./🧮️digest/📥️read/🧬️schema/🔣️.json", "./🔒️lock/🔣️schema.json", "./💾️storage/🟨️.mjs", "./💾️storage/📒️ledger/🟨️.mjs", "./💾️storage/🧬️schema/🔣️.json", "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json", "./🧮️digest/🟨️.mjs", "./🧮️digest/🔣️schema.json", "./🔒️lock/📥️read/🟨️.mjs", "./🔒️lock/🟨️.mjs"]);
+
+/** 🪢️ The workspace relative helper files of a compacted group: the helper list without the files the scheduling table gives to a domain (custody of stores and ledgers decides where bytes live, never what a closure digests to). */
+export function compactionHelperPathsV1(workspaceRoot, origin = physicalSourceOriginV1(import.meta.url, import.meta.semioPhysicalSourceURL)) {
+  return COMPACTION_HELPERS_V1.map(path => inWorkspaceV1(workspaceRoot, fileURLToPath(new URL(path, origin)))).filter(path => path !== undefined && buildSchedulingDomainOfV1(path) === undefined);
+}
+
 /** 🤝️ Shares exact inventories while backends hash their current byte digest once per unique closure. */
-export function compactSourceInputs(inputs, workspaceRoot, root = ".") {
+export function compactSourceInputs(inputs, workspaceRoot, root = ".", digest = "bytes") {
   const candidates = [...new Set(inputs.filter(input => typeof input === "string" && input.startsWith("{workspaceRoot}/") && !GLOB_CHARACTER_V1.test(input.slice("{workspaceRoot}/".length))))].sort();
   const selected = new Set(candidates), remaining = inputs.filter(input => !selected.has(input));
   const residual = remaining.some(input => typeof input === "string" && !input.startsWith("!")) ? remaining : remaining.filter(input => typeof input !== "string" || !input.startsWith("!"));
@@ -220,9 +230,9 @@ export function compactSourceInputs(inputs, workspaceRoot, root = ".") {
     exact = exact.filter((input, index) => !excluded[index]);
   }
   if (exact.length < 1) return residual;
-  const helpers = ["./🟨️.mjs", "./🔏️revision/🟨️.mjs", "./🔏️revision/🧬️schema/🔣️.json", "./📋️data/🟨️.mjs", "./📋️data/📥️load/🟨️.mjs", "./📋️data/🧬️schema/🔣️.json", "./🧮️digest/📥️read/🟨️.mjs", "./🧮️digest/📥️read/🧬️schema/🔣️.json", "./🔒️lock/🔣️schema.json", "./💾️storage/🟨️.mjs", "./💾️storage/📒️ledger/🟨️.mjs", "./💾️storage/🧬️schema/🔣️.json", "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json", "./🧮️digest/🟨️.mjs", "./🧮️digest/🔣️schema.json", "./🔒️lock/📥️read/🟨️.mjs", "./🔒️lock/🟨️.mjs"].map(path => inWorkspaceV1(workspaceRoot, fileURLToPath(new URL(path, physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL))))).filter(path => path !== undefined);
-  const files = [...new Set([...exact.map(input => input.slice("{workspaceRoot}/".length)), ...helpers])].sort(), directory = repositoryBuildGraphWriterDirectoryV1(workspaceRoot,"build-input-closures");
-  const tokens = splitInputClosureV1(files).map(chunk => { const contract = capturedInventoryV1(chunk, workspaceRoot).text, key = sha256HexV1(contract); publishInputClosureV1(join(directory, `${key}.json`), contract); return { env: `SEMIO_SOURCE_CLOSURE_${key}` }; });
+  const helpers = compactionHelperPathsV1(workspaceRoot);
+  const listed = [...new Set([...exact.map(input => input.slice("{workspaceRoot}/".length)), ...helpers])].sort(), files = digest === "interface" ? [...interfaceClosureFilesV1(listed)] : listed; let directory;
+  const tokens = (digest === "interface" ? [files] : splitInputClosureV1(files)).map(chunk => { const contract = capturedInventoryV1(chunk, workspaceRoot).text, key = sha256HexV1(contract); directory ??= repositoryBuildGraphWriterDirectoryV1(workspaceRoot,"build-input-closures"); publishInputClosureV1(join(directory, `${key}.json`), contract); return { env: `SEMIO_SOURCE_CLOSURE_${key}` }; });
   const script = fileURLToPath(new URL("./🧮️digest/🟨️.mjs", physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL))), schema = fileURLToPath(new URL("./🧮️digest/🔣️schema.json", physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)));
   return [...residual, ...[script, schema].map(path => inWorkspaceV1(workspaceRoot, path)).filter(path => path !== undefined).map(path => `{workspaceRoot}/${path}`), ...tokens];
 }
@@ -320,7 +330,7 @@ export async function inferProjectInputs(json, root, workspaceRoot, facts, scrip
   const cargoManifest = existsSync(join(workspaceRoot, nativeManifest)) ? nativeManifest : undefined, persisted = context.sourceRepresentation !== "source";
   if (persisted && cargoManifest && tools.includes("cargo")) await warmCargoResolutionV1(workspaceRoot, scripts, cargoManifest, context);
   const cargoToolchain = tools.includes("cargo") ? [...POLICY.toolchains.cargo.files.map((file) => `{workspaceRoot}/${file}`), ...(persisted && cargoManifest ? [cargoLockInput(cargoManifest, workspaceRoot)] : [])] : undefined;
-  const groups = (sourceContracts) => ({ ...declarations, ...sourceContracts, ...(cargoToolchain ? { cargoToolchain } : {}), ...(ownerPrivate.length ? { ownerPrivate } : {}), default: [...inputs, ...(declarations.default ?? []), ...exclusions], production: [...inputs, ...(declarations.default ?? []), ...exclusions, ...production, ...(declarations.production ?? [])], nativeSources: workspaceNegationClosed([...native(nativeSources, true), ...(declarations.nativeSources ?? [])]), nativeTestSources: workspaceNegationClosed([...native(nativeTests), ...(declarations.nativeSources ?? []), ...(declarations.nativeTestSources ?? [])]), ...(artifactTypeScript ? { artifactSources: [...artifactSources, ...exclusions, ...(declarations.artifactSources ?? [])], artifactCommandSources: [...artifactCommandSources, ...(declarations.artifactCommandSources ?? [])] } : {}) });
+  const groups = (sourceContracts) => ({ ...declarations, ...sourceContracts, ...(cargoToolchain ? { cargoToolchain } : {}), ...(ownerPrivate.length ? { ownerPrivate } : {}), default: [...inputs, ...(declarations.default ?? []), ...exclusions], production: [...inputs, ...(declarations.default ?? []), ...exclusions, ...production, ...(declarations.production ?? [])], nativeSources: workspaceNegationClosed([...native(nativeSources, true), ...(declarations.nativeSources ?? [])]), ...(tools.includes("cargo") ? { nativeInterface: workspaceNegationClosed([...native(nativeSources, true), ...(declarations.nativeSources ?? [])]) } : {}), nativeTestSources: workspaceNegationClosed([...native(nativeTests), ...(declarations.nativeSources ?? []), ...(declarations.nativeTestSources ?? [])]), ...(artifactTypeScript ? { artifactSources: [...artifactSources, ...exclusions, ...(declarations.artifactSources ?? [])], artifactCommandSources: [...artifactCommandSources, ...(declarations.artifactCommandSources ?? [])] } : {}) });
   const sourceContracts = await declaredSourceInputs(json, workspaceRoot, Object.fromEntries(Object.entries(groups({})).map(([name, inputs]) => [name, inputs.filter(item => !(item !== null && typeof item === "object" && typeof item.closureRef === "string"))])));
   const sourceScopes = [...inputs, ...Object.values(declarations).flat(), ...Object.values(sourceContracts).flat(), ...(nativeSources ?? []), ...(nativeTests ?? [])];
   for (const target of Object.values(json.targets ?? {})) for (const output of target.outputs ?? []) {
@@ -342,7 +352,7 @@ export async function inferProjectInputs(json, root, workspaceRoot, facts, scrip
     }
   }
   const named = Object.entries(groups(sourceContracts)), symbolic = named.filter(([, inputs]) => inputs.some(item => item !== null && typeof item === "object" && typeof item.closureRef === "string"));
-  const interned = internProjectInputGroups(Object.fromEntries(named.filter(([name]) => !symbolic.some(([other]) => other === name)).map(([name, inputs]) => [name, context.sourceRepresentation === "source" ? deduplicateProjectInputs(inputs, root) : compactSourceInputs(deduplicateProjectInputs(inputs, root), workspaceRoot, root)])));
+  const interned = internProjectInputGroups(Object.fromEntries(named.filter(([name]) => !symbolic.some(([other]) => other === name)).map(([name, inputs]) => [name, context.sourceRepresentation === "source" ? deduplicateProjectInputs(inputs, root) : compactSourceInputs(deduplicateProjectInputs(inputs, root), workspaceRoot, root, name === "nativeInterface" ? "interface" : "bytes")])));
   return Object.assign(interned, Object.fromEntries(symbolic));
 }
 

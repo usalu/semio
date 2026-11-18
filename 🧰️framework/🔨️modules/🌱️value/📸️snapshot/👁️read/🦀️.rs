@@ -483,15 +483,17 @@ pub struct SnapshotReadLeaseRegistryOwner(Option<SnapshotReadRegistryAliasRetire
 impl SnapshotReadLeaseRegistryOwner {
     /// 🧳️ Receives the exact admitted registry handle without constructing another registry.
     pub fn from_original(registry:SnapshotReadRegistryHandle)->Self{Self(Some(SnapshotReadRegistryAliasRetirement::new(registry)))}
-    pub fn returned_count(&self) -> usize { self.0.as_ref().map_or(0, |owner| owner.returned_count()) }
-    pub fn has_returned(&self)->bool{self.0.as_ref().is_some_and(|owner|SnapshotReadLeaseRegistry::has_returned(owner))}
+    /// 🧳️ Borrows the alias only while it still holds a registry, because a funded-closed alias has no registry left to read.
+    fn live(&self)->Option<&SnapshotReadRegistryAliasRetirement>{self.0.as_ref().filter(|owner|!owner.closed())}
+    pub fn returned_count(&self) -> usize { self.live().map_or(0, |owner| owner.returned_count()) }
+    pub fn has_returned(&self)->bool{self.live().is_some_and(|owner|SnapshotReadLeaseRegistry::has_returned(owner))}
 
     pub fn new() -> Self { Self(Some(SnapshotReadRegistryAliasRetirement::new(SnapshotReadRegistryHandle::new()))) }
-    pub fn terminal_is_empty(&self) -> bool { self.0.as_ref().is_none_or(|owner| SnapshotReadLeaseRegistry::terminal_is_empty(owner)) }
+    pub fn terminal_is_empty(&self) -> bool { self.live().is_none_or(|owner| SnapshotReadLeaseRegistry::terminal_is_empty(owner)) }
     pub fn closed(&self) -> bool { self.0.is_none() }
-    pub fn occupied_count(&self) -> usize { self.0.as_ref().map_or(0, |owner| owner.occupied_count()) }
-    pub fn empty_backing_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> { self.0.as_ref().map_or(Ok(Default::default()), |owner| owner.empty_backing_demands()) }
-    pub fn close_empty_backing_step(&self,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{self.0.as_ref().map_or(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0},|owner|owner.close_empty_backing_step(effect))}
+    pub fn occupied_count(&self) -> usize { self.live().map_or(0, |owner| owner.occupied_count()) }
+    pub fn empty_backing_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> { self.live().map_or(Ok(Default::default()), |owner| owner.empty_backing_demands()) }
+    pub fn close_empty_backing_step(&self,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{self.live().map_or(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0},|owner|owner.close_empty_backing_step(effect))}
     /// 📚️ Quotes the next release of the registry's own custody: its Arc frame, then, once sole, each generation page.
     pub fn custody_byte_demand(&self) -> Result<usize, ValueError> { self.0.as_ref().map_or(Ok(0), |owner| owner.custody_byte_demand()) }
     /// 🪜️ Releases the registry's own custody one frame or page at a time once it is the sole terminal owner.

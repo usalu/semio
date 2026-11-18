@@ -1,0 +1,13 @@
+2026-11-15T20:29:35.540Z request-failed bd0b2e16 Error: Inventory record changed while opening
+Error
+    at readInventoryRecordLeanV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🪶️lean-inventory/🟨️.mjs:16:92)
+    at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/📥️reuse/🟨️.mjs:71:68)
+    at async <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs:146:491)
+    at processTicksAndRejections (unknown:7:39)
+graph: plan answered, managed 108 MB, resident 172 MB (released 0 MB)
+[repository:command] still running after 1240 s
+[repo] still working after 1250 s; last phase started: source.served
+[repository:command] still running after 1250 s
+[repository:command] still running after 1260 s
+[repository:command] still running after 1270 s
+[repo] still working after 1280 s; last phase started: source.served

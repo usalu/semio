@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {existsSync,lstatSync,statSync} from "node:fs";
 import {dirname,join} from "node:path";
 import budget from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
@@ -33,7 +34,7 @@ export const storageProbeV1:DoctorProbeV1=Object.freeze({
  area:"storage",phase:1,
  async read(ports){
   const rows=Object.entries(budget.partitions).map(([id,row])=>partition(ports,id,join(ports.root,...row.directory.split("/"))));
-  let host=join(ports.root,".cache");while(!existsSync(host)&&dirname(host)!==host)host=dirname(host);
+  let host=machinePathV1(ports.root,".cache");while(!existsSync(host)&&dirname(host)!==host)host=dirname(host);
   let hostFreeBytes:number|null=null,hostTotalBytes:number|null=null;
   const hostSpace=nativeFreeSpaceSyncV1(host);hostFreeBytes=hostSpace?.availableBytes??null;hostTotalBytes=hostSpace?.totalBytes??null;
   return {sections:{storage:{hostFreeBytes,hostTotalBytes,partitions:rows}}};

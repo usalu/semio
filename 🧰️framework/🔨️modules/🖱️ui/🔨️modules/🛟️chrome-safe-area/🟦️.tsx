@@ -1,5 +1,4 @@
 /** 🛟 Owns the chrome panel safe-area bookkeeping and the shell navbar trailing reserve that panels yield to. */
-import { uiSpacingPx } from "@semio-tech/ui-styling";
 import { ephemeralMap } from "@semio-tech/framework-transient";
 import * as React from "react";
 import { reactHostPort } from "../../🧱️elements/🔌️Ports/⚛️react/🟦️.ts";
@@ -35,7 +34,7 @@ export function useShellNavbarTrailingEndWidthPx(root?: HTMLElement): number {
 /** 🔚️ Inline cap-row reserve that clears trailing navbar controls for chrome-hosted right panels. */
 export function shellNavbarTrailingEndReserveStyle(widthPx: number): React.CSSProperties | undefined {
   if (widthPx <= 0) return undefined;
-  return { paddingInlineStart: `${widthPx + uiSpacingPx(1)}px` };
+  return { paddingInlineStart: `${widthPx}px` };
 }
 
 /** 🧢 One OPEN chrome-hosted dock's cap row: it sizes to its CONTENT and never below the body it

@@ -21,7 +21,7 @@ import type { ExportCapabilities, ExportResult } from "../../🔨️modules/📤
 const walker = walkerDocument as unknown as Asset;
 
 const catalog = new CatalogStore({ manifest: async () => { throw new Error("unused"); }, category: async () => null });
-const row = { entry: { id: walker.id, category: "humans", title: walker.title, heightM: 1.73, widthM: 0.37, poses: [], clips: [], representations: { "500": "unavailable", "200": "authored", "100": "authored", "50": "authored" }, symbols: [], analytics: [], exports: [], distinction: walker.summary, completion: "authored" }, status: "ready", asset: walker } as const;
+const row = { entry: { id: walker.id, category: "humans", title: walker.title, heightM: 1.73, widthM: 0.37, powerW: 0, poses: [], clips: [], representations: { "500": "unavailable", "200": "authored", "100": "authored", "50": "authored" }, symbols: [], analytics: [], exports: [], distinction: walker.summary, completion: "authored" }, status: "ready", asset: walker } as const;
 
 function wrap(node: ReactElement, language: Language = "en"): ReactElement {
   return <ArchiveProvider language={language} t={translator(language)} catalog={catalog} store={new ArchiveStore(memoryStorage(), ["dark-line"])}>{node}</ArchiveProvider>;
@@ -104,6 +104,7 @@ describe("📤️ export panel", () => {
     render(wrap(<ExportPanel asset={walker} query={query} request={request} language="en" capabilities={capabilities} exporter={exporter as never} save={save} />));
     fireEvent.click(within(document.querySelector('[data-format="svg"]') as HTMLElement).getByRole("button"));
     await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(document.querySelector("[data-result]")).not.toBeNull());
     expect(document.querySelector("[data-result]")!.textContent).toContain("x.svg");
     expect(document.querySelector("[data-result]")!.textContent).toContain("2.0 kB");
   });

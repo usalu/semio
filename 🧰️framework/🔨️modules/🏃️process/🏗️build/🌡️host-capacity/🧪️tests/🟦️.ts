@@ -151,7 +151,7 @@ test("Policy ordering rules are enforced beyond the schema",()=>{
 });
 
 test("Messages exist for every reason in English and German and fill every placeholder",()=>{
- const values={files:8000,images:10,total:32768,pressure:"normal",swap:0,grants:1,waiters:0,seconds:12,operation:"run",reason:"x",need:4096,spare:100,floor:6553,load:3.5,running:2,ahead:1,behind:"x",jobs:3,preferred:8,reserved:7000,available:9000,switch:"SEMIO_HOST_CAPACITY"};
+ const values={files:8000,images:10,total:32768,pressure:"normal",swap:0,grants:1,waiters:0,seconds:12,operation:"run",reason:"x",need:4096,spare:100,floor:6553,load:3.5,running:2,ahead:1,held:2048,taken:1536,short:"x",megabytes:512,behind:"x",jobs:3,preferred:8,reserved:7000,available:9000,switch:"SEMIO_HOST_CAPACITY"};
  for(const language of ["en","de"] as const)for(const name of ["waiting","admitted","reduced","override","bypassed","status"] as const)expect(formatHostCapacityV1(language,name,values)).not.toMatch(/\{[a-z]+\}/u);
  expect(formatHostCapacityV1("de","waiting",values)).toContain("wartet seit 12 s");
  expect(formatHostCapacityV1("en","waiting",values)).toContain("waiting 12s");

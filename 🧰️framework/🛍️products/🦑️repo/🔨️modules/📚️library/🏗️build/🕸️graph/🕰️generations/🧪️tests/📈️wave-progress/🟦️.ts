@@ -18,9 +18,9 @@ test("every published wave carries the owners done and the owners stale in all, 
   await world.refresh();
   const before=(await world.store.read())!.pointer.generation,told:[number,unknown][]=[];
   await edit(dir,COUNT);
-  const result=await world.refresh({published:(generation:number,info:unknown)=>{told.push([generation,info]);}});
+  const result=await world.refresh({published:(generation:number,info:unknown)=>{told.push([generation,info]);},wave:(info:{generation:number})=>{told.push([info.generation,info]);}});
   expect(result.published).toBe(true);
   const wave=GENERATION_POLICY_V1.ownerWave;
-  expect(told.map(([generation,info])=>[generation,{done:(info as {done:number}).done,total:(info as {total:number}).total}])).toEqual([[before+1,{done:wave,total:COUNT}],[before+2,{done:wave*2,total:COUNT}],[before+3,{done:COUNT,total:COUNT}]]);
+  expect(told.map(([generation,info])=>[generation,{done:(info as {done:number}).done,total:(info as {total:number}).total}])).toEqual([[before+1,{done:wave,total:COUNT}],[before+1,{done:wave*2,total:COUNT}],[before+1,{done:COUNT,total:COUNT}]]);
  }finally{rmSync(dir,{recursive:true,force:true});}
 });

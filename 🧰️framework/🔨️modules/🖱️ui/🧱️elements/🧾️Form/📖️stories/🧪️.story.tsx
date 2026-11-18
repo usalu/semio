@@ -1,5 +1,5 @@
 // #region 🔌️Adapters
-import { Form } from "@semio-tech/ui-react";
+import { Form, SharedBorderRow, SharedBorderRowField } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "../../../🧪️tests/📚️storybook-types/🟦️.ts";
 // #endregion 🔌️Adapters
 
@@ -16,14 +16,15 @@ type Story = StoryObj<typeof meta>;
 
 export const NativeSubmission: Story = {
   render: () => (
-    <Form className="flex items-center gap-single" onSubmit={(event) => event.preventDefault()}>
-      <label className="flex flex-col gap-half text-xs">
-        Query
-        <input name="query" className="rounded-sm border px-single py-half" />
-      </label>
-      <button type="submit" className="rounded-sm border px-single py-half text-xs">
-        Submit
-      </button>
+    <Form onSubmit={(event) => event.preventDefault()}>
+      <SharedBorderRow>
+        <SharedBorderRowField label="Query">
+          <input name="query" />
+        </SharedBorderRowField>
+        <button type="submit" data-shared-border-cell="" className="px-single text-xs">
+          Submit
+        </button>
+      </SharedBorderRow>
     </Form>
   ),
 };

@@ -6,7 +6,7 @@ import{tmpdir}from"node:os";
 import{join}from"node:path";
 import{pathToFileURL}from"node:url";
 import{closeProjectFarmsV1,openProjectFarmV1}from"../../🟨️.mjs";
-import{inferenceRecordIdentityV1}from"/Users/Shared/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs";
+import{inferenceRecordIdentityV1}from"../../../../../../👁️observation/🟨️.mjs";
 import{graphFarmIdentityV1}from"../../🪆️captured/🟨️.mjs";
 import{farmGrantEnvironmentV1}from"../🧫️fixtures/🎟️grant/🟨️.mjs";
 

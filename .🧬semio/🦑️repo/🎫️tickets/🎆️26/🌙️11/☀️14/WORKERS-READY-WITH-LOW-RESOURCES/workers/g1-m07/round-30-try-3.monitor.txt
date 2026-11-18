@@ -1,0 +1,4 @@
+started pid=44786 at 2026-11-15T20:35:15Z log=/Users/ueli/native-bootstrap-round-30-try-3.log
+HARD STOP at 2026-11-15T21:08:25Z: process of the run above 8 GB resident (8888432 KiB); sending one SIGINT to process group 44786
+one minute after SIGINT: alive=no
+ended at 2026-11-15T21:09:25Z peak_rss_kib=8888432 run_peak_rss_kib=8888432 hard_stop=process of the run above 8 GB resident (8888432 KiB)

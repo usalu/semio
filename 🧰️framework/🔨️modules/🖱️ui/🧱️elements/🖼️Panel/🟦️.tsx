@@ -16,7 +16,6 @@ import { Scrollable } from "../📜️Scrollable/🟦️.tsx";
 import { Tree } from "../🌳️Tree/🟦️.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { useFirstDraggableElementAlias } from "../🆔️ElementId/🟦️.tsx";
-import { borderNormalClass } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
 import { dropZoneReadyFillClass } from "../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
 import { FlowProvider, useFlow } from "../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
 import { LevelProvider, getLevelZClass, useSurfaceActive } from "../🌈️Surface/🟦️.tsx";
@@ -307,7 +306,9 @@ export function PanelEmptyDockZone({ anchor }: { readonly anchor: Anchor }) {
     <div
       ref={setRef}
       data-slot="panel-empty-drop-zone"
-      className={cn("flex h-medium min-w-[10rem] items-center justify-center rounded-sm border border-dashed", borderNormalClass, dropZoneReadyFillClass, isDropAnchor ? "border-accent text-accent" : "text-emphasized")}
+      data-shared-border-cell=""
+      data-active={isDropAnchor ? "true" : undefined}
+      className={cn("flex h-medium min-w-[10rem] items-center justify-center", dropZoneReadyFillClass, isDropAnchor ? "text-accent" : "text-emphasized")}
     >
       <Icon icon="grip-vertical" size="small" />
     </div>

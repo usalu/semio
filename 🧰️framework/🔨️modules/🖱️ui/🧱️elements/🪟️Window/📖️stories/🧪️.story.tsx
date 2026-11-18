@@ -292,13 +292,13 @@ export const HorizontalLayout: Story = {
     <div className="h-[25rem] w-full">
       <Canvas>
         <HorizontalWindows>
-          <Window id="left" defaultSize={50}>
+          <Window id="left" fill defaultSize={50}>
             <WindowContent title="Left" />
           </Window>
-          <Window id="center" defaultSize={25}>
+          <Window id="center" fill defaultSize={25}>
             <WindowContent title="Center" />
           </Window>
-          <Window id="right" defaultSize={25}>
+          <Window id="right" fill defaultSize={25}>
             <WindowContent title="Right" />
           </Window>
         </HorizontalWindows>
@@ -313,10 +313,10 @@ export const VerticalLayout: Story = {
     <div className="h-[25rem] w-full">
       <Canvas>
         <VerticalWindows>
-          <Window id="top" defaultSize={50}>
+          <Window id="top" fill defaultSize={50}>
             <WindowContent title="Top" />
           </Window>
-          <Window id="bottom" defaultSize={50}>
+          <Window id="bottom" fill defaultSize={50}>
             <WindowContent title="Bottom" />
           </Window>
         </VerticalWindows>
@@ -331,19 +331,19 @@ export const NestedLayout: Story = {
     <div className="h-[31.25rem] w-full">
       <Canvas>
         <HorizontalWindows>
-          <Window id="left" defaultSize={40}>
+          <Window id="left" fill defaultSize={40}>
             <WindowContent title="Left" />
           </Window>
-          <Window id="right" defaultSize={60}>
+          <div className="flex h-full min-w-0 flex-1">
             <VerticalWindows>
-              <Window id="top-right" defaultSize={60}>
+              <Window id="top-right" fill defaultSize={60}>
                 <WindowContent title="Top Right" />
               </Window>
-              <Window id="bottom-right" defaultSize={40}>
+              <Window id="bottom-right" fill defaultSize={40}>
                 <WindowContent title="Bottom Right" />
               </Window>
             </VerticalWindows>
-          </Window>
+          </div>
         </HorizontalWindows>
       </Canvas>
     </div>

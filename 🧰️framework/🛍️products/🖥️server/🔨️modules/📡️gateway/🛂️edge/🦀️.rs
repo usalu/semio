@@ -181,9 +181,10 @@ pub const EVENT_STREAM_INBOUND_BYTES: usize = 1024;
 /// 🚀️ Make one accepted connection send each write at once instead of holding a small one back
 /// for the peer's acknowledgement (Nagle's algorithm): the answers and presence frames of this
 /// gateway are small and complete, and a held one is latency its reader sees. Meant for
-/// `listener.tap_io(undelayed)`.
+/// `listener.tap_io(undelayed)`. A peer that already reset the connection makes macOS refuse the
+/// option with `EINVAL`; that connection is gone, so nothing is reported for it.
 pub fn undelayed(connection: &mut tokio::net::TcpStream) {
-    if let Err(error) = connection.set_nodelay(true) {
+    if let Err(error) = connection.set_nodelay(true).or_else(|error| if error.kind() == std::io::ErrorKind::InvalidInput { Ok(()) } else { Err(error) }) {
         report("a connection keeps delaying small writes", &error);
     }
 }

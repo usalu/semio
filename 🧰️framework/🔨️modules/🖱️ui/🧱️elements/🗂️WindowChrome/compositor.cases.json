@@ -110,5 +110,212 @@
       "secondContent": "<span aria-pressed=\"true\"></span>",
       "color": "rgb(255, 0, 0)"
     }
+  ],
+  "cellFrames": {
+    "row": {
+      "width": 300,
+      "height": 30
+    },
+    "cells": 3,
+    "expectedOverlays": 1,
+    "rowPaths": [
+      "M 1 1 L 299 1",
+      "M 299 1 L 299 29",
+      "M 1 29 L 299 29",
+      "M 1 1 L 1 29"
+    ],
+    "seams": [
+      {
+        "name": "active next cell frame",
+        "orientation": "horizontal",
+        "dir": "ltr",
+        "first": "",
+        "second": "data-state=\"active\"",
+        "color": "rgb(255, 0, 0)"
+      },
+      {
+        "name": "loading next cell frame vertical",
+        "orientation": "vertical",
+        "dir": "ltr",
+        "first": "",
+        "second": "class=\"border-loading\"",
+        "color": "rgb(0, 0, 255)"
+      },
+      {
+        "name": "previous cell frame active RTL",
+        "orientation": "horizontal",
+        "dir": "rtl",
+        "first": "data-state=\"active\"",
+        "second": "",
+        "color": "rgb(255, 0, 0)"
+      }
+    ]
+  },
+  "interlock": [
+    {
+      "name": "footer chip of the upper card shares the band with the title chip of the lower card",
+      "windows": [
+        {
+          "id": "upper",
+          "left": 0,
+          "top": 0,
+          "width": 400,
+          "height": 200,
+          "topEdge": {
+            "depth": 28,
+            "chips": [
+              {
+                "left": 0,
+                "right": 100
+              }
+            ]
+          },
+          "bottomEdge": {
+            "depth": 28,
+            "chips": [
+              {
+                "left": 300,
+                "right": 400
+              }
+            ]
+          }
+        },
+        {
+          "id": "lower",
+          "left": 0,
+          "top": 172,
+          "width": 400,
+          "height": 200,
+          "topEdge": {
+            "depth": 28,
+            "chips": [
+              {
+                "left": 0,
+                "right": 100
+              }
+            ]
+          },
+          "bottomEdge": {
+            "depth": 0,
+            "chips": []
+          }
+        }
+      ],
+      "lines": [
+        {
+          "axis": "h",
+          "at": 172,
+          "from": 0,
+          "to": 100
+        },
+        {
+          "axis": "h",
+          "at": 200,
+          "from": 300,
+          "to": 400
+        }
+      ]
+    },
+    {
+      "name": "cards of a row tile and share the vertical seam",
+      "windows": [
+        {
+          "id": "left",
+          "left": 0,
+          "top": 0,
+          "width": 400,
+          "height": 200,
+          "topEdge": {
+            "depth": 28,
+            "chips": [
+              {
+                "left": 0,
+                "right": 100
+              }
+            ]
+          },
+          "bottomEdge": {
+            "depth": 0,
+            "chips": []
+          }
+        },
+        {
+          "id": "right",
+          "left": 400,
+          "top": 0,
+          "width": 400,
+          "height": 200,
+          "topEdge": {
+            "depth": 28,
+            "chips": [
+              {
+                "left": 0,
+                "right": 100
+              }
+            ]
+          },
+          "bottomEdge": {
+            "depth": 0,
+            "chips": []
+          }
+        }
+      ],
+      "lines": [
+        {
+          "axis": "v",
+          "at": 400,
+          "from": 0,
+          "to": 200
+        }
+      ]
+    },
+    {
+      "name": "a bar over a card with a title chip keeps one straight line across the chip and the notch",
+      "windows": [
+        {
+          "id": "bar",
+          "left": 0,
+          "top": 0,
+          "width": 400,
+          "height": 28,
+          "topEdge": {
+            "depth": 0,
+            "chips": []
+          },
+          "bottomEdge": {
+            "depth": 0,
+            "chips": []
+          }
+        },
+        {
+          "id": "card",
+          "left": 0,
+          "top": 28,
+          "width": 400,
+          "height": 200,
+          "topEdge": {
+            "depth": 28,
+            "chips": [
+              {
+                "left": 0,
+                "right": 100
+              }
+            ]
+          },
+          "bottomEdge": {
+            "depth": 0,
+            "chips": []
+          }
+        }
+      ],
+      "lines": [
+        {
+          "axis": "h",
+          "at": 28,
+          "from": 0,
+          "to": 400
+        }
+      ]
+    }
   ]
 }

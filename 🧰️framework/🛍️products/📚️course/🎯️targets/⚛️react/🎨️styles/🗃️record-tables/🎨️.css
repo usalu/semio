@@ -20,6 +20,10 @@
   --course-records-minimum-fold: 0;
 }
 
+.course-fold > tbody > tr:last-child > :is(th, td) {
+  border-block-end-width: 0;
+}
+
 @container course-records (max-width: 36em) {
   .course-fold {
     --course-records-minimum-fold: 1;
@@ -47,8 +51,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--spacing-single);
-  padding-block-end: var(--spacing-double);
-  border-block-end: var(--stroke-default) solid var(--border-normal-color);
+  padding: var(--spacing-single) var(--spacing-double);
+  border-block-end: var(--stroke-hairline) solid var(--border-normal-color);
 }
 
 .course-records[data-folded] .course-fold[data-head="sort"] > thead > tr > th {
@@ -56,7 +60,7 @@
   max-inline-size: 100%;
   white-space: normal;
   padding: 0 var(--spacing-double);
-  border: var(--stroke-hairline) solid var(--border-normal-color);
+  border: 0;
 }
 
 .course-records[data-folded] .course-fold[data-head="sort"] > thead > tr > th > button {
@@ -71,6 +75,10 @@
   gap: var(--spacing-single) calc(2 * var(--spacing-double));
   padding: var(--spacing-double) var(--spacing-single);
   border-block-end: var(--stroke-hairline) solid var(--border-normal-color);
+}
+
+.course-records[data-folded] .course-fold > tbody > tr:last-child {
+  border-block-end-width: 0;
 }
 
 .course-records[data-folded] .course-fold > tbody > tr::before {

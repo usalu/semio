@@ -4296,6 +4296,12 @@
       "packages": []
     },
     {
+      "name": "@semio-tech/os-plugin-native-transpile-rs",
+      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🦀️native-transpile",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🦀️native-transpile/📋️project.json",
+      "packages": []
+    },
+    {
       "name": "@semio-tech/os-plugin-registry-schema-rs",
       "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/📦️packages/🦀️rust/📋️project.json",

@@ -1949,10 +1949,10 @@
               "filled": false,
               "tone": 0.55,
               "kind": "path",
-              "d": "M 0.01 -0.004 C 0.07 -0.01 0.22 -0.14 0.2 -0.26 C 0.18 -0.38 0.07 -0.36 0.09 -0.22 C 0.11 -0.06 0.14 0.26 0.02196 0.51843",
+              "d": "M 0.01 -0.004 L 0.06781 -0.02966 L 0.135 -0.08925 L 0.18719 -0.17022 L 0.2 -0.26 L 0.17156 -0.32406 L 0.13 -0.3375 L 0.09594 -0.30219 L 0.09 -0.22 L 0.10862 0.02895 L 0.09216 0.27727 L 0.02196 0.51843",
               "region": "hose",
               "material": "epdm-hose",
-              "penMm": 0.1
+              "penMm": 0.15
             },
             {
               "id": "tube",
@@ -2100,7 +2100,7 @@
               "closed": false,
               "region": "hose",
               "material": "epdm-hose",
-              "penMm": 0.1
+              "penMm": 0.15
             },
             {
               "id": "handle",
@@ -3152,6 +3152,8 @@
             "key": "water",
             "heatW": 300
           },
+          "ratedPowerW": 0,
+          "ratedPowerBasis": "passive",
           "source": "authored-estimate",
           "reference": "incropera-2018",
           "hidden": {

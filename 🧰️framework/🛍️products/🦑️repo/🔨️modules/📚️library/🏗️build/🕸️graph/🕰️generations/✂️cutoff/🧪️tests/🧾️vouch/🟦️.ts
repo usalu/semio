@@ -1,5 +1,5 @@
 import{expect,test}from"bun:test";
-import{mkdirSync,mkdtempSync,readFileSync,rmSync,symlinkSync,utimesSync,writeFileSync}from"node:fs";
+import{mkdirSync,mkdtempSync,readFileSync,rmSync,statSync,symlinkSync,utimesSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{dirname,join}from"node:path";
 import{fileURLToPath}from"node:url";
@@ -83,7 +83,7 @@ test("a damaged manifest shard in the store is a miss: the start is correct with
   const first=world.fresh(),cold=await world.run(first,undefined);await first.markIndexed({held:cold.settled.held});
   world.edit("q009","v1");
   const store=createNodeStoreV1({root:world.store}),head=await store.get(manifestIdentity("all"));
-  expect(head?.value?.version).toBe(3);
+  expect(head?.value?.version).toBe(4);
   const row=head.value.shards.find((shard:string[])=>shard[0][0]==="e"),shard=await store.get(manifestIdentity(row[1]));
   shard.value.digests[0]="0".repeat(64);store.put(shard,"");await store.flush?.();
   const broken=await world.run(world.fresh(),dirty);
@@ -95,11 +95,11 @@ test("a damaged manifest shard in the store is a miss: the start is correct with
 
 test("every way to damage a persisted manifest reads as an empty one, and a sound one round-trips with its vouches",()=>{
  const book=createManifestV1();
- for(const[at,name]of["a","b","c"].entries()){indexPartV1(book,"part"+at,{paths:["f"+at],dirs:["d"],bare:[],config:false,volatile:false,outside:[],size:1});recordEntryV1(book,name,{digest:"d"+at,fact:"fact"+at,length:2,ids:["part"+at],vouch:at===1?undefined:"v"+at});}
+ for(const[at,name]of["a","b","c"].entries()){indexPartV1(book,"part"+at,{paths:["f"+at],dirs:["d"],volatile:false,outside:[],size:1});recordEntryV1(book,name,{digest:"d"+at,fact:"fact"+at,length:2,ids:["part"+at],vouch:at===1?undefined:"v"+at});}
  const sound=JSON.parse(JSON.stringify(writeManifestV1(book))),back=readManifestV1(sound);
  expect([...back.entries.keys()].sort()).toEqual(["a","b","c"]);expect(back.entries.get("a")!.vouch).toBe("v0");expect(back.entries.get("b")!.vouch).toBeUndefined();expect(back.entries.get("c")!.digest).toBe("d2");
  expect([...back.paths.keys()].sort()).toEqual(["f0","f1","f2"]);expect(back.dirs.get("d")!.length).toBe(3);
- const check=createHash("sha256").update(JSON.stringify([sound.head.at,sound.head.parts,sound.head.indexed,sound.head.marks,sound.head.volatile,sound.head.config,sound.head.bareAny,sound.head.outside,sound.head.shards])).digest("hex");
+ const check=createHash("sha256").update(JSON.stringify([sound.head.at,sound.head.parts,sound.head.indexed,sound.head.marks,sound.head.volatile,sound.head.outside,sound.head.shards])).digest("hex");
  expect(sound.head.check,"the check equals an independent sha256 of the head").toBe(check);
  const external=Bun.spawnSync(["shasum","-a","256"],{stdin:Buffer.from(JSON.stringify(Object.values(sound.shards)[0]))});
  if(external.exitCode===0)expect(sound.head.shards.some((row:string[])=>row[2]===external.stdout.toString().split(" ")[0]),"a shard digest equals an independent sha256 of its text").toBe(true);
@@ -116,7 +116,7 @@ test("every way to damage a persisted manifest reads as an empty one, and a soun
 
 test("only the shards that changed are written again, and a manifest saved after every change loads to the same entries",async()=>{
  const book=createManifestV1();
- for(let at=0;at<300;at++){indexPartV1(book,"part"+at,{paths:["f"+at],dirs:[],bare:[],config:false,volatile:false,outside:[],size:1});recordEntryV1(book,"q"+at,{digest:"d"+at,fact:"fact"+at,length:2,ids:["part"+at,"part"+((at+1)%300)]});}
+ for(let at=0;at<300;at++){indexPartV1(book,"part"+at,{paths:["f"+at],dirs:[],volatile:false,outside:[],size:1});recordEntryV1(book,"q"+at,{digest:"d"+at,fact:"fact"+at,length:2,ids:["part"+at,"part"+((at+1)%300)]});}
  const first=planSaveV1(book);expect(first.writes.length).toBeGreaterThan(2);first.commit();
  const idle=planSaveV1(book);expect(idle.writes,"nothing changed: nothing is written").toEqual([]);
  recordEntryV1(book,"q7",{digest:"changed",fact:"fact7",length:2,ids:["part7"],vouch:"v"});
@@ -162,4 +162,78 @@ test("a settle killed in the middle leaves its manifest durable: the resumed sta
   expect(settled.held.size+settled.kept.size).toBe(count);
   expect(derived.length,"only the unfinished closures were derived").toBeLessThanOrEqual(count-flushed);
  }finally{world.drop();rmSync(root,{recursive:true,force:true});rmSync(ws,{recursive:true,force:true});}
+});
+
+const unwatched=(path:string)=>path.startsWith(".cache/")||path.split("/").includes("node_modules");
+
+function installed(){
+ const store=mkdtempSync(join(tmpdir(),"vouch-install-store-")),workspace=mkdtempSync(join(tmpdir(),"vouch-install-ws-")),packages=["a","b"],old=new Date(1e12);
+ mkdirSync(join(workspace,"own"));
+ const put=(path:string,text:string)=>{const file=join(workspace,path);mkdirSync(dirname(file),{recursive:true});writeFileSync(file,text);utimesSync(file,old,old);};
+ const read=(path:string)=>readFileSync(join(workspace,path),"utf8"),pkg=(name:string)=>".cache/inst/node_modules/"+packages[names.indexOf(name)%2]+"/index.js";
+ for(const name of packages)put(".cache/inst/node_modules/"+name+"/index.js","pkg "+name+" v0");
+ for(const name of names)put("own/"+name,"v0-"+name);
+ const run=async(dirty:{paths:string[]}|undefined,settler=createClosureSettlerV1({store:createNodeStoreV1({root:store})}),cheap=true)=>{
+  const derived:string[]=[];let rows=0;
+  const settled=await settler.settle({pseudoRows:suspectRowsV1(index,suspects),derive:async(row:{path:string})=>{derived.push(row.path);return{fact:"old",parts:[[{kind:"file",path:"own/"+row.path,fact:read("own/"+row.path)}],[{kind:"file",path:pkg(row.path),fact:read(pkg(row.path))}]]};},hold:async(list:{path:string;fact:string}[])=>{rows+=list.length;return list.every(row=>read(row.path)===row.fact);},...dirty===undefined?{}:{dirty:{...dirty,excluded:unwatched}},vouchStamp:(name:string,wanted?:boolean)=>stampOfV1(join(workspace,name),undefined,cheap&&wanted)} as never);
+  await settler.markIndexed({held:settled.held});
+  return{settled:settled as typeof settled&{slow:number;vouched:number},derived,rows};
+ };
+ return{store,workspace,put,run,pkg,drop:()=>{rmSync(store,{recursive:true,force:true});rmSync(workspace,{recursive:true,force:true});}};
+}
+
+test("law: closures that read an install tree the journal does not watch are vouched by its stamps, so an unchanged start asks none of them and checks no row",async()=>{
+ const world=installed(),dirty={paths:["own/q003"]};
+ try{
+  const cold=await world.run(undefined);expect(cold.derived.length).toBe(COUNT);
+  world.put("own/q003","v1-q003");
+  const first=await world.run(dirty);expect(first.derived,"only the edited closure is derived").toEqual(["q003"]);
+  expect(first.settled.slow,"nothing was sealed before: every closure that reads the install tree is asked once").toBe(COUNT);
+  for(let again=0;again<3;again++){
+   const next=await world.run(dirty);
+   expect(next.settled.slow,"start "+again+": no closure goes down the slow path").toBe(0);expect(next.derived).toEqual([]);expect(next.rows,"and no row is checked").toBe(0);
+   expect(next.settled.held.size+next.settled.kept.size+next.settled.changed.size).toBe(COUNT);
+  }
+ }finally{world.drop();}
+});
+
+test("law: an edit below an unwatched region that no journal names moves exactly the closures that read it, a revert to older bytes moves them again, and a stamp taken in the racy window is never vouched",async()=>{
+ const world=installed(),dirty={paths:["own/q003"]},readers=(name:string)=>names.filter(candidate=>world.pkg(candidate)===world.pkg(name));
+ try{
+  await world.run(undefined);world.put("own/q003","v1-q003");await world.run(dirty);
+  expect((await world.run(dirty)).settled.slow).toBe(0);
+  const target=world.pkg("q000");world.put(target,"pkg a v1 longer");
+  const edited=await world.run(dirty);expect(edited.derived.sort(),"exactly the closures that read the package").toEqual(readers("q000").sort());
+  expect(edited.settled.slow,"the others are still vouched").toBeLessThanOrEqual(readers("q000").length+1);
+  expect((await world.run(dirty)).settled.slow,"settled again").toBe(0);
+  world.put(target,"pkg a v0");
+  expect((await world.run(dirty)).derived.sort(),"the older bytes are not the bytes that were vouched").toEqual(readers("q000").sort());
+  expect((await world.run(dirty)).settled.slow).toBe(0);
+  writeFileSync(join(world.workspace,target),"pkg a v2 now");
+  const racing=await world.run(dirty);expect(racing.derived.sort()).toEqual(readers("q000").sort());
+  expect((await world.run(dirty)).settled.slow,"a file written in the last two seconds has no stamp: its readers are asked again").toBeGreaterThanOrEqual(readers("q000").length);
+ }finally{world.drop();}
+});
+
+test("law: without the cheap stamp (the bytes of every unwatched file hashed) the answers are the same, only slower to take",async()=>{
+ const world=installed(),dirty={paths:["own/q003"]};
+ try{
+  await world.run(undefined,undefined,false);world.put("own/q003","v1-q003");await world.run(dirty,undefined,false);
+  const next=await world.run(dirty,undefined,false);expect(next.settled.slow).toBe(0);expect(next.rows).toBe(0);
+ }finally{world.drop();}
+});
+
+test("the cheap stamp of a file is its size, times and inode as an independent stat reports them, it follows a change of size or inode and has none inside the racy window",async()=>{
+ const dir=mkdtempSync(join(tmpdir(),"cheap-stamp-"));
+ try{
+  const file=join(dir,"f.txt");writeFileSync(file,"hello");
+  expect(await stampOfV1(file,undefined,true),"just written").toBeUndefined();
+  utimesSync(file,new Date(1e12),new Date(1e12));
+  const stamp=await stampOfV1(file,undefined,true),info=statSync(file,{bigint:true});
+  expect(stamp).toBe("s:"+info.size+":"+info.mtimeNs+":"+info.ctimeNs+":"+info.ino);
+  expect(await stampOfV1(file,undefined,true),"stable").toBe(stamp);
+  writeFileSync(file,"hello!");utimesSync(file,new Date(1e12),new Date(1e12));expect(await stampOfV1(file,undefined,true)).not.toBe(stamp);
+  expect(await stampOfV1(join(dir,"absent"),undefined,true)).toBe("-");
+  expect(await stampOfV1(dir,undefined,true),"a directory keeps its listing stamp").toBe(await stampOfV1(dir));
+ }finally{rmSync(dir,{recursive:true,force:true});}
 });

@@ -13,6 +13,7 @@
     "scriptGzipBytes": { "publish": 250000, "rehearsal": 250000 },
     "styleGzipBytes": 60000,
     "totalBytes": 5000000,
-    "assignmentBytes": 2500000
+    "assignmentBytes": 2500000,
+    "posterBytes": 2600000
   }
 }

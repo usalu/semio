@@ -9,6 +9,8 @@ import {nativeRepoRecoveryBuildDescendantsV1,readNativeRepoRecoveryPlanV1} from 
 import schema from "../../🧬️schema/🔣️.json";
 import corpus from "./🔣️.json";
 import corpusSchema from "./🧬️schema/🔣️.json";
+import{existsSync as existsRootV1}from"node:fs";import{dirname as dirnameRootV1,join as joinRootV1}from"node:path";
+const repositoryRootV1=(()=>{let directory=import.meta.dir;while(!existsRootV1(joinRootV1(directory,"MODULE.bazel"))&&dirnameRootV1(directory)!==directory)directory=dirnameRootV1(directory);return directory;})();
 
 setDefaultTimeout(60000);
 
@@ -44,8 +46,8 @@ test("private recovery owners retain ordinary single-link bounded physical Sourc
 test("actual recovery commands use bounded domain owners with every authored profile",()=>{
  const ajv=new Ajv({strict:false});
  for(const [group,name,definition]of [[protocol.maintenance,"repo-cache-retirement","MaintenanceOwner"],[protocol.reset,"repo-cache-reset","ResetOwner"]]as const){
-  expect(group.project).toBe(name);const file=join(process.cwd(),group.owner,"📋️project.json"),bytes=readFileSync(file),owner=JSON.parse(bytes.toString("utf8"));
+  expect(group.project).toBe(name);const file=join(repositoryRootV1,group.owner,"📋️project.json"),bytes=readFileSync(file),owner=JSON.parse(bytes.toString("utf8"));
   expect(bytes.length).toBeLessThanOrEqual(protocol.maximumOwnerBytes);expect(lstatSync(file).nlink).toBe(1);expect(ajv.validate({$defs:schema.$defs,$ref:"#/$defs/"+definition},owner),JSON.stringify(ajv.errors)).toBe(true);
-  for(const [target,profile]of Object.entries(group.targets)){expect(owner.targets[target]).toBeDefined();expect(readNativeRepoRecoveryPlanV1(process.cwd(),["run",name+":"+target])?.target).toBe(profile);}
+  for(const [target,profile]of Object.entries(group.targets)){expect(owner.targets[target]).toBeDefined();expect(readNativeRepoRecoveryPlanV1(repositoryRootV1,["run",name+":"+target])?.target).toBe(profile);}
  }
 });

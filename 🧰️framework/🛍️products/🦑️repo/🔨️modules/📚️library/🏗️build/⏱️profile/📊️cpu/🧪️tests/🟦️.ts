@@ -7,6 +7,9 @@ import {fileURLToPath} from "node:url";
 import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import schema from "../🧬️schema/🔣️.json";
 import fixture from "./🔣️.json";
+import{implementationProcessEnvironmentV1}from"../../../🏛️sealed/📥️execution/🟦️.ts";
+import{existsSync as existsRootV1}from"node:fs";import{dirname as dirnameRootV1,join as joinRootV1}from"node:path";
+const repositoryRootV1=(()=>{let directory=import.meta.dir;while(!existsRootV1(joinRootV1(directory,"MODULE.bazel"))&&dirnameRootV1(directory)!==directory)directory=dirnameRootV1(directory);return directory;})();
 
 /** 📊️ Compares the closed cross-platform profile request and fixed driver flags to Ajv and SQLite. */
 test("CPU profiling accepts only declared requests and explicit bounded artifact paths",()=>{
@@ -62,6 +65,7 @@ test("both launcher ports retain exact custody and add only the closed profiler 
    readSealedSnapshotV1:()=>fixture.text,
    readSealedLoaderV1:()=>"loader",
    sealedPolicyV1:{maximumCommandLineCharacters:32767},
+   implementationProcessEnvironmentV1,
    profileMarkV1:()=>{},
    relative:path.relative,
    fileURLToPath:url.fileURLToPath,
@@ -88,7 +92,7 @@ test("genuine file launch retains the owned sampler within its guarded test",asy
  const code=ts.transpileModule("const launch="+launch.getText(ast)+";return launch;",{compilerOptions:{target:ts.ScriptTarget.ESNext,module:ts.ModuleKind.None}}).outputText;
  await receiver.withBuildTestInvocationV1(async original=>{for(const row of fixture.cases.filter(row=>row.name==="off"||row.name==="linux")){
   const environment=row.environment,request={pattern:"^selected$"},flags=repoCpuProfileArgumentsV1(environment,{platform:"linux",pid:123,sequence:1}),calls:{command:string;args:readonly string[];budget:number;options:any}[]=[],before=original.control.remainingMilliseconds();
-  const run=new Function("advanceScriptInvocation","prepareRepoCpuTestProfileArgumentsV1","guardArgumentsV1","declared","local","request","environment","root","label","runOwnedCommand","scriptInvocationEnvironment","birth",code)(async(value:unknown)=>expect(value).toBe(original),(env:unknown)=>{expect(env).toBe(environment);return flags.length?["--preload","owned-profiler"]:[];},(command:string,args:readonly string[],env:unknown)=>{expect(command).toBe(process.execPath);expect(env).toBe(environment);return["guarded",...args];},{childTimeoutMilliseconds:120000},"suite.ts",request,environment,process.cwd(),"build:genuine-test",async(command:string,args:readonly string[],_root:string,_label:string,budget:number,options:any)=>{calls.push({command,args,budget,options});},routing.scriptInvocationEnvironment,{id:"fixture"});
+  const run=new Function("advanceScriptInvocation","prepareRepoCpuTestProfileArgumentsV1","guardArgumentsV1","declared","local","request","environment","root","label","runOwnedCommand","scriptInvocationEnvironment","birth",code)(async(value:unknown)=>expect(value).toBe(original),(env:unknown)=>{expect(env).toBe(environment);return flags.length?["--preload","owned-profiler"]:[];},(command:string,args:readonly string[],env:unknown)=>{expect(command).toBe(process.execPath);expect(env).toBe(environment);return["guarded",...args];},{childTimeoutMilliseconds:120000},"suite.ts",request,environment,repositoryRootV1,"build:genuine-test",async(command:string,args:readonly string[],_root:string,_label:string,budget:number,options:any)=>{calls.push({command,args,budget,options});},routing.scriptInvocationEnvironment,{id:"fixture"});
   await run(original);expect(calls).toHaveLength(1);const call=calls[0]!;expect(call.command).toBe(process.execPath);expect(call.args).toEqual(["guarded","test",...(row.expected!.length?["--preload","owned-profiler"]:[]),"--timeout","120000","./suite.ts","--test-name-pattern","^selected$"]);expect(call.budget).toBeGreaterThan(0);expect(call.budget).toBeLessThanOrEqual(before!);expect(call.options.signal).toBe(original.control.signal);expect(call.options.env[routing.SCRIPT_PROCESS_INVOCATION_ENV]).toBe(routing.scriptInvocationEnvironment(original,{})[routing.SCRIPT_PROCESS_INVOCATION_ENV]);
  }});
 });

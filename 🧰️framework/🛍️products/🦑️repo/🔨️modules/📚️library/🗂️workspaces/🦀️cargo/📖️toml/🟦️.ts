@@ -3,7 +3,7 @@ export type CargoTomlValue=string|number|boolean|CargoTomlValue[]|CargoTomlTable
 export interface CargoTomlTable { [key:string]:CargoTomlValue; }
 export class CargoTomlWorkspace {
  source="";readonly chunks:string[]=[];sourceLength=0;chunk=0;offset=0;previous="";position=0;private units=0;private bytes=0;document:CargoTomlTable|null=null;state:"empty"|"parsing"|"complete"|"refused"="empty";
- constructor(private readonly accounting?:CargoAccounting){}
+ private readonly accounting?:CargoAccounting; constructor(accounting?:CargoAccounting){this.accounting=accounting;}
  get completed():number{return this.accounting?.completed??this.units;}
  set completed(value:number){if(this.accounting)this.accounting.completed=value;else this.units=value;}
  get ownedBytes():number{return this.accounting?.ownedBytes??this.bytes;}
@@ -28,7 +28,7 @@ export async function parseCargoTomlChunks(chunks:readonly string[],workspace:Ca
 }
 
 class CargoTomlParser {
- constructor(readonly workspace:CargoTomlWorkspace,readonly control:CargoController,readonly path:string){}
+ readonly workspace:CargoTomlWorkspace; readonly control:CargoController; readonly path:string; constructor(workspace:CargoTomlWorkspace,control:CargoController,path:string){this.workspace=workspace;this.control=control;this.path=path;}
  get length():number{return this.workspace.sourceLength;}
  get at():number{return this.workspace.position;}
  char(offset=0):string{let index=this.workspace.chunk,at=this.workspace.offset+offset;while(index<this.workspace.chunks.length){const chunk=this.workspace.chunks[index]!;if(at<chunk.length)return chunk[at]!;at-=chunk.length;index++;}return "";}

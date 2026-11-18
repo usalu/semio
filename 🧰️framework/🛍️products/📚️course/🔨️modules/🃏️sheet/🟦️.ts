@@ -13,7 +13,7 @@
  */
 import type { Axis, Category, Challenge, Icon, Mockup, QuestionPool, Quiz, SheetAxis, SheetItem, SheetTask, Sheet, ShortText, SortingItem, Task, Text } from "../../🧬️schema/🟦️.ts";
 import { challengeRules, taskSeconds, type ChallengeRules } from "../⛰️challenge/🟦️.ts";
-import { Mt19937, fnv1a32, shuffle, type RandomSource } from "../🎲️randomness/🟦️.ts";
+import { Mt19937, fnv1a32, shuffle, weightedSample, type RandomSource } from "../🎲️randomness/🟦️.ts";
 
 /** 🪧️ The solution-free projection of an item: id, label, short label and icon. */
 function sheetItem(item: { readonly id: string; readonly label: Text; readonly short?: ShortText; readonly icon?: Icon; readonly mockup?: Mockup }): SheetItem {
@@ -35,11 +35,30 @@ function drawn<T>(items: readonly T[], draw: number | undefined): readonly T[] {
   return draw !== undefined && draw < items.length ? items.slice(0, draw) : items;
 }
 
-/** 🎠️ One shuffled deck per semantic slot, indexed by attempt; presentation order follows the run shuffle. */
-function pooled<T extends { readonly id: string }>(task: { readonly id: string; readonly draw?: number; readonly pool?: QuestionPool }, seed: number, shuffled: readonly T[]): readonly T[] {
+/** 📏️ The magnitude that ranks an item in a distribution: a sorting item's absolute value, a matching item's absolute value on its first dimension, a classification item's definition position. */
+function magnitude(task: Task, position: number): number {
+  const item = task.items[position]!;
+  if ("value" in item) return Math.abs(item.value);
+  if ("values" in item && task.kind === "matching") return Math.abs(item.values[task.dimensions[0]!.id] ?? Number.POSITIVE_INFINITY);
+  return position;
+}
+
+/** 📉️ The indices of the slots a sheet draws: all of them, or `task.draw` of them by the Zipf weight `1 / rank^exponent` of their rank by smallest magnitude, ties by slot order. */
+function drawnSlots(task: Task, pool: QuestionPool, seed: number): readonly number[] {
+  const { distribution, slots } = pool;
+  if (!distribution) return slots.map((_, index) => index);
+  const smallest = slots.map((slot) => Math.min(...slot.map((id) => magnitude(task, task.items.findIndex((item) => item.id === id)))));
+  const ranked = slots.map((_, index) => index).sort((left, right) => smallest[left]! - smallest[right]! || left - right);
+  const picked = weightedSample(new Mt19937((seed ^ fnv1a32(task.id + ":zipf")) >>> 0), ranked.map((_, rank) => Math.pow(rank + 1, -distribution.exponent)), task.draw!);
+  return picked.map((rank) => ranked[rank]!);
+}
+
+/** 🎠️ One shuffled deck per drawn semantic slot, indexed by attempt; presentation order follows the run shuffle. */
+function pooled<T extends { readonly id: string }>(task: Task, seed: number, shuffled: readonly T[]): readonly T[] {
   if (!task.pool) return drawn(shuffled, task.draw);
-  const selected = new Set(task.pool.slots.map((slot, index) => {
-    const deck = shuffle(new Mt19937((seed >>> 16) ^ fnv1a32(task.id + ":" + index)), slot);
+  const pool = task.pool;
+  const selected = new Set(drawnSlots(task, pool, seed).map((index) => {
+    const deck = shuffle(new Mt19937((seed >>> 16) ^ fnv1a32(task.id + ":" + index)), pool.slots[index]!);
     return deck[(seed & 65535) % deck.length]!;
   }));
   return shuffled.filter(item => selected.has(item.id));

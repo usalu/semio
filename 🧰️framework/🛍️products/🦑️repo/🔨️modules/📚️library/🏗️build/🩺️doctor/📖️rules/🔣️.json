@@ -1278,11 +1278,12 @@
       "de": "Der Wächter hält schwere Befehle bei {limit} eingehängten Images zurück; liegengebliebene Wegwerf-Images aus Tests sind die übliche Ursache."
     },
     "fix": {
-      "kind": "command",
-      "command": "repo cache status",
+      "kind": "automatic",
+      "command": "repo doctor --fix --only=host",
+      "repair": "host-leaked-images",
       "note": {
-        "en": "Opening the partitions lets the storage layer detach abandoned scratch images.",
-        "de": "Das Öffnen der Partitionen lässt die Speicherschicht verlassene Wegwerf-Images aushängen."
+        "en": "Detaches only the images of dead test sandboxes, nested ones first; the capacity gate does the same before it refuses.",
+        "de": "Hängt nur die Images toter Test-Sandboxes aus, verschachtelte zuerst; der Kapazitätswächter tut dasselbe, bevor er ablehnt."
       }
     }
   },

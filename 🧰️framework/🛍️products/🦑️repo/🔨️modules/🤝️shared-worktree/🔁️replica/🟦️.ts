@@ -10,7 +10,7 @@ import {appendEventsV1,expiredHorizonV1,repairBlobV1,blobPathV1,copyVerifiedV1,t
 import {compileIgnoreV1,foldNameV1,gitPrivateV1,hashFileV1,linkRefusalV1,refusePathV1,scanSharedV1,sharedV1,type FleetIgnoreV1,type FleetScanEntryV1} from "../🚧️boundary/🟦️.ts";
 import {compactionDefaultsV1,cursorAheadV1,estimateEventsBehindV1,listSnapshotsV1,planRetirementV1,pruneSnapshotsV1,reclaimBlobsV1,reclaimLitterV1,requireCompactionShapeV1,retireSegmentsV1,scanSnapshotV1,snapshotSavesV1,storeReportV1,withCompactionLockV1,writeCompactionRecordV1,type CompactionSettingsV1,type ReclaimResultV1,type SnapshotRefV1,type StoreReportV1} from "../🗜️compaction/🟦️.ts";
 import {bucketsHexV1,digestHexV1,emptyBucketsV1,foldBucketV1,bucketOfV1,foldTermV1,manifestTermV1,createAttesterV1,fleetReportV1,readAttestationV1,readAttestationsV1,readRetirementV1,readRetirementsV1,repairableDriftV1,type AttesterGitV1,type AttesterViewV1,type FleetFallbackV1,type FleetGuardsV1,type FleetReportV1} from "../🩺️attest/🟦️.ts";
-import {sweepGitGarbageV1,repairGitConfigV1,applyIndexV1,branchRefV1,gitBrokenV1,linearizeRefV1,gitGuardsV1,gitStateV1,gitViewDeltaV1,gitViewV1,resolveGitV1,INDEX_BASE_V1,INDEX_PREFIX_V1,indexRealmV1,indexSignatureV1,normaliseGitConfigV1,publishIndexV1,stageHealthV1,verifyIndexV1,type GitBrokenV1,type GitViewV1,type IndexHostV1,type StageReasonV1} from "../🌿️git/🟦️.ts";
+import {sweepGitGarbageV1,repairGitConfigV1,applyIndexV1,branchRefV1,gitBrokenV1,linearizeRefV1,gitGuardsV1,gitStateV1,gitViewDeltaV1,gitViewV1,resolveGitV1,INDEX_BASE_V1,INDEX_PREFIX_V1,indexRealmV1,indexSignatureV1,normaliseGitConfigV1,publishIndexV1,stageHealthV1,stageRecordedV1,verifyIndexV1,type GitBrokenV1,type GitViewV1,type IndexHostV1,type StageReasonV1} from "../🌿️git/🟦️.ts";
 import {DirectoryTableV1,HotSetV1,LatencyV1,nextDelayV1,takeHintsV1,ensureHintsV1,type LatencyReportV1} from "../🎣️tiers/🟦️.ts";
 import {StateCorruptV1,appendWalV1,bytesOfV1,checkpointPartsV1,decodeRecordsV1,partWidthV1,payloadsV1,readCheckpointV1,readWalV1,writeCheckpointV1,type CheckpointV1,type WalRecordV1} from "./💾️state/🟦️.ts";
 import {clashKeyV1,clashV1,staleRepublishV1,type ContentEventV1} from "./⚖️clash/🟦️.ts";
@@ -20,7 +20,7 @@ import {admitEntryScriptV1,entryDirectoryV1,entryGuardedV1,maintainEntryV1,migra
 import {ensureLauncherConsentV1} from "../../📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/🍎️launchd/🟨️.mjs";
 import {packLocalV1,packPartsV1,readPackAuthorisationV1,rescueLocalPacksV1} from "./🧷️packgate/🟦️.ts";
 import {createSidecarsV1,type SidecarSettingsV1} from "./🧷️sidecars/🟦️.ts";
-import {yieldingV1,activityV1,codeDirectoryV1,createFailuresV1,createStoreGuardV1,existingCompanionsV1,importClosureV1,installBootStageV1,listStoreCodeV1,moduleSourcesV1,pruneLostV1,pruneStoreCodeV1,publishCodeSnapshotV1,readBeatV1,readBlockedRestartV1,readHealthV1,StoreStalledV1,readRunHistoryV1,recordRefusedV1,withdrawRefusedV1,recordRunV1,rotateLogV1,runSelfCheckV1,sealCodeV1,suspectCodeV1,writeHealthV1,type FailuresV1,type HealthV1,type SealedCodeV1} from "../🛡️resilience/🟦️.ts";
+import {yieldingV1,activityV1,codeDirectoryV1,createFailuresV1,createStoreGuardV1,existingCompanionsV1,importClosureV1,installBootStageV1,listStoreCodeV1,moduleSourcesV1,pruneLostV1,pruneStoreCodeV1,publishCodeSnapshotV1,readBeatV1,readBlockedRestartV1,readHealthV1,StoreStalledV1,readRefusedPathsV1,readRunHistoryV1,recordRefusedV1,withdrawRefusedV1,recordRunV1,rotateLogV1,runSelfCheckV1,sealCodeV1,suspectCodeV1,writeHealthV1,writeRefusedPathsV1,noteRefusedPathV1,NO_REFUSED_PATHS_V1,type FailuresV1,type HealthV1,type RefusedPathsV1,type SealedCodeV1} from "../🛡️resilience/🟦️.ts";
 import {maintainKitV1} from "../🗺️topology/🥾️provision/🟦️.ts";
 import {createTrustTrackerV1,trustPolicyV1,type TrustTrackerV1} from "../🔏️trust/🟦️.ts";
 import {blamesCheckV1,blamesStartV1,blamesWatchdogV1,canaryLimitsV1,canaryReasonV1,createCanaryTrackerV1,decideCanaryV1,publishRefusalV1,readRefusalsV1,refusalProofMsV1,watchdogWindowMsV1,withdrawRefusalV1,type CanaryLimitsV1,type CanaryPeerV1,type CanaryTrackerV1,type CanaryVerdictV1} from "../🚦️canary/🟦️.ts";
@@ -55,6 +55,7 @@ export type ReplicaV1={
  readonly cursors:Record<string,FleetCursorV1>;
  readonly folds:ReplicaFoldsV1;
  readonly noted:Set<string>;
+ readonly refusedPaths:{record:RefusedPathsV1;dirty:boolean};
  readonly failures:FailuresV1;
  readonly trust:TrustTrackerV1;
  beat:()=>void;
@@ -108,7 +109,7 @@ export type DriftV1=Drift;
 export type VerifyReportV1=Readonly<{version:1;ok:boolean;checked:number;total:number;truncated:boolean;drift:readonly Drift[];refusedTotal:number;refused:readonly Readonly<{path:string;reason:string}>[]}>;
 
 /** 📊️ The report of `statusV1`, shaped by `Status` of the schema. */
-export type StatusReportV1=Readonly<{access?:AccessRecordV1;version:1;originId:string;groupId:string;storeRoot:string;reachable:boolean;daemon:Readonly<{running:boolean;pid:number|null;busySeconds?:number}>;code?:Readonly<{source:"worktree"|"snapshot"|"store";phase:"boot"|"open"|"run"}>;sync:boolean;files:number;queue:Readonly<{incoming:number;outgoing:number|null}>;lost:number;refused:number|null;git:Readonly<{shared:boolean;reason:"shared"|"no-git"|"no-repository"|StageReasonV1;indexTree:string|null}>;origins:readonly Readonly<{origin:string;behindEvents:number;behindBytes:number;lastHlc:string|null;ageSeconds:number|null;rejoinRequired:boolean;retired:boolean}>[];latency:LatencyReportV1|null;retired:Readonly<{by:string;reason:string;wallMs:number}>|null;health:Omit<HealthV1,"version"|"pid">|null;store:StoreReportV1|null}>;
+export type StatusReportV1=Readonly<{access?:AccessRecordV1;version:1;originId:string;groupId:string;storeRoot:string;reachable:boolean;daemon:Readonly<{running:boolean;pid:number|null;busySeconds?:number}>;code?:Readonly<{source:"worktree"|"snapshot"|"store";phase:"boot"|"open"|"run"}>;sync:boolean;files:number;queue:Readonly<{incoming:number;outgoing:number|null}>;lost:number;refused:number|null;refusedPaths:RefusedPathsV1;git:Readonly<{shared:boolean;reason:"shared"|"no-git"|"no-repository"|StageReasonV1;indexTree:string|null}>;origins:readonly Readonly<{origin:string;behindEvents:number;behindBytes:number;lastHlc:string|null;ageSeconds:number|null;rejoinRequired:boolean;retired:boolean}>[];latency:LatencyReportV1|null;retired:Readonly<{by:string;reason:string;wallMs:number}>|null;health:Omit<HealthV1,"version"|"pid">|null;store:StoreReportV1|null}>;
 
 /** 🎞️ A written snapshot. */
 export type SnapshotResultV1=Readonly<{file:string;hlc:string;entries:number;created:boolean}>;
@@ -129,12 +130,20 @@ const sharing=(error:unknown):boolean=>code(error)==="EBUSY"||code(error)==="EPE
 const messageOf=(error:unknown):string=>error instanceof Error?error.message:String(error);
 const digest=(text:string):string=>createHash("sha256").update(text).digest("hex");
 const token=():string=>randomBytes(8).toString("hex");
-const capable=new WeakMap<object,boolean>(),caseless=new WeakMap<object,boolean>();
+const capable=new WeakMap<object,boolean>(),caseless=new WeakMap<object,boolean>(),unicode=new WeakMap<object,boolean>();
 
 /** 🔡️ Tells whether the volume that holds `directory` ignores case: a probe file is looked up under another spelling. */
 async function caseIgnored(directory:string):Promise<boolean>{
  const stem=token(),name=join(directory,`Case-${stem}`);
  try{await mkdir(directory,{recursive:true});await writeFile(name,"");return await lstat(join(directory,`case-${stem}`)).then(()=>true,()=>false);}
+ catch{return false;}
+ finally{await rm(name,{force:true}).catch(()=>{});}
+}
+
+/** 🔣️ Tells whether the volume that holds `directory` ignores Unicode normalisation (APFS, HFS+): a probe file with a composed name is looked up under its decomposed spelling. */
+async function normalisationIgnored(directory:string):Promise<boolean>{
+ const stem=token(),name=join(directory,`N-${stem}-\u00e9`);
+ try{await mkdir(directory,{recursive:true});await writeFile(name,"");return await lstat(join(directory,`N-${stem}-e\u0301`)).then(()=>true,()=>false);}
  catch{return false;}
  finally{await rm(name,{force:true}).catch(()=>{});}
 }
@@ -159,6 +168,13 @@ async function respell(replica:ReplicaV1,path:string):Promise<void>{
  if(actual===undefined)return;
  try{await rename(join(directory,actual),target);}catch{return;}
  replica.say({event:"repaired",path,reason:"respelled",count:1});
+}
+
+/** 🔤️ The directory entry that stands for `path` when its volume ignores Unicode normalisation and the directory lists the name decomposed (NFD) next to the composed (NFC) spelling the fleet carries: such a name is refused by the path policy and so never carried, yet a lookup of the carried name finds it. `undefined` when the carried spelling is listed, or nothing is. */
+async function variantOf(replica:ReplicaV1,path:string):Promise<string|undefined>{
+ const base=basename(path),names=await readdir(dirname(absolute(replica.settings.worktree,path))).catch(()=>[] as string[]);
+ if(names.includes(base))return undefined;
+ return names.find(name=>name.normalize("NFC")===base);
 }
 
 /** 🔗️ Tells whether the volume that holds `directory` can hold symbolic links (a Windows account without the privilege or the developer mode cannot): one link is created, read back and removed. */
@@ -867,7 +883,7 @@ function indexHost(replica:ReplicaV1):IndexHostV1{
  if(known!==undefined)return known;
  const {manifest,files,queue,book,settings}=replica;
  const host:IndexHostV1={
-  worktree:settings.worktree,server:settings.originId===`${settings.groupId}-server`,now:settings.now,
+  worktree:settings.worktree,server:settings.originId===`${settings.groupId}-server`,archivist:`${settings.groupId}-server`,now:settings.now,
   base:()=>manifest.get(INDEX_BASE_V1),
   each:visit=>{for(const id of manifest.ids()){const path=book.name(id);if(path.startsWith(INDEX_PREFIX_V1))visit(path,manifest.entryAt(id));}},
   held:visit=>{for(const id of files.ids()){const path=book.name(id);if(indexRealmV1(path))visit(path,plain(files.entryAt(id)));}},
@@ -911,6 +927,7 @@ function requeue(replica:ReplicaV1):void{
 }
 
 function noteOnce(replica:ReplicaV1,key:string,event:Omit<ReplicaEventV1,"version">):void{
+ if(event.event==="refused"&&event.path!==undefined){replica.refusedPaths.record=noteRefusedPathV1(replica.refusedPaths.record,event.path,event.reason??"-",replica.settings.now());replica.refusedPaths.dirty=true;}
  const {announce,count}=replica.failures.note(key,event.message??event.reason??key);
  replica.trust.failure(key);
  if(replica.noted.size>=noteCapacity)replica.noted.clear();
@@ -974,7 +991,7 @@ export async function openReplicaV1(options:ReplicaOptionsV1,sink:ReplicaSinkV1=
   let clock=local.clock;
   try{const head=await readHeadV1(settings.storeRoot,settings.originId);if(head)clock=mergeClockV1(clock,head.hlc,Number.MAX_SAFE_INTEGER-futureMilliseconds);}catch{}
   const text=await readIgnoreText(paths);
-  const replica:ReplicaV1={settings,paths,book:tables.book,files:tables.files,queue:tables.queue,manifest:tables.manifest,cursors:local.cursors,folds:tables.folds,noted:new Set(),failures:createFailuresV1({now:settings.now}),trust:createTrustTrackerV1(settings.now),beat:()=>{},key,applying:0,changed:new Set(),held:new Map(),hot:new HotSetV1(),warm:new HotSetV1(5000),dirs:tables.dirs,latency:new LatencyV1(100,600_000,3_600_000,settings.now),startedMs:settings.now(),memo:local.memo,memoDirty:new Set(),say:event=>sink({version:1,...event}),release,clock,ignore:guarded(compileIgnoreV1(text)),ignoreHash:digest(text),dirty:false,persistedAt:settings.now(),homeWritten:false,generation:local.generation,logBytes:local.log.good,activity:0,viewDirt:{paths:new Set(),overflow:false},checkpointBytes:local.checkpointBytes,joined:local.machine!==undefined};
+  const replica:ReplicaV1={settings,paths,book:tables.book,files:tables.files,queue:tables.queue,manifest:tables.manifest,cursors:local.cursors,folds:tables.folds,noted:new Set(),refusedPaths:{record:await readRefusedPathsV1(settings.worktree)??NO_REFUSED_PATHS_V1,dirty:false},failures:createFailuresV1({now:settings.now}),trust:createTrustTrackerV1(settings.now),beat:()=>{},key,applying:0,changed:new Set(),held:new Map(),hot:new HotSetV1(),warm:new HotSetV1(5000),dirs:tables.dirs,latency:new LatencyV1(100,600_000,3_600_000,settings.now),startedMs:settings.now(),memo:local.memo,memoDirty:new Set(),say:event=>sink({version:1,...event}),release,clock,ignore:guarded(compileIgnoreV1(text)),ignoreHash:digest(text),dirty:false,persistedAt:settings.now(),homeWritten:false,generation:local.generation,logBytes:local.log.good,activity:0,viewDirt:{paths:new Set(),overflow:false},checkpointBytes:local.checkpointBytes,joined:local.machine!==undefined};
   replica.ignore=guarded(compileIgnoreV1(text),packLocalOf(replica));
   if(corrupt!==undefined){
    replica.say({event:"state-rebuilt",reason:corrupt.includes("missing")?"missing":"corrupt",message:corrupt});
@@ -983,6 +1000,7 @@ export async function openReplicaV1(options:ReplicaOptionsV1,sink:ReplicaSinkV1=
   restoreHistory(replica);
   capable.set(replica,settings.symlinks??await linksWork(paths.tmp));
   caseless.set(replica,settings.caseInsensitive??await caseIgnored(paths.tmp));
+  unicode.set(replica,await normalisationIgnored(paths.tmp));
   const hot=local.memo.get("hot");
   if(hot!==undefined)for(const path of Buffer.from(hot).toString("utf8").split("\0"))if(path!=="")replica.hot.note(path,settings.now());
   requeue(replica);
@@ -1130,13 +1148,21 @@ export function rememberV1(replica:ReplicaV1,name:string,value:Uint8Array|undefi
 /** 🧠️ Reads a blob kept with `rememberV1`. */
 export function recallV1(replica:ReplicaV1,name:string):Uint8Array|undefined{return replica.memo.get(name);}
 
-/** 🔚️ Persists the clock, the pending delta of the state (appended to the log; a checkpoint is written only when the log has outgrown its limit) and the cursors, then releases the daemon lock. */
+/** 🚫️ Writes the record of refused paths to `.cache/f/refused-paths.json` when a refusal was noted since the last write; a failed write keeps it pending and never throws. */
+export async function flushRefusalsV1(replica:ReplicaV1):Promise<void>{
+ if(!replica.refusedPaths.dirty)return;
+ replica.refusedPaths.dirty=false;
+ await writeRefusedPathsV1(replica.settings.worktree,replica.refusedPaths.record).catch(()=>{replica.refusedPaths.dirty=true;});
+}
+
+/** 🔚️ Persists the clock, the pending delta of the state (appended to the log; a checkpoint is written only when the log has outgrown its limit), the cursors and the record of refused paths, then releases the daemon lock. */
 export async function closeReplicaV1(replica:ReplicaV1):Promise<void>{
  try{
   const hot=replica.hot.snapshot(replica.settings.now());
   if(hot.length>0||replica.memo.has("hot"))rememberV1(replica,"hot",hot.length>0?encoder.encode(hot.join("\0")):undefined);
   keepHistory(replica,true);
   await persist(replica,true);
+  await flushRefusalsV1(replica);
  }finally{await replica.release();}
 }
 
@@ -1296,7 +1322,9 @@ async function observe(replica:ReplicaV1,paths:readonly string[],flat:readonly s
   }
   if(info.isSymbolicLink()){
    const link=await readlink(target);
-   if(linkRefusalV1(path,link)===undefined)entries.push({path,kind:"link",bytes:info.size,mtimeMs:info.mtimeMs,executable:false,target:link});
+   const unsafe=linkRefusalV1(path,link);
+   if(unsafe===undefined)entries.push({path,kind:"link",bytes:info.size,mtimeMs:info.mtimeMs,executable:false,target:link});
+   else noteOnce(replica,`refused:${path}:${unsafe}`,{event:"refused",path,reason:unsafe});
   }else if(info.isFile())entries.push({path,kind:"file",bytes:info.size,mtimeMs:info.mtimeMs,executable:!replica.settings.modeless&&(info.mode&0o111)!==0});
  }
  const kept=new Map<string,number>();
@@ -1674,7 +1702,15 @@ async function materialise(replica:ReplicaV1,path:string,entry:FleetManifestEntr
  let same=false,lose=false;
  if(here!==undefined){
   same=entry.operation==="put"?here.isFile()&&here.size===entry.bytes&&(await hashFileV1(target)).sha256===entry.sha256:here.isSymbolicLink()&&await readlink(target)===entry.target;
-  if(!same)lose=await differs(target,here,known);
+  if(!same){
+   const variant=unicode.get(replica)===true?await variantOf(replica,path):undefined;
+   if(variant!==undefined){
+    const aliased=join(dirname(target),variant);
+    await keepLost(replica,path,aliased,here,entry.hlc);
+    await retrying(()=>unlink(aliased).catch(error=>{if(!gone(error))throw error;}));
+    here=undefined;
+   }else lose=await differs(target,here,known);
+  }
  }
  if(lose&&conflictWinnerV1(here!.mtimeMs,entry.hlc)==="local")return keepNewer(replica,path,entry,here!);
  const mark=entry.operation==="put"?stales.get(replica)?.get(replica.book.find(path)!):undefined;
@@ -2327,7 +2363,7 @@ export async function runV1(options:ReplicaOptionsV1,signal:AbortSignal,sink:Rep
  const guard=createStoreGuardV1({probe:()=>(options.storeProbe??storeReachableV1)(settings.storeRoot),deadlineMs:options.storeDeadlineMilliseconds??10_000,now:Date.now,changed:()=>{}});
  replica.beat=()=>{guard.beat();};
  const baseDrift=options.driftMilliseconds??120_000,drift={at:settings.now()+baseDrift,wait:baseDrift,attempts:0};
- const sound={at:0,healAt:settings.now()+(options.gitHealMilliseconds??600_000),broken:null as GitBrokenV1|null};
+ const sound={at:0,healAt:settings.now()+(options.gitHealMilliseconds??600_000),stageHeal:settings.now()+60_000,broken:null as GitBrokenV1|null};
  let rescueAt=0;
  const watchGit=async(signal:AbortSignal):Promise<void>=>{
   const now=settings.now(),id=replica.manifest.idOf(".git/HEAD");
@@ -2344,8 +2380,9 @@ export async function runV1(options:ReplicaOptionsV1,signal:AbortSignal,sink:Rep
   if(reason==="config-unreadable"&&await repairGitConfigV1(settings.worktree,now,signal)){replica.say({event:"repaired",stage:"git",reason:"git-config"});reason=await gitBrokenV1(settings.worktree,signal);}
   if(sound.broken!==null&&sound.broken!==reason){resolved(replica,`git-broken-${sound.broken}`);replica.say({event:"repaired",stage:"git",reason:"git-sound"});}
   sound.broken=reason;
-  const unstaged=await lstat(join(settings.worktree,".git","index")).then(()=>false,()=>true);
-  if(reason===null&&!unstaged&&now<sound.healAt)return;
+  const unstaged=await lstat(join(settings.worktree,".git","index")).then(()=>false,()=>true),stage=await stageHealthV1(settings.worktree);
+  if(reason===null&&!unstaged&&now<sound.healAt&&!(stage.reason==="objects-missing"&&now>=sound.stageHeal)){return;}
+  if(stage.reason==="objects-missing")sound.stageHeal=now+(options.gitHealMilliseconds??600_000);
   if(reason!==null)noteOnce(replica,`git-broken-${reason}`,{event:"blocked",path:".git/HEAD",reason:`git-broken-${reason}`});
   sound.healAt=now+(options.gitHealMilliseconds??600_000);
   const queued=await healGitV1(replica,signal);
@@ -2369,8 +2406,11 @@ export async function runV1(options:ReplicaOptionsV1,signal:AbortSignal,sink:Rep
  let syncOn=true,restart=false,parked=false;
  const history={current:await readRunHistoryV1(settings.worktree)};
  const running=options.codeRoot??codeRootV1,watching=options.watchRoot??running;
+ const checks=new Map<string,number>();
  const checkCode=async(digest:string,aborted?:AbortSignal):Promise<RestartCheckV1>=>{
-  const result=await runSelfCheckV1({command:process.execPath,args:[join(watching,"🔁️replica","📜️script.ts"),"self-check"],cwd:settings.worktree,timeoutMs:options.selfCheckMilliseconds??180_000,signal:aborted});
+  const attempt=checks.get(digest)??0,base=options.selfCheckMilliseconds??180_000;
+  checks.set(digest,attempt+1);
+  const result=await runSelfCheckV1({command:process.execPath,args:[join(watching,"🔁️replica","📜️script.ts"),"self-check"],cwd:settings.worktree,timeoutMs:Math.min(base*2**Math.min(attempt,10),Math.max(base,1_800_000)),signal:aborted});
   if(!result.ok)return {ok:false,reason:result.reason};
   if(result.digest!==digest)return {ok:false,reason:"code changed during the check",again:true};
   const sealed=await sealCodeV1({root:settings.worktree,moduleRoot:watching,digest,digestOf:codeDigestV1,signal:aborted});
@@ -2385,7 +2425,7 @@ export async function runV1(options:ReplicaOptionsV1,signal:AbortSignal,sink:Rep
   finally{clearTimeout(timer);}
  };
  const admission=createAdmissionStateV1();
- const attester=createAttesterV1({storeRoot:settings.storeRoot,originId:settings.originId,groupId:settings.groupId,now:settings.now,heartbeatMilliseconds:options.attestMilliseconds,stableMilliseconds:options.restartStableMilliseconds,codeRoot:options.codeRoot,watchRoot:options.watchRoot,check:options.selfCheck??checkCode,admit:options.admit??(options.selfCheck===undefined?(digest,aborted)=>admitCodeV1(replica,{digest,running:attester.running(),moduleRoot:watching,bounded,signal:aborted,state:admission}):undefined),fallback:options.fallback,returnMilliseconds:options.returnMilliseconds,busy:()=>replica.queue.size>0||replica.applying>0,jitterSpanMilliseconds:options.restartJitterMilliseconds,minimumUptimeMilliseconds:options.minimumUptimeMilliseconds,refused:(digest,reason)=>{replica.say({event:"restart-refused",reason:digest,message:reason});void recordRefusedV1(settings.worktree,digest).then(next=>{history.current=next;}).catch(()=>{});if(blamesCheckV1(reason))void publishRefusalV1(settings.storeRoot,settings.originId,{digest,reason},settings.now()).catch(()=>{});},suspect:(digest,runningDigest)=>suspectCodeV1(history.current,runningDigest,digest),suspicious:(digest,reason)=>{replica.say({event:"code-reverted",reason:digest,message:reason});},ran:digest=>{void recordRunV1(settings.worktree,digest).then(next=>{history.current=next;}).catch(()=>{});},failures:()=>replica.failures.summary(),store:work=>guard.call(work),git:signal=>(options.gitState??gitStateV1)(settings.worktree,signal),view:async(signal,request)=>{if(request!==undefined&&options.gitView===undefined){const next=await gitViewDeltaV1(settings.worktree,request.previous as GitViewV1,{paths:request.paths,restage:request.restage},signal);if(next!==null)return next;}return (options.gitView??gitViewV1)(settings.worktree,signal);},changes:()=>takeViewDirtV1(replica),unsettled:()=>[...touched,...hinted,...(full?[".gitignore"]:[])],viewMilliseconds:options.viewMilliseconds,viewDebounceMilliseconds:options.viewDebounceMilliseconds,deltaDebounceMilliseconds:options.deltaDebounceMilliseconds,deltaLimit:options.deltaLimit,guards:async signal=>{if(options.gitGuards!==undefined)return options.gitGuards(settings.worktree,signal);const found=await gitGuardsV1(settings.worktree,{signal,modeless:settings.modeless});if(found===null)return null;const {samples:_,...guards}=found;return guards;},guardsMilliseconds:options.guardsMilliseconds,guardsMinimumMilliseconds:options.guardsMinimumMilliseconds,reachable:()=>reachable.get(),prepare:()=>ensureHome(replica),latency:()=>replica.latency.report(),timed:(name,cost,delay)=>{replica.latency.tiers.record(name,cost,delay);},viewSeed:()=>seedView(replica),onView:view=>{rememberV1(replica,"view",encoder.encode(JSON.stringify(view)));}});
+ const attester=createAttesterV1({storeRoot:settings.storeRoot,originId:settings.originId,groupId:settings.groupId,now:settings.now,heartbeatMilliseconds:options.attestMilliseconds,stableMilliseconds:options.restartStableMilliseconds,codeRoot:options.codeRoot,watchRoot:options.watchRoot,check:options.selfCheck??checkCode,admit:options.admit??(options.selfCheck===undefined?(digest,aborted)=>admitCodeV1(replica,{digest,running:attester.running(),moduleRoot:watching,bounded,signal:aborted,state:admission}):undefined),fallback:options.fallback,returnMilliseconds:options.returnMilliseconds,busy:()=>replica.queue.size>0||replica.applying>0,jitterSpanMilliseconds:options.restartJitterMilliseconds,minimumUptimeMilliseconds:options.minimumUptimeMilliseconds,refused:(digest,reason)=>{replica.say({event:"restart-refused",reason:digest,message:reason});if(blamesCheckV1(reason))void recordRefusedV1(settings.worktree,digest).then(next=>{history.current=next;}).catch(()=>{});if(blamesCheckV1(reason))void publishRefusalV1(settings.storeRoot,settings.originId,{digest,reason},settings.now()).catch(()=>{});},suspect:(digest,runningDigest)=>suspectCodeV1(history.current,runningDigest,digest),suspicious:(digest,reason)=>{replica.say({event:"code-reverted",reason:digest,message:reason});},ran:digest=>{void recordRunV1(settings.worktree,digest).then(next=>{history.current=next;}).catch(()=>{});},failures:()=>{const stage=stageRecordedV1(settings.worktree);return stage===null||stage.state==='shared'||stage.reason===null?replica.failures.summary():[...replica.failures.summary(),{kind:`stage-${stage.reason}`,count:1,lastMs:settings.now()}];},store:work=>guard.call(work),git:signal=>(options.gitState??gitStateV1)(settings.worktree,signal),view:async(signal,request)=>{if(request!==undefined&&options.gitView===undefined){const next=await gitViewDeltaV1(settings.worktree,request.previous as GitViewV1,{paths:request.paths,restage:request.restage},signal);if(next!==null)return next;}return (options.gitView??gitViewV1)(settings.worktree,signal);},changes:()=>takeViewDirtV1(replica),unsettled:()=>[...touched,...hinted,...(full?[".gitignore"]:[])],viewMilliseconds:options.viewMilliseconds,viewDebounceMilliseconds:options.viewDebounceMilliseconds,deltaDebounceMilliseconds:options.deltaDebounceMilliseconds,deltaLimit:options.deltaLimit,guards:async signal=>{if(options.gitGuards!==undefined)return options.gitGuards(settings.worktree,signal);const found=await gitGuardsV1(settings.worktree,{signal,modeless:settings.modeless});if(found===null)return null;const {samples:_,...guards}=found;return guards;},guardsMilliseconds:options.guardsMilliseconds,guardsMinimumMilliseconds:options.guardsMinimumMilliseconds,reachable:()=>reachable.get(),prepare:()=>ensureHome(replica),latency:()=>replica.latency.report(),timed:(name,cost,delay)=>{replica.latency.tiers.record(name,cost,delay);},viewSeed:()=>seedView(replica),onView:view=>{rememberV1(replica,"view",encoder.encode(JSON.stringify(view)));}});
  options.opened?.(replica);
  replica.say({event:"started",originId:settings.originId,groupId:settings.groupId});
  const booted=attester.start(signal).catch(()=>{});
@@ -2582,7 +2622,7 @@ export async function runV1(options:ReplicaOptionsV1,signal:AbortSignal,sink:Rep
     activityV1("sidecars");
     sidecars?.tick(guard.state()==="ok"&&attester.running()!==""&&!parked);
     activityV1("health");
-    if(wall-healthAt>=(options.attestMilliseconds??healthMilliseconds)){healthAt=wall;await writeHealthV1(settings.worktree,{version:1,wallMs:wall,pid:process.pid,code:attester.running()===""?"0".repeat(64):attester.running(),store:guard.state(),storeSinceMs:guard.since(),pending:attester.pending(),failures:[...replica.failures.summary()],trust:replica.trust.record(),...sidecars===undefined?{}:{sidecars:sidecars.report()}}).catch(()=>{});}
+    if(wall-healthAt>=(options.attestMilliseconds??healthMilliseconds)){healthAt=wall;await writeHealthV1(settings.worktree,{version:1,wallMs:wall,pid:process.pid,code:attester.running()===""?"0".repeat(64):attester.running(),store:guard.state(),storeSinceMs:guard.since(),pending:attester.pending(),failures:[...replica.failures.summary()],trust:replica.trust.record(),...sidecars===undefined?{}:{sidecars:sidecars.report()}}).catch(()=>{});await flushRefusalsV1(replica);}
     activityV1("tend");
     if(wall-tendedAt>=tendMilliseconds&&syncOn&&!parked){tendedAt=wall;await tendBlobsV1(replica,signal).catch(()=>{});}
     activityV1("maintain");
@@ -2910,7 +2950,7 @@ export async function verifyV1(options:ReplicaOptionsV1,signal?:AbortSignal,sink
   if(seen.has(id)||drifted.has(id)||queue.hasId(id)||files.operationAt(id)==="delete"||indexRealmV1(book.name(id))||ignore.local?.(book.name(id))===true||(files.operationAt(id)==="link"&&!links))continue;
   drift.push({path:book.name(id),kind:"state",expected:manifest.live(id)&&files.sameHlcAs(manifest,id)?undefined:manifest.live(id)?manifest.hlcAt(id):undefined,actual:files.hlcAt(id)});
  }
- const stage=await verifyIndexV1({worktree:settings.worktree,server:false,now:settings.now,base:()=>manifest.get(INDEX_BASE_V1),each:visit=>{for(const id of manifest.ids()){const path=book.name(id);if(path.startsWith(INDEX_PREFIX_V1))visit(path,manifest.entryAt(id));}},held:()=>{},pending:()=>new Map(),emit:async()=>undefined,settle:()=>{},enqueue:()=>{},say:()=>{}},signal);
+ const stage=await verifyIndexV1({worktree:settings.worktree,server:false,archivist:`${settings.groupId}-server`,now:settings.now,base:()=>manifest.get(INDEX_BASE_V1),each:visit=>{for(const id of manifest.ids()){const path=book.name(id);if(path.startsWith(INDEX_PREFIX_V1))visit(path,manifest.entryAt(id));}},held:()=>{},pending:()=>new Map(),emit:async()=>undefined,settle:()=>{},enqueue:()=>{},say:()=>{}},signal);
  if(!stage.ok)drift.push({path:".git/index",kind:"content",expected:stage.expected??undefined,actual:stage.actual??undefined});
  drift.sort((left,right)=>left.path<right.path?-1:left.path>right.path?1:0);
  return {version:1,ok:drift.length===0,checked:found.length,total:drift.length,truncated:drift.length>driftLimit,drift:drift.slice(0,driftLimit),refusedTotal:refused.length,refused:refused.slice(0,driftLimit)};
@@ -2972,7 +3012,7 @@ export async function statusV1(options:ReplicaOptionsV1,deep:boolean=false,signa
  }
  const stage=await gitStateV1(settings.worktree),health=await stageHealthV1(settings.worktree),git:StatusReportV1["git"]=await resolveGitV1()===null?{shared:false,reason:"no-git",indexTree:null}:!stage.present?{shared:false,reason:"no-repository",indexTree:null}:!tables.files.has(INDEX_BASE_V1)?{shared:false,reason:"waiting-for-base",indexTree:stage.indexTree}:health.reason!==null?{shared:false,reason:health.reason,indexTree:stage.indexTree}:{shared:true,reason:"shared",indexTree:stage.indexTree};
  const access=reachable?await readAccessV1(settings.storeRoot,settings.originId):undefined;
- const report:StatusReportV1={...access===undefined?{}:{access},version:1,originId:settings.originId,groupId:settings.groupId,storeRoot:settings.storeRoot,reachable,daemon:{running:held!==undefined&&!held.stale||pulse!==undefined,pid:held!==undefined&&!held.stale&&held.pid>0?held.pid:pulse?.pid??null,...pulse!==undefined&&pulse.lagMs>=5000?{busySeconds:Math.floor(pulse.lagMs/1000)}:{}},...pulse===undefined?{}:{code:{source:pulse.source,phase:pulse.phase}},sync,files:tables.files.size-tables.files.count("delete"),queue:{incoming:tables.queue.size,outgoing},lost:await countFiles(paths.lost),refused:refusedCount?.length??null,git,origins,latency:reachable?(await readAttestationV1(settings.storeRoot,settings.originId))?.latency??null:null,retired:own?.retired===true?{by:own.by,reason:own.reason,wallMs:own.wallMs}:null,health:beat===undefined||!(held!==undefined&&!held.stale||pulse!==undefined)?null:{wallMs:beat.wallMs,store:beat.store,storeSinceMs:beat.storeSinceMs,code:beat.code,pending:beat.pending,failures:beat.failures,trust:beat.trust,...beat.sidecars===undefined?{}:{sidecars:beat.sidecars}},store:reachable?await storeReportV1(settings.storeRoot,settings.compaction,settings.now(),signal,deep).catch(()=>null):null};
+ const report:StatusReportV1={...access===undefined?{}:{access},version:1,originId:settings.originId,groupId:settings.groupId,storeRoot:settings.storeRoot,reachable,daemon:{running:held!==undefined&&!held.stale||pulse!==undefined,pid:held!==undefined&&!held.stale&&held.pid>0?held.pid:pulse?.pid??null,...pulse!==undefined&&pulse.lagMs>=5000?{busySeconds:Math.floor(pulse.lagMs/1000)}:{}},...pulse===undefined?{}:{code:{source:pulse.source,phase:pulse.phase}},sync,files:tables.files.size-tables.files.count("delete"),queue:{incoming:tables.queue.size,outgoing},lost:await countFiles(paths.lost),refused:refusedCount?.length??null,refusedPaths:await readRefusedPathsV1(settings.worktree)??NO_REFUSED_PATHS_V1,git,origins,latency:reachable?(await readAttestationV1(settings.storeRoot,settings.originId))?.latency??null:null,retired:own?.retired===true?{by:own.by,reason:own.reason,wallMs:own.wallMs}:null,health:beat===undefined||!(held!==undefined&&!held.stale||pulse!==undefined)?null:{wallMs:beat.wallMs,store:beat.store,storeSinceMs:beat.storeSinceMs,code:beat.code,pending:beat.pending,failures:beat.failures,trust:beat.trust,...beat.sidecars===undefined?{}:{sidecars:beat.sidecars}},store:reachable?await storeReportV1(settings.storeRoot,settings.compaction,settings.now(),signal,deep).catch(()=>null):null};
  if(report.store!==null)requireCompactionShapeV1("Store",report.store,"Closed compaction store report required");
  requireReplicaShapeV1("Status",report,"Closed replica status required");
  return report;

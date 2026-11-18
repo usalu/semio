@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "sites": 170,
+  "unclassified": {
+    "names": [
+      "[\"semio.build-telemetry/v1\"",
+      "compiler-state:v1:",
+      "native-cache-producer:",
+      "repository-nx-tooling-collector:",
+      "repository-storybook:"
+    ],
+    "reason": {
+      "en": "Acknowledged and not yet ranked: waiting for one of these while holding any exclusive lease is refused after the grace period, because no class and no edge declares it. Each is taken alone or last by its single owner; classify it (or declare an edge) before it is ever taken under another lease. A new name that is not listed here fails the law.",
+      "de": "Anerkannt und noch nicht eingeordnet: Das Warten auf eine dieser Sperren bei gehaltener exklusiver Lease wird nach der Karenzzeit abgelehnt, weil keine Klasse und keine Kante sie deklariert. Jede wird von ihrem einzigen Eigentümer allein oder zuletzt genommen; vor jeder Nutzung unter einer anderen Lease einordnen (oder eine Kante deklarieren). Ein neuer Name, der hier nicht steht, lässt das Gesetz scheitern."
+    }
+  },
+  "dynamic": {
+    "files": {
+      "🔨️modules/🏃️process/🏗️build/🎟️capacity/🎫️lease/🟦️.ts": 1,
+      "🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🥾️boot/🩹️recovery/🧯️act/🟦️.ts": 1,
+      "🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🥾️boot/🩹️recovery/🩺️heal/🟦️.ts": 2,
+      "🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🟦️.ts": 9,
+      "🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/🎛️command/🟦️.ts": 2,
+      "🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🔐️custody/🟦️.ts": 1,
+      "🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts": 4,
+      "🔨️modules/🏃️process/📦️artifacts/💾️cache/💾️volume/🟦️.ts": 2,
+      "🔨️modules/🏃️process/🔒️leases/🟦️.ts": 10,
+      "🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts": 1,
+      "🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts": 2,
+      "🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts": 1,
+      "🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts": 14,
+      "🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🟦️.ts": 1,
+      "🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🎟️put-slots/🟦️.ts": 2,
+      "🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts": 1,
+      "🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚏️admission/🟦️.ts": 2,
+      "🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📥️admission/💾️storage/🟦️.ts": 1,
+      "🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🚦️concurrent/💾️storage/🟦️.ts": 3,
+      "🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/🎚️store-bound/🏃️run/🔌️host/🟦️.ts": 1,
+      "🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/🔒️namespace/🟦️.ts": 1,
+      "🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧱️units/🟦️.ts": 1,
+      "🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟢️ready/💾️storage/🟦️.ts": 3,
+      "🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts": 2,
+      "🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts": 1,
+      "🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🔧️custody/🟨️.mjs": 1,
+      "🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs": 3,
+      "🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧵️sessions/🔌️port/🟦️.ts": 2,
+      "🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️host/🟦️.ts": 3,
+      "🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🛑️custody/🟦️.ts": 1,
+      "🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/⌨️command/🟦️.ts": 3,
+      "🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🔒️lock/🟦️.ts": 1
+    },
+    "reason": {
+      "en": "The resource name of these sites is a parameter, a record field or a helper result that only the caller knows, so the census cannot rank them; the order guard classifies each at run time and refuses an inversion with a typed reason. A site added to or removed from a file changes its count and fails the law until this table is updated by hand.",
+      "de": "Der Ressourcenname dieser Stellen ist ein Parameter, ein Datensatzfeld oder ein Hilfsergebnis, das nur der Aufrufer kennt; die Zählung kann sie daher nicht einordnen, der Reihenfolgewächter ordnet jede zur Laufzeit ein und lehnt eine Umkehrung mit einem typisierten Grund ab. Eine hinzugekommene oder entfallene Stelle ändert die Zahl ihrer Datei und lässt das Gesetz scheitern, bis diese Tabelle von Hand angepasst ist."
+    }
+  },
+  "knownPairs": [
+    {
+      "held": "native-snapshot-slot:",
+      "heldMode": "exclusive",
+      "wanted": "native-snapshot:",
+      "wantedMode": "shared",
+      "file": "🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️selected/📦️snapshot/🟦️.ts",
+      "reason": {
+        "en": "The slot writer publishes one snapshot directory and then takes the shared reader of that very directory, which only a retirement of the same snapshot could hold; both names derive from one private directory, so no other task waits for the slot while this one waits for the reader.",
+        "de": "Der Slot-Schreiber veröffentlicht ein Snapshot-Verzeichnis und nimmt danach den geteilten Leser genau dieses Verzeichnisses, den nur eine Stilllegung desselben Snapshots halten könnte; beide Namen stammen aus einem privaten Verzeichnis, daher wartet keine andere Task auf den Slot, während diese auf den Leser wartet."
+      }
+    }
+  ]
+}

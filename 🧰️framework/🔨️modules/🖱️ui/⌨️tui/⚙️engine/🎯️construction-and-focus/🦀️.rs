@@ -223,10 +223,12 @@ self.size = size;
 
     pub(super) fn focus_target(&self, hit: NodeId) -> Option<NodeId> {
         let lineage = self.scene.lineage(hit);
-        if let Some(&node) = lineage.iter().find(|&&node| focusable(&self.scene, node)) {
+        let window_at = lineage.iter().position(|&node| matches!(self.scene.node(node).content, NodeContent::Chrome(ChromeState::Window(_))));
+        let inside = &lineage[..window_at.unwrap_or(lineage.len())];
+        if let Some(&node) = inside.iter().find(|&&node| focusable(&self.scene, node)) {
             return Some(node);
         }
-        let window = lineage.iter().find(|&&node| matches!(self.scene.node(node).content, NodeContent::Chrome(ChromeState::Window(_))))?;
+        let window = &lineage[window_at?];
         let mut ring = Vec::new();
         collect_focusables(&self.scene, *window, &mut ring);
         ring.first().copied()

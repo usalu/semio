@@ -1,6 +1,11 @@
 export function accessDeniedOfV1(error:unknown,options?:{root?:string;platform?:string;home?:string}):string|undefined;
-export function failureRefusalV1(error:unknown,options:{log:(event:string,detail?:string)=>void;logPath:string;retry?:"later"|"never";root?:string;platform?:string;home?:string;environment?:Record<string,string|undefined>;pid?:number;ppid?:number}):{code:"disk"|"internal"|"unserved"|"consent";key:string;fields:Record<string,string>;retry:"later"|"never"};
+export function failureRefusalV1(error:unknown,options:{log:(event:string,detail?:string)=>void;logPath:string;retry?:"later"|"never";root?:string;platform?:string;home?:string;environment?:Record<string,string|undefined>;pid?:number;ppid?:number;streak?:{cause:string;count:number};sameCauseMaximum?:number}):{code:"disk"|"internal"|"unserved"|"consent";key:string;fields:Record<string,string>;retry:"later"|"never"};
 export function wantedRefusalOfV1(error:unknown,depth?:number):Record<"wanted"|"arrived"|"seconds"|"missing"|"local",string>|undefined;
 export function deniedPlaceOfV1(error:unknown,depth?:number):string|undefined;
 export function serviceFactsV1(options?:{environment?:Record<string,string|undefined>;pid?:number;ppid?:number}):string;
 export function serviceRouteV1(environment?:Record<string,string|undefined>):"launchd"|"direct"|"foreground";
+export const FAILURE_BLOCK_BYTES_V1:number;
+export function failureMessageV1(error:unknown):string;
+export function failureFramesV1(error:unknown):string;
+export function failureBlockV1(input:{reference:string;detail:string;error:unknown;refusal:{key:string;fields:Record<string,string>};at?:Date;limit?:number}):string;
+export function mirrorFailureV1(block:string,reference:string,options?:{environment?:Record<string,string|undefined>}):string|undefined;

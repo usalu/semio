@@ -24,7 +24,7 @@
 //! @see ../../🧬️schema/🔣️.json — the constraints mirrored here
 //! @see ../✅️validation/🟦️.ts — the TypeScript twin
 
-use crate::schema::{Answer, Axis, Badge, BadgeRule, Course, CourseView, Category, ClassificationTask, Command, MatchingItem, MatchingTask, Quantity, Query, Quiz, Rejection, Scale, SheetItem, SheetMatchingTask, SheetTask, SortingTask, Task, Topic, Icon, Text, COURSE_ROOT_IDS, MAX_TIMESTAMP, SHORT_LENGTH};
+use crate::schema::{Answer, Axis, Badge, BadgeRule, Course, CourseView, Category, ClassificationTask, Command, Distribution, MatchingItem, MatchingTask, Quantity, Query, Quiz, Rejection, Scale, SheetItem, SheetMatchingTask, SheetTask, SortingTask, Task, Topic, Icon, Text, COURSE_ROOT_IDS, MAX_TIMESTAMP, SHORT_LENGTH};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -157,7 +157,14 @@ pub fn quiz_issues(quiz: &Quiz) -> Vec<ValidationIssue> {
                     if !used.insert(id.as_str()) { issues.push(pointer, IssueCode::DuplicateId); }
                 }
             }
-            if draw != Some(pool.slots.len()) { issues.push(format!("{base}/draw"), IssueCode::ValueInvalid); }
+            let distributed = match pool.distribution {
+                Some(Distribution::Zipf { exponent }) => {
+                    if !(exponent > 0.0 && exponent.is_finite()) { issues.push(format!("{base}/pool/distribution/exponent"), IssueCode::ValueInvalid); }
+                    draw.is_some_and(|draw| draw < pool.slots.len())
+                }
+                None => draw == Some(pool.slots.len()),
+            };
+            if !distributed { issues.push(format!("{base}/draw"), IssueCode::ValueInvalid); }
             if known.iter().any(|id| !used.contains(id)) { issues.push(format!("{base}/pool/slots"), IssueCode::ValueInvalid); }
         }
         match task {
@@ -208,6 +215,48 @@ fn assignment_issues(assignments: &[crate::schema::Assignment], topics: Option<&
     }
 }
 
+/// 🔗️ Whether a clip address is the HTTPS address of a host outside this site.
+fn is_clip_url(value: &str) -> bool {
+    let Some(rest) = value.strip_prefix("https://") else { return false; };
+    let host = rest.find(['/', '?', '#']).map_or(rest, |end| &rest[..end]);
+    !host.is_empty() && !value.chars().any(char::is_whitespace)
+}
+
+/// 🎬️ Checks learning clip metadata, its poster file, its hosted addresses and its course topic ownership.
+fn clip_issues(clips: &[crate::schema::Clip], topics: Option<&[Topic]>, issues: &mut Issues) {
+    issues.unique("/clips", clips.iter().map(|clip| clip.id.as_str()));
+    for (index, clip) in clips.iter().enumerate() {
+        let base = format!("/clips/{index}");
+        issues.slug(format!("{base}/id"), &clip.id);
+        issues.slug(format!("{base}/topic"), &clip.topic);
+        if !topics.is_some_and(|topics| topics.iter().any(|topic| topic.id == clip.topic)) { issues.push(format!("{base}/topic"), IssueCode::ValueInvalid); }
+        issues.length(format!("{base}/emoji"), &clip.emoji, 1, 16);
+        issues.text(&format!("{base}/title"), &clip.title);
+        issues.text(&format!("{base}/description"), &clip.description);
+        let file = &clip.poster.file;
+        issues.length(format!("{base}/poster/file"), file, 1, 128);
+        if !file.strip_suffix(".png").is_some_and(|stem| !stem.is_empty() && stem.split(['_', '-']).all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_alphanumeric()))) { issues.push(format!("{base}/poster/file"), IssueCode::ValueInvalid); }
+        let Some(urls) = &clip.urls else { continue; };
+        if urls.en.is_none() && urls.de.is_none() { issues.push(format!("{base}/urls"), IssueCode::ItemsTooFew); }
+        for (language, url) in [("en", &urls.en), ("de", &urls.de)] {
+            let Some(url) = url else { continue; };
+            let pointer = format!("{base}/urls/{language}");
+            if issues.length(pointer.clone(), url, 1, 2048) && !is_clip_url(url) { issues.push(pointer, IssueCode::ValueInvalid); }
+        }
+    }
+}
+
+/// 🧭️ Keeps the addresses of assignments and clips apart from each other, from quizzes, topics and the reserved root pages.
+fn page_address_issues(assignments: Option<&[crate::schema::Assignment]>, clips: Option<&[crate::schema::Clip]>, topics: Option<&[Topic]>, quiz_ids: &BTreeSet<&str>, issues: &mut Issues) {
+    let mut taken: BTreeSet<&str> = quiz_ids.iter().copied().chain(COURSE_ROOT_IDS).chain(topics.unwrap_or_default().iter().map(|topic| topic.id.as_str())).collect();
+    let members = [("/assignments", assignments.unwrap_or_default().iter().map(|assignment| assignment.id.as_str()).collect::<Vec<_>>()), ("/clips", clips.unwrap_or_default().iter().map(|clip| clip.id.as_str()).collect())];
+    for (base, ids) in members {
+        for (index, id) in ids.into_iter().enumerate() {
+            if !taken.insert(id) { issues.push(format!("{base}/{index}/id"), IssueCode::ValueInvalid); }
+        }
+    }
+}
+
 /// 🗄️ Every issue of a course given its loaded quizzes in course order: structure, unique paths,
 /// quiz ids and badge ids, and badge rules that reference loaded quizzes and select at least one task.
 /// The quizzes' own issues are [`quiz_issues`].
@@ -249,6 +298,8 @@ pub fn course_issues(course: &Course, quizzes: &[Quiz]) -> Vec<ValidationIssue> 
     }
     if let Some(topics) = &course.topics { issues.topic_groups(topics, &quiz_ids); }
     if let Some(assignments) = &course.assignments { assignment_issues(assignments, course.topics.as_deref(), &mut issues); }
+    if let Some(clips) = &course.clips { clip_issues(clips, course.topics.as_deref(), &mut issues); }
+    page_address_issues(course.assignments.as_deref(), course.clips.as_deref(), course.topics.as_deref(), &quiz_ids, &mut issues);
     for (index, badge) in course.badges.iter().enumerate() {
         issues.badge(&format!("/badges/{index}"), badge, quizzes, &quiz_ids);
     }
@@ -290,6 +341,8 @@ pub fn course_view_issues(course: &CourseView) -> Vec<ValidationIssue> {
     }
     if let Some(topics) = &course.topics { issues.topic_groups(topics, &quiz_ids); }
     if let Some(assignments) = &course.assignments { assignment_issues(assignments, course.topics.as_deref(), &mut issues); }
+    if let Some(clips) = &course.clips { clip_issues(clips, course.topics.as_deref(), &mut issues); }
+    page_address_issues(course.assignments.as_deref(), course.clips.as_deref(), course.topics.as_deref(), &quiz_ids, &mut issues);
     issues.unique("/badges", course.badges.iter().map(|badge| badge.id.as_str()));
     for (index, badge) in course.badges.iter().enumerate() {
         let base = format!("/badges/{index}");

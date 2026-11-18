@@ -4,6 +4,8 @@ import{INDEX_CHUNK_POLICY_V1}from"../🧱️chunk-classes/🟨️.mjs";
 import{rowKeyV1,sameFactV1}from"../🧮️fact-rows/🟨️.mjs";
 import{P,createYielderV1}from"../🧱️guards/🟨️.mjs";
 import{createHash}from"node:crypto";
+import{createKeyTableV1}from"../🔑️key-table/🟨️.mjs";
+import{createTextArenaV1}from"../🔤️text-arena/🟨️.mjs";
 import{runtimeCollectGarbageV1}from"../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
 const T=FACT_CODEC_POLICY_V1.tags,MAGIC=Buffer.from(FACT_CODEC_POLICY_V1.magic,"latin1"),LONE_SURROGATE=/[\ud800-\udfff]/u,fail=message=>Error(message);
@@ -19,9 +21,9 @@ async function*numberedBatchesV1(source,memos,idOfRow,pause){
  for(let at=0;at<ids.length;at+=step){
   const slice=ids.subarray(at,Math.min(ids.length,at+step)),unknown=[];
   for(const id of slice)if(memo[id]<0)unknown.push(id);
-  if(unknown.length){const found=log.read(Uint32Array.from(unknown));for(let item=0;item<unknown.length;item++)memo[unknown[item]]=idOfRow(found[item]);}
+  if(unknown.length){const found=log.read(Uint32Array.from(unknown));for(let item=0;item<unknown.length;item++)memo[unknown[item]]=idOfRow(found[item],unknown[item],log);}
   const mapped=new Uint32Array(slice.length);for(let item=0;item<slice.length;item++)mapped[item]=memo[slice[item]];
-  yield mapped;await pause?.();
+  yield mapped;await pause?.();if((at/step)%32===31)runtimeCollectGarbageV1(true);
  }
  for(const tail of source.tails)yield tail;
 }
@@ -98,17 +100,35 @@ export async function patchFactIndexBytesV1(view,{drop=[],upserts=new Map(),appe
  };
  const decoded=new Map(),textOf=rank=>{let text=decoded.get(rank);if(text===undefined){text=D.textAt(rank,false);if(decoded.size<65536)decoded.set(rank,text);}return text;};
  const rankOf=text=>{let low=0,high=D.stringCount-1;while(low<=high){const mid=(low+high)>>>1,order=compareCodePointsV1(textOf(mid),text);if(order===0)return mid;if(order<0)low=mid+1;else high=mid-1;}return-1;};
- const fresh=[],added=new Map(),byObject=new Map();
- const idOfRow=row=>{
-  let id=byObject.get(row);if(id!==undefined)return id;
+ const fresh=[],added=createKeyTableV1(),byObject=new Map(),FRESH_WINDOW=2048;let refs=new Uint32Array(1024),refLog;
+ const idOfRow=(row,logId,log)=>{
+  const logged=logId!==undefined&&(refLog===undefined||refLog===log);
+  let id=logged?undefined:byObject.get(row);
+  if(id!==undefined)return id;
   const rank=oldRows?rankOf(row.path):-1;
   if(rank>=0){const{first,list}=pathsOf();for(let slot=first[rank];slot<first[rank+1];slot++){const candidate=list[slot];if(D.kinds[D.rowKind[candidate]]===row.kind&&sameFactV1(view.rows[candidate].fact,row.fact)){id=candidate;break;}}}
   if(id===undefined){
    const key=rowKeyV1(row);id=added.get(key);
    if(id===undefined&&rank>=0){const{first,list}=pathsOf();for(let slot=first[rank];slot<first[rank+1];slot++){const candidate=list[slot];if(D.kinds[D.rowKind[candidate]]===row.kind&&rowKeyV1(view.rows[candidate])===key){id=candidate;break;}}}
-   if(id===undefined){id=oldRows+fresh.length;fresh.push(row);added.set(key,id);}
+   if(id===undefined){
+    const at=fresh.length;id=oldRows+at;
+    if(logged){refLog=log;if(at>=refs.length){const next=new Uint32Array(refs.length*2);next.set(refs);refs=next;}refs[at]=logId;fresh.push(undefined);}else fresh.push(row);
+    added.set(key,id);
+   }
   }
-  byObject.set(row,id);return id;
+  if(!logged)byObject.set(row,id);return id;
+ };
+ let windowFrom=0,windowRows=[],windows=0;
+ const freshRow=index=>{
+  const row=fresh[index];if(row!==undefined)return row;
+  if(index<windowFrom||index>=windowFrom+windowRows.length){
+   const end=Math.min(fresh.length,index+FRESH_WINDOW),wanted=[],at=[];
+   for(let item=index;item<end;item++)if(fresh[item]===undefined){wanted.push(refs[item]);at.push(item-index);}
+   const read=refLog.read(Uint32Array.from(wanted));windowRows=new Array(end-index);
+   for(let item=0;item<at.length;item++)windowRows[at[item]]=read[item];
+   windowFrom=index;if(++windows%16===0)runtimeCollectGarbageV1(true);
+  }
+  return windowRows[index-windowFrom];
  };
  const lengthOf=source=>Array.isArray(source)?source.length:typeof source?.length==="number"?source.length:INDEX_CHUNK_POLICY_V1.bulkUpsertRows;
  const memos=new Map();
@@ -137,7 +157,7 @@ export async function patchFactIndexBytesV1(view,{drop=[],upserts=new Map(),appe
  if(compact.length>P.compactionFactor*ownersOut.length+P.compactionFloor&&compact.length>P.compactionGrowth*D.classCount||ids>P.compactionFloor&&ids>P.compactionDuplication*rowsOut)compact=refineClassesV1(compact,ownersOut.length,rowsOut);
  runtimeCollectGarbageV1(true);
 
- const marked=new Uint8Array(D.stringCount),seenFacts=new Uint8Array(D.factCount),freshText=new Set(),freshFacts=new Set(),mark=rank=>{marked[rank]=1;};
+ const marked=new Uint8Array(D.stringCount),seenFacts=new Uint8Array(D.factCount),freshText=createTextArenaV1({validate:text=>{if(LONE_SURROGATE.test(text))throw fail("Well formed text required in a fact index: "+JSON.stringify(text.slice(0,64)));}}),freshFacts=new Set(),kindNo=new Uint32Array(fresh.length),pathNo=new Uint32Array(fresh.length),mark=rank=>{marked[rank]=1;};
  for(const id of ownersOut)if(id<D.ownerString.length)marked[D.ownerString[id]]=1;else freshText.add(owners[id]);
  for(let id=0;id<rowTotal;id++){
   if(!used[id])continue;
@@ -145,12 +165,12 @@ export async function patchFactIndexBytesV1(view,{drop=[],upserts=new Map(),appe
    marked[D.kindString[D.rowKind[id]]]=1;marked[D.rowPath[id]]=1;
    const fact=D.rowFact[id];if(!seenFacts[fact]){seenFacts[fact]=1;reader.scan(D.factAt[fact],mark);}
   }else{
-   const row=fresh[id-oldRows];freshText.add(row.kind);freshText.add(row.path);
-   if(typeof row.fact!=="object"||row.fact===null||!freshFacts.has(row.fact)){if(typeof row.fact==="object"&&row.fact!==null)freshFacts.add(row.fact);collectFactStringsV1(row.fact,freshText);}
+   const row=freshRow(id-oldRows),logged=fresh[id-oldRows]===undefined;kindNo[id-oldRows]=freshText.add(row.kind);pathNo[id-oldRows]=freshText.add(row.path);
+   if(typeof row.fact!=="object"||row.fact===null||logged||!freshFacts.has(row.fact)){if(!logged&&typeof row.fact==="object"&&row.fact!==null)freshFacts.add(row.fact);collectFactStringsV1(row.fact,freshText);}
   }
  }
- const sortedFresh=[...freshText].map(text=>{if(LONE_SURROGATE.test(text))throw fail("Well formed text required in a fact index: "+JSON.stringify(text.slice(0,64)));return{text,bytes:Buffer.from(text,"utf8")};}).sort((a,b)=>Buffer.compare(a.bytes,b.bytes));
- const remap=new Uint32Array(D.stringCount),freshId=new Map(),stringSink=createFactSinkV1(maximumBytes);
+ const sortedFresh=freshText.sorted(),freshRank=new Uint32Array(freshText.count());
+ const remap=new Uint32Array(D.stringCount),stringSink=createFactSinkV1(maximumBytes);
  let strings=0,previous=Buffer.allocUnsafe(256),previousLength=0,current=Buffer.allocUnsafe(256),next=0;
  const emit=bytes=>{
   const limit=Math.min(previousLength,bytes.length);let lcp=0;while(lcp<limit&&previous[lcp]===bytes[lcp])lcp++;
@@ -164,18 +184,21 @@ export async function patchFactIndexBytesV1(view,{drop=[],upserts=new Map(),appe
   if(length>current.length){const grown=Buffer.allocUnsafe(Math.max(length,current.length*2));current.copy(grown,0,0,lcp);current=grown;}
   D.buffer.copy(current,lcp,D.suffixAt[rank],D.suffixAt[rank]+suffix);
   const bytes=current.subarray(0,length);
-  while(next<sortedFresh.length&&Buffer.compare(sortedFresh[next].bytes,bytes)<0){freshId.set(sortedFresh[next].text,strings);emit(sortedFresh[next].bytes);next++;}
+  while(next<sortedFresh.length&&Buffer.compare(freshText.bytes(sortedFresh[next]),bytes)<0){freshRank[sortedFresh[next]]=strings;emit(freshText.bytes(sortedFresh[next]));next++;}
   let keep=marked[rank]===1;
-  if(next<sortedFresh.length&&Buffer.compare(sortedFresh[next].bytes,bytes)===0){keep=true;freshId.set(sortedFresh[next].text,strings);next++;}
+  if(next<sortedFresh.length&&Buffer.compare(freshText.bytes(sortedFresh[next]),bytes)===0){keep=true;freshRank[sortedFresh[next]]=strings;next++;}
   if(keep){remap[rank]=strings;emit(bytes);}
  }
- while(next<sortedFresh.length){freshId.set(sortedFresh[next].text,strings);emit(sortedFresh[next].bytes);next++;}
+ while(next<sortedFresh.length){freshRank[sortedFresh[next]]=strings;emit(freshText.bytes(sortedFresh[next]));next++;}
 
- const factSink=createFactSinkV1(maximumBytes),rowSink=createFactSinkV1(maximumBytes),kindIds=new Map(),kindStrings=[],spans=[],byBytes=new Map(),oldFact=new Int32Array(D.factCount).fill(-1),newFact=new Map(),textId=text=>freshId.get(text);
+ let spanFrom=new Uint32Array(1024),spanTo=new Uint32Array(1024),spanCount=0;
+ const factSink=createFactSinkV1(maximumBytes),rowSink=createFactSinkV1(maximumBytes),kindIds=new Map(),kindStrings=[],byBytes=createKeyTableV1(),oldFact=new Int32Array(D.factCount).fill(-1),newFact=new Map(),textId=text=>freshRank[freshText.id(text)];
  const commit=start=>{
-  const span=factSink.result().subarray(start,factSink.size()),key=createHash("sha256").update(span).digest("latin1"),known=byBytes.get(key);
-  if(known!==undefined)for(const id of known){const[from,to]=spans[id];if(Buffer.compare(factSink.result().subarray(from,to),span)===0){factSink.truncate(start);return id;}}
-  const id=spans.length;spans.push([start,factSink.size()]);if(known===undefined)byBytes.set(key,[id]);else known.push(id);return id;
+  const result=factSink.result(),span=result.subarray(start,factSink.size()),key=createHash("sha256").update(span).digest(),known=byBytes.getDigest(key);
+  if(known!==undefined&&Buffer.compare(result.subarray(spanFrom[known],spanTo[known]),span)===0){factSink.truncate(start);return known;}
+  const id=spanCount++;
+  if(id>=spanFrom.length){const from=new Uint32Array(spanFrom.length*2),to=new Uint32Array(spanTo.length*2);from.set(spanFrom);to.set(spanTo);spanFrom=from;spanTo=to;}
+  spanFrom[id]=start;spanTo[id]=factSink.size();if(known===undefined)byBytes.setDigest(key,id);return id;
  };
  for(let id=0;id<rowTotal;id++){
   if(!used[id])continue;
@@ -185,16 +208,16 @@ export async function patchFactIndexBytesV1(view,{drop=[],upserts=new Map(),appe
    const fromOld=D.rowFact[id];kind=D.kinds[D.rowKind[id]];kindString=remap[D.kindString[D.rowKind[id]]];path=remap[D.rowPath[id]];
    fact=oldFact[fromOld];if(fact<0){const start=factSink.size();reader.copy(D.factAt[fromOld],factSink,remap);fact=oldFact[fromOld]=commit(start);}
   }else{
-   const row=fresh[id-oldRows];kind=row.kind;kindString=textId(kind);path=textId(row.path);
-   fact=typeof row.fact==="object"&&row.fact!==null?newFact.get(row.fact):undefined;
-   if(fact===undefined){const start=factSink.size();writeFactValueV1(factSink,row.fact,textId,1);fact=commit(start);if(typeof row.fact==="object"&&row.fact!==null)newFact.set(row.fact,fact);}
+   const row=freshRow(id-oldRows),logged=fresh[id-oldRows]===undefined;kind=row.kind;kindString=freshRank[kindNo[id-oldRows]];path=freshRank[pathNo[id-oldRows]];
+   fact=!logged&&typeof row.fact==="object"&&row.fact!==null?newFact.get(row.fact):undefined;
+   if(fact===undefined){const start=factSink.size();writeFactValueV1(factSink,row.fact,textId,1);fact=commit(start);if(!logged&&typeof row.fact==="object"&&row.fact!==null)newFact.set(row.fact,fact);}
   }
   let at=kindIds.get(kind);if(at===undefined){at=kindStrings.length;kindIds.set(kind,at);kindStrings.push(kindString);}
   rowSink.varint(at);rowSink.varint(path);rowSink.varint(fact);
  }
  const out=createFactSinkV1(maximumBytes);
  out.bytes(MAGIC);
- for(const count of[strings,kindStrings.length,ownersOut.length,spans.length,rowsOut,compact.length])out.varint(count);
+ for(const count of[strings,kindStrings.length,ownersOut.length,spanCount,rowsOut,compact.length])out.varint(count);
  out.bytes(stringSink.result());
  for(const string of kindStrings)out.varint(string);
  for(const id of ownersOut)out.varint(id<D.ownerString.length?remap[D.ownerString[id]]:textId(owners[id]));

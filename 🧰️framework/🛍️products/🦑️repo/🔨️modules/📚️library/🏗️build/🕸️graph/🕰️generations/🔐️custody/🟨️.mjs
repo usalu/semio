@@ -2,6 +2,7 @@ import{randomBytes}from"node:crypto";
 import{join}from"node:path";
 import{canonicalJsonV1,compareCodePointsV1}from"../🧮️fact-codec/🟨️.mjs";
 import{waitAnyLeaseV1}from"../🧩️claims/🟨️.mjs";
+import{advanceProgressV1,askReasonV1,idleMillisecondsV1,isDeposedV1,holderSuffixV1,readAskV1,readHolderV1,readProgressV1,rememberDoorV1}from"../🪧️door-board/🟨️.mjs";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 
 /** 🔐️ The declared constants of the slice custody; the schema file is the single source and a law keeps both equal. */
@@ -16,15 +17,17 @@ const ownersOf=names=>[...new Set(names)].sort(compareCodePointsV1);
 export function renderCustodyMessageV1(key,fields,language){
  const template=CUSTODY_MESSAGES_V1[language]?.[key];
  if(template===undefined)throw fail("Closed custody message required: "+key);
- return template.replace(/\{([a-z]+)\}/gu,(_token,name)=>String(fields[name]));
+ return template.replace(/\{([a-z]+)\}/gu,(_token,name)=>String(fields[name]??""));
 }
 
 /** 🛂️ Admits a closed custody claim: its ticket, the owners it writes in strict code point order, whether it is structural and whether it holds the custody. */
 export function readCustodyClaimV1(value){
- const required=schema.definitions.Claim.required;
+ const required=schema.definitions.Claim.required,allowed=Object.keys(schema.definitions.Claim.properties);
  if(value===null||typeof value!=="object"||Array.isArray(value))throw fail("Closed custody claim required");
- for(const key of Object.keys(value))if(!required.includes(key))throw fail("Closed custody claim required: unknown "+key);
+ for(const key of Object.keys(value))if(!allowed.includes(key))throw fail("Closed custody claim required: unknown "+key);
  for(const key of required)if(!Object.hasOwn(value,key))throw fail("Closed custody claim required: missing "+key);
+
+ if(value.holder!==undefined)try{readHolderV1(value.holder);}catch{throw fail("Closed custody holder required");}
  if(value.version!==1||typeof value.token!=="string"||!TOKEN.test(value.token))throw fail("Custody token of 24 hex digits required");
  if(!Number.isSafeInteger(value.ticket)||value.ticket<1)throw fail("Positive custody ticket required");
  if(!Number.isSafeInteger(value.queuedMs)||value.queuedMs<0)throw fail("Epoch milliseconds required in a custody claim");
@@ -52,84 +55,133 @@ export function admissionOfV1(mine,others){
  */
 export function createSliceCustodyV1({root,fs,lease,now=()=>Date.now(),token=()=>randomBytes(12).toString("hex")}){
  if(typeof root!=="string"||!root||!fs||!lease)throw fail("Custody root, file port and lease port required");
- const directory=join(root,P.directory),pathOf=name=>join(directory,name+".json"),own=new Map();
+ const directory=join(root,P.directory),pathOf=name=>join(directory,name+".json"),sidePath=(name,kind)=>join(directory,name+"."+kind+".json"),own=new Map(),SIDE=/^([a-f0-9]{24})\.(progress|ask)\.json$/u;
  const resource={claim:name=>"graph-custody:"+root+":"+name,admission:"graph-custody-admission:"+root};
  const write=async claim=>{await fs.write(pathOf(claim.token),Buffer.from(canonicalJsonV1(readCustodyClaimV1(claim))));own.set(claim.token,claim);return claim;};
+ const readSide=async(name,kind,read)=>{const bytes=await fs.read(sidePath(name,kind));if(!bytes)return undefined;try{return read(JSON.parse(Buffer.from(bytes).toString("utf8")));}catch{return undefined;}};
+ const writeSide=(name,kind,value)=>fs.write(sidePath(name,kind),Buffer.from(canonicalJsonV1(value)));
+ const removeSides=name=>Promise.all(["progress","ask"].map(kind=>fs.remove(sidePath(name,kind)).catch(()=>{})));
  const readOne=async name=>{const bytes=await fs.read(pathOf(name));if(!bytes)return undefined;try{return readCustodyClaimV1(JSON.parse(Buffer.from(bytes).toString("utf8")));}catch{return undefined;}};
 
  /** 💓️ The live claims: a claim of this process is live while it is not released, a claim of another command while its lease is held; the document of a dead claim and an unreadable document older than ten polls are removed. */
  async function live(signal){
-  const rows=[];
-  for(const file of await fs.list(directory)){
+  const rows=[],files=[...await fs.list(directory)],sides=new Map(),named=new Set();
+  for(const file of files){const found=SIDE.exec(file.name);if(found)sides.set(file.name,found[1]);else if(/^[a-f0-9]{24}\.json$/u.test(file.name))named.add(file.name.slice(0,24));}
+  for(const file of files){
    aborted(signal);
    if(!/^[a-f0-9]{24}\.json$/u.test(file.name))continue;
    if(rows.length>=P.maximumClaims)throw fail("Bounded number of custody claims required","CUSTODY_FULL");
    const name=file.name.slice(0,24);
-   if(own.has(name)){rows.push(own.get(name));continue;}
+   const attach=async claim=>{const extra={};if(sides.has(name+".progress.json"))extra.progress=await readSide(name,"progress",readProgressV1);if(sides.has(name+".ask.json"))extra.ask=await readSide(name,"ask",readAskV1);return{...claim,...extra};};
+   if(own.has(name)){rows.push(await attach(own.get(name)));continue;}
    const claim=await readOne(name);
-   if(!claim){if(now()-file.modifiedMs>10*P.pollMilliseconds)await fs.remove(join(directory,file.name));continue;}
+   if(!claim){if(now()-file.modifiedMs>10*P.pollMilliseconds){await fs.remove(join(directory,file.name));await removeSides(name);}continue;}
    const probe=await lease.tryHold(resource.claim(name));
-   if(!probe){rows.push(claim);continue;}
-   try{await fs.remove(pathOf(name));}finally{probe.release();}
+   if(!probe){rows.push(await attach(claim));continue;}
+   try{await fs.remove(pathOf(name));await removeSides(name);}finally{probe.release();}
   }
+  for(const[sideName,owner]of sides)if(!named.has(owner)&&now()-(files.find(file=>file.name===sideName)?.modifiedMs??now())>10*P.pollMilliseconds)await fs.remove(join(directory,sideName)).catch(()=>{});
   return rows;
  }
+
+ const active=async signal=>{const at=now();return(await live(signal)).filter(row=>!isDeposedV1(row,at));};
 
  const admitted=async(signal,body)=>{const admission=await lease.hold(resource.admission,{signal});try{return await body();}finally{admission.release();}};
 
  /** 🎫️ The handle of a held claim: `owners`/`structural` say what it may write, `extend` widens it at once when no other held claim conflicts (answering the request to queue again otherwise), `alone` makes it structural when no other live claim exists, `release` gives it back. */
- function handle(name,lock){
+ function handle(name,lock,settings){
   const current=()=>{const claim=own.get(name);if(!claim)throw fail("Released custody claim","CUSTODY_RELEASED");return claim;};
+  let side={phase:"start",done:0,total:0,advancedMs:now()},wrote=side.advancedMs;
+  const digestNow=()=>settings.digest();
   return Object.freeze({
    token:name,
    get owners(){return current().owners;},
    get structural(){return current().structural;},
    async extend({owners=[],structural=false,signal}={}){
-    const held=current(),wanted=ownersOf([...held.owners,...owners]),wide=held.structural||structural===true,request={dirty:wanted,structural:wide};
+    const held=current(),wanted=ownersOf([...held.owners,...owners]),wide=held.structural||structural===true,request={dirty:wanted,structural:wide},ask=await readSide(name,"ask",readAskV1);
+    if(ask&&isDeposedV1({ask},now()))return{held:false,request};
     if(held.structural||!wide&&wanted.length===held.owners.length)return{held:true,request};
     const next=readCustodyClaimV1({...held,owners:wanted,structural:wide});
     return admitted(signal,async()=>{
-     if((await live(signal)).some(claim=>claim.token!==name&&claim.state==="held"&&claimsConflictV1(next,claim)))return{held:false,request};
+     if((await active(signal)).some(claim=>claim.token!==name&&claim.state==="held"&&claimsConflictV1(next,claim)))return{held:false,request};
      await write(next);return{held:true,request};
     });
    },
    async alone({signal}={}){
     const held=current();if(held.structural)return true;
-    return admitted(signal,async()=>{if((await live(signal)).some(claim=>claim.token!==name))return false;await write({...held,structural:true});return true;});
+    return admitted(signal,async()=>{if((await active(signal)).some(claim=>claim.token!==name))return false;await write({...held,structural:true});return true;});
    },
-   async release(){if(!own.has(name))return;own.delete(name);try{await fs.remove(pathOf(name));}finally{lock.release();}},
+   async settle(finished){
+    const held=current();if(held.structural)return false;
+    const done=new Set(finished),rest=held.owners.filter(owner=>!done.has(owner));
+    if(rest.length===held.owners.length)return true;
+    await write(readCustodyClaimV1({...held,owners:rest}));return true;
+   },
+   async progress(event){
+    const at=now(),next=advanceProgressV1(side,event,at),phaseChanged=next.phase!==side.phase,moved=phaseChanged||next.done>side.done;
+    side=next;
+    if(!moved||!phaseChanged&&at-wrote<P.progressWriteMilliseconds)return;
+    wrote=at;await writeSide(name,"progress",side).catch(()=>{});
+   },
+   async handover(){
+    const ask=await readSide(name,"ask",readAskV1);
+    if(ask)return{reason:ask.reason,ask};
+    const mine=own.get(name)?.holder?.digest,found=await digestNow();
+    if(!mine||!found||mine===found)return undefined;
+    const claim=current();
+    return(await live()).some(row=>row.token!==name&&row.state==="waiting"&&claimsConflictV1(claim,row))?{reason:"stale-code",current:found}:undefined;
+   },
+   handoverError(reason,{done=0,total=0}={}){
+    const fields={seconds:Math.round((idleMillisecondsV1({progress:side},now())??0)/1000),done,total,digest:(own.get(name)?.holder?.digest??"").slice(0,12),current:(reason.current??settings.currentSeen??"").slice(0,12)},key=reason.reason==="stale-code"?"handoverStale":"handoverStalled";
+    return Object.assign(Error(renderCustodyMessageV1(key,fields,"en")+"\n"+renderCustodyMessageV1(key,fields,"de")),{code:"SEMIO_STALE_IMPLEMENTATION",handover:{reason:reason.reason,done,total}});
+   },
+   async release(){if(!own.has(name))return;own.delete(name);try{await fs.remove(pathOf(name));await removeSides(name);}finally{lock.release();}},
   });
  }
 
  /** 🚪️ Queues a claim on `owners` (every owner when `structural`) and resolves with its handle once no held or earlier live claim conflicts; `say` tells at once and then every notice interval which claims go first. */
- async function hold({owners=[],structural=false,signal,say=()=>{}}={}){
+ async function hold({owners=[],structural=false,signal,say=()=>{},language="en",holder,currentDigest}={}){
   const name=token(),lock=await lease.tryHold(resource.claim(name),{fresh:true});
   if(!lock)throw fail("A fresh custody lease is free","CUSTODY_LEASE_TAKEN");
-  const mine={owners:ownersOf(owners),structural:structural===true},started=now();let claim,noticed=-Infinity;
+  rememberDoorV1(directory);
+  const mine={owners:ownersOf(owners),structural:structural===true,...holder?{holder:readHolderV1(holder)}:{}},started=now(),told=new Set();let claim,noticed=-Infinity,seen,seenAt=-Infinity;
+  const digestNow=async()=>{if(!currentDigest)return undefined;if(now()-seenAt<P.noticeMilliseconds&&seen!==undefined)return seen;try{seen=await currentDigest();}catch{}seenAt=now();return seen;};
+  const asking=async blockers=>{
+   const at=now(),current=await digestNow();
+   for(const row of blockers){
+    if(isDeposedV1(row,at))continue;
+    const reason=askReasonV1({claim:row,now:at,current});
+    if(!reason)continue;
+    await writeSide(row.token,"ask",{version:1,reason,atMs:at,by:{pid:process.pid,digest:mine.holder?.digest??""}}).catch(()=>{});
+    if(reason==="stalled")say("askedStalled",{pid:row.holder?.pid??0,seconds:Math.round((idleMillisecondsV1(row,at)??0)/1000)});else say("askedStale",{pid:row.holder?.pid??0,digest:(row.holder?.digest??"").slice(0,12),current:(current??"").slice(0,12)});
+   }
+  };
   try{
    for(;;){
     aborted(signal);
     const decision=await admitted(signal,async()=>{
-     const others=(await live(signal)).filter(row=>row.token!==name);
+     const at=now(),all=(await live(signal)).filter(row=>row.token!==name),others=all.filter(row=>!isDeposedV1(row,at));
+     for(const row of all)if(isDeposedV1(row,at)&&!told.has(row.token)){told.add(row.token);say("deposed",{pid:row.holder?.pid??0,seconds:Math.round((at-row.ask.atMs)/1000)});}
      claim??={version:1,token:name,ticket:others.reduce((top,row)=>Math.max(top,row.ticket),0)+1,...mine,state:"waiting",queuedMs:now()};
      const found=admissionOfV1(claim,others);
      claim=await write({...claim,state:found.admit?"held":"waiting"});
      return found;
     });
-    if(decision.admit)return handle(name,lock);
+    if(decision.admit){await writeSide(name,"progress",{phase:"start",done:0,total:0,advancedMs:now()}).catch(()=>{});return handle(name,lock,{digest:digestNow});}
+    await asking(decision.blockers);
     if(now()-noticed>=P.noticeMilliseconds){
      noticed=now();const first=decision.blockers[0],sample=ownersOf(first.owners.filter(owner=>claim.owners.includes(owner))).slice(0,P.sampleOwners);
-     say(claim.structural||first.structural||!sample.length?"blockedAll":"blocked",{peers:decision.blockers.length,seconds:Math.round((now()-started)/1000),sample:sample.join(", ")});
+     say(claim.structural||first.structural||!sample.length?"blockedAll":"blocked",{peers:decision.blockers.length,seconds:Math.round((now()-started)/1000),sample:sample.join(", "),holder:holderSuffixV1(first,now(),language)});
     }
     await waitAnyLeaseV1(lease,decision.blockers.map(row=>resource.claim(row.token)),{signal,timeoutMs:P.pollMilliseconds});
    }
-  }catch(error){own.delete(name);await fs.remove(pathOf(name)).catch(()=>{});lock.release();throw error;}
+  }catch(error){own.delete(name);await fs.remove(pathOf(name)).catch(()=>{});await removeSides(name);lock.release();throw error;}
  }
 
  /** 💤️ Whether a claim on `owners` would hold the custody at once: no live claim conflicts with it. */
  async function idle({owners=[],structural=false,signal}={}){
   const mine={owners:ownersOf(owners),structural:structural===true};
-  return!(await live(signal)).some(claim=>claimsConflictV1(mine,claim));
+  return!(await active(signal)).some(claim=>claimsConflictV1(mine,claim));
  }
 
  return Object.freeze({hold,idle,list:live,resource});
@@ -142,14 +194,16 @@ const pause=(milliseconds,signal)=>new Promise((resolve,reject)=>{
 });
 
 /**
- * 🧲️ Attaches a reader to the live builder of its stale projects: the second reader of a machine neither builds nor prepares the projects beside the builder, it looks every `attachPollMilliseconds` (`look()` answers whether a live claim holds the custody against the reader and the newest generation), tells at once and then every notice interval that it is attached, tells each wave the builder publishes and at most every `attachRecheckMilliseconds` lets `recheck()` serve it from the generation published so far (any answer but undefined ends the attachment and is returned). It answers undefined as soon as nothing holds the custody against the reader any more, and when the custody cannot be looked at, so the caller builds or prepares as before: an attachment never fails a command, a cancellation is rethrown.
+ * 🧲️ Attaches a reader to the live builder of its stale projects: the second reader of a machine neither builds nor prepares the projects beside the builder, it looks every `attachPollMilliseconds` (never more often than `attachSpendRatio` times the duration of the last look, at most every `attachMaximumPollMilliseconds`: a look opens the store and is slow on a busy host, so the waiting reader cannot keep the machine busy) (`look()` answers whether a live claim holds the custody against the reader and the newest generation), tells at once and then every notice interval that it is attached, tells each wave the builder publishes and at most every `attachRecheckMilliseconds` lets `recheck()` serve it from the generation published so far (any answer but undefined ends the attachment and is returned). It answers undefined as soon as nothing holds the custody against the reader any more, and when the custody cannot be looked at, so the caller builds or prepares as before: an attachment never fails a command, a cancellation is rethrown.
  */
 export async function attachToBuilderV1({look,recheck,say=()=>{},signal,now=()=>Date.now(),sleep=pause,policy=P}){
  const started=now();let previous,waves=0,noticed=-Infinity,checked=started;
  for(;;){
   aborted(signal);
   let seen;
+  const lookBegan=now();
   try{seen=await look();}catch(error){if(signal?.aborted)throw error;return undefined;}
+  const took=now()-lookBegan;
   if(!seen.held)return undefined;
   const seconds=Math.round((now()-started)/1000);
   if(seen.generation!==undefined&&previous!==undefined&&seen.generation>previous){
@@ -161,6 +215,6 @@ export async function attachToBuilderV1({look,recheck,say=()=>{},signal,now=()=>
    }
   }else if(now()-noticed>=policy.noticeMilliseconds){noticed=now();say("attached",{generation:seen.generation??-1,seconds});}
   if(seen.generation!==undefined)previous=seen.generation;
-  await sleep(policy.attachPollMilliseconds,signal);
+  await sleep(Math.min(policy.attachMaximumPollMilliseconds,Math.max(policy.attachPollMilliseconds,policy.attachSpendRatio*took)),signal);
  }
 }

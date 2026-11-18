@@ -29,9 +29,9 @@ export function registerIntroductionRectRelativeHostTests({ describe, it, expect
       expect(clampIntroductionInfoBoxPosition({ top: 1_000, left: 1_000 }, boxSize, viewport, 0)).toEqual({ top: 550, left: 700 });
     });
 
-    it("preserves the authored placement inset", () => {
-      expect(clampIntroductionInfoBoxPosition({ top: -100, left: -100 }, boxSize, viewport, INTRODUCTION_INFO_BOX_GAP_PX)).toEqual({ top: 16, left: 16 });
-      expect(clampIntroductionInfoBoxPosition({ top: 1_000, left: 1_000 }, boxSize, viewport, INTRODUCTION_INFO_BOX_GAP_PX)).toEqual({ top: 534, left: 684 });
+    it("preserves a caller-supplied inset", () => {
+      expect(clampIntroductionInfoBoxPosition({ top: -100, left: -100 }, boxSize, viewport, 16)).toEqual({ top: 16, left: 16 });
+      expect(clampIntroductionInfoBoxPosition({ top: 1_000, left: 1_000 }, boxSize, viewport, 16)).toEqual({ top: 534, left: 684 });
     });
   });
 
@@ -53,18 +53,22 @@ export function registerIntroductionRectRelativeHostTests({ describe, it, expect
       expect(tiny.left).toBeGreaterThanOrEqual(0);
     });
 
+    it("docks flush: the authored gap is zero", () => {
+      expect(INTRODUCTION_INFO_BOX_GAP_PX).toBe(0);
+    });
+
     it("auto picks the side with the most free space", () => {
       const nearTop = { top: 0, left: 350, width: 100, height: 20 };
       const placedBelow = resolveIntroductionPlacement("auto", nearTop, boxSize, viewport);
-      expect(placedBelow.top).toBeGreaterThan(nearTop.top + nearTop.height);
+      expect(placedBelow.top).toBe(nearTop.top + nearTop.height);
     });
 
     it("explicit placements position relative to the anchor and stay within the viewport", () => {
       const anchor = { top: 275, left: 350, width: 100, height: 20 };
       const right = resolveIntroductionPlacement("right", anchor, boxSize, viewport);
-      expect(right.left).toBeGreaterThan(anchor.left + anchor.width);
+      expect(right.left).toBe(anchor.left + anchor.width);
       const left = resolveIntroductionPlacement("left", anchor, boxSize, viewport);
-      expect(left.left).toBeLessThan(anchor.left);
+      expect(left.left).toBe(anchor.left - boxSize.width);
       const nearEdge = resolveIntroductionPlacement("right", { top: 10, left: 780, width: 10, height: 10 }, boxSize, viewport);
       expect(nearEdge.left).toBeLessThanOrEqual(viewport.width - boxSize.width);
     });

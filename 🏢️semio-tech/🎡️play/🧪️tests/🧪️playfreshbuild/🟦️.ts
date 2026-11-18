@@ -10,7 +10,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   const repository = new URL("../../../../", import.meta.url), read = (path: string): string => readFileSync(new URL(path, repository), "utf8");
   const { describe, expect, it } = vitest;
   describe("fresh Play release", () => {
-    it("is one uncached release driver task whose jobs bundle before any component links and assemble pages after every module", () => {
+    it("is one uncached release driver task whose jobs all finish before any component links, with the pages assembled after the driver", () => {
       const project = JSON.parse(readFileSync(new URL("../../📋️project.json", import.meta.url), "utf8")), build = project.targets[fixture.release.target];
       for (const removed of fixture.release.removedTargets) expect(project.targets[removed], removed).toBeUndefined();
       expect(build.cache).toBe(false);
@@ -20,7 +20,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(pipeline.prerequisites).toEqual(fixture.release.prerequisites);
       expect(job("bundle").after).toEqual(fixture.release.bundleAfter);
       expect(job("bundle").after.some((name: string) => name.startsWith("components:"))).toBe(false);
-      expect(job("pages").after).toEqual(fixture.release.pagesAfter);
+      expect(pipeline.jobs.some((row: any) => row.id === "pages" || row.after.some((dependency: string) => !dependency.startsWith("job:")))).toBe(false);
       expect(pipeline.jobs.filter((row: any) => row.lane !== undefined).map((row: any) => row.id)).toEqual(fixture.release.laneJobs);
     });
     it("refuses stale catalog owners in the release gate instead of rewriting the catalog during a build", () => {

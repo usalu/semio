@@ -11,3 +11,4 @@ export function freshPriorityV1(environment:Readonly<Record<string,string|undefi
 export function readOfferedV1(environment?:Readonly<Record<string,string|undefined>>,now?:number):Set<string>;
 export function writeOfferedV1(environment:Readonly<Record<string,string|undefined>>,names:Iterable<string>,now?:number):void;
 export function readPendingV1(directory:string):PendingV1|undefined;
+export function createColdPendingV1(environment?:Readonly<Record<string,string|undefined>>,intervalMs?:number,now?:()=>number):Readonly<{begin():void;done(name:string):void;flush():void}>;

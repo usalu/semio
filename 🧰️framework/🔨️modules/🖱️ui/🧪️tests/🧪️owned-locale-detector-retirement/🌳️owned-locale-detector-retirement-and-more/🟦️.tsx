@@ -422,7 +422,7 @@ export async function registerOwnedLocaleDetectorRetirementAndMoreTests(vitest: 
       expect(css).toContain("[data-window-silhouette-gap]");
       expect(css).toContain("[data-window-silhouette-chip]");
       expect(css).not.toMatch(/\[data-slot="mode-dock-stack"\]\s*\[data-slot="window"\]\[data-introduced="true"\]/);
-      expect(css).toContain(":is(.shared-border-cell, [data-shared-border-cell])");
+      expect(css).toContain(":is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame])");
       expect(css).toContain("border-inline-end: var(--stroke-hairline) solid var(--border-normal-color)");
       expect(css).not.toContain("box-shadow: inset calc(-1 * var(--stroke-hairline)) 0 0 0 var(--border-normal-color)");
     });

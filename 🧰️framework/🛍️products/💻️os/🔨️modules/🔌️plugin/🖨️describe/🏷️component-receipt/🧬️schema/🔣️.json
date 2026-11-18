@@ -52,11 +52,11 @@
       }
     },
     "ComponentProfilePolicies": {
-      "description": "The profile policy table. `release` keeps the 256 MiB shipped bound; `prototype` carries its own 512 MiB local-only cap.",
+      "description": "The profile policy table. `release` keeps the 1 GiB shipped bound (the WebAssembly module size limit of the browser engines); `prototype` carries its own 512 MiB local-only cap.",
       "const": {
         "release": {
           "directory": "dist/components/release",
-          "maximumBytes": 268435456,
+          "maximumBytes": 1073741824,
           "shipped": true
         },
         "prototype": {
@@ -104,7 +104,7 @@
         "wasmBytes": {
           "type": "integer",
           "minimum": 8,
-          "maximum": 536870912
+          "maximum": 1073741824
         },
         "semanticDescriptorSha256": {
           "$ref": "#/$defs/ComponentSha256"
@@ -136,7 +136,16 @@
         "properties": {
           "wasmBytes": {
             "type": "integer",
-            "maximum": 268435456
+            "maximum": 1073741824
+          }
+        }
+      },
+      "else": {
+        "type": "object",
+        "properties": {
+          "wasmBytes": {
+            "type": "integer",
+            "maximum": 536870912
           }
         }
       }

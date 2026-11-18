@@ -56,7 +56,7 @@ test("a graph read that publishes nothing for the stall limit is stopped and say
  try{
   const started=Date.now(),result=await readOf(path);
   expect(Date.now()-started).toBeLessThan(15000);
-  expect(result.ok).toBe(false);expect(result.generation).toBe(4);expect(result.detail).toContain("no wave was published for");
+  expect(result.ok).toBe(false);expect(result.generation).toBe(4);expect(result.detail).toContain("nothing advanced for");
   const german=await readOf(path,{language:"de"});expect(german.detail).toContain("seit ");
  }finally{rmSync(dir,{recursive:true,force:true});}
 },60000);

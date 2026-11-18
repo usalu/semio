@@ -23,7 +23,7 @@ test("the declared policy, the claim and the bilingual texts are the ones the im
  expect(CUSTODY_MESSAGES_V1).toEqual(schema.definitions.Messages.const as never);
  const placeholders=(text:string)=>[...text.matchAll(/\{([a-z]+)\}/gu)].map(match=>match[1]).sort();
  for(const key of Object.keys(CUSTODY_MESSAGES_V1.en) as (keyof typeof CUSTODY_MESSAGES_V1.en)[])expect(placeholders(CUSTODY_MESSAGES_V1.de[key])).toEqual(placeholders(CUSTODY_MESSAGES_V1.en[key]));
- const validate=new Ajv2020({strict:false}).compile(schema.definitions.Claim),claim={version:1,token:"a".repeat(24),ticket:1,owners:["a","b"],structural:false,state:"held",queuedMs:1};
+ const validate=new Ajv2020({strict:false}).compile({...schema.definitions.Claim,definitions:schema.definitions}),claim={version:1,token:"a".repeat(24),ticket:1,owners:["a","b"],structural:false,state:"held",queuedMs:1};
  expect(validate(claim)).toBe(true);expect(readCustodyClaimV1(claim)).toEqual(claim as never);
  for(const bad of[{...claim,owners:["b","a"]},{...claim,ticket:0},{...claim,state:"done"},{...claim,extra:1},{...claim,token:"x"}])expect(()=>readCustodyClaimV1(bad)).toThrow();
 });
@@ -112,7 +112,7 @@ test("a cancelled wait removes its claim and its lease, and a peer that waited b
  await a.release();const again:SliceClaimV1=await custody.hold({owners:["a"]});await again.release();
 });
 
-const attachPolicy={...CUSTODY_POLICY_V1,attachPollMilliseconds:20,attachRecheckMilliseconds:150,noticeMilliseconds:60};
+const attachPolicy={...CUSTODY_POLICY_V1,attachSpendRatio:0,attachPollMilliseconds:20,attachRecheckMilliseconds:150,noticeMilliseconds:60};
 const lookOf=(custody:ReturnType<typeof world>["custody"],pointer:()=>number,owners:string[])=>async()=>({held:!await custody.idle({owners}),generation:pointer()});
 
 test("a second reader on one state root attaches to the live builder: it never holds the custody beside it, tells the waves in English and German, is served from a wave through the recheck, and ends when the builder lets go",async()=>{

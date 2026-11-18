@@ -7,6 +7,7 @@
 
 // #region 🔌️Adapters
 import { useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
+import { useSharedBorderWrap } from "../🪢️SharedBorderRow/🟦️.tsx";
 import * as React from "react";
 import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
@@ -41,6 +42,8 @@ interface ToggleGroupBaseProps extends Omit<React.HTMLAttributes<HTMLDivElement>
   dir?: ToggleGroupDirection;
   loop?: boolean;
   rovingFocus?: boolean;
+  /** 🪢️ Lets the items break into lines that share one hairline across lines (see `useSharedBorderWrap`); meant for a group placed as a cell of a `SharedBorderRow`. */
+  wrap?: boolean;
   ref?: React.Ref<HTMLDivElement>;
 }
 
@@ -86,8 +89,14 @@ const ToggleGroupContext = reactHostPort.createContext<ToggleGroupContextValue |
 
 /** 🎛️ Owns exact single/multiple selection and independent roving focus. */
 function ToggleGroup(props: ToggleGroupProps) {
-  const { className, id, showLabel, items, kind = "single", disabled = false, orientation = "horizontal", dir = "ltr", loop = true, rovingFocus = true, ref, ...rootProps } = props;
-  const borderRef = useSharedBorderFrameRef(ref);
+  const { className, id, showLabel, items, kind = "single", disabled = false, orientation = "horizontal", dir = "ltr", loop = true, rovingFocus = true, wrap = false, ref, ...rootProps } = props;
+  const frameRef = useSharedBorderFrameRef(ref);
+  const rootRef = React.useRef<HTMLElement | null>(null);
+  useSharedBorderWrap(rootRef, wrap);
+  const borderRef = React.useCallback((node: HTMLDivElement | null) => {
+    rootRef.current = node;
+    return frameRef(node);
+  }, [frameRef]);
   const level = useLevel();
   const isMultiple = kind === "multiple";
   const radio = !isMultiple && (props as ToggleGroupSingleProps).semantics === "radio";
@@ -158,13 +167,14 @@ function ToggleGroup(props: ToggleGroupProps) {
       dir={dir}
       aria-disabled={disabled || undefined}
       data-slot="toggle-group"
+      data-shared-border-wrap={wrap ? "" : undefined}
       data-shared-border-frame=""
       data-shared-border-edges="top right bottom left"
       data-detail-panel-control="fit"
       data-state={rootDataState}
       data-disabled={disabled ? "" : undefined}
       data-orientation={orientation}
-      className={cn(chromeControlGroupClass, "relative group/toggle-group has-[_[data-slot=inline-label]]:overflow-visible", orientation === "vertical" && "flex-col h-auto", className)}
+      className={cn(chromeControlGroupClass, "relative group/toggle-group has-[_[data-slot=inline-label]]:overflow-visible", orientation === "vertical" && "flex-col h-auto", wrap && orientation === "horizontal" && "flex-wrap h-auto", className)}
     >
       <ToggleGroupContext.Provider value={context}>
         {items.map((item) => (
@@ -195,7 +205,7 @@ function ToggleGroupItem({ className, id, icon, text, action, value, disabled = 
   const ariaLabel = suppliedAriaLabel ?? (inlineText ? undefined : accessibleLabel);
   const title = suppliedTitle ?? tooltipText;
   return (
-    <div data-slot="toggle-group-item-shell" data-shared-border-cell="" data-orientation={context.orientation} className={cn("flex min-w-0 items-stretch", !action && inlineText ? "w-auto shrink-0" : "flex-1", chromeControlGroupSiblingDividerClass)}>
+    <div data-slot="toggle-group-item-shell" data-shared-border-cell="" data-shared-border-group={action ? "" : undefined} data-orientation={action ? "horizontal" : context.orientation} className={cn("flex min-w-0 items-stretch", action ? "shrink-0" : inlineText ? "w-auto shrink-0" : "flex-1", chromeControlGroupSiblingDividerClass)}>
       <button
         {...props}
         ref={ref}
@@ -214,8 +224,10 @@ function ToggleGroupItem({ className, id, icon, text, action, value, disabled = 
         data-state={pressed ? "on" : "off"}
         data-disabled={itemDisabled ? "" : undefined}
         data-orientation={context.orientation}
+        data-shared-border-cell={action ? "" : undefined}
         className={cn(
           toggleVariants(),
+          context.orientation !== "vertical" && "min-h-0",
           inlineText ? "w-auto shrink-0 focus:z-panel focus-visible:z-panel" : "min-w-medium flex-1 shrink-0 focus:z-panel focus-visible:z-panel",
           (inlineText || action) && "flex items-center gap-single py-single px-double aspect-auto",
           inlineText && "w-auto",
@@ -243,7 +255,7 @@ function ToggleGroupItem({ className, id, icon, text, action, value, disabled = 
         <span className={action ? "flex-1 flex items-center justify-center" : undefined}>{renderControlIcon(icon)}</span>
       </button>
       {action ? (
-        <div data-slot="toggle-group-item-action" aria-disabled={itemDisabled || undefined} className={cn("flex items-center justify-center aspect-square h-full flex-shrink-0", surfaceClass, text && "ms-single")}>
+        <div data-slot="toggle-group-item-action" data-shared-border-cell="" data-shared-border-cells="" data-orientation="horizontal" aria-disabled={itemDisabled || undefined} className={cn("flex items-center justify-center aspect-square h-full flex-shrink-0", surfaceClass, text && "ms-single")}>
           {action}
         </div>
       ) : null}

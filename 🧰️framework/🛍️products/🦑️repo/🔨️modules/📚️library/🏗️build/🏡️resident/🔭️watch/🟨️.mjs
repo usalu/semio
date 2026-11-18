@@ -59,7 +59,7 @@ export function createWatchSupervisorV1(options){
   const args=["watch","--root",root,"--latency-ms",String(latencyMs)];
   args.push(...nativeExclusionArgumentsV1({rooted,names}));
   if(state.cursor!==""&&state.uuid!=="")args.push("--since",state.cursor,"--uuid",state.uuid);
-  const process_=spawnProcess(binary,args,{stdio:["pipe","pipe","ignore"]});
+  const process_=spawnProcess(binary,args,{stdio:["pipe","pipe","ignore"],windowsHide:true});
   child=process_;
   let settled=false,timer;
   const cleanup=()=>{clearTimeout(timer);if(readyResolve===accept)readyResolve=undefined;if(readyReject===decline)readyReject=undefined;};

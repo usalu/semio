@@ -1,0 +1,99 @@
+{
+ "revision": "f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0",
+ "form": 2,
+ "cases": [
+  {
+   "name": "a cargo owner at the root of machine one",
+   "workspace": "/Users/ueli/Documents/semio",
+   "fleet": "libs/alpha-rs",
+   "head": [
+    "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+    "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+    "c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3",
+    "d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4",
+    "closure-references/4"
+   ],
+   "json": {
+    "name": "@semio-tech/alpha-rs",
+    "root": "libs/alpha-rs",
+    "tags": [
+     "language:cargo"
+    ],
+    "targets": {
+     "build": {
+      "options": {
+       "cwd": "/Users/ueli/Documents/semio/libs/alpha-rs"
+      }
+     }
+    }
+   },
+   "selectedInputs": []
+  },
+  {
+   "name": "the same owner at the root of machine two (same key)",
+   "workspace": "/Volumes/work/checkout",
+   "fleet": "libs/alpha-rs",
+   "head": [
+    "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+    "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+    "c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3",
+    "d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4",
+    "closure-references/4"
+   ],
+   "json": {
+    "name": "@semio-tech/alpha-rs",
+    "root": "libs/alpha-rs",
+    "tags": [
+     "language:cargo"
+    ],
+    "targets": {
+     "build": {
+      "options": {
+       "cwd": "/Volumes/work/checkout/libs/alpha-rs"
+      }
+     }
+    }
+   },
+   "selectedInputs": []
+  },
+  {
+   "name": "a project owner without native parts",
+   "workspace": "/Users/ueli/Documents/semio",
+   "fleet": "✏️s/🔌️plugin",
+   "head": [
+    "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+    "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+    null,
+    null
+   ],
+   "json": {
+    "name": "plugin-ü",
+    "root": "✏️s/🔌️plugin",
+    "targets": {}
+   },
+   "selectedInputs": []
+  },
+  {
+   "name": "selected inputs of an admission",
+   "workspace": "/Users/ueli/Documents/semio",
+   "fleet": "libs/alpha-rs",
+   "head": [
+    "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+    "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+    "c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3",
+    "d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4"
+   ],
+   "json": {
+    "name": "@semio-tech/alpha-rs",
+    "root": "libs/alpha-rs"
+   },
+   "selectedTargets": [
+    "build"
+   ],
+   "selectedInputs": [
+    "src/lib.rs"
+   ]
+  }
+ ],
+ "platform": "all"
+}

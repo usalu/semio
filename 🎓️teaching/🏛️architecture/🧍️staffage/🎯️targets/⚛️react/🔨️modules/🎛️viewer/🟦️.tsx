@@ -12,7 +12,7 @@ import type { Asset, AuthoredRepresentation, DrawingScene, Environment, Evaluate
 import type { ViewpointKey } from "../🔭️viewpoints/🟦️.ts";
 import { StaffageClock } from "../⏱️clock/🟦️.ts";
 import { useArchive } from "../🧭️context/🟦️.tsx";
-import { Button, CheckField, Notice, NumberField, Segmented, SelectField, SliderField, Tag, cn } from "../🪟️chrome/🟦️.tsx";
+import { Bar, Button, ButtonGroup, CheckField, Cell, Column, Group, Note, Notice, NumberField, Segmented, SelectField, SliderField, Tag, cn } from "../🪟️chrome/🟦️.tsx";
 import { FigureBoundary, useDarkSurface } from "../🖼️previews/🟦️.tsx";
 import { Transport } from "../⏯️transport/🟦️.tsx";
 import { scaleChoices } from "../🧊️spatial/🟦️.ts";
@@ -165,30 +165,38 @@ export function Viewer(props: ViewerProps): ReactElement {
   const patch = (next: Partial<ViewerState>, replace = true): void => onChange(next, replace);
   const setEnv = (key: keyof Environment, value: number): void => patch({ environment: { ...viewer.environment, [key]: value } });
   return (
-    <div className="grid min-w-0 gap-double lg:grid-cols-[minmax(0,1fr)_21rem]" data-viewer="">
-      <div className="flex min-w-0 flex-col gap-double">
-        <div className="flex flex-wrap items-center gap-single text-xs">
-          <Tag>{`1:${formatNumber(viewer.scale, Number.isInteger(viewer.scale) ? 0 : 1, language)}`}</Tag>
-          <Tag>{VIEW_NAMES[viewer.view][language]}</Tag>
-          <Tag>{all ? VIEWPOINT_PHRASES.all[language] : viewpointName(viewer.viewpoint)}</Tag>
-          <span className="text-muted-foreground">{t("viewer.onPaper", { height: formatNumber(reference100, 1, language), mm: "mm", metres: formatNumber(asset.dimensions.heightM, 2, language) })}</span>
-          {model ? <Tag>{t(`model.camera.${viewer.camera}`)}</Tag> : null}
-          {model ? null : <span className="ml-auto flex flex-wrap items-center gap-single">
-            <Button icon="minus" aria-label={t("viewer.zoomOut")} title={t("viewer.zoomOut")} onClick={() => patch({ zoom: Math.max(0.05, Number(((viewer.zoom === "fit" ? fitZoom.current : viewer.zoom) / 1.25).toFixed(3))) })} />
-            <output className="min-w-16 text-center font-mono" aria-label={t("viewer.zoom")}>{zoomText}</output>
-            <Button icon="plus" aria-label={t("viewer.zoomIn")} title={t("viewer.zoomIn")} onClick={() => patch({ zoom: Math.min(64, Number(((viewer.zoom === "fit" ? fitZoom.current : viewer.zoom) * 1.25).toFixed(3))) })} />
-            <Button aria-pressed={viewer.zoom === "fit"} onClick={() => patch({ zoom: "fit", pan: { xMm: 0, yMm: 0 } })} icon="maximize-2">{t("viewer.fit")}</Button>
-            <Button aria-pressed={printSize} onClick={() => patch({ zoom: printSize ? "fit" : 1 })} icon="scaling" title={t("viewer.printSizeHelp")}>{t("viewer.printSize")}</Button>
-            <Button icon="crosshair" aria-label={t("viewer.centre")} title={t("viewer.centre")} onClick={() => patch({ pan: { xMm: 0, yMm: 0 } })} />
-          </span>}
-        </div>
+    <Bar below="tablet" data-viewer="" className="items-stretch">
+      <Column className="min-w-0 flex-1">
+        <Bar>
+          <Cell className="flex-1 items-center text-xs">
+            <Tag>{`1:${formatNumber(viewer.scale, Number.isInteger(viewer.scale) ? 0 : 1, language)}`}</Tag>
+            <Tag>{VIEW_NAMES[viewer.view][language]}</Tag>
+            <Tag>{all ? VIEWPOINT_PHRASES.all[language] : viewpointName(viewer.viewpoint)}</Tag>
+            <span className="text-muted-foreground">{t("viewer.onPaper", { height: formatNumber(reference100, 1, language), mm: "mm", metres: formatNumber(asset.dimensions.heightM, 2, language) })}</span>
+            {model ? <Tag>{t(`model.camera.${viewer.camera}`)}</Tag> : null}
+          </Cell>
+          {model ? null : (
+            <>
+              <ButtonGroup>
+                <Button grouped icon="minus" aria-label={t("viewer.zoomOut")} title={t("viewer.zoomOut")} onClick={() => patch({ zoom: Math.max(0.05, Number(((viewer.zoom === "fit" ? fitZoom.current : viewer.zoom) / 1.25).toFixed(3))) })} />
+                <output data-shared-border-cell="" className="inline-flex min-w-16 items-center justify-center font-mono" aria-label={t("viewer.zoom")}>{zoomText}</output>
+                <Button grouped icon="plus" aria-label={t("viewer.zoomIn")} title={t("viewer.zoomIn")} onClick={() => patch({ zoom: Math.min(64, Number(((viewer.zoom === "fit" ? fitZoom.current : viewer.zoom) * 1.25).toFixed(3))) })} />
+              </ButtonGroup>
+              <ButtonGroup>
+                <Button grouped aria-pressed={viewer.zoom === "fit"} onClick={() => patch({ zoom: "fit", pan: { xMm: 0, yMm: 0 } })} icon="maximize-2">{t("viewer.fit")}</Button>
+                <Button grouped aria-pressed={printSize} onClick={() => patch({ zoom: printSize ? "fit" : 1 })} icon="scaling" title={t("viewer.printSizeHelp")}>{t("viewer.printSize")}</Button>
+                <Button grouped icon="crosshair" aria-label={t("viewer.centre")} title={t("viewer.centre")} onClick={() => patch({ pan: { xMm: 0, yMm: 0 } })} />
+              </ButtonGroup>
+            </>
+          )}
+        </Bar>
         {unavailable !== undefined && !unavailable.available ? (
           <Notice kind="unavailable" title={viewpointWord("viewpoints.unavailable", language, { view: VIEWPOINT_PHRASES[viewer.viewpoint][language] })}>
             <p className="m-0">{unavailable.message[language]}</p>
             <p className="m-0 text-muted-foreground">{viewpointWord("viewpoints.nothingInstead", language)}</p>
           </Notice>
         ) : model ? (
-          <div role="group" aria-label={t("model.viewerStage", { title: asset.title[language] })} aria-describedby={`${asset.id}-model-help`} data-stage="" data-model="" className="relative h-[clamp(22rem,64vh,42rem)] w-full">
+          <div role="group" aria-label={t("model.viewerStage", { title: asset.title[language] })} aria-describedby={`${asset.id}-model-help`} data-stage="" data-model="" data-shared-border-cell="" data-border-probe-art="" className="relative h-[clamp(22rem,64vh,42rem)] w-full">
             <span id={`${asset.id}-model-help`} className="sr-only">{t("model.viewerHelp")}</span>
             <FigureBoundary resetKey={asset} fallback={(message) => <Notice kind="error" title={asset.title[language]}>{message}</Notice>}>
               <StaffageFigure asset={asset} query={query} clock={clock} view={viewer.view} viewpoint="model" scale={{ denominator: viewer.scale }} language={language} theme={theme} fit="contain" preset={viewer.camera} onPreset={(camera) => patch({ camera })} onScale={(scale) => patch({ scale })} onView={(view) => patch({ view })} background={groundColour} thermalQuantity={viewer.thermalQuantity} forceQuantity={viewer.forceQuantity} range={viewer.range} {...(overridden ? { environment } : {})} live />
@@ -257,42 +265,41 @@ export function Viewer(props: ViewerProps): ReactElement {
         )}
         {model ? (analytic ? <Notice kind="info" compact title={t("model.analyticNote")} /> : null) : <Inspector inspected={inspected} language={language} hasValues={hasValues} asset={asset} />}
         {model ? null : <Legends scene={scene} language={language} patterns={viewer.patterns} />}
-      </div>
-      <form aria-label={t("viewer.controls")} onSubmit={(event) => event.preventDefault()} className="flex min-w-0 flex-col gap-double border border-border bg-panel p-double">
+      </Column>
+      <Column as="form" aria-label={t("viewer.controls")} onSubmit={(event) => event.preventDefault()} className="w-full bg-panel lg:w-[21rem] lg:shrink-0">
         <Segmented label={t("viewer.view")} value={viewer.view} onChange={(view) => patch({ view })} options={VIEWS.map((view) => ({ value: view, label: VIEW_NAMES[view][language], title: VIEW_NAMES[view][language] }))} />
         <ViewpointSelector value={all ? "all" : viewer.viewpoint} focus={planarFocus} language={language} choices={FIGURE_CHOICES} resolutions={resolutions} names={Object.fromEntries(sectionNames)} onChange={(choice) => patch(choice === "all" ? { layout: "all" } : { viewpoint: choice, layout: "single" })} />
-        <div className="flex flex-col gap-single">
-          <Segmented label={t("viewer.scale")} value={customScale ? -1 : viewer.scale} onChange={(scale) => scale > 0 && patch({ scale })} options={[...SCALE_PRESETS.map((scale) => ({ value: scale as number, label: `1:${scale}`, ...(model && reasons.has(scale) ? { unavailable: reasons.get(scale)! } : {}) })), { value: -1, label: t("viewer.scaleCustom"), title: t("viewer.scaleCustomHelp") }]} />
+        <Segmented label={t("viewer.scale")} value={customScale ? -1 : viewer.scale} onChange={(scale) => scale > 0 && patch({ scale })} options={[...SCALE_PRESETS.map((scale) => ({ value: scale as number, label: `1:${scale}`, ...(model && reasons.has(scale) ? { unavailable: reasons.get(scale)! } : {}) })), { value: -1, label: t("viewer.scaleCustom"), title: t("viewer.scaleCustomHelp") }]} />
+        <Bar>
           <NumberField label={t("viewer.scaleDenominator")} unit={t("viewer.scaleUnit")} min={1} max={100000} value={viewer.scale} onChange={(scale) => scale !== null && scale >= 1 && patch({ scale })} />
-        </div>
-        <SelectField label={t("viewer.selection")} value={selectionKey(viewer.selection)} options={poseOptions} onChange={(key) => patch({ selection: keyToSelection(key), timeS: null, pan: viewer.pan })} />
+        </Bar>
+        <Bar>
+          <SelectField label={t("viewer.selection")} value={selectionKey(viewer.selection)} options={poseOptions} onChange={(key) => patch({ selection: keyToSelection(key), timeS: null, pan: viewer.pan })} />
+        </Bar>
         <Segmented label={t("viewer.background")} value={viewer.background} onChange={(background) => patch({ background })} options={[{ value: "auto", label: t("viewer.background.auto") }, { value: "dark", label: t("viewer.background.dark") }, { value: "light", label: t("viewer.background.light") }, { value: "paper", label: t("viewer.background.paper") }, { value: "transparent", label: t("viewer.background.transparent") }]} />
         <Segmented label={t("viewer.theme")} value={viewer.theme} onChange={(next) => patch({ theme: next })} options={[{ value: "auto", label: t("viewer.theme.auto") }, { value: "light", label: t("viewer.theme.light") }, { value: "dark", label: t("viewer.theme.dark") }]} />
-        <fieldset className={cn("m-0 flex min-w-0 flex-col gap-double border border-border p-double", !analytic && "opacity-70")}>
-          <legend className="px-single text-[0.65rem] uppercase tracking-wide text-muted-foreground">{t("viewer.analytics")}</legend>
-          {!analytic ? <p className="m-0 text-[0.65rem] text-muted-foreground">{t("viewer.analyticsOnly")}</p> : null}
-          <SelectField label={t("viewer.thermalQuantity")} value={viewer.thermalQuantity} disabled={viewer.view !== "thermal"} onChange={(thermalQuantity) => patch({ thermalQuantity })} options={THERMAL_QUANTITIES.map((quantity) => ({ value: quantity, label: t(`viewer.thermal.${quantity}`) }))} />
-          <SelectField label={t("viewer.forceQuantity")} value={viewer.forceQuantity} disabled={viewer.view !== "forces"} onChange={(forceQuantity) => patch({ forceQuantity })} options={FORCE_QUANTITIES.map((quantity) => ({ value: quantity, label: t(`viewer.force.${quantity}`) }))} />
+        <Group stacked legend={t("viewer.analytics")} className={cn(!analytic && "opacity-70")}>
+          {!analytic ? <Note className="text-[0.65rem]">{t("viewer.analyticsOnly")}</Note> : null}
+          <Bar><SelectField label={t("viewer.thermalQuantity")} value={viewer.thermalQuantity} disabled={viewer.view !== "thermal"} onChange={(thermalQuantity) => patch({ thermalQuantity })} options={THERMAL_QUANTITIES.map((quantity) => ({ value: quantity, label: t(`viewer.thermal.${quantity}`) }))} /></Bar>
+          <Bar><SelectField label={t("viewer.forceQuantity")} value={viewer.forceQuantity} disabled={viewer.view !== "forces"} onChange={(forceQuantity) => patch({ forceQuantity })} options={FORCE_QUANTITIES.map((quantity) => ({ value: quantity, label: t(`viewer.force.${quantity}`) }))} /></Bar>
           <RangeControl range={viewer.range} {...(scene?.legends[0] === undefined ? {} : { legend: scene.legends[0] })} onChange={(range) => patch({ range })} />
-          <CheckField label={t("viewer.patterns")} checked={viewer.patterns} onChange={(patterns) => patch({ patterns })} />
-          <fieldset className="m-0 flex flex-wrap gap-x-double border-0 p-0">
-            <legend className="mb-single p-0 text-[0.65rem] text-muted-foreground">{t("viewer.diagrams")}</legend>
+          <Bar><CheckField label={t("viewer.patterns")} checked={viewer.patterns} onChange={(patterns) => patch({ patterns })} /></Bar>
+          <Group stacked legend={t("viewer.diagrams")}>
             {(["axial", "shear", "moment", "freeBody"] as const).map((key) => (
               <CheckField key={key} label={t(`viewer.diagram.${key}`)} checked={viewer.diagrams[key]} onChange={(checked) => patch({ diagrams: { ...viewer.diagrams, [key]: checked } })} />
             ))}
-          </fieldset>
-        </fieldset>
-        <fieldset className="m-0 flex min-w-0 flex-col gap-double border border-border p-double">
-          <legend className="px-single text-[0.65rem] uppercase tracking-wide text-muted-foreground">{t("viewer.environment")}</legend>
-          <p className="m-0 text-[0.65rem] text-muted-foreground">{t(viewer.view === "thermal" ? "viewer.environmentHelp" : "viewer.environmentOnlyThermal")}</p>
+          </Group>
+        </Group>
+        <Group stacked legend={t("viewer.environment")}>
+          <Note className="text-[0.65rem]">{t(viewer.view === "thermal" ? "viewer.environmentHelp" : "viewer.environmentOnlyThermal")}</Note>
           <SliderField label={t("viewer.env.air")} min={-30} max={45} step={0.5} value={environment.airTempC} text={`${formatNumber(environment.airTempC, 1, language)} °C`} onChange={(value) => setEnv("airTempC", value)} />
           <SliderField label={t("viewer.env.radiant")} min={-30} max={60} step={0.5} value={environment.meanRadiantTempC} text={`${formatNumber(environment.meanRadiantTempC, 1, language)} °C`} onChange={(value) => setEnv("meanRadiantTempC", value)} />
           <SliderField label={t("viewer.env.humidity")} min={0} max={100} step={1} value={Math.round(environment.relativeHumidity * 100)} text={`${Math.round(environment.relativeHumidity * 100)} %`} onChange={(value) => setEnv("relativeHumidity", value / 100)} />
           <SliderField label={t("viewer.env.wind")} min={0} max={15} step={0.1} value={environment.windMS} text={`${formatNumber(environment.windMS, 1, language)} m/s`} onChange={(value) => setEnv("windMS", value)} />
           <SliderField label={t("viewer.env.solar")} min={0} max={1000} step={10} value={environment.solarWM2} text={`${Math.round(environment.solarWM2)} W/m²`} onChange={(value) => setEnv("solarWM2", value)} />
-          <Button icon="rotate-ccw" disabled={!overridden} onClick={() => patch({ environment: {} })}>{t("viewer.env.reset")}</Button>
-        </fieldset>
-      </form>
-    </div>
+          <Bar><Button grouped icon="rotate-ccw" disabled={!overridden} onClick={() => patch({ environment: {} })}>{t("viewer.env.reset")}</Button></Bar>
+        </Group>
+      </Column>
+    </Bar>
   );
 }

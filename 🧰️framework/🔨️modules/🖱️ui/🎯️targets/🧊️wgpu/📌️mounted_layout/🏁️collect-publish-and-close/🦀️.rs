@@ -168,9 +168,11 @@ impl MountedLayoutJob {
     }
     #[cfg(any(test, feature = "testkit"))]
     pub fn close_one(&mut self)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-        let(mut preview,mut actual)=(0,semio_framework_job::RetainedCloneProgress::default());
-        let mut cx=semio_framework_job::StepContext::new(semio_framework_job::OperationId(0),semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(1,u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY),semio_framework_job::CancelToken::root_now(),||Some(0),&mut preview,&mut actual);
-        Ok(matches!(semio_framework_job::InteractiveJob::close_step(self,&mut cx)?,semio_framework_job::InteractiveJobCloseStep::Complete{..}))
+        let policy=ui_contract::UI_WORKER_RETIREMENT_POLICY;
+        let mut caller=fixture_caller();
+        let closed=caller.turn(policy,|cx|semio_framework_job::InteractiveJob::close_step(self,cx));
+        caller.retire(policy);
+        Ok(matches!(closed?,semio_framework_job::InteractiveJobCloseStep::Complete{..}))
     }
 
     pub fn terminal_is_empty(&self)->bool{
@@ -193,24 +195,27 @@ impl MountedLayoutJob {
 pub fn layout_tree_now(tree: &mut UiTree, root: NodeId, theme: Theme, width: f32, height: f32) -> bool {
     let identity = MountedLayoutIdentity { surface: UiSurfaceToken::new(0, 1), generation: 1, revision: 0, theme_revision: 0, viewport_revision: 0 };
     let Ok(mut job) = MountedLayoutJob::try_new(tree, root, identity, theme, width, height, false, ui_contract::FlowInline::Ltr) else { return false };
-    let cancel = semio_framework_job::CancelToken::root_now();
-    let mut preview = 0;
-    while !job.is_admitted() {
-        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
-        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(0), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), || Some(0), &mut preview,&mut actual_retained_progress);
-        if matches!(job.admit_one(tree, &mut cx), LayoutJobStep::Fault(_) | LayoutJobStep::Cancelled) {
-            return false;
+    let policy = ui_contract::UI_WORKER_RETIREMENT_POLICY;
+    let mut caller = fixture_caller();
+    let solved = (|| {
+        while !job.is_admitted() {
+            let turn = caller.turn(policy, |cx| Ok(job.admit_one(tree, cx))); if let Ok(LayoutJobStep::Fault(label)) = &turn { eprintln!("[DEBUG] admit fault {label}"); } if matches!(turn, Ok(LayoutJobStep::Fault(_) | LayoutJobStep::Cancelled) | Err(_)) { return false; }
         }
-    }
-    while job.stage() != LayoutJobStage::PublishResults {
-        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
-        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(0), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), || Some(0), &mut preview,&mut actual_retained_progress);
-        let outcome = match job.worker_one(&mut cx) { Ok(outcome) => outcome.map(semio_framework_job::JobOutcomeBorrow::into_descriptor), Err(_) => return false };
-        if let Some(mut descriptor) = outcome {
-            let failed = matches!(descriptor.kind(), semio_framework_job::JobOutcomeKind::Fault | semio_framework_job::JobOutcomeKind::Cancelled);
-            descriptor.acknowledge(ui_contract::UI_WORKER_RETIREMENT_POLICY);
-            if failed { job.begin_close(); while !job.close_one().unwrap() {} return false; }
+        while job.stage() != LayoutJobStage::PublishResults {
+            let Ok(outcome) = caller.turn(policy, |cx| Ok(job.worker_one(cx).map_err(semio_framework_job::OriginalTurnFailure::from)?.map(semio_framework_job::JobOutcomeBorrow::into_descriptor))) else { return false };
+            if let Some(mut descriptor) = outcome {
+                let failed = matches!(descriptor.kind(), semio_framework_job::JobOutcomeKind::Fault | semio_framework_job::JobOutcomeKind::Cancelled);
+                let _ = descriptor.acknowledge(policy);
+                if failed { return false; }
+            }
         }
+        true
+    })();
+    if !solved {
+        job.begin_close();
+        while !job.close_one().unwrap() {}
+        caller.retire(policy);
+        return false;
     }
     while let Some(result) = job.take_preview_one() {
         if let Some(node) = tree.node_mut(result.id) {
@@ -225,13 +230,21 @@ pub fn layout_tree_now(tree: &mut UiTree, root: NodeId, theme: Theme, width: f32
     loop {
         match job.publish_one(tree, published) {
             LayoutJobStep::Complete => break,
-            LayoutJobStep::Fault(_) | LayoutJobStep::Cancelled => return false,
+            LayoutJobStep::Fault(label) => { eprintln!("[DEBUG] publish fault {label}"); return false }
+            LayoutJobStep::Cancelled => return false,
             LayoutJobStep::Yield { .. } => {}
         }
     }
     job.begin_close();
     while !job.close_one().unwrap() {}
+    caller.retire(policy);
     true
+}
+
+#[cfg(any(test, feature = "testkit"))]
+fn fixture_caller() -> semio_framework_job::OriginalJobFixtureCaller {
+    let stock = semio_framework_job::RetainedCloneGrant { maximum_items: 1 << 32, maximum_copy_bytes: 1 << 32, maximum_capacity_bytes: 1 << 32, maximum_release_bytes: 1 << 32, maximum_depth: 1 << 10 };
+    semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(0), semio_framework_job::Generation(1), stock, || Some(0), u64::MAX, 1 << 40)
 }
 
 impl MountedLayoutFault {

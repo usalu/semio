@@ -8,8 +8,8 @@ import type { ReactElement } from "react";
 import { formatNumber, formatQuantity } from "@teaching/staffage";
 import type { Asset, Environment, EvaluatedState, Language, ParameterSource, StructuralResult, ThermalField, ThermalRegion } from "@teaching/staffage";
 import { useArchive } from "../../🧭️context/🟦️.tsx";
-import { cn } from "../../🪟️chrome/🟦️.tsx";
-import { DataTable, Fact, Row, SOURCES, num, sci } from "../🧱️tables/🟦️.tsx";
+import { Cell, Column, Note, Section, SectionTitle, cn } from "../../🪟️chrome/🟦️.tsx";
+import { DataTable, Fact, FactList, Row, SOURCES, num, sci } from "../🧱️tables/🟦️.tsx";
 
 const SHAPES: Readonly<Record<ParameterSource, string>> = { measured: "M12 4a8 8 0 100 16 8 8 0 000-16z", literature: "M5 5h14v14H5z", calibrated: "M12 3a9 9 0 100 18 9 9 0 000-18zm0 4a5 5 0 110 10 5 5 0 010-10z", "authored-estimate": "M12 4l9 16H3z", illustrative: "M12 3l9 9-9 9-9-9z" };
 
@@ -19,7 +19,7 @@ export function SourceTag(props: { readonly source: ParameterSource; readonly re
   const { t } = useArchive();
   const citation = reference === undefined ? undefined : asset?.provenance.references.find((candidate) => candidate.id === reference)?.citation ?? reference;
   return (
-    <span data-source={source} title={citation === undefined ? t(`detail.source.${source}.hint`) : `${t(`detail.source.${source}.hint`)} — ${citation}`} className={cn("inline-flex items-center gap-1 border px-single py-0.5 font-sans text-[0.65rem]", source === "illustrative" ? "border-dashed border-border" : "border-border")}>
+    <span data-source={source} title={citation === undefined ? t(`detail.source.${source}.hint`) : `${t(`detail.source.${source}.hint`)} — ${citation}`} className={cn("inline-flex items-center gap-1 bg-muted/60 px-single py-0.5 font-sans text-[0.65rem]", source === "illustrative" && "italic")}>
       <svg viewBox="0 0 24 24" width="10" height="10" aria-hidden="true" focusable="false">
         <path d={SHAPES[source]} fill={source === "measured" || source === "literature" || source === "calibrated" ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.5" strokeDasharray={source === "illustrative" ? "4 3" : undefined} />
       </svg>
@@ -50,17 +50,17 @@ function ThermalInspector(props: { readonly asset: Asset; readonly thermal: Ther
   const { t } = useArchive();
   const model = asset.thermal;
   return (
-    <div className="flex flex-col gap-double" data-inspector="thermal">
-      <h3 className="m-0 text-sm font-semibold">{t("detail.thermal.title")}</h3>
-      <p className="m-0 max-w-[70ch] text-xs leading-normal text-muted-foreground">{t("detail.thermal.honesty")}</p>
-      <dl className="m-0 grid gap-x-4 sm:grid-cols-3 xl:grid-cols-6">
+    <Column data-inspector="thermal">
+      <SectionTitle level={3}>{t("detail.thermal.title")}</SectionTitle>
+      <Note>{t("detail.thermal.honesty")}</Note>
+      <FactList>
         <Fact term={t("detail.env.air")}>{num(environment.airTempC, language)} °C</Fact>
         <Fact term={t("detail.env.radiant")}>{num(environment.meanRadiantTempC, language)} °C</Fact>
         <Fact term={t("detail.env.humidity")}>{num(environment.relativeHumidity * 100, language)} %</Fact>
         <Fact term={t("detail.env.wind")}>{num(environment.windMS, language)} m/s · {num(environment.windDirectionDeg, language)}°</Fact>
         <Fact term={t("detail.env.solar")}>{num(environment.solarWM2, language)} W/m²</Fact>
         <Fact term={t("detail.env.pressure")}>{num(environment.pressurePa, language)} Pa</Fact>
-      </dl>
+      </FactList>
       <DataTable caption={t("detail.thermal.regions")} head={[t("detail.col.region"), t("detail.col.kind"), t("detail.col.model"), t("detail.col.area"), t("detail.col.length"), t("detail.col.parameters"), t("detail.col.source")]}>
         {model.regions.map((region) => (
           <Row key={region.id} head={region.title[language]} cells={[region.kind, <span key="m" className="font-sans"><strong>{region.model}</strong><br />{t(`detail.model.${region.model}`)}</span>, `${num(region.areaM2, language)} m²`, `${num(region.characteristicLengthM, language)} m`, <ul key="p" className="m-0 list-none p-0 font-sans">{parameters(region, language, t).map((line) => <li key={line}>{line}</li>)}</ul>, <SourceTag key="s" source={region.source} reference={region.reference} asset={asset} />]} />
@@ -73,7 +73,7 @@ function ThermalInspector(props: { readonly asset: Asset; readonly thermal: Ther
           ))}
         </DataTable>
       )}
-      {thermal === null ? <p className="m-0 text-xs text-muted-foreground">{t("detail.thermal.unsolved")}</p> : (
+      {thermal === null ? <Note>{t("detail.thermal.unsolved")}</Note> : (
         <>
           <DataTable caption={t("detail.thermal.solved")} head={[t("detail.col.region"), t("detail.col.surfaceTemp"), t("detail.col.skin"), t("detail.col.radiant"), t("detail.col.net"), t("detail.col.convective"), t("detail.col.latent"), t("detail.col.moisture")]}>
             {model.regions.flatMap((region) => {
@@ -81,25 +81,25 @@ function ThermalInspector(props: { readonly asset: Asset; readonly thermal: Ther
               return field === undefined ? [] : [<Row key={region.id} head={region.title[language]} cells={[`${num(field.surfaceTempC, language)} °C`, field.skinTempC === null ? "—" : `${num(field.skinTempC, language)} °C`, flux(field.emittedRadiantWM2, language), flux(field.netRadiativeWM2, language), flux(field.sensibleWM2, language), flux(field.latentWM2, language), `${num(field.moistureGM2H, language)} g/(m²·h)`]} />];
             })}
           </DataTable>
-          <p className="m-0 text-xs text-muted-foreground">{t("detail.thermal.sign")}</p>
+          <Note>{t("detail.thermal.sign")}</Note>
           {thermal.body === null ? null : (
-            <dl className="m-0 grid gap-x-4 sm:grid-cols-2" data-totals="body">
+            <FactList data-totals="body">
               <Fact term={t("detail.thermal.core")}>{num(thermal.body.coreTempC, language)} °C</Fact>
               <Fact term={t("detail.thermal.skin")}>{num(thermal.body.meanSkinTempC, language)} °C</Fact>
-            </dl>
+            </FactList>
           )}
-          <dl className="m-0 grid gap-x-4 sm:grid-cols-3 xl:grid-cols-6" data-totals="thermal">
+          <FactList data-totals="thermal">
             <Fact term={t("detail.totals.radiant")}>{formatQuantity(thermal.totals.netRadiativeW, "W", language)}</Fact>
             <Fact term={t("detail.totals.convective")}>{formatQuantity(thermal.totals.sensibleW, "W", language)}</Fact>
             <Fact term={t("detail.totals.latent")}>{formatQuantity(thermal.totals.latentW, "W", language)}</Fact>
             <Fact term={t("detail.totals.moisture")}>{num(thermal.totals.moistureGH, language)} g/h</Fact>
             <Fact term={t("detail.totals.emitterSensible")}>{formatQuantity(thermal.totals.emitterSensibleW, "W", language)}</Fact>
             <Fact term={t("detail.totals.emitterLatent")}>{formatQuantity(thermal.totals.emitterLatentW, "W", language)}</Fact>
-          </dl>
+          </FactList>
         </>
       )}
       <Assumptions items={model.assumptions} language={language} />
-    </div>
+    </Column>
   );
 }
 
@@ -107,10 +107,10 @@ function Assumptions(props: { readonly items: readonly { readonly en: string; re
   const { t } = useArchive();
   if (props.items.length === 0) return null;
   return (
-    <div>
+    <Cell className="flex-col items-start">
       <h5 className="m-0 mb-single text-xs font-semibold">{t("detail.assumptions")}</h5>
       <ul className="m-0 list-disc pl-4 text-xs leading-normal">{props.items.map((item, index) => <li key={index}>{item[props.language]}</li>)}</ul>
-    </div>
+    </Cell>
   );
 }
 
@@ -120,15 +120,15 @@ function StructuralInspector(props: { readonly asset: Asset; readonly state: Eva
   const model = asset.structure;
   const massed = asset.rig.bones.filter((bone) => bone.mass !== undefined || bone.section !== undefined);
   return (
-    <div className="flex flex-col gap-double" data-inspector="structural">
-      <h3 className="m-0 text-sm font-semibold">{t("detail.structure.title")}</h3>
-      {asset.rig.kind === "anatomical" ? <p className="m-0 max-w-[70ch] text-xs leading-normal text-muted-foreground">{t("detail.structure.notClinical")}</p> : null}
-      <p className="m-0 text-xs text-muted-foreground">{t("detail.structure.sign")}</p>
-      <dl className="m-0 grid gap-x-4 sm:grid-cols-3">
+    <Column data-inspector="structural">
+      <SectionTitle level={3}>{t("detail.structure.title")}</SectionTitle>
+      {asset.rig.kind === "anatomical" ? <Note>{t("detail.structure.notClinical")}</Note> : null}
+      <Note>{t("detail.structure.sign")}</Note>
+      <FactList>
         <Fact term={t("detail.structure.gravity")}>{num(model.gravityMS2, language)} m/s²</Fact>
         <Fact term={t("detail.structure.dynamics")}>{t(`detail.dynamics.${model.dynamics}`)}</Fact>
         <Fact term={t("detail.structure.supports")}>{model.supports.length === 0 ? "—" : model.supports.map((id) => asset.anchors.find((anchor) => anchor.id === id)?.title[language] ?? id).join(", ")}</Fact>
-      </dl>
+      </FactList>
       <DataTable caption={t("detail.structure.bones")} head={[t("detail.col.bone"), t("detail.col.mass"), t("detail.col.com"), t("detail.col.section"), t("detail.col.source")]}>
         {massed.map((bone) => (
           <Row key={bone.id} head={bone.title[language]} cells={[bone.mass === undefined ? "—" : `${num(bone.mass.kg, language)} kg · ${t(`detail.distribution.${bone.mass.distribution}`)}`, bone.mass === undefined ? "—" : `(${num(bone.mass.comX, language)}; ${num(bone.mass.comY, language)}) m`, bone.section === undefined ? "—" : `A ${sci(bone.section.areaM2, language)} m² · I ${sci(bone.section.secondMomentM4, language)} m⁴ · c ${num(bone.section.extremeFibreM, language)} m · ${bone.section.material}`, bone.mass === undefined ? "—" : <SourceTag key="s" source={bone.mass.source} reference={bone.mass.reference} asset={asset} />]} />
@@ -139,31 +139,31 @@ function StructuralInspector(props: { readonly asset: Asset; readonly state: Eva
           <Row key={material.id} head={material.title[language]} cells={[material.elasticModulusPa === undefined ? "—" : formatQuantity(material.elasticModulusPa, "Pa", language), material.strengthPa === undefined ? "—" : formatQuantity(material.strengthPa, "Pa", language), material.densityKgM3 === undefined ? "—" : `${num(material.densityKgM3, language)} kg/m³`, material.conductivityWmK === undefined ? "—" : `${num(material.conductivityWmK, language)} W/(m·K)`, num(material.emissivity, language), <SourceTag key="s" source={material.source} reference={material.reference} asset={asset} />]} />
         ))}
       </DataTable>
-      {state === null || state.loads.length === 0 ? <p className="m-0 text-xs text-muted-foreground">{t("detail.structure.noLoads")}</p> : (
+      {state === null || state.loads.length === 0 ? <Note>{t("detail.structure.noLoads")}</Note> : (
         <DataTable caption={t("detail.structure.loads")} head={[t("detail.col.load"), t("detail.col.kind"), t("detail.col.fx"), t("detail.col.fy"), t("detail.col.fz"), t("detail.col.mx"), t("detail.col.my"), t("detail.col.moment")]}>
           {state.loads.map((load) => <Row key={`${load.id}-${load.at.x}-${load.at.y}`} head={load.title[language]} cells={[load.kind, formatQuantity(load.fxN, "N", language), formatQuantity(load.fyN, "N", language), formatQuantity(load.fzN, "N", language), formatQuantity(load.mxNm, "N·m", language), formatQuantity(load.myNm, "N·m", language), formatQuantity(load.mzNm, "N·m", language)]} />)}
         </DataTable>
       )}
-      {structure === null ? <p className="m-0 text-xs text-muted-foreground">{t("detail.structure.unsolved")}</p> : (
+      {structure === null ? <Note>{t("detail.structure.unsolved")}</Note> : (
         <>
-          <dl className="m-0 grid gap-x-4 sm:grid-cols-3" data-totals="structure">
+          <FactList data-totals="structure">
             <Fact term={t("detail.structure.totalMass")}>{num(structure.totalMassKg, language)} kg</Fact>
             <Fact term={t("detail.structure.centre")}>({num(structure.centreOfMass.x, language)}; {num(structure.centreOfMass.y, language)}) m</Fact>
             <Fact term={t("detail.structure.residual")}>{formatQuantity(structure.residual.fxN, "N", language)} · {formatQuantity(structure.residual.fyN, "N", language)} · {formatQuantity(structure.residual.fzN, "N", language)} · {formatQuantity(structure.residual.mxNm, "N·m", language)} · {formatQuantity(structure.residual.myNm, "N·m", language)} · {formatQuantity(structure.residual.mzNm, "N·m", language)}</Fact>
-          </dl>
+          </FactList>
           <DataTable caption={t("detail.structure.reactions")} head={[t("detail.col.anchor"), t("detail.col.fx"), t("detail.col.fy"), t("detail.col.fz"), t("detail.col.mx"), t("detail.col.my"), t("detail.col.moment"), t("detail.col.pressure"), t("detail.col.active")]}>
             {structure.reactions.map((reaction) => <Row key={reaction.anchor} head={asset.anchors.find((anchor) => anchor.id === reaction.anchor)?.title[language] ?? reaction.anchor} cells={[formatQuantity(reaction.fxN, "N", language), formatQuantity(reaction.fyN, "N", language), formatQuantity(reaction.fzN, "N", language), formatQuantity(reaction.mxNm, "N·m", language), formatQuantity(reaction.myNm, "N·m", language), formatQuantity(reaction.mzNm, "N·m", language), reaction.pressurePa === null ? "—" : formatQuantity(reaction.pressurePa, "Pa", language), t(reaction.active ? "detail.yes" : "detail.no")]} />)}
           </DataTable>
-          <details>
-            <summary className="min-h-6 cursor-pointer text-xs">{t("detail.structure.joints")}</summary>
-            <DataTable className="mt-single" caption={t("detail.structure.joints")} head={[t("detail.col.bone"), t("detail.col.axial"), t("detail.col.shear"), t("detail.col.fz"), t("detail.col.mx"), t("detail.col.my"), t("detail.col.torsion"), t("detail.col.jointMoment")]}>
+          <details data-shared-border-cell="">
+            <summary className="min-h-6 cursor-pointer px-double py-single text-xs">{t("detail.structure.joints")}</summary>
+            <DataTable caption={t("detail.structure.joints")} head={[t("detail.col.bone"), t("detail.col.axial"), t("detail.col.shear"), t("detail.col.fz"), t("detail.col.mx"), t("detail.col.my"), t("detail.col.torsion"), t("detail.col.jointMoment")]}>
               {Object.values(structure.joints).map((joint) => <Row key={joint.bone} head={asset.rig.bones.find((bone) => bone.id === joint.bone)?.title[language] ?? joint.bone} cells={[formatQuantity(joint.axialN, "N", language), formatQuantity(joint.shearN, "N", language), formatQuantity(joint.fzN, "N", language), formatQuantity(joint.mxNm, "N·m", language), formatQuantity(joint.myNm, "N·m", language), formatQuantity(joint.torsionNm, "N·m", language), formatQuantity(joint.momentNm, "N·m", language)]} />)}
             </DataTable>
           </details>
         </>
       )}
       <Assumptions items={model.assumptions} language={language} />
-    </div>
+    </Column>
   );
 }
 
@@ -171,13 +171,15 @@ function StructuralInspector(props: { readonly asset: Asset; readonly state: Eva
 export function ModelSection(props: { readonly asset: Asset; readonly state: EvaluatedState | null; readonly thermal: ThermalField | null; readonly structure: StructuralResult | null; readonly environment: Environment; readonly language: Language }): ReactElement {
   const { t } = useArchive();
   return (
-    <section aria-labelledby="detail-model" className="flex flex-col gap-double" data-section="model">
-      <h2 id="detail-model" className="m-0 font-serif text-lg">{t("detail.model.title")}</h2>
-      <ul className="m-0 flex list-none flex-wrap gap-single p-0" aria-label={t("detail.source.legend")}>
-        {SOURCES.map((source) => <li key={source}><SourceTag source={source} /></li>)}
-      </ul>
+    <Section aria-labelledby="detail-model" data-section="model">
+      <SectionTitle id="detail-model">{t("detail.model.title")}</SectionTitle>
+      <Cell>
+        <ul className="m-0 flex list-none flex-wrap gap-single p-0" aria-label={t("detail.source.legend")}>
+          {SOURCES.map((source) => <li key={source}><SourceTag source={source} /></li>)}
+        </ul>
+      </Cell>
       <ThermalInspector asset={props.asset} thermal={props.thermal} environment={props.environment} language={props.language} />
       <StructuralInspector asset={props.asset} state={props.state} structure={props.structure} language={props.language} />
-    </section>
+    </Section>
   );
 }

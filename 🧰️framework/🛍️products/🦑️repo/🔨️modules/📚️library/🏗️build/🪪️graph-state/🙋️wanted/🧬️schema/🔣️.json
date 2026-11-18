@@ -18,7 +18,7 @@
         "narrowMilliseconds": 30000,
         "pollMilliseconds": 2000,
         "ttlMilliseconds": 1200000,
-        "maximumProjects": 8192,
+        "maximumProjects": 16384,
         "serveHeadroomMegabytes": 9400,
         "availableFloorMegabytes": 2048,
         "claimTtlMilliseconds": 180000,
@@ -58,7 +58,7 @@
         },
         "projects": {
           "type": "array",
-          "maxItems": 8192,
+          "maxItems": 16384,
           "items": {
             "type": "string",
             "minLength": 1,
@@ -75,7 +75,7 @@
         },
         "heavy": {
           "type": "array",
-          "maxItems": 8192,
+          "maxItems": 16384,
           "items": {
             "type": "string",
             "minLength": 1,
@@ -84,7 +84,7 @@
         },
         "left": {
           "type": "array",
-          "maxItems": 8192,
+          "maxItems": 16384,
           "items": {
             "type": "string",
             "minLength": 1,
@@ -108,6 +108,7 @@
           "causeStalled": "graph: the fleet made no progress for {minutes} min although its server is alive",
           "causeLimit": "graph: the wait reached its maximum of {hours} h",
           "gave-up": "graph: the fleet delivered {arrived} of {wanted} projects within {seconds} s; {missing} remain, more than this machine can infer",
+          "noBuilder": "graph: no fleet machine advertises a graph builder, so {wanted} stale projects are inferred here at the full width of this machine without waiting for the fleet",
           "unreachable": "graph: the fleet cache cannot be reached, so {wanted} stale projects cannot be requested from it; this machine can infer {local}",
           "refused": "graph: nothing to wait for any longer: asked the fleet for {wanted} stale projects and received {arrived} within {seconds} s, {missing} remain and this machine can infer only {local}; try again when a machine with free memory serves the graph, or read the graph on a larger machine",
           "serving": "graph-server: serving {count} stale projects for {requester}",
@@ -119,11 +120,14 @@
           "lost": "graph-server: the claim for {requester} is held by {by}; this machine leaves the request to it",
           "resumed": "graph-server: continuing after a restart with {held} held request(s), {fresh} projects already reported fresh",
           "continuing": "graph-server: the read starts from the {count} projects that are published already",
+          "adopted": "graph-server: attached to the graph read (pid {pid}) that has run for {seconds} s; it is not started again",
+          "adoptedEnded": "graph-server: the graph read (pid {pid}) ended with status {status} while no server watched; its result is taken",
+          "detached": "graph-server: left the graph read (pid {pid}) running; the next process of the server attaches to it",
           "served": "graph-server: served {count} projects for {requester} in {seconds} s",
           "refreshing": "graph-server: refreshing the fleet generation in the background ({reason})",
           "refreshed": "graph-server: fleet generation refreshed in {seconds} s",
           "failed": "graph-server: the graph read ended with status {status} after {seconds} s: {detail}",
-          "stalled": "no wave was published for {minutes} min; the read is stopped and the next one starts from the waves published so far",
+          "stalled": "nothing advanced for {minutes} min (no wave, no counter of any phase); the read is stopped and the next one starts from what is stored",
           "tooLong": "the read ran longer than the maximum of {hours} h and is stopped; the next one starts from the waves published so far",
           "paused": "graph: paused after generation {generation}: {waiters} command(s) wait for memory on this machine ({seconds} s)",
           "capped": "graph-server: the claim for {requester} reached the lifetime of the cache server; it is taken again in a moment",
@@ -157,6 +161,7 @@
           "causeStalled": "Graph: die Flotte kam {minutes} min lang nicht voran, obwohl ihr Server lebt",
           "causeLimit": "Graph: das Warten erreichte sein Maximum von {hours} h",
           "gave-up": "Graph: die Flotte lieferte {arrived} von {wanted} Projekten innerhalb von {seconds} s; {missing} fehlen, mehr als diese Maschine berechnen kann",
+          "noBuilder": "Graph: keine Flottenmaschine meldet einen Graph-Builder, daher werden {wanted} veraltete Projekte hier mit der vollen Breite dieser Maschine berechnet, ohne auf die Flotte zu warten",
           "unreachable": "Graph: der Flotten-Cache ist nicht erreichbar, daher können {wanted} veraltete Projekte nicht angefragt werden; diese Maschine kann {local} berechnen",
           "refused": "Graph: es gibt nichts mehr abzuwarten: {wanted} veraltete Projekte bei der Flotte angefragt, {arrived} in {seconds} s erhalten, {missing} fehlen und diese Maschine kann nur {local} berechnen; erneut versuchen, sobald eine Maschine mit freiem Speicher den Graphen bedient, oder den Graphen auf einer größeren Maschine lesen",
           "serving": "Graph-Server: bediene {count} veraltete Projekte für {requester}",
@@ -168,11 +173,14 @@
           "lost": "Graph-Server: den Anspruch für {requester} hält {by}; diese Maschine überlässt ihm die Anfrage",
           "resumed": "Graph-Server: setze nach einem Neustart fort mit {held} gehaltenen Anfrage(n), {fresh} Projekte schon als aktuell gemeldet",
           "continuing": "Graph-Server: das Lesen beginnt bei den {count} Projekten, die schon veröffentlicht sind",
+          "adopted": "Graph-Server: am Graph-Lesen (pid {pid}) angehängt, das seit {seconds} s läuft; es wird nicht noch einmal gestartet",
+          "adoptedEnded": "Graph-Server: das Graph-Lesen (pid {pid}) endete mit Status {status}, während kein Server zusah; sein Ergebnis wird übernommen",
+          "detached": "Graph-Server: das Graph-Lesen (pid {pid}) läuft weiter; der nächste Prozess des Servers hängt sich daran an",
           "served": "Graph-Server: {count} Projekte für {requester} in {seconds} s bedient",
           "refreshing": "Graph-Server: aktualisiere die Flotten-Generation im Hintergrund ({reason})",
           "refreshed": "Graph-Server: Flotten-Generation in {seconds} s aktualisiert",
           "failed": "Graph-Server: das Lesen des Graphen endete nach {seconds} s mit Status {status}: {detail}",
-          "stalled": "seit {minutes} min wurde keine Welle veröffentlicht; das Lesen wird beendet und das nächste beginnt bei den bisher veröffentlichten Wellen",
+          "stalled": "seit {minutes} min hat sich nichts bewegt (keine Welle, kein Zähler einer Phase); das Lesen wird beendet und das nächste beginnt bei dem, was gespeichert ist",
           "tooLong": "das Lesen dauerte länger als das Maximum von {hours} h und wird beendet; das nächste beginnt bei den bisher veröffentlichten Wellen",
           "paused": "Graph: pausiert nach Generation {generation}: {waiters} Befehl(e) warten auf Speicher auf diesem Rechner ({seconds} s)",
           "capped": "Graph-Server: der Anspruch für {requester} erreichte die Lebensdauer des Cache-Servers; er wird gleich neu genommen",
@@ -228,7 +236,7 @@
         },
         "projects": {
           "type": "array",
-          "maxItems": 8192,
+          "maxItems": 16384,
           "items": {
             "type": "string",
             "minLength": 1,
@@ -263,7 +271,7 @@
         },
         "left": {
           "type": "array",
-          "maxItems": 8192,
+          "maxItems": 16384,
           "items": {
             "type": "string",
             "minLength": 1,
@@ -329,7 +337,7 @@
               },
               "list": {
                 "type": "array",
-                "maxItems": 8192,
+                "maxItems": 16384,
                 "items": {
                   "type": "string",
                   "minLength": 1,
@@ -369,6 +377,39 @@
         }
       }
     },
+    "ReadStop": {
+      "description": "EN: why the server stopped a graph read, written to read-stop.json BEFORE the signal is sent: the verdict, the milliseconds without progress, the newest generation and the highest counter of every phase. DE: warum der Server ein Graph-Lesen beendet hat, vor dem Signal in read-stop.json geschrieben: Urteil, Millisekunden ohne Fortschritt, neueste Generation und der höchste Zähler jeder Phase.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "verdict", "atMs", "silentMilliseconds", "generation", "counters", "runner", "read"],
+      "properties": {
+        "version": { "const": 1 },
+        "verdict": { "enum": ["stalled", "too-long", "memory-overrun"] },
+        "atMs": { "type": "integer", "minimum": 0 },
+        "silentMilliseconds": { "type": "integer", "minimum": 0 },
+        "generation": { "type": ["integer", "null"] },
+        "counters": { "type": "object", "additionalProperties": { "type": "array", "items": { "type": "integer", "minimum": 0 } } },
+        "runner": { "type": "integer" },
+        "read": { "type": ["integer", "null"] }
+      }
+    },
+    "ReadRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "reason", "runner", "read", "startedMs", "beatMs", "log", "status", "endedMs"],
+      "description": "What the detached runner of a graph read keeps in read-record.json, replaced atomically every beat: the kind of read, the pid of the runner and of the read, when the read started, when the runner last wrote, the log file with the progress output of the read and, once the read ended, its exit status and the time. A process of the graph server that finds a record whose runner lives and beat lately attaches to the read instead of starting another; a record with a status is the result of a read that ended while no server watched.",
+      "properties": {
+        "version": { "const": 1 },
+        "reason": { "type": "string", "enum": ["request", "refresh"] },
+        "runner": { "type": "integer", "minimum": 1 },
+        "read": { "type": ["integer", "null"], "minimum": 1 },
+        "startedMs": { "type": "integer", "minimum": 0 },
+        "beatMs": { "type": "integer", "minimum": 0 },
+        "log": { "type": "string", "minLength": 1, "maxLength": 1024 },
+        "status": { "type": ["integer", "null"] },
+        "endedMs": { "type": ["integer", "null"], "minimum": 0 }
+      }
+    },
     "Server": {
       "const": {
         "roundMilliseconds": 5000,
@@ -394,6 +435,10 @@
         "leasePollMilliseconds": 5000,
         "leaseNoticeMilliseconds": 60000,
         "leaseWaitMilliseconds": 1200000,
+        "readBeatMilliseconds": 2000,
+        "readPollMilliseconds": 1000,
+        "readOrphanMilliseconds": 1800000,
+        "readLogsKept": 5,
         "leaseResourcePrefixes": [
           "native-fixed-image:"
         ]

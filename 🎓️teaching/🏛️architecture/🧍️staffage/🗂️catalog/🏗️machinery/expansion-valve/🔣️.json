@@ -1327,6 +1327,8 @@
             "key": "flow",
             "heatW": -2.4
           },
+          "ratedPowerW": 0,
+          "ratedPowerBasis": "passive",
           "source": "authored-estimate",
           "reference": "incropera-2018"
         },

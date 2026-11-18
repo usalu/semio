@@ -1,0 +1,4 @@
+f1 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧮️derived-nodes/🧩️closure-kinds/📒️manifest/🟨️.mjs mod
+f2 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧮️derived-nodes/🧩️closure-kinds/🧭️row-paths/🟨️.mjs mod
+f3 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.mjs mod
+f4 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/✂️cutoff/🧪️tests/🧾️vouch/🟦️.ts mod

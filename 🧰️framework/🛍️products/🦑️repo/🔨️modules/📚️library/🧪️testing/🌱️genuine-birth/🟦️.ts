@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {prepareRepoCpuTestProfileArgumentsV1} from "../../🏗️build/⏱️profile/📊️cpu/🟨️.mjs";
 import { basename, isAbsolute, join, relative, resolve } from "node:path";
 import { realpath } from "node:fs/promises";
@@ -86,7 +87,7 @@ export async function runGenuineBunTestV1(request: GenuineBunTestRequestV1): Pro
     if (!birth.sdk) return start(original);
     const { withRepositoryToolingStoreV1 } = await import("../../⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts"), { withNxToolingUseV1, nxToolingUseStorageV1 } = await import("../../⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🟦️.ts");
     return withRepositoryToolingStoreV1(root, original, createIssuedResourceControlV1(original, "fixture:tooling-store", 0), async (_store, phase) => {
-      const toolkitRoot = await realpath(join(root, ".nx/installation")), identity = basename(toolkitRoot);
+      const toolkitRoot = await realpath(machinePathV1(root, ".nx/installation")), identity = basename(toolkitRoot);
       return withNxToolingUseV1(nxToolingUseStorageV1(root), { identity, toolkitRoot, invocation: original }, phase, () => start(original, { SEMIO_NX_TOOLING_ROOT: toolkitRoot, SEMIO_NX_TOOLING_IDENTITY: identity }));
     });
   });

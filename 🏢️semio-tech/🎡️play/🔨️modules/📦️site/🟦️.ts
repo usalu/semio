@@ -8,9 +8,9 @@ import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { buildViteArtifact } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
 import { prefetchPlayMapTiles } from "./🗺️map-tiles/🟦️.ts";
-import { playRuntimeComponentIds } from "../🧩️runtime/🟦️.ts";
+import { PLAY_HOST, playRuntimeComponentIds } from "../🧩️runtime/🟦️.ts";
 import { playModuleCatalogFindingsV1 } from "./📄pages/🟦️.ts";
-import { withPublishedPlayPagesV1 } from "./📄pages/📦️publication/🟦️.ts";
+import { publishPlayPageCohortV1, withPublishedPlayPagesV1 } from "./📄pages/📦️publication/🟦️.ts";
 
 async function cancellable(run: (signal: AbortSignal) => Promise<void>): Promise<void> {
   const controller = new AbortController(), cancel = (): void => { controller.abort(Error("Play release step cancelled")); process.exitCode = 130; };
@@ -28,6 +28,7 @@ export async function runBuildScript(context: Readonly<{ root: string; repoRoot:
   ]);
   await cancellable(async () => {
     await buildReleasePipelineV1(context.repoRoot, pipeline, { facet:"browser",invocation:context.invocation,components: new Set(playRuntimeComponentIds()), network: repositoryCargoNetworkV1(context.invocation, context.repoRoot), control: scriptCompilerAdmissionControlV1(context.invocation, "native:driver", 0) });
+    await publishPlayPageCohortV1(context.repoRoot, context.invocation, PLAY_HOST);
   });
 }
 

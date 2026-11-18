@@ -3556,7 +3556,8 @@
        0.0,
        0.0
       ]
-     }
+     },
+     "slender": true
     },
     {
      "id": "tower-head-tie-x-3",
@@ -14120,11 +14121,11 @@
    "decisions": [
     {
      "en": "Detailed model: every 2D member of the 1:50 drawing is a real bar (322 members as repeat families): four 160 mm mast chords, 90 mm ties and 80 mm diagonals on four faces, trapezoidal jib (140 mm top chords at +-0.74 m, 120 mm bottom rails at +-0.45 m, 80 mm side diagonals, 60 mm top bracing), counter-jib, A-frame tower head with 16 diagonals and four tie levels, slings, a rung ladder inside the mast (texture, 125 rungs); ballast as four separate blocks, frustum mast foot, slewing ring ellipse 2.8 m along the jib by 2.0 m, platform, rounded cab with two glazing panes flush with its walls, three stacked counterweight slabs, winch house as six hollow walls with louvre and vent stack, trolley frame with axle wheels, sheaves, block, swept hook, tapered skip, eight 19 mm rope pieces and three 12 mm pendants as slender solids. Bars at least 20 times longer than wide are flagged slender (C2); the ties are 90 mm instead of the drawn 100 mm so that they qualify.",
-     "de": "Detailmodell: Jeder 2D-Stab der Zeichnung 1:50 ist ein echter Stab (322 Stäbe als Wiederholungsfamilien): vier Mastgurte 160 mm, Riegel 90 mm und Diagonalen 80 mm auf vier Seiten, trapezförmiger Ausleger (Obergurte 140 mm bei +-0,74 m, Untergurtschienen 120 mm bei +-0,45 m, Seitendiagonalen 80 mm, Kopfverband 60 mm), Gegenausleger, A-Bock mit 16 Diagonalen und vier Riegelebenen, Anschlagseile, eine Leiter im Mast (Textur, 125 Sprossen); Ballast aus vier getrennten Blöcken, Mastfuß als Pyramidenstumpf, Drehkranz-Ellipse 2,8 m entlang des Auslegers mal 2,0 m, Plattform, gerundete Kabine mit zwei bündigen Scheiben, drei gestapelte Gegengewichtsplatten, Windenhaus aus sechs hohlen Wänden mit Lamelle und Lüfterstutzen, Katzrahmen mit Radachsen, Seilscheiben, Flasche, geführter Haken, konischer Kübel, acht Seilstücke mit 19 mm und drei Abspannungen mit 12 mm als schlanke Körper. Stäbe, die mindestens 20-mal länger als breit sind, tragen das Zeichen schlank (C2); die Riegel sind 90 mm statt der gezeichneten 100 mm, damit sie dazugehören."
+     "de": "Detailmodell: Jeder 2D-Stab der Zeichnung 1:50 ist ein echter Stab (322 St\u00e4be als Wiederholungsfamilien): vier Mastgurte 160 mm, Riegel 90 mm und Diagonalen 80 mm auf vier Seiten, trapezf\u00f6rmiger Ausleger (Obergurte 140 mm bei +-0,74 m, Untergurtschienen 120 mm bei +-0,45 m, Seitendiagonalen 80 mm, Kopfverband 60 mm), Gegenausleger, A-Bock mit 16 Diagonalen und vier Riegelebenen, Anschlagseile, eine Leiter im Mast (Textur, 125 Sprossen); Ballast aus vier getrennten Bl\u00f6cken, Mastfu\u00df als Pyramidenstumpf, Drehkranz-Ellipse 2,8 m entlang des Auslegers mal 2,0 m, Plattform, gerundete Kabine mit zwei b\u00fcndigen Scheiben, drei gestapelte Gegengewichtsplatten, Windenhaus aus sechs hohlen W\u00e4nden mit Lamelle und L\u00fcfterstutzen, Katzrahmen mit Radachsen, Seilscheiben, Flasche, gef\u00fchrter Haken, konischer K\u00fcbel, acht Seilst\u00fccke mit 19 mm und drei Abspannungen mit 12 mm als schlanke K\u00f6rper. St\u00e4be, die mindestens 20-mal l\u00e4nger als breit sind, tragen das Zeichen schlank (C2); die Riegel sind 90 mm statt der gezeichneten 100 mm, damit sie dazugeh\u00f6ren."
     },
     {
      "en": "Thermal: a reference to every body solid of a region; the cab is two nested shells (30 mm lining outside, 3 mm steel inside) and each window three stacked sheets (4 / 12 / 4 mm); the hoist motor is a box inside the winch house; the winch vent emitter is a 400 mm outlet ring on its stack. Structure: every lattice bar is a member of its own (292 bars) with the platform, the ballast blocks, the tower head and the ropes, the slew bearing, the jib and counter-jib roots, trolley and block are joints, counterweight, trolley, skip content, winch motor and ballast are masses, a 7 m x 3.5 m fixed block is the foundation support.",
-     "de": "Thermik: ein Verweis auf jeden Körper einer Region; die Kabine besteht aus zwei verschachtelten Schalen (30 mm Auskleidung außen, 3 mm Stahl innen), jedes Fenster aus drei gestapelten Scheiben (4 / 12 / 4 mm); der Hubmotor ist ein Kasten im Windenhaus; der Lüfter-Emitter ist ein 400-mm-Austrittsring auf dem Stutzen. Tragwerk: jeder Gitterstab ist ein eigener Stab (292 Stäbe), dazu Plattform, Ballastblöcke, Turmspitze und Seile; Drehlager, Wurzeln von Ausleger und Gegenausleger, Katze und Flasche sind Gelenke, Gegengewicht, Katze, Kübelinhalt, Windenmotor und Ballast sind Massen, ein Block 7 m x 3,5 m ist das Fundamentauflager."
+     "de": "Thermik: ein Verweis auf jeden K\u00f6rper einer Region; die Kabine besteht aus zwei verschachtelten Schalen (30 mm Auskleidung au\u00dfen, 3 mm Stahl innen), jedes Fenster aus drei gestapelten Scheiben (4 / 12 / 4 mm); der Hubmotor ist ein Kasten im Windenhaus; der L\u00fcfter-Emitter ist ein 400-mm-Austrittsring auf dem Stutzen. Tragwerk: jeder Gitterstab ist ein eigener Stab (292 St\u00e4be), dazu Plattform, Ballastbl\u00f6cke, Turmspitze und Seile; Drehlager, Wurzeln von Ausleger und Gegenausleger, Katze und Flasche sind Gelenke, Gegengewicht, Katze, K\u00fcbelinhalt, Windenmotor und Ballast sind Massen, ein Block 7 m x 3,5 m ist das Fundamentauflager."
     }
    ]
   },
@@ -14949,11 +14950,11 @@
      "profile": [
       [
        0.0,
-       0.0065
+       0.0095
       ],
       [
        5.75,
-       0.0065
+       0.0095
       ]
      ],
      "axis": [
@@ -14978,11 +14979,11 @@
      "profile": [
       [
        0.0,
-       0.0065
+       0.0095
       ],
       [
        5.75,
-       0.0065
+       0.0095
       ]
      ],
      "axis": [
@@ -15007,11 +15008,11 @@
      "profile": [
       [
        0.0,
-       0.0065
+       0.0095
       ],
       [
        5.75,
-       0.0065
+       0.0095
       ]
      ],
      "axis": [
@@ -15036,11 +15037,11 @@
      "profile": [
       [
        0.0,
-       0.0065
+       0.0095
       ],
       [
        5.75,
-       0.0065
+       0.0095
       ]
      ],
      "axis": [
@@ -15065,11 +15066,11 @@
      "profile": [
       [
        0.0,
-       0.0065
+       0.0095
       ],
       [
        5.75,
-       0.0065
+       0.0095
       ]
      ],
      "axis": [
@@ -15094,11 +15095,11 @@
      "profile": [
       [
        0.0,
-       0.0065
+       0.0095
       ],
       [
        5.75,
-       0.0065
+       0.0095
       ]
      ],
      "axis": [
@@ -15123,11 +15124,11 @@
      "profile": [
       [
        0.0,
-       0.0065
+       0.0095
       ],
       [
        5.75,
-       0.0065
+       0.0095
       ]
      ],
      "axis": [
@@ -15152,11 +15153,11 @@
      "profile": [
       [
        0.0,
-       0.0065
+       0.0095
       ],
       [
        5.75,
-       0.0065
+       0.0095
       ]
      ],
      "axis": [
@@ -17575,7 +17576,8 @@
        0.0,
        0.0
       ]
-     }
+     },
+     "slender": true
     },
     {
      "id": "tower-head-tie-x-3",
@@ -19150,11 +19152,11 @@
    "decisions": [
     {
      "en": "Redrawn against the 1:100 drawing: every stroke of the lattice is a bar centred on it and as wide as the pen draws it (mast chords 80 mm, diagonals 50 mm, horizontals 30 mm; jib chords 80 mm at +-0.8 m on top and rails 80 mm at +-0.45 m below, diagonals 60 mm, end frames 40 mm, top bracing as a zigzag; counter-jib chords 90 mm, diagonals and bracing 63 mm); the mast diagonals pitch 2 m on all four faces; ballast is one slab with the mast-foot core in its hole, the counterweight one block, the cab a single rounded box, ropes and pendants 13 mm.",
-     "de": "Neu gezeichnet gegen die Zeichnung 1:100: Jeder Strich des Gitters ist ein Stab, auf ihm zentriert und so breit wie der Stift zeichnet (Mastgurte 80 mm, Diagonalen 50 mm, Riegel 30 mm; Auslegergurte 80 mm bei +-0,8 m oben und Schienen 80 mm bei +-0,45 m unten, Diagonalen 60 mm, Endrahmen 40 mm, Kopfverband als Zickzack; Gegenauslegergurte 90 mm, Diagonalen und Verband 63 mm); die Mastdiagonalen steigen auf allen vier Seiten je 2 m; der Ballast ist eine Platte mit dem Mastfußkern in ihrem Loch, das Gegengewicht ein Block, die Kabine ein gerundeter Kasten, Seile und Abspannungen 13 mm."
+     "de": "Neu gezeichnet gegen die Zeichnung 1:100: Jeder Strich des Gitters ist ein Stab, auf ihm zentriert und so breit wie der Stift zeichnet (Mastgurte 80 mm, Diagonalen 50 mm, Riegel 30 mm; Auslegergurte 80 mm bei +-0,8 m oben und Schienen 80 mm bei +-0,45 m unten, Diagonalen 60 mm, Endrahmen 40 mm, Kopfverband als Zickzack; Gegenauslegergurte 90 mm, Diagonalen und Verband 63 mm); die Mastdiagonalen steigen auf allen vier Seiten je 2 m; der Ballast ist eine Platte mit dem Mastfu\u00dfkern in ihrem Loch, das Gegengewicht ein Block, die Kabine ein gerundeter Kasten, Seile und Abspannungen 13 mm."
     },
     {
      "en": "Thermal and structure are derived from the body like at 1:50 but with one skin per region (layers are merged at this scale); structure members are the lattice bars themselves, joints sit inside the jib and counter-jib chords; same support, masses and joints as 1:50 in simpler sizes.",
-     "de": "Thermik und Tragwerk wie bei 1:50 aus dem Körper abgeleitet, aber mit einer Haut je Region (Schichten sind in diesem Maßstab zusammengefasst); die Tragwerksstäbe sind die Gitterstäbe selbst, die Gelenke sitzen in den Gurten von Ausleger und Gegenausleger; gleiches Auflager und gleiche Massen wie bei 1:50 in einfacheren Größen."
+     "de": "Thermik und Tragwerk wie bei 1:50 aus dem K\u00f6rper abgeleitet, aber mit einer Haut je Region (Schichten sind in diesem Ma\u00dfstab zusammengefasst); die Tragwerksst\u00e4be sind die Gitterst\u00e4be selbst, die Gelenke sitzen in den Gurten von Ausleger und Gegenausleger; gleiches Auflager und gleiche Massen wie bei 1:50 in einfacheren Gr\u00f6\u00dfen."
     }
    ]
   },
@@ -19978,11 +19980,11 @@
      "profile": [
       [
        0.0,
-       0.013
+       0.0095
       ],
       [
        5.75,
-       0.013
+       0.0095
       ]
      ],
      "axis": [
@@ -20007,11 +20009,11 @@
      "profile": [
       [
        0.0,
-       0.013
+       0.0095
       ],
       [
        5.75,
-       0.013
+       0.0095
       ]
      ],
      "axis": [
@@ -20036,11 +20038,11 @@
      "profile": [
       [
        0.0,
-       0.013
+       0.0095
       ],
       [
        5.75,
-       0.013
+       0.0095
       ]
      ],
      "axis": [
@@ -20065,11 +20067,11 @@
      "profile": [
       [
        0.0,
-       0.013
+       0.0095
       ],
       [
        5.75,
-       0.013
+       0.0095
       ]
      ],
      "axis": [
@@ -20094,11 +20096,11 @@
      "profile": [
       [
        0.0,
-       0.013
+       0.0095
       ],
       [
        5.75,
-       0.013
+       0.0095
       ]
      ],
      "axis": [
@@ -20123,11 +20125,11 @@
      "profile": [
       [
        0.0,
-       0.013
+       0.0095
       ],
       [
        5.75,
-       0.013
+       0.0095
       ]
      ],
      "axis": [
@@ -20152,11 +20154,11 @@
      "profile": [
       [
        0.0,
-       0.013
+       0.0095
       ],
       [
        5.75,
-       0.013
+       0.0095
       ]
      ],
      "axis": [
@@ -20181,11 +20183,11 @@
      "profile": [
       [
        0.0,
-       0.013
+       0.0095
       ],
       [
        5.75,
-       0.013
+       0.0095
       ]
      ],
      "axis": [
@@ -20273,8 +20275,8 @@
       5.2,
       0.135
      ],
-     "r0": 0.013,
-     "r1": 0.013
+     "r0": 0.006,
+     "r1": 0.006
     },
     {
      "id": "pendant-fore-r",
@@ -20294,8 +20296,8 @@
       5.2,
       -0.135
      ],
-     "r0": 0.013,
-     "r1": 0.013
+     "r0": 0.006,
+     "r1": 0.006
     },
     {
      "id": "pendant-back",
@@ -20315,8 +20317,8 @@
       5.1,
       0.0
      ],
-     "r0": 0.013,
-     "r1": 0.013
+     "r0": 0.006,
+     "r1": 0.006
     },
     {
      "id": "mast-chord-px",
@@ -22317,11 +22319,11 @@
      "profile": [
       [
        0.0,
-       0.015
+       0.01
       ],
       [
        1.35144,
-       0.015
+       0.01
       ]
      ],
      "axis": [
@@ -22346,11 +22348,11 @@
      "profile": [
       [
        0.0,
-       0.015
+       0.01
       ],
       [
        1.35144,
-       0.015
+       0.01
       ]
      ],
      "axis": [
@@ -22375,11 +22377,11 @@
      "profile": [
       [
        0.0,
-       0.015
+       0.01
       ],
       [
        1.35144,
-       0.015
+       0.01
       ]
      ],
      "axis": [
@@ -22404,11 +22406,11 @@
      "profile": [
       [
        0.0,
-       0.015
+       0.01
       ],
       [
        1.35144,
-       0.015
+       0.01
       ]
      ],
      "axis": [
@@ -23748,11 +23750,11 @@
    "decisions": [
     {
      "en": "Redrawn against the 1:200 drawing: the jib has 100 mm top chords at +-0.8 m and 100 mm bottom rails at +-0.45 m, 86 mm diagonals on both sides, 86 mm top bracing and 60 mm end frames, the counter-jib has 107 mm chords and 63 mm diagonals and bracing, the mast four 100 mm chords with 60 mm diagonals on all faces and end ties at both ends (the horizontals of 1:100 are dropped), the tower head legs, frame and diagonals only; the winch house walls are 30 mm, the hook is omitted, ropes and pendants are 26 mm.",
-     "de": "Neu gezeichnet gegen die Zeichnung 1:200: Der Ausleger hat Obergurte von 100 mm bei +-0,8 m und Untergurtschienen von 100 mm bei +-0,45 m, Diagonalen 60 mm auf beiden Seiten, Kopfverband 86 mm und Endrahmen 60 mm, der Gegenausleger hat Gurte 107 mm sowie Diagonalen und Verband 63 mm, der Mast vier Gurte 100 mm mit Diagonalen 60 mm auf allen Seiten und Endriegeln an beiden Enden (die Querriegel von 1:100 entfallen), die Turmspitze nur Beine, Rahmen und Diagonalen; die Wände des Windenhauses sind 30 mm, der Haken entfällt, Seile und Abspannungen sind 26 mm."
+     "de": "Neu gezeichnet gegen die Zeichnung 1:200: Der Ausleger hat Obergurte von 100 mm bei +-0,8 m und Untergurtschienen von 100 mm bei +-0,45 m, Diagonalen 60 mm auf beiden Seiten, Kopfverband 86 mm und Endrahmen 60 mm, der Gegenausleger hat Gurte 107 mm sowie Diagonalen und Verband 63 mm, der Mast vier Gurte 100 mm mit Diagonalen 60 mm auf allen Seiten und Endriegeln an beiden Enden (die Querriegel von 1:100 entfallen), die Turmspitze nur Beine, Rahmen und Diagonalen; die W\u00e4nde des Windenhauses sind 30 mm, der Haken entf\u00e4llt, Seile und Abspannungen sind 26 mm."
     },
     {
      "en": "Thermal and structure are derived from the body with one skin per region; the lattice bars are members, the joints are 500 mm blocks in the chords; the region areas are sums over the exposed bar surfaces.",
-     "de": "Thermik und Tragwerk aus dem Körper abgeleitet mit einer Haut je Region; die Gitterstäbe sind Stäbe des Tragwerks, die Gelenke 500-mm-Blöcke in den Gurten; die Regionsflächen sind Summen über die freien Stabflächen."
+     "de": "Thermik und Tragwerk aus dem K\u00f6rper abgeleitet mit einer Haut je Region; die Gitterst\u00e4be sind St\u00e4be des Tragwerks, die Gelenke 500-mm-Bl\u00f6cke in den Gurten; die Regionsfl\u00e4chen sind Summen \u00fcber die freien Stabfl\u00e4chen."
     }
    ]
   },
@@ -26600,11 +26602,11 @@
    "decisions": [
     {
      "en": "Merged masses: mast, jib and counter-jib are prisms of their envelope (marked envelope: true, the drawing fills them), the tower head is four 100 mm legs with a base frame and four tie levels, the winch house four hollow 75 mm walls, ballast and counterweight single blocks, ropes 65 mm, the pendants 65 mm and 140 mm as the drawing strokes are wide; the cab and platform are boxes.",
-     "de": "Zusammengefasste Massen: Mast, Ausleger und Gegenausleger sind Prismen ihrer Hüllen (mit envelope: true markiert, die Zeichnung füllt sie), die Turmspitze besteht aus vier Beinen von 100 mm mit Grundrahmen und vier Riegelebenen, das Windenhaus aus vier hohlen 75-mm-Wänden, Ballast und Gegengewicht sind einzelne Blöcke, Seile 65 mm, die Abspannungen 65 mm und 140 mm so breit wie die Striche der Zeichnung; Kabine und Plattform sind Kästen."
+     "de": "Zusammengefasste Massen: Mast, Ausleger und Gegenausleger sind Prismen ihrer H\u00fcllen (mit envelope: true markiert, die Zeichnung f\u00fcllt sie), die Turmspitze besteht aus vier Beinen von 100 mm mit Grundrahmen und vier Riegelebenen, das Windenhaus aus vier hohlen 75-mm-W\u00e4nden, Ballast und Gegengewicht sind einzelne Bl\u00f6cke, Seile 65 mm, die Abspannungen 65 mm und 140 mm so breit wie die Striche der Zeichnung; Kabine und Plattform sind K\u00e4sten."
     },
     {
      "en": "Thermal: references to the body solids; the lattice region is covered by the envelope prisms and the tower head bars, the hull surface of a prism stands for a porous lattice and is left out of the area sums (C22). Structure: the real chords inside the prisms (four 150 mm mast chords, two 140 mm jib chords, two 120 mm rails and four 120 mm counter-jib chords), tower head, ropes and platform are members, the jib and counter-jib roots 900 mm joint blocks, the same support and masses.",
-     "de": "Thermik: Verweise auf die Körper; die Gitterregion ist durch die Hüllprismen und die Stäbe der Turmspitze abgedeckt, die Hüllfläche eines Prismas steht für ein poröses Gitter und bleibt aus den Flächensummen heraus (C22). Tragwerk: die echten Gurte in den Prismen (vier Mastgurte 150 mm, zwei Auslegergurte 140 mm, zwei Schienen 120 mm und vier Gegenauslegergurte 120 mm), Turmspitze, Seile und Plattform sind Stäbe, die Wurzeln von Ausleger und Gegenausleger 900-mm-Gelenkblöcke, gleiches Auflager und gleiche Massen."
+     "de": "Thermik: Verweise auf die K\u00f6rper; die Gitterregion ist durch die H\u00fcllprismen und die St\u00e4be der Turmspitze abgedeckt, die H\u00fcllfl\u00e4che eines Prismas steht f\u00fcr ein por\u00f6ses Gitter und bleibt aus den Fl\u00e4chensummen heraus (C22). Tragwerk: die echten Gurte in den Prismen (vier Mastgurte 150 mm, zwei Auslegergurte 140 mm, zwei Schienen 120 mm und vier Gegenauslegergurte 120 mm), Turmspitze, Seile und Plattform sind St\u00e4be, die Wurzeln von Ausleger und Gegenausleger 900-mm-Gelenkbl\u00f6cke, gleiches Auflager und gleiche Massen."
     }
    ]
   }

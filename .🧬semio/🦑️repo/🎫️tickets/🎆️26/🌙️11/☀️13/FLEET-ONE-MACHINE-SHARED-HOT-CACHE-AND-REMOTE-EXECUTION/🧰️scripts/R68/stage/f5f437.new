@@ -1,0 +1,39 @@
+import Ajv from"ajv";
+import{afterAll,expect,test}from"bun:test";
+import{spawnSync}from"node:child_process";
+import{mkdtempSync,rmSync,utimesSync,writeFileSync}from"node:fs";
+import{tmpdir}from"node:os";
+import{join}from"node:path";
+import{fileURLToPath}from"node:url";
+import{FRESH_POLICY_V1,fileDigestV1,freshVerdictV1,observedDigestsV1,refreshStateV1}from"../🟦️.ts";
+import schema from"../🧬️schema/🔣️.json"with{type:"json"};
+import fixture from"./🔣️.json"with{type:"json"};
+
+/** 🌱️ Contract: a stored record that no longer holds is told apart from one that does by the digests of the files it read (equal to an independent Python model on the fixture), a record younger than the minimum age is never judged stale, the claim state of a refresh differs from the state of the record and from the refresh of any other stale entry, and the digest of a file follows its content.
+ * @see ../🟦️.ts */
+const scratch:string[]=[],here=(name:string)=>fileURLToPath(new URL(name,import.meta.url));
+afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true});});
+
+test("the rows, the verdicts and the refresh states equal the fixture, the schema and the Python oracle",()=>{
+ expect(new Ajv({strict:false}).validate({$ref:"#/definitions/Policy",definitions:schema.definitions},FRESH_POLICY_V1)).toBe(true);
+ const run=spawnSync("python3",["-I",here("./🐍️.py"),here("../🧬️schema/🔣️.json"),here("./🔣️.json")],{encoding:"utf8"});
+ expect(run.status,run.stderr).toBe(0);
+ const oracle=JSON.parse(run.stdout) as {digests:string[][][];verdicts:unknown[];states:string[]};
+ expect(fixture.verdicts.map(row=>observedDigestsV1(row.rows as never).map(each=>[each.path,each.sha256]))).toEqual(oracle.digests);
+ expect(fixture.verdicts.map(row=>freshVerdictV1({rows:row.rows as never,hashOf:path=>(row.tree as Record<string,string>)[path],createdMs:row.createdMs,now:row.now}))).toEqual(oracle.verdicts);
+ expect(fixture.states.map(row=>refreshStateV1({digest:row.digest} as never,row.noteHash).digest)).toEqual(oracle.states);
+ expect(oracle.verdicts.map((row:any)=>row.fresh)).toEqual([true,false,false,true,true]);
+});
+
+test("a refresh is claimed under a state of its own for every stale entry",()=>{
+ const state={version:1,frame:{kind:"project-inference"},digest:"d".repeat(64)} as never;
+ const one=refreshStateV1(state,"1".repeat(64)),two=refreshStateV1(state,"2".repeat(64));
+ expect(one.digest).not.toBe((state as {digest:string}).digest);expect(one.digest).not.toBe(two.digest);expect(refreshStateV1(state,"1".repeat(64)).digest).toBe(one.digest);
+});
+
+test("the digest of a file follows its content and a missing file has none",()=>{
+ const dir=mkdtempSync(join(tmpdir(),"fresh-"));scratch.push(dir);const file=join(dir,"a.txt");
+ writeFileSync(file,"one");const first=fileDigestV1(file);expect(first).toMatch(/^[0-9a-f]{64}$/u);expect(fileDigestV1(file)).toBe(first);
+ writeFileSync(file,"two");utimesSync(file,new Date(Date.now()+5000),new Date(Date.now()+5000));expect(fileDigestV1(file)).not.toBe(first);
+ expect(fileDigestV1(join(dir,"absent"))).toBeUndefined();
+});

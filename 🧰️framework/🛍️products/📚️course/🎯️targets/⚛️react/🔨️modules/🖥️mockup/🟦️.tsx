@@ -97,7 +97,7 @@ function NodeGraph({ value, locale }: { readonly value: GrasshopperMockup; reado
 /** 🪟️ A keyboard-scrollable, labelled preview, without controls that could alter an answer. */
 export function MockupView({ value, locale }: { readonly value: Mockup; readonly locale: CourseLocale }): ReactElement {
   const id = useId();
-  return <figure className="course-mockup" data-mockup={value.kind}>
+  return <figure className="course-mockup" data-border-probe-art="" data-mockup={value.kind}>
     <figcaption id={id}>{localized(value.caption, locale)}</figcaption>
     <div className="course-mockup-scroll" role="region" aria-labelledby={id} tabIndex={0}>{value.kind === "excel" ? <Workbook value={value} locale={locale} /> : <NodeGraph value={value} locale={locale} />}</div>
   </figure>;

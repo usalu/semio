@@ -14,7 +14,7 @@ import { TASK_KIND_LABELS, localized, type CourseLocale, type CourseText } from 
 import { formatPoints } from "../📏️quantity/🟦️.ts";
 import { CHALLENGE_LABELS, ChallengeChooser } from "../⛰️challenge/🟦️.tsx";
 import { badgesEarnedIn } from "../🏅️badges/🟦️.tsx";
-import { CardAction, CardIcon, Dialog, Facts, Glyph, IconLabel, PageFrame, CourseCard, TaskGlyph, textPresentation, type PaneView } from "../🪟️chrome/🟦️.tsx";
+import { CELL, CardAction, CardIcon, CardSection, Dialog, Facts, Glyph, IconLabel, PageFrame, CourseCard, RowList, TaskGlyph, textPresentation, type PaneView } from "../🪟️chrome/🟦️.tsx";
 import { PanePeers, usePresenceView } from "../👥️presence/🟦️.tsx";
 import { PRESENCE_ANCHORS } from "../👥️presence/👁️view/🟦️.ts";
 import { CrowdDoor, ScoreFigure, TaskFigures, crowdGate, crowdShown, type CrowdGate, type OthersChoice } from "../🗳️crowd/🟦️.tsx";
@@ -47,15 +47,15 @@ function actionsOf(props: QuizProps, ask?: () => void): { readonly primary: Reac
   const open = openRunOf(state, quiz.id);
   const opened = openChallengeOf(state, quiz.id) ?? challenge;
   const last = lastSubmittedRunOf(state, quiz.id);
-  const shown = last === undefined ? [] : [<CardAction key="last" onClick={() => session.open({ screen: "results", run: last })}>{text("course.home.lastResult")}</CardAction>];
+  const shown = last === undefined ? [] : [<CardAction key="last" {...CELL} onClick={() => session.open({ screen: "results", run: last })}>{text("course.home.lastResult")}</CardAction>];
   const start = (
-    <CardAction primary disabled={busy || locked} onClick={open === undefined ? () => act((signal) => session.startRun(quiz.id, challenge, signal)) : ask}>
+    <CardAction {...CELL} primary disabled={busy || locked} onClick={open === undefined ? () => act((signal) => session.startRun(quiz.id, challenge, signal)) : ask}>
       {text(state.learnerView?.best[quiz.id] === undefined ? "course.home.start" : "course.home.again", { challenge: text(CHALLENGE_LABELS[challenge]) })}
     </CardAction>
   );
   if (open === undefined) return { primary: start, secondary: shown };
   const resume = (
-    <CardAction key="resume" primary={ask === undefined || opened === challenge} disabled={busy || locked} onClick={() => act((signal) => session.resumeRun(open, signal))}>
+    <CardAction key="resume" {...CELL} primary={ask === undefined || opened === challenge} disabled={busy || locked} onClick={() => act((signal) => session.resumeRun(open, signal))}>
       {text("course.home.resume", { challenge: text(CHALLENGE_LABELS[opened]) })}
     </CardAction>
   );
@@ -103,8 +103,7 @@ export function QuizCardView(props: QuizProps & { readonly revealed: boolean; re
       revealed={revealed}
       icon={<Glyph emoji={quiz.emoji} className="text-sm" />}
       title={localized(quiz.title, locale)}
-      footerLeft={secondary.length === 0 ? undefined : secondary}
-      footerRight={primary}
+      footerRight={<>{secondary}{primary}</>}
     >
       <p className="m-0 text-xs leading-normal text-foreground">{localized(quiz.description, locale)}</p>
       <Facts items={facts(props, learning)} />
@@ -133,17 +132,21 @@ function QuizCrowd(props: QuizProps & { readonly gate: CrowdGate; readonly think
   if (gate === "off") return null;
   const title = localized(quiz.title, locale);
   return (
-    <CourseCard id={`${id}-crowd`} card="course-crowd" icon={<CardIcon icon="users" />} title={text("course.crowd.title")}>
+    <CourseCard flush id={`${id}-crowd`} card="course-crowd" icon={<CardIcon icon="users" />} title={text("course.crowd.title")}>
       <CrowdDoor gate={gate} onAsk={() => session.askCrowd(quiz.id)} onUnask={() => session.unaskCrowd(quiz.id)} text={text} />
       {!crowdShown(gate) ? null : (crowd?.runs ?? 0) === 0 && thinking.length === 0 ? (
-        <p data-crowd-empty="" className="m-0 text-sm text-muted-foreground">
-          {text("course.crowd.nobody")}
-        </p>
+        <CardSection>
+          <p data-crowd-empty="" className="m-0 text-sm text-muted-foreground">
+            {text("course.crowd.nobody")}
+          </p>
+        </CardSection>
       ) : (
         <>
-          <ScoreFigure name={text("course.crowd.scoresFigure", { subject: title })} bins={crowd?.scores} own={state.learnerView?.best[quiz.id]?.score} text={text} locale={locale} />
+          <CardSection>
+            <ScoreFigure name={text("course.crowd.scoresFigure", { subject: title })} bins={crowd?.scores} own={state.learnerView?.best[quiz.id]?.score} text={text} locale={locale} />
+          </CardSection>
           {(sheet?.sheet.tasks ?? []).map((task) => (
-            <section key={task.id} aria-labelledby={`${id}-${task.id}`} className="flex flex-col gap-single">
+            <section key={task.id} aria-labelledby={`${id}-${task.id}`} {...CELL} className="flex flex-col gap-single p-double">
               <h3 data-icon-host="" id={`${id}-${task.id}`} className="m-0 text-sm font-semibold">
                 <IconLabel icon={task.icon}>{localized(task.title, locale)}</IconLabel>
               </h3>
@@ -181,13 +184,17 @@ export function QuizPage(props: QuizProps & { readonly view: PaneView; readonly 
   const close = (): void => setAsking(false);
   return (
     <PageFrame page={`quiz:${quiz.id}`} overlay={<PanePeers scope={course === undefined ? undefined : roomScope(course, { screen: "quiz", quiz: quiz.id })} opened={view.opened} />}>
-      <CourseCard id={`${id}-quiz`} card="quiz" anchor={PRESENCE_ANCHORS.quiz(quiz.id)} icon={<Glyph emoji={quiz.emoji} className="text-sm" />} title={localized(quiz.title, locale)} footerLeft={secondary.length === 0 ? undefined : secondary} footerRight={primary}>
-        <p className="m-0 text-sm leading-normal">{localized(quiz.description, locale)}</p>
-        <Facts items={facts(props, learning)} />
+      <CourseCard flush id={`${id}-quiz`} card="quiz" anchor={PRESENCE_ANCHORS.quiz(quiz.id)} icon={<Glyph emoji={quiz.emoji} className="text-sm" />} title={localized(quiz.title, locale)} footerRight={<>{secondary}{primary}</>}>
+        <CardSection>
+          <p className="m-0 text-sm leading-normal">{localized(quiz.description, locale)}</p>
+          <Facts items={facts(props, learning)} />
+        </CardSection>
         <ChallengeChooser challenge={challenge} onChange={onChallenge} text={text} locale={locale} />
-        {opened === undefined ? null : <p className="m-0 text-xs">{text("course.challenge.openRun", { challenge: text(CHALLENGE_LABELS[opened]) })}</p>}
-        <p className="m-0 text-xs text-muted-foreground">{text("course.quizPage.hint")}</p>
-        <Earned {...props} />
+        <CardSection>
+          {opened === undefined ? null : <p className="m-0 text-xs">{text("course.challenge.openRun", { challenge: text(CHALLENGE_LABELS[opened]) })}</p>}
+          <p className="m-0 text-xs text-muted-foreground">{text("course.quizPage.hint")}</p>
+          <Earned {...props} />
+        </CardSection>
       </CourseCard>
       {asking && opened !== undefined ? (
         <Dialog
@@ -219,17 +226,21 @@ export function QuizPage(props: QuizProps & { readonly view: PaneView; readonly 
           </p>
         </Dialog>
       ) : null}
-      <CourseCard id={`${id}-tasks`} card="course-tasks" anchor={PRESENCE_ANCHORS.quizTasks(quiz.id)} icon={<CardIcon icon="list" />} title={text("course.quizPage.tasks")}>
-        <ol role="list" className="m-0 flex list-none flex-col gap-single p-0">
+      <CourseCard flush id={`${id}-tasks`} card="course-tasks" anchor={PRESENCE_ANCHORS.quizTasks(quiz.id)} icon={<CardIcon icon="list" />} title={text("course.quizPage.tasks")}>
+        <RowList as="ol">
           {quiz.tasks.map((task, index) => (
-            <li key={task.id}><AccessGate course={state.course} page={quiz.id} task={task.id} at={at} locale={locale} text={text}><div data-icon-host="" data-pet-prop={petProp(quiz.id, task.id)} className="flex min-w-0 items-center gap-double border border-normal px-double py-single text-sm">
-              <span className="course-nowrap w-[2ch] shrink-0 font-semibold tabular-nums text-muted-foreground">{index + 1}</span>
-              <TaskGlyph task={task} />
-              <span className="min-w-0 flex-1 font-medium">{localized(task.title, locale)}</span>
-              <span className="text-xs text-muted-foreground">{text(TASK_KIND_LABELS[task.kind])}</span>
-            </div></AccessGate></li>
+            <li key={task.id} {...CELL}>
+              <AccessGate course={state.course} page={quiz.id} task={task.id} at={at} locale={locale} text={text}>
+                <div data-icon-host="" data-pet-prop={petProp(quiz.id, task.id)} className="flex min-w-0 items-center gap-double px-double py-single text-sm">
+                  <span className="course-nowrap w-[2ch] shrink-0 font-semibold tabular-nums text-muted-foreground">{index + 1}</span>
+                  <TaskGlyph task={task} />
+                  <span className="min-w-0 flex-1 font-medium">{localized(task.title, locale)}</span>
+                  <span className="text-xs text-muted-foreground">{text(TASK_KIND_LABELS[task.kind])}</span>
+                </div>
+              </AccessGate>
+            </li>
           ))}
-        </ol>
+        </RowList>
       </CourseCard>
       <QuizCrowd {...props} gate={gate} thinking={course === undefined ? [] : (thinking.get(thinkingScope(course, quiz.id)) ?? [])} />
     </PageFrame>

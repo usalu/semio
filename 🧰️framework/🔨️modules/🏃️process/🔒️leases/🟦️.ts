@@ -1,7 +1,7 @@
 import{initializeResourceLeaseContinuationV1,requireResourceLeaseContinuationCatalogV1,readResourceLeaseContinuationV1,writeResourceLeaseContinuationV1,resourceLeaseContinuationStartV1,type ResourceLeaseContinuationKindV1,type ResourceLeaseTransactionPhaseV1}from"./♻️retirement/🧭️continuation/🟦️.ts";
 import cleanupLeaseSchema from"./🧹️cleanup/🧬️schema/🔣️.json" with{type:"json"};
 import metadataSchema from "./📦️metadata/🧬️schema/🔣️.json" with {type:"json"};
-import {captureResourceLeaseCandidateV1,requireResourceLeaseCandidateV1,readOwnedResourceLeaseV1,resourceLeaseBusyV1,resourceLeaseRetirementNamesV1,resourceLeaseRetirementScanLimitsV1,resourceLeaseRetirementIdlePolicyV1,finishResourceLeaseCleanupV1,openResourceLeaseDatabaseV1,ResourceLeaseAdmissionFinalizerV1,type ResourceLeaseDatabaseV1,type ResourceLeaseCandidateV1} from "./♻️retirement/🟦️.ts";
+import {captureResourceLeaseCandidateV1,requireResourceLeaseCandidateV1,readOwnedResourceLeaseV1,resourceLeaseBusyV1,resourceLeaseRetirementNamesV1,resourceLeaseRetirementScanLimitsV1,resourceLeaseRetirementIdlePolicyV1,resourceLeaseRetirementMessagesV1,finishResourceLeaseCleanupV1,openResourceLeaseDatabaseV1,ResourceLeaseAdmissionFinalizerV1,type ResourceLeaseDatabaseV1,type ResourceLeaseCandidateV1} from "./♻️retirement/🟦️.ts";
 import { createHash, randomBytes } from "node:crypto";
 import { AsyncLocalStorage } from "node:async_hooks";
 import {beginLeaseOrderV1,classifyLeaseResourceV1,forgetLeaseV1,currentLeaseLineageV1,heldLeasesV1,holdsSharedInProcessV1,leaseOrderPolicyV1,leaseTaskIdV1,type LeaseOrderGuardV1} from "./🧭️order/🟦️.ts";
@@ -27,7 +27,7 @@ import {agentSessionAddressOfEnvironmentV1} from "../🪪️agent-sessions/🗄�
 import waitPolicySchema from "./⏳️wait/🧬️schema/📜️policy.json" with { type: "json" };
 import boundedSchema from "./📦️bounded/🧬️schema/🔣️.json" with {type:"json"};
 import {compileJsonSchemaSubset} from "../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import { freeSpaceSyncV1 } from "../🆓️free-space/🟦️.ts";
+import { freeSpaceSyncV1, type FreeSpaceV1 } from "../🆓️free-space/🟦️.ts";
 
 const retirementSchema=queueSchema.definitions.RetirementPolicy,custodySchema=queueSchema.definitions.ClaimCustodyPolicy,retentionSchema=queueSchema.definitions.ClaimRetentionPolicy,boundedContract=compileJsonSchemaSubset(boundedSchema);
 
@@ -353,8 +353,67 @@ function admitResourceLeaseV1(options:Pick<LeaseOptions,"directory"|"resource"|"
 }
 async function acquireResourceLeaseBody(options:LeaseOptions,cleanup?:CleanupLeaseScope):Promise<ResourceLease>{
  options=Object.freeze({...options});options.signal.throwIfAborted();if(options.resource===admissionResource)throw refuseProcessV1("refused", "leases.admission-resource-reserved");if(typeof options.resource!=="string"||!options.resource.length||options.resource.length>4096||options.resource.includes("\0"))throw refuseProcessV1("invalid", "leases.invalid-resource");if(!["shared","exclusive"].includes(options.mode))throw refuseProcessV1("invalid", "leases.invalid-access-mode");if(options.timeoutMs!==undefined&&(!Number.isFinite(options.timeoutMs)||options.timeoutMs<0))throw refuseProcessV1("invalid", "leases.invalid-timeout");const started=Date.now();remaining(options,started,cleanup);
- if(!cleanup&&options.timeoutMs!==0&&leaseOrderPolicyV1().gate.releaseWhileWaiting)return acquireWaitingOutsideGate(options,started);
- return acquireHoldingGate(options,started,cleanup);
+ const attempt=():Promise<ResourceLease>=>!cleanup&&options.timeoutMs!==0&&leaseOrderPolicyV1().gate.releaseWhileWaiting?acquireWaitingOutsideGate(options,started):acquireHoldingGate(options,started,cleanup);
+ if(cleanup||options.control===undefined||reliefRunning)return attempt();
+ await relieveLeaseStoreBeforeCreateV1(options);
+ try{return await attempt();}
+ catch(error){
+  if(!leaseStoreFullV1(error)||options.signal.aborted)throw error;
+  const relief=await relieveLeaseStoreV1(options.directory,options.control);
+  try{return await attempt();}
+  catch(second){throw leaseStoreFullV1(second)?annotateLeaseStoreFullV1(second,relief,resolve(options.directory)):second;}
+ }
+}
+
+/** 🛟️ What one relief of a full lease store retired. */
+export type ResourceLeaseReliefV1=Readonly<{claims:number;databases:number;queues:number;freedBytes:number;failure?:string}>;
+/** 🚨️ Whether a failure is a full disk or an exhausted quota: the open explanation marks it (`space`, probe `EDQUOT` or `ENOSPC`), or SQLite reports the file full (`SQLITE_FULL`, result code 13) or the operating system its errno. */
+export function leaseStoreFullV1(error:unknown):boolean{
+ const value=error!==null&&typeof error==="object"?error as{space?:unknown;probe?:unknown;code?:unknown;errcode?:unknown}:undefined;
+ return value?.space===true||value?.probe==="EDQUOT"||value?.probe==="ENOSPC"||["ENOSPC","EDQUOT","SQLITE_FULL"].includes(String(value?.code))||(typeof value?.errcode==="number"&&(value.errcode&255)===13);
+}
+let reliefRunning=false;
+/** 🛟️ Retires settled queue claims first and idle lease databases with their empty queues next, on the pressure clock, so a full lease store frees space the way the sweep does but at once and for this caller: the slices of the sweep policy, the directory gate taken for a few milliseconds each, a busy gate, a cancellation or a failure (a retirement that must itself create a file on the full disk) ends the relief with what it retired and the reason in `failure`. Never recurses: retirement that itself needs a lease does not start another relief. */
+export async function relieveLeaseStoreV1(directory:string,control:ResourceLeaseControl):Promise<ResourceLeaseReliefV1>{
+ const policy=resourceLeaseRetirementIdlePolicyV1,root=resolve(directory),patience={admissionPatienceMs:policy.admissionPatienceMilliseconds};
+ let claims=0,databases=0,queues=0,freed=0,failure:string|undefined;
+ if(reliefRunning)return Object.freeze({claims,databases,queues,freedBytes:freed});
+ reliefRunning=true;
+ try{
+  for(let turn=0;turn<policy.claimTurnsPerSweep;turn++){const row=await retireResourceQueueClaimsV1(root,control,0,patience);claims+=row.retired;freed+=row.allocatedBytes;if(!row.retired)break;}
+  for(let slice=0;slice<policy.slicesPerSweep;slice++){
+   checkResourceLeaseControl(control);
+   const row=await retireIdleResourceLeasesV1(root,control,0,{idleMilliseconds:policy.pressureIdleMilliseconds,nowMilliseconds:Date.now(),maximumCandidates:policy.pressureCandidatesPerSlice,...patience});
+   databases+=row.retired;queues+=row.queues;freed+=row.allocatedBytes;
+   if(row.complete)break;
+  }
+ }catch(error){if(!control.signal.aborted&&!resourceLeaseBusyV1(error))failure=(error instanceof Error?error.message:String(error)).slice(0,200);}
+ finally{reliefRunning=false;}
+ return Object.freeze({claims,databases,queues,freedBytes:freed,...failure===undefined?{}:{failure}});
+}
+/** 🌡️ Whether a lease store with this free space is relieved before a create: the free space is unknown or below `createReserveBytes`. A share that is merely low is left to the pressure clock of the sweep (`pressureFreeRatio`), which already runs on its own interval. A pure function. */
+export function leaseStoreNeedsReliefV1(space:FreeSpaceV1|undefined,policy:Readonly<{createReserveBytes:number}>=resourceLeaseRetirementIdlePolicyV1):boolean{
+ return space===undefined||space.availableBytes<policy.createReserveBytes;
+}
+let freeSpaceReader:(directory:string)=>FreeSpaceV1|undefined=directory=>freeSpaceSyncV1(directory,{nearest:true});
+/** 🧪️ Runs `body` with `reader` as the free-space question of the lease store, then restores the previous reader. */
+export async function withLeaseFreeSpaceReaderV1<T>(reader:(directory:string)=>FreeSpaceV1|undefined,body:()=>Promise<T>):Promise<T>{const previous=freeSpaceReader;freeSpaceReader=reader;try{return await body();}finally{freeSpaceReader=previous;}}
+const lastCreateRelief=new Map<string,number>();
+/** 🌡️ Relieves the lease store before a create can fail: when this acquisition would create a new lease database and the store has fewer than `createReserveBytes` free bytes (or an unmeasurable or pressured volume), idle databases and settled claims are retired first, at most once per `createReliefIntervalMilliseconds` per directory and never for a try-lock. A relief that fails is only a missed optimisation: the create then runs and the reactive relief of the failure takes over. */
+async function relieveLeaseStoreBeforeCreateV1(options:LeaseOptions):Promise<void>{
+ const control=options.control,policy=resourceLeaseRetirementIdlePolicyV1;if(control===undefined)return;
+ try{
+  const root=resolve(options.directory);
+  if(lstatSync(resourceLeasePathV1(root,options.resource),{throwIfNoEntry:false})!==undefined)return;
+  if(!leaseStoreNeedsReliefV1(freeSpaceReader(root)))return;
+  if(claimSweepDueV1(lastCreateRelief,root,Date.now(),policy.createReliefIntervalMilliseconds,options.timeoutMs))await relieveLeaseStoreV1(root,control);
+ }catch(error){if(options.signal.aborted)throw error;}
+}
+/** 🗣️ The failure of a create that is still full after the relief, in English and German: the original message first (it names the directory that is full) and what the relief retired. */
+function annotateLeaseStoreFullV1(error:unknown,relief:ResourceLeaseReliefV1,directory:string):Error{
+ const message=error instanceof Error?error.message:String(error),text=(language:"en"|"de")=>resourceLeaseRetirementMessagesV1.full[language].replace(/\{(\w+)\}/gu,(all,name:string)=>({message:language==="en"?message:"",databases:relief.databases,queues:relief.queues,claims:relief.claims,freed:(relief.freedBytes/1048576).toFixed(1)+" MiB",directory}[name as"message"]??all)+"");
+ const annotated=new Error(`${text("en")} / ${text("de").trim()}`,{cause:error}),source=error as{code?:unknown;errno?:unknown;errcode?:unknown;path?:unknown;directory?:unknown;probe?:unknown;space?:unknown};
+ return Object.assign(annotated,{...source.code!==undefined?{code:source.code}:{},...source.errno!==undefined?{errno:source.errno}:{},...source.errcode!==undefined?{errcode:source.errcode}:{},path:source.path,directory:source.directory??directory,probe:source.probe,space:true,relief});
 }
 /** 🐢️ Waits for a busy lease without holding the directory admission gate: each attempt takes the gate shared, tries once and gives the gate back, so retirement and every other opener are never blocked by a waiter. */
 async function acquireWaitingOutsideGate(options:LeaseOptions,started:number):Promise<ResourceLease>{

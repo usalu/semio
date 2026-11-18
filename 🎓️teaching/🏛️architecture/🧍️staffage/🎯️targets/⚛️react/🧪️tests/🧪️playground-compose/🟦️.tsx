@@ -74,7 +74,7 @@ describe("🧪️ composition", () => {
 });
 
 describe("🧪️ placement events", () => {
-  const placement: Placement = { id: "p1", asset: "walking-commuter", xM: 3, zM: 0, yawDeg: 0, pick: null, offsetS: 0, mirrored: false };
+  const placement: Placement = { id: "p1", asset: "walking-commuter", xM: 3, zM: 0, yawDeg: 0, pick: null, offsetS: 0, mirrored: false, startS: 0, durationS: null, speed: 1, loop: true, holdS: null };
 
   it("adds, moves, clamps, duplicates and removes", () => {
     let state = reduce(INITIAL_STATE, { type: "placement-added", placement });

@@ -49,7 +49,7 @@ test("cached units are recorded with their measurements, marked, excluded from h
 test("the compiler chain of a build names the cache wrapper only when the environment names a cache",()=>{
  expect(compilerWrapperEnvironmentV1("/t/scheduler","/gen",{})).toEqual({});
  expect(compilerWrapperEnvironmentV1("/t/scheduler","/gen",{SEMIO_UNIT_CACHE_ROOT:"/m/u"})).toEqual({});
- expect(compilerWrapperEnvironmentV1("/t/scheduler","/gen",{SEMIO_UNIT_CACHE_ROOT:"/m/u",SEMIO_UNIT_CACHE_SCRIPT:"/s.ts",SEMIO_UNIT_CACHE:"off"})).toEqual({});
- const chain=compilerWrapperEnvironmentV1("/t/scheduler","/gen",{SEMIO_UNIT_CACHE_ROOT:"/m/u",SEMIO_UNIT_CACHE_SCRIPT:"/s.ts",RUSTC:"rustc-x",SEMIO_UNIT_CACHE_SLOTS:"3",SEMIO_UNIT_CACHE_TOOLCHAIN:"tc"});
- expect(chain.RUSTC_WRAPPER).toBe(process.execPath);expect(chain.RUSTC).toBe("/s.ts");expect(JSON.parse(chain.SEMIO_UNIT_CACHE_INNER)).toEqual(["/t/scheduler","rustc-x"]);expect(chain.SEMIO_UNIT_CACHE_LANE_ROOT).toBe("/gen");expect(chain.SEMIO_UNIT_CACHE_SLOTS).toBe("3");expect(chain.SEMIO_UNIT_CACHE_BUILD_SCRIPTS).toBe("on");expect(chain.SEMIO_UNIT_CACHE_BROKER_REPLAY).toBe("on");expect(chain.SEMIO_UNIT_CACHE_TOOLCHAIN).toBe("tc");
+ expect(compilerWrapperEnvironmentV1("/t/scheduler","/gen",{SEMIO_UNIT_CACHE_ROOT:"/m/u",SEMIO_UNIT_CACHE_WRAPPER:"/w/rustc-wrapper",SEMIO_UNIT_CACHE:"off"})).toEqual({});
+ const chain=compilerWrapperEnvironmentV1("/t/scheduler","/gen",{SEMIO_UNIT_CACHE_ROOT:"/m/u",SEMIO_UNIT_CACHE_WRAPPER:"/w/rustc-wrapper",RUSTC:"rustc-x",SEMIO_UNIT_CACHE_SLOTS:"3",SEMIO_UNIT_CACHE_TOOLCHAIN:"tc"});
+ expect(chain.RUSTC_WRAPPER).toBe("/w/rustc-wrapper");expect("RUSTC" in chain,"the compiler stays the real one").toBe(false);expect(JSON.parse(chain.SEMIO_UNIT_CACHE_INNER)).toEqual(["/t/scheduler","rustc-x"]);expect(chain.SEMIO_UNIT_CACHE_LANE_ROOT).toBe("/gen");expect(chain.SEMIO_UNIT_CACHE_SLOTS).toBe("3");expect(chain.SEMIO_UNIT_CACHE_BUILD_SCRIPTS).toBe("on");expect(chain.SEMIO_UNIT_CACHE_BROKER_REPLAY).toBe("on");expect(chain.SEMIO_UNIT_CACHE_TOOLCHAIN).toBe("tc");
 });

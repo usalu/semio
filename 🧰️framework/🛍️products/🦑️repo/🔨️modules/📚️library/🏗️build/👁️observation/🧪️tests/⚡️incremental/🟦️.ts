@@ -18,11 +18,13 @@ import {scriptInvocationEnvironment} from "../../../../../../../../🔨️module
 import {withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import {captureOwnedCommandV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import{privateRepositoryWorkspaceV1,testNxToolkitDirectoryV1}from"../../../../🧪️testing/🧫️private-repository/🟦️.ts";
-const repository=await privateRepositoryWorkspaceV1();
+import{privateRepositoryWorkspaceV1,testCheckoutRootV1,testNxToolkitDirectoryV1}from"../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+import{existsSync as existsRootV1}from"node:fs";import{dirname as dirnameRootV1,join as joinRootV1}from"node:path";
+const repositoryRootV1=(()=>{let directory=import.meta.dir;while(!existsRootV1(joinRootV1(directory,"MODULE.bazel"))&&dirnameRootV1(directory)!==directory)directory=dirnameRootV1(directory);return directory;})();
+const repository=await privateRepositoryWorkspaceV1("graph");
 
 type Snapshot=Record<string,string>;
-type Outcome={result:string;counts:Record<string,number>;raced?:boolean;persisted?:{records:number;foreignLibraryFacts:number;authorityRows:number}};
+type Outcome={result:string;counts:Record<string,number>;raced?:boolean;persisted?:{records:number;foreignLibraryFacts:number;foreignPaths:string[];authorityRows:number}};
 
 /** 🧪️ Loads actual TypeScript Source in Node with the admitted immutable compiler. */
 function nodeTypeScriptLoaderV1(compiler:string):string{
@@ -32,18 +34,18 @@ function nodeTypeScriptLoaderV1(compiler:string):string{
 /** 🎬️ One Node process per pass family: `oracle` is a cold serial full inference of one snapshot; `scenario` replays the concurrent-edit timeline in parallel. */
 const childSourceV1=`const fs=require('node:fs'),{join,dirname}=require('node:path'),crypto=require('node:crypto');(async()=>{const routing=await import(process.env.SEMIO_G1_ROUTING),storage=await import(process.env.SEMIO_G1_STORAGE);await routing.receiveScriptProcessInvocation(process.env,original=>storage.withRepositoryBuildInferenceDatasetV1(process.env.SEMIO_G1_WORKSPACE,original,routing.createIssuedResourceControlV1(original,"graph:node-dataset",0),JSON.parse(process.env.SEMIO_G1_DATASET),async(scope,phaseControl)=>{
 const fixture=JSON.parse(fs.readFileSync(process.env.SEMIO_G1_FIXTURE,'utf8')),cwd=process.cwd(),originalRead=fs.readFileSync,originalWrite=fs.writeFileSync,write=(path,content)=>{fs.mkdirSync(dirname(join(cwd,path)),{recursive:true});originalWrite(join(cwd,path),content);},age=(path,milliseconds)=>{const at=new Date(Date.now()-milliseconds);fs.utimesSync(join(cwd,path),at,at);};
-await new Promise(resolve=>setTimeout(resolve,2200));const plugin=await import(process.env.SEMIO_G1_PLUGIN),observation=await import(process.env.SEMIO_G1_OBSERVER);await plugin.libraryBootstrap;
+const observation=await import(process.env.SEMIO_G1_OBSERVER);await new Promise(resolve=>setTimeout(resolve,observation.OBSERVATION_LIMITS_V1.racyMilliseconds+500));const plugin=await import(process.env.SEMIO_G1_PLUGIN);await plugin.libraryBootstrap;
 const files=fixture.owners.map(root=>root+'/📋️project.json'),run=async concurrency=>JSON.stringify(await plugin.default.createNodesV2[1](files,{projectConcurrency:concurrency},{workspaceRoot:cwd,invocation:original,phaseControl})),counts=()=>({...observation.projectInferenceCountsV1()}),hook=(path,after)=>{let fired=false;fs.readFileSync=function(file,...args){const bytes=originalRead.call(this,file,...args);if(!fired&&String(file)===join(cwd,path)){fired=true;after();}return bytes;};require('node:module').syncBuiltinESMExports();return()=>{fs.readFileSync=originalRead;require('node:module').syncBuiltinESMExports();return fired;};};
 if(process.env.SEMIO_G1_MODE==='oracle'){console.log(JSON.stringify({result:await run(fixture.concurrency.serial),counts:counts()}));return;}
-const out={};write(fixture.race.extra.path,fixture.race.extra.content);const release=hook(fixture.race.path,()=>write(fixture.race.path,fixture.race.content));
+const out={},racy=observation.OBSERVATION_LIMITS_V1.racyMilliseconds+500,wait=()=>new Promise(resolve=>setTimeout(resolve,racy)),pass=async()=>({result:await run(fixture.concurrency.parallel),counts:counts()});write(fixture.race.extra.path,fixture.race.extra.content);const release=hook(fixture.race.path,()=>write(fixture.race.path,fixture.race.content));
 out.race={result:await run(fixture.concurrency.parallel),counts:counts(),raced:release()};
-out.warm={result:await run(fixture.concurrency.parallel),counts:counts()};
-write(fixture.stale.extra.path,fixture.stale.extra.content);write(fixture.stale.path,fixture.stale.content);out.stale={result:await run(fixture.concurrency.parallel),counts:counts()};
+await wait();out.settle=await pass();out.warm=await pass();
+write(fixture.stale.extra.path,fixture.stale.extra.content);write(fixture.stale.path,fixture.stale.content);await pass();await wait();out.stale=await pass();
 const declaration=originalRead(join(cwd,fixture.unparseable.source),'utf8');write(fixture.unparseable.source,fixture.unparseable.content);age(fixture.unparseable.source,fixture.unparseable.ageMilliseconds);out.unparseable={result:await run(fixture.concurrency.parallel),counts:counts()};
 write(fixture.unparseable.source,declaration);out.restored={result:await run(fixture.concurrency.parallel),counts:counts()};
 write(fixture.halfWritten.source,fixture.halfWritten.partial);setTimeout(()=>write(fixture.halfWritten.source,declaration),fixture.halfWritten.completeAfterMilliseconds);out.halfWritten={result:await run(fixture.concurrency.parallel),counts:counts()};
-const library=process.env.SEMIO_G1_LIBRARY,directory=join(scope.root,'np'),records=fs.existsSync(directory)?fs.readdirSync(directory).filter(name=>name.endsWith('.json')):[];let foreignLibraryFacts=0,authorityRows=0;for(const name of records){const header=observation.readInferenceHeaderV1(join(directory,name));authorityRows+=header.authorityObservations.length;foreignLibraryFacts+=header.observations.filter(row=>row.kind==='file'&&row.path.startsWith(library)).length;}
-out.halfWritten.persisted={records:records.length,foreignLibraryFacts,authorityRows};console.log(JSON.stringify(out));}));})().catch(error=>{console.error(error);process.exit(1)});`;
+const library=process.env.SEMIO_G1_LIBRARY,directory=join(scope.root,'np'),records=fs.existsSync(directory)?fs.readdirSync(directory).filter(name=>/^[0-9a-f]{24}\.json$/u.test(name)):[];let foreignLibraryFacts=0,authorityRows=0;const foreignPaths=new Set();for(const name of records){const header=observation.readInferenceHeaderV1(join(directory,name));authorityRows+=header.authorityObservations.length;const foreign=header.observations.filter(row=>row.kind==='file'&&row.path.startsWith(library));foreignLibraryFacts+=foreign.length;for(const row of foreign)foreignPaths.add(row.path);}
+out.halfWritten.persisted={records:records.length,foreignLibraryFacts,foreignPaths:[...foreignPaths],authorityRows};console.log(JSON.stringify(out));}));})().catch(error=>{console.error(error);process.exit(1)});`;
 
 /** 🧫️ Materializes one source snapshot in its own artifact root. */
 function materializeV1(root:string,files:Snapshot):void{for(const[path,content]of Object.entries(files)){mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),content);}}
@@ -53,18 +55,18 @@ test("parallel incremental inference settles concurrent edits onto serial full i
  const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR,identity=process.env.SEMIO_NX_TOOLING_IDENTITY;if(!artifacts||!identity)throw Error("Original artifact namespace and immutable SDK required");
  const sdk=createRequire(join(testNxToolkitDirectoryV1(identity),"package.json")),compiler=sdk.resolve("typescript"),library=resolve("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library"),input=join(mkdtempSync(join(artifacts,"g1-")),"fixture.json");writeFileSync(input,JSON.stringify(fixture));
  const initial:Snapshot={...fixture.files},raced:Snapshot={...initial,[fixture.race.path]:fixture.race.content,[fixture.race.extra.path]:fixture.race.extra.content},stale:Snapshot={...raced,[fixture.stale.path]:fixture.stale.content,[fixture.stale.extra.path]:fixture.stale.extra.content},broken:Snapshot={...stale,[fixture.unparseable.source]:fixture.unparseable.content};
- const runs=[{name:"scenario",files:initial},{name:"raced",files:raced},{name:"stale",files:stale},{name:"broken",files:broken}].map(run=>{const root=mkdtempSync(join(artifacts,"g1-"+run.name+"-"));materializeV1(root,run.files);return {...run,root,dataset:{version:1,identity:createHash("sha256").update(root).digest("hex"),sourceRoot:relative(process.cwd(),root).replaceAll("\\","/")}};});
+ const runs=await Promise.all([{name:"scenario",files:initial},{name:"raced",files:raced},{name:"stale",files:stale},{name:"broken",files:broken}].map(async run=>{const root=await repository.scratch("g1-"+run.name+"-");materializeV1(root,run.files);return {...run,root,dataset:{version:1,identity:createHash("sha256").update(root).digest("hex"),sourceRoot:relative(repository.root,root).replaceAll("\\","/")}};}));
  try{
-  const outputs=await withBuildTestInvocationV1(original=>Promise.all(runs.map(async run=>{
+  const outputs=await repository.invoke(original=>Promise.all(runs.map(async run=>{
    const brokenAge=run.name==="broken"?"const{utimesSync}=require('node:fs'),at=new Date(Date.now()-"+fixture.unparseable.ageMilliseconds+");utimesSync("+JSON.stringify(join(run.root,fixture.unparseable.source))+",at,at);":"";
-   const output=await captureOwnedCommandV1("node",["--conditions","development","-e",nodeTypeScriptLoaderV1(compiler)+brokenAge+childSourceV1],run.root,{control:scriptCompilerAdmissionControlV1(original,"g1-incremental:"+run.name,240000),env:{...scriptInvocationEnvironment(original,process.env),NODE_PATH:join(dirname(dirname(sdk.resolve("nx/package.json")))),NX_DAEMON:"false",SEMIO_G1_MODE:run.name==="scenario"?"scenario":"oracle",SEMIO_G1_WORKSPACE:process.cwd(),SEMIO_G1_DATASET:JSON.stringify(run.dataset),SEMIO_G1_FIXTURE:input,SEMIO_G1_LIBRARY:library,SEMIO_G1_STORAGE:pathToFileURL(join(library,"🏗️build/📥️inputs/💾️storage/🟨️.mjs")).href,SEMIO_G1_ROUTING:pathToFileURL(resolve("🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts")).href,SEMIO_G1_PLUGIN:pathToFileURL(join(library,"🏗️build/🕸️graph/📥️inference/🟨️.mjs")).href,SEMIO_G1_OBSERVER:pathToFileURL(join(library,"🏗️build/👁️observation/🟨️.mjs")).href}});
+   const output=await captureOwnedCommandV1("node",["--conditions","development","-e",nodeTypeScriptLoaderV1(compiler)+brokenAge+childSourceV1],run.root,{control:scriptCompilerAdmissionControlV1(original,"g1-incremental:"+run.name,240000),output:{maximumBytes:8388608,maximumLines:8192},env:{...scriptInvocationEnvironment(original,process.env),NODE_PATH:join(dirname(dirname(sdk.resolve("nx/package.json")))),NX_DAEMON:"false",SEMIO_G1_MODE:run.name==="scenario"?"scenario":"oracle",SEMIO_G1_WORKSPACE:repository.root,SEMIO_G1_DATASET:JSON.stringify(run.dataset),SEMIO_G1_FIXTURE:input,SEMIO_G1_LIBRARY:library,SEMIO_G1_STORAGE:pathToFileURL(join(library,"🏗️build/📥️inputs/💾️storage/🟨️.mjs")).href,SEMIO_G1_ROUTING:pathToFileURL(join(testCheckoutRootV1(),"🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts")).href,SEMIO_G1_PLUGIN:pathToFileURL(join(library,"🏗️build/🕸️graph/📥️inference/🟨️.mjs")).href,SEMIO_G1_OBSERVER:pathToFileURL(join(library,"🏗️build/👁️observation/🟨️.mjs")).href}});
    return [run.name,JSON.parse(output.trim().split("\n").findLast(row=>row.startsWith("{"))!)] as const;
-  })));
+  })),{maximumElapsedMilliseconds:280000});
   const result=Object.fromEntries(outputs) as {scenario:Record<string,Outcome>;raced:Outcome;stale:Outcome;broken:Outcome},scenario=result.scenario,owners=Object.fromEntries(fixture.owners.map(owner=>[owner,owner]));
   expect(scenario.race!.raced).toBe(true);
   expect(scenario.race!.result).toBe(result.raced.result);
   for(const root of fixture.race.untouched)expect(scenario.race!.counts[owners[root]!]).toBe(1);
-  expect(scenario.warm!.counts).toEqual(scenario.race!.counts);
+  for(const root of fixture.race.untouched)expect(scenario.settle!.counts[owners[root]!]).toBe(scenario.race!.counts[owners[root]!]);expect(scenario.settle!.result).toBe(result.raced.result);expect(scenario.warm!.counts).toEqual(scenario.settle!.counts);
   expect(scenario.warm!.result).toBe(scenario.race!.result);
   expect(scenario.stale!.result).toBe(result.stale.result);
   for(const root of fixture.stale.recomputed)expect(scenario.stale!.counts[root]).toBeGreaterThan(scenario.warm!.counts[root]!);
@@ -80,10 +82,10 @@ test("parallel incremental inference settles concurrent edits onto serial full i
   expect(scenario.restored!.counts).toEqual(scenario.unparseable!.counts);
   expect(scenario.halfWritten!.result).toBe(result.stale.result);
   expect(scenario.halfWritten!.persisted!.records).toBeGreaterThan(0);
-  expect(scenario.halfWritten!.persisted!.foreignLibraryFacts).toBe(fixture.foreignLibraryFacts);
+  expect(scenario.halfWritten!.persisted!.foreignPaths).toEqual([join(library,"🏗️build/📥️inputs/🎯️precision/🔣️.json")]);expect(scenario.halfWritten!.persisted!.foreignLibraryFacts).toBe(scenario.halfWritten!.persisted!.records*fixture.foreignLibraryFacts);
   expect(scenario.halfWritten!.persisted!.authorityRows).toBe(0);
  }finally{
-  try{await withBuildTestInvocationV1(original=>Promise.all(runs.map(run=>withRepositoryBuildInferenceDatasetV1(repository.root,original,scriptCompilerAdmissionControlV1(original,"graph:dataset-retirement",0),run.dataset,async scope=>{await scope.retire();expect(existsSync(scope.root)).toBe(false);}))));}
+  try{await repository.invoke(original=>Promise.all(runs.map(run=>withRepositoryBuildInferenceDatasetV1(repository.root,original,scriptCompilerAdmissionControlV1(original,"graph:dataset-retirement",0),run.dataset,async scope=>{await scope.retire();expect(existsSync(scope.root)).toBe(false);}))),{maximumElapsedMilliseconds:120000});}
   finally{for(const run of runs)rmSync(run.root,{recursive:true,force:true});rmSync(dirname(input),{recursive:true,force:true});}
  }
 },300_000);

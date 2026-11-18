@@ -19,7 +19,7 @@
     { "state": "the area of a spider diagram", "selector": ".course-radar-area", "properties": ["fill", "stroke"] },
     { "state": "a control that cannot be used now", "selector": ".course-app [aria-disabled=true]", "properties": ["color"] },
     { "state": "keyboard focus on any control", "selector": ".course-app :focus-visible", "properties": ["outline"] },
-    { "state": "a hint beside an answer of an easy run", "selector": ".course-hint", "properties": ["border-inline-start"] },
+    { "state": "a hint beside an answer of an easy run", "selector": ".course-hint-symbol", "properties": ["forced-color-adjust", "background-color"] },
     { "state": "the last 30 seconds of a task's clock", "selector": ".course-clock[data-clock=thirty]", "properties": ["outline"] },
     { "state": "the last 10 seconds of a task's clock", "selector": ".course-clock[data-clock=ten]", "properties": ["outline"] },
     { "state": "a task whose time is up", "selector": ".course-clock[data-clock=up]", "properties": ["outline"] },
@@ -33,8 +33,8 @@
     "states": [
       { "state": "a hint beside an answer of an easy run", "selector": ".course-hint", "ink": "--foreground" },
       { "state": "a guess that lies far off in the results", "selector": ".course-miss", "ink": "--foreground" },
-      { "state": "the last 30 seconds of a task's clock", "selector": ".course-clock[data-clock=thirty]", "ink": "--foreground", "tint": { "colour": "--color-warning", "share": 0.12 } },
-      { "state": "the last 10 seconds of a task's clock", "selector": ".course-clock[data-clock=ten]", "ink": "--foreground", "tint": { "colour": "--color-warning", "share": 0.12 } },
+      { "state": "the last 30 seconds of a task's clock", "selector": ".course-clock[data-clock=thirty]", "ink": "--foreground", "tint": { "colour": "--color-warning", "share": 0.24 } },
+      { "state": "the last 10 seconds of a task's clock", "selector": ".course-clock[data-clock=ten]", "ink": "--foreground", "tint": { "colour": "--color-warning", "share": 0.24 } },
       { "state": "a task whose time is up", "selector": ".course-clock[data-clock=up]", "ink": "--foreground" }
     ]
   }

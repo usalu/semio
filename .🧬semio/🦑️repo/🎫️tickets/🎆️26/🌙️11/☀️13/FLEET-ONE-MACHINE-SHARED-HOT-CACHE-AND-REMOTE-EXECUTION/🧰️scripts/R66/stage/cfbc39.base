@@ -1,0 +1,100 @@
+import { createHash } from "node:crypto";
+import { mkdtempSync, realpathSync, rmSync } from "node:fs";
+import { hostname, tmpdir, totalmem } from "node:os";
+import { join } from "node:path";
+import { deserialize } from "node:v8";
+import { libraryBootstrap } from "../../../🟨️.mjs";
+import { exportProjectRecordV1, inferenceRecordIdentityV1, projectClosureTravelV1, projectRecordKeyTextV1 } from "../../../../../👁️observation/🟨️.mjs";
+import { serviceMemoryHeadroomBytesV1 } from "../../../../../🧠️memory/🟨️.mjs";
+import { graphFleetClientV1 } from "../../../../../🪪️graph-state/🛰️exchange/🟦️.ts";
+import { graphFleetSettingsV1 } from "../../../../../🪪️graph-state/🧶️nx/🟦️.ts";
+import { createProjectFleetPortV1 } from "../../../../../🪪️graph-state/📦️project-records/🟦️.ts";
+import { remoteCacheFetchV1 } from "../../../../../🌐️remote-cache/🛰️fleet/🟦️.ts";
+import { ownerJobV1, projectRecordKeyV1 } from "../../🟨️.mjs";
+import { OWNER_POOL_POLICY_V1 as P, ownerPoolGrantBytesV1, publishOwnerPoolFailureV1, pullOwnerPoolV1, readOwnerPoolFailureV1, readOwnerPoolPointerV1, readOwnerPoolV1 } from "../🟦️.ts";
+import schema from "../🧬️schema/🔣️.json" with { type: "json" };
+
+const REASON_TEXTS = { yielding: "reasonYielding", revision: "reasonRevision", "too-small": "reasonTooSmall", "no-wave": "reasonNoWave", "nothing-fits": "reasonNothingFits", off: "reasonOff" }, MEGABYTE = 1048576, sleep = (milliseconds, signal) => new Promise(done => { const timer = setTimeout(done, milliseconds); signal?.addEventListener("abort", () => { clearTimeout(timer); done(); }, { once: true }); });
+
+/** 🔔️ One message of the pool texts, English and German in one line. */
+export const ownerPoolTextV1 = (key, fields = {}) => ["en", "de"].map(language => schema.definitions.Texts.const[language][key].replace(/\{(\w+)\}/gu, (_all, name) => String(fields[name] ?? ""))).join(" / ");
+
+/** 🏃️ Runs one wave of the pool on this machine: opens the inference session the publisher described under this machine's own root, claims the owners one by one from the tail, infers each into a private staging directory, publishes the record to the fleet cache and removes the staged files. */
+async function pullWaveV1({ root, manifest, port, client, signal, say, cores, headroomBytes, stop, busy, progress, known, fail, allow }) {
+  await libraryBootstrap;
+  const service = await import("../../🏊️project-farm/👷️service/🟨️.mjs"), base = mkdtempSync(join(realpathSync(tmpdir()), "semio-owner-pool-"));
+  try {
+    const session = { ...deserialize(manifest.session), workspaceRoot: root, closureStore: undefined, stagingBase: base, authority: undefined };
+    await service.open(session, { slot: 0, generation: 1 });
+    const environment = service.sessionEnvironmentV1(), staging = service.stagingDirectoryV1(), jobs = new Map(), leaves = new Map(), digests = new Map(), revision = projectRecordKeyTextV1(null), failed = (name, message, deterministic) => { fail?.(name, message, deterministic); if (deterministic && digests.has(name)) void publishOwnerPoolFailureV1({ client, owner: hostname() + ":" + process.pid, origin: hostname(), recordDigest: digests.get(name), revision, cause: message }); };
+    const forget = name => { for (const leaf of leaves.get(name) ?? []) rmSync(join(staging, leaf), { recursive: true, force: true }); leaves.delete(name); jobs.delete(name); };
+    const claim = async unit => {
+      let job = jobs.get(unit.name);
+      try { job ??= ownerJobV1(environment, manifest.head.globals, unit); } catch { return { state: "fault" }; }
+      jobs.set(unit.name, job);
+      const cachePath = join(staging, "inference", "np", job.cacheKey + ".json");
+      const answer = await port.claim({ cachePath, fleet: job.root, keyText: projectRecordKeyTextV1(projectRecordKeyV1(job.head, job.root, job.json, undefined, job.selectedInputs)), expectedMilliseconds: Math.max(unit.expectedMilliseconds, P.claimExpectedMinimumMilliseconds), ttlMilliseconds: P.claimTtlMilliseconds, exportRecord: () => exportProjectRecordV1(cachePath), closures: projectClosureTravelV1(), import: async () => false });
+      if (answer.state !== "granted") { if (answer.state === "stored") jobs.delete(unit.name); return answer; }
+      const note = await readOwnerPoolFailureV1(client, answer.digest, revision);
+      if (note !== undefined) { await answer.abandon(); jobs.delete(unit.name); return { state: "refused" }; }
+      digests.set(unit.name, answer.digest);
+      return { state: "granted", why: () => answer.why(), deterministic: () => answer.deterministic(), publish: async () => { try { return await answer.publish(); } finally { forget(unit.name); } }, abandon: async () => { try { await answer.abandon(); } finally { forget(unit.name); } } };
+    };
+    const run = async unit => { const reply = await service.run(jobs.get(unit.name)); leaves.set(unit.name, [...reply.names, "inference/np/" + jobs.get(unit.name).cacheKey + ".json.records"]); return true; };
+    return await pullOwnerPoolV1({ units: manifest.units, claim, run, headroomBytes, cores, peaks: manifest.head.peaks, signal, stop, busy, progress, known, allow, fail: failed });
+  } finally { rmSync(base, { recursive: true, force: true }); }
+}
+
+/** 🌐️ The puller of one machine: looks at the pointer of the pool, and whenever a wave it has not pulled is published, joins it (declining a wave of another record identity or when the machine is too small) until the wave is stored or a newer one is published (`once`: and then returns). `fleetRoot` is the checkout whose fleet facts name the cache (the root itself unless a test brings its own cache). It claims, infers and publishes; it schedules nothing and waits for nobody. */
+export async function runOwnerPoolV1({ root, environment, signal, say = () => {}, cores, grantBytes = ownerPoolGrantBytesV1(totalmem(), process.env), allow, siblings = 0, headroomBytes = () => Math.min(serviceMemoryHeadroomBytesV1(), grantBytes - process.memoryUsage().rss), pollMilliseconds = P.pointerPollMilliseconds, once = false, fleetRoot = root, work, status }) {
+  const settings = environment[P.environmentOff] === "off" ? undefined : graphFleetSettingsV1(fleetRoot, environment);
+  if (settings === undefined) { status?.update({ state: "off", reason: "off", reasonText: { en: schema.definitions.Texts.const.en.reasonOff, de: schema.definitions.Texts.const.de.reasonOff } }); return; }
+  const total = Math.round(totalmem() / MEGABYTE);
+  status?.update({ state: "idle", grantMegabytes: Math.round(grantBytes / MEGABYTE), siblings });
+  const beat = setInterval(() => status?.update({ rssMegabytes: Math.round(process.memoryUsage().rss / MEGABYTE) }), P.footprintIntervalMilliseconds);
+  beat.unref?.();
+  let yielding = false, worked = false;
+  const allowing = allow === undefined ? undefined : async running => { const ok = await allow(running); yielding = !ok; return ok; };
+  const overGrant = () => process.memoryUsage().rss > grantBytes;
+  if (total < P.minimumTotalMegabytes) { status?.update({ state: "too-small", reason: "too-small", reasonText: { en: schema.definitions.Texts.const.en.reasonTooSmall, de: schema.definitions.Texts.const.de.reasonTooSmall } }); say(ownerPoolTextV1("tooSmall", { megabytes: total, minimum: P.minimumTotalMegabytes })); return; }
+  const client = graphFleetClientV1(settings, { fetch: remoteCacheFetchV1(environment, { root: fleetRoot }) }), port = createProjectFleetPortV1({ root, environment, client });
+  if (port === undefined) return;
+  const slots = cores ?? (await import("node:os")).availableParallelism(), known = new Set(), totals = { claimed: 0, published: 0, stored: 0, held: 0, failed: 0 };
+  let done, knownFor;
+  const reasonOf = key => ({ reason: key, reasonText: key === null ? null : { en: schema.definitions.Texts.const.en[REASON_TEXTS[key]], de: schema.definitions.Texts.const.de[REASON_TEXTS[key]] } });
+  const recycle = () => {
+    const fields = { megabytes: Math.round(process.memoryUsage().rss / MEGABYTE), grant: Math.round(grantBytes / MEGABYTE) };
+    status?.update({ lastError: schema.definitions.Texts.const.en.recycled.replace(/\{(\w+)\}/gu, (_all, name) => String(fields[name])), rssMegabytes: fields.megabytes });
+    status?.flush(); say(ownerPoolTextV1("recycled", fields)); clearInterval(beat); return "recycle";
+  };
+  while (!signal.aborted) {
+    if (worked && overGrant()) return recycle();
+    const pointer = await readOwnerPoolPointerV1(client);
+    if (pointer === undefined) { status?.update({ state: "idle", wave: null, running: 0, ...reasonOf("no-wave") }); await sleep(pollMilliseconds, signal); continue; }
+    if (pointer.id === done) { await sleep(pollMilliseconds, signal); continue; }
+    const manifest = await readOwnerPoolV1(client, pointer.id);
+    if (manifest === undefined) { await sleep(pollMilliseconds, signal); continue; }
+    await libraryBootstrap;
+    if (manifest.head.revision !== undefined && manifest.head.revision !== projectRecordKeyTextV1(null)) {
+      status?.update({ state: "declined", wave: pointer.id, units: manifest.units.length, running: 0, slots: 0, ...reasonOf("revision") });
+      say(ownerPoolTextV1("declined", { reason: "revision" }));
+      await sleep(pollMilliseconds, signal); continue;
+    }
+    done = pointer.id;
+    const sessionDigest = createHash("sha256").update(manifest.session).digest("hex");
+    if (knownFor !== sessionDigest) { known.clear(); knownFor = sessionDigest; for (const name of Object.keys(totals)) totals[name] = 0; }
+    say(ownerPoolTextV1("joined", { id: pointer.id.slice(0, 12), units: manifest.units.length, slots }));
+    status?.update({ state: "pulling", wave: pointer.id, units: manifest.units.length, slots, lastError: null, ...reasonOf(null) });
+    let changed = false;
+    const watch = setInterval(() => { void readOwnerPoolPointerV1(client).then(next => { if (next === undefined || next.id !== pointer.id) changed = true; }); }, pollMilliseconds);
+    try {
+      const stats = await pullWaveV1({ root, manifest, port, client, signal, say, cores: slots, headroomBytes, known, allow: allowing, fail: (name, message) => status?.update({ lastError: (name + ": " + message).slice(0, 300) }), stop: () => changed || work?.restartPending === true || (worked && overGrant()), progress: (stats, running, blocked) => { if (stats.claimed > 0) worked = true; status?.update({ claimed: totals.claimed + stats.claimed, published: totals.published + stats.published, stored: totals.stored + stats.stored, held: stats.held, failed: totals.failed + stats.failed, running, rssMegabytes: Math.round(process.memoryUsage().rss / MEGABYTE), ...reasonOf(blocked ? "nothing-fits" : yielding ? "yielding" : null) }); }, busy: count => { if (work === undefined) return; work.busy = count > 0; if (count === 0) work.wake?.(); } });
+      for (const name of Object.keys(totals)) totals[name] += stats[name] ?? 0;
+      if (stats.claimed > 0) worked = true;
+      say(ownerPoolTextV1("finished", { id: pointer.id.slice(0, 12), published: stats.published, stored: stats.stored, held: stats.held, failed: stats.failed }));
+    } catch (error) { status?.update({ lastError: String(error?.message ?? error).slice(0, 200) }); say("owner pool: " + String(error?.message ?? error).slice(0, 200)); done = undefined; await sleep(pollMilliseconds, signal); }
+    finally { clearInterval(watch); status?.update({ state: "idle", running: 0 }); }
+    if (worked && overGrant()) return recycle();
+    if (once) return;
+  }
+}

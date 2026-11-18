@@ -1,0 +1,138 @@
+== /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-b79757bed7da.log (lines after 0)
+2026-11-15T17:51:43.703Z access-proof version=3 root=/Users/ueli/Documents/semio protected=Documents sample=ok reproof=on route=direct pid=51856 ppid=51835 responsible=78070
+graph: plan stage inference starts (managed 208 MB, resident 965 MB)
+graph: waiting for memory headroom (1505 of 551 MB reserved, 1 projects running): @semio-tech/mit-bestand-bericht needs 1505 MB and has waited 0 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: plan stage inference settled from 7326 to 9156 MB
+graph: plan stage inference starts (managed 209 MB, resident 1022 MB)
+graph: waiting for memory headroom (1505 of 977 MB reserved, 1 projects running): @semio-tech/mit-bestand-bericht needs 1505 MB and has waited 0 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: plan stage inference settled from 7183 to 8969 MB
+graph: plan stage inference starts (managed 202 MB, resident 884 MB)
+graph: plan stage inference settled from 8607 to 10317 MB
+graph: plan stage inference starts (managed 202 MB, resident 871 MB)
+graph: plan stage inference settled from 7230 to 9573 MB
+graph: plan stage inference starts (managed 203 MB, resident 1010 MB)
+graph: plan stage inference settled from 6800 to 9196 MB
+graph: plan stage inference starts (managed 205 MB, resident 1007 MB)
+graph: plan stage inference settled from 6804 to 9581 MB
+2026-11-15T18:09:21.257Z graph-plan-too-heavy {"stage":"inference","operation":"inference","megabytes":10113,"limit":6553,"available":3667,"reserve":2048,"reason":"ceiling","worker":{"heapMb":560.5,"extraMb":425.8,"objectCount":2400984,"objectTypes":[{"type":"string","count":992196},{"type":"Object","count":414824},{"type":"Array","count":268634},{"type":"WeakRef","count":94273},{"type":"Promise","count":55969},{"type":"Function","count":53790},{"type":"JSLexicalEnvironment","count":33059},{"type":"Structure","count":32921}],"at":1794766132972}}
+-- waiting for the fleet: first and last line, largest x
+largest x: 
+-- waiting for memory headroom: first and last line
+graph: waiting for memory headroom (1505 of 551 MB reserved, 1 projects running): @semio-tech/mit-bestand-bericht needs 1505 MB and has waited 0 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (1505 of 977 MB reserved, 1 projects running): @semio-tech/mit-bestand-bericht needs 1505 MB and has waited 0 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+-- request-failed entries with 12 lines after
+-- last 30 lines when the try ended
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:0:4774:1:15:shared%20closures%2044%2F49","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 0 of 4774 projects · 1 running, longest 15 s: shared closures 44/49
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:0:4774:1:15:shared%20closures%2046%2F49","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 0 of 4774 projects · 1 running, longest 15 s: shared closures 46/49
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:0:4774:1:15:shared%20closures%2047%2F49","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 0 of 4774 projects · 1 running, longest 15 s: shared closures 47/49
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:0:4774:1:15:shared%20closures%2049%2F49","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 0 of 4774 projects · 1 running, longest 15 s: shared closures 49/49
+graph: headroom of 710 MB is below one project (1505 MB), inferring one project at a time
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[repository:command] still running after 1050 s
+graph: plan stage inference settled from 6804 to 9581 MB
+Graph: Plan-Stufe inference beruhigt von 6804 auf 9581 MB
+[repository:command] still running after 1060 s
+2026-11-15T18:09:21.257Z graph-plan-too-heavy {"stage":"inference","operation":"inference","megabytes":10113,"limit":6553,"available":3667,"reserve":2048,"reason":"ceiling","worker":{"heapMb":560.5,"extraMb":425.8,"objectCount":2400984,"objectTypes":[{"type":"string","count":992196},{"type":"Object","count":414824},{"type":"Array","count":268634},{"type":"WeakRef","count":94273},{"type":"Promise","count":55969},{"type":"Function","count":53790},{"type":"JSLexicalEnvironment","count":33059},{"typ
+graph: plan answered, managed 109 MB, resident 115 MB (released 0 MB)
+[repo] still working after 1070 s; last phase started: source.served
+[repository:command] still running after 1070 s
+[repository:command] still running after 1080 s
+== /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-ec883dab0a20.log (lines after 7426)
+-- waiting for the fleet: first and last line, largest x
+largest x: 
+-- waiting for memory headroom: first and last line
+-- request-failed entries with 12 lines after
+-- last 30 lines when the try ended
+[repo] still working after 25951 s; last phase started: source.served
+[repository:command] still running after 25947 s
+[repository:command] still running after 25957 s
+[repository:command] still running after 25967 s
+[repo] still working after 25981 s; last phase started: source.served
+[repository:command] still running after 25977 s
+[repository:command] still running after 25987 s
+[repository:command] still running after 25997 s
+[repo] still working after 26011 s; last phase started: source.served
+[repository:command] still running after 26007 s
+[repository:command] still running after 26017 s
+[repository:command] still running after 26027 s
+[repo] still working after 26041 s; last phase started: source.served
+[repository:command] still running after 26037 s
+[repository:command] still running after 26047 s
+[repository:command] still running after 26057 s
+[repo] still working after 26071 s; last phase started: source.served
+[repository:command] still running after 26067 s
+[repository:command] still running after 26077 s
+[repository:command] still running after 26087 s
+[repo] still working after 26101 s; last phase started: source.served
+[repository:command] still running after 26097 s
+[repository:command] still running after 26107 s
+[repository:command] still running after 26117 s
+[repo] still working after 26131 s; last phase started: source.served
+[repository:command] still running after 26127 s
+[repository:command] still running after 26137 s
+[repository:command] still running after 26147 s
+[repo] still working after 26161 s; last phase started: source.served
+[repository:command] still running after 26157 s
+-- bootstrap log: cut smaller lines
+Reading the project graph slice (0 s): the slice worker grew to 9156 MB, more than the 6553 MB a plan may take on this machine, so the work is cut smaller (step 2 of 6: fewer projects at once and smaller waves) and continues; projects already inferred are kept and nothing is repeated.
+Reading the project graph slice (0 s): the slice worker grew to 8969 MB, more than the 6553 MB a plan may take on this machine, so the work is cut smaller (step 3 of 6: fewer projects at once and smaller waves) and continues; projects already inferred are kept and nothing is repeated.
+Reading the project graph slice (0 s): the slice worker grew to 10317 MB, more than the 6553 MB a plan may take on this machine, so the work is cut smaller (step 4 of 6: fewer projects at once and smaller waves) and continues; projects already inferred are kept and nothing is repeated.
+Reading the project graph slice (0 s): the slice worker grew to 9865 MB, more than the 6553 MB a plan may take on this machine, so the work is cut smaller (step 5 of 6: fewer projects at once and smaller waves) and continues; projects already inferred are kept and nothing is repeated.
+Reading the project graph slice (0 s): the slice worker grew to 9860 MB, more than the 6553 MB a plan may take on this machine, so the work is cut smaller (step 6 of 6: fewer projects at once and smaller waves) and continues; projects already inferred are kept and nothing is repeated.
+highest step: step 6 of 6
+-- bootstrap log: last 40 lines
+Reading the project graph slice (360 s): reservation 0 of 6553; running (name, kind, seconds, rows): ; waiting for memory: 6553 MB are asked for (2048 MB are enough to start), 5790 MB are free above the 2048 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (362 s): reservation 0 of 6553; running (name, kind, seconds, rows): ; waiting for memory: 6553 MB are asked for (2048 MB are enough to start), 5790 MB are free above the 2048 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (364 s): reservation 0 of 6553; running (name, kind, seconds, rows): ; waiting for memory: 6553 MB are asked for (2048 MB are enough to start), 5790 MB are free above the 2048 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (366 s): reservation 0 of 6553; running (name, kind, seconds, rows): ; waiting for memory: 6553 MB are asked for (2048 MB are enough to start), 5957 MB are free above the 2048 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (368 s): reservation 0 of 6553; running (name, kind, seconds, rows): ; waiting for memory: 6553 MB are asked for (2048 MB are enough to start), 5957 MB are free above the 2048 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (370 s): reservation 0 of 6553; running (name, kind, seconds, rows): ; waiting for memory: 6553 MB are asked for (2048 MB are enough to start), 5957 MB are free above the 2048 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (372 s): reservation 0 of 6553; running (name, kind, seconds, rows): ; waiting for memory: 6553 MB are asked for (2048 MB are enough to start), 6379 MB are free above the 2048 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (374 s): reservation 0 of 6553; running (name, kind, seconds, rows): ; waiting for memory: 6553 MB are asked for (2048 MB are enough to start), 6379 MB are free above the 2048 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (376 s): reservation 0 of 6553; running (name, kind, seconds, rows): ; waiting for memory: 6553 MB are asked for (2048 MB are enough to start), 6379 MB are free above the 2048 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+[repo] still working after 1010 s; last phase started: door.script
+Reading the project graph slice (2 s).
+Reading the project graph slice (4 s).
+Reading the project graph slice (6 s).
+Reading the project graph slice (8 s).
+Reading the project graph slice (10 s).
+Reading the project graph slice (12 s).
+Reading the project graph slice (14 s).
+Reading the project graph slice (16 s).
+Reading the project graph slice (18 s).
+Reading the project graph slice (20 s).
+Reading the project graph slice (22 s).
+Reading the project graph slice (24 s).
+Reading the project graph slice (26 s).
+Reading the project graph slice (28 s).
+Reading the project graph slice (30 s).
+[repo] still working after 1040 s; last phase started: door.script
+Reading the project graph slice (32 s).
+Reading the project graph slice (34 s).
+Reading the project graph slice (36 s).
+Reading the project graph slice (38 s).
+Reading the project graph slice (40 s).
+Reading the project graph slice (42 s).
+Reading the project graph slice (44 s).
+Reading the project graph slice (46 s).
+Reading the project graph slice (48 s).
+Reading the project graph slice (50 s).
+Reading the project graph slice (52 s).
+The project graph could not be read on this machine yet: the plan stage inference (during inference) grew to 10113 MB, more than the 6553 MB this machine gives a plan, and only 3667 MB of memory were available (at least 2048 MB are kept in reserve) after it gave back what it could. It was stopped before the host ran short of memory. Nothing is wrong with your tree; run the command again when a machine with free memory serves the graph, or read the graph on a larger machine.
+end 2026-11-15T18:09:22Z
+native_rc=75

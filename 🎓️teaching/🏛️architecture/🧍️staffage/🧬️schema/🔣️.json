@@ -2796,6 +2796,20 @@
             }
           }
         },
+        "ratedPowerW": {
+          "description": "Nameplate power in watts of the element this region represents, stated once per element, on any region; the source and reference of the region cover it. The total power of an asset is the sum of these ratings plus the metabolic heat of its bodies, never derived from operating.heatW (released heat).",
+          "type": "number",
+          "minimum": 0
+        },
+        "ratedPowerBasis": {
+          "description": "What the rating states: electrical-input (appliances, devices, lamps, heat pumps: input, not capacity), fuel-input (burners and fires), rated-output (engines, traction and drive motors, generating sets) or passive (the element draws nothing: 0 W).",
+          "enum": [
+            "electrical-input",
+            "fuel-input",
+            "rated-output",
+            "passive"
+          ]
+        },
         "conditioned": {
           "type": "object",
           "additionalProperties": false,
@@ -6539,6 +6553,7 @@
         "title",
         "heightM",
         "widthM",
+        "powerW",
         "poses",
         "clips",
         "representations",
@@ -6565,6 +6580,11 @@
         "widthM": {
           "type": "number",
           "exclusiveMinimum": 0
+        },
+        "powerW": {
+          "description": "Total rated power of all elements in watts, derived from the asset document (powerOf); the asset file is the single source of truth.",
+          "type": "number",
+          "minimum": 0
         },
         "poses": {
           "type": "array",

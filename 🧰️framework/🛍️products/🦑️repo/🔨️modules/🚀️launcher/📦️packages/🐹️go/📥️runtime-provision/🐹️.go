@@ -81,7 +81,7 @@ const receiptName = ".toolchain.json"
 // 🏪️StoreDirectories answers where an archive's install lives in the tools partition and in the user cache.
 func (q ProvisionRequest) StoreDirectories(row Distribution) (tools string, user string, err error) {
 	cache := q.Registry.Cache
-	tools = filepath.Join(append(append([]string{q.Root}, cache.ToolsPartition...), q.Name, row.Sha256)...)
+	tools = MachinePath(q.Env, q.Root, append(append([]string{}, cache.ToolsPartition...), q.Name, row.Sha256)...)
 	base := q.Env(cache.Environment)
 	if base == "" {
 		directory, failure := os.UserCacheDir()

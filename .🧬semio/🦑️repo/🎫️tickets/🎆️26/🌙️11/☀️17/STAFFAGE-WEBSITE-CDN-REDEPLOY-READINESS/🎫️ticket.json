@@ -1,0 +1,173 @@
+{
+  "title": "Staffage Website CDN Redeploy Readiness",
+  "emoji": "🧍",
+  "status": "closed",
+  "description": "Get the staffage website (@teaching/staffage-site, 🎓️teaching/🏛️architecture/🧍️staffage/🌐️site) ready to be redeployed over CDN as fast as possible: build, typecheck, tests green, CDN-safe static output (relative/hashed assets, chunk-load retry, no dev-only deps), and record readiness. Fall back to native tools if the shared work fleet does not work.",
+  "summary": "Staffage website is ready to be redeployed over a CDN. The release build of `dist/release` is verified on a static CDN stand-in: 152 of 152 assets are available, no failed requests, and the archive, the detail views (thermal and forces) and the 3D views render. Built natively with Vite (3.7 s) because the build graph and script admission were starved. Fixes:\n- 32 invalid assets and 4 manifest mismatches corrected; validateAsset and validateManifest report 0 issues.\n- 19 schema-conformance breaks fixed, with 5 new validator rules.\n- Compact catalog chunks with the precomputed authored revision (−44 % raw).\n- Stale-chunk reload recovery after a redeploy.\n- CSP `wasm-unsafe-eval` and a dependency on the DWG wasm target, so DWG export works.\n- Browser `process.env` debug read removed.\n- 3 framework typecheck errors fixed and the generators run (site, React and library tsc clean).\n- Library failures fixed: fill-rule, plan-projection, three-views, export-performance, model-split.\nOwner requests:\n- Total nameplate power in watts for every asset, with metabolic heat, on cards, compare, metadata, sort and filter in en/de.\n- Playground rebuilt as Section (side or front), Floor plan (yaw and mirror) and lazy 3D over one shared linkable scene, with per-asset clip, pose, play/pause, scrub, loop and speed, and a global adjustable timeline.\nFinal run: site 9 of 9 and React 271 of 271 tests pass.\nRemaining, documented in catalog-silhouette.md and silhouette-*.md: about 90 assets still fail the catalog-silhouette guard; all were already failing before today. Upload of dist/release is the owner's action. Report: 🚀️readiness.md.",
+  "goal": "runningproducts",
+  "sessions": [
+    "dfc58a18-4ea3-4d64-9c59-d12ef3bc4a66"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-17 15:40:37",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Get the staffage website (@teaching/staffage-site, 🎓️teaching/🏛️architecture/🧍️staffage/🌐️site) ready to be redeployed over CDN as fast as possible: build, typecheck, tests green, CDN-safe static output (relative/hashed assets, chunk-load retry, no dev-only deps), and record readiness. Fall back to native tools if the shared work fleet does not work.",
+      "llm": "opus-5-5",
+      "effort": "medium"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-17 18:25:04",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "efff7f986f5231a088a66da7c5e33a32529cd3c0",
+      "summary": "Staffage website is ready to be redeployed over a CDN. The release build of `dist/release` is verified on a static CDN stand-in: 152 of 152 assets are available, no failed requests, and the archive, the detail views (thermal and forces) and the 3D views render. Built natively with Vite (3.7 s) because the build graph and script admission were starved. Fixes:\n- 32 invalid assets and 4 manifest mismatches corrected; validateAsset and validateManifest report 0 issues.\n- 19 schema-conformance breaks fixed, with 5 new validator rules.\n- Compact catalog chunks with the precomputed authored revision (−44 % raw).\n- Stale-chunk reload recovery after a redeploy.\n- CSP `wasm-unsafe-eval` and a dependency on the DWG wasm target, so DWG export works.\n- Browser `process.env` debug read removed.\n- 3 framework typecheck errors fixed and the generators run (site, React and library tsc clean).\n- Library failures fixed: fill-rule, plan-projection, three-views, export-performance, model-split.\nOwner requests:\n- Total nameplate power in watts for every asset, with metabolic heat, on cards, compare, metadata, sort and filter in en/de.\n- Playground rebuilt as Section (side or front), Floor plan (yaw and mirror) and lazy 3D over one shared linkable scene, with per-asset clip, pose, play/pause, scrub, loop and speed, and a global adjustable timeline.\nFinal run: site 9 of 9 and React 271 of 271 tests pass.\nRemaining, documented in catalog-silhouette.md and silhouette-*.md: about 90 assets still fail the catalog-silhouette guard; all were already failing before today. Upload of dist/release is the owner's action. Report: 🚀️readiness.md.",
+      "files": [
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🏗️machinery🗃️excavator⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🏗️machinery🗃️sorptionwheel⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🧱️components🗃️curtainwallbay⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🏗️machinery🗃️plateheatexchanger⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️pregnantperson⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage📃readme"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🧪️tests🗃️📖️detailsections💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🧪️tests🗃️🧊️modeldownloads💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️wheelchairuser⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🔌️appliances🗃️showerhead⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🔌️appliances🗃️splitacindoorunit⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🔌️appliances🗃️thermostaticradiatorvalve⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🔌️appliances🗃️vacuumcleaner⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🛋️furniture🗃️parkbench⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🧪️tests🗃️💾️favoritespersistence💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🔌️appliances🗃️circulationpump⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🔌️appliances🗃️serverrack⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🧪️tests🗃️🗺️addressroundtrip💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🔌️appliances🗃️desktopmonitor⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🔌️appliances🗃️laptop⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🧪️tests🗃️🧭️viewpointpages💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🐕️animals🗃️herringgull⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🪑️objects🗃️patioheater⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🧪️tests🗃️🧰️support💻🧰️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🏗️machinery🗃️solarthermalcollector⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🏗️machinery🗃️towercrane⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🔌️appliances🗃️electricfanheater⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🔌️appliances🗃️electrickettle⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🚜️vehicles🗃️electrickickscooter⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🐕️animals🗃️mallardduck⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🔌️appliances🗃️hotwatercylinder⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🛋️furniture🗃️barstool⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🧱️components🗃️slidingdoor⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🧱️components🗃️wheelchairramp⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🪑️objects🗃️charcoalgrill⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🪑️objects🗃️tealight⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🧫️fixtures🗃️🚀️exportperformance⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🧪️playground💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🧪️tests🗃️🔭️viewpoints💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🧪️tests🗃️🧪️playgroundcompose💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🐕️animals🗃️pigeon⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️walkingcommuter⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🧪️tests🗃️🧷️sharedborders💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🛋️furniture🗃️picnictable⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🧱️components🗃️cantileverbalcony⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🧱️components🗃️steelcolumn⚙️🔣️"
+        }
+      ]
+    }
+  ]
+}

@@ -576,11 +576,42 @@
               ],
               "material": "concrete",
               "hatch": "concrete",
-              "kind": "rect",
-              "x": 0,
-              "y": -0.1,
-              "w": 1.5,
-              "h": 0.2
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  -0.1
+                ],
+                [
+                  1.42,
+                  -0.1
+                ],
+                [
+                  1.42,
+                  -0.08
+                ],
+                [
+                  1.44,
+                  -0.08
+                ],
+                [
+                  1.44,
+                  -0.1
+                ],
+                [
+                  1.5,
+                  -0.1
+                ],
+                [
+                  1.5,
+                  0.1
+                ],
+                [
+                  0.0,
+                  0.1
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "rebar-top",
@@ -688,27 +719,6 @@
                 [
                   0,
                   -0.065
-                ]
-              ],
-              "closed": false
-            },
-            {
-              "id": "drip-groove",
-              "bone": "slab",
-              "role": "detail",
-              "z": 4,
-              "filled": false,
-              "tone": 0.2,
-              "region": "slab-soffit",
-              "kind": "poly",
-              "points": [
-                [
-                  1.43,
-                  -0.1
-                ],
-                [
-                  1.43,
-                  -0.08
                 ]
               ],
               "closed": false

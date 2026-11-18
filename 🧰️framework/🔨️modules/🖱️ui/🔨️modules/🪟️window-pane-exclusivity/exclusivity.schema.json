@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Window Pane Exclusivity Cases",
+  "type": "object",
+  "required": ["schema", "cases"],
+  "properties": {
+    "schema": { "const": "window-pane-exclusivity/v1" },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "open", "last", "exclusive", "expanded", "quickActionsCovered"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "open": { "$ref": "#/$defs/panes" },
+          "last": { "enum": ["engagement", "search", "measures", "utility", null] },
+          "exclusive": { "type": "boolean" },
+          "expanded": { "$ref": "#/$defs/panes" },
+          "quickActionsCovered": { "type": "boolean" }
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "panes": { "type": "object", "required": ["engagement", "search", "measures", "utility"], "additionalProperties": false, "properties": { "engagement": { "type": "boolean" }, "search": { "type": "boolean" }, "measures": { "type": "boolean" }, "utility": { "type": "boolean" } } }
+  }
+}

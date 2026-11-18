@@ -11,7 +11,7 @@ import fixture from "../../../../🧰️framework/🛍️products/💻️os/🔨
 const validateTransport = semioSchemaAjvV1({ allErrors: true }).compile(catalogueTransportSchema);
 const ownedTransport = compileJsonSchemaSubset(catalogueTransportSchema);
 
-beforeEach(() => { canvasInputSessions().length = 0; vi.stubGlobal("ResizeObserver", class { observe() {} disconnect() {} }); });
+beforeEach(() => { canvasInputSessions().length = 0; vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} }); });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 describe("Layout catalogue host integration", () => {

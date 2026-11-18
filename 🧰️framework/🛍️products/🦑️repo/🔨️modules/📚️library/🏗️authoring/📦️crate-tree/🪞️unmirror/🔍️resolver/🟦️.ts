@@ -59,7 +59,7 @@ export class Universe {
   ignoreVisibility = false;
   apiLeaf: (bound: Bound) => boolean = () => false;
   cutEdge: (bound: Bound) => boolean = () => false;
-  constructor(readonly repoRoot: string, readonly overlay: ReadonlyMap<string, string> = new Map()) {}
+  readonly repoRoot:string; readonly overlay:ReadonlyMap<string, string>; constructor(repoRoot: string, overlay: ReadonlyMap<string, string> = new Map()) {this.repoRoot=repoRoot;this.overlay=overlay;}
 
   read(path: string): string | null {
     const overlaid = this.overlay.get(path);

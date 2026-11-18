@@ -30,6 +30,7 @@ export type ModelFigureProps = {
   readonly theme?: "light" | "dark";
   readonly background?: string | null;
   readonly toolbar?: boolean;
+  readonly framed?: boolean;
   readonly reducedMotion?: boolean;
   readonly backend?: StageOptions["backend"];
   readonly settleMs?: number;
@@ -38,7 +39,7 @@ export type ModelFigureProps = {
 
 const optionsOf = (props: ModelFigureProps, callbacks: Pick<StageOptions, "onPreset" | "onScale" | "onView" | "onState">): StageOptions => {
   const { className: _className, onPreset: _onPreset, onScale: _onScale, onView: _onView, onState: _onState, ...rest } = props;
-  return { ...rest, ...callbacks };
+  return { ...rest, framed: rest.framed ?? false, ...callbacks };
 };
 
 /** 🧊️ The interactive 3D model of an asset. */

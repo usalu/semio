@@ -1056,9 +1056,9 @@
       "path": "⟦semio-root⟧/libs/alpha/src/a.ts",
       "fact": {
        "size": 3,
-       "mtimeMs": 1,
-       "ctimeMs": 2,
-       "ino": 3,
+       "mtimeMs": 0,
+       "ctimeMs": 0,
+       "ino": 0,
        "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
       }
      },
@@ -1130,9 +1130,9 @@
        "resultSha256": "9999999999999999999999999999999999999999999999999999999999999999",
        "source": {
         "size": 3,
-        "mtimeMs": 1,
-        "ctimeMs": 2,
-        "ino": 3,
+        "mtimeMs": 0,
+        "ctimeMs": 0,
+        "ino": 0,
         "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
        },
        "nestedObservations": [
@@ -1141,9 +1141,9 @@
          "path": "⟦semio-root⟧/libs/alpha/src/b.rs",
          "fact": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          }
         },
@@ -1164,9 +1164,9 @@
        "resultSha256": "8888888888888888888888888888888888888888888888888888888888888888",
        "source": {
         "size": 3,
-        "mtimeMs": 1,
-        "ctimeMs": 2,
-        "ino": 3,
+        "mtimeMs": 0,
+        "ctimeMs": 0,
+        "ino": 0,
         "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
        },
        "nestedObservations": []
@@ -1208,9 +1208,9 @@
         "path": "/Users/Shared/semio/libs/alpha/src/a.ts",
         "fact": {
          "size": 3,
-         "mtimeMs": 1,
-         "ctimeMs": 2,
-         "ino": 3,
+         "mtimeMs": 0,
+         "ctimeMs": 0,
+         "ino": 0,
          "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
         }
        },
@@ -1282,9 +1282,9 @@
          "resultSha256": "9999999999999999999999999999999999999999999999999999999999999999",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": [
@@ -1293,9 +1293,9 @@
            "path": "/Users/Shared/semio/libs/alpha/src/b.rs",
            "fact": {
             "size": 3,
-            "mtimeMs": 1,
-            "ctimeMs": 2,
-            "ino": 3,
+            "mtimeMs": 0,
+            "ctimeMs": 0,
+            "ino": 0,
             "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
            }
           },
@@ -1316,9 +1316,9 @@
          "resultSha256": "8888888888888888888888888888888888888888888888888888888888888888",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": []
@@ -1355,9 +1355,9 @@
           "path": "/Users/Shared/semio/tool/a.ts",
           "fact": {
            "size": 3,
-           "mtimeMs": 1,
-           "ctimeMs": 2,
-           "ino": 3,
+           "mtimeMs": 0,
+           "ctimeMs": 0,
+           "ino": 0,
            "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
           }
          },
@@ -1370,9 +1370,9 @@
            "resultSha256": "7777777777777777777777777777777777777777777777777777777777777777",
            "source": {
             "size": 3,
-            "mtimeMs": 1,
-            "ctimeMs": 2,
-            "ino": 3,
+            "mtimeMs": 0,
+            "ctimeMs": 0,
+            "ino": 0,
             "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
            },
            "nestedObservations": []
@@ -1419,9 +1419,9 @@
         "path": "/home/deck/semio/libs/alpha/src/a.ts",
         "fact": {
          "size": 3,
-         "mtimeMs": 1,
-         "ctimeMs": 2,
-         "ino": 3,
+         "mtimeMs": 0,
+         "ctimeMs": 0,
+         "ino": 0,
          "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
         }
        },
@@ -1493,9 +1493,9 @@
          "resultSha256": "9999999999999999999999999999999999999999999999999999999999999999",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": [
@@ -1504,9 +1504,9 @@
            "path": "/home/deck/semio/libs/alpha/src/b.rs",
            "fact": {
             "size": 3,
-            "mtimeMs": 1,
-            "ctimeMs": 2,
-            "ino": 3,
+            "mtimeMs": 0,
+            "ctimeMs": 0,
+            "ino": 0,
             "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
            }
           },
@@ -1527,9 +1527,9 @@
          "resultSha256": "8888888888888888888888888888888888888888888888888888888888888888",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": []
@@ -1566,9 +1566,9 @@
           "path": "/home/deck/semio/tool/a.ts",
           "fact": {
            "size": 3,
-           "mtimeMs": 1,
-           "ctimeMs": 2,
-           "ino": 3,
+           "mtimeMs": 0,
+           "ctimeMs": 0,
+           "ino": 0,
            "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
           }
          },
@@ -1581,9 +1581,9 @@
            "resultSha256": "7777777777777777777777777777777777777777777777777777777777777777",
            "source": {
             "size": 3,
-            "mtimeMs": 1,
-            "ctimeMs": 2,
-            "ino": 3,
+            "mtimeMs": 0,
+            "ctimeMs": 0,
+            "ino": 0,
             "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
            },
            "nestedObservations": []
@@ -1630,9 +1630,9 @@
         "path": "D:\\work\\semio\\libs\\alpha\\src\\a.ts",
         "fact": {
          "size": 3,
-         "mtimeMs": 1,
-         "ctimeMs": 2,
-         "ino": 3,
+         "mtimeMs": 0,
+         "ctimeMs": 0,
+         "ino": 0,
          "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
         }
        },
@@ -1704,9 +1704,9 @@
          "resultSha256": "9999999999999999999999999999999999999999999999999999999999999999",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": [
@@ -1715,9 +1715,9 @@
            "path": "D:\\work\\semio\\libs\\alpha\\src\\b.rs",
            "fact": {
             "size": 3,
-            "mtimeMs": 1,
-            "ctimeMs": 2,
-            "ino": 3,
+            "mtimeMs": 0,
+            "ctimeMs": 0,
+            "ino": 0,
             "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
            }
           },
@@ -1738,9 +1738,9 @@
          "resultSha256": "8888888888888888888888888888888888888888888888888888888888888888",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": []
@@ -1777,9 +1777,9 @@
           "path": "D:\\work\\semio\\tool\\a.ts",
           "fact": {
            "size": 3,
-           "mtimeMs": 1,
-           "ctimeMs": 2,
-           "ino": 3,
+           "mtimeMs": 0,
+           "ctimeMs": 0,
+           "ino": 0,
            "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
           }
          },
@@ -1792,9 +1792,9 @@
            "resultSha256": "7777777777777777777777777777777777777777777777777777777777777777",
            "source": {
             "size": 3,
-            "mtimeMs": 1,
-            "ctimeMs": 2,
-            "ino": 3,
+            "mtimeMs": 0,
+            "ctimeMs": 0,
+            "ino": 0,
             "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
            },
            "nestedObservations": []
@@ -1837,9 +1837,9 @@
         "path": "/Users/Shared/semio/libs/alpha/src/a.ts",
         "fact": {
          "size": 3,
-         "mtimeMs": 1,
-         "ctimeMs": 2,
-         "ino": 3,
+         "mtimeMs": 0,
+         "ctimeMs": 0,
+         "ino": 0,
          "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
         }
        },
@@ -1911,9 +1911,9 @@
          "resultSha256": "9999999999999999999999999999999999999999999999999999999999999999",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": [
@@ -1922,9 +1922,9 @@
            "path": "/Users/Shared/semio/libs/alpha/src/b.rs",
            "fact": {
             "size": 3,
-            "mtimeMs": 1,
-            "ctimeMs": 2,
-            "ino": 3,
+            "mtimeMs": 0,
+            "ctimeMs": 0,
+            "ino": 0,
             "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
            }
           },
@@ -1945,9 +1945,9 @@
          "resultSha256": "8888888888888888888888888888888888888888888888888888888888888888",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": []
@@ -1984,9 +1984,9 @@
           "path": "/Users/Shared/semio/tool/a.ts",
           "fact": {
            "size": 3,
-           "mtimeMs": 1,
-           "ctimeMs": 2,
-           "ino": 3,
+           "mtimeMs": 0,
+           "ctimeMs": 0,
+           "ino": 0,
            "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
           }
          },
@@ -1999,9 +1999,9 @@
            "resultSha256": "7777777777777777777777777777777777777777777777777777777777777777",
            "source": {
             "size": 3,
-            "mtimeMs": 1,
-            "ctimeMs": 2,
-            "ino": 3,
+            "mtimeMs": 0,
+            "ctimeMs": 0,
+            "ino": 0,
             "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
            },
            "nestedObservations": []
@@ -2104,9 +2104,9 @@
         "path": "⟦semio-root⟧/tool/a.ts",
         "fact": {
          "size": 3,
-         "mtimeMs": 1,
-         "ctimeMs": 2,
-         "ino": 3,
+         "mtimeMs": 0,
+         "ctimeMs": 0,
+         "ino": 0,
          "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
         }
        },
@@ -2119,9 +2119,9 @@
          "resultSha256": "7777777777777777777777777777777777777777777777777777777777777777",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": []
@@ -2306,9 +2306,9 @@
       "path": "⟦semio-root⟧/libs/alpha/src/a.ts",
       "fact": {
        "size": 3,
-       "mtimeMs": 1,
-       "ctimeMs": 2,
-       "ino": 3,
+       "mtimeMs": 0,
+       "ctimeMs": 0,
+       "ino": 0,
        "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
       }
      },
@@ -2380,9 +2380,9 @@
        "resultSha256": "9999999999999999999999999999999999999999999999999999999999999999",
        "source": {
         "size": 3,
-        "mtimeMs": 1,
-        "ctimeMs": 2,
-        "ino": 3,
+        "mtimeMs": 0,
+        "ctimeMs": 0,
+        "ino": 0,
         "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
        },
        "nestedObservations": [
@@ -2391,9 +2391,9 @@
          "path": "⟦semio-root⟧/libs/alpha/src/b.rs",
          "fact": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          }
         },
@@ -2414,9 +2414,9 @@
        "resultSha256": "8888888888888888888888888888888888888888888888888888888888888888",
        "source": {
         "size": 3,
-        "mtimeMs": 1,
-        "ctimeMs": 2,
-        "ino": 3,
+        "mtimeMs": 0,
+        "ctimeMs": 0,
+        "ino": 0,
         "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
        },
        "nestedObservations": []
@@ -2453,9 +2453,9 @@
         "path": "/Users/Shared/semio/libs/alpha/src/a.ts",
         "fact": {
          "size": 3,
-         "mtimeMs": 1,
-         "ctimeMs": 2,
-         "ino": 3,
+         "mtimeMs": 0,
+         "ctimeMs": 0,
+         "ino": 0,
          "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
         }
        },
@@ -2527,9 +2527,9 @@
          "resultSha256": "9999999999999999999999999999999999999999999999999999999999999999",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": [
@@ -2538,9 +2538,9 @@
            "path": "/Users/Shared/semio/libs/alpha/src/b.rs",
            "fact": {
             "size": 3,
-            "mtimeMs": 1,
-            "ctimeMs": 2,
-            "ino": 3,
+            "mtimeMs": 0,
+            "ctimeMs": 0,
+            "ino": 0,
             "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
            }
           },
@@ -2561,9 +2561,9 @@
          "resultSha256": "8888888888888888888888888888888888888888888888888888888888888888",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": []
@@ -2595,9 +2595,9 @@
           "path": "/Users/Shared/semio/tool/a.ts",
           "fact": {
            "size": 3,
-           "mtimeMs": 1,
-           "ctimeMs": 2,
-           "ino": 3,
+           "mtimeMs": 0,
+           "ctimeMs": 0,
+           "ino": 0,
            "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
           }
          },
@@ -2610,9 +2610,9 @@
            "resultSha256": "7777777777777777777777777777777777777777777777777777777777777777",
            "source": {
             "size": 3,
-            "mtimeMs": 1,
-            "ctimeMs": 2,
-            "ino": 3,
+            "mtimeMs": 0,
+            "ctimeMs": 0,
+            "ino": 0,
             "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
            },
            "nestedObservations": []
@@ -2659,9 +2659,9 @@
         "path": "/home/deck/semio/libs/alpha/src/a.ts",
         "fact": {
          "size": 3,
-         "mtimeMs": 1,
-         "ctimeMs": 2,
-         "ino": 3,
+         "mtimeMs": 0,
+         "ctimeMs": 0,
+         "ino": 0,
          "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
         }
        },
@@ -2733,9 +2733,9 @@
          "resultSha256": "9999999999999999999999999999999999999999999999999999999999999999",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": [
@@ -2744,9 +2744,9 @@
            "path": "/home/deck/semio/libs/alpha/src/b.rs",
            "fact": {
             "size": 3,
-            "mtimeMs": 1,
-            "ctimeMs": 2,
-            "ino": 3,
+            "mtimeMs": 0,
+            "ctimeMs": 0,
+            "ino": 0,
             "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
            }
           },
@@ -2767,9 +2767,9 @@
          "resultSha256": "8888888888888888888888888888888888888888888888888888888888888888",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": []
@@ -2801,9 +2801,9 @@
           "path": "/home/deck/semio/tool/a.ts",
           "fact": {
            "size": 3,
-           "mtimeMs": 1,
-           "ctimeMs": 2,
-           "ino": 3,
+           "mtimeMs": 0,
+           "ctimeMs": 0,
+           "ino": 0,
            "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
           }
          },
@@ -2816,9 +2816,9 @@
            "resultSha256": "7777777777777777777777777777777777777777777777777777777777777777",
            "source": {
             "size": 3,
-            "mtimeMs": 1,
-            "ctimeMs": 2,
-            "ino": 3,
+            "mtimeMs": 0,
+            "ctimeMs": 0,
+            "ino": 0,
             "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
            },
            "nestedObservations": []
@@ -2865,9 +2865,9 @@
         "path": "D:\\work\\semio\\libs\\alpha\\src\\a.ts",
         "fact": {
          "size": 3,
-         "mtimeMs": 1,
-         "ctimeMs": 2,
-         "ino": 3,
+         "mtimeMs": 0,
+         "ctimeMs": 0,
+         "ino": 0,
          "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
         }
        },
@@ -2939,9 +2939,9 @@
          "resultSha256": "9999999999999999999999999999999999999999999999999999999999999999",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": [
@@ -2950,9 +2950,9 @@
            "path": "D:\\work\\semio\\libs\\alpha\\src\\b.rs",
            "fact": {
             "size": 3,
-            "mtimeMs": 1,
-            "ctimeMs": 2,
-            "ino": 3,
+            "mtimeMs": 0,
+            "ctimeMs": 0,
+            "ino": 0,
             "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
            }
           },
@@ -2973,9 +2973,9 @@
          "resultSha256": "8888888888888888888888888888888888888888888888888888888888888888",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": []
@@ -3007,9 +3007,9 @@
           "path": "D:\\work\\semio\\tool\\a.ts",
           "fact": {
            "size": 3,
-           "mtimeMs": 1,
-           "ctimeMs": 2,
-           "ino": 3,
+           "mtimeMs": 0,
+           "ctimeMs": 0,
+           "ino": 0,
            "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
           }
          },
@@ -3022,9 +3022,9 @@
            "resultSha256": "7777777777777777777777777777777777777777777777777777777777777777",
            "source": {
             "size": 3,
-            "mtimeMs": 1,
-            "ctimeMs": 2,
-            "ino": 3,
+            "mtimeMs": 0,
+            "ctimeMs": 0,
+            "ino": 0,
             "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
            },
            "nestedObservations": []
@@ -3067,9 +3067,9 @@
         "path": "/Users/Shared/semio/libs/alpha/src/a.ts",
         "fact": {
          "size": 3,
-         "mtimeMs": 1,
-         "ctimeMs": 2,
-         "ino": 3,
+         "mtimeMs": 0,
+         "ctimeMs": 0,
+         "ino": 0,
          "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
         }
        },
@@ -3141,9 +3141,9 @@
          "resultSha256": "9999999999999999999999999999999999999999999999999999999999999999",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": [
@@ -3152,9 +3152,9 @@
            "path": "/Users/Shared/semio/libs/alpha/src/b.rs",
            "fact": {
             "size": 3,
-            "mtimeMs": 1,
-            "ctimeMs": 2,
-            "ino": 3,
+            "mtimeMs": 0,
+            "ctimeMs": 0,
+            "ino": 0,
             "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
            }
           },
@@ -3175,9 +3175,9 @@
          "resultSha256": "8888888888888888888888888888888888888888888888888888888888888888",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": []
@@ -3209,9 +3209,9 @@
           "path": "/Users/Shared/semio/tool/a.ts",
           "fact": {
            "size": 3,
-           "mtimeMs": 1,
-           "ctimeMs": 2,
-           "ino": 3,
+           "mtimeMs": 0,
+           "ctimeMs": 0,
+           "ino": 0,
            "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
           }
          },
@@ -3224,9 +3224,9 @@
            "resultSha256": "7777777777777777777777777777777777777777777777777777777777777777",
            "source": {
             "size": 3,
-            "mtimeMs": 1,
-            "ctimeMs": 2,
-            "ino": 3,
+            "mtimeMs": 0,
+            "ctimeMs": 0,
+            "ino": 0,
             "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
            },
            "nestedObservations": []
@@ -3329,9 +3329,9 @@
         "path": "⟦semio-root⟧/tool/a.ts",
         "fact": {
          "size": 3,
-         "mtimeMs": 1,
-         "ctimeMs": 2,
-         "ino": 3,
+         "mtimeMs": 0,
+         "ctimeMs": 0,
+         "ino": 0,
          "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
         }
        },
@@ -3344,9 +3344,9 @@
          "resultSha256": "7777777777777777777777777777777777777777777777777777777777777777",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": []
@@ -3531,9 +3531,9 @@
       "path": "⟦semio-root⟧/libs/alpha/src/a.ts",
       "fact": {
        "size": 3,
-       "mtimeMs": 1,
-       "ctimeMs": 2,
-       "ino": 3,
+       "mtimeMs": 0,
+       "ctimeMs": 0,
+       "ino": 0,
        "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
       }
      },
@@ -3605,9 +3605,9 @@
        "resultSha256": "9999999999999999999999999999999999999999999999999999999999999999",
        "source": {
         "size": 3,
-        "mtimeMs": 1,
-        "ctimeMs": 2,
-        "ino": 3,
+        "mtimeMs": 0,
+        "ctimeMs": 0,
+        "ino": 0,
         "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
        },
        "nestedObservations": [
@@ -3616,9 +3616,9 @@
          "path": "⟦semio-root⟧/libs/alpha/src/b.rs",
          "fact": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          }
         },
@@ -3639,9 +3639,9 @@
        "resultSha256": "8888888888888888888888888888888888888888888888888888888888888888",
        "source": {
         "size": 3,
-        "mtimeMs": 1,
-        "ctimeMs": 2,
-        "ino": 3,
+        "mtimeMs": 0,
+        "ctimeMs": 0,
+        "ino": 0,
         "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
        },
        "nestedObservations": []
@@ -3678,9 +3678,9 @@
         "path": "/Users/Shared/semio/libs/alpha/src/a.ts",
         "fact": {
          "size": 3,
-         "mtimeMs": 1,
-         "ctimeMs": 2,
-         "ino": 3,
+         "mtimeMs": 0,
+         "ctimeMs": 0,
+         "ino": 0,
          "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
         }
        },
@@ -3752,9 +3752,9 @@
          "resultSha256": "9999999999999999999999999999999999999999999999999999999999999999",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": [
@@ -3763,9 +3763,9 @@
            "path": "/Users/Shared/semio/libs/alpha/src/b.rs",
            "fact": {
             "size": 3,
-            "mtimeMs": 1,
-            "ctimeMs": 2,
-            "ino": 3,
+            "mtimeMs": 0,
+            "ctimeMs": 0,
+            "ino": 0,
             "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
            }
           },
@@ -3786,9 +3786,9 @@
          "resultSha256": "8888888888888888888888888888888888888888888888888888888888888888",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": []
@@ -3825,9 +3825,9 @@
         "path": "/home/deck/semio/libs/alpha/src/a.ts",
         "fact": {
          "size": 3,
-         "mtimeMs": 1,
-         "ctimeMs": 2,
-         "ino": 3,
+         "mtimeMs": 0,
+         "ctimeMs": 0,
+         "ino": 0,
          "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
         }
        },
@@ -3899,9 +3899,9 @@
          "resultSha256": "9999999999999999999999999999999999999999999999999999999999999999",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": [
@@ -3910,9 +3910,9 @@
            "path": "/home/deck/semio/libs/alpha/src/b.rs",
            "fact": {
             "size": 3,
-            "mtimeMs": 1,
-            "ctimeMs": 2,
-            "ino": 3,
+            "mtimeMs": 0,
+            "ctimeMs": 0,
+            "ino": 0,
             "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
            }
           },
@@ -3933,9 +3933,9 @@
          "resultSha256": "8888888888888888888888888888888888888888888888888888888888888888",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": []
@@ -3972,9 +3972,9 @@
         "path": "D:\\work\\semio\\libs\\alpha\\src\\a.ts",
         "fact": {
          "size": 3,
-         "mtimeMs": 1,
-         "ctimeMs": 2,
-         "ino": 3,
+         "mtimeMs": 0,
+         "ctimeMs": 0,
+         "ino": 0,
          "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
         }
        },
@@ -4046,9 +4046,9 @@
          "resultSha256": "9999999999999999999999999999999999999999999999999999999999999999",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": [
@@ -4057,9 +4057,9 @@
            "path": "D:\\work\\semio\\libs\\alpha\\src\\b.rs",
            "fact": {
             "size": 3,
-            "mtimeMs": 1,
-            "ctimeMs": 2,
-            "ino": 3,
+            "mtimeMs": 0,
+            "ctimeMs": 0,
+            "ino": 0,
             "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
            }
           },
@@ -4080,9 +4080,9 @@
          "resultSha256": "8888888888888888888888888888888888888888888888888888888888888888",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": []
@@ -4115,9 +4115,9 @@
         "path": "/Users/Shared/semio/libs/alpha/src/a.ts",
         "fact": {
          "size": 3,
-         "mtimeMs": 1,
-         "ctimeMs": 2,
-         "ino": 3,
+         "mtimeMs": 0,
+         "ctimeMs": 0,
+         "ino": 0,
          "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
         }
        },
@@ -4189,9 +4189,9 @@
          "resultSha256": "9999999999999999999999999999999999999999999999999999999999999999",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": [
@@ -4200,9 +4200,9 @@
            "path": "/Users/Shared/semio/libs/alpha/src/b.rs",
            "fact": {
             "size": 3,
-            "mtimeMs": 1,
-            "ctimeMs": 2,
-            "ino": 3,
+            "mtimeMs": 0,
+            "ctimeMs": 0,
+            "ino": 0,
             "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
            }
           },
@@ -4223,9 +4223,9 @@
          "resultSha256": "8888888888888888888888888888888888888888888888888888888888888888",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": []
@@ -4412,9 +4412,9 @@
       "path": "⟦semio-root⟧/libs/alpha/src/a.ts",
       "fact": {
        "size": 3,
-       "mtimeMs": 1,
-       "ctimeMs": 2,
-       "ino": 3,
+       "mtimeMs": 0,
+       "ctimeMs": 0,
+       "ino": 0,
        "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
       }
      },
@@ -4486,9 +4486,9 @@
        "resultSha256": "9999999999999999999999999999999999999999999999999999999999999999",
        "source": {
         "size": 3,
-        "mtimeMs": 1,
-        "ctimeMs": 2,
-        "ino": 3,
+        "mtimeMs": 0,
+        "ctimeMs": 0,
+        "ino": 0,
         "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
        },
        "nestedObservations": [
@@ -4497,9 +4497,9 @@
          "path": "⟦semio-root⟧/libs/alpha/src/b.rs",
          "fact": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          }
         },
@@ -4520,9 +4520,9 @@
        "resultSha256": "8888888888888888888888888888888888888888888888888888888888888888",
        "source": {
         "size": 3,
-        "mtimeMs": 1,
-        "ctimeMs": 2,
-        "ino": 3,
+        "mtimeMs": 0,
+        "ctimeMs": 0,
+        "ino": 0,
         "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
        },
        "nestedObservations": []
@@ -4569,9 +4569,9 @@
         "path": "/Users/Shared/semio/libs/alpha/src/a.ts",
         "fact": {
          "size": 3,
-         "mtimeMs": 1,
-         "ctimeMs": 2,
-         "ino": 3,
+         "mtimeMs": 0,
+         "ctimeMs": 0,
+         "ino": 0,
          "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
         }
        },
@@ -4643,9 +4643,9 @@
          "resultSha256": "9999999999999999999999999999999999999999999999999999999999999999",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": [
@@ -4654,9 +4654,9 @@
            "path": "/Users/Shared/semio/libs/alpha/src/b.rs",
            "fact": {
             "size": 3,
-            "mtimeMs": 1,
-            "ctimeMs": 2,
-            "ino": 3,
+            "mtimeMs": 0,
+            "ctimeMs": 0,
+            "ino": 0,
             "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
            }
           },
@@ -4677,9 +4677,9 @@
          "resultSha256": "8888888888888888888888888888888888888888888888888888888888888888",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": []
@@ -4726,9 +4726,9 @@
         "path": "/home/deck/semio/libs/alpha/src/a.ts",
         "fact": {
          "size": 3,
-         "mtimeMs": 1,
-         "ctimeMs": 2,
-         "ino": 3,
+         "mtimeMs": 0,
+         "ctimeMs": 0,
+         "ino": 0,
          "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
         }
        },
@@ -4800,9 +4800,9 @@
          "resultSha256": "9999999999999999999999999999999999999999999999999999999999999999",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": [
@@ -4811,9 +4811,9 @@
            "path": "/home/deck/semio/libs/alpha/src/b.rs",
            "fact": {
             "size": 3,
-            "mtimeMs": 1,
-            "ctimeMs": 2,
-            "ino": 3,
+            "mtimeMs": 0,
+            "ctimeMs": 0,
+            "ino": 0,
             "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
            }
           },
@@ -4834,9 +4834,9 @@
          "resultSha256": "8888888888888888888888888888888888888888888888888888888888888888",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": []
@@ -4883,9 +4883,9 @@
         "path": "D:\\work\\semio\\libs\\alpha\\src\\a.ts",
         "fact": {
          "size": 3,
-         "mtimeMs": 1,
-         "ctimeMs": 2,
-         "ino": 3,
+         "mtimeMs": 0,
+         "ctimeMs": 0,
+         "ino": 0,
          "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
         }
        },
@@ -4957,9 +4957,9 @@
          "resultSha256": "9999999999999999999999999999999999999999999999999999999999999999",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": [
@@ -4968,9 +4968,9 @@
            "path": "D:\\work\\semio\\libs\\alpha\\src\\b.rs",
            "fact": {
             "size": 3,
-            "mtimeMs": 1,
-            "ctimeMs": 2,
-            "ino": 3,
+            "mtimeMs": 0,
+            "ctimeMs": 0,
+            "ino": 0,
             "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
            }
           },
@@ -4991,9 +4991,9 @@
          "resultSha256": "8888888888888888888888888888888888888888888888888888888888888888",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": []
@@ -5036,9 +5036,9 @@
         "path": "/Users/Shared/semio/libs/alpha/src/a.ts",
         "fact": {
          "size": 3,
-         "mtimeMs": 1,
-         "ctimeMs": 2,
-         "ino": 3,
+         "mtimeMs": 0,
+         "ctimeMs": 0,
+         "ino": 0,
          "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
         }
        },
@@ -5110,9 +5110,9 @@
          "resultSha256": "9999999999999999999999999999999999999999999999999999999999999999",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": [
@@ -5121,9 +5121,9 @@
            "path": "/Users/Shared/semio/libs/alpha/src/b.rs",
            "fact": {
             "size": 3,
-            "mtimeMs": 1,
-            "ctimeMs": 2,
-            "ino": 3,
+            "mtimeMs": 0,
+            "ctimeMs": 0,
+            "ino": 0,
             "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
            }
           },
@@ -5144,9 +5144,9 @@
          "resultSha256": "8888888888888888888888888888888888888888888888888888888888888888",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": []
@@ -5333,9 +5333,9 @@
       "path": "⟦semio-root⟧/libs/alpha/src/a.ts",
       "fact": {
        "size": 3,
-       "mtimeMs": 1,
-       "ctimeMs": 2,
-       "ino": 3,
+       "mtimeMs": 0,
+       "ctimeMs": 0,
+       "ino": 0,
        "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
       }
      },
@@ -5407,9 +5407,9 @@
        "resultSha256": "9999999999999999999999999999999999999999999999999999999999999999",
        "source": {
         "size": 3,
-        "mtimeMs": 1,
-        "ctimeMs": 2,
-        "ino": 3,
+        "mtimeMs": 0,
+        "ctimeMs": 0,
+        "ino": 0,
         "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
        },
        "nestedObservations": [
@@ -5418,9 +5418,9 @@
          "path": "⟦semio-root⟧/libs/alpha/src/b.rs",
          "fact": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          }
         },
@@ -5441,9 +5441,9 @@
        "resultSha256": "8888888888888888888888888888888888888888888888888888888888888888",
        "source": {
         "size": 3,
-        "mtimeMs": 1,
-        "ctimeMs": 2,
-        "ino": 3,
+        "mtimeMs": 0,
+        "ctimeMs": 0,
+        "ino": 0,
         "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
        },
        "nestedObservations": []
@@ -5485,9 +5485,9 @@
         "path": "/Users/Shared/semio/libs/alpha/src/a.ts",
         "fact": {
          "size": 3,
-         "mtimeMs": 1,
-         "ctimeMs": 2,
-         "ino": 3,
+         "mtimeMs": 0,
+         "ctimeMs": 0,
+         "ino": 0,
          "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
         }
        },
@@ -5559,9 +5559,9 @@
          "resultSha256": "9999999999999999999999999999999999999999999999999999999999999999",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": [
@@ -5570,9 +5570,9 @@
            "path": "/Users/Shared/semio/libs/alpha/src/b.rs",
            "fact": {
             "size": 3,
-            "mtimeMs": 1,
-            "ctimeMs": 2,
-            "ino": 3,
+            "mtimeMs": 0,
+            "ctimeMs": 0,
+            "ino": 0,
             "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
            }
           },
@@ -5593,9 +5593,9 @@
          "resultSha256": "8888888888888888888888888888888888888888888888888888888888888888",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": []
@@ -5637,9 +5637,9 @@
         "path": "/home/deck/semio/libs/alpha/src/a.ts",
         "fact": {
          "size": 3,
-         "mtimeMs": 1,
-         "ctimeMs": 2,
-         "ino": 3,
+         "mtimeMs": 0,
+         "ctimeMs": 0,
+         "ino": 0,
          "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
         }
        },
@@ -5711,9 +5711,9 @@
          "resultSha256": "9999999999999999999999999999999999999999999999999999999999999999",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": [
@@ -5722,9 +5722,9 @@
            "path": "/home/deck/semio/libs/alpha/src/b.rs",
            "fact": {
             "size": 3,
-            "mtimeMs": 1,
-            "ctimeMs": 2,
-            "ino": 3,
+            "mtimeMs": 0,
+            "ctimeMs": 0,
+            "ino": 0,
             "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
            }
           },
@@ -5745,9 +5745,9 @@
          "resultSha256": "8888888888888888888888888888888888888888888888888888888888888888",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": []
@@ -5789,9 +5789,9 @@
         "path": "D:\\work\\semio\\libs\\alpha\\src\\a.ts",
         "fact": {
          "size": 3,
-         "mtimeMs": 1,
-         "ctimeMs": 2,
-         "ino": 3,
+         "mtimeMs": 0,
+         "ctimeMs": 0,
+         "ino": 0,
          "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
         }
        },
@@ -5863,9 +5863,9 @@
          "resultSha256": "9999999999999999999999999999999999999999999999999999999999999999",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": [
@@ -5874,9 +5874,9 @@
            "path": "D:\\work\\semio\\libs\\alpha\\src\\b.rs",
            "fact": {
             "size": 3,
-            "mtimeMs": 1,
-            "ctimeMs": 2,
-            "ino": 3,
+            "mtimeMs": 0,
+            "ctimeMs": 0,
+            "ino": 0,
             "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
            }
           },
@@ -5897,9 +5897,9 @@
          "resultSha256": "8888888888888888888888888888888888888888888888888888888888888888",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": []
@@ -5937,9 +5937,9 @@
         "path": "/Users/Shared/semio/libs/alpha/src/a.ts",
         "fact": {
          "size": 3,
-         "mtimeMs": 1,
-         "ctimeMs": 2,
-         "ino": 3,
+         "mtimeMs": 0,
+         "ctimeMs": 0,
+         "ino": 0,
          "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
         }
        },
@@ -6011,9 +6011,9 @@
          "resultSha256": "9999999999999999999999999999999999999999999999999999999999999999",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": [
@@ -6022,9 +6022,9 @@
            "path": "/Users/Shared/semio/libs/alpha/src/b.rs",
            "fact": {
             "size": 3,
-            "mtimeMs": 1,
-            "ctimeMs": 2,
-            "ino": 3,
+            "mtimeMs": 0,
+            "ctimeMs": 0,
+            "ino": 0,
             "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
            }
           },
@@ -6045,9 +6045,9 @@
          "resultSha256": "8888888888888888888888888888888888888888888888888888888888888888",
          "source": {
           "size": 3,
-          "mtimeMs": 1,
-          "ctimeMs": 2,
-          "ino": 3,
+          "mtimeMs": 0,
+          "ctimeMs": 0,
+          "ino": 0,
           "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
          },
          "nestedObservations": []

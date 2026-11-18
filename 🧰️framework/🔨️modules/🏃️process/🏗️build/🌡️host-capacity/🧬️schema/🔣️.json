@@ -282,6 +282,21 @@
               "type": "integer",
               "minimum": 0,
               "maximum": 64
+            },
+            "rampIdleKeepMegabytes": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "With rampIdleKeepBasisPoints: what an idle ramping grant (see rampIdleAfterMilliseconds) is still charged beside what it holds, so the unused rest of its reservation is released to others."
+            },
+            "rampIdleKeepBasisPoints": {
+              "type": "integer",
+              "minimum": 10000,
+              "maximum": 100000
+            },
+            "childStartMegabytes": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "What a farm child (a grant of a run's worker) is charged per job while it boots or idles, or what it measurably holds when that is more: its memory sits inside the tree of the run and is already out of the available memory."
             }
           }
         },
@@ -704,6 +719,9 @@
         "elastic": {
           "type": "boolean"
         },
+        "essential": {
+          "type": "boolean"
+        },
         "label": {
           "type": "string",
           "pattern": "^[^\\p{Cc}]{1,120}$"
@@ -1070,7 +1088,8 @@
         "blockerHost",
         "blockerStates",
         "shrunk",
-        "lent"
+        "lent",
+        "waitingShort"
       ],
       "properties": {
         "waiting": {
@@ -1346,13 +1365,16 @@
         },
         "lent": {
           "type": "string"
+        },
+        "waitingShort": {
+          "type": "string"
         }
       }
     },
     "Messages": {
       "const": {
         "en": {
-          "waiting": "[capacity] waiting {seconds}s for {operation}: {reason} (need {need} MB; {spare} MB spare above the {floor} MB floor, load {load}; {running} running, {ahead} ahead); behind {behind}",
+          "waiting": "[capacity] waiting {seconds}s for {operation}: {reason} (need {need} MB; {spare} MB spare = {available} MB available - {floor} MB floor - {held} MB reserved but not yet resident - {taken} MB admitted ahead{short}; load {load}; {running} running, {ahead} ahead); behind {behind}",
           "blocker": "{label} ({state}, {jobs} job(s), {megabytes} MB)",
           "blockerHost": "the host itself (nothing of ours)",
           "blockerStates": {
@@ -1429,10 +1451,11 @@
           "reducedGrows": "[capacity] admitted {operation} with {jobs} of {preferred} job(s): the host cannot carry more right now; the run grows to more jobs once memory frees up",
           "grown": "[capacity] {operation}: grown from {from} to {jobs} of {preferred} job(s) after {seconds}s, reservation {before} MB -> {reserved} MB: memory freed up and nothing of ours waits ({available} MB available, {floor} MB floor); work that starts from now on uses the new jobs",
           "shrunk": "[capacity] admitted {operation} with {reserved} of {wanted} MB: only {spare} MB are free above the {floor} MB floor right now, and {minimum} MB are enough to start",
-          "lent": "[capacity] admitted {operation} inside the reservation of {holder}: {jobs} job(s), {reserved} MB lent from its unused part, the parent keeps what it needs"
+          "lent": "[capacity] admitted {operation} inside the reservation of {holder}: {jobs} job(s), {reserved} MB lent from its unused part, the parent keeps what it needs",
+          "waitingShort": ", short by {megabytes} MB"
         },
         "de": {
-          "waiting": "[capacity] wartet seit {seconds} s auf {operation}: {reason} (benötigt {need} MB; {spare} MB frei oberhalb der Untergrenze von {floor} MB, Last {load}; {running} laufen, {ahead} davor); hinter {behind}",
+          "waiting": "[capacity] wartet seit {seconds} s auf {operation}: {reason} (benötigt {need} MB; {spare} MB frei = {available} MB verfügbar - {floor} MB Untergrenze - {held} MB reserviert, aber noch nicht belegt - {taken} MB davor zugelassen{short}; Last {load}; {running} laufen, {ahead} davor); hinter {behind}",
           "blocker": "{label} ({state}, {jobs} Job(s), {megabytes} MB)",
           "blockerHost": "dem Rechner selbst (nichts von uns)",
           "blockerStates": {
@@ -1509,7 +1532,8 @@
           "reducedGrows": "[capacity] {operation} mit {jobs} von {preferred} Job(s) zugelassen: der Rechner trägt gerade nicht mehr; der Lauf wächst auf mehr Jobs, sobald Speicher frei wird",
           "grown": "[capacity] {operation}: nach {seconds} s von {from} auf {jobs} von {preferred} Job(s) gewachsen, Reservierung {before} MB -> {reserved} MB: Speicher ist frei geworden und nichts von uns wartet ({available} MB verfügbar, Untergrenze {floor} MB); Arbeit, die ab jetzt startet, nutzt die neuen Jobs",
           "shrunk": "[capacity] {operation} mit {reserved} von {wanted} MB zugelassen: gerade sind nur {spare} MB über der Untergrenze von {floor} MB frei, und {minimum} MB genügen zum Start",
-          "lent": "[capacity] {operation} innerhalb der Reservierung von {holder} zugelassen: {jobs} Job(s), {reserved} MB aus dem ungenutzten Teil geliehen, der Elternprozess behält, was er braucht"
+          "lent": "[capacity] {operation} innerhalb der Reservierung von {holder} zugelassen: {jobs} Job(s), {reserved} MB aus dem ungenutzten Teil geliehen, der Elternprozess behält, was er braucht",
+          "waitingShort": ", es fehlen {megabytes} MB"
         }
       }
     },

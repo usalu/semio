@@ -1,0 +1,60 @@
+[repository:command] still running after 260 s
+[repository:command] still running after 270 s
+2026-11-17T15:37:53.734Z request-failed f8b20b65 Error: Unknown selected named source input: scriptProvider:artifact-package:native
+Error
+    at visit (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🚪️admission/🟦️.ts:83:502)
+    at buildSourceContractGroupsV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🚪️admission/🟦️.ts:84:100)
+    at declaredSourceInputs (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs:308:21)
+    at inferProjectInputs (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.mjs:334:33)
+    at projectInputs (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs:331:17)
+    at projectWithDefaults (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs:458:29)
+    at async discoverBuildOwnerAdmissionFactsV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔎️owner-discovery/🟨️.mjs:197:55)
+    at processTicksAndRejections (unknown:7:39)
+graph: plan answered, managed 111 MB, resident 212 MB (released 0 MB)
+[capacity] the memory footprint of running process trees cannot be read on darwin (Command failed: footprint -f bytes --noCategories -p 44286); the resident set is used instead, which can overstate what a process holds
+[capacity] Der Speicher-Fußabdruck laufender Prozessbäume kann unter darwin nicht gelesen werden (Command failed: footprint -f bytes --noCategories -p 44286); stattdessen gilt der residente Speicher, der überschätzen kann, was ein Prozess hält
+[repository:command] still running after 280 s
+[repo] still working after 290 s; last phase started: source.served
+[repository:command] still running after 290 s
+[repository:command] still running after 300 s
+[repository:command] still running after 310 s
+[repo] still working after 320 s; last phase started: source.served
+[repository:command] still running after 320 s
+[repository:command] still running after 330 s
+[repository:command] still running after 340 s
+[repo] still working after 350 s; last phase started: source.served
+[repository:command] still running after 350 s
+[repository:command] still running after 360 s
+[repository:command] still running after 370 s
+--
+[repo] still working after 440 s; last phase started: source.served
+[repository:command] still running after 440 s
+2026-11-17T16:05:28.486Z request-failed f8b20b65 Error: Unknown selected named source input: scriptProvider:artifact-package:native
+Error
+    at visit (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🚪️admission/🟦️.ts:83:502)
+    at buildSourceContractGroupsV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🚪️admission/🟦️.ts:84:100)
+    at declaredSourceInputs (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs:308:21)
+    at inferProjectInputs (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.mjs:334:33)
+    at projectInputs (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs:331:17)
+    at projectWithDefaults (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs:458:29)
+    at async discoverBuildOwnerAdmissionFactsV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔎️owner-discovery/🟨️.mjs:197:55)
+    at processTicksAndRejections (unknown:7:39)
+graph: plan answered, managed 110 MB, resident 213 MB (released 0 MB)
+[repository:command] still running after 450 s
+[repository:command] still running after 460 s
+[repo] still working after 470 s; last phase started: source.served
+[repository:command] still running after 470 s
+[repository:command] still running after 480 s
+[repository:command] still running after 490 s
+[repo] still working after 500 s; last phase started: source.served
+[repository:command] still running after 500 s
+[repository:command] still running after 510 s
+[repository:command] still running after 520 s
+[repo] still working after 530 s; last phase started: source.served
+[repository:command] still running after 530 s
+[repository:command] still running after 540 s
+[repository:command] still running after 550 s
+[repo] still working after 560 s; last phase started: source.served
+--
+[repository:command] still running after 230 s
+[repository:command] still running after 240 s

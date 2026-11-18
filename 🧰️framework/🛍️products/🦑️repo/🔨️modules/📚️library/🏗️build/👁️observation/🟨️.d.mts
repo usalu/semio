@@ -51,7 +51,9 @@ export function adoptInferenceAuthorityV1(rows:readonly {readonly kind:string;re
 /** 🧊️ Registers a block a farm worker validated and the caller verified by its hash. */
 export function adoptVerifiedBlockV1(path:string,text:string):void;
 /** 📦️ Admits one physical project's awaited JSON computation and complete observations. */
-export function observeProjectInferenceV1<T>(options:Readonly<{cachePath:string;key:unknown;owner:string;reusable?:(value:unknown)=>boolean|PromiseLike<boolean>;stamps?:readonly string[];prepare?:()=>boolean|PromiseLike<boolean>;fleet?:string}>,compute:()=>T|PromiseLike<T>):Promise<Awaited<T>>;
+export function observeProjectInferenceV1<T>(options:Readonly<{cachePath:string;key:unknown;owner:string;reusable?:(value:unknown)=>boolean|PromiseLike<boolean>;stamps?:readonly string[];prepare?:()=>boolean|PromiseLike<boolean>;fleet?:string;verdict?:(asked:{readonly headerDigest:string})=>PromiseLike<{readonly verdict?:string;readonly headerDigest?:string}|undefined>;verdictFinal?:boolean;prepareAttempts?:number}>,compute:()=>T|PromiseLike<T>):Promise<Awaited<T>>;
+/** 🤝️ The verdict of one process on one stored project record: `holds`, `stale`, `other` (a record of another key) or `missing`, with the digest of the header line it judged. */
+export function verifyStoredProjectRecordV1(options:Readonly<{cachePath:string;key:unknown}>):Promise<{readonly verdict:"holds"|"stale"|"other"|"missing";readonly headerDigest?:string;readonly rows?:number;readonly verifier:number}>;
 /** 🔖️ Registers the declared stamps of the inference protocol as `[path, stamp]` pairs and the path fragments they cover, which the module-load authority names by stamp instead of by bytes. */
 export function registerInferenceStampsV1(entries:Iterable<readonly [string,string]>,fragments?:readonly string[]):void;
 /** 📌️ Records the stamp of each named inferrer in the active inference scope. */
@@ -69,7 +71,10 @@ export function observedRequireResolve(from:string|URL,request:string):string;
 /** 🧭️ The spelling in which a module resolution is recorded: the dependency generation id is a placeholder. */
 export function canonicalResolutionV1(path:string):string;
 /** 🔗️ The seam of the shared command closure entries: how the answer of a `closure` fact is read now and how the entries named by facts are brought up to date. */
-export function registerClosureProviderV1(provider:{answer(path:string):string;settle(paths:readonly string[],value?:unknown):Promise<void>}):void;
+export function registerClosureProviderV1(provider:{answer(path:string):string;settle(paths:readonly string[],value?:unknown):Promise<void>;verify?(rows:readonly {kind:string;path:string;fact:unknown}[],value?:unknown):Promise<boolean>}):void;
+/** 🏁️ Whether the rows one inference observed still hold when it ends (closure rows are verified by the provider). */
+export function projectRowsHoldV1(rows:readonly {kind:string;path:string;fact:unknown}[],value:unknown,holdsRest:(rest:readonly {kind:string;path:string;fact:unknown}[])=>boolean):Promise<boolean>;
+export function projectRowsHoldAtEndV1(rows:readonly {kind:string;path:string;fact:unknown}[],value:unknown,nested:boolean,parent:unknown):Promise<boolean>;
 /** 🚚️ Brings the closure entries named by the `closure` facts among `rows` up to date. */
 export function settleClosureRowsV1(rows:readonly {kind:string;path:string}[],value?:unknown):Promise<void>;
 /** 📝️ Records the answer one closure entry gave to the running inference. */
@@ -78,12 +83,17 @@ export function recordClosureFactV1(path:string,answer:string):void;
 /** 🕊️ Drops every in-process cache a graph construction filled; safe only when no inference runs. */
 export function releaseInferenceMemoryV1():void;
 /** 📏️ The entry counts of the in-process caches a graph construction fills. */
+export function observationCollectionsV1():{name:string;entries:number;sample?:()=>unknown[];bytes?:number}[];
 export function inferenceCacheSizesV1():{interned:number;rowStore:{rows:number;strings:number;characters:number;bytes:number};analysisImages:number;analysisBytes:number;settledReadBytes:number;fileRecordImageBytes:number;verifiedBlockRows:number;settledReads:number;projectImages:number;publications:number;registryFiles:number};
 export function recordRegistryOwnerV1(workspaceRoot:string,name:string,row:{root:string;manifest:string}|undefined|null):void;
 /** ❓️ Whether recorded rows still hold, sharing the checks of the running inference round. */
 export function observationRowsHoldV1(rows:readonly unknown[]):boolean;
 /** 🤔️ Whether the shared rows of one reused computation still hold, checked once per validation round. */
 export function observationLayerHoldsV1(layer:readonly unknown[]):boolean;
+/** ⏱️ Where the lookups of stored project records spent their milliseconds in this process. */
+export function observationLookupClockV1():Record<string,number>;
+/** 🧪️ Whether one stored row still holds, probed against the tree now and remembered nowhere. */
+export function observationRowFreshV1(row:unknown):boolean;
 /** 🏃️ The running validation round, if any. */
 export function observationRoundV1():object|undefined;
 /** 🔂️ Runs `compute` inside one validation round (the open one when there is one), so stored facts and memoized computations are validated once per round. */
@@ -109,7 +119,7 @@ export type SourceSettlementRoundV1 = Readonly<{round:number;conflict?:string;fa
 /** ⏳️ Settles mutually consistent original facts under the existing signal and finite round limit. */
 export function settleObservedComputationV1<T>(compute:()=>T|PromiseLike<T>,options?:Readonly<{signal?:AbortSignal;limit?:number;onRound?:(round:SourceSettlementRoundV1)=>void|Promise<void>}>):Promise<Awaited<T>>;
 /** 🗃️ Reuses an inference result only while its complete current facts hold. */
-export function observeInference<T>(options:Readonly<{cachePath:string;key:unknown;reusable?:(value:unknown)=>boolean|PromiseLike<boolean>}>,compute:()=>T|PromiseLike<T>):Promise<Awaited<T>>;
+export function observeInference<T>(options:Readonly<{cachePath:string;key:unknown;verdictFinal?:boolean;prepare?:()=>boolean|PromiseLike<boolean>;prepareAttempts?:number;reusable?:(value:unknown)=>boolean|PromiseLike<boolean>;verdict?:(asked:{readonly headerDigest:string})=>PromiseLike<{readonly verdict?:string;readonly headerDigest?:string}|undefined>}>,compute:()=>T|PromiseLike<T>):Promise<Awaited<T>>;
 /** 🪢️ Publishes dependencies only with complete original inference and consumed facts. */
 export function observeDependencies<T>(options:Readonly<{receiptPath:string;recordDirectory?:string}>,compute:()=>T|PromiseLike<T>):Promise<Awaited<T>>;
 /** 🎛️ Receives the original preparation control without constructing operation authority. */
@@ -134,6 +144,7 @@ export function observeInferenceSnapshotV1<T>(compute:()=>T|PromiseLike<T>):Prom
 export function sourceObservationStatsV1():Readonly<{loadObservations:number;projectImages:number;projectImageBytes:number;originalInferencePublications:number;projectObservationRows:number;captureObservations:number;recordStores:number;analysisEntries:number;analysisBytes:number}>;
 
 export function requireCurrentObservationV1():void;
+export function staleSourceFactsErrorV1(rows:readonly {kind:string;path:string}[]):Error;
 
 /** 🪡️ Projects finite aggregate observation budget admission DATA. */
 export function observationBlockBudgetAdmitsV1(used:number,next:number,maximum:number):boolean;
@@ -178,6 +189,10 @@ export function observationProbeCountsV1():{readdir:number};
 export type ProjectClosureTravelV1 = Readonly<{ export(root: string, image: string): Promise<readonly Readonly<{ recipeKey: string; bundle: unknown }>[]>; import(root: string, bundles: readonly Readonly<{ recipeKey: string; bundle: unknown }>[]): Promise<number> }>;
 export function registerProjectClosureTravelV1(travel: ProjectClosureTravelV1): void;
 export function useProjectFleetV1(port:undefined|Readonly<{gate(info:unknown):Promise<unknown>;offer(info:unknown):void}>):void;
+/** 🔑️ The key text a project record is filed under in the fleet. */
+export function projectRecordKeyTextV1(key:unknown):string;
+/** 🚚️ The closure travel registered by the closure owner, or undefined. */
+export function projectClosureTravelV1():ProjectClosureTravelV1|undefined;
 /** 📤️ The record at `cachePath` in portable form or undefined. */
 export function exportProjectRecordV1(cachePath:string):undefined|Readonly<{digest:string;authority:readonly unknown[];observations:readonly unknown[];image:string}>;
 /** 📥️ Writes a portable record as the local record at `cachePath`. */
@@ -188,3 +203,5 @@ export function observationRowJsonV1(row:unknown):string;
 export function releaseProjectInferenceRetentionV1(cachePath:string):void;
 export function settleObservationLeafV1<T>(attempt:()=>T,options?:{attempts?:number}):T;
 export function readInferenceRecordOrMissV1(cachePath:string,options?:{read?:(path:string,optional:boolean)=>unknown;say?:(line:string)=>void}):any;
+/** 🔦️ The directory fact of `path` for one of the kinds that read a directory (`readdir`, `readdirNames`, `directories`), as a record row would hold it. */
+export function directoryFactOfV1(kind:"readdir"|"readdirNames"|"directories",path:string):string;

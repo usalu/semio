@@ -8,6 +8,8 @@
 import * as React from "react";
 import { Button, Table, uiDataLabel, type TableColumn } from "@semio-tech/ui-react";
 import type { HubDbIoKindV1, HubObservabilityV1, HubRouteLatencyV1, HubTraceEventRowV1, TrustedCatalogPackageProgressV1 } from "os-hub-ts/observability";
+import { AdminNote, AdminPage, AdminSection } from "../📄️AdminPage/🟦️.tsx";
+import { StatTiles } from "../📊️StatTiles/🟦️.tsx";
 import { useAdminT, type AdminI18nKey } from "../📚️I18n/🟦️.tsx";
 import { useAdminSession } from "../🔑️AdminSession/🟦️.tsx";
 // #endregion 🔌️Adapters
@@ -32,16 +34,6 @@ function formatMicros(micros: number): string {
   if (micros < 1_000) return `${micros} µs`;
   if (micros < 1_000_000) return `${(micros / 1_000).toFixed(1)} ms`;
   return `${(micros / 1_000_000).toFixed(2)} s`;
-}
-
-/** 📊️ One labelled figure. */
-function Figure({ label, value }: { readonly label: string; readonly value: React.ReactNode }): React.ReactElement {
-  return (
-    <div className="flex flex-col gap-single rounded border p-single">
-      <span className="text-sm text-muted-foreground">{label}</span>
-      <span className="text-lg font-semibold text-emphasized">{value}</span>
-    </div>
-  );
 }
 
 /** 📊️ `GET /admin/api/observability` as a live operator page: compiled-guest residency, the trusted catalog's
@@ -101,66 +93,53 @@ export function ObservabilityPage(): React.ReactElement {
   const routes = reading ? [...reading.routes].sort((left, right) => right.p95Us - left.p95Us) : [];
 
   return (
-    <div className="flex h-full w-full flex-col gap-single overflow-auto p-single">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-emphasized">{t("admin.observability.title")}</h1>
-        <Button id="admin-observability-refresh" icon="save" text={t("admin.observability.refresh")} variant="ghost" onClick={() => load()} />
-      </div>
-      {failed && (
-        <p role="alert" className="text-sm text-muted-foreground">
-          {t("admin.observability.unavailable")}
-        </p>
-      )}
+    <AdminPage title={t("admin.observability.title")} data-slot="admin-observability" actions={<Button id="admin-observability-refresh" icon="save" text={t("admin.observability.refresh")} variant="ghost" onClick={() => load()} />}>
+      {failed && <AdminNote role="alert">{t("admin.observability.unavailable")}</AdminNote>}
       {reading && (
         <>
-          <div className="grid grid-cols-2 gap-single md:grid-cols-4">
-            <Figure label={t("admin.observability.uptime")} value={formatMicros(reading.uptimeMs * 1_000)} />
-            <Figure label={t("admin.observability.droppedEvents")} value={reading.droppedEvents} />
-          </div>
-          <section aria-labelledby="admin-observability-residency" className="flex flex-col gap-single">
-            <h2 id="admin-observability-residency" className="font-semibold">{t("admin.observability.residencyTitle")}</h2>
+          <StatTiles columns={2} tiles={[
+            { label: t("admin.observability.uptime"), value: formatMicros(reading.uptimeMs * 1_000) },
+            { label: t("admin.observability.droppedEvents"), value: reading.droppedEvents },
+          ]} />
+          <AdminSection id="admin-observability-residency" title={t("admin.observability.residencyTitle")}>
             {reading.residency ? (
-              <div className="grid grid-cols-2 gap-single md:grid-cols-4">
-                <Figure label={t("admin.observability.residencyResident")} value={`${reading.residency.residentGuests} / ${reading.residency.registeredGuests} · ${formatBytes(reading.residency.residentBytes)}`} />
-                <Figure label={t("admin.observability.residencyBudget")} value={formatBytes(reading.residency.budgetBytes)} />
-                <Figure label={t("admin.observability.residencyFootprint")} value={formatBytes(reading.residency.footprintBytes)} />
-                <Figure label={t("admin.observability.residencyHits")} value={reading.residency.hits} />
-                <Figure label={t("admin.observability.residencyCompiles")} value={reading.residency.compiles} />
-                <Figure label={t("admin.observability.residencyAdmitted")} value={reading.residency.admitted} />
-                <Figure label={t("admin.observability.residencyBypassed")} value={reading.residency.bypassed} />
-                <Figure label={t("admin.observability.residencyReleased")} value={reading.residency.released} />
-                <Figure label={t("admin.observability.residencyCompileTime")} value={formatMicros(reading.residency.compileMicros)} />
-              </div>
+              <StatTiles columns={4} tiles={[
+                { label: t("admin.observability.residencyResident"), value: `${reading.residency.residentGuests} / ${reading.residency.registeredGuests} · ${formatBytes(reading.residency.residentBytes)}` },
+                { label: t("admin.observability.residencyBudget"), value: formatBytes(reading.residency.budgetBytes) },
+                { label: t("admin.observability.residencyFootprint"), value: formatBytes(reading.residency.footprintBytes) },
+                { label: t("admin.observability.residencyHits"), value: reading.residency.hits },
+                { label: t("admin.observability.residencyCompiles"), value: reading.residency.compiles },
+                { label: t("admin.observability.residencyAdmitted"), value: reading.residency.admitted },
+                { label: t("admin.observability.residencyBypassed"), value: reading.residency.bypassed },
+                { label: t("admin.observability.residencyReleased"), value: reading.residency.released },
+                { label: t("admin.observability.residencyCompileTime"), value: formatMicros(reading.residency.compileMicros) },
+              ]} />
             ) : (
-              <p className="text-sm text-muted-foreground">{t("admin.observability.residencyNone")}</p>
+              <AdminNote>{t("admin.observability.residencyNone")}</AdminNote>
             )}
-          </section>
+          </AdminSection>
           {reading.catalog && (
-            <section aria-labelledby="admin-observability-catalog" className="flex flex-col gap-single">
-              <h2 id="admin-observability-catalog" className="font-semibold">{t("admin.observability.catalogTitle")}</h2>
-              <p className="text-sm">
+            <AdminSection id="admin-observability-catalog" title={t("admin.observability.catalogTitle")}>
+              <AdminNote className="text-sm">
                 {t("admin.observability.catalogSummary", { ready: reading.catalog.packagesReady, total: reading.catalog.packagesTotal, refused: reading.catalog.packagesRefused, pinned: reading.catalog.rowsPinned, verified: reading.catalog.rowsVerified, rows: reading.catalog.rowsTotal })}
-              </p>
+              </AdminNote>
               <Table columns={packageColumns} data={[...reading.catalog.packages]} emptyMessage={uiDataLabel(t("admin.observability.residencyNone"))} getRowId={(row) => `package:${row.pluginId}`} />
-            </section>
+            </AdminSection>
           )}
-          <section aria-labelledby="admin-observability-routes" className="flex flex-col gap-single">
-            <h2 id="admin-observability-routes" className="font-semibold">{t("admin.observability.routesTitle")}</h2>
-            {reading.routesOverflowed > 0 && <p className="text-sm text-muted-foreground">{t("admin.observability.routesOverflowed", { count: reading.routesOverflowed })}</p>}
+          <AdminSection id="admin-observability-routes" title={t("admin.observability.routesTitle")}>
+            {reading.routesOverflowed > 0 && <AdminNote>{t("admin.observability.routesOverflowed", { count: reading.routesOverflowed })}</AdminNote>}
             <Table columns={routeColumns} data={routes} emptyMessage={uiDataLabel(t("admin.observability.requests"))} getRowId={(row) => `route:${row.method}:${row.route}`} />
-          </section>
-          <section aria-labelledby="admin-observability-events" className="flex flex-col gap-single">
-            <h2 id="admin-observability-events" className="font-semibold">{t("admin.observability.eventsTitle")}</h2>
+          </AdminSection>
+          <AdminSection id="admin-observability-events" title={t("admin.observability.eventsTitle")}>
             <Table columns={eventColumns} data={[...reading.rows]} emptyMessage={uiDataLabel(t("admin.observability.eventsTitle"))} getRowId={(row) => `event:${row.event}`} />
-          </section>
-          <section aria-labelledby="admin-observability-db-io" className="flex flex-col gap-single">
-            <h2 id="admin-observability-db-io" className="font-semibold">{t("admin.observability.dbIoTitle")}</h2>
-            <p className="text-sm">{t("admin.observability.dbIoSummary", { tasks: reading.dbIo.tasks, steps: reading.dbIo.steps, turns: reading.dbIo.turns })}</p>
-            <p className="text-sm">{t("admin.observability.dbIoAdmissionSummary", { waits: reading.dbIo.admissionWaits, waited: formatMicros(reading.dbIo.admissionWaitMicros), refusals: reading.dbIo.admissionRefusals })}</p>
+          </AdminSection>
+          <AdminSection id="admin-observability-db-io" title={t("admin.observability.dbIoTitle")}>
+            <AdminNote className="text-sm">{t("admin.observability.dbIoSummary", { tasks: reading.dbIo.tasks, steps: reading.dbIo.steps, turns: reading.dbIo.turns })}</AdminNote>
+            <AdminNote className="text-sm">{t("admin.observability.dbIoAdmissionSummary", { waits: reading.dbIo.admissionWaits, waited: formatMicros(reading.dbIo.admissionWaitMicros), refusals: reading.dbIo.admissionRefusals })}</AdminNote>
             <Table columns={dbIoColumns} data={[...reading.dbIo.kinds]} emptyMessage={uiDataLabel(t("admin.observability.dbIoTitle"))} getRowId={(row) => `db-io:${row.kind}`} />
-          </section>
+          </AdminSection>
         </>
       )}
-    </div>
+    </AdminPage>
   );
 }

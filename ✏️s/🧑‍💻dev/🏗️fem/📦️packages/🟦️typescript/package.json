@@ -28,6 +28,7 @@
     "@semio-tech/process": "workspace:*"
   },
   "dependencies": {
+    "@semio-tech/ui-react": "workspace:*",
     "@semio-tech/framework-ui-viewport-ts": "workspace:*"
   }
 }

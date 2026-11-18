@@ -15,7 +15,7 @@ interface Hall {
   readonly rooms: Set<Room>;
 }
 
-function shuffled<T>(items: readonly T[]): T[] {
+export function shuffled<T>(items: readonly T[]): T[] {
   const order = [...items];
   for (let index = order.length - 1; index > 0; index -= 1) {
     const other = Math.floor(Math.random() * (index + 1));
@@ -31,7 +31,7 @@ const guessed = (): number => Number((10 ** between(-1, 6)).toPrecision(3));
 /** ✍️ A valid answer to one presented task — the keys assigned where the sheet shows them, a guess per item (and
  * dimension) where it hides them, the guessed items standing in the order of their guesses — and the draft a learner
  * shares of it. */
-function answerOf(task: SheetTask): { readonly answer: Answer; readonly draft: ThinkingAnswer | undefined } {
+export function answerOf(task: SheetTask): { readonly answer: Answer; readonly draft: ThinkingAnswer | undefined } {
   const items = task.items.map((item) => item.id);
   const drafted = (answer: Answer) => ({ answer, draft: thinkingAnswer(task, answer) });
   if (task.kind === "classification") return drafted({ kind: "classification", assignments: Object.fromEntries(items.map((item) => [item, task.categories[Math.floor(Math.random() * task.categories.length)].id])) });

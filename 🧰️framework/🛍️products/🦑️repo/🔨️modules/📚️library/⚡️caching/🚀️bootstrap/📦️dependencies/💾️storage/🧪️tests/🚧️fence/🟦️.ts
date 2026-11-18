@@ -94,12 +94,12 @@ test("dependency preservation source comparison agrees with SQLite JSON oracles"
 test("dependency producer keeps the full fence at every interval and after the final verification",async()=>{
  const ts=await import("typescript"),source=readFileSync(new URL("../../🟦️.ts",import.meta.url),"utf8"),file=ts.createSourceFile("storage.ts",source,ts.ScriptTarget.Latest,true),producer=file.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="runJavascriptDependencyStoreProducerV1")!.getText(file);
  const interval=installSchema.$defs.InstalledPathProtocol.const.fullFenceInterval;expect(Number.isSafeInteger(interval)&&interval>=1&&interval<=64).toBe(true);
- expect(producer).toContain("if(++published%installSchema.$defs.InstalledPathProtocol.const.fullFenceInterval===0)await fence();else{checkpoint();requireJavascriptDependencyEndpointFenceV1(binding.sourceDirectory,expected,parents,ancestors);checkpoint();}");
+ expect(producer).toContain("if(published%installSchema.$defs.InstalledPathProtocol.const.fullFenceInterval===0)await fence();else{checkpoint();requireJavascriptDependencyEndpointFenceV1(binding.sourceDirectory,expected,parents,ancestors);checkpoint();}");
  expect(producer).not.toContain("fence=async(full");expect(producer).not.toContain("fence(false");
  const loop=producer.indexOf("requireJavascriptDependencyEndpointFenceV1("),tail=producer.slice(loop);
  expect(tail.indexOf("await verifyReady();")).toBeGreaterThan(0);expect(tail.indexOf("await verifyReady();")).toBeLessThan(tail.indexOf("for(const scope of requested)"));expect(tail.slice(tail.indexOf("for(const scope of requested)"))).toContain("await fence();");
- const verify=producer.slice(producer.indexOf("verifyReady=async()=>{"));expect(verify.slice(0,verify.indexOf("};"))).toContain("await fence();");
- const definition=producer.slice(producer.indexOf("fence=async()=>{"),producer.indexOf("material=("));
+ const verify=producer.slice(producer.indexOf("verifyReady=async()=>{"));expect(verify.slice(0,verify.indexOf("};"))).toContain("await finalFence();");expect(producer).toContain("finalFence=budgeted(true)");
+ const definition=producer.slice(producer.indexOf("fullFence=async()=>{"),producer.indexOf("fences={state"));
  for(const needed of["await store.recheck()","await custody.recheck()","recheckJavascriptDependencyInputsV1(row.plan.sources,control)","requireJavascriptDependencyPreservationSourceUnchangedV1(await readJavascriptDependencyPreservationSourceV1(","verifyJavascriptDependencyDescriptorGroupV1(","recheckJavascriptDependencyPreservationsDescriptorV1(held"])expect(definition).toContain(needed);
 });
 

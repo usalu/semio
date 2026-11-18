@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
 import deployment from "../../../🚀️deploy/🔣️.json" with { type: "json" };
 import publication from "../../../🧫️fixtures/🌐️publication/🔣️.json" with { type: "json" };
+import course from "../../../🔣️.json" with { type: "json" };
 
 export const site = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 
@@ -61,11 +62,17 @@ export const BOOT = "document.documentElement.dataset.ready='1'";
 export const STYLE = "body{margin:0}";
 
 /** 📄️ A release document sealed for `origin` the way the site's builder seals it: `policy` replaces the whole policy. */
-export function sealed(origin: string, policy = `default-src 'self'; script-src 'self' ${digest(BOOT)}; style-src 'self' ${digest(STYLE)}; style-src-attr 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src ${origin} ${origin.replace(/^http/u, "ws")}; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'`): string {
+export function sealed(origin: string, policy = `default-src 'self'; script-src 'self' ${digest(BOOT)}; style-src 'self' ${digest(STYLE)}; style-src-attr 'unsafe-inline'; img-src 'self' data:; font-src 'self'; frame-src 'self'; connect-src ${origin} ${origin.replace(/^http/u, "ws")}; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'`): string {
   return `<!doctype html>\n<html>\n  <head>\n    <meta charset="UTF-8" />\n    <meta http-equiv="Content-Security-Policy" content="${policy}" />\n    <title>Architecture and Technology</title>\n    <meta name="description" lang="en" content="Quizzes" />\n    <script>${BOOT}</script>\n    <style>${STYLE}</style>\n    <script type="module" crossorigin src="/assets/app-AbCd1234.js"></script>\n    <link rel="stylesheet" crossorigin href="/assets/app-EfGh5678.css">\n  </head>\n  <body><div id="root"></div></body>\n</html>\n`;
 }
 
+/** 🖼️ The signature of a PNG: all the artifact check reads of a poster. */
+export const PNG = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+
+/** 🎞️ The hashed asset path the build gives the poster of a clip in the artifact. */
+export const posterAsset = (file: string): string => `assets/${file.replace(/\.png$/u, "")}-AbCd1234.png`;
+
 /** 📦️ A whole CDN artifact baked for `origin`. */
 export function released(origin: string): Record<string, string | Uint8Array> {
-  return { ...Object.fromEntries(publication.assignmentFiles.map(path => [path, publication.pdf])), "index.html": sealed(origin), "404.html": sealed(origin), ".nojekyll": "", CNAME: `${deployment.site.host}\n`, "robots.txt": "User-agent: *\nAllow: /\n", "manifest.webmanifest": "{}", "favicon.svg": "<svg xmlns=\"http://www.w3.org/2000/svg\"/>", "assets/app-AbCd1234.js": `const proctor = ${JSON.stringify(origin)};`, "assets/app-EfGh5678.css": STYLE };
+  return { ...Object.fromEntries(publication.assignmentFiles.map(path => [path, publication.pdf])), ...Object.fromEntries(course.clips.map(clip => [posterAsset(clip.poster.file), PNG])), "index.html": sealed(origin), "404.html": sealed(origin), ".nojekyll": "", CNAME: `${deployment.site.host}\n`, "robots.txt": "User-agent: *\nAllow: /\n", "manifest.webmanifest": "{}", "favicon.svg": "<svg xmlns=\"http://www.w3.org/2000/svg\"/>", "assets/app-AbCd1234.js": `const proctor = ${JSON.stringify(origin)};`, "assets/app-EfGh5678.css": STYLE };
 }

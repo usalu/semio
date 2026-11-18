@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import type {BuildGraphInvalidationInventoryV1} from "../📋️model/🟦️.ts";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {withRepositoryBuildGraphFactStoreV1,withRepositoryBuildGraphSelectionV1} from "../../📥️inputs/💾️storage/🟨️.mjs";
@@ -10,6 +11,7 @@ import {acquireQueuedResourceLease,acquireResourceLease,acquireFreshResourceLeas
 import {type RepositoryCacheStoreV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {createGenerationStoreV1,createNodeFilePortV1} from "../🕰️generations/🟨️.mjs";
+import {currentHolderV1} from "../🕰️generations/🪧️door-board/🟨️.mjs";
 import {createQueuedClaimLeasePortV1} from "../🕰️generations/🧩️claims/🟨️.mjs";
 import {createSliceCustodyV1,renderCustodyMessageV1,type SliceClaimV1,type SliceCustodyV1} from "../🕰️generations/🔐️custody/🟨️.mjs";
 import {createGenerationFilesV1} from "../🗂️generation-files/🟦️.ts";
@@ -22,7 +24,7 @@ import {buildGraphPathV1,planBuildGraphInvalidationV1} from "../📜️contract/
 export async function withBuildGraphStateV1<T>(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,body:(store:RepositoryCacheStoreV1,actualControl:ResourceLeaseControl)=>Promise<T>,scope?:string):Promise<T> {
   requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);checkScriptInvocation(invocation);
   const run=async(store:RepositoryCacheStoreV1,actualControl:ResourceLeaseControl)=>{
-    const writer=await acquireQueuedResourceLease({directory:join(root,".cache/b/l/m/data"),resource:scope?buildGraphPublicationWriterResourceV1(store.root,scope):"build-graph-state:"+store.root,mode:"exclusive",owner:randomBytes(16).toString("base64url"),control:actualControl,signal:actualControl.signal});
+    const writer=await acquireQueuedResourceLease({directory:machinePathV1(root,".cache/b/l/m/data"),resource:scope?buildGraphPublicationWriterResourceV1(store.root,scope):"build-graph-state:"+store.root,mode:"exclusive",owner:randomBytes(16).toString("base64url"),control:actualControl,signal:actualControl.signal});
     try{checkResourceLeaseControl(actualControl);return await body(store,actualControl);}finally{writer.release();}
   };
   return scope?withRepositoryBuildGraphSelectionV1(root,invocation,phaseControl,scope,run):withRepositoryBuildGraphFactStoreV1(root,invocation,phaseControl,run);
@@ -31,7 +33,18 @@ export async function withBuildGraphStateV1<T>(root:string,invocation:ScriptInvo
 
 /** 🛡️ The slice custody of the generation builders of one graph image (see `./🕰️generations/🔐️custody`): claim documents beside the generations, leases in the repository lease directory. */
 export function generationCustodyV1(root:string,store:RepositoryCacheStoreV1,control:ResourceLeaseControl):SliceCustodyV1{
-  return createSliceCustodyV1({root:join(store.root,"generations"),fs:generationFilesV1(store) as never,lease:createQueuedClaimLeasePortV1({acquire:acquireQueuedResourceLease as never,tryAcquire:acquireResourceLease as never,acquireFresh:acquireFreshResourceLeaseV1 as never,directory:join(root,".cache/b/l/m/data"),control})});
+  return createSliceCustodyV1({root:join(store.root,"generations"),fs:generationFilesV1(store) as never,lease:createQueuedClaimLeasePortV1({acquire:acquireQueuedResourceLease as never,tryAcquire:acquireResourceLease as never,acquireFresh:acquireFreshResourceLeaseV1 as never,directory:machinePathV1(root,".cache/b/l/m/data"),control})});
+}
+
+
+const runningCodeV1=new Map<string,string>();
+/** 🪪️ The code identity this process runs (fixed at the first queue of the process) and a reader of the identity the tree wants now; the reader answers undefined when the tree cannot be sealed at the moment. */
+async function codeIdentityV1(root:string):Promise<{digest:string;current:()=>Promise<string|undefined>}>{
+  try{
+    const{hostImplementationV1}=await import("../../🧭️invocation/🛰️plan/🟦️.ts"),{hostReloadIdentityV1}=await import("../../🧭️invocation/🔄️reload/🟦️.ts"),digest=runningCodeV1.get(root)??hostImplementationV1(root,process.env);
+    runningCodeV1.set(root,digest);const identify=hostReloadIdentityV1(root,process.env,digest);
+    return{digest,current:async()=>{const found=await identify();return found.blocked?undefined:found.implementation;}};
+  }catch{return{digest:"",current:async()=>undefined};}
 }
 
 
@@ -39,8 +52,9 @@ export function generationCustodyV1(root:string,store:RepositoryCacheStoreV1,con
 export async function withGenerationCustodyV1<T>(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,request:{readonly dirty:readonly string[];readonly structural:boolean}|undefined,body:(store:RepositoryCacheStoreV1,control:ResourceLeaseControl,claim:SliceClaimV1)=>Promise<T>):Promise<T> {
   requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);checkScriptInvocation(invocation);
   return withRepositoryBuildGraphSelectionV1(root,invocation,phaseControl,generationScopeV1,async(store,control)=>{
-    const language=resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language,claim=await generationCustodyV1(root,store,control).hold({owners:request?.dirty??[],structural:request===undefined||request.structural,signal:control.signal,say:(key,fields)=>{process.stderr.write(renderCustodyMessageV1(key,fields,language)+"\n");}});
-    try{checkResourceLeaseControl(control);return await body(store,control,claim);}finally{await claim.release();}
+    const language=resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language as "en"|"de",code=await codeIdentityV1(root),claim=await generationCustodyV1(root,store,control).hold({owners:request?.dirty??[],structural:request===undefined||request.structural,signal:control.signal,language,holder:currentHolderV1({digest:code.digest}),currentDigest:code.current,say:(key,fields)=>{process.stderr.write(renderCustodyMessageV1(key,fields,language)+"\n");}});
+    const stop=((await import("../🕰️generations/🔌️load/🟨️.mjs")) as unknown as {onGenerationProgressV1(listener:(event:{phase?:string;done?:number;total?:number})=>void):()=>void}).onGenerationProgressV1(event=>{void claim.progress(event).catch(()=>undefined);});
+    try{checkResourceLeaseControl(control);return await body(store,control,claim);}finally{stop();await claim.release();}
   },{optionalCaches:false,shared:true});
 }
 

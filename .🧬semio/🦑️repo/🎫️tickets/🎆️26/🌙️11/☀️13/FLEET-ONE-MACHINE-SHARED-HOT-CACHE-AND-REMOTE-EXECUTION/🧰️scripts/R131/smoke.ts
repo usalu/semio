@@ -1,0 +1,11 @@
+import{mkdtempSync,readFileSync}from"node:fs";import{join}from"node:path";import{tmpdir}from"node:os";
+const R="/Users/ueli/Documents/semio",L=R+"/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/";
+const service=await import(L+"🏊️project-farm/👷️service/🟨️.mjs"),nodes=await import(L+"🟨️.mjs");
+const owner=process.argv[2]??"📦️packages/🦀️rust/x";const json=JSON.parse(readFileSync(R+"/"+owner+"/📋️project.json","utf8"));
+const stagingBase=mkdtempSync(join(tmpdir(),"r131-smoke-"));
+const obs0=await import(R+'/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs');await service.libraryBootstrapReady?.();await (await import(L+'../🟨️.mjs')).libraryBootstrap;const authority=obs0.inferenceAuthorityRowsV1();
+await service.open({authority,workspaceRoot:R,registry:undefined,projectsByRoot:[],componentRoots:[],contracts:nodes.projectGeneratorContractsV1(R),commandInputs:null,lateClosures:false,stagingBase},{slot:0,generation:1});
+const job={look:true,owners:[{name:json.name,root:json.root??owner,json:{...json,root:json.root??owner},cacheKey:"smoke",cachePath:join(stagingBase,"none.json")}],globals:{projectAuthority:"a",registryDigest:"b",commandRevision:"c",late:false},closureStore:undefined,verdicts:undefined,refs:false};
+const env=service.sessionEnvironmentV1(),obs=await import(R+'/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs');for(const wrap of [false,true]){try{const o=job.owners[0];const r=wrap?await obs.observeInferenceSnapshotV1(()=>nodes.ownerJobV1(env,job.globals,o)):nodes.ownerJobV1(env,job.globals,o);console.log(wrap?'wrapped':'bare','ok',JSON.stringify(r.head).slice(0,200),r.native);}catch(e){console.log(wrap?'wrapped':'bare','ERR',String(e.message).slice(0,200),String(e.stack).split('\n').slice(1,6).join(' | ').slice(0,700));}}
+const o0=job.owners[0],prepared=nodes.ownerJobV1(env,job.globals,o0);try{const old=await service.run({...prepared,cachePath:o0.cachePath,observe:true,refs:false});console.log('OLD observe',JSON.stringify(old).slice(0,300));}catch(e){console.log('OLD ERR',String(e.message).slice(0,200));}
+const at=performance.now();const reply=await service.run(job);console.log(JSON.stringify({ms:Math.round(performance.now()-at),reply},null,1).slice(0,1500));process.exit(0);

@@ -8,6 +8,6 @@
       "@teaching/staffage": ["../../../📦️packages/🟦️typescript/🟦️.ts"]
     }
   },
-  "include": ["./📜️script.ts", "../../🟦️.ts", "../../🏗️builder/**/*.ts", "../../🧪️tests/**/*.ts"],
+  "include": ["./📜️script.ts", "../../🟦️.ts", "../../🛟️recovery/**/*.ts", "../../🏗️builder/**/*.ts", "../../🧪️tests/**/*.ts"],
   "exclude": ["**/node_modules/**"]
 }

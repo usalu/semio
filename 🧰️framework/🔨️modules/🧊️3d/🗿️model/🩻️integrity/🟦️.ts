@@ -10,7 +10,7 @@
  * @see ../🔺️tessellation/🟦️.ts */
 import type { Geometry } from "../🔺️tessellation/🧱️builder/🟦️.ts";
 import type { Quality, Solid } from "../🧬️schema/🟦️.ts";
-import { tessellateSolid } from "../🔺️tessellation/🟦️.ts";
+import { tessellateSolid } from "../🔺️tessellation/🧱️solid/🟦️.ts";
 import * as portable from "../🧮️math/🎯️portable/🟦️.ts";
 
 /** 🪡️ The topology and size of a mesh, see the module notes for the terms. */

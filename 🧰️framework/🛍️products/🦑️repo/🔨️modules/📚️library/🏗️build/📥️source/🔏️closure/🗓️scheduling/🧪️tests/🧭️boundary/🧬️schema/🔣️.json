@@ -7,7 +7,6 @@
     "version",
     "checkoutFromTests",
     "cargoScript",
-    "minimumLeaving",
     "introduced",
     "enforced",
     "debt",
@@ -24,10 +23,6 @@
     "cargoScript": {
       "type": "string",
       "minLength": 1
-    },
-    "minimumLeaving": {
-      "type": "integer",
-      "minimum": 0
     },
     "enforced": {
       "type": "array",

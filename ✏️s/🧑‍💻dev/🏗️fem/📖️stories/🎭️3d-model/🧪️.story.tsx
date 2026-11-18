@@ -15,6 +15,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
+import { Button, SharedBorderRow } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useCallback, useMemo, useState, type ReactElement } from "react";
 
@@ -64,17 +65,17 @@ function Fem3dModelStoryHost({ initialExampleId, locale }: { readonly initialExa
 
   return (
     <div style={{ display: "flex", height: "100%", width: "100%", minHeight: "24rem", flexDirection: "column" }}>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 4, padding: 4 }}>
-        <button type="button" data-testid="fem3d-load-default" onClick={() => dispatch("setActiveExample", { exampleId: FEM3D_STORY_EXAMPLE_ID })}>
+      <SharedBorderRow wrap>
+        <Button variant="outline" icon="arrow-right" type="button" data-testid="fem3d-load-default" onClick={() => dispatch("setActiveExample", { exampleId: FEM3D_STORY_EXAMPLE_ID })}>
           {femStoryLabel("loadExample", state.locale)}: {FEM3D_STORY_EXAMPLE_ID}
-        </button>
-        <button type="button" data-testid="fem3d-load-shipped-id" onClick={() => dispatch("setActiveExample", { exampleId: FEM3D_CLEARED_EXAMPLE_ID })}>
+        </Button>
+        <Button variant="outline" icon="arrow-right" type="button" data-testid="fem3d-load-shipped-id" onClick={() => dispatch("setActiveExample", { exampleId: FEM3D_CLEARED_EXAMPLE_ID })}>
           {femStoryLabel("example", state.locale)}: {FEM3D_CLEARED_EXAMPLE_ID}
-        </button>
-        <button type="button" data-testid="fem3d-add-node" onClick={() => dispatch("addNode", { x: 4, y: 5, z: 8.4 })}>
+        </Button>
+        <Button variant="outline" icon="arrow-right" type="button" data-testid="fem3d-add-node" onClick={() => dispatch("addNode", { x: 4, y: 5, z: 8.4 })}>
           {femStoryLabel("addNode", state.locale)}
-        </button>
-      </div>
+        </Button>
+      </SharedBorderRow>
       <div style={{ position: "relative", flex: "1 1 auto", minHeight: 0 }} data-testid="fem3d-model-world">
         <World3dHost node={node} onAction={onAction} />
       </div>

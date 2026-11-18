@@ -24,7 +24,7 @@
     "files": {
       "type": "array",
       "minItems": 1,
-      "maxItems": 2048,
+      "maxItems": 16384,
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -63,10 +63,10 @@
   "definitions": {
     "Policy": {
       "const": {
-        "maximumFiles": 2048,
+        "maximumFiles": 16384,
         "maximumFileBytes": 4194304,
-        "maximumSourceBytes": 20971520,
-        "maximumSnapshotBytes": 33554432,
+        "maximumSourceBytes": 67108864,
+        "maximumSnapshotBytes": 100663296,
         "readChunkBytes": 65536,
         "progressFiles": 16
       }
@@ -91,7 +91,7 @@
         "sources": {
           "type": "array",
           "minItems": 1,
-          "maxItems": 2048,
+          "maxItems": 16384,
           "items": {
             "type": "object",
             "additionalProperties": false,
@@ -177,7 +177,7 @@
         "version": 1,
         "transport": "owned-auxiliary-pipe",
         "descriptor": 3,
-        "maximumSnapshotBytes": 33554432,
+        "maximumSnapshotBytes": 100663296,
         "digest": "sha256-exact-utf8-bytes",
         "loaderIdentity": "actual-single-eval-argument",
         "snapshot": null,
@@ -205,7 +205,7 @@
         "bytes": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 33554433
+          "maximum": 100663297
         },
         "digest": {
           "enum": [
@@ -619,7 +619,7 @@
         "files": {
           "type": "array",
           "minItems": 1,
-          "maxItems": 2048,
+          "maxItems": 16384,
           "items": {
             "type": "object",
             "additionalProperties": false,

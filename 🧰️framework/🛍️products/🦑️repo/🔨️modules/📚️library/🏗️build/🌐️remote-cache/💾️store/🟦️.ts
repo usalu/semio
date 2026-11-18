@@ -58,7 +58,7 @@ export class RemoteCacheStoreV1{
  private clock=0;
  private collecting:Promise<void>=Promise.resolve();
  private readonly writing=join(".tmp",`${process.pid}-${randomUUID()}`);
- private constructor(private readonly options:RemoteCacheStoreOptionsV1){}
+ private readonly options:RemoteCacheStoreOptionsV1; private constructor(options:RemoteCacheStoreOptionsV1){this.options=options;}
  private get grace():number{return this.options.graceMilliseconds??SLOT_GRACE_MILLISECONDS_V1;}
  private storedClock=0;
  private stamp():number{return this.storedClock=Math.max(Date.now(),this.storedClock+1);}

@@ -202,7 +202,8 @@ export function useIntroductionElevation(ids: readonly string[]): ReadonlySet<st
 
 export type IntroductionInfoBoxPosition = { readonly top: number; readonly left: number };
 
-export const INTRODUCTION_INFO_BOX_GAP_PX = 16;
+/** 📏️ The distance between the info box and the element it points at, and its inset from the viewport edge: none, the box docks flush so its border is the target's (and the viewport's) one shared line. */
+export const INTRODUCTION_INFO_BOX_GAP_PX = 0;
 
 /** 📝️ Splits an introduction step body into visual paragraphs on blank lines so each
  * paragraph can emphasize independently on hover. */
@@ -213,8 +214,8 @@ export function splitIntroductionBodyParagraphs(body: string): readonly string[]
     .filter((paragraph) => paragraph.length > 0);
 }
 
-/** 🧲️ Clamps an introduction info box to the viewport. Authored placement uses a visual inset;
- * direct manipulation uses zero so every outer edge can meet the corresponding viewport border. */
+/** 🧲️ Clamps an introduction info box to the viewport. Authored placement and direct
+ * manipulation both use the zero {@link INTRODUCTION_INFO_BOX_GAP_PX} so every outer edge can meet the corresponding viewport border; a caller may still pass an inset. */
 export function clampIntroductionInfoBoxPosition(
   position: IntroductionInfoBoxPosition,
   boxSize: { readonly width: number; readonly height: number },
@@ -225,6 +226,85 @@ export function clampIntroductionInfoBoxPosition(
     top: Math.min(Math.max(position.top, inset), Math.max(inset, viewport.height - boxSize.height - inset)),
     left: Math.min(Math.max(position.left, inset), Math.max(inset, viewport.width - boxSize.width - inset)),
   };
+}
+
+/** 🧲️ Docks the info box flush onto the border lines beneath it: per axis, the box edge (start or end) closest to a line within `reach` px moves onto that line, then the opposite edge, when another line lies within `reach` of it, is stretched or shrunk onto that line too, so the box shares both seams with the cards or chips under it instead of floating a few pixels off. An axis with no line within reach stays as it is. */
+export function dockIntroductionInfoBox(
+  position: IntroductionInfoBoxPosition,
+  boxSize: { readonly width: number; readonly height: number },
+  lines: { readonly xs: readonly number[]; readonly ys: readonly number[] },
+  reach: number,
+): IntroductionInfoBoxPosition & { readonly width: number; readonly height: number } {
+  const dock = (start: number, size: number, candidates: readonly number[]): { start: number; size: number } => {
+    let best = 0;
+    let bestDistance = reach + 1;
+    let fromEnd = false;
+    for (const line of candidates) {
+      for (const [delta, end] of [[line - start, false], [line - (start + size), true]] as const) {
+        if (Math.abs(delta) < bestDistance) {
+          best = delta;
+          bestDistance = Math.abs(delta);
+          fromEnd = end;
+        }
+      }
+    }
+    if (bestDistance > reach) return { start, size };
+    const fixed = fromEnd ? start + size + best : start + best;
+    const free = fromEnd ? start + best : start + size + best;
+    let opposite = free;
+    let oppositeDistance = reach + 1;
+    let oppositeInner = false;
+    for (const line of candidates) {
+      if (!(fromEnd ? line < fixed : line > fixed)) continue;
+      const distance = Math.abs(line - free);
+      const inner = fromEnd ? line >= free : line <= free;
+      if (distance <= reach && (distance < oppositeDistance || (inner && !oppositeInner)) && (inner || !oppositeInner)) {
+        opposite = line;
+        oppositeDistance = distance;
+        oppositeInner = inner;
+      }
+    }
+    const far = oppositeDistance <= reach ? opposite : free;
+    return fromEnd ? { start: far, size: fixed - far } : { start: fixed, size: far - fixed };
+  };
+  const y = dock(position.top, boxSize.height, lines.ys);
+  const x = dock(position.left, boxSize.width, lines.xs);
+  return { top: y.start, left: x.start, width: x.size, height: y.size };
+}
+
+/** 🌬️ Slides the docked info box by the smallest offset (within `range` px per axis) that leaves none of its own border lines (`own`, relative to the box origin) a near miss of a line beneath it: a line pair closer than `reach` but not coincident reads as a double line, so every such pair costs its shortfall while a coincident pair (within half a pixel) costs nothing. Ties keep the smaller move. */
+export function clearIntroductionInfoBoxNearMisses(
+  position: IntroductionInfoBoxPosition,
+  own: { readonly xs: readonly number[]; readonly ys: readonly number[] },
+  lines: { readonly xs: readonly number[]; readonly ys: readonly number[] },
+  reach: number,
+  range: number,
+): IntroductionInfoBoxPosition {
+  const cost = (origin: number, ownLines: readonly number[], others: readonly number[]): number => {
+    let total = 0;
+    for (const line of ownLines) {
+      for (const other of others) {
+        const distance = Math.abs(origin + line - other);
+        if (distance >= 0.5 && distance < reach) total += reach - distance;
+      }
+    }
+    return total;
+  };
+  const best = (start: number, ownLines: readonly number[], others: readonly number[]): number => {
+    let winner = start;
+    let winnerCost = cost(start, ownLines, others);
+    for (let step = 1; step <= range && winnerCost > 0; step++) {
+      for (const candidate of [start - step, start + step]) {
+        const candidateCost = cost(candidate, ownLines, others);
+        if (candidateCost < winnerCost) {
+          winner = candidate;
+          winnerCost = candidateCost;
+        }
+      }
+    }
+    return winner;
+  };
+  return { top: best(position.top, own.ys, lines.ys), left: best(position.left, own.xs, lines.xs) };
 }
 
 /** 🍱️ Where the info box sits relative to its anchor. `auto` picks the side with the most free

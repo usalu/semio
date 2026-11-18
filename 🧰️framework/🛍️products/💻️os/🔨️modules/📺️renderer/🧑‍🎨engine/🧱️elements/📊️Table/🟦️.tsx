@@ -8,7 +8,7 @@
 // #region 🔌️Adapters
 import { restoreFocusAfterCommitV1 } from "../🎯️focus-return/🟦️.ts";
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "../⚛️react-port/🟦️.ts";
-import { Button, ContextMenuController, Icon, Input, Table, Textarea, uiDataLabel, useLabel, useShellScopeOptional, type ContextMenuItem, type IconName, type TableColumn } from "@semio-tech/ui-react";
+import { Button, ContextMenuController, Icon, Input, SharedBorderRow, Table, Textarea, uiDataLabel, useLabel, useShellScopeOptional, type ContextMenuItem, type IconName, type TableColumn } from "@semio-tech/ui-react";
 import { type ActionDescriptor, type ComponentSceneHostProps } from "@semio-tech/framework";
 import { openSurfaceContextMenu, useShellContextMenuFallback, type SurfaceContextMenuResult, useMapContextMenuSpecs } from "../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
 import { parseSceneJsonField, WindowInstanceIdContext } from "../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
@@ -161,10 +161,10 @@ function TableStepperCell({ cell, id, columnLabel, onAction }: { readonly cell: 
     dispatchCellAction(onAction, cell.action, { delta: clamped });
   };
   return (
-    <div className="flex min-w-0 items-center gap-1" data-slot="table-stepper" data-stepper-for={id} onClick={(event) => event.stopPropagation()}>
+    <SharedBorderRow framed={false} className="h-full" data-slot="table-stepper" data-stepper-for={id} onClick={(event) => event.stopPropagation()}>
       <Button
         aria-label={`${decrementLabel} ${readoutLabel}`}
-        className="h-medium shrink-0 px-2"
+        className="shrink-0 px-2"
         data-stepper-control="decrement"
         data-stepper-for={id}
         disabled={cell.value <= cell.min}
@@ -181,7 +181,7 @@ function TableStepperCell({ cell, id, columnLabel, onAction }: { readonly cell: 
         aria-valuemin={cell.min}
         aria-valuenow={cell.value}
         aria-valuetext={String(cell.value)}
-        className="h-medium w-14 min-w-0 text-center font-mono text-xs"
+        className="w-14 min-w-0 text-center font-mono text-xs"
         data-stepper-control="value"
         id={id}
         onKeyDown={(event) => {
@@ -196,7 +196,7 @@ function TableStepperCell({ cell, id, columnLabel, onAction }: { readonly cell: 
       />
       <Button
         aria-label={`${incrementLabel} ${readoutLabel}`}
-        className="h-medium shrink-0 px-2"
+        className="shrink-0 px-2"
         data-stepper-control="increment"
         data-stepper-for={id}
         disabled={cell.value >= cell.max}
@@ -207,7 +207,7 @@ function TableStepperCell({ cell, id, columnLabel, onAction }: { readonly cell: 
         type="button"
         variant="outline"
       />
-    </div>
+    </SharedBorderRow>
   );
 }
 
@@ -218,20 +218,20 @@ function renderTableCell(cell: TableCellRecord, id: string, columnLabel: string 
     case "number":
       return String(cell.value);
     case "editableText":
-      return <TableEditableTextCell cell={cell} columnLabel={columnLabel} id={id} onAction={onAction} />;
+      return <SharedBorderRow framed={false} className="h-full w-full"><TableEditableTextCell cell={cell} columnLabel={columnLabel} id={id} onAction={onAction} /></SharedBorderRow>;
     case "stepper":
       return <TableStepperCell cell={cell} columnLabel={columnLabel} id={id} onAction={onAction} />;
     case "buttons":
       return (
-        <div className="flex min-w-0 items-center gap-1" onClick={(event) => event.stopPropagation()}>
+        <SharedBorderRow framed={false} className="h-full" onClick={(event) => event.stopPropagation()}>
           {cell.buttons
             .filter((button) => (button.placement ?? "row") === "row")
             .map((button, index) => (
-            <Button icon={button.iconId} key={index} className="h-medium shrink-0 px-2" onClick={() => dispatchCellAction(onAction, button.action, {})} title={button.label} type="button" variant="outline">
+            <Button icon={button.iconId} key={index} className="shrink-0 px-2" onClick={() => dispatchCellAction(onAction, button.action, {})} title={button.label} type="button" variant="outline">
               <Icon icon={button.iconId} size="small" />
             </Button>
           ))}
-        </div>
+        </SharedBorderRow>
       );
   }
 }

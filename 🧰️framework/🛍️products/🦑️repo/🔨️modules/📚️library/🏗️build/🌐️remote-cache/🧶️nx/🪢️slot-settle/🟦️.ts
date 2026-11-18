@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {readdirSync,readFileSync} from "node:fs";
 import {isAbsolute,join,resolve} from "node:path";
 import {readNxTaskRowsV1,supersedeNxCacheV1,type NxSupersessionV1,type NxTaskReaderV1} from "../../🪢️nx-slots/🟦️.ts";
@@ -9,7 +10,7 @@ export type NxSlotSettlementV1=Readonly<{registered:Readonly<{claimed:number;mis
 /** 🗄️ The Nx cache directory of a workspace: the `cacheDirectory` of its nx.json, relative to the root, `.nx/cache` by default. */
 export function nxCacheDirectoryV1(root:string):string{
  let configured:unknown;try{configured=JSON.parse(readFileSync(join(root,"nx.json"),"utf8")).cacheDirectory;}catch{}
- return typeof configured==="string"&&configured!==""?(isAbsolute(configured)?configured:resolve(root,configured)):join(root,".nx","cache");
+ return typeof configured==="string"&&configured!==""?(isAbsolute(configured)?configured:resolve(root,configured)):machinePathV1(root,".nx","cache");
 }
 
 /** 🪢️ Settles the slots after an Nx run: every task the run touched (stored or hit since `sinceMs`) is claimed as current at the fleet cache through the front (the server cannot see a local hit or a header-less upload), and the local Nx cache drops the entries a newer entry of the same task slot superseded beyond the grace, forgetting their rows in the Nx database so Nx never believes in a removed entry. Fails soft: nothing here can fail a build. */

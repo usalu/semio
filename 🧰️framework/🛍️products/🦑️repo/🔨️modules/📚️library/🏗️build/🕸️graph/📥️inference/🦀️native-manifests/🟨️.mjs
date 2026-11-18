@@ -9,6 +9,7 @@ import {refuseBuildV1} from "../../../📖️texts/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {isOpaqueSourcePathV1,CACHE_POLICY} from "../../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
 import sourceSchema from "./🧬️schema/🔣️.json" with {type:"json"};
+import { interfaceDependencyInputV1 } from "../../../📥️inputs/🔭️interface/🟦️.ts";
 const { existsSync, readdirSync, readFileSync, lstatSync } = observedFs;
 
 /** 🏷️ Names this component as its roster entry does. */
@@ -288,7 +289,7 @@ export function withNativePreparation(project, workspaceRoot, contracts, cache =
         if (!owner){const error=new Error(`Native dependency has no build project owner: ${root} (required by ${project.name}:${name}; candidates=${projectsByRoot.size})`);error.code="BUILD_SOURCE_AUTHORITY";throw error;}
         return owner;
       }).sort();
-      target.inputs = target.inputs.flatMap((input) => input === "^nativeSources" || input === "^nativeTestSources" ? dependencies.length ? [{ input: "nativeSources", projects: dependencies }] : [] : [input]);
+      target.inputs = target.inputs.flatMap((input) => input === "^nativeSources" || input === "^nativeTestSources" ? interfaceDependencyInputV1(name, target, input, dependencies) : [input]);
     }
     if (!selected.length) continue;
     target.dependsOn = [...(target.dependsOn ?? []), ...selected.map((contract) => contract.target).filter((name) => !target.dependsOn?.includes(name))];

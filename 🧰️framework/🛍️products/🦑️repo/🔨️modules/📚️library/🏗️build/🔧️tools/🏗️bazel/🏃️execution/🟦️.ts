@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import{checkResourceLeaseControl,withResourceLeases,type ResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{requireNativeStoragePathV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
@@ -259,7 +260,7 @@ export async function prepareBazelBunV1(workspace:string,store:RepositoryTooling
  const row=bazelExecutionPlatformByIdV1(id),pin=bazelBunDistributionV1(id),executable=bazelBunStorePathV1(store.root,id),directory=dirname(executable),signal=phaseControl.signal,receipt=join(directory,".pin"),digest=async(bytes:Uint8Array)=>createHash("sha256").update(bytes).digest("hex"),progress=options.progress??(()=>undefined);
  const verified=async():Promise<boolean>=>{try{const info=await lstat(executable);if(!info.isFile()||info.isSymbolicLink())return false;return (await readFile(receipt,"utf8")).trim()===await digest(await readFile(executable));}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return false;throw error;}};
  await progress({phase:"waiting",bytes:0,total:pin.bytes});
- return withResourceLeases({directory:join(workspace,".cache/b/l/m/data"),signal,control:phaseControl,resources:[{resource:`bazel-bun-${pin.sha256}`,mode:"exclusive"}]},async()=>{
+ return withResourceLeases({directory:machinePathV1(workspace,".cache/b/l/m/data"),signal,control:phaseControl,resources:[{resource:`bazel-bun-${pin.sha256}`,mode:"exclusive"}]},async()=>{
   checkResourceLeaseControl(phaseControl);await progress({phase:"verifying",bytes:0,total:pin.bytes});if(await verified()){await progress({phase:"ready",bytes:pin.bytes,total:pin.bytes});return executable;}
   if(options.offline)throw new Error(`Pinned Bun ${bun.version} for ${id} is not prepared for the original offline invocation`);
   await mkdir(dirname(directory),{recursive:true});const staging=await mkdtemp(join(dirname(directory),".prepare-"));

@@ -1,10 +1,11 @@
+import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {appendFileSync,mkdirSync,readdirSync,readFileSync,renameSync,statSync,writeFileSync} from "node:fs";
 import {join} from "node:path";
 
 /** 📊️ The offload counters of this machine as the load reporter reads them: units handed to another machine, units the fleet refused for lack of headroom, units that fell back to a local compile after a fault. */
 export type OffloadCountersV1=Readonly<{out:number;refused:number;fellBack:number}>;
 const KINDS=["out","refused","fellBack"] as const;
-const directory=(root:string)=>join(root,".cache","f","offload-counters");
+const directory=(root:string)=>machinePathV1(root,".cache","f","offload-counters");
 
 /** 🔖️ Why units did not leave: the count of every decline or fall-back reason (`no-idle-machine`, `worker-policy`, `incomplete-inputs`, `infrastructure`, ...), one file per reason below `.cache/f/offload-counters/reason/`, so the sum of `refused` and `fellBack` can be told apart by cause. */
 export function readOffloadReasonCountersV1(root:string):Readonly<Record<string,number>>{
@@ -29,7 +30,7 @@ export function bumpOffloadCountersV1(root:string,add:Partial<OffloadCountersV1>
    const count=add[kind]??0;if(count<1)continue;
    try{appendFileSync(join(base,kind),"1".repeat(count));}catch{mkdirSync(base,{recursive:true});appendFileSync(join(base,kind),"1".repeat(count));}
   }
-  const path=join(root,".cache","f","build-counters.json");let value:Record<string,unknown>={version:1};
+  const path=machinePathV1(root,".cache","f","build-counters.json");let value:Record<string,unknown>={version:1};
   try{value=JSON.parse(readFileSync(path,"utf8")) as Record<string,unknown>;}catch{}
   const temporary=path+"."+process.pid+"."+Math.random().toString(16).slice(2,8);
   writeFileSync(temporary,JSON.stringify({...value,version:1,unit:value.unit??{localHit:0,remoteHit:0,miss:0,stored:0},offload:readOffloadCountersV1(root)})+"\n");renameSync(temporary,path);

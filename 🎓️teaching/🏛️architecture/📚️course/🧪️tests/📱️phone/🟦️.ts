@@ -31,9 +31,9 @@ test("home is the same grid on a phone, swiped page by page in both directions, 
   await enter(learner, { kind: "anonymous" });
   const root = activeOverview(learner.page);
   await expect(root).toHaveAttribute("data-mode", "swipe");
-  const [first, second, third] = ["quizzes", "badges", "prefs"];
-  const ring = [["learner", 0, 0], ["quizzes", 1, 0], ["board", 2, 0], ["badges", 0, 1], ["prefs", 1, 1]];
-  expect(await root.locator(":scope > [data-layered-overlay] > [data-layered-cell]").evaluateAll((cells) => cells.map((cell) => [(cell as HTMLElement).dataset.layeredCell, Number((cell as HTMLElement).style.gridColumn) - 1, Number((cell as HTMLElement).style.gridRow) - 1])), "the five cards of the root grid, in reading order").toEqual(ring);
+  const [first, second, third, fourth] = ["quizzes", "clips", "board", "prefs"];
+  const ring = [["learner", 0, 0], ["quizzes", 1, 0], ["assignments", 2, 0], ["clips", 0, 1], ["board", 1, 1], ["badges", 2, 1], ["prefs", 0, 2]];
+  expect(await root.locator(":scope > [data-layered-overlay] > [data-layered-cell]").evaluateAll((cells) => cells.map((cell) => [(cell as HTMLElement).dataset.layeredCell, Number((cell as HTMLElement).style.gridColumn) - 1, Number((cell as HTMLElement).style.gridRow) - 1])), "the seven cards of the root grid, in reading order").toEqual(ring);
   const view = await boxOf(root);
   const resting = await boxOf(root.locator('[data-layered-cell="learner"]'));
   expect([Math.round(resting.x), Math.round(resting.y), Math.round(resting.width), Math.round(resting.height)], "the learner's page fills the overview").toEqual([Math.round(view.x), Math.round(view.y), 375, Math.round(view.height)]);
@@ -46,26 +46,26 @@ test("home is the same grid on a phone, swiped page by page in both directions, 
       return { centred: getComputedStyle(cell).alignItems, cut: held.scrollHeight - held.clientHeight };
     }),
   );
-  expect(cards, "every card is centred on its page where it fits and cut nowhere").toEqual(cards.map(() => ({ centred: "safe center", cut: 0 })));
+  expect(cards, "every card fills its page (the cell stretches it, as the layered overview does) and is cut nowhere").toEqual(cards.map(() => ({ centred: "stretch", cut: 0 })));
 
   await touchSwipe(learner.page, 240, 0);
-  await expect.poll(() => restingPage(learner.page), { message: "before the first column lies the last one: the ring wraps" }).toBe("board");
+  await expect.poll(() => restingPage(learner.page), { message: "before the first column lies the last one: the ring wraps" }).toBe("assignments");
   await touchSwipe(learner.page, -240, 0);
   await expect.poll(() => restingPage(learner.page), { message: "and back across the edge" }).toBe("learner");
   await touchSwipe(learner.page, 0, 325);
-  await expect.poll(() => restingPage(learner.page), { message: "above the top row lies the bottom row" }).toBe("badges");
+  await expect.poll(() => restingPage(learner.page), { message: "above the top row lies the bottom row" }).toBe("prefs");
   await touchSwipe(learner.page, 0, -325);
   await expect.poll(() => restingPage(learner.page), { message: "and below the bottom row the top row" }).toBe("learner");
   await touchSwipe(learner.page, -60, 0, 600);
   await expect.poll(() => restingPage(learner.page), { message: "a short slow swipe stays" }).toBe("learner");
   const hints = () => root.locator(":scope > [data-layered-neighbour]").evaluateAll((all) => all.map((hint) => [(hint as HTMLElement).dataset.layeredNeighbour, (hint as HTMLElement).dataset.pane]));
-  expect(await hints(), "every edge of the learner's page names the page behind it, across the edges the far side's").toEqual([["up", "badges"], ["left", "board"], ["right", first], ["down", second]]);
+  expect(await hints(), "every edge of the learner's page names the page behind it, across the edges the far side's").toEqual([["up", "prefs"], ["left", "assignments"], ["right", first], ["down", second]]);
   await expect(root.locator(':scope > [data-layered-neighbour="right"]')).toHaveAttribute("aria-label", "Nach rechts zu Quizze");
   await expect(root.locator(':scope > [data-layered-neighbour="right"]')).toContainText("Quizze");
   for (const hint of await root.locator(":scope > [data-layered-neighbour]").all()) await expect(hint).toBeInViewport({ ratio: 1 });
   await root.locator(':scope > [data-layered-neighbour="down"]').tap();
   await expect.poll(() => restingPage(learner.page), { message: "a tap on a hint goes where it points" }).toBe(second);
-  await expect.poll(hints).toEqual([["up", "learner"], ["left", third], ["right", third], ["down", "learner"]]);
+  await expect.poll(hints).toEqual([["up", "learner"], ["left", "badges"], ["right", third], ["down", fourth]]);
   await swipeTo(learner, "learner");
   await swipeTo(learner, "quizzes");
   await card(learner.page, "quizzes").getByRole("link").tap();

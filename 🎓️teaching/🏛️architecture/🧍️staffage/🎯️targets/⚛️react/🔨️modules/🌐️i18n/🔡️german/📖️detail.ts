@@ -10,6 +10,7 @@ export const DETAIL_DE: Record<keyof typeof DETAIL_EN, string> = {
   "detail.dimensions.width": "Breite",
   "detail.dimensions.depth": "Tiefe",
   "detail.dimensions.mass": "Masse",
+  "detail.dimensions.power": "Leistung (Summe aller Elemente)",
   "detail.dimensions.completion": "Fertigstellung",
   "detail.dimensions.category": "Kategorie",
   "detail.dimensions.id": "Kennung",

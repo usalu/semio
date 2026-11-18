@@ -25,7 +25,7 @@ class StrangerChild extends EventEmitter{
 
 test("a farm whose host-granted workers are refused gives the host grant back before the graph construction closes",async()=>{
  const released:string[]=[],lines:string[]=[];let grant!:(value:{jobs:number;megabytes:number}|undefined)=>void;
- const farm=openProjectFarmV1({workspaceRoot:scratch(),context:{registry:null},contracts:{},launch:null,projects:566,commandInputs:null,projectsByRoot:new Map(),componentRoots:[],environment:{LANG:"en_US.UTF-8"},processed:()=>24,cores:10,write:line=>lines.push(line),
+ const farm=openProjectFarmV1({workspaceRoot:scratch(),context:{registry:null},contracts:{},launch:null,projects:566,commandInputs:null,projectsByRoot:new Map(),componentRoots:[],environment:{LANG:"en_US.UTF-8",SEMIO_SLICE_LEAN:"off"},processed:()=>24,cores:10,write:line=>lines.push(line),
   spawnProcess:(()=>new StrangerChild()) as never,
   request:(()=>{let cancel!:(value:undefined)=>void,first=grant===undefined;const granted=new Promise<{jobs:number;megabytes:number}|undefined>(done=>{cancel=done;if(first)grant=done;});return{granted,release:()=>{released.push("host");cancel(undefined);}};}) as never})!;
  const job={name:"p",root:"p",json:{},native:false,pipeline:false,nativeRoot:"p",selectedInputs:[],head:[],cacheKey:"0".repeat(24)};

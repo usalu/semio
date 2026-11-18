@@ -23,7 +23,7 @@ const detailPanelPropertyStackedRowGapPx = domSizePx("propertyStackedGapUiSpacin
 export const treePropertyHeaderGridClassName = "grid min-w-0 w-full items-center gap-x-tiny min-h-[var(--tree-row-min-height,var(--tree-row-height))]";
 export const treePropertyHeaderGridStyle: React.CSSProperties = { gridTemplateColumns: `minmax(0, 1fr) var(--tree-value-column, ${uiSpacingLen(STYLING_DOM.controlValueColumnUiSpacing)})` };
 export const treeItemControlClassName =
-  "min-w-0 w-full flex items-stretch justify-[var(--tree-value-justify,flex-end)] [&_[data-detail-panel-control='fill']]:min-w-0 [&_[data-detail-panel-control='fill']]:w-full [&_[data-detail-panel-control='fit']]:ms-auto [&_[data-detail-panel-control='fit']]:max-w-full [&_[data-detail-panel-control='fit']]:shrink-0";
+  "min-w-0 w-full self-stretch flex items-stretch [justify-content:var(--tree-value-justify,flex-end)] [&_[data-detail-panel-control='fill']]:min-w-0 [&_[data-detail-panel-control='fill']]:w-full [&_[data-detail-panel-control='fit']]:ms-auto [&_[data-detail-panel-control='fit']]:max-w-full [&_[data-detail-panel-control='fit']]:shrink-0";
 /** 🌳️ Continue the owning non-final sibling through its children; outer branches already paint earlier ancestors, and rows own their terminating parent connector. */
 const treeBranchGuideIndices = (level: number, isLastAtLevel: readonly boolean[]): number[] => level > 1 && !isLastAtLevel[level - 1] ? [level - 2] : [];
 const treeRowInlineGapPx = domSizePx("propertyInlineGapUiSpacing");

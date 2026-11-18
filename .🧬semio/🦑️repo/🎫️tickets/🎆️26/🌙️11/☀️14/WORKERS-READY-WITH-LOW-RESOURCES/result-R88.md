@@ -1,0 +1,41 @@
+# R88: the 5 GB resident set and the 10 GB plan guard number were our own heap snapshot probe; removed, landed 18:02 UTC; no Mac ready yet
+
+Scripts: `T/🧰️scripts/R88/` (`land.py`, `wait-land.py`, `mk1..mk3.py`, `snap-harness.ts`, `no-heap-walk-child.mjs`). T = `☀️13/FLEET-ONE-MACHINE-SHARED-HOT-CACHE-AND-REMOTE-EXECUTION`. LIB = `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/`.
+
+## 1. What the plan guard measures
+`createPlanStageGuardV1` (`🏗️build/🧠️memory/🪜️plan-stage`) samples `ports.sample()` = `graphMemoryPressureBytesV1(process.memoryUsage())` = **heapUsed + external of the slice worker process alone**. It is the growth since the plan started (baseline), checked every sample tick, confirmed by one full collection. It does NOT include rss, `phys_footprint`, children, mapped files. (The separate slice ceiling gate judges the tree footprint.) So "10061 MB" means heapUsed + external really was 10 GB inside the worker, within about 12 s of the stage `inference` starting (24 s to 36 s of the try).
+
+## 2. The cause (measured): `Bun.generateHeapSnapshot()` in the 30 s report
+`startSliceReportV1` (R80 diagnostic, `📋️slice-report`) took ONE heap snapshot per process the first time `heapUsed` was between 500 and 1 000 MB after 20 s of uptime, and summarised it (`summarizeHeapSnapshotV1`). Evidence:
+- `slice-memory.json` of g1-m01 and g1-m10 carried `snapshots: [{heapUsedMegabytes 707, seconds 7}]` and `[{514, 4}]`; the worker CPU profile had `generateHeapSnapshot` as the 3rd self entry (861 samples). g1-m03 had rss 1 920 MB at 61 s (no snapshot yet) and 5 452 MB at 311 s; g1-m07 died 12 s after the heap passed 500 MB (24 s) at 36 s with 10 061 MB.
+- Real-process harness (`snap-harness.ts`, plain bun, real `summarizeHeapSnapshotV1`): a 450 MB heap (8.5 M nodes, 22 M edges): rss 553 MB before, **4 206 MB after the snapshot, unchanged after dropping the result, after `Bun.gc(true)` and 3 s later** (JSC/malloc keep the pages); the summary then adds +950 MB of heap (a Map with one entry per node) so the guard number goes 467 MB to 1 416 MB for a 450 MB heap, and it scales with nodes: at 870 MB heap the process was killed by the system (law below, old module: no output after the last report at 19.8 s uptime). m07 at 10 GB is the same effect with the larger heap and edge list.
+- The other candidates, measured and ruled out: (b) native decompression/hash buffers: `arrayBuffers` 1 to 7 MB on all workers (116 MB on m10 during settle); (c) children are not in the guard's number (heapUsed+external), and the walk farm children are 2 x 70 MB (`processes` below); (d) whole-file reads: `readFileSync` is the top self sample but `arrayBuffers`/`external` stay at 300 to 500 MB; (a) JSC not returning pages after a burst IS the mechanism, but the burst is the snapshot, not the take.
+
+## 3. Fix landed (18:02 to 18:04 UTC, under `landing.lock`, 7 files, all member tests and both standing preflights green; the 18:00 attempt found the lock held by R85 and did not start)
+- `📋️slice-report/🟨️.mjs`: the snapshot probe and `summarizeHeapSnapshotV1` are gone (greenfield, no option kept: the worker no longer passes `snapshot`; policy fields `snapshot*` removed from the schema). The report never walks the heap.
+- New in the 30 s report (schema `Report`, EN/DE descriptions): `guard {measure:"heapUsed+external", megabytes, heapUsed, external}` (the guard's own number and parts), `footprintMegabytes` (macOS `phys_footprint` / Linux smaps via the existing `readProcessFootprintBytesV1`), `treeFootprintMegabytes` (the ceiling gate's number, only while children exist), `processes {self{rss,vsz}, count, rssMegabytes (children summed), children[top 8: pid, role, rss, vsz]}` from `ps -A -o pid=,ppid=,rss=,vsz=,command=` (asynchronous, 5 s timeout, off Windows; the `ps` helper itself is excluded). `memory` keeps all `process.memoryUsage()` fields.
+- `👷️worker.ts`: passes `footprint {self, tree}` instead of `snapshot`.
+- Estimator (`script-inputs/🟨️.mjs`, `sharedBytesV1` in the report module): `closure:entries.sidecar`, `closure:entries.digests` and `closure:walkMembers (real)` are declared sizes with every shared array/object/set charged ONCE (exact over all entries, 16 + 8 per element, 16 + 16 per key, strings only their slot), no longer entries x JSON of a sample. Worker readback: sidecar 57.5 MB for 1 752 entries (was 263 GB), digests 8.1 MB, walkMembers 5.8 MB for 9 321 lists (was 410 MB).
+- Laws (all in `📋️slice-report/🧪️tests/🟦️.ts` unless noted): `real process: a report that runs for 24 seconds beside a 560 MB heap keeps the guard number under 2 GB and the resident set under 3 GB` (old module: the process dies at the snapshot, no result = red; new: guard 739 MB, rss 828 MB = green; the child passes the old `snapshot` function on purpose); `a structure shared by many entries is charged once` (exact analytic total 1 476 960 bytes for 120 entries sharing 150 arrays of 500, against more than 20 times that for the old JSON estimate); `a process table names the descendants ...` and `real processes: the children ... resident size that ps reports` (two real child processes found by role, rss within 25 percent of an independent `ps -o rss= -p`); the real-process report test now checks `guard`, `footprintMegabytes`, `processes`; `script-inputs/🧪️tests/closure-collections-shared.test.ts` (declared bytes, no sample).
+- NOT done as a law: "a full take of N real stored owners". The old probe needs 20 s of uptime and 500 MB of heap, which the 24 s law reproduces with the real report module; a take of real owners would not add information about the cause and the live workers are the take law (below).
+
+## 4. Read back from the workers (new code, after 18:04 UTC)
+| worker | uptime | owners taken | rss | heapUsed | external | guard (heapUsed+external) | phys_footprint (self / tree) | children |
+|---|---|---|---|---|---|---|---|---|
+| g1-m01 (before: 272 s, rss 5 424) | 152 s / 333 s | 27 / 116 | 2 110 / 2 222 | 667 / 735 | 395 / 398 | 1 062 / 1 134 | 1 147 / 1 257 | 2 walk-farm children, 140 MB |
+| g1-m03 (before: 311 s, rss 5 452) | 33 s / 214 s | 0 / 0 (stage inference) | 1 069 / 2 720 | 175 / 571 | 113 / 304 | 288 / 875 | 40 / 225 (tree 260) | 1 child 121 MB |
+| g1-m07 (before: killed at 36 s by the guard at 10 061 MB) | passed 30 s | take started | 1 436 | 579 | 178 | 757 | 37 | 0 |
+rss is down from 5.4 GB to 2.1 to 2.7 GB and the guard number is 0.9 to 1.1 GB, i.e. under the 2 GB / 3 GB targets; the remaining rss above the footprint (2.2 GB rss against 1.1 GB footprint on m01) is shared/mapped file pages. Heap per 100 owners cannot be read: every window another landing restarts the workers (exit 75 "code changed under the slice worker", seen on m02, m08 and a `3a9fba88` failure on m10 during rederivation, the same reference R86 described, before the new code reached it); the longest new-code run was 333 s with 116 owners (0.35/s), heap 735 MB.
+
+## 5. Ready table (R54, 18:11 UTC)
+**No Mac is `ready: true`.** m01, m02, m03, m06, m07, m08, m10: `workspace 5/5`; m04, m05: `tools 4/5`; m09: no pool.
+
+## 6. Not proven / next
+- That a try now completes the slice on a 16 GB Mac: workers never stayed up long enough (landing churn) to pass the take; with the snapshot gone the plan guard cannot be what stops them, but the post-take stages (settle, rederivation: m10 `3a9fba88`) are still unobserved. The first stop after this landing will carry `guard`/`processes` in its report.
+- `phys_footprint` of g1-m03 (225 MB at 214 s while rss is 2 720 MB) looks too low for a process with a 571 MB heap: the `footprint` tool may be reading a stale/other process there; not investigated.
+- mapped file bytes (the row dictionary under `ce/x/`) are not reported (`vsz` is, which is dominated by the 480 GB address-space reservation of JSC).
+- The remaining forced collection (`afterCollect` at 2 500 MB heap, once) and the plan guard's own confirming collection are unchanged.
+- R87: `worker.ts` and the slice-report module changed; re-read both before editing. Worker threads share the process's footprint but not its JS heap: add their heap to `guard` if you add them.
+
+## 7. Rule notes
+Harness runs of the old module reached 4.8 GB rss twice and killed one scratch process (mine) at the snapshot; no process of mine remains; the scratch directory holds only small files.

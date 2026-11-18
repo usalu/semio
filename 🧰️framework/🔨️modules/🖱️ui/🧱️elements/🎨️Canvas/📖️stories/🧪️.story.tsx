@@ -38,10 +38,10 @@ export const Default: Story = {
   args: {
     children: (
       <HorizontalWindows>
-        <Window id="left" defaultSize={50}>
+        <Window id="left" fill defaultSize={50}>
           <WindowContent title="Left Window" />
         </Window>
-        <Window id="right" defaultSize={50}>
+        <Window id="right" fill defaultSize={50}>
           <WindowContent title="Right Window" />
         </Window>
       </HorizontalWindows>

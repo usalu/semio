@@ -20,6 +20,7 @@ import { useShellScopeOptional } from "../🐚️ShellScope/🟦️.tsx";
 import { resolveUiLocalizedText, useUiTerminology } from "../../🔨️modules/🗣️ui-terminology/🟦️.tsx";
 import { GLASS_OVERLAY_BOX_CLASS } from "../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
 import { Button } from "../🔘️Button/🟦️.tsx";
+import { SharedBorderRow, SharedBorderRowCell } from "../🪢️SharedBorderRow/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🗨️Dialog
@@ -116,33 +117,33 @@ export function UIDialog<Arg extends ActionArgDef>({ dialog, seedArgs, notice, c
         keyboard?.preventDefault();
         keyboard?.stopPropagation();
         if (keyboard?.target instanceof Node && contentRef.current?.contains(keyboard.target) && chords.submit?.some(chord => keyboardEventMatchesOwnedHotkey(keyboard, chord))) submit();
-      }} className={cn(GLASS_OVERLAY_BOX_CLASS, "block z-dialog sm:max-w-sm")}>
-        <DialogTitle className="mb-single text-sm font-medium">{text(dialog.title)}</DialogTitle>
-        {body && <DialogDescription className="mb-double text-xs text-muted-foreground">{body}</DialogDescription>}
-        {notice}
-        {dialog.args.length > 0 && (
-          <div className="mb-double flex flex-col gap-single">
-            {dialog.args.map((def, index) => (
-              <div key={def.id} role="group" aria-labelledby={`${labelPrefix}-${index}`} className="flex flex-col gap-tiny">
-                <span id={`${labelPrefix}-${index}`} className="text-xs text-muted-foreground">{text(def.label)}</span>
-                {renderField(def, effective[def.id], (value) => setStaged((prev) => ({ ...prev, args: { ...prev.args, [def.id]: value } })), { id: def.id, labelledBy: `${labelPrefix}-${index}`, required: def.required ?? false })}
-              </div>
-            ))}
-          </div>
-        )}
-        <div className="flex flex-wrap items-start justify-between gap-single">
-          <Button id="ui.dialog.cancel" variant="ghost" icon="x" text={dialog.cancelLabel ? text(dialog.cancelLabel) : cancelLabel} onClick={onCancel} />
-          <div data-shared-border-group="" className="flex min-w-0 flex-1 flex-wrap items-start justify-end">
-            {choices.map((choice) => {
-              const chrome = dialogChoiceChrome(choice);
-              return <div key={choice.id} data-dialog-choice-group={choice.id} className="flex min-w-0 flex-col items-end gap-tiny">
-                <Button id={`ui.dialog.choice.${choice.id}`} variant={chrome.variant} className={chrome.className} icon={choice.destructive ? "triangle-alert" : "arrow-right"} text={text(choice.label)} data-dialog-choice={choice.id} data-tone={choice.tone ?? "neutral"} data-destructive={choice.destructive ? "true" : undefined} aria-describedby={choice.description == null ? undefined : choiceDescriptionId(choice)} disabled={!choiceEnabled(choice)} onClick={() => { if (choiceEnabled(choice)) onChoose(choice, dialogChoiceArgs(choice, dialog.args, effective)); }} />
-                {choice.description != null && <p id={choiceDescriptionId(choice)} data-dialog-choice-description={choice.id} className="max-w-full text-xs text-muted-foreground">{text(choice.description)}</p>}
-              </div>;
-            })}
-            <Button id="ui.dialog.submit" icon="check" text={text(dialog.submitLabel)} disabled={!canSubmit} onClick={submit} />
-          </div>
+      }} className={cn(GLASS_OVERLAY_BOX_CLASS, "block z-dialog gap-0 p-0 sm:max-w-sm")}>
+        <div data-slot="ui-dialog-text" className="flex flex-col gap-single p-double">
+          <DialogTitle className="text-sm font-medium">{text(dialog.title)}</DialogTitle>
+          {body && <DialogDescription className="text-xs text-muted-foreground">{body}</DialogDescription>}
+          {notice}
         </div>
+        {dialog.args.length > 0 && (
+          <SharedBorderRow data-slot="ui-dialog-arguments" orientation="vertical" edges={["top", "bottom"]}>
+            {dialog.args.map((def, index) => (
+              <SharedBorderRow key={def.id} role="group" aria-labelledby={`${labelPrefix}-${index}`} orientation="vertical">
+                <SharedBorderRowCell id={`${labelPrefix}-${index}`} className="text-xs text-muted-foreground">{text(def.label)}</SharedBorderRowCell>
+                {renderField(def, effective[def.id], (value) => setStaged((prev) => ({ ...prev, args: { ...prev.args, [def.id]: value } })), { id: def.id, labelledBy: `${labelPrefix}-${index}`, required: def.required ?? false })}
+              </SharedBorderRow>
+            ))}
+          </SharedBorderRow>
+        )}
+        <SharedBorderRow data-slot="ui-dialog-footer" edges={["top"]}>
+          <Button id="ui.dialog.cancel" variant="ghost" className="min-w-0 flex-1" icon="x" text={dialog.cancelLabel ? text(dialog.cancelLabel) : cancelLabel} onClick={onCancel} />
+          {choices.map((choice) => {
+            const chrome = dialogChoiceChrome(choice);
+            return <SharedBorderRow key={choice.id} data-dialog-choice-group={choice.id} orientation="vertical" className="min-w-0 flex-1">
+              <Button id={`ui.dialog.choice.${choice.id}`} variant={chrome.variant} className={cn("min-w-0 flex-1", chrome.className)} icon={choice.destructive ? "triangle-alert" : "arrow-right"} text={text(choice.label)} data-dialog-choice={choice.id} data-tone={choice.tone ?? "neutral"} data-destructive={choice.destructive ? "true" : undefined} aria-describedby={choice.description == null ? undefined : choiceDescriptionId(choice)} disabled={!choiceEnabled(choice)} onClick={() => { if (choiceEnabled(choice)) onChoose(choice, dialogChoiceArgs(choice, dialog.args, effective)); }} />
+              {choice.description != null && <SharedBorderRowCell id={choiceDescriptionId(choice)} data-dialog-choice-description={choice.id} className="max-w-full text-xs text-muted-foreground">{text(choice.description)}</SharedBorderRowCell>}
+            </SharedBorderRow>;
+          })}
+          <Button id="ui.dialog.submit" className="min-w-0 flex-1" icon="check" text={text(dialog.submitLabel)} disabled={!canSubmit} onClick={submit} />
+        </SharedBorderRow>
       </DialogContent>
       </DialogPortal>
     </Dialog>

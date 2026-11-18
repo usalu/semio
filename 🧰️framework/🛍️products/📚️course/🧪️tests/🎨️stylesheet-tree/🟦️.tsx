@@ -27,6 +27,11 @@ describe("🎨️ stylesheet tree", () => {
     expect(quizStylesheet).toBe(IMPORTS.map((entry) => SECTIONS[TARGET + entry]).join("\n"));
   });
 
+  it("keeps a free strip above the footer for the pets while they are shown, except in forced colours", () => {
+    const rule = /@media not \(forced-colors: active\) \{\s*\.course-app:not\(\[data-pets="off"\]\) > #course-main \{\s*padding-bottom: 48px;/u;
+    expect(strip(quizStylesheet)).toMatch(rule);
+  });
+
   it("makes each section a self-contained run of rules named by its folder's emoji", () => {
     for (const entry of IMPORTS) {
       const css = SECTIONS[TARGET + entry]!;

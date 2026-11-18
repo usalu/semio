@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {readFileSync} from "node:fs";
 import {join} from "node:path";
 import {openNxSdkV1} from "../🔌️sdk/🟦️.ts";
@@ -12,7 +13,7 @@ function nxProbeInputV1(input:CacheProbeInputV1):string|Readonly<{env:string}>{
 
 /** 🏭️ Renders the neutral cache probe as an isolated Nx workspace and invokes Nx for one of its tasks. */
 export function nxCacheProbeV1(repositoryRoot:string):CacheProbeToolV1{
- const sdk=openNxSdkV1(join(repositoryRoot,".nx/installation/package.json"));
+ const sdk=openNxSdkV1(machinePathV1(repositoryRoot,".nx/installation/package.json"));
  return Object.freeze<CacheProbeToolV1>({
   tool:"nx",
   label:"Nx",

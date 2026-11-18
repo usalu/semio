@@ -127,18 +127,32 @@ export function usePresenceFollow(): FollowContextValue {
   return useContext(FollowContext);
 }
 
+/** 📏️ How far `element` can scroll vertically: its overflow only counts when its own style lets it scroll, since a box that merely overflows visibly cannot take a scroll position. */
+function scrollRange(element: HTMLElement): number {
+  return /auto|scroll|overlay/u.test(getComputedStyle(element).overflowY) ? Math.max(0, element.scrollHeight - element.clientHeight) : 0;
+}
+
+/** 🧗️ The nearest ancestor of `root` that really scrolls: where a page whose cards all fit their cells scrolls as a whole. */
+function scrollParent(root: HTMLElement): HTMLElement | undefined {
+  for (let current = root.parentElement; current !== null; current = current.parentElement) if (scrollRange(current) > 0) return current;
+  return undefined;
+}
+
+/** 📜️ The element whose scroll a followed page shares: the page of the swipe overview that rests (or is `swipe`) — or, inside it, the box that scrolls furthest, since a card that fills its page scrolls itself — else the box of `root` that scrolls furthest, else the page that scrolls around `root`. Only boxes that really scroll count. */
 function scroller(root: HTMLElement, following: boolean, swipe: string | undefined): HTMLElement {
   const visible = (element: HTMLElement, allowed?: HTMLElement): boolean => {
     if (element.closest('[hidden], [aria-hidden="true"]') !== null) return false;
     for (let current: HTMLElement | null = element; current !== null && root.contains(current); current = current.parentElement) if (current.hasAttribute("inert") && current !== allowed) return false;
     return true;
   };
+  const furthest = (seed: HTMLElement, candidates: readonly HTMLElement[]): HTMLElement => candidates.reduce((largest, element) => scrollRange(element) > scrollRange(largest) ? element : largest, seed);
   const grid = [...root.querySelectorAll<HTMLElement>("[data-course-grid][data-grid-active]")].find((element) => visible(element));
   const overview = grid?.querySelector<HTMLElement>(':scope > [data-layered-overview][data-mode="swipe"]');
   const overlay = overview?.querySelector<HTMLElement>(":scope > [data-layered-overlay]");
   const cell = overlay === undefined || overlay === null ? undefined : [...overlay.children].find((element) => element instanceof HTMLElement && element.dataset.layeredCell === (swipe ?? overview?.dataset.layeredResting));
-  if (cell instanceof HTMLElement && visible(cell, following ? overlay ?? undefined : undefined)) return cell;
-  return [root, ...root.querySelectorAll<HTMLElement>("*")].filter((element) => visible(element)).reduce((largest, element) => element.scrollHeight - element.clientHeight > largest.scrollHeight - largest.clientHeight ? element : largest, root);
+  const allowed = following ? overlay ?? undefined : undefined;
+  const inside = cell instanceof HTMLElement && visible(cell, allowed) ? furthest(cell, [...cell.querySelectorAll<HTMLElement>("*")].filter((element) => visible(element, allowed))) : furthest(root, [...root.querySelectorAll<HTMLElement>("*")].filter((element) => visible(element)));
+  return scrollRange(inside) > 0 ? inside : scrollParent(root) ?? inside;
 }
 
 /** 📸️ Captures the latest presentation at the presence frame budget and cancels queued frames on scope changes. */
@@ -195,9 +209,10 @@ export function usePresenceViewport(root: RefObject<HTMLElement | null>, key: st
     const element = root.current;
     if (element === null || following) return;
     const capture = (): void => share(undefined);
-    element.addEventListener("scroll", capture, true);
+    const hosts = new Set<EventTarget>([element, element.ownerDocument]);
+    for (const host of hosts) host.addEventListener("scroll", capture, true);
     capture();
-    return () => element.removeEventListener("scroll", capture, true);
+    return () => { for (const host of hosts) host.removeEventListener("scroll", capture, true); };
   }, [root, key, swipe, following, share]);
   useLayoutEffect(() => {
     const element = root.current;

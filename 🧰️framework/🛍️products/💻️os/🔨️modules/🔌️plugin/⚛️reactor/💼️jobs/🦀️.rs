@@ -221,7 +221,7 @@ impl JobSlot{
 }
 const JOB_SLOTS:usize=semio_plugin_actor_host::requests::REQUEST_SLOTS;
 semio_plugin_abi::component_persistent_local! {
-    static JOBS: RefCell<[Option<JobSlot>;JOB_SLOTS]> = const { RefCell::new([const {None};JOB_SLOTS]) };
+    static JOBS: RefCell<semio_framework_async::LazySlots<JobSlot,JOB_SLOTS>> = const { RefCell::new(semio_framework_async::LazySlots::new()) };
 }
 
 //#endregion

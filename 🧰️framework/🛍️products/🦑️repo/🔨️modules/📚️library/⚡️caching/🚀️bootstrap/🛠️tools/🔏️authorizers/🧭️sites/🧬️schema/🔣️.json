@@ -7,7 +7,7 @@
     "installedScheme": "installed:",
     "rootScheme": "semio-root:",
     "catalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧭️sites/🧬️schema/🔣️.json",
-    "maximumSitesPerFile": 4096,
+    "maximumSitesPerFile": 16384,
     "languages": [
      "en",
      "de"
@@ -179,6 +179,56 @@
       "refusal": "Eine geschlossene erfasste Importauflösung ist erforderlich",
       "fix": "Behebung: Führe den Befehl erneut aus; der äußerste Befehl startet mit der Implementierung neu, die jetzt auf dem Datenträger liegt."
      }
+    },
+    "digest-required": {
+      "en": {
+        "refusal": "Immutable implementation digest required",
+        "fix": "Fix: pass the 64-character hexadecimal SHA-256 digest of the implementation snapshot as the first argument."
+      },
+      "de": {
+        "refusal": "Unveränderlicher Implementierungs-Digest erforderlich",
+        "fix": "Behebung: Übergib den hexadezimalen SHA-256-Digest des Implementierungs-Snapshots mit 64 Zeichen als erstes Argument."
+      }
+    },
+    "snapshot-bounded": {
+      "en": {
+        "refusal": "Immutable implementation snapshot is larger than its bound",
+        "fix": "Fix: capture a smaller Source closure or raise the closure bound in the source closure policy together with every ceiling of its family."
+      },
+      "de": {
+        "refusal": "Unveränderlicher Implementierungs-Snapshot ist größer als seine Grenze",
+        "fix": "Behebung: Erfasse eine kleinere Source-Hülle oder erhöhe die Grenze in der Richtlinie der Source-Hülle zusammen mit jeder Obergrenze ihrer Familie."
+      }
+    },
+    "snapshot-changed": {
+      "en": {
+        "refusal": "Immutable implementation snapshot changed",
+        "fix": "Fix: run the command again; the snapshot does not match its digest."
+      },
+      "de": {
+        "refusal": "Unveränderlicher Implementierungs-Snapshot hat sich geändert",
+        "fix": "Behebung: Führe den Befehl erneut aus; der Snapshot passt nicht zu seinem Digest."
+      }
+    },
+    "snapshot-shortened": {
+      "en": {
+        "refusal": "Immutable implementation snapshot was shortened while it was read",
+        "fix": "Fix: run the command again and do not edit the snapshot file while the command runs."
+      },
+      "de": {
+        "refusal": "Unveränderlicher Implementierungs-Snapshot wurde beim Lesen gekürzt",
+        "fix": "Behebung: Führe den Befehl erneut aus und bearbeite die Snapshot-Datei nicht, während der Befehl läuft."
+      }
+    },
+    "sites-bounded": {
+      "en": {
+        "refusal": "Source file names more distinct import sites than the closure bound: {importer} ({detail})",
+        "fix": "Fix: split the file so that each part names fewer distinct specifiers, or raise maximumSitesPerFile together with the closure bound family (SourceClosureFamily in the authorizers schema)."
+      },
+      "de": {
+        "refusal": "Quelldatei nennt mehr verschiedene Import-Stellen als die Grenze des Abschlusses: {importer} ({detail})",
+        "fix": "Behebung: Teile die Datei so auf, dass jeder Teil weniger verschiedene Specifier nennt, oder erhöhe maximumSitesPerFile zusammen mit der Grenzen-Familie des Abschlusses (SourceClosureFamily im Authorizers-Schema)."
+      }
     }
    }
   }

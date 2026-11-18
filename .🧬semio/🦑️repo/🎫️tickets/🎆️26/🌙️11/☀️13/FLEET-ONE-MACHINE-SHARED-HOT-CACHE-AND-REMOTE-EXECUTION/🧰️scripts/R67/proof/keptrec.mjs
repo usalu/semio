@@ -1,0 +1,17 @@
+import {readFileSync,writeFileSync} from "node:fs";import {brotliDecompressSync} from "node:zlib";
+const root="/Users/ueli/Documents/semio",B=root+"/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build";
+const {remoteCacheFetchV1}=await import(B+"/🌐️remote-cache/🛰️fleet/🟦️.ts");const {graphFleetSettingsV1}=await import(B+"/🪪️graph-state/🧶️nx/🟦️.ts");
+const {REAPI_V1,decodeProtobufV1}=await import(B+"/🌐️remote-execution/📡️wire/📦️protobuf/🟦️.ts");
+const {unpackRecordV1}=await import(B+"/🪪️graph-state/📦️project-records/🧳️portable/🟦️.ts");
+const env={...process.env};for(const k of Object.keys(env))if(k.startsWith("SEMIO_REMOTE_CACHE"))delete env[k];
+const s=graphFleetSettingsV1(root,env),f=remoteCacheFetchV1(env,{root}),base=`${s.endpoint}/${s.instance}`;
+const key=process.argv[2];
+const a=await f(`${base}/ac/${key}`);const kept=decodeProtobufV1(REAPI_V1.actionResult,new Uint8Array(await a.arrayBuffer()));
+const files=(kept.output_files??[]).map(x=>[x.path,x.digest.hash,Number(x.digest.size_bytes)]);console.log(files.map(x=>x[0]+":"+x[2]).join(" "));
+const rec=files.find(x=>x[0]==="record.br");
+const b=await f(`${base}/cas/${rec[1]}`);const doc=JSON.parse(Buffer.from(brotliDecompressSync(new Uint8Array(await b.arrayBuffer()))).toString());
+const un=unpackRecordV1(doc);writeFileSync("kept-"+key.slice(0,8)+".json",JSON.stringify(un,null,1));
+console.log(Object.keys(un), un.observations?.length);
+const kinds={};for(const o of un.observations??[]){const k=o.kind;kinds[k]=(kinds[k]??0)+1;}console.log(kinds);
+const fk=new Set();for(const o of un.observations??[])if(o.kind==="file")for(const k of Object.keys(o.fact??{}))fk.add(k);console.log([...fk]);
+const sample=(un.observations??[]).find(o=>o.kind==="file");console.log(JSON.stringify(sample).slice(0,600));

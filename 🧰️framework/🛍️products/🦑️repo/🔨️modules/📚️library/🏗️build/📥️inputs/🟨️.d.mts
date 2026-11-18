@@ -11,7 +11,10 @@ export function buildInputPathMatchesV1(path:string,pattern:string):boolean;
 export function splitInputClosureV1(files:readonly string[]):string[][];
 /** 🕊️ Forgets the in-process memo of captured inventories and verified closure stamps. */
 export function releaseInputMemoryV1():void;
+/** 🪢️ The workspace relative helper files a compacted group names besides its exact files. */
+export function compactionHelperPathsV1(workspaceRoot:string,origin?:string|URL):string[];
 export function compactSourceInputs(inputs:unknown[],workspaceRoot:string,root?:string):unknown[];
+export function compactSourceInputs(inputs:unknown[],workspaceRoot:string,root:string|undefined,digest:"bytes"|"interface"):unknown[];
 /** 🧮️ Interns equivalent source coordinates before native hashing. */
 export function deduplicateProjectInputs(inputs:unknown[],root:string):unknown[];
 /** 🧬️ Checks whether authored output negations overlap source scopes. */

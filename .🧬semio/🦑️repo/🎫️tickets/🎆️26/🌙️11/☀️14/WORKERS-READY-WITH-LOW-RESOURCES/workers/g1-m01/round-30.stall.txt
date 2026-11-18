@@ -1,0 +1,62 @@
+
+##### 2026-11-15T20:05:30Z stall in try 1; last 60 lines of /var/folders/gd/byw98s3s0p95zhdpzyv769740000gn/T/semio-repo/501/host-b79757bed7da.log
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:209:4774","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 209 of 4774 projects
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[repo] still working after 8781 s; last phase started: source.served
+[repository:command] still running after 8782 s
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:210:4774:1:5:%40semio-tech%2Fblock-5d-rs|language%3Arust|5|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 210 of 4774 projects · 1 running, longest 5 s: @semio-tech/block-5d-rs (language:rust, 5 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:210:4774","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 210 of 4774 projects
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:211:4774:1:0:%40semio-tech%2Fblock-3d|language%3Atypescript|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 211 of 4774 projects · 1 running, longest 0 s: @semio-tech/block-3d (language:typescript, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:211:4774","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 211 of 4774 projects
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[repository:command] still running after 8792 s
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:212:4774:1:5:%40semio-tech%2Fblock-3d-rs|language%3Arust|5|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 212 of 4774 projects · 1 running, longest 5 s: @semio-tech/block-3d-rs (language:rust, 5 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:212:4774","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 212 of 4774 projects
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:213:4774","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 213 of 4774 projects
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[repository:command] still running after 8802 s
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:214:4774:1:10:%40semio-tech%2Fspace-home|language%3Atypescript|10|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 214 of 4774 projects · 1 running, longest 10 s: @semio-tech/space-home (language:typescript, 10 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[repo] still working after 8811 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:214:4774","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 214 of 4774 projects
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[repository:command] still running after 8812 s
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:215:4774:1:0:%40semio-tech%2Fspace-space-rs|language%3Arust|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 215 of 4774 projects · 1 running, longest 0 s: @semio-tech/space-space-rs (language:rust, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}

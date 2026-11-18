@@ -20,5 +20,5 @@
   {"id": "foreign-acquire-failure-propagates", "lease": "other", "body": "published", "aborted": false, "expect": "rethrow", "released": false},
   {"id": "failing-body-still-releases", "lease": "free", "body": "throw", "aborted": false, "expect": "rethrow", "released": true}
  ],
- "files": {"sizes": [0, 1, 65535, 65536, 65537, 300000, 5000000], "chunkCeiling": 65536}
+ "files": {"sizes": [0, 1, 65535, 65536, 65537, 300000, 5000000, 8388607, 8388608, 8388609], "chunkCeiling": 8388608}
 }

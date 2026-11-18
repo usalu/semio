@@ -51,8 +51,8 @@
       "de": "{what} der Abhängigkeitsfüllung hat sich während des Laufs verändert ({path})"
     },
     "dependency-store.funding-rerun": {
-      "en": "The {what} of the dependency funding moved ({path}); running it again, attempt {attempt} of {limit}, in {seconds} s",
-      "de": "{what} der Abhängigkeitsfüllung hat sich verändert ({path}); sie läuft erneut, Versuch {attempt} von {limit}, in {seconds} s"
+      "en": "The {what} of the dependency funding moved ({path}); running it again from the progress so far (re-run {attempt}, at most {limit} min in total), in {seconds} s",
+      "de": "{what} der Abhängigkeitsfüllung hat sich verändert ({path}); sie läuft erneut ab dem bisherigen Fortschritt (Wiederholung {attempt}, höchstens {limit} Min. insgesamt), in {seconds} s"
     },
     "dependency-store.moving": {
       "en": "The {what} of the dependency funding kept moving ({path}) and held still in none of {attempts} attempts; try again when the files it reads (manifests, lockfiles, patches) are not being edited",
@@ -82,6 +82,10 @@
       "en": "Retiring obsolete dependency generation {prefix} ({retired} retired so far)",
       "de": "Veraltete Abhängigkeitsgeneration {prefix} wird entfernt (bisher {retired} entfernt)"
     },
+    "dependency-store.stale-generation": {
+      "en": "Retained dependency generation {prefix} cannot be read with the current field set (file {file}; missing {missing}, unexpected {unexpected}; {reason}); it was written by older code and is retired as obsolete",
+      "de": "Die behaltene Abhängigkeitsgeneration {prefix} lässt sich mit dem aktuellen Feldsatz nicht lesen (Datei {file}; fehlend {missing}, unerwartet {unexpected}; {reason}); sie stammt von älterem Code und wird als veraltet entfernt"
+    },
     "dependency-store.retirement-deferred": {
       "en": "The dependency store stayed busy for {seconds} s while obsolete generations were retired ({retired} retired); the rest is retired by the next setup",
       "de": "Der Abhängigkeitsspeicher blieb {seconds} s belegt, während veraltete Generationen entfernt wurden ({retired} entfernt); der Rest wird vom nächsten Setup entfernt"
@@ -97,6 +101,10 @@
     "dependency-store.waiting": {
       "en": "Another process holds the dependency store; waiting for it ({seconds} s of at most {limit} s)",
       "de": "Ein anderer Prozess hält den Abhängigkeitsspeicher; es wird darauf gewartet ({seconds} s von höchstens {limit} s)"
+    },
+    "dependency-store.waiting-for-silent-holder": {
+      "en": "Process {pid} ({command}) holds the dependency store since {since} and has not renewed its registration for {silent} s, so it may be blocked; waiting for it ({seconds} s of at most {limit} s)",
+      "de": "Der Prozess {pid} ({command}) hält den Abhängigkeitsspeicher seit {since} und hat seine Anmeldung seit {silent} s nicht erneuert, er ist womöglich blockiert; es wird darauf gewartet ({seconds} s von höchstens {limit} s)"
     },
     "dependency-store.waiting-for-holder": {
       "en": "Process {pid} ({command}) holds the dependency store since {since}; waiting for it ({seconds} s of at most {limit} s)",

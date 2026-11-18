@@ -134,12 +134,12 @@ async function verifyAdoption(fleetMachines:{store:string;server:Machine;worker:
  expect(subjects).toEqual(["local commit","fleet commit","initial","zero"]);
  expect(git(adopter,"rev-list","--merges","main").trim()).toBe("");
  expect(readFileSync(lost(`lost/adopt-${report.stamp}/git/.git/packed-refs`),"utf8")).toContain("refs/heads/side");
- expect(git(adopter,"diff","--cached","--name-only","HEAD").trim()).toBe("f.txt");
+ expect(git(adopter,"write-tree").trim()).toBe(git(server,"write-tree").trim());
  await open(adopter);
  await converge([server,worker,adopter],()=>same([server,worker,adopter],who=>who.replica!.files.manifestHex())&&same([server,worker,adopter],who=>git(who,"rev-parse","HEAD"))&&same([server,worker,adopter],who=>git(who,"write-tree")));
  for(const who of [server,worker,adopter]){
   expect(git(who,"log","--format=%s","main").trim().split("\n")).toEqual(["local commit","fleet commit","initial","zero"]);
-  expect(git(who,"diff","--cached","--name-only","HEAD").trim()).toBe("f.txt");
+  expect(git(who,"diff","--cached","--name-only","HEAD")).toBe(git(server,"diff","--cached","--name-only","HEAD"));
   expect(read(who,"a.txt")).toBe("alpha local\n");expect(read(who,"local-only.txt")).toBe("only\n");
   for(const [path,text] of [["b.txt","bravo fleet\n"],["g.txt","golf fleet\n"],["k.txt","kilo fleet\n"],["m.txt","mike v2\n"],["h.txt","hotel fleet\n"]] as const)expect(read(who,path)).toBe(text);
   expect(existsSync(at(who,"d.txt"))).toBe(false);expect(existsSync(at(who,"e.txt"))).toBe(false);

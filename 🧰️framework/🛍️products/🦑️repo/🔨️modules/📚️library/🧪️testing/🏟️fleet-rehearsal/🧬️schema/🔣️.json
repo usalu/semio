@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:semio:repo:library:testing:fleet-rehearsal",
+  "title": "Fleet rehearsal",
+  "description": "Closed declaration of a local rehearsal of the fleet: N simulated machines, each its own process tree with its own state, one temporary cache server with the real claim table, the limits of a small worker, a sampled timeline and a verdict. The owners are a model (a process that holds memory and burns processor time), the claim, wave, pointer and pull protocol is the real code of the build library.",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "sampleMilliseconds": 5000,
+        "driverSampleMilliseconds": 1000,
+        "stopGraceMilliseconds": 4000,
+        "settleMilliseconds": 8000,
+        "originPrefix": "rehearsal",
+        "group": "rehearsal",
+        "instance": "main",
+        "slot": "rehearsal-owner",
+        "markerFlag": "--rehearsal=",
+        "machineFlag": "--machine=",
+        "temporaryPrefix": "rehearsal-",
+        "maximumMachines": 8,
+        "maximumWorkBytes": 524288000,
+        "memoryChoices": [16384, 8192],
+        "landingWindowMinutes": 5,
+        "idleReasonOpenMinimum": 1
+      }
+    },
+    "Options": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["machines", "memoryMegabytes", "cores", "owners", "ownerSeconds", "scenario", "timeoutSeconds"],
+      "properties": {
+        "machines": { "type": "integer", "minimum": 1, "maximum": 8 },
+        "memoryMegabytes": { "enum": [16384, 8192] },
+        "cores": { "type": "integer", "minimum": 1, "maximum": 64 },
+        "owners": { "type": "integer", "minimum": 4, "maximum": 5000 },
+        "ownerSeconds": { "type": "number", "minimum": 0.1, "maximum": 600 },
+        "ownerMegabytes": { "type": "integer", "minimum": 16, "maximum": 8192 },
+        "scenario": { "enum": ["steady", "landing"] },
+        "landingAfterSeconds": { "type": "number", "minimum": 1, "maximum": 3600 },
+        "landingMovesRevision": { "type": "boolean" },
+        "timeoutSeconds": { "type": "integer", "minimum": 10, "maximum": 7200 },
+        "out": { "type": "string", "minLength": 1 }
+      }
+    },
+    "Ledger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "present", "fetched", "here", "wanted", "done"],
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "present": { "type": "integer", "minimum": 0 },
+        "fetched": { "type": "integer", "minimum": 0 },
+        "here": { "type": "integer", "minimum": 0 },
+        "wanted": { "type": "integer", "minimum": 0 },
+        "done": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

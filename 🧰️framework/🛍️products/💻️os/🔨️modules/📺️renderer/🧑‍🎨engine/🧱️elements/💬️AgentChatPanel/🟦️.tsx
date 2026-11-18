@@ -79,11 +79,11 @@ function AgentChatEntry({
   const cancellable = entry.kind === "toolCall" && entry.state === "running" && onCancelToolCall !== undefined;
 
   return (
-    <li id={entryElementId(entry)} data-semio-agent-chat-entry={entry.kind} data-agent-chat-state={entry.kind === "toolCall" ? entry.state : entry.kind === "approval" ? entry.state : entry.kind === "agentMessage" ? entry.state : "sent"} className="flex min-w-0 flex-col gap-single py-single">
-      <div className="flex min-w-0 items-baseline justify-between gap-single">
-        <span className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">{roleLabel}</span>
-        <span className="flex items-center gap-single">
-          {state ? <span className="text-2xs text-muted-foreground">{state}</span> : null}
+    <li id={entryElementId(entry)} data-shared-border-frame="" data-shared-border-edges="bottom" data-semio-agent-chat-entry={entry.kind} data-agent-chat-state={entry.kind === "toolCall" ? entry.state : entry.kind === "approval" ? entry.state : entry.kind === "agentMessage" ? entry.state : "sent"} className="flex min-w-0 flex-col">
+      <div className="flex min-w-0 items-stretch justify-between">
+        <span className="self-center px-single py-single text-2xs font-semibold uppercase tracking-wide text-muted-foreground">{roleLabel}</span>
+        <span className="flex items-stretch">
+          {state ? <span className="self-center px-single text-2xs text-muted-foreground">{state}</span> : null}
           {cancellable && entry.kind === "toolCall" ? (
             <Button
               type="button"
@@ -100,7 +100,7 @@ function AgentChatEntry({
           ) : null}
         </span>
       </div>
-      {entry.kind === "userMessage" ? <p className="whitespace-pre-wrap break-words text-xs text-foreground">{entry.text}</p> : null}
+      {entry.kind === "userMessage" ? <p className="whitespace-pre-wrap break-words px-single pb-single text-xs text-foreground">{entry.text}</p> : null}
       {entry.kind === "agentMessage" ? (
         <p
           role="status"
@@ -109,7 +109,7 @@ function AgentChatEntry({
           data-semio-agent-chat-reply={entry.id}
           data-semio-agent-chat-reply-to={entry.inReplyTo ?? ""}
           title={entry.inReplyTo ? replyToLabel : undefined}
-          className="whitespace-pre-wrap break-words text-xs text-foreground"
+          className="whitespace-pre-wrap break-words px-single pb-single text-xs text-foreground"
         >
           {entry.text}
         </p>
@@ -117,10 +117,10 @@ function AgentChatEntry({
       {entry.kind === "approval" ? <AgentApprovalAffordance approvalId={entry.id} summary={entry.summary} requestedAtMs={entry.atMs} state={entry.state} decision={entry.decision} withdrawal={entry.withdrawal} onDecision={onResolveApproval} /> : null}
       {entry.kind === "toolCall" ? (
         <>
-          <p className="break-words font-mono text-xs text-foreground">{entry.toolName}</p>
-          {entry.args ? <pre className="overflow-x-auto whitespace-pre-wrap break-words rounded-sm bg-muted p-single font-mono text-2xs text-muted-foreground">{entry.args}</pre> : null}
+          <p className="break-words px-single pb-single font-mono text-xs text-foreground">{entry.toolName}</p>
+          {entry.args ? <pre className="mx-single mb-single overflow-x-auto whitespace-pre-wrap break-words rounded-sm bg-muted p-single font-mono text-2xs text-muted-foreground">{entry.args}</pre> : null}
           {entry.summary !== null ? (
-            <p className="whitespace-pre-wrap break-words text-xs text-foreground">
+            <p className="whitespace-pre-wrap break-words px-single pb-single text-xs text-foreground">
               <span className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">{resultRoleLabel}: </span>
               {entry.summary}
             </p>
@@ -158,16 +158,16 @@ export function AgentChatPanel({ status, presence, versionMismatch = null, conve
   };
 
   return (
-    <div data-semio-agent-chat-panel="" className="flex w-full min-w-0 flex-col gap-single">
-      <div className="flex shrink-0 items-center justify-between gap-double border-b border-border px-single py-single">
+    <div data-semio-agent-chat-panel="" className="flex w-full min-w-0 flex-col">
+      <div data-shared-border-frame="" data-shared-border-edges="bottom" className="flex shrink-0 items-center justify-between gap-double px-single py-single">
         <span className="text-sm font-medium">{title}</span>
         <AgentPresence status={status} presence={presence} versionMismatch={versionMismatch} />
       </div>
-      <ol ref={feedRef} id="framework.chat.feed" data-semio-agent-chat-feed="" aria-label={transcriptLabel} aria-live="polite" className="min-h-huge flex min-w-0 flex-col divide-y divide-border overflow-y-auto px-single">
-        {conversation.length === 0 ? <li className="py-single text-xs text-muted-foreground">{emptyLabel}</li> : conversation.map((entry) => <AgentChatEntry key={`${entry.kind}:${entry.id}`} entry={entry} onCancelToolCall={onCancelToolCall} onResolveApproval={onResolveApproval} />)}
+      <ol ref={feedRef} id="framework.chat.feed" data-semio-agent-chat-feed="" aria-label={transcriptLabel} aria-live="polite" className="min-h-huge flex min-w-0 flex-col overflow-y-auto">
+        {conversation.length === 0 ? <li className="px-single py-single text-xs text-muted-foreground">{emptyLabel}</li> : conversation.map((entry) => <AgentChatEntry key={`${entry.kind}:${entry.id}`} entry={entry} onCancelToolCall={onCancelToolCall} onResolveApproval={onResolveApproval} />)}
       </ol>
-      <div className="flex shrink-0 flex-col gap-single px-single pb-single">
-        {connected ? null : <p className="text-2xs text-muted-foreground">{disconnectedLabel}</p>}
+      <div className="flex shrink-0 flex-col">
+        {connected ? null : <p className="px-single py-single text-2xs text-muted-foreground">{disconnectedLabel}</p>}
         <Textarea
           id="framework.chat.draft"
           aria-label={draftLabel}
@@ -182,8 +182,8 @@ export function AgentChatPanel({ status, presence, versionMismatch = null, conve
           rows={3}
           placeholder={placeholderLabel}
         />
-        <div className="flex items-center justify-end gap-single">
-          <Button type="button" id="framework.chat.send" text={sendLabel} icon="arrow-right" onClick={submit} disabled={!connected || !draft.trim()} />
+        <div className="flex items-stretch">
+          <Button type="button" className="flex-1" id="framework.chat.send" text={sendLabel} icon="arrow-right" onClick={submit} disabled={!connected || !draft.trim()} />
         </div>
       </div>
     </div>

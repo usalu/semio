@@ -135,7 +135,7 @@ impl NativeRetirementDecodeControl<'_,'_>{
   let before=self.original.owned_bytes();let initial_spent=self.spent;let accounting=RetirementEffectSpend{loan:self,before,initial_spent};let owner=&mut *accounting.loan;
   if frame.phase()==super::NativeReceivingEffectPhase::Empty{frame.bind_original(owner.original)?;frame.quote_retirement(owner.original,demand,maximum_work)?}
   let capacity=owner.capacity;let spent=&mut owner.spent;
-  owner.original.receive_original_effect(demand,maximum_work,frame,authority,|control,effect,authority,action|{let previous_maximum=control.maximum_bytes;let mut funding=RetirementFundingScope{loan:NativeRetirementDecodeControl{original:control,funding:None,capacity,spent:*spent,previous_maximum},spent};invoke(&mut funding.loan,effect,authority,action)})
+  owner.original.receive_original_effect_dyn(demand,maximum_work,frame,&mut semio_framework_value_native_receiving_frame::BoundProducerDrive::<NativeDecodeControl<'_>,P,_>::new(authority,|control,effect,authority,action,_|{let previous_maximum=control.maximum_bytes;let mut funding=RetirementFundingScope{loan:NativeRetirementDecodeControl{original:control,funding:None,capacity,spent:*spent,previous_maximum},spent};invoke(&mut funding.loan,effect,authority,action)}))
  }
  /// 🪢️ Runs one cleanup action inside an original invocation of this decoder's persistent Work scope, so owners bound to that scope keep their binding across turns; `None` means the work quote was not admitted.
  pub fn with_original_effect<R>(&mut self,demand:RetirementDemand,maximum_work:u64,run:impl FnOnce(&mut crate::RetainedAllocationEffect<'_>)->R)->Result<Option<R>,ValueError>{

@@ -6,8 +6,9 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { Button, Table, uiDataLabel, type TableColumn } from "@semio-tech/ui-react";
+import { Button, SharedBorderRow, Table, uiDataLabel, type TableColumn } from "@semio-tech/ui-react";
 import type { UserView } from "@semio-tech/framework-os";
+import { AdminPage } from "../📄️AdminPage/🟦️.tsx";
 import { useAdminT } from "../📚️I18n/🟦️.tsx";
 import { useAdminSession } from "../🔑️AdminSession/🟦️.tsx";
 // #endregion 🔌️Adapters
@@ -33,14 +34,18 @@ export function UsersPage(): React.ReactElement {
     {
       id: "actions",
       header: t("admin.spaces.actions"),
-      accessor: (row) => <Button id={`admin-user-revoke-${row.id}`} icon="trash" text={t("admin.users.revokeSessions")} variant="ghost" onClick={() => client.revokeUserSessions(row.id).then(load)} />,
+      cell: "row",
+      accessor: (row) => (
+        <SharedBorderRow framed={false} className="h-full w-fit">
+          <Button id={`admin-user-revoke-${row.id}`} icon="trash" text={t("admin.users.revokeSessions")} variant="ghost" onClick={() => client.revokeUserSessions(row.id).then(load)} />
+        </SharedBorderRow>
+      ),
     },
   ];
 
   return (
-    <div className="flex h-full w-full flex-col gap-single overflow-auto p-single">
-      <h1 className="text-lg font-semibold text-emphasized">{t("admin.users.title")}</h1>
+    <AdminPage title={t("admin.users.title")} data-slot="admin-users">
       <Table columns={columns} data={users ?? []} emptyMessage={uiDataLabel(t("admin.users.empty"))} getRowId={(row) => `user:${row.id}`} rowDragProps={(row) => ({ "data-row-id": `user:${row.id}` }) as React.HTMLAttributes<HTMLTableRowElement>} />
-    </div>
+    </AdminPage>
   );
 }

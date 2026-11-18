@@ -1,0 +1,18 @@
+edit(B+"👁️observation/🟨️.d.mts",[('export function inferenceCacheSizesV1()','export function observationCollectionsV1():{name:string;entries:number;sample?:()=>unknown[];bytes?:number}[];\nexport function inferenceCacheSizesV1()',1)])
+edit(B+"🕸️graph/📥️inference/🧭️script-inputs/🟨️.d.mts",[('export function closureEntryCountsV1()','export function closureCollectionsV1(): { name: string; entries: number; bytes: number }[];\nexport function closureEntryCountsV1()',1)])
+PN=B+"🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs"
+edit(PN,[
+('import { registerSliceReportSourceV1 } from','import { describeCollectionV1, registerSliceCollectionsV1, registerSliceReportSourceV1 } from',1),
+('  const reportOff=registerSliceReportSourceV1("owners",','  const collectionsOff=registerSliceCollectionsV1("owners",()=>{const all=results.flatMap(([,row])=>Object.values(row.projects));return[{name:"owners:results.projects",entries:all.length,sample:()=>all.slice(0,16)},describeCollectionV1("owners:jobs",jobs),describeCollectionV1("owners:taken",taken),describeCollectionV1("owners:inflight",inflight),describeCollectionV1("owners:missed",missed),describeCollectionV1("owners:rowCounts",rowCounts),describeCollectionV1("owners:never",never),describeCollectionV1("owners:alone",alone),describeCollectionV1("owners:stages",stagesV1)];});\n  const reportOff=registerSliceReportSourceV1("owners",',1),
+('finally{reportOff();','finally{reportOff();collectionsOff();',1),
+])
+DI=B+"🕸️graph/🧭️discovery/🟦️.ts"
+edit(DI,[
+('import * as observationV1 from "../../👁️observation/🟨️.mjs";','import * as observationV1 from "../../👁️observation/🟨️.mjs";\nimport {describeCollectionV1,registerSliceCollectionsV1} from "../../🧠️memory/📋️slice-report/🟨️.mjs";',1),
+('  const read=async(path:string)=>{try{return await readFile(join(root,path),"utf8");}','  const partRefs={nodeRows:new WeakRef(nodeRows),derivedFacts:new WeakRef(derivedFacts)};registerSliceCollectionsV1("part",()=>{const rows=partRefs.nodeRows.deref(),facts=partRefs.derivedFacts.deref();return[...rows?[describeCollectionV1("part:nodeRows",rows)]:[],...facts?[describeCollectionV1("part:derivedFacts",facts)]:[]];});\n  const read=async(path:string)=>{try{return await readFile(join(root,path),"utf8");}',1),
+])
+WK=B+"🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts"
+edit(WK,[
+('const report=await import("../../../../🧠️memory/📋️slice-report/🟨️.mjs"),{inferenceCacheSizesV1}=await import("../../../../👁️observation/🟨️.mjs");','const report=await import("../../../../🧠️memory/📋️slice-report/🟨️.mjs"),{inferenceCacheSizesV1,observationCollectionsV1}=await import("../../../../👁️observation/🟨️.mjs");\nconst{boundedCacheStatsV1}=await import("../../../../🧊️bounded/🟨️.mjs"),{graphStringInternerV1}=await import("../../../../🧠️memory/🟨️.mjs");\nreport.registerSliceCollectionsV1("observation",()=>observationCollectionsV1());\nreport.registerSliceCollectionsV1("bounded",()=>boundedCacheStatsV1().map((row:{name:string;entries:number;bytes:number})=>({name:"bounded:"+row.name,entries:row.entries,bytes:row.bytes})));\nreport.registerSliceCollectionsV1("interner",()=>{const row=graphStringInternerV1.stats();return[{name:"memory:graphStringInterner",entries:row.entries,bytes:row.characters*2+row.entries*48}];});',1),
+('const{layerVerdictCountsV1}=await import("../../../../🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs");','const{layerVerdictCountsV1,closureCollectionsV1}=await import("../../../../🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs");\nreport.registerSliceCollectionsV1("closure",()=>closureCollectionsV1());',1),
+])

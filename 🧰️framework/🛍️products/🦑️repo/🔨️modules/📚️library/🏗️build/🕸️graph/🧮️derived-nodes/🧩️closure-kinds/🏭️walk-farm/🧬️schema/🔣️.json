@@ -1,0 +1,171 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "title": "Closure walk farm",
+ "description": "Child processes that walk closure questions in parallel. Every message is one line `<marker><json>`: the parent writes requests to the stdin of a child and reads messages from its stdout (anything without the marker is ignored, a child sends its own output to stderr); each child is fed up to `batch` requests at once. An answer names every part of the closure by its id (the digest of its row keys) and carries the rows only of a part this child has not sent before. A child announces itself with `ready` once its deriver is open, answers each request with `answer` or `failure`, and ends with `recycle` when its memory passed the limit (the parent starts a new one on demand). A child whose stdin closes ends. Any failure of the farm only makes the parent walk the question itself: the farm is never a reason for a read to fail or wait.",
+ "definitions": {
+  "Policy": {
+   "const": {
+    "version": 1,
+    "maximumChildren": 8,
+    "childBytes": 805306368,
+    "afterDerivations": 48,
+    "startTimeoutMilliseconds": 180000,
+    "requestTimeoutMilliseconds": 900000,
+    "failuresToStop": 3,
+    "recycleBytes": 805306368,
+    "roundResetEvery": 128,
+    "environment": "SEMIO_GRAPH_WALK_FARM",
+    "disabledValue": "off",
+    "batch": 4,
+    "marker": "\u0001walk-farm ",
+    "idleMilliseconds": 120000,
+    "recipesAfter": 4,
+    "recipeStartWaitMilliseconds": 20000
+   }
+  },
+  "Row": {
+   "type": "object",
+   "required": [
+    "kind",
+    "path"
+   ],
+   "properties": {
+    "kind": {
+     "type": "string",
+     "description": "A derived question, or `recipe` for a shared closure entry: `path` is the recipe as JSON, the answer is `fact` = the value and `parts` = the rows followed by the layers, every part with its rows."
+    },
+    "path": {
+     "type": "string"
+    },
+    "fact": {}
+   },
+   "additionalProperties": false
+  },
+  "Ready": {
+   "type": "object",
+   "required": [
+    "ready",
+    "pid"
+   ],
+   "properties": {
+    "ready": {
+     "const": true
+    },
+    "pid": {
+     "type": "integer",
+     "minimum": 1
+    }
+   },
+   "additionalProperties": false
+  },
+  "Request": {
+   "type": "object",
+   "required": [
+    "id",
+    "row"
+   ],
+   "properties": {
+    "id": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "row": {
+     "$ref": "#/definitions/Row"
+    }
+   },
+   "additionalProperties": false
+  },
+  "Answer": {
+   "type": "object",
+   "required": [
+    "id",
+    "answer"
+   ],
+   "properties": {
+    "id": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "answer": {
+     "type": "object",
+     "required": [
+      "fact",
+      "parts"
+     ],
+     "properties": {
+      "fact": {},
+      "parts": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "required": [
+         "id"
+        ],
+        "properties": {
+         "id": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{20}$"
+         },
+         "rows": {
+          "type": "array",
+          "items": {
+           "$ref": "#/definitions/Row"
+          }
+         }
+        },
+        "additionalProperties": false
+       }
+      }
+     },
+     "additionalProperties": false
+    }
+   },
+   "additionalProperties": false
+  },
+  "Failure": {
+   "type": "object",
+   "required": [
+    "id",
+    "failure"
+   ],
+   "properties": {
+    "id": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "failure": {
+     "type": "object",
+     "required": [
+      "message"
+     ],
+     "properties": {
+      "name": {
+       "type": "string"
+      },
+      "code": {
+       "type": "string"
+      },
+      "message": {
+       "type": "string",
+       "maxLength": 2000
+      }
+     },
+     "additionalProperties": false
+    }
+   },
+   "additionalProperties": false
+  },
+  "Recycle": {
+   "type": "object",
+   "required": [
+    "recycle"
+   ],
+   "properties": {
+    "recycle": {
+     "const": true
+    }
+   },
+   "additionalProperties": false
+  }
+ }
+}

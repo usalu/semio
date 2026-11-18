@@ -1,0 +1,482 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:graph:inference:owner-pool:v1",
+  "title": "Fleet Owner Pool",
+  "description": "🌐️ The pool of owner inferences of one graph wave that every machine of the fleet pulls from: the machine that runs the wave publishes the units (owner name, project JSON, learned peak per kind) as an entry of the fleet cache, every machine pulls units from the tail, claims one by the digest of its record state (claim, heartbeat, publish; a lapsed claim returns the unit to the pool; a stored record is never computed again) and sizes what it takes by its free memory and cores. No machine schedules for another.",
+  "oneOf": [
+    {
+      "$ref": "#/definitions/Pointer"
+    },
+    {
+      "$ref": "#/definitions/Head"
+    },
+    {
+      "$ref": "#/definitions/Unit"
+    },
+    {
+      "$ref": "#/definitions/Texts"
+    },
+    {
+      "$ref": "#/definitions/Status"
+    },
+    {
+      "$ref": "#/definitions/Failure"
+    }
+  ],
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "domain": "semio-owner-pool-v1",
+        "pointerName": "pointer",
+        "headName": "head",
+        "sessionName": "session",
+        "unitsName": "units",
+        "manifestMaximumAgeMilliseconds": 10800000,
+        "pointerPollMilliseconds": 15000,
+        "pointerRetryMilliseconds": [1000, 3000, 9000],
+        "pointerBreakerWaitMaximumMilliseconds": 20000,
+        "resendFinalMilliseconds": 30000,
+        "heldRetryMilliseconds": 15000,
+        "faultRetryMilliseconds": 30000,
+        "minimumTotalMegabytes": 4096,
+        "expectedMillisecondsDefault": 60000,
+        "environmentOff": "SEMIO_OWNER_POOL",
+        "statusName": "pool.json",
+        "statusIntervalMilliseconds": 5000,
+        "claimTtlMilliseconds": 300000,
+        "claimExpectedMinimumMilliseconds": 240000,
+        "failureName": "failure",
+        "failureMaximumAgeMilliseconds": 1200000,
+        "guardFile": "owner-pool.pid",
+        "guardWaitMilliseconds": 60000,
+        "guardPollMilliseconds": 2000,
+        "recycleExitCode": 75,
+        "sweepPollMilliseconds": 2000,
+        "claimWindow": 4,
+        "prefetchClaims": 1,
+        "gallopRun": 4,
+        "doneJumps": 3,
+        "reopenMilliseconds": 60000,
+        "wavesKept": 8,
+        "wavesActive": 3,
+        "childMegabytesDefault": 800,
+        "childRecycleShareBasisPoints": 600,
+        "childRecycleMinimumMegabytes": 1200,
+        "childRecycleMaximumMegabytes": 3000,
+        "childHardShareBasisPoints": 3000,
+        "childHardMinimumMegabytes": 3072,
+        "childLifetimeMilliseconds": 1800000,
+        "maximumChildren": 32,
+        "floorShareBasisPoints": 1250,
+        "floorMinimumMegabytes": 1536,
+        "floorMaximumMegabytes": 4096,
+        "loadCeilingBasisPointsPerCore": 15000,
+        "foregroundCoreShareBasisPoints": 2500,
+        "targetPollMilliseconds": 2000,
+        "beatMilliseconds": 5000,
+        "drainGraceMilliseconds": 20000,
+        "rateWindowMilliseconds": 300000,
+        "childEnvironment": "SEMIO_OWNER_POOL_CHILD",
+        "peakSamples": 5,
+        "peakMarginPercent": 20,
+        "childPriority": 10
+      }
+    },
+    "Hex": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "Pointer": {
+      "description": "The tiny entry every machine polls: the waves that are open, newest last. A wave that is published is added, never replaced, so a machine that follows the pool keeps its session and takes the units of every open wave; a wave leaves the list when it is older than the policy's maximum age or when more than `wavesKept` are newer.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "waves"
+      ],
+      "properties": {
+        "version": {
+          "const": 2
+        },
+        "waves": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "createdMs",
+              "units"
+            ],
+            "properties": {
+              "id": {
+                "$ref": "#/definitions/Hex"
+              },
+              "createdMs": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "units": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "Head": {
+      "description": "What a puller needs besides the units: who published, the record identity it must share, the head parts of the record keys that no unit carries, the learned peak samples per kind and the order the publisher infers in.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "id",
+        "createdMs",
+        "publisher",
+        "identity",
+        "globals"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "id": {
+          "$ref": "#/definitions/Hex"
+        },
+        "createdMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "publisher": {
+          "type": "string"
+        },
+        "identity": {
+          "type": "string"
+        },
+        "globals": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "projectAuthority",
+            "registryDigest",
+            "commandRevision",
+            "late"
+          ],
+          "properties": {
+            "projectAuthority": {
+              "type": "string"
+            },
+            "registryDigest": {
+              "type": "string"
+            },
+            "commandRevision": {
+              "type": "string"
+            },
+            "late": {
+              "type": "boolean"
+            }
+          }
+        },
+        "revision": {
+          "type": "string"
+        }
+      }
+    },
+    "Unit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "kind",
+        "expectedMilliseconds",
+        "json"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "expectedMilliseconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "json": {
+          "type": "object"
+        }
+      }
+    },
+    "Texts": {
+      "const": {
+        "en": {
+          "joined": "owner pool {id}: {units} owners, {children} children of this machine take them",
+          "idle": "owner pool: no wave is published, looking again in {seconds} s",
+          "tooSmall": "owner pool: this machine has {megabytes} MB, below the {minimum} MB a puller needs",
+          "finished": "owner pool {id}: {published} owners inferred and stored here, {stored} already stored, {held} held by another machine, {failed} failed",
+          "declined": "owner pool: the record identity differs from the publisher ({reason}), nothing is pulled",
+          "reasonRevision": "declined: this machine runs another revision of the record code than the machine that runs the wave, so its records would be filed under other keys; looked at again every poll",
+          "reasonTooSmall": "declined: this machine has too little memory to pull owners",
+          "reasonNoWave": "nothing to pull: no wave is published",
+          "reasonNothingFits": "waiting: no capacity for another child now",
+          "reasonOff": "switched off by SEMIO_OWNER_POOL=off or no fleet cache",
+          "reasonYielding": "waiting: the machine's own work holds the capacity; the pool keeps one child and takes what is left",
+          "recycled": "recycled: a child of {megabytes} MB passed {limit} MB and was replaced to return the memory",
+          "guarded": "another pool process of this machine (pid {pid}) is alive: this one waits for it to end",
+          "childEnded": "owner pool: a child ended ({reason})",
+        "cacheFault": "owner pool: the fleet cache did not answer, the waves of this machine are kept",
+          "target": "owner pool: {children} of {target} children run, {megabytes} MB each"
+        },
+        "de": {
+          "joined": "Owner-Pool {id}: {units} Owner, {children} Kindprozesse dieser Maschine nehmen sie",
+          "idle": "Owner-Pool: keine Welle veröffentlicht, nächster Blick in {seconds} s",
+          "tooSmall": "Owner-Pool: diese Maschine hat {megabytes} MB, weniger als die {minimum} MB eines Ziehers",
+          "finished": "Owner-Pool {id}: {published} Owner hier berechnet und gespeichert, {stored} schon gespeichert, {held} bei einer anderen Maschine, {failed} fehlgeschlagen",
+          "declined": "Owner-Pool: die Datensatz-Identität weicht vom Veröffentlicher ab ({reason}), nichts wird gezogen",
+          "reasonRevision": "abgelehnt: diese Maschine führt eine andere Revision des Datensatz-Codes aus als die Maschine der Welle, ihre Datensätze lägen unter anderen Schlüsseln; bei jedem Blick neu geprüft",
+          "reasonTooSmall": "abgelehnt: diese Maschine hat zu wenig Speicher zum Ziehen von Ownern",
+          "reasonNoWave": "nichts zu ziehen: keine Welle veröffentlicht",
+          "reasonNothingFits": "wartet: gerade keine Kapazität für einen weiteren Kindprozess",
+          "reasonOff": "abgeschaltet durch SEMIO_OWNER_POOL=off oder kein Flotten-Cache",
+          "reasonYielding": "wartet: die eigene Arbeit der Maschine hält die Kapazität; der Pool behält einen Kindprozess und nimmt, was übrig ist",
+          "recycled": "erneuert: ein Kindprozess mit {megabytes} MB überschritt {limit} MB und wurde ersetzt, um den Speicher zurückzugeben",
+          "guarded": "ein anderer Pool-Prozess dieser Maschine (pid {pid}) lebt: dieser wartet auf sein Ende",
+          "childEnded": "Owner-Pool: ein Kindprozess endete ({reason})",
+        "cacheFault": "Owner-Pool: der Flottenspeicher antwortete nicht, die Wellen dieser Maschine bleiben erhalten",
+          "target": "Owner-Pool: {children} von {target} Kindprozessen laufen, je {megabytes} MB"
+        }
+      }
+    },
+    "Status": {
+      "description": "What a machine says about its part in the owner pool, in the store of the fleet under `v1/origins/<origin>/pool.json`: the puller (waves joined, owners claimed, published, found stored or held, the last error) and the machine that runs the wave (the pool it published, the owners/min of the wave and which hosts' records it took).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "role",
+        "origin",
+        "host",
+        "pid",
+        "state",
+        "wave",
+        "units",
+        "claimed",
+        "published",
+        "stored",
+        "held",
+        "failed",
+        "running",
+        "slots",
+        "lastError",
+        "startedMs",
+        "updatedMs",
+        "reason",
+        "reasonText",
+        "rssMegabytes",
+        "siblings"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "role": {
+          "enum": [
+            "puller",
+            "publisher"
+          ]
+        },
+        "origin": {
+          "type": "string"
+        },
+        "host": {
+          "type": "string"
+        },
+        "pid": {
+          "type": "integer"
+        },
+        "state": {
+          "enum": [
+            "idle",
+            "pulling",
+            "declined",
+            "too-small",
+            "off"
+          ]
+        },
+        "wave": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "units": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "claimed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "published": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "stored": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "held": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "failed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "running": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "slots": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lastError": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "startedMs": {
+          "type": "integer"
+        },
+        "updatedMs": {
+          "type": "integer"
+        },
+        "consumedByHost": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "waveSeconds": {
+          "type": "number"
+        },
+        "ownersPerMinute": {
+          "type": "number",
+          "minimum": 0
+        },
+        "reason": {
+          "enum": [
+            "revision",
+            "too-small",
+            "no-wave",
+            "nothing-fits",
+            "off",
+            "yielding",
+            null
+          ]
+        },
+        "reasonText": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "en",
+                "de"
+              ],
+              "properties": {
+                "en": {
+                  "type": "string"
+                },
+                "de": {
+                  "type": "string"
+                }
+              }
+            }
+          ]
+        },
+        "rssMegabytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "siblings": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "children": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "target": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "claimAttempts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "recycled": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "childMegabytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "waves": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "failures": {
+          "description": "How many records were not stored, by the code of the refusal (see `graph-state/exchange/refusal`): the true reasons of the failures of this machine instead of one catch-all text.",
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        },
+        "kept": { "type": "integer", "minimum": 0 },
+        "resent": { "type": "integer", "minimum": 0 },
+        "diverged": { "type": "integer", "minimum": 0 },
+        "shed": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "Failure": {
+      "description": "A bounded note that an owner failed with a deterministic cause for this record state: pullers leave it to the machine that runs the wave until the note is older than the policy's maximum age or the record-code revision changes.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "revision",
+        "cause",
+        "origin",
+        "atMs"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "revision": {
+          "type": "string"
+        },
+        "cause": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "origin": {
+          "type": "string"
+        },
+        "atMs": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

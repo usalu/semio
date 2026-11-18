@@ -153,7 +153,7 @@ run("a first machine of a Linux-served group sets long paths, mounts over Client
  expect(outcome.tasks["semio-fleet-compact"]!.Xml).toBe(task(read,"a1","compact-definition"));
  expect(outcome.tasks["semio-fleet-compact"]!.Xml).not.toContain("--collect-blobs");
  expect(outcome.tasks["semio-fleet-store-mount"]).toMatchObject({Xml:task(read,"a1","mount-definition"),User:user});
- expect(outcome.tasks["semio-fleet-store-mount"]!.Xml).toContain(`<Arguments>/d /c if not exist ${drive}\\ mount.exe -o anon -o nolock -o mtype=hard ${UNC_A} ${drive}</Arguments>`);
+ expect(outcome.tasks["semio-fleet-store-mount"]!.Xml).toContain(`<Arguments>--headless cmd.exe /d /c if not exist ${drive}\\ mount.exe -o anon -o nolock -o mtype=hard ${UNC_A} ${drive}</Arguments>`);
  expect(outcome.started).toEqual(["semio-fleet-store-mount","semio-fleet-replica"]);
  expect(outcome.out).toContain("done: a1-m01 is a member of group a1");
  forget(outcome);
@@ -203,7 +203,7 @@ run("a worker of an SMB group mounts with net use, registers a net use logon tas
  const remote="\\\\nfs.c3.example.test\\store-c";
  expect(outcome.calls).toContain(`net.exe use ${drive} ${remote} /persistent:yes`);
  expect(outcome.tasks["semio-fleet-store-mount"]).toMatchObject({Xml:task(readSmb,"c3","mount-definition"),User:user});
- expect(outcome.tasks["semio-fleet-store-mount"]!.Xml).toContain(`<Arguments>/d /c if not exist ${drive}\\ net.exe use ${drive} ${remote} /persistent:yes</Arguments>`);
+ expect(outcome.tasks["semio-fleet-store-mount"]!.Xml).toContain(`<Arguments>--headless cmd.exe /d /c if not exist ${drive}\\ net.exe use ${drive} ${remote} /persistent:yes</Arguments>`);
  fresh(outcome,/^Enable-WindowsOptionalFeature/u,/^mount\.exe/u);
  forget(outcome);
  const failed=provision({group:"c3",topology:smb,archive:true,exit:{"net.exe":2}});

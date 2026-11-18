@@ -1,0 +1,12 @@
+from importlib import import_module
+L = import_module("animals-appliances-components-c-lib")
+d = L.D("🧱️components/masonry-wall-with-lintel")
+L.setf(d, 200, "front", "lintel", w=0.445)
+L.setf(d, 200, "front", "sill", w=0.445)
+L.setf(d, 200, "plan", "sill-below", h=0.445)
+L.dup(d, 100, "front", "lintel", "lintel-back", x=0.0875, w=0.135)
+L.dup(d, 100, "front", "sill", "sill-back", x=0.1175, w=0.105)
+L.dup(d, 100, "plan", "sill-below", "sill-back-below", y=0.1175, h=0.105)
+L.dup(d, 50, "plan", "sill-plaster-below", "sill-back-below", y=0.1175, h=0.09)
+L.dup(d, 50, "plan", "sill-plaster-below", "sill-back-plaster-below", y=0.2075, h=0.015)
+d.commit()

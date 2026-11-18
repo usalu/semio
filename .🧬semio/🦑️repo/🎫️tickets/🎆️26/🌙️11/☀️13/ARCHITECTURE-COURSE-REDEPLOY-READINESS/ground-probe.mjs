@@ -1,0 +1,33 @@
+import { createRequire } from "node:module";
+const require = createRequire("/Users/ueli/Documents/semio/.cache/b/d/m/j/b87aa6c238609ac86876/node_modules/");
+const { chromium } = require("playwright-core");
+const [hash = "parametric", w = "1440", h = "900"] = process.argv.slice(2);
+const browser = await chromium.launch();
+const page = await (await browser.newContext({ viewport: { width: +w, height: +h }, isMobile: process.env.MOBILE === "1", hasTouch: process.env.MOBILE === "1", baseURL: "http://127.0.0.1:6063" })).newPage();
+await page.goto("/");
+await page.locator('[data-slot="introduction-close"]').click();
+await page.locator('[data-course-grid][data-grid-active] [data-layered-card="learner"] [data-overview-card-action="primary"]').click();
+await page.locator('input[type="radio"][value="anonymous"]').check();
+await page.getByRole("dialog").locator('[data-overview-card-action="primary"]').click();
+await page.waitForTimeout(2500);
+await page.goto("/?preview=1#" + hash);
+if (process.env.CSS) await page.addStyleTag({ content: process.env.CSS });
+await page.evaluate(() => document.documentElement.setAttribute("data-pets-tempo", "8"));
+await page.waitForTimeout(+(process.env.WAIT ?? 4000));
+await page.screenshot({ path: process.argv[5] ?? "/tmp/p.png" });
+const info = await page.evaluate(() => {
+  const sel = '#course-main [data-card] [data-slot="window-chrome-chip-cap"], #course-main [data-card] [data-slot="window-chrome-body-surface"], .course-app > footer';
+  return [...document.querySelectorAll(sel)].filter(e=>!e.closest("[inert]")).map(e => { const b = e.getBoundingClientRect(); return `${e.dataset.slot ?? e.tagName} x${b.left|0} y${b.top|0} w${b.width|0} h${b.height|0}`; });
+});
+console.log('pets', JSON.stringify(await page.locator('.pet-layer svg.pet').evaluateAll(l=>l.map(p=>{const b=p.getBoundingClientRect();return [p.getAttribute('data-pet'),b.left|0,b.top|0,b.width|0,b.height|0,p.getAttribute('data-pet-footing')]}))));
+console.log(info.join("\n"));
+console.log("main", JSON.stringify(await page.evaluate(() => { const m = document.querySelector("#course-main"); return [getComputedStyle(m).paddingBottom, document.querySelector(".course-app").dataset.pets, [...document.styleSheets].map(s=>{try{return [...s.cssRules].some(r=>r.cssText.includes("data-pets"))}catch{return null}}).join()]; })));
+console.log("wide", JSON.stringify(await page.evaluate(() => {
+  const boxes = [document.documentElement, ...document.querySelectorAll("#course-main, #course-main *")].filter((e) => e.closest("[inert]") === null);
+  return boxes.filter((e) => e === document.documentElement || ["auto", "scroll"].includes(getComputedStyle(e).overflowX)).filter((e) => e.scrollWidth > e.clientWidth + 1).map((e) => `${e.tagName.toLowerCase()}.${e.className} +${e.scrollWidth - e.clientWidth}`);
+}), null, 1));
+const widest = await page.evaluate(() => { const f = document.querySelector(".course-page-frame"); if (!f) return []; return [...f.querySelectorAll("*")].filter(e => e.getBoundingClientRect().right > f.getBoundingClientRect().left + f.clientWidth + 1).slice(0, 25).map(e => `${e.tagName.toLowerCase()}.${String(e.className).slice(0,80)} [${e.dataset.slot??""}] r${e.getBoundingClientRect().right|0} w${e.getBoundingClientRect().width|0}`); });
+console.log("frame", await page.evaluate(()=>{const f=document.querySelector('.course-page-frame');return [f.clientWidth,f.scrollWidth,f.getBoundingClientRect().left,f.closest('[inert]')!==null, f.outerHTML.length]}));
+console.log("scrolls", JSON.stringify(await page.evaluate(()=>[...document.querySelectorAll(".course-page-frame, .course-page-frame *")].filter(e=>e.scrollWidth>e.clientWidth+1).map(e=>`${e.tagName.toLowerCase()}[${e.dataset.slot??""}].${String(e.className).slice(0,100)} sw${e.scrollWidth} cw${e.clientWidth} ox:${getComputedStyle(e).overflowX} r${e.getBoundingClientRect().right|0}`)),null,1));
+console.log("over", JSON.stringify(widest, null, 1));
+await browser.close();

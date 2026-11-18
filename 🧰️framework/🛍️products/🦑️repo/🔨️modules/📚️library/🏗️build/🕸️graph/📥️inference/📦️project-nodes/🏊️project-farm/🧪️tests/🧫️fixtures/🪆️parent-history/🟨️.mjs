@@ -22,7 +22,7 @@ if (mode === "adopt") {
 }
 if (mode === "history") observation.observedFs.readFileSync(join(root, "package.json"));
 const lines = [], granted = mkdtempSync(join(realpathSync(tmpdir()), "farm-parent-")), job = name => ({ name, root: name, json: {}, native: false, pipeline: false, nativeRoot: name, selectedInputs: [], head: [], cacheKey: "0".repeat(24) });
-const contracts = projectGeneratorContractsV1(root), farm = openProjectFarmV1({ workspaceRoot: root, context: { registry: null }, contracts, projects: 100, commandInputs: null, projectsByRoot: new Map(), componentRoots: [], environment: { ...process.env, ...farmGrantEnvironmentV1(granted, "farm_parent_001"), SEMIO_GRAPH_WORKERS: "1" }, processed: () => 24, cores: 4, write: line => lines.push(line), launch: null, request: () => ({ granted: Promise.resolve(undefined), release: () => undefined }) });
+const contracts = projectGeneratorContractsV1(root), farm = openProjectFarmV1({ workspaceRoot: root, context: { registry: null }, contracts, projects: 100, commandInputs: null, projectsByRoot: new Map(), componentRoots: [], environment: { ...process.env, ...farmGrantEnvironmentV1(granted, "farm_parent_001"), SEMIO_GRAPH_WORKERS: "2" }, processed: () => 24, cores: 4, write: line => lines.push(line), launch: null, request: () => ({ granted: Promise.resolve(undefined), release: () => undefined }) });
 for (let index = 0; index < 24; index++) await farm.prepare(job("miss" + index));
 const ready = await new Promise(done => { farm.onReady(() => done(true)); const poll = setInterval(() => { if (lines.some(line => line.includes("differ from this process"))) { clearInterval(poll); done(false); } }, 50); poll.unref?.(); setTimeout(() => done(false), 120000).unref?.(); });
 await farm.close();

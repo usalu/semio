@@ -10,6 +10,7 @@ import {mintCapabilityV1} from "../../📨️protocol/🔑️capability/🟨️.
 import {canonicalRootV1} from "../../📨️protocol/📍️endpoint/🟨️.mjs";
 import {hostEndpointsV1,workspaceIdV1} from "../../📨️protocol/📍️endpoint/🏠️host/🟨️.mjs";
 import {HOST_POLICY_V1,renderBothV1,renderTextV1} from "../../📨️protocol/🎚️policy/🟨️.mjs";
+import waitSchema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {preparePrivateDirectoryV1} from "../../📨️protocol/📍️endpoint/🔐️directory/🟨️.mjs";
 
 /** 🚨 The host service could not answer; `reason` is a refusal code or `down`, `timeout`, `protocol`. */
@@ -78,14 +79,22 @@ export async function withRestartOwnerV1({implementation,environment=process.env
 }
 const takeLockProbeV1=(path,staleMilliseconds)=>{try{const holder=JSON.parse(readFileSync(path,"utf8"));return Date.now()-holder.at<=staleMilliseconds&&alive(holder.pid);}catch{return false;}};
 
+/** 🌐 A text of the start wait in the requested languages (both when a typed error carries it).
+ * @see ./🧬️schema/🔣️.json */
+export function waitMessagesV1(key,fields,languages){
+ const fill=text=>text.replace(/\{(\w+)\}/gu,(_all,name)=>String(fields[name]));
+ return Object.fromEntries(languages.map(language=>[language,fill(waitSchema.definitions.Texts.const[language==="de"?"de":"en"][key])]));
+}
+
 /** 🚀 Connects to the host service of `implementation`, starting it through `spawnService` when none answers. Resolves `{socket,runtime,started}`. `spawnService` may resolve a handle `{alive():boolean}` for the process it started: while that process lives the client keeps waiting (a cold start behind a loaded host is silent for minutes, up to `startCeilingMilliseconds`), when it died without a socket the start fails at once as `lost` with the reason from the exit log; without a handle, `startTimeoutMilliseconds` of log silence ends the wait. */
-export async function connectHostV1({implementation,environment=process.env,platform=process.platform,spawnService,signal,onProgress=()=>{},languages=["en"],policy:given=HOST_POLICY_V1,ignorePids=[]}){
+export async function connectHostV1({implementation,identify,environment=process.env,platform=process.platform,spawnService,signal,onProgress=()=>{},languages=["en"],policy:given=HOST_POLICY_V1,ignorePids=[]}){
  const policy={...HOST_POLICY_V1,...given},runtime=hostEndpointsV1(implementation,environment,platform),say=(key,fields)=>{const rendered=renderTextV1(key,fields,languages);return rendered??{en:key};};
  const first=await tryConnect(runtime.endpoint);
- if(first)return{socket:first,runtime,started:false};
+ if(first)return{socket:first,runtime,implementation,started:false};
  if(!spawnService)throw new HostUnavailableErrorV1("down");
  preparePrivateDirectoryV1(runtime.directory);
  const began=performance.now(),startedAt=Date.now()-1000;
+ const candidates=[{implementation,runtime}],asked={at:-Infinity};
  let owner=false,announced=-2000,seen=logSize(runtime.log),firstSize=Math.max(0,logSize(runtime.log)),lastProgress=performance.now(),handle,checkedAt=-Infinity,living;
  const lives=()=>{if(typeof handle?.alive!=="function")return undefined;if(performance.now()-checkedAt>=policy.startLivenessMilliseconds){checkedAt=performance.now();try{living=handle.alive();}catch{living=undefined;}}return living;};
  try{
@@ -93,8 +102,11 @@ export async function connectHostV1({implementation,environment=process.env,plat
   if(owner){onProgress({phase:"start",done:0,total:1,message:say("host-start",{})});handle=await spawnService({runtime,implementation,environment});}
   for(;;){
    signal?.throwIfAborted();
-   const socket=await tryConnect(runtime.endpoint);
-   if(socket)return{socket,runtime,started:owner};
+   for(const candidate of[...candidates].reverse()){const socket=await tryConnect(candidate.runtime.endpoint);if(socket)return{socket,runtime:candidate.runtime,implementation:candidate.implementation,started:owner};}
+   if(identify!==undefined&&performance.now()-asked.at>=waitSchema.definitions.Policy.const.identifyMilliseconds){
+    asked.at=performance.now();
+    try{const next=identify();if(typeof next==="string"&&!candidates.some(candidate=>candidate.implementation===next)){candidates.push({implementation:next,runtime:hostEndpointsV1(next,environment,platform)});onProgress({phase:"start",done:0,total:0,message:waitMessagesV1("moved",{seen:candidates.length},languages)});}}catch{}
+   }
    const refused=consentRefusalOfExitV1(runtime,startedAt,ignorePids);
    if(refused)throw refused;
    const written=logSize(runtime.log);
@@ -102,7 +114,7 @@ export async function connectHostV1({implementation,environment=process.env,plat
    const elapsed=Math.round(performance.now()-began);
    const alive=lives();
    if(alive===false)throw new HostUnavailableErrorV1("lost","Host graph service unavailable (lost): "+explainServiceLossV1(runtime.directory)+startOutputV1(runtime.log,firstSize));
-   if(alive===true?elapsed>policy.startCeilingMilliseconds:performance.now()-lastProgress>policy.startTimeoutMilliseconds)throw new HostUnavailableErrorV1("timeout");
+   if(alive===true?elapsed>policy.startCeilingMilliseconds:performance.now()-lastProgress>policy.startTimeoutMilliseconds)throw alive===true?new HostUnavailableErrorV1("timeout",Object.values(waitMessagesV1("ceiling",{seconds:Math.round(policy.startCeilingMilliseconds/1000),seen:candidates.length},["en","de"])).join(" / ")):new HostUnavailableErrorV1("timeout");
    if(!owner&&takeLock(runtime.lock,policy.lockStaleMilliseconds)){owner=true;onProgress({phase:"start",done:0,total:1,message:say("host-start",{})});handle=await spawnService({runtime,implementation,environment});}
    if(elapsed-announced>=2000){announced=elapsed;onProgress({phase:"start",done:0,total:0,message:say("host-wait",{elapsed})});}
    await sleep(policy.startPollMilliseconds,signal);
@@ -110,15 +122,20 @@ export async function connectHostV1({implementation,environment=process.env,plat
  }finally{if(owner)rmSync(runtime.lock,{force:true});}
 }
 
-function exchange({socket,runtime,implementation,frame,agent,workspace,languages,signal,onProgress,denialWaitMilliseconds=1000,ignorePids=[]}){
+/** 🔇 The failure of a request whose service sent no frame at all for `seconds`: a service that holds a request keeps it audible (progress, keepalive), so a silent one has lost it. */
+const silentErrorV1=(seconds,progressed)=>Object.assign(new HostUnavailableErrorV1("silent","Host graph service unavailable (silent): "+Object.values(renderBothV1("host-silent",{seconds})).join(" / ")),{progressed});
+
+function exchange({socket,runtime,implementation,frame,agent,workspace,languages,signal,onProgress,denialWaitMilliseconds=1000,ignorePids=[],silenceMilliseconds=HOST_POLICY_V1.planSilenceMilliseconds}){
  return new Promise((resolve,reject)=>{
-  let finished=false,welcome,progressed=false;
-  const end=(settle,value)=>{if(finished)return;finished=true;signal?.removeEventListener("abort",abort);socket.destroy();settle(value);};
+  let finished=false,welcome,progressed=false,heardAt=Date.now(),watch;
+  const end=(settle,value)=>{if(finished)return;finished=true;clearInterval(watch);signal?.removeEventListener("abort",abort);socket.destroy();settle(value);};
+  if(silenceMilliseconds>0){watch=setInterval(()=>{if(Date.now()-heardAt>=silenceMilliseconds)end(reject,silentErrorV1(Math.round(silenceMilliseconds/1000),progressed));},Math.max(10,Math.min(5000,Math.floor(silenceMilliseconds/4))));watch.unref?.();}
   const abort=()=>{try{socket.write(encodeFrameV1({t:"cancel",id:frame.id}));}catch{}end(reject,signal.reason??new Error("aborted"));};
   let token;
-  try{token=mintCapabilityV1(readFileSync(runtime.key),[{k:"scope",v:["query"]},{k:"notAfter",v:Date.now()+60000},{k:"worktree",v:workspace},{k:"agent",v:agent}]);}catch{end(reject,new HostUnavailableErrorV1("key"));return;}
+  try{token=mintCapabilityV1(readFileSync(runtime.key),[{k:"scope",v:["query"]},{k:"notAfter",v:Date.now()+60000},{k:"worktree",v:workspace},{k:"agent",v:agent}]);}catch(error){end(reject,Object.assign(new HostUnavailableErrorV1("key"),{missing:error?.code==="ENOENT"}));return;}
   const decoder=createFrameDecoderV1({maximumFrameBytes:HOST_POLICY_V1.maximumFrameBytes,
    onFrame:message=>{
+    heardAt=Date.now();
     if(message.t==="welcome"){welcome=message;if(!message.features?.includes("plan"))end(reject,new HostUnavailableErrorV1("protocol","service does not answer plan requests"));return;}
     if(message.t==="progress"){progressed=true;onProgress(message);return;}
     if(message.t==="plan-reply"&&message.id===frame.id){end(resolve,{reply:message,welcome});return;}
@@ -140,23 +157,31 @@ function exchange({socket,runtime,implementation,frame,agent,workspace,languages
  });
 }
 
-/** 🛰 Asks the host service for the plan of `targets` of the workspace at `root`; retries per lost connection (crash, restart); a connection lost after the service had begun to answer (progress frames seen) attaches to the replacement generation without using up an attempt, `reattachMaximum` times at most, and starts the service when none runs. */
+/** 🗝️ How long a plan request waits for the key file of a service that is being replaced: the old generation removed it and the new one writes it once it listens. */
+export const PLAN_KEY_WAIT_V1=Object.freeze({maximum:30,milliseconds:1000});
+
+/** 🗝️ Whether a request retries after an unreadable key: only a key file that is missing (ENOENT, the service is between two generations) and not more than `maximum` times; any other failure (permission, damage) stays a refusal.
+ * @see ../../🧪️tests/🚪️client/🗝️key/🟦️.ts */
+export function planKeyRetryV1(error,waited){return error?.reason==="key"&&error.missing===true&&waited<PLAN_KEY_WAIT_V1.maximum;}
+
+/** 🛰 Asks the host service for the plan of `targets` of the workspace at `root`; retries per lost connection (crash, restart); a connection lost after the service had begun to answer (progress frames seen) attaches to the replacement generation without using up an attempt, `reattachMaximum` times at most, and starts the service when none runs; a service that sends no frame at all for `silenceMilliseconds` (the declared `planSilenceMilliseconds`, 0 turns it off) has lost the request: it ends with the bilingual failure `silent` and is asked again like a lost connection.
+ * @see ../../🧪️tests/💓️keepalive/🟦️.ts */
 export async function requestPlanV1(options){
- const{root,implementation,targets,agent,priority=5,revision,parent,dirty,arguments:invocation,tool,graphPolicy,language,signal,onProgress=()=>{},environment=process.env,platform=process.platform,spawnService,attempts=3,deadlineMs,ignorePids}=options;
+ const{root,implementation,targets,agent,priority=5,revision,parent,dirty,arguments:invocation,tool,graphPolicy,language,signal,onProgress=()=>{},environment=process.env,platform=process.platform,spawnService,attempts=3,deadlineMs,ignorePids,silenceMilliseconds,identify}=options;
  const canonical=canonicalRootV1(root),workspace=workspaceIdV1(canonical),languages=[language,...["en","de"].filter(other=>other!==language)];
- let last,reattached=0;
+ let last,reattached=0,keyWaits=0;
  for(let attempt=0;attempt<attempts;attempt++){
   signal?.throwIfAborted();
-  const{socket,runtime}=await connectHostV1({implementation,environment,platform,spawnService,signal,onProgress,languages,...ignorePids?{ignorePids}:{}});
+  const{socket,runtime,implementation:connected}=await connectHostV1({implementation,...identify===undefined?{}:{identify},environment,platform,spawnService,signal,onProgress,languages,...ignorePids?{ignorePids}:{}});
   const frame={t:"plan",id:1,workspace,root:canonical,targets:[...new Set(targets)],agent,priority,language,...(revision?{revision}:{}),...(parent?{parent}:{}),...(dirty?{dirty}:{}),...(invocation?{arguments:invocation}:{}),...(tool?{tool}:{}),...(graphPolicy?{graphPolicy}:{}),...(deadlineMs?{deadlineMs}:{})};
   try{
-   const{reply,welcome}=await exchange({socket,runtime,implementation,frame,agent,workspace,languages,signal,onProgress,...ignorePids?{ignorePids}:{}});
+   const{reply,welcome}=await exchange({socket,runtime,implementation:connected??implementation,frame,agent,workspace,languages,signal,onProgress,...silenceMilliseconds===undefined?{}:{silenceMilliseconds},...ignorePids?{ignorePids}:{}});
    return{reply,welcome,runtime,plan:resolvePlanV1(reply,runtime)};
   }catch(error){
    if(!(error instanceof HostUnavailableErrorV1)||error.reason==="protocol"&&attempt===attempts-1)throw error;
    last=error;
-   if(error.reason==="key")throw error;
-   if(error.reason==="lost"&&error.progressed===true&&reattached<HOST_POLICY_V1.reattachMaximum){reattached++;attempt--;}
+   if(error.reason==="key"){if(!planKeyRetryV1(error,keyWaits))throw error;keyWaits++;attempt--;await new Promise(done=>setTimeout(done,PLAN_KEY_WAIT_V1.milliseconds));continue;}
+   if((error.reason==="lost"||error.reason==="silent")&&error.progressed===true&&reattached<HOST_POLICY_V1.reattachMaximum){reattached++;attempt--;}
   }
  }
  throw last;

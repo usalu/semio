@@ -16,7 +16,7 @@ export class CargoCliOperationOwner {
  private readonly discoverySignal=new AbortController();private readonly retirementSignal=new AbortController();private readonly retirement:CargoRetirementOperation;
  private attached=true;private lastProgress=Number.NEGATIVE_INFINITY;
  private readonly onInterrupt=()=>this.discoverySignal.abort();
- constructor(policy:CargoCliPolicy,private readonly progress:CargoCliProgressPort){
+ private readonly progress:CargoCliProgressPort; constructor(policy:CargoCliPolicy,progress:CargoCliProgressPort){this.progress=progress;
   this.policy=parseCargoCliPolicy(policy);if(typeof progress.remainingMilliseconds!=="function"||typeof progress.publish!=="function"||typeof progress.yieldContinuation!=="function")throw Error("Cargo CLI requires real deadline, progress and yielding ports");this.workspace=new CargoDiscoveryWorkspace();
   this.operation={workspace:this.workspace,signal:this.discoverySignal.signal,...this.policy.discovery,remainingMilliseconds:()=>progress.remainingMilliseconds(),onProgress:row=>this.publish(row),yieldContinuation:()=>progress.yieldContinuation()};
   this.retirement={accounting:{completed:0,ownedBytes:0},signal:this.retirementSignal.signal,...this.policy.retirement,remainingMilliseconds:()=>progress.remainingMilliseconds(),onProgress:row=>progress.publish(row),yieldContinuation:()=>progress.yieldContinuation()};
@@ -32,7 +32,7 @@ export class CargoCliOperationOwner {
 }
 
 /** ⚠️ Retains the exact interrupted owner and both command/retirement refusals. */
-export class CargoCommandFailure extends Error {constructor(readonly owner:CargoCliOperationOwner,readonly commandCause:unknown,readonly retirementCause:unknown){super("Cargo command or owned retirement refused");this.name="CargoCommandFailure";}}
+export class CargoCommandFailure extends Error {readonly owner:CargoCliOperationOwner; readonly commandCause:unknown; readonly retirementCause:unknown; constructor(owner:CargoCliOperationOwner,commandCause:unknown,retirementCause:unknown){super("Cargo command or owned retirement refused");this.owner=owner;this.commandCause=commandCause;this.retirementCause=retirementCause;this.name="CargoCommandFailure";}}
 
 /** 🧾️ Executes the real command and closes its owners without turning a failure into acceptance. */
 export async function runCargoCliCommand<T>(owner:CargoCliOperationOwner,body:()=>Promise<T>):Promise<T>{let value:T|undefined,commandCause:unknown=null,retirementCause:unknown=null;try{await new CargoController(owner.operation,owner.workspace).step("command-entry","",0);value=await body();}catch(error){commandCause=error;}owner.cancelDiscovery();try{await owner.closeSystemOwners();}catch(error){retirementCause=error;}if(commandCause!==null||retirementCause!==null)throw new CargoCommandFailure(owner,commandCause,retirementCause);return value!;}

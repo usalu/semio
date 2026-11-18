@@ -8,6 +8,8 @@ import ts from "typescript";
 import schema from "../🧬️schema/🔣️.json";
 import cases from "./🔣️.json";
 import {storybookEnginePackagesV1} from "../🟦️.ts";
+import{existsSync as existsRootV1}from"node:fs";import{dirname as dirnameRootV1,join as joinRootV1}from"node:path";
+const repositoryRootV1=(()=>{let directory=import.meta.dir;while(!existsRootV1(joinRootV1(directory,"MODULE.bazel"))&&dirnameRootV1(directory)!==directory)directory=dirnameRootV1(directory);return directory;})();
 
 test("scope package requirements agree with independent SQLite selection",()=>{
  const validate=new Ajv({strict:false}).compile(schema),db=new Database(":memory:");
@@ -64,9 +66,9 @@ test("actual scope declarations exclude unrelated engines and resolve canonical 
  expect(puzzle.some(name=>/cad|layout|flow/u.test(name))).toBe(false);
  const code=declaration("storybookEngineBuildArgumentsV1").replace(/import\("[^"]*coordination[^"]*"\)/u,"Promise.resolve(ports.scopes)");
  const run=new Function("catalog","readFileSync","join","storybookEnginePackagesV1","ports",code+";return storybookEngineBuildArgumentsV1;")(catalog,readFileSync,join,storybookEnginePackagesV1,{scopes:{resolveActiveScopes:resolve}});
- expect(await run(process.cwd(),"prototype","ui")).toEqual([]);
- const requests=await run(process.cwd(),"release","puzzle/2d");
- expect(requests).toEqual(puzzle.map(name=>{const owner=catalog.sourcePackages.find(row=>row.packageName===name)!;return ["run",JSON.parse(readFileSync(join(process.cwd(),owner.sourceOwner,"📋️project.json"),"utf8")).name+":wasm"];}));
+ expect(await run(repositoryRootV1,"prototype","ui")).toEqual([]);
+ const requests=await run(repositoryRootV1,"release","puzzle/2d");
+ expect(requests).toEqual(puzzle.map(name=>{const owner=catalog.sourcePackages.find(row=>row.packageName===name)!;return ["run",JSON.parse(readFileSync(join(repositoryRootV1,owner.sourceOwner,"📋️project.json"),"utf8")).name+":wasm"];}));
  expect(requests).toContainEqual(["run","@semio-tech/puzzle-plugin:wasm"]);
- await expect(run(process.cwd(),"debug","ui")).rejects.toThrow();
+ await expect(run(repositoryRootV1,"debug","ui")).rejects.toThrow();
 });

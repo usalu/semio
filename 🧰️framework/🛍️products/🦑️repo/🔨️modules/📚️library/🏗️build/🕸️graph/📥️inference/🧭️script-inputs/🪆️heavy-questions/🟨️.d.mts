@@ -8,3 +8,7 @@ export function askHeavyQuestionV1(row:{kind:string;path:string;fact:unknown},op
 
 /** 🧰️ Derives the shared closure entries in the capped child and stores them below `storeDirectory`. */
 export function primeSharedClosuresInChildV1(options:{workspaceRoot:string;storeDirectory:string;signal?:AbortSignal}):Promise<{recipes:number;derived:number;loaded:number;stale:number}>;
+/** 🛃️ Walks every declared tool closure and provider port in the capped child, once per process and policy, and refuses with what it found. */
+export function preflightToolClosuresInChildV1(options:{workspaceRoot:string;signal?:AbortSignal}):Promise<{checked:number}>;
+/** 🛃️ The refusal of a preflight. */
+export function refusedToolClosuresV1(rows:readonly {name:string;code:string;key:string;values:Record<string,string|number>}[]):Error&{code:string;key:string;values:Record<string,string|number>};

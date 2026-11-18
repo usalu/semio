@@ -24,6 +24,8 @@ import {
   glassClass,
   pickMostSpecificCanvasTarget,
   SelectionMarquee,
+  SharedBorderRow,
+  SharedBorderRowCell,
   useDiagramTranslate,
   useLabel,
   type CanvasPickTarget
@@ -176,17 +178,17 @@ export const useClient = () => {
   return client;
 };
 
-function PresencePeersOverlay({ peers }: { readonly peers: readonly PresencePeer[] }) {
+export function PresencePeersOverlay({ peers }: { readonly peers: readonly PresencePeer[] }) {
   if (peers.length === 0) return null;
   return (
-    <div className={cn("pointer-events-none absolute right-2 top-2 z-panel flex max-w-[14rem] flex-col gap-1 rounded border border-border/60 px-2 py-1 text-xs shadow-sm", glassClass)} data-level="pane">
+    <SharedBorderRow orientation="vertical" data-level="pane" data-presence-peers="" className={cn("pointer-events-none absolute right-0 top-0 z-panel max-w-[14rem] text-xs shadow-sm", glassClass)}>
       {peers.map((peer) => (
-        <div key={peer.clientId} className="flex items-center justify-between gap-2 text-muted-foreground">
+        <SharedBorderRowCell key={peer.clientId} className="justify-between gap-2 text-muted-foreground">
           <span className="truncate font-medium text-foreground">{peer.name}</span>
           <span>{peer.selectionCount} selected</span>
-        </div>
+        </SharedBorderRowCell>
       ))}
-    </div>
+    </SharedBorderRow>
   );
 }
 /**

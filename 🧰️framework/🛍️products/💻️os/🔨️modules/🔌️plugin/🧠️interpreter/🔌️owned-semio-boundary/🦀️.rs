@@ -201,7 +201,6 @@ impl OwnedSemioExport {
         match self {
             Self::Allocate => FunctionType { parameters: vec![ValueType::I32], results: vec![ValueType::I32] },
             Self::Deallocate => FunctionType { parameters: vec![ValueType::I32, ValueType::I32], results: vec![] },
-            Self::ChannelVersion => FunctionType { parameters: vec![], results: vec![ValueType::I32] },
             Self::StartJob | Self::StepJob | Self::ReadJobOutput | Self::AcknowledgeJobOutput | Self::CancelJob => FunctionType{parameters:vec![ValueType::I64;20],results:vec![ValueType::I64]},
             Self::PublishActorFailure | Self::ReadActorFailure | Self::AcknowledgeActorFailure => FunctionType{parameters:vec![ValueType::I64;21],results:vec![ValueType::I64]},
             Self::CloseJobs => FunctionType{parameters:vec![ValueType::I64;19],results:vec![ValueType::I64]},
@@ -210,9 +209,9 @@ impl OwnedSemioExport {
             Self::AcknowledgeJobOutputChunk=>FunctionType{parameters:vec![ValueType::I64;22],results:vec![ValueType::I64]},
             Self::AcknowledgeActorFailureChunk=>FunctionType{parameters:vec![ValueType::I64;23],results:vec![ValueType::I64]},
             Self::AdmitActorInput=>FunctionType{parameters:[vec![ValueType::I32,ValueType::I32],vec![ValueType::I64;19]].concat(),results:vec![ValueType::I64]},
-            Self::Checkpoint | Self::Describe | Self::Restore | Self::Poll | Self::AdmitActorContext | Self::CloseActorContext | Self::CloseActorOutput | Self::PackSchemaHash | Self::Genesis | Self::PrintMirror | Self::ApplyOps | Self::ReplayEnvelopes | Self::SqliteSchema | Self::SqliteExport | Self::SqliteImport | Self::SqliteRetirement | Self::SqliteClose | Self::SqliteTakeFile | Self::SqliteTakePayload => {
-                FunctionType { parameters: vec![ValueType::I64;19], results: vec![ValueType::I64] }
-            }
+            Self::Checkpoint | Self::Describe | Self::ChannelVersion => FunctionType { parameters: vec![], results: vec![ValueType::I64] },
+            Self::Restore | Self::PackSchemaHash | Self::Genesis | Self::PrintMirror | Self::ApplyOps | Self::ReplayEnvelopes | Self::SqliteSchema | Self::SqliteExport | Self::SqliteImport | Self::SqliteRetirement | Self::SqliteClose | Self::SqliteTakeFile | Self::SqliteTakePayload => FunctionType { parameters: vec![ValueType::I32, ValueType::I32], results: vec![ValueType::I64] },
+            Self::Poll | Self::AdmitActorContext | Self::CloseActorContext | Self::CloseActorOutput => FunctionType { parameters: vec![ValueType::I64;19], results: vec![ValueType::I64] },
         }
     }
 }

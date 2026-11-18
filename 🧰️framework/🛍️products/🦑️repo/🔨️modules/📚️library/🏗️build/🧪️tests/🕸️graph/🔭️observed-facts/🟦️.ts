@@ -2,7 +2,7 @@
 import {mkdir,mkdtemp,writeFile,readFile,rm,access} from "node:fs/promises";
 import * as rawPromises from "node:fs/promises";
 import {join,resolve} from "node:path";
-import {expect,test} from "bun:test";
+import {beforeAll,expect,test} from "bun:test";
 import {fileURLToPath} from "node:url";
 import {createRequire} from "node:module";
 import {createHash} from "node:crypto";
@@ -12,6 +12,9 @@ import fixture from "../../🧫️fixtures/🕸️graph/🔣️.json";
 import {buildGraphMembershipV1,buildGraphSourceFactsHoldV1,workspaceBuildFilesV1} from "../../../🕸️graph/🟦️.ts";
 import {createScriptProcessEnvelope,withScriptProcessEnvelope} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {independentGlobV1,withCommandSourceControlV1} from "../🧰️support/🟦️.ts";
+import{existsSync as existsRootV1}from"node:fs";import{dirname as dirnameRootV1,join as joinRootV1}from"node:path";
+const repositoryRootV1=(()=>{let directory=import.meta.dir;while(!existsRootV1(joinRootV1(directory,"MODULE.bazel"))&&dirnameRootV1(directory)!==directory)directory=dirnameRootV1(directory);return directory;})();
+beforeAll(async()=>{await (await import("../../../🕸️graph/📥️inference/🟨️.mjs")).libraryBootstrap;});
 
 const require=createRequire(import.meta.url),Ajv=require("ajv").default;
 test("test owner inference names only the current declared fact namespace without storage admission",async()=>{
@@ -22,7 +25,7 @@ test("the defining graph fact module exposes its declared writer port under orig
  const source=new URL("../../../📥️inputs/💾️storage/🟨️.mjs",import.meta.url),storage=await import(source.href),parser=require("typescript"),tree=parser.createSourceFile(fileURLToPath(source),readFileSync(source,"utf8"),parser.ScriptTarget.Latest,true),exports=tree.statements.filter((node:any)=>parser.isFunctionDeclaration(node)&&node.modifiers?.some((modifier:any)=>modifier.kind===parser.SyntaxKind.ExportKeyword)).map((node:any)=>node.name.text);
  expect(exports).toEqual(fixture.initialAuthoring.storagePorts);
  for(const name of fixture.initialAuthoring.storagePorts)expect(typeof storage[name],name).toBe("function");
- expect(()=>storage.repositoryBuildGraphWriterDirectoryV1(process.cwd(),"inference")).toThrow("Original bounded graph writer custody required");
+ expect(()=>storage.repositoryBuildGraphWriterDirectoryV1(repositoryRootV1,"inference")).toThrow("Original bounded graph writer custody required");
 });
 test("observed authority ignores unread body edits and identical rewrites while retaining consumed bytes and physical membership",async()=>{
   const root=await mkdtemp(join(resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!),"facts-")),observation=require("../../../👁️observation/🟨️.mjs");

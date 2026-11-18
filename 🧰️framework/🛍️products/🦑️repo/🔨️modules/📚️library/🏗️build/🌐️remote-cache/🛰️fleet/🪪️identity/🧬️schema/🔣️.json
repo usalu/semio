@@ -94,6 +94,29 @@
           }
         }
       }
+    },
+    "Consumption": {
+      "description": "The cache server's tally of which origin read the action results of which origin: one row per producer>consumer pair (the id `unknown` stands for an entry stored before the server kept provenance, `static` and `anonymous` for readers without a fleet identity, `*>*` for all pairs beyond the bound of 1024), the reads and, among them, the compiled units; `since` is the time of the first read.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "since", "total", "pairs"],
+      "properties": {
+        "version": { "const": 1 },
+        "since": { "$ref": "#/definitions/Milliseconds" },
+        "total": { "type": "integer", "minimum": 0 },
+        "pairs": {
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[A-Za-z0-9*][A-Za-z0-9._*-]{0,63}>[A-Za-z0-9*][A-Za-z0-9._*-]{0,63}$": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["hits", "units"],
+              "properties": { "hits": { "type": "integer", "minimum": 0 }, "units": { "type": "integer", "minimum": 0 } }
+            }
+          }
+        }
+      }
     }
   }
 }

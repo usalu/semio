@@ -1,0 +1,33 @@
+import { mkdtempSync, readFileSync, realpathSync, mkdirSync, rmSync } from "node:fs";
+import * as fs from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+const root = "/Users/ueli/Documents/semio", L = root + "/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library", B = L + "/🏗️build", I = B + "/🕸️graph/📥️inference", P = I + "/📦️project-nodes";
+const { libraryBootstrap } = await import(I + "/🟨️.mjs"); await libraryBootstrap;
+const pn = await import(P + "/🟨️.mjs"), obs = await import(B + "/👁️observation/🟨️.mjs"), service = await import(P + "/🏊️project-farm/👷️service/🟨️.mjs");
+const { withBuildGraphStagingV1 } = await import(B + "/📥️inputs/💾️storage/🟨️.mjs");
+const rel = process.argv[2] ?? "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏃️test-runner/📦️packages/🐹️go";
+const contracts = await obs.observeInferenceSnapshotV1(() => pn.projectGeneratorContractsV1(root));
+const session = { version: 3, workspaceRoot: root, closureStore: undefined, registry: null, contracts, commandInputs: null, lateClosures: false, projectsByRoot: [], componentRoots: [] };
+const globals = { projectAuthority: "r57", registryDigest: "r57", commandRevision: "r57", late: false };
+const rootS = mkdtempSync(join(realpathSync(tmpdir()), "r57-"));
+await service.open({ ...session, stagingBase: rootS }, { slot: 0, generation: 1 });
+const env = service.sessionEnvironmentV1(), staging = service.stagingDirectoryV1();
+for (const d of ["ce", "ip", "mr", "np", "rl", "rr"]) mkdirSync(join(staging, "inference", d), { recursive: true });
+const json = { ...JSON.parse(readFileSync(join(root, rel, "📋️project.json"), "utf8")), root: rel };
+const unit = { name: json.name, kind: "project", expectedMilliseconds: 60000, json };
+const job = pn.ownerJobV1(env, globals, unit), cachePath = join(staging, "inference", "np", job.cacheKey + ".json");
+let t = Date.now();
+await service.run(job);
+console.log("infer ms", Date.now() - t);
+const rec = await withBuildGraphStagingV1({ root: staging, published() {} }, () => obs.exportProjectRecordV1(cachePath));
+const rows = rec.observations;
+const kinds = {}; for (const r of rows) kinds[r.kind] = (kinds[r.kind] ?? 0) + 1;
+console.log("rows", rows.length, JSON.stringify(kinds), "unique kind+path", new Set(rows.map(r => r.kind + "\0" + r.path)).size, "unique paths", new Set(rows.map(r => r.path)).size);
+const counts = {}; const wrap = {}; 
+for (const k of Object.keys(fs)) { const f = fs[k]; wrap[k] = typeof f === "function" && /Sync$/.test(k) ? Object.assign((...a) => { counts[k] = (counts[k] ?? 0) + 1; return f(...a); }, f) : f; }
+for (let i = 0; i < 2; i++) { for (const k in counts) delete counts[k]; t = Date.now();
+const ok = await obs.withObservedWorldV1(wrap, () => obs.observationRowsHoldV1(rows));
+console.log("pass", i, "holds", ok, "ms", Date.now() - t, JSON.stringify(counts)); }
+rmSync(rootS, { recursive: true, force: true });
+process.exit(0);

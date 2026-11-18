@@ -8,7 +8,7 @@
         "version": 1,
         "shareBasisPoints": 5000,
         "minimumShareBasisPoints": 5000,
-        "megabytesPerUnit": 2048,
+        "megabytesPerUnit": 512,
         "reserveMegabytes": 2048,
         "pressureWarnDivisor": 2,
         "fixedClasses": {

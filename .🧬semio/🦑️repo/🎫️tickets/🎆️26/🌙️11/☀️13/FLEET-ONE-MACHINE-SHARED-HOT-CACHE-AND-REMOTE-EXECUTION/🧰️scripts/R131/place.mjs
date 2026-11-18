@@ -1,0 +1,2 @@
+import{readFileSync,writeFileSync,mkdirSync,rmSync,rmdirSync}from"node:fs";import{dirname}from"node:path";const R="/Users/ueli/Documents/semio/",{news}=await import(import.meta.dir+"/news.mjs");
+for(const[from,to]of news){if(process.argv[2]==="remove"){rmSync(R+to,{force:true});try{rmdirSync(dirname(R+to));}catch{}}else{mkdirSync(dirname(R+to),{recursive:true});writeFileSync(R+to,readFileSync(import.meta.dir+"/"+from));}}

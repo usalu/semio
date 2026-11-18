@@ -1,10 +1,13 @@
-import ts from "typescript";
+import type * as TsTypes from "typescript";
+import {typescriptCompilerV1} from "../../🏗️build/🚀️bootstrap/🔷️typescript-compiler/🟨️.mjs";
 import {existsSync,readdirSync,readFileSync} from "node:fs";
 import {join} from "node:path";
 import {gitSyncV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import rulesDocument from "./🔣️.json" with {type:"json"};
 import rulesSchema from "./🧬️schema/🔣️.json" with {type:"json"};
+const ts=typescriptCompilerV1() as unknown as typeof TsTypes;
+declare namespace ts{type CallExpression=TsTypes.CallExpression;type Expression=TsTypes.Expression;type Identifier=TsTypes.Identifier;type Node=TsTypes.Node;type ScriptKind=TsTypes.ScriptKind;type ScriptTarget=TsTypes.ScriptTarget;type SyntaxKind=TsTypes.SyntaxKind;type VariableDeclaration=TsTypes.VariableDeclaration;type VariableDeclarationList=TsTypes.VariableDeclarationList}
 
 /** 📒️ The language-agnostic rules of the test-store-isolation law. @see ./🧬️schema/🔣️.json */
 export type TestStoreRulesV1=Readonly<{version:1;roots:readonly string[];testPath:string;sourceExtensions:readonly string[];checkoutCalls:readonly string[];checkoutEnvironment:readonly string[];storeCalls:readonly string[];storeLiterals:readonly string[];exceptions:readonly Readonly<{path:string;reason:Readonly<{en:string;de:string}>}>[]}>;

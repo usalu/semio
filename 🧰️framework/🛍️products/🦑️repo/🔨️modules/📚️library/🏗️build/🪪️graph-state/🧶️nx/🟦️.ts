@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {createHash,randomBytes} from "node:crypto";
 import {hostname} from "node:os";
 import {mkdir,readFile,rename,rm,writeFile} from "node:fs/promises";
@@ -26,7 +27,7 @@ export function graphFleetSettingsV1(root:string,environment:Environment):GraphF
  try{
   const resolved=resolveRemoteCacheV1(environment,{root});
   if(resolved===undefined)return undefined;
-  return Object.freeze({endpoint:resolved.contract.endpoint.replace(/\/+$/u,""),instance:resolved.contract.instance,token:resolved.token,upload:remoteCacheEffectiveUploadV1(resolved.contract),stateDirectory:join(root,".cache","f","graph-state")});
+  return Object.freeze({endpoint:resolved.contract.endpoint.replace(/\/+$/u,""),instance:resolved.contract.instance,token:resolved.token,upload:remoteCacheEffectiveUploadV1(resolved.contract),stateDirectory:machinePathV1(root,".cache","f","graph-state")});
  }catch{return undefined;}
 }
 
@@ -54,12 +55,12 @@ export async function rootlessGraphDigestV1(manifestFile:string,root:string,memo
 
 /** ⏱️ How long the last local computation of the Nx graph took on this machine (`undefined` before the first), kept in an ignored cache file so a waiting machine can judge how long the holder of a claim may need. */
 export async function readNxGraphCostV1(root:string):Promise<number|undefined>{
- try{const value=JSON.parse(await readFile(join(root,".cache","f","graph-state-cost.json"),"utf8")) as {nx?:number};return Number.isFinite(value.nx)&&value.nx!>0?value.nx:undefined;}catch{return undefined;}
+ try{const value=JSON.parse(await readFile(machinePathV1(root,".cache","f","graph-state-cost.json"),"utf8")) as {nx?:number};return Number.isFinite(value.nx)&&value.nx!>0?value.nx:undefined;}catch{return undefined;}
 }
 
 /** 📝️ Remembers the duration of a local computation of the Nx graph. */
 export async function rememberNxGraphCostV1(root:string,milliseconds:number):Promise<void>{
- const file=join(root,".cache","f","graph-state-cost.json"),temporary=`${file}.${process.pid}.tmp`;
+ const file=machinePathV1(root,".cache","f","graph-state-cost.json"),temporary=`${file}.${process.pid}.tmp`;
  try{await mkdir(dirname(file),{recursive:true});await writeFile(temporary,JSON.stringify({nx:Math.round(milliseconds)}));await rename(temporary,file);}catch{await rm(temporary,{force:true}).catch(()=>undefined);}
 }
 
@@ -101,7 +102,7 @@ export async function beginNxFleetV1(input:Readonly<{root:string;environment:Env
  try{
   const settings=input.settings??graphFleetSettingsV1(input.root,input.environment);
   if(settings===undefined||input.manifestFile===undefined)return idle;
-  const rootless=await rootlessGraphDigestV1(input.manifestFile,input.root,join(input.root,".cache","f","graph-state-records.json"));
+  const rootless=await rootlessGraphDigestV1(input.manifestFile,input.root,machinePathV1(input.root,".cache","f","graph-state-records.json"));
   if(rootless===undefined)return idle;
   const state=nxGraphStateV1(input.claim,rootless),client=graphFleetClientV1(settings,{fetch:(await import("../../🌐️remote-cache/🛰️fleet/🟦️.ts")).remoteCacheFetchV1(input.environment,{root:input.root})}),owner=input.owner??`${hostname()}:${process.pid}:${randomBytes(3).toString("hex")}`.replace(/[^A-Za-z0-9._:@/+-]/gu,"-").slice(0,160);
   const cost=await readNxGraphCostV1(input.root),limit=Math.min(input.waitLimitMilliseconds??policy.claimWaitMaximumMilliseconds,Math.max(60000,2*(cost??240000))),began=Date.now();

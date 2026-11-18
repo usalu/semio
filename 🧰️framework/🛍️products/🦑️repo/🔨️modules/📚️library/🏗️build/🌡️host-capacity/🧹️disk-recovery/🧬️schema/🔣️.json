@@ -1,0 +1,95 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Machine disk recovery / Plattenrückgewinnung der Maschine",
+  "$comment": "EN: Every writer of the build system on a machine is registered here with the root it fills, how it is bounded, who collects it and in which order the gate frees it before a command is refused. DE: Jeder Schreiber des Build-Systems auf einer Maschine ist hier mit seinem Wurzelverzeichnis, seiner Begrenzung, seinem Sammler und der Reihenfolge eingetragen, in der das Tor ihn freigibt, bevor ein Befehl abgelehnt wird.",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "collectorBudgetMilliseconds": 600000,
+        "consumerCount": 5,
+        "measureEntryLimit": 2000000,
+        "environmentChild": "SEMIO_DISK_RECOVERY_CHILD"
+      }
+    },
+    "Bounds": {
+      "const": {
+        "version": 1,
+        "waves": {"maximumAgeMilliseconds": 86400000, "keepNewest": 8},
+        "footprintLogs": {"maximumAgeMilliseconds": 259200000, "keepNewest": 256},
+        "readVerdicts": {"maximumAgeMilliseconds": 7200000},
+        "temporaryDirectories": {"minimumAgeMilliseconds": 3600000, "maximumAgeMilliseconds": 604800000, "prefix": "semio-"},
+        "replicaLost": {"maximumAgeMilliseconds": 2592000000, "keepNewest": 16}
+      }
+    },
+    "Writer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "priority", "class", "relief", "root", "collector", "command", "bound"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+        "priority": {"type": "integer", "minimum": 1, "maximum": 100},
+        "class": {"enum": ["derivable", "recoverable", "content", "image"]},
+        "relief": {"enum": ["host", "image", "none"]},
+        "root": {"type": "string", "minLength": 1},
+        "collector": {"enum": ["ledger", "cas-lru", "staging-sweep", "image-sweep", "age-prune", "log-rotate", "manual"]},
+        "command": {"type": "string", "minLength": 1},
+        "bound": {"type": "object", "additionalProperties": false, "required": ["en", "de"], "properties": {"en": {"type": "string", "minLength": 1}, "de": {"type": "string", "minLength": 1}}}
+      }
+    },
+    "Writers": {
+      "const": [
+        {"id": "cargo-incremental", "priority": 10, "class": "derivable", "relief": "image", "root": "{workspace}/.cache/b/r/m/cargo", "collector": "ledger", "command": "repo cache gc --area=cargo-store", "bound": {"en": "Cargo incremental caches, trimmed by the ledger collector (area cargo-store).", "de": "Cargo-Inkrementalcaches, vom Ledger-Sammler gekürzt (Bereich cargo-store)."}},
+        {"id": "compile-caches", "priority": 62, "class": "derivable", "relief": "host", "root": "{workspace}/.🧬semio/🦑️repo/⚡️cache", "collector": "ledger", "command": "repo cache gc", "bound": {"en": "Go, Vite, Vitest and compile caches below their ledger ages and budgets.", "de": "Go-, Vite-, Vitest- und Compile-Caches unter ihren Ledger-Altern und -Budgets."}},
+        {"id": "tool-generations", "priority": 20, "class": "derivable", "relief": "image", "root": "{workspace}/.cache/b/t/m/nx", "collector": "ledger", "command": "repo cache gc --area=nx-tooling,nx-tmp", "bound": {"en": "Newest few Nx tooling generations plus the current one.", "de": "Neueste paar Nx-Werkzeuggenerationen plus die aktuelle."}},
+        {"id": "closure-layers", "priority": 30, "class": "derivable", "relief": "image", "root": "{workspace}/.cache/b/g/m", "collector": "ledger", "command": "repo cache gc --area=graph-inference", "bound": {"en": "Superseded closure entries and unreferenced layers after a grace.", "de": "Abgelöste Abschlusseinträge und unreferenzierte Schichten nach einer Karenz."}},
+        {"id": "stale-waves", "priority": 40, "class": "derivable", "relief": "host", "root": "{workspace}/.cache/f/owner-pool-waves", "collector": "age-prune", "command": "repo cache gc", "bound": {"en": "A wave directory goes after maximumAgeMilliseconds without a write, the newest keepNewest stay.", "de": "Ein Wellenverzeichnis geht nach maximumAgeMilliseconds ohne Schreiben, die neuesten keepNewest bleiben."}},
+        {"id": "footprint-logs", "priority": 41, "class": "derivable", "relief": "host", "root": "{tmp}/semio-footprint", "collector": "log-rotate", "command": "repo cache gc", "bound": {"en": "At most keepNewest per-process trace logs, none older than maximumAgeMilliseconds.", "de": "Höchstens keepNewest Trace-Protokolle je Prozess, keines älter als maximumAgeMilliseconds."}},
+        {"id": "read-verdicts", "priority": 42, "class": "derivable", "relief": "host", "root": "{tmp}/semio-read-verdicts-{uid}", "collector": "age-prune", "command": "repo cache gc", "bound": {"en": "A verdict directory of a finished read goes after maximumAgeMilliseconds.", "de": "Ein Urteilsverzeichnis eines beendeten Lesens geht nach maximumAgeMilliseconds."}},
+        {"id": "dependency-generations", "priority": 50, "class": "derivable", "relief": "image", "root": "{workspace}/.cache/b/d/m/j", "collector": "ledger", "command": "repo cache gc --area=dependencies", "bound": {"en": "Superseded unpinned generations after the grace and rollback window.", "de": "Abgelöste, nicht angeheftete Generationen nach Karenz- und Rücknahmefenster."}},
+        {"id": "leaked-staging", "priority": 60, "class": "derivable", "relief": "host", "root": "{tmp}/semio-owner-pool-*", "collector": "staging-sweep", "command": "repo cache gc", "bound": {"en": "Staging directories of gone owners (pid and start time) and temporary directories older than maximumAgeMilliseconds.", "de": "Staging-Verzeichnisse beendeter Eigner (PID und Startzeit) und temporäre Verzeichnisse älter als maximumAgeMilliseconds."}},
+        {"id": "leaked-images", "priority": 61, "class": "derivable", "relief": "host", "root": "{workspace}/.cache/test-sandbox", "collector": "image-sweep", "command": "repo doctor --fix --only=host", "bound": {"en": "Disk images of dead test sandboxes are detached and removed.", "de": "Disk-Images toter Test-Sandboxes werden abgehängt und entfernt."}},
+        {"id": "cas-lru", "priority": 70, "class": "content", "relief": "host", "root": "{home}/.cache/semio/cas", "collector": "cas-lru", "command": "repo cache cas gc", "bound": {"en": "Capped at capBytes, least recently accessed first, down to the derived low share.", "de": "Auf capBytes begrenzt, die am längsten ungenutzten zuerst, bis zum abgeleiteten unteren Anteil."}},
+        {"id": "replica-lost", "priority": 80, "class": "recoverable", "relief": "host", "root": "{workspace}/.cache/f/lost", "collector": "age-prune", "command": "repo cache gc", "bound": {"en": "Files the replica overwrote are kept for maximumAgeMilliseconds, the newest keepNewest stay.", "de": "Vom Replikat überschriebene Dateien bleiben maximumAgeMilliseconds, die neuesten keepNewest bleiben."}},
+        {"id": "image-slack", "priority": 90, "class": "image", "relief": "host", "root": "{workspace}/.cache/b", "collector": "manual", "command": "hdiutil detach {workspace}/.cache/b/<partition>/m && rm -r {workspace}/.cache/b/<partition>", "bound": {"en": "Blocks a fixed image freed are never returned to the host; only retiring an idle recomputable image (graph, nx, rust, products) returns them, with no repo command running.", "de": "Von einem festen Image freigegebene Blöcke gehen nie an den Host zurück; nur das Abräumen eines untätigen, neu berechenbaren Images (Graph, Nx, Rust, Produkte) gibt sie zurück, ohne laufenden repo-Befehl."}}
+      ]
+    },
+    "Messages": {
+      "const": {
+        "version": 1,
+        "id": "disk-recovery",
+        "languages": ["en", "de"],
+        "messages": {
+          "recovery.start": {
+            "en": "Partition {partition} has {free} free, below the {target} this command needs with its reserve: freeing derivable caches first, then the least recently used cache objects.",
+            "de": "Partition {partition} hat {free} frei, weniger als die {target}, die dieser Befehl mit seiner Reserve braucht: zuerst ableitbare Caches, dann die am längsten ungenutzten Cache-Objekte werden freigegeben."
+          },
+          "recovery.step": {
+            "en": "Collector {id} freed {freed}; {free} free now.",
+            "de": "Sammler {id} hat {freed} freigegeben; jetzt {free} frei."
+          },
+          "recovery.failed": {
+            "en": "Collector {id} could not free space: {message}",
+            "de": "Sammler {id} konnte keinen Platz freigeben: {message}"
+          },
+          "bounds.freed": {
+            "en": "Machine bound {id}: {freed} freed.",
+            "de": "Maschinengrenze {id}: {freed} freigegeben."
+          },
+          "bounds.dry": {
+            "en": "Machine bound {id}: {freed} would be freed.",
+            "de": "Maschinengrenze {id}: {freed} würden freigegeben."
+          },
+          "recovery.done": {
+            "en": "Partition {partition} has {free} free; the command starts.",
+            "de": "Partition {partition} hat {free} frei; der Befehl startet."
+          },
+          "low-space-consumers": {
+            "en": "Partition {partition} has only {free} free ({usedPercent}% used): this command needs {must} ({need} for itself and {cushion} cushion), and everything that can be freed automatically is freed. Largest consumers: {consumers}. Free space with the command listed for a consumer, then run the command again.",
+            "de": "Partition {partition} hat nur noch {free} frei ({usedPercent} % belegt): dieser Befehl braucht {must} ({need} für sich und {cushion} Puffer), und alles, was sich automatisch freigeben lässt, ist freigegeben. Größte Verbraucher: {consumers}. Schaffe Platz mit dem zu einem Verbraucher genannten Befehl und führe den Befehl erneut aus."
+          }
+        }
+      }
+    }
+  }
+}

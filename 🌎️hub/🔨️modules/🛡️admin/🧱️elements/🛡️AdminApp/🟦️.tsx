@@ -6,7 +6,7 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Tabs, TabsContent, TabsList, TabsTrigger } from "@semio-tech/ui-react";
+import { Navbar, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Tabs, TabsContent, TabsList, TabsTrigger, UI_MOBILE_MEDIA_QUERY, navbarFillItem, useMediaQuery } from "@semio-tech/ui-react";
 import { ADMIN_LOCALES, useAdminLocale, useAdminT, type AdminI18nKey, type AdminLocale } from "../📚️I18n/🟦️.tsx";
 import { AdminAccessGate, useAdminSession } from "../🔑️AdminSession/🟦️.tsx";
 import { OverviewPage } from "../🏠️OverviewPage/🟦️.tsx";
@@ -48,13 +48,12 @@ export function AdminApp(): React.ReactElement {
   const t = useAdminT();
   const { status } = useAdminSession();
   const [tab, setTab] = React.useState<AdminTab>("overview");
+  const compact = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
 
   if (status !== "authorized") {
     return (
       <div className="flex h-full w-full flex-col">
-        <header className="flex items-center justify-end border-b p-single">
-          <LocaleSwitch />
-        </header>
+        <Navbar label={t("admin.session.title")} showFullscreenToggle={false} items={[navbarFillItem(), { key: "locale", content: <LocaleSwitch /> }]} />
         <AdminAccessGate />
       </div>
     );
@@ -63,16 +62,45 @@ export function AdminApp(): React.ReactElement {
   return (
     <div className="flex h-full w-full flex-col">
       <Tabs value={tab} onValueChange={(next) => setTab(next as AdminTab)} className="flex h-full w-full flex-col">
-        <header className="flex items-center justify-between gap-single border-b p-single">
-          <TabsList>
-            {ADMIN_TABS.map((candidate) => (
-              <TabsTrigger key={candidate} value={candidate} id={`admin-tab-${candidate}`}>
-                {t(`admin.nav.${candidate}` as AdminI18nKey)}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-          <LocaleSwitch />
-        </header>
+        <Navbar
+          label={t("admin.session.title")}
+          showFullscreenToggle={false}
+          items={[
+            compact
+              ? {
+                  key: "tabs",
+                  content: (
+                    <Select id="admin-tab-select" value={tab} onValueChange={(next) => setTab(next as AdminTab)}>
+                      <SelectTrigger id="admin-tab-switch" aria-label={t("admin.session.title")} className="min-w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ADMIN_TABS.map((candidate) => (
+                          <SelectItem key={candidate} value={candidate}>
+                            {t(`admin.nav.${candidate}` as AdminI18nKey)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ),
+                }
+              : {
+                  key: "tabs",
+                  className: "shrink overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+                  content: (
+                    <TabsList>
+                      {ADMIN_TABS.map((candidate) => (
+                        <TabsTrigger key={candidate} value={candidate} id={`admin-tab-${candidate}`}>
+                          {t(`admin.nav.${candidate}` as AdminI18nKey)}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                  ),
+                },
+            navbarFillItem(),
+            { key: "locale", content: <LocaleSwitch /> },
+          ]}
+        />
         <div className="min-h-0 flex-1 overflow-hidden">
           <TabsContent value="overview" className="h-full">
             <OverviewPage />

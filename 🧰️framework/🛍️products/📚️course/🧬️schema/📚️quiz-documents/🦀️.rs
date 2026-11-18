@@ -216,12 +216,23 @@ pub struct MatchingItem {
     pub explanation: Option<Text>,
 }
 
-/// 🧺️ Fixed semantic slots with rotating variants and a per-question time budget.
+/// 📉️ How a pool draws fewer slots than it has: Zipf over the slots ranked ascending by magnitude,
+/// each pick proportional to `1 / rank^exponent` among the slots left.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "kebab-case", deny_unknown_fields)]
+pub enum Distribution {
+    Zipf { exponent: f64 },
+}
+
+/// 🧺️ Fixed semantic slots with rotating variants, a per-question time budget and an optional
+/// distribution over the slots a sheet draws.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct QuestionPool {
     pub seconds: u32,
     pub slots: Vec<Vec<Slug>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub distribution: Option<Distribution>,
 }
 
 /// 🪣️ Assign every item to one category; categories may carry profiles on shared axes and a wrong
@@ -390,7 +401,7 @@ pub struct Introduction {
 }
 
 /// 🧭️ Page names reserved for the course's root navigation.
-pub const COURSE_ROOT_IDS: [&str; 11] = ["home", "identity", "introduction", "learner", "intro", "board", "badges", "prefs", "quizzes", "run", "results"];
+pub const COURSE_ROOT_IDS: [&str; 13] = ["home", "identity", "introduction", "learner", "intro", "board", "badges", "prefs", "quizzes", "assignments", "clips", "run", "results"];
 
 /// 🧩️ An ordered course group; an empty quiz list marks a placeholder.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -412,6 +423,8 @@ pub type Unlocks = BTreeMap<String, Option<Timestamp>>;
 pub struct Course {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub assignments: Option<Vec<Assignment>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub clips: Option<Vec<Clip>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub unlocks: Option<Unlocks>,
     #[serde(rename = "$schema", default, skip_serializing_if = "Option::is_none")]
@@ -457,4 +470,35 @@ pub struct Assignment {
     pub title: Text,
     pub description: Text,
     pub documents: AssignmentDocuments,
+}
+
+/// 🖼️ The still frame of a clip, a PNG the site builds into its hashed assets.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ClipPoster {
+    pub file: String,
+}
+
+/// 🔗️ Where a clip is hosted per language; a language without an address has no hosted clip yet.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ClipUrls {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub en: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub de: Option<String>,
+}
+
+/// 🎬️ A learning clip of one course topic: its poster now and, once hosted elsewhere, its address per language.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Clip {
+    pub id: Slug,
+    pub topic: Slug,
+    pub emoji: String,
+    pub title: Text,
+    pub description: Text,
+    pub poster: ClipPoster,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub urls: Option<ClipUrls>,
 }

@@ -14,6 +14,8 @@ import fixture from "./🧫️fixtures/🔣️.json";
 import catalogue from "../../../../⚙️operations/🔣️catalog.json";
 import {bazelCacheLayoutV1,bazelCacheFlagsV1,bazelDiskCacheMaximumBytesV1,bazelServerBaseV1,requireBazelHostPathsV1} from "../🟦️.ts";
 import {canonicalArchitectureEnvironment} from "../../../../../⚡️caching/🦀️cargo/🌿️environment/🟦️.ts";
+import{existsSync as existsRootV1}from"node:fs";import{dirname as dirnameRootV1,join as joinRootV1}from"node:path";
+const repositoryRootV1=(()=>{let directory=import.meta.dir;while(!existsRootV1(joinRootV1(directory,"MODULE.bazel"))&&dirnameRootV1(directory)!==directory)directory=dirnameRootV1(directory);return directory;})();
 
 test("every Bazel generated writer selects an authored finite partition against an independent SQL oracle",()=>{
  const roots={tools:resolve(fixture.roots.tools),dependencies:resolve(fixture.roots.dependencies),products:resolve(fixture.roots.products)},layout=bazelCacheLayoutV1(roots),validate=new Ajv({strict:true}).compile(schema),database=new Database(":memory:");
@@ -24,7 +26,7 @@ test("every Bazel generated writer selects an authored finite partition against 
 });
 
 test("native grants select the authored Cargo target against an independent TOML oracle",()=>{
- const root=process.cwd(),configuration=parse(readFileSync(join(root,".cargo/config.toml"),"utf8")) as {build:{"target-dir":string;"build-dir":string}};
+ const root=repositoryRootV1,configuration=parse(readFileSync(join(root,".cargo/config.toml"),"utf8")) as {build:{"target-dir":string;"build-dir":string}};
  for(const row of fixture.cargoAuthority){const expected=resolve(root,row.target==="configuration"?configuration.build["target-dir"]:row.target),actual=canonicalArchitectureEnvironment(root,row.environment);expect(actual.CARGO_TARGET_DIR).toBe(expected);expect(actual.CARGO_BUILD_BUILD_DIR).toBe(resolve(root,configuration.build["build-dir"]));}
 });
 
@@ -58,7 +60,7 @@ test("generated Bazel cache flags agree with the fixture, the closed schema and 
 });
 
 test("the repository .bazelrc carries exactly the authored static cache policy and no host paths",()=>{
- const text=readFileSync(join(process.cwd(),".bazelrc"),"utf8"),lines=text.split(/\r?\n/u).filter(Boolean),database=new Database(":memory:");
+ const text=readFileSync(join(repositoryRootV1,".bazelrc"),"utf8"),lines=text.split(/\r?\n/u).filter(Boolean),database=new Database(":memory:");
  try{
   const idle=cachePolicy.diskCache.garbageCollectionIdleDelaySeconds,age=cachePolicy.diskCache.garbageCollectionMaximumAgeDays,repositoryAge=cachePolicy.repositoryContents.garbageCollectionMaximumAgeDays,
    rows=database.query("SELECT printf('build --experimental_disk_cache_gc_idle_delay=%ds',?1) AS line UNION ALL SELECT printf('build --experimental_disk_cache_gc_max_age=%dd',?2) UNION ALL SELECT printf('build --repo_contents_cache_gc_max_age=%dd',?3)").all(idle,age,repositoryAge) as {line:string}[];
@@ -75,7 +77,7 @@ test.skipIf(!process.env.SEMIO_TEST_BAZEL_BINARY)("the provisioned Bazel binary 
   mkdirSync(workspace);writeFileSync(join(workspace,"MODULE.bazel"),'module(name="flags")\n');writeFileSync(join(workspace,"BUILD.bazel"),'genrule(name="x",outs=["x.txt"],cmd="echo x > $@")\n');
   for(const row of cache.accepted){
    const flags=bazelCacheFlagsV1(layout,slot,{environment:row.environment,skipCache:(row as {skipCache?:boolean}).skipCache});if(flags.helper){if(process.platform==="win32")continue;mkdirSync(layout.temporary,{recursive:true});writeFileSync(flags.helper.path,flags.helper.content,{mode:flags.helper.mode});}
-   const result=spawnSync(binary,["--batch",`--output_user_root=${join(directory,"root")}`,`--install_base=${join(directory,"install")}`,...flags.startup,"--nosystem_rc","--nohome_rc","--noworkspace_rc",`--bazelrc=${join(process.cwd(),".bazelrc")}`,"build","--nobuild","--lockfile_mode=off","--incompatible_autoload_externally=",...flags.command,"//:x"],{cwd:workspace,encoding:"utf8",timeout:240000});
+   const result=spawnSync(binary,["--batch",`--output_user_root=${join(directory,"root")}`,`--install_base=${join(directory,"install")}`,...flags.startup,"--nosystem_rc","--nohome_rc","--noworkspace_rc",`--bazelrc=${join(repositoryRootV1,".bazelrc")}`,"build","--nobuild","--lockfile_mode=off","--incompatible_autoload_externally=",...flags.command,"//:x"],{cwd:workspace,encoding:"utf8",timeout:240000});
    expect(result.status,row.name+"\n"+result.stderr).toBe(0);
   }
  }finally{rmSync(directory,{recursive:true,force:true});}
@@ -107,9 +109,9 @@ test("the production Bazel layout names an ASCII output base and the rc never ov
 });
 
 test.skipIf(!process.env.SEMIO_TEST_BAZEL_BINARY||process.platform!=="darwin")("the real macOS Bazel crashes on a non-ASCII install base and its sandbox profile double-encodes a non-ASCII output base, which the host sandbox refuses or (macOS 27) leaves unconfined, so only an ASCII output base runs sandboxed as declared",()=>{
- const binary=process.env.SEMIO_TEST_BAZEL_BINARY!,base=mkdtempSync(join(process.cwd(),".bazel-sandbox-")),directory=join(base,"d"),workspace=join(directory,"workspace"),environment={...process.env,LANG:"en_US.UTF-8",LC_ALL:"en_US.UTF-8"},common=["--nosystem_rc","--nohome_rc","--max_idle_secs=30"],emoji=(name:string)=>join(directory,"\u{1F9F0}\uFE0F"+name),asciiInstall=join(directory,"install"),run=(startup:string[],command:string[])=>spawnSync(binary,[...common,...startup,...command],{cwd:workspace,encoding:"utf8",timeout:300000,env:environment}),sandboxed=["build","--lockfile_mode=off","--spawn_strategy=sandboxed","--sandbox_debug","--execution_log_json_file="+join(directory,"log.json"),"//:x"];
+ const binary=process.env.SEMIO_TEST_BAZEL_BINARY!,base=mkdtempSync(join(repositoryRootV1,".bazel-sandbox-")),directory=join(base,"d"),workspace=join(directory,"workspace"),environment={...process.env,LANG:"en_US.UTF-8",LC_ALL:"en_US.UTF-8"},common=["--nosystem_rc","--nohome_rc","--max_idle_secs=30"],emoji=(name:string)=>join(directory,"\u{1F9F0}\uFE0F"+name),asciiInstall=join(directory,"install"),run=(startup:string[],command:string[])=>spawnSync(binary,[...common,...startup,...command],{cwd:workspace,encoding:"utf8",timeout:300000,env:environment}),sandboxed=["build","--lockfile_mode=off","--spawn_strategy=sandboxed","--sandbox_debug","--execution_log_json_file="+join(directory,"log.json"),"//:x"];
  try{
-  expect(process.cwd()).toMatch(new RegExp(componentSchema.definitions.HostPaths.const.platforms.darwin.pattern));
+  expect(repositoryRootV1).toMatch(new RegExp(componentSchema.definitions.HostPaths.const.platforms.darwin.pattern));
   mkdirSync(workspace,{recursive:true});writeFileSync(join(workspace,"MODULE.bazel"),'module(name="ascii")\n');writeFileSync(join(workspace,"BUILD.bazel"),'genrule(name="x",outs=["\u{1F9F0}\uFE0F.txt"],cmd="echo x > $@")\n');
   const install=run([`--output_base=${join(directory,"base-a")}`,`--install_base=${emoji("install")}`],["info"]);expect(install.status).not.toBe(0);expect(install.stderr).toContain("Could not find or load main class");
   const ascii=run([`--output_base=${join(directory,"base-ascii")}`,`--install_base=${asciiInstall}`],sandboxed);expect(ascii.status,ascii.stderr).toBe(0);expect(readFileSync(join(directory,"log.json"),"utf8")).toContain(fixture.sandbox.expectedRunner);

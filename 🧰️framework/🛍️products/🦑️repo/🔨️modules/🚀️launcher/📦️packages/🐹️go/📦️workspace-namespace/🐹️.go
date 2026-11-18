@@ -216,7 +216,7 @@ func readWorkspaceManagedContract(root string, policy WorkspaceLinksPolicy) (wor
 			return contract, fmt.Errorf("canonical dependency partition path required")
 		}
 	}
-	contract.generationRoot = filepath.Join(root, filepath.FromSlash(directory), mount, manager.GenerationDirectory)
+	contract.generationRoot = MachinePath(os.Getenv, root, append(strings.Split(directory, "/"), mount, manager.GenerationDirectory)...)
 	return contract, nil
 }
 

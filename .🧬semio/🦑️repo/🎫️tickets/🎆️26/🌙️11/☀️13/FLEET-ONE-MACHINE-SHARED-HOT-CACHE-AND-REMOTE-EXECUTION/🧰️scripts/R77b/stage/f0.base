@@ -1,0 +1,828 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://repo.nx/AuthorizerSourcesV1",
+  "title": "Nx Authorizer Sources V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "mode",
+    "entry",
+    "sources",
+    "resolutions"
+  ],
+  "$defs": {
+    "Receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "mode",
+        "sourceSha256",
+        "entry",
+        "outputs"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "mode": {
+          "const": "release"
+        },
+        "sourceSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "entry": {
+          "const": "semio-authorizers.mjs"
+        },
+        "outputs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "properties": {
+              "path": {
+                "const": "semio-authorizers.mjs"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        }
+      }
+    },
+    "CompilerPublication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "mode",
+        "bun",
+        "physicalSourceRoot",
+        "resolutions",
+        "sources",
+        "entryRole",
+        "runtimeEntryRole"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "mode": {
+          "const": "release"
+        },
+        "bun": {
+          "type": "string",
+          "pattern": "^bun@\\d+\\.\\d+\\.\\d+$"
+        },
+        "resolutions": {
+          "$ref": "#/properties/resolutions"
+        },
+        "sources": {
+          "$ref": "#/properties/sources"
+        },
+        "physicalSourceRoot": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^(?:/|[A-Za-z]:[\\\\/]|\\\\\\\\)"
+        },
+        "entryRole": {
+          "const": "program"
+        },
+        "runtimeEntryRole": {
+          "const": "module"
+        }
+      }
+    },
+    "ReceiptFailureDiagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "directory",
+        "reason",
+        "authority",
+        "publicationRetirementDispatches",
+        "validation"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "unqualified-authorizer-receipt-data"
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "reason": {
+          "enum": [
+            "receipt-schema",
+            "source-read",
+            "source-json",
+            "source-digest",
+            "source-manifest",
+            "manifest-entry",
+            "manifest-order",
+            "output-read",
+            "output-digest"
+          ]
+        },
+        "authority": {
+          "const": false
+        },
+        "publicationRetirementDispatches": {
+          "const": 0
+        },
+        "validation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "count",
+            "sample"
+          ],
+          "properties": {
+            "count": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1048576
+            },
+            "sample": {
+              "type": "array",
+              "maxItems": 8,
+              "items": {
+                "type": "string",
+                "maxLength": 512
+              }
+            }
+          }
+        }
+      }
+    },
+    "ReceiptFailureCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fault",
+        "accepted",
+        "reason",
+        "reads"
+      ],
+      "properties": {
+        "fault": {
+          "enum": [
+            "none",
+            "receipt-schema",
+            "source-read",
+            "source-json",
+            "source-digest",
+            "source-manifest",
+            "manifest-entry",
+            "manifest-order",
+            "manifest-duplicate",
+            "output-read",
+            "output-digest"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "enum": [
+                "receipt-schema",
+                "source-read",
+                "source-json",
+                "source-digest",
+                "source-manifest",
+                "manifest-entry",
+                "manifest-order",
+                "output-read",
+                "output-digest"
+              ]
+            }
+          ]
+        },
+        "reads": {
+          "type": "array",
+          "maxItems": 2,
+          "items": {
+            "enum": [
+              ".semio-authorizer-source.json",
+              "semio-authorizers.mjs"
+            ]
+          }
+        }
+      }
+    },
+    "RetirementIntegrityCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fault",
+        "accepted"
+      ],
+      "properties": {
+        "fault": {
+          "enum": [
+            "complete",
+            "opaque-missing-resolution",
+            "opaque-invalid-json",
+            "opaque-foreign-path",
+            "source-drift",
+            "output-drift",
+            "receipt-extra",
+            "receipt-output-name",
+            "receipt-version"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "RuntimeDataCompanions": {
+      "const": [
+        {
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🛠️native-compiler/🪟️windows/🟦️.ts",
+          "paths": [
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/acquire.go",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/archive.go",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/cabinet_windows.go",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/go.mod",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/locked_other.go",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/locked_windows.go",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/main_other.go",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/main_windows.go",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/manifest.go",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/msi_windows.go",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/path.go",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/plan_windows.go",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/preflight_windows.go",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/recipe.go",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/request.go",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/sdk.go",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/system_windows.go"
+          ]
+        },
+        {
+          "owner": "🧰️framework/🔨️modules/🖱️ui/🎚️axes/📥️source/🟦️.ts",
+          "paths": [
+            "🧰️framework/🔨️modules/🖱️ui/🎚️axes/🔣️.json"
+          ]
+        },
+        {
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🟦️.ts",
+          "paths": [
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📋️project.json",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/📋️project.json",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/📋️project.json"
+          ]
+        },
+        {
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📝️derived-config/🟦️.ts",
+          "paths": [
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json"
+          ]
+        },
+        {
+          "owner": "🧰️framework/🔨️modules/⚙️runtime/🟢️node/🧲️native/🏗️addon/🟦️.ts",
+          "paths": [
+            "🧰️framework/🔨️modules/⚙️runtime/🟢️node/🧲️native/🦀️.rs"
+          ]
+        },
+        {
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/🔏️implementation/🟨️.mjs",
+          "paths": [
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📥️engine.json"
+          ]
+        }
+      ],
+      "description": "Data files the capture cannot derive from literal relative paths or sibling schema folders: owner-relative reads assembled at run time. The closure law fails on a row the capture would derive anyway."
+    },
+    "OriginCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "fault",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fault": {
+          "enum": [
+            "none",
+            "schema-before",
+            "schema-after",
+            "undeclared",
+            "global-spoof",
+            "local-collision",
+            "reader-before",
+            "reader-after",
+            "reader-after-cached",
+            "reader-policy-before",
+            "reader-policy-after"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "RuntimeCompanionCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "excluded": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      },
+      "required": [
+        "owner",
+        "path",
+        "excluded"
+      ]
+    },
+    "CommonJsCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "files": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "entry": {
+          "type": "string"
+        },
+        "expectedFiles": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "files",
+        "entry",
+        "expectedFiles"
+      ]
+    },
+    "LoaderManifestCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "fault",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fault": {
+          "enum": [
+            "current-empty",
+            "resolved",
+            "shared-target",
+            "source-limit",
+            "resolution-limit",
+            "legacy",
+            "manifest-extra",
+            "source-extra",
+            "source-overlimit",
+            "source-unsorted",
+            "source-unsafe",
+            "entry-missing",
+            "resolution-missing",
+            "resolution-not-array",
+            "resolution-extra",
+            "resolution-nonstring",
+            "resolution-oversize",
+            "resolution-unknownpath",
+            "resolution-duplicate",
+            "resolution-unsorted",
+            "resolution-unsafe",
+            "resolution-overlimit"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ComputedImportSites": {
+      "description": "Every computed import, require, resolve or createRequire-base site of the files in the repository command closures (owner, site count) and the roots those sites, or a worker spawn with count 0, may load. The closure law derives the counts from the TypeScript parser; a site outside this table, a changed count or a row without site or root fails it.",
+      "const": [
+        {
+          "owner": "🧰️framework/🔨️modules/⚙️runtime/🟢️node/📦️esbuild/🟦️.ts",
+          "count": 2,
+          "roots": []
+        },
+        {
+          "owner": "🧰️framework/🔨️modules/⚙️runtime/🟢️node/🧲️native/🟦️.ts",
+          "count": 1,
+          "roots": []
+        },
+        {
+          "owner": "🧰️framework/🔨️modules/🏃️process/🔌️providers/🟦️.ts",
+          "count": 2,
+          "roots": []
+        },
+        {
+          "owner": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🎭️playwright/🟦️.ts",
+          "count": 1,
+          "roots": []
+        },
+        {
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🟦️.ts",
+          "count": 0,
+          "roots": [
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/👷️closure-read-worker/🟨️.mjs"
+          ]
+        },
+        {
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+          "count": 1,
+          "roots": []
+        },
+        {
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🟨️.mjs",
+          "count": 9,
+          "roots": []
+        },
+        {
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🧊️pristine/🟦️.ts",
+          "count": 2,
+          "roots": []
+        },
+        {
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔌️sdk/🟦️.ts",
+          "count": 3,
+          "roots": []
+        },
+        {
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+          "count": 4,
+          "roots": []
+        },
+        {
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👷️workers/📨️protocol/🟦️.ts",
+          "count": 1,
+          "roots": []
+        },
+        {
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📐️conformance/⌨️command/🟦️.ts",
+          "count": 1,
+          "roots": []
+        },
+        {
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook/🏃️execution/🟦️.ts",
+          "count": 4,
+          "roots": []
+        },
+        {
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📋️data/📥️load/🟨️.mjs",
+          "count": 1,
+          "roots": [
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📋️data/🟨️.mjs"
+          ]
+        },
+        {
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔌️backends/🚀️launch/🟦️.ts",
+          "count": 1,
+          "roots": [
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🧶️nx/🚀️launch/🟦️.ts"
+          ]
+        },
+        {
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔌️backends/🚚️loading/🟦️.ts",
+          "count": 1,
+          "roots": [
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🔌️backend/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🐙️semio/🔌️backend/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🧶️nx/🔌️backend/🟦️.ts"
+          ]
+        },
+        {
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔁️bootstrap/🟨️.mjs",
+          "count": 3,
+          "roots": [
+            "✏️s/🧑‍💻dev/🧩️catalog/📣️publication/🟦️.ts",
+            "🧰️framework/🔨️modules/🪪️identity/📁️installation/🟨️.mjs",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧩️composition/🟨️.mjs",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚙️engine/🧭️selection/🟨️.mjs",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📥️inference/🟨️.mjs",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🖥️native-host/🟨️.mjs",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🟨️.mjs",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.mjs",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📇️catalog/🚚️deployment/🟨️.mjs",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/🟨️.mjs",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.mjs"
+          ]
+        },
+        {
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🕸️dependency-edges/🟨️.mjs",
+          "count": 3,
+          "roots": []
+        },
+        {
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs",
+          "count": 1,
+          "roots": []
+        },
+        {
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧩️units/⌨️command/🟦️.ts",
+          "count": 3,
+          "roots": []
+        },
+        {
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/🔌️ports/🟦️.ts",
+          "count": 1,
+          "roots": []
+        },
+        {
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🔌️nx/🟦️.ts",
+          "count": 1,
+          "roots": []
+        },
+        {
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟨️.mjs",
+          "count": 4,
+          "roots": []
+        }
+      ]
+    },
+    "RuntimeDataDiscoveryPolicy": {
+      "const": {
+        "maximumDepth": 32,
+        "maximumDirectories": 8192,
+        "maximumEntries": 8192,
+        "maximumResults": 8192,
+        "maximumDeclaredBytes": 67108864
+      }
+    },
+    "MemoPolicy": {
+      "const": {
+        "maximumFileBytes": 33554432,
+        "concurrency": 24
+      }
+    },
+    "RuntimeDataDiscoveryCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "scenario",
+        "accepted",
+        "maximumEnumerations"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scenario": {
+          "enum": [
+            "ordinary",
+            "absent",
+            "symlink",
+            "overflow",
+            "entries",
+            "depth",
+            "race",
+            "kind",
+            "literal-symlink",
+            "bytes",
+            "close-primary",
+            "cancel",
+            "close-mutation"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "maximumEnumerations": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 34
+        }
+      }
+    },
+    "SourceCensusPolicy": { "const": { "maximumFiles": 65536, "maximumSourceBytes": 268435456, "progressFiles": 16 } },
+    "SourceCapacityTexts": {
+      "const": {
+        "en": "Authorizer source closure capacity exceeded: files={files}/{maximumFiles}, bytes={bytes}/{maximumBytes}. The closure reached {path} through {chain}. Drop the import that pulls this subtree into the entry, or raise maximumFiles, maximumSourceBytes and maximumSnapshotBytes together in the Policy of build/source/closure/schema (one file per 4096 source bytes, snapshot 1.5 times the sources).",
+        "de": "Kapazität des Autorisierer-Quellabschlusses überschritten: Dateien={files}/{maximumFiles}, Bytes={bytes}/{maximumBytes}. Der Abschluss erreichte {path} über {chain}. Entferne den Import, der diesen Teilbaum in den Einstieg zieht, oder erhöhe maximumFiles, maximumSourceBytes und maximumSnapshotBytes gemeinsam in der Policy von build/source/closure/schema (eine Datei je 4096 Quellbytes, Snapshot das 1,5-fache der Quellen)."
+      }
+    },
+    "CompilerClosureLaw": {
+      "const": {
+        "version": 1,
+        "entry": "🔏️authorizers/📜️script.ts",
+        "maximumFiles": 12288,
+        "maximumSourceBytes": 50331648,
+        "maximumSnapshotBytes": 75497472,
+        "reservedHeadroomBasisPoints": 1000,
+        "entryGuardBound": "import\\.meta\\.main\\s*\\?\\?",
+        "entryGuards": [
+          "(?:===|!==|==|!=)\\s*(?:[A-Za-z_$][\\w$.]*\\(\\s*)*import\\.meta\\.(?:url|filename|path)\\b",
+          "\\bimport\\.meta\\.(?:url|filename|path)\\b(?:\\s*\\))*\\s*(?:===|!==|==|!=)"
+        ],
+        "texts": {
+          "en": { "budget": "The authorizer compiler closure holds {files} files and {sourceBytes} source bytes; the declared budget is {budgetBytes} bytes ({headroom} percent left), the hard limit {limitBytes} bytes.", "guard": "The authorizer compiler closure reaches {path}, which decides by itself whether it is the process entry; inside the single-file bundle that is true for every module. Use isMainModuleV1(import.meta.url)." },
+          "de": { "budget": "Die Hülle des Autorisierer-Compilers enthält {files} Dateien und {sourceBytes} Quellbytes; das deklarierte Budget beträgt {budgetBytes} Bytes ({headroom} Prozent frei), die harte Grenze {limitBytes} Bytes.", "guard": "Die Hülle des Autorisierer-Compilers erreicht {path}, das selbst entscheidet, ob es der Prozess-Einstieg ist; im Einzeldatei-Bündel gilt das für jedes Modul. Verwende isMainModuleV1(import.meta.url)." }
+        }
+      }
+    },
+    "SourceCensus": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "version", "entry", "files", "sourceBytes", "snapshotBytes", "sources"],
+      "properties": {
+        "kind": { "const": "source-census" }, "version": { "const": 1 },
+        "entry": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "files": { "type": "integer", "minimum": 1, "maximum": 65536 },
+        "sourceBytes": { "type": "integer", "minimum": 0, "maximum": 268435456 },
+        "snapshotBytes": { "type": "integer", "minimum": 0 },
+        "sources": { "type": "array", "maxItems": 65536, "items": { "type": "object", "additionalProperties": false, "required": ["path", "bytes", "origin", "importer"], "properties": { "path": { "type": "string", "minLength": 1, "maxLength": 256 }, "bytes": { "type": "integer", "minimum": 0, "maximum": 4194304 }, "origin": { "enum": ["entry", "import", "declared-companion", "discovered-data", "workspace-manifest", "unknown"] }, "importer": { "type": ["string", "null"] } } } }
+      }
+    },
+    "SourceCapacityDiagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "path",
+        "origin",
+        "chain",
+        "files",
+        "bytes",
+        "largest"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "origin": {
+          "enum": [
+            "entry",
+            "import",
+            "declared-companion",
+            "discovered-data",
+            "workspace-manifest",
+            "unknown"
+          ]
+        },
+        "chain": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 14,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
+        "files": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16385
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 71303168
+        },
+        "largest": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "bytes"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4194304
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "mode": {
+      "const": "release"
+    },
+    "entry": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      },
+      "maxItems": 16384
+    },
+    "resolutions": {
+      "type": "array",
+      "maxItems": 256,
+      "items": {
+        "type": "object",
+        "required": [
+          "specifier",
+          "path"
+        ],
+        "properties": {
+          "specifier": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

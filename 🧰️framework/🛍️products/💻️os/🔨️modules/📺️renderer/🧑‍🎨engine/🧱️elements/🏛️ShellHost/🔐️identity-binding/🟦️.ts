@@ -21,7 +21,7 @@ import { STREAM_MUX_ANNOUNCEMENT, documentRuntimeKeyV1 } from "@semio-tech/frame
 import { type MutationEnvelope } from "@semio-tech/framework/replication";
 import { IDENTITY_CONFIG_SCHEMA } from "@semio-tech/framework/backbone/config-lane";
 import { type Identity, type IdentityConfigMutation, identityMutationDiffPair } from "@semio-tech/framework/config/mutations";
-import { type UiLocale } from "@semio-tech/ui-react";
+import { type NavbarItem, type UiLocale } from "@semio-tech/ui-react";
 import { type FrameworkOsDefaults, type ResolvedShellLocks } from "../../🐚️Shell/🔒️boot-and-locks/🟦️.ts";
 import { SILENT_STREAM_MUX_ENDPOINT_V1, StreamMuxChannelV1, pageStreamMuxChannelV1, type StreamMuxEndpointV1 } from "@semio-tech/framework/io/stream-mux";
 import type { PluginCatalog } from "@semio-tech/framework";
@@ -85,6 +85,8 @@ export interface FrameworkOsShellProps {
    * otherwise all auto-play their onboarding at once the moment they boot. Defaults to `false` (existing
    * single-shell-per-page behavior unchanged). */
   readonly suppressAutoIntroduction?: boolean;
+  /** 🧭️ Extra items the host appends to the shell navbar, after its own items and before the fullscreen toggle, as cells of the one navbar band (e.g. the demonstrator's "Overview" control), instead of a second band above the shell. */
+  readonly navbarTrailingItems?: readonly NavbarItem[];
 }
 
 /** 📶️ The page's stream channel when the serve that hosts this page announces one (`STREAM_MUX_ANNOUNCEMENT`, defined by

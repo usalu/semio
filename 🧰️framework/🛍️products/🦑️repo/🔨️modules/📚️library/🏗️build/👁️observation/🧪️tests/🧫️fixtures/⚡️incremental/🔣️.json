@@ -64,7 +64,7 @@
     "partial": "{\"name\":\"c\",\"tar",
     "completeAfterMilliseconds": 300
   },
-  "foreignLibraryFacts": 0,
+  "foreignLibraryFacts": 1,
   "retirement": {
     "cases": [
       {

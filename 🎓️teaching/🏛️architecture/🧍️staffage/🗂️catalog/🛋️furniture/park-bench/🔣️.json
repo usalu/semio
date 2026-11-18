@@ -3076,7 +3076,7 @@
               "kind": "rect",
               "x": -0.3,
               "y": 0.405,
-              "w": 0.11875,
+              "w": 0.1,
               "h": 0.045,
               "r": 0.008,
               "penMm": 0.35
@@ -3092,9 +3092,9 @@
               "material": "oak-timber",
               "hatch": "oak-grain",
               "kind": "rect",
-              "x": -0.17625,
+              "x": -0.17,
               "y": 0.405,
-              "w": 0.11875,
+              "w": 0.1,
               "h": 0.045,
               "r": 0.008,
               "penMm": 0.35
@@ -3110,9 +3110,9 @@
               "material": "oak-timber",
               "hatch": "oak-grain",
               "kind": "rect",
-              "x": -0.0525,
+              "x": -0.04,
               "y": 0.405,
-              "w": 0.11875,
+              "w": 0.1,
               "h": 0.045,
               "r": 0.008,
               "penMm": 0.35
@@ -3128,15 +3128,15 @@
               "material": "oak-timber",
               "hatch": "oak-grain",
               "kind": "rect",
-              "x": 0.07125,
+              "x": 0.09,
               "y": 0.405,
-              "w": 0.11875,
+              "w": 0.1,
               "h": 0.045,
               "r": 0.008,
               "penMm": 0.35
             },
             {
-              "id": "seat-chamfer",
+              "id": "seat-chamfer-1",
               "bone": "seat",
               "role": "detail",
               "z": 4.15,
@@ -3148,6 +3148,72 @@
               "points": [
                 [
                   -0.288,
+                  0.441
+                ],
+                [
+                  -0.212,
+                  0.441
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "seat-chamfer-2",
+              "bone": "seat",
+              "role": "detail",
+              "z": 4.15,
+              "filled": false,
+              "tone": 0.3,
+              "region": "seat-timber",
+              "material": "oak-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.158,
+                  0.441
+                ],
+                [
+                  -0.082,
+                  0.441
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "seat-chamfer-3",
+              "bone": "seat",
+              "role": "detail",
+              "z": 4.15,
+              "filled": false,
+              "tone": 0.3,
+              "region": "seat-timber",
+              "material": "oak-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.028,
+                  0.441
+                ],
+                [
+                  0.048,
+                  0.441
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "seat-chamfer-4",
+              "bone": "seat",
+              "role": "detail",
+              "z": 4.15,
+              "filled": false,
+              "tone": 0.3,
+              "region": "seat-timber",
+              "material": "oak-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.102,
                   0.441
                 ],
                 [
@@ -3233,7 +3299,7 @@
               "region": "steel-frame",
               "material": "steel-painted",
               "kind": "path",
-              "d": "M -0.29 0.612 C -0.29 0.585 -0.26 0.58 -0.26 0.55"
+              "d": "M -0.26 0.59 C -0.26 0.575 -0.26 0.565 -0.26 0.55"
             },
             {
               "id": "back-slat-1",
@@ -3503,7 +3569,7 @@
               "x": 0.0,
               "y": -0.3,
               "w": 1.8,
-              "h": 0.11875,
+              "h": 0.1,
               "r": 0.008,
               "penMm": 0.35
             },
@@ -3519,9 +3585,9 @@
               "hatch": "oak-grain",
               "kind": "rect",
               "x": 0.0,
-              "y": -0.17625,
+              "y": -0.17,
               "w": 1.8,
-              "h": 0.11875,
+              "h": 0.1,
               "r": 0.008,
               "penMm": 0.35
             },
@@ -3537,9 +3603,9 @@
               "hatch": "oak-grain",
               "kind": "rect",
               "x": 0.0,
-              "y": -0.0525,
+              "y": -0.04,
               "w": 1.8,
-              "h": 0.11875,
+              "h": 0.1,
               "r": 0.008,
               "penMm": 0.35
             },
@@ -3555,9 +3621,9 @@
               "hatch": "oak-grain",
               "kind": "rect",
               "x": 0.0,
-              "y": 0.07125,
+              "y": 0.09,
               "w": 1.8,
-              "h": 0.11875,
+              "h": 0.1,
               "r": 0.008,
               "penMm": 0.35
             },
@@ -3704,6 +3770,22 @@
               "closed": false
             },
             {
+              "id": "l-foot",
+              "bone": "end-left",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.42,
+              "region": "steel-frame",
+              "material": "steel-painted",
+              "kind": "rect",
+              "x": 0.058,
+              "y": -0.3,
+              "w": 0.124,
+              "h": 0.55,
+              "r": 0.01
+            },
+            {
               "id": "l-armrest",
               "bone": "end-left",
               "role": "body",
@@ -3730,6 +3812,22 @@
               "material": "steel-painted",
               "kind": "path",
               "d": "M 0.12 -0.285 L 0.12 0.12"
+            },
+            {
+              "id": "r-foot",
+              "bone": "end-right",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.42,
+              "region": "steel-frame",
+              "material": "steel-painted",
+              "kind": "rect",
+              "x": 1.618,
+              "y": -0.3,
+              "w": 0.124,
+              "h": 0.55,
+              "r": 0.01
             },
             {
               "id": "r-armrest",
@@ -4742,14 +4840,14 @@
             "material": "oak-timber",
             "role": "body",
             "tone": 0.6,
-            "size": [1.8, 0.045, 0.11875],
+            "size": [1.8, 0.045, 0.1],
             "cornerRadius": 0.008,
             "transform": {
-              "translation": [0.9, 0.0225, -0.24062]
+              "translation": [0.9, 0.0225, -0.25]
             },
             "repeat": {
               "count": 4,
-              "translation": [0, 0, 0.12375]
+              "translation": [0, 0, 0.13]
             }
           },
           {

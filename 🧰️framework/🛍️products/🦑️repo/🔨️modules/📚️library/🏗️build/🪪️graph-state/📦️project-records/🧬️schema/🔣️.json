@@ -2,8 +2,16 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "semio:build:graph-state:project-records:v1",
   "title": "Project inference record in portable form",
-  "description": "One project's inference record as it travels through the fleet cache: the digest it was stored under, the authority rows and every observation row of the producer, and the result text. The record is stored in the neutral form of `./🧳️portable` (root token and forward slashes, neutral provider owner and closure keys) and spelled the reading machine's way when it is taken, whatever the platform of the two, and the reader accepts it only through its own record lookup, which checks every observation row against its own tree.",
+  "description": "One project's inference record as it travels through the fleet cache (in the packed form of `../🗜️packed-rows`, which stores every distinct row once): the digest it was stored under, the authority rows and every observation row of the producer, and the result text. The record is stored in the neutral form of `./🧳️portable` (root token and forward slashes, neutral provider owner and closure keys) and spelled the reading machine's way when it is taken, whatever the platform of the two, and the reader accepts it only through its own record lookup, which checks every observation row against its own tree.",
   "definitions": {
+    "Policy": {
+      "description": "The revision of the stored form of a project record and its closure entries. It is part of the state a record is stored under, so a record in another form is never found and never read: version 2 stores the observation rows once each, see `../🗜️packed-rows`.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["form"],
+      "properties": { "form": { "const": 2 } },
+      "const": { "form": 2 }
+    },
     "PortableRecord": {
       "type": "object",
       "additionalProperties": false,
@@ -13,6 +21,56 @@
         "authority": { "type": "array" },
         "observations": { "type": "array" },
         "image": { "type": "string" }
+      }
+    },
+    "Publish": {
+      "description": "How a finished record is stored: it is sent at most `attempts` times, waiting `backoffMilliseconds[n]` (plus up to `backoffJitterPercent` percent, and never less than the rest of the breaker of the machine, at most `breakerWaitMaximumMilliseconds`) before try n+2, and only while the refusal says the same bytes may be accepted later; the closure documents that travel with a record are taken in the order of their keys until `closureBudgetBytes` is used (the record stays valid without the others, a taker derives them itself), so one owner never makes an entry of hundreds of MiB; a record that was not stored is kept on disk (`unsent`) and sent again when the cache answers.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["attempts", "backoffMilliseconds", "backoffJitterPercent", "breakerWaitMaximumMilliseconds", "closureBudgetBytes", "unsent"],
+      "properties": {
+        "attempts": { "type": "integer", "minimum": 1 },
+        "backoffMilliseconds": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "backoffJitterPercent": { "type": "integer", "minimum": 0 },
+        "breakerWaitMaximumMilliseconds": { "type": "integer", "minimum": 0 },
+        "closureBudgetBytes": { "type": "integer", "minimum": 1 },
+        "unsent": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["directory", "maximumEntries", "maximumBytes", "maximumAgeMilliseconds", "resendEveryMilliseconds", "resendPerLook", "claimTtlMilliseconds"],
+          "properties": {
+            "directory": { "type": "string" },
+            "maximumEntries": { "type": "integer", "minimum": 1 },
+            "maximumBytes": { "type": "integer", "minimum": 1 },
+            "maximumAgeMilliseconds": { "type": "integer", "minimum": 1 },
+            "resendEveryMilliseconds": { "type": "integer", "minimum": 1 },
+            "resendPerLook": { "type": "integer", "minimum": 1 },
+            "claimTtlMilliseconds": { "type": "integer", "minimum": 1 }
+          }
+        }
+      },
+      "const": {
+        "attempts": 4,
+        "backoffMilliseconds": [2000, 6000, 15000],
+        "backoffJitterPercent": 25,
+        "breakerWaitMaximumMilliseconds": 20000,
+        "closureBudgetBytes": 201326592,
+        "unsent": { "directory": "owner-pool-unsent", "maximumEntries": 16384, "maximumBytes": 201326592, "maximumAgeMilliseconds": 1800000, "resendEveryMilliseconds": 20000, "resendPerLook": 2, "claimTtlMilliseconds": 300000 }
+      }
+    },
+    "UnsentMeta": {
+      "description": "A finished record that was not stored yet, on disk: the state it is stored under, who inferred it, when, how often it was sent, why it was not stored and its documents (names, sizes and digests; the bytes are in files beside this one).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "state", "owner", "createdMs", "attempts", "cause", "documents"],
+      "properties": {
+        "version": { "const": 1 },
+        "state": { "type": "object" },
+        "owner": { "type": "string" },
+        "createdMs": { "type": "integer" },
+        "attempts": { "type": "integer", "minimum": 0 },
+        "cause": { "type": "string" },
+        "documents": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["name", "size", "sha256"], "properties": { "name": { "type": "string" }, "size": { "type": "integer", "minimum": 0 }, "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" } } } }
       }
     },
     "Texts": {

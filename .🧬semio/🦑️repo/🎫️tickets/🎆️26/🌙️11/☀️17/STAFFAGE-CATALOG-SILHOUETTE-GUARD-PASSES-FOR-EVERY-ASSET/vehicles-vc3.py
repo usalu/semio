@@ -1,0 +1,10 @@
+import sys, importlib
+sys.path.insert(0, ".")
+m = importlib.import_module("vehicles-lib")
+d = m.V("🚜️vehicles/vintage-car-1929")
+drop = ("kind", "x", "y", "w", "h", "r")
+s = d.shape(50, "front", "silencer")
+d.replace_shape(s, {"kind": "ellipse", "cx": -0.3, "cy": 0.27, "rx": 0.075, "ry": 0.075, **{k: v for k, v in d.obj(s).items() if k not in drop}})
+d.set(d.shape(50, "front", "cabin"), "r", 0.005)
+d.add_rects(50, "front", "frame", "frame", [("body-mount-l", 0.17, 0.41, 0.24, 0.11), ("body-mount-c", -0.1, 0.41, 0.2, 0.11), ("body-mount-r", -0.41, 0.41, 0.24, 0.11)])
+d.commit()

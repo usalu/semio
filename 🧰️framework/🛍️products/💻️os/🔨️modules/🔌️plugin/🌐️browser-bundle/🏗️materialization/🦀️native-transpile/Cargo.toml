@@ -1,0 +1,18 @@
+cargo-features = ["trim-paths"]
+
+[package]
+name = "semio-native-transpile"
+version = "0.1.0"
+edition = "2021"
+description = "Native component-to-JS transpile identical to the vendored jco bindgen, without its wasm32 address-space limits"
+publish = false
+
+[[bin]]
+name = "semio-native-transpile"
+path = "🦀️.rs"
+
+[dependencies]
+js-component-bindgen = "=2.16.0"
+anyhow = "1"
+
+[workspace]

@@ -1,0 +1,15 @@
+{
+ "plans": [
+  {"name": "a tiny batch gets the floor", "totalBytes": 100, "freeMemoryBytes": 34359738368},
+  {"name": "165 MB on a 32 GB host", "totalBytes": 165000000, "freeMemoryBytes": 34359738368},
+  {"name": "165 MB with 512 MB free", "totalBytes": 165000000, "freeMemoryBytes": 536870912},
+  {"name": "165 MB with 1 GB free", "totalBytes": 165000000, "freeMemoryBytes": 1073741824},
+  {"name": "64 MiB on a large host", "totalBytes": 67108864, "freeMemoryBytes": 68719476736},
+  {"name": "1 MiB batch", "totalBytes": 1048576, "freeMemoryBytes": 34359738368},
+  {"name": "600 KB batch", "totalBytes": 600000, "freeMemoryBytes": 34359738368},
+  {"name": "1 MB of free memory", "totalBytes": 165000000, "freeMemoryBytes": 1048576},
+  {"name": "no bytes", "totalBytes": 0, "freeMemoryBytes": 1073741824},
+  {"name": "16 MiB batch", "totalBytes": 16777216, "freeMemoryBytes": 34359738368},
+  {"name": "24 MiB batch with 2 GB free", "totalBytes": 25165824, "freeMemoryBytes": 2147483648}
+ ]
+}

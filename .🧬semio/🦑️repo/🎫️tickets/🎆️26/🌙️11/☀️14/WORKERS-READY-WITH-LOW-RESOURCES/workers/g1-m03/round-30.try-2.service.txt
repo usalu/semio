@@ -1,0 +1,115 @@
+== /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-b79757bed7da.log (lines after 9310)
+-- waiting for the fleet: first and last line, largest x
+largest x: 
+-- waiting for memory headroom: first and last line
+-- request-failed entries with 12 lines after
+-- last 30 lines when the try ended
+[repository:command] still running after 2120 s
+[repository:command] still running after 2130 s
+[repository:command] still running after 2140 s
+[repo] still working after 2150 s; last phase started: source.served
+[repository:command] still running after 2150 s
+[repository:command] still running after 2160 s
+[repository:command] still running after 2170 s
+[repo] still working after 2180 s; last phase started: source.served
+[repository:command] still running after 2180 s
+[repository:command] still running after 2190 s
+[repository:command] still running after 2200 s
+[repo] still working after 2210 s; last phase started: source.served
+[repository:command] still running after 2210 s
+[repository:command] still running after 2220 s
+[repository:command] still running after 2230 s
+[repo] still working after 2240 s; last phase started: source.served
+[repository:command] still running after 2240 s
+[repository:command] still running after 2250 s
+[repository:command] still running after 2260 s
+[repo] still working after 2270 s; last phase started: source.served
+[repository:command] still running after 2270 s
+[repository:command] still running after 2280 s
+[repository:command] still running after 2290 s
+[repo] still working after 2300 s; last phase started: source.served
+[repository:command] still running after 2300 s
+[repository:command] still running after 2310 s
+[repository:command] still running after 2320 s
+[repo] still working after 2330 s; last phase started: source.served
+[repository:command] still running after 2330 s
+[repository:command] still running after 2340 s
+== /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-ec883dab0a20.log (lines after 7685)
+-- waiting for the fleet: first and last line, largest x
+largest x: 
+-- waiting for memory headroom: first and last line
+-- request-failed entries with 12 lines after
+-- last 30 lines when the try ended
+[repo] still working after 27211 s; last phase started: source.served
+[repository:command] still running after 27208 s
+[repository:command] still running after 27218 s
+[repository:command] still running after 27228 s
+[repo] still working after 27241 s; last phase started: source.served
+[repository:command] still running after 27238 s
+[repository:command] still running after 27248 s
+[repository:command] still running after 27258 s
+[repo] still working after 27271 s; last phase started: source.served
+[repository:command] still running after 27268 s
+[repository:command] still running after 27278 s
+[repository:command] still running after 27288 s
+[repo] still working after 27301 s; last phase started: source.served
+[repository:command] still running after 27298 s
+[repository:command] still running after 27308 s
+[repository:command] still running after 27318 s
+[repo] still working after 27331 s; last phase started: source.served
+[repository:command] still running after 27328 s
+[repository:command] still running after 27338 s
+[repository:command] still running after 27348 s
+[repo] still working after 27361 s; last phase started: source.served
+[repository:command] still running after 27358 s
+[repository:command] still running after 27368 s
+[repository:command] still running after 27378 s
+[repo] still working after 27391 s; last phase started: source.served
+[repository:command] still running after 27388 s
+[repository:command] still running after 27398 s
+[repository:command] still running after 27408 s
+[repo] still working after 27421 s; last phase started: source.served
+[repository:command] still running after 27418 s
+-- bootstrap log: cut smaller lines
+highest step: 
+-- bootstrap log: last 40 lines
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 541 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 542 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 543 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 544 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 545 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 546 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 547 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 548 s)
+[repository:command] still running after 550 s
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 549 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 550 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 551 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 553 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 554 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 555 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 556 s)
+[repo] still working after 560 s; last phase started: source.served
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 557 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 558 s)
+[repository:command] still running after 560 s
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 559 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 560 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 561 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 562 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 563 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 564 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 565 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 566 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 567 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 568 s)
+[repository:command] still running after 570 s
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 569 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 570 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 571 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 572 s)
+[script] bun:dependency-storage remains active on native-fixed-image:/Users/ueli/Documents/semio/.cache/b/d (shared, 573 s)
+SIGINT received: the running work is cancelled and its leases are released; this process exits after 10 s at the latest.
+Cancelled (SIGINT); leases released.
+end 2026-11-15T18:30:16Z
+native_rc=130

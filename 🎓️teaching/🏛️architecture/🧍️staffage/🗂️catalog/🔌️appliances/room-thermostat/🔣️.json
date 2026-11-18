@@ -1088,6 +1088,8 @@
             "key": "electronics",
             "heatW": 0.7
           },
+          "ratedPowerW": 0.7,
+          "ratedPowerBasis": "electrical-input",
           "source": "authored-estimate",
           "reference": "incropera-2018"
         },

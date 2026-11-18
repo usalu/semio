@@ -1,5 +1,5 @@
 import type {HostCapacityPolicyV1,HostRequestV1} from "../📏️decision/🟦️.ts";
-import {estimateHostRatioV1,hostClassBoundV1,hostSampleQuantileV1,recordHostOutcomeV1,robustHostSamplesV1,scaleHostRequestV1,type HostEstimateStoreV1,type HostEstimateV1} from "../📐️estimates/🟦️.ts";
+import {estimateHostRatioV1,hostClassBoundV1,hostClassCeilingV1,hostSampleQuantileV1,recordHostOutcomeV1,robustHostSamplesV1,scaleHostRequestV1,type HostEstimateStoreV1,type HostEstimateV1} from "../📐️estimates/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 
 /** 🪜️ The phases of one admitted run in the order it passes them: its own preparation (`assembly`: source capture, loader), the graph served from a current generation (`plan`), the graph built by this very run (`rebuild`, an excursion bounded by the graph builder custody and the compute slots, never part of a run's own reservation) and the tool (`execution`). */
@@ -74,7 +74,7 @@ export function estimateHostPhasesV1(policy:HostCapacityPolicyV1,store:HostEstim
  const learned=(phase:Exclude<HostPhaseV1,"execution">):HostPhaseSizeV1|undefined=>{const size=estimateHostPhaseV1(policy,store,phase,phase==="rebuild"?policy.estimates.rebuildPriorMegabytes:prior,nowMs);return size&&Object.freeze({megabytes:size.megabytes,rampMilliseconds:size.rampMilliseconds});};
  const assembly=learned("assembly"),plan=learned("plan"),build=learned("rebuild");
  const scaled:HostPhaseSizeV1=Object.freeze({megabytes:round(preferred*execution.ratioBasisPoints/SCALE),rampMilliseconds:execution.rampMilliseconds});
- const floor=Math.max(assembly?.megabytes??0,plan?.megabytes??0),decisive=[assembly,plan].reduce<HostPhaseSizeV1|undefined>((best,row)=>row&&(!best||row.megabytes>best.megabytes)?row:best,undefined);
+ const declared=hostClassCeilingV1(policy,lineage[lineage.length-1]!),floor=Math.min(declared??Infinity,Math.max(assembly?.megabytes??0,plan?.megabytes??0)),decisive=[assembly,plan].reduce<HostPhaseSizeV1|undefined>((best,row)=>row&&(!best||row.megabytes>best.megabytes)?row:best,undefined);
  return Object.freeze({...execution,growRatioBasisPoints:grow,rampMilliseconds:decisive&&decisive.megabytes>scaled.megabytes?decisive.rampMilliseconds:execution.rampMilliseconds,floorMegabytes:floor,phases:Object.freeze({...(assembly?{assembly}:{}),...(plan?{plan}:{}),...(build?{rebuild:build}:{}),execution:scaled})});
 }
 

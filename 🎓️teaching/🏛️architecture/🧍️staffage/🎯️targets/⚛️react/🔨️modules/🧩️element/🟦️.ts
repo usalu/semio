@@ -178,7 +178,7 @@ export function defineStaffageElement(catalog: StaffageCatalog, name = "staffage
           this.#lastKey = problemKey;
           this.#state = null;
           this.#disposeStage();
-          this.#root.innerHTML = `<div role="alert" part="problem" lang="${language}" style="border:1px dashed currentColor;padding:0.5em">${escapeHtml(message[language])}</div>`;
+          this.#root.innerHTML = `<div role="alert" part="problem" lang="${language}" style="padding:0.5em;background:color-mix(in srgb,currentColor 8%,transparent)">${escapeHtml(message[language])}</div>`;
         }
         return;
       }
@@ -234,7 +234,7 @@ export function defineStaffageElement(catalog: StaffageCatalog, name = "staffage
         const reason = refusalOf(error, viewpoint!);
         if (reason === null) throw error;
         this.#state = null;
-        this.#root.innerHTML = `<div role="alert" part="problem" data-refusal="${viewpoint}" lang="${language}" style="border:1px dashed currentColor;padding:0.5em"><b>${escapeHtml(viewpointWord("viewpoints.unavailable", language, { view: VIEWPOINT_PHRASES[viewpoint!][language] }))}</b><p style="margin:0">${escapeHtml(reason[language])}</p><p style="margin:0">${escapeHtml(viewpointWord("viewpoints.nothingInstead", language))}</p></div>`;
+        this.#root.innerHTML = `<div role="alert" part="problem" data-refusal="${viewpoint}" lang="${language}" style="padding:0.5em;background:color-mix(in srgb,currentColor 8%,transparent)"><b>${escapeHtml(viewpointWord("viewpoints.unavailable", language, { view: VIEWPOINT_PHRASES[viewpoint!][language] }))}</b><p style="margin:0">${escapeHtml(reason[language])}</p><p style="margin:0">${escapeHtml(viewpointWord("viewpoints.nothingInstead", language))}</p></div>`;
         return;
       }
       const { scene } = frame;
@@ -296,7 +296,7 @@ export function defineStaffageElement(catalog: StaffageCatalog, name = "staffage
         },
         () => {
           if (ticket !== this.#loading) return;
-          host.innerHTML = `<div role="alert" part="problem" lang="${language}" style="border:1px dashed currentColor;padding:0.5em">${escapeHtml(translator(language)("model.error"))}</div>`;
+          host.innerHTML = `<div role="alert" part="problem" lang="${language}" style="padding:0.5em;background:color-mix(in srgb,currentColor 8%,transparent)">${escapeHtml(translator(language)("model.error"))}</div>`;
         },
       );
     }
@@ -311,7 +311,7 @@ export function defineStaffageElement(catalog: StaffageCatalog, name = "staffage
         const phrase = VIEWPOINT_PHRASES[at][language];
         const place = `grid-column:${cell.column};grid-row:${cell.row};width:${mm(cell.widthMm)};height:${mm(cell.heightMm)}`;
         if (!resolution.available)
-          return `<figure data-viewpoint="${at}" data-available="false" aria-label="${escapeHtml(VIEWPOINT_NAMES[at][language])}" style="margin:0;${place}"><div data-notice="unavailable" style="border:1px dashed currentColor;padding:0.5em;height:100%;box-sizing:border-box;overflow:auto"><p style="margin:0"><b>${escapeHtml(viewpointWord("viewpoints.unavailable", language, { view: phrase }))}</b></p><p style="margin:0">${escapeHtml(resolution.message[language])}</p>${resolution.details === undefined ? "" : `<details><summary>${escapeHtml(viewpointWord("viewpoints.failedDetails", language))}</summary><code>${escapeHtml(resolution.details)}</code></details>`}<p style="margin:0">${escapeHtml(viewpointWord("viewpoints.nothingInstead", language))}</p></div></figure>`;
+          return `<figure data-viewpoint="${at}" data-available="false" aria-label="${escapeHtml(VIEWPOINT_NAMES[at][language])}" style="margin:0;${place}"><div data-notice="unavailable" style="padding:0.5em;background:color-mix(in srgb,currentColor 8%,transparent);height:100%;box-sizing:border-box;overflow:auto"><p style="margin:0"><b>${escapeHtml(viewpointWord("viewpoints.unavailable", language, { view: phrase }))}</b></p><p style="margin:0">${escapeHtml(resolution.message[language])}</p>${resolution.details === undefined ? "" : `<details><summary>${escapeHtml(viewpointWord("viewpoints.failedDetails", language))}</summary><code>${escapeHtml(resolution.details)}</code></details>`}<p style="margin:0">${escapeHtml(viewpointWord("viewpoints.nothingInstead", language))}</p></div></figure>`;
         const frame = figureFrame(asset, query, { ...request, viewpoint: at });
         frames[at] = frame;
         return `<figure data-viewpoint="${at}" data-available="true" role="img" lang="${language}" aria-label="${escapeHtml(describeScene(frame.scene, language))}" style="position:relative;margin:0;overflow:hidden;${place}">${inlineSvg(frame.scene, cell.frame)}</figure>`;

@@ -103,7 +103,7 @@ impl MountedLayoutJob {
             (UiNode::Field(field), 1) => Some(field.description.as_deref()),
             (UiNode::Field(field), 2) => Some(field.error.as_deref()),
             (UiNode::Slider(slider), 0) => Some(slider.shown_unit()),
-            (UiNode::Text(_) | UiNode::Button(_) | UiNode::Section(_) | UiNode::Slider(_), 1..) | (UiNode::Field(_), 3..) => None,
+            (UiNode::Text(_) | UiNode::Button(_) | UiNode::Section(_) | UiNode::Slider(_), 1..) | (UiNode::Field(_), 3..) | (UiNode::OverviewCard(_) | UiNode::CardStack(_), 0..) => None,
             _ => return TextPush::Neither,
         };
         match part {
@@ -210,7 +210,7 @@ impl MountedLayoutJob {
             (UiNode::Field(field), 1) => Some(field.description.as_deref()),
             (UiNode::Field(field), 2) => Some(field.error.as_deref()),
             (UiNode::Slider(_), 0) => Some(slider_unit_label.as_deref()),
-            (UiNode::Text(_) | UiNode::Button(_) | UiNode::Section(_) | UiNode::Slider(_), 1..) | (UiNode::Field(_), 3..) => None,
+            (UiNode::Text(_) | UiNode::Button(_) | UiNode::Section(_) | UiNode::Slider(_), 1..) | (UiNode::Field(_), 3..) | (UiNode::OverviewCard(_) | UiNode::CardStack(_), 0..) => None,
             _ => {
                 self.fault = Some(MountedLayoutFault::Stale);
                 return (0, 0);
@@ -267,7 +267,7 @@ impl MountedLayoutJob {
             (ChromeTextRanges::Field { description, .. }, 1) => *description = range,
             (ChromeTextRanges::Field { error, .. }, 2) => *error = range,
             (ChromeTextRanges::SliderUnit { label }, 0) => *label = range.unwrap_or_default(),
-            (ChromeTextRanges::None, _) => {}
+            (ChromeTextRanges::None | ChromeTextRanges::Banded, _) => {}
             _ => self.fault = Some(MountedLayoutFault::Stale),
         }
     }

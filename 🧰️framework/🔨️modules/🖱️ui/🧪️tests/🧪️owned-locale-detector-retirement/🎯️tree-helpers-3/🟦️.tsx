@@ -302,7 +302,7 @@ describe("tree helpers", () => {
         expect(markup).toContain('data-slot="tree-branch-elbow"');
         expect(markup).not.toContain('style="top:50%;left:7px;width:3px"');
         expect(markup).toContain('data-slot="tree-branch-stem"');
-        expect(markup.match(/data-tree-guide-line="" class="w-px h-full bg-muted-foreground\/40 group-hover\/tree-row:bg-emphasized/g)?.length ?? 0).toBeGreaterThanOrEqual(1);
+        expect(markup.match(/data-slot="tree-parent-guide" class="pointer-events-none absolute w-px bg-muted-foreground\/40 group-hover\/tree-row:bg-emphasized/g)?.length ?? 0).toBeGreaterThanOrEqual(1);
         expect(markup).not.toContain('data-slot="tree-content" class="relative" style="padding-top:3px;padding-bottom:3px;padding-left:');
         expect(markup).not.toContain('data-slot="tree-property-label" class="relative min-w-0" style="padding-left:');
         expect(markup).toContain('data-slot="tree-item-content" data-tree-owner-kind="group" data-tree-owner-expanded="true" class="relative flex w-full min-w-0 flex-col"');

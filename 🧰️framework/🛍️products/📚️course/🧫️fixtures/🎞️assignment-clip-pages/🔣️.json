@@ -1,0 +1,81 @@
+{
+  "schema": "semio.course.assignment-clip-pages/v1",
+  "description": "A course with assignments and clips lists them as two more general cards of the root overview; each opens a grid of its entries, and an entry opens its own page. Assignments show their PDF in the learner's language inside the page; a clip links to its hosted address for the learner's language, or says it is coming soon while it has none. A course without them shows five cards, as before.",
+  "topics": [{ "id": "sample-topic", "emoji": "📐", "title": { "en": "Sample Topic", "de": "Beispielthema" }, "quizzes": ["q0"] }],
+  "assignments": [
+    {
+      "id": "sample-exercise",
+      "topic": "sample-topic",
+      "emoji": "📐",
+      "title": { "en": "Finger Exercise", "de": "Fingerübung" },
+      "description": { "en": "Explore parameters.", "de": "Untersuche Parameter." },
+      "documents": {
+        "en": { "namespace": "course", "id": "sample-exercise-en", "file": "sample-exercise-en.pdf", "producer": "@teaching/sample:build-exercise-en" },
+        "de": { "namespace": "course", "id": "sample-exercise-de", "file": "sample-exercise-de.pdf", "producer": "@teaching/sample:build-exercise-de" }
+      }
+    },
+    {
+      "id": "sample-task",
+      "topic": "sample-topic",
+      "emoji": "🏙",
+      "title": { "en": "Assignment One", "de": "Aufgabe Eins" },
+      "description": { "en": "Design a typology.", "de": "Entwirf eine Typologie." },
+      "documents": {
+        "en": { "namespace": "course", "id": "sample-task-en", "file": "sample-task-en.pdf", "producer": "@teaching/sample:build-task-en" },
+        "de": { "namespace": "course", "id": "sample-task-de", "file": "sample-task-de.pdf", "producer": "@teaching/sample:build-task-de" }
+      }
+    }
+  ],
+  "clips": [
+    {
+      "id": "clip-soon",
+      "topic": "sample-topic",
+      "emoji": "🎬",
+      "title": { "en": "Clip Without Link", "de": "Clip ohne Link" },
+      "description": { "en": "Not hosted yet.", "de": "Noch nicht gehostet." },
+      "poster": { "file": "Sample_01_Soon.png" }
+    },
+    {
+      "id": "clip-hosted",
+      "topic": "sample-topic",
+      "emoji": "🎬",
+      "title": { "en": "Hosted Clip", "de": "Gehosteter Clip" },
+      "description": { "en": "Hosted in both languages.", "de": "In beiden Sprachen gehostet." },
+      "poster": { "file": "Sample_02_Hosted.png" },
+      "urls": { "en": "https://videos.example.org/en/hosted", "de": "https://videos.example.org/de/hosted" }
+    },
+    {
+      "id": "clip-german",
+      "topic": "sample-topic",
+      "emoji": "🎬",
+      "title": { "en": "German Clip", "de": "Deutscher Clip" },
+      "description": { "en": "Hosted in German only.", "de": "Nur auf Deutsch gehostet." },
+      "poster": { "file": "Sample_03_German.png" },
+      "urls": { "de": "https://videos.example.org/de/german" }
+    }
+  ],
+  "posters": { "Sample_01_Soon.png": "/assets/Sample_01_Soon-AbCd1234.png", "Sample_02_Hosted.png": "/assets/Sample_02_Hosted-AbCd1234.png" },
+  "pages": {
+    "withBoth": ["learner", "quizzes", "assignments", "clips", "board", "badges", "prefs"],
+    "withAssignmentsOnly": ["learner", "quizzes", "assignments", "board", "badges", "prefs"],
+    "withClipsOnly": ["learner", "quizzes", "clips", "board", "badges", "prefs"],
+    "withNeither": ["learner", "quizzes", "board", "badges", "prefs"],
+    "within": { "assignments": ["sample-exercise", "sample-task"], "clips": ["clip-soon", "clip-hosted", "clip-german"] },
+    "parents": { "assignments": null, "clips": null, "sample-exercise": "assignments", "sample-task": "assignments", "clip-soon": "clips", "clip-hosted": "clips", "clip-german": "clips" },
+    "labels": {
+      "assignments": { "en": "Assignments", "de": "Übungen" },
+      "clips": { "en": "Learning Clips", "de": "Lernclips" },
+      "sample-exercise": { "en": "Finger Exercise", "de": "Fingerübung" },
+      "clip-hosted": { "en": "Hosted Clip", "de": "Gehosteter Clip" }
+    }
+  },
+  "viewer": {
+    "sample-exercise": { "en": "/assignments/sample-exercise-en.pdf", "de": "/assignments/sample-exercise-de.pdf" },
+    "sample-task": { "en": "/assignments/sample-task-en.pdf", "de": "/assignments/sample-task-de.pdf" }
+  },
+  "watch": {
+    "clip-soon": { "en": null, "de": null },
+    "clip-hosted": { "en": "https://videos.example.org/en/hosted", "de": "https://videos.example.org/de/hosted" },
+    "clip-german": { "en": null, "de": "https://videos.example.org/de/german" }
+  }
+}

@@ -17,8 +17,8 @@
  "exitCode": 75,
  "texts": {
   "waiting": {
-   "en": "graph: a peer builds the graph; this run waits as its front door alone, without a loader ({seconds} s, generation {generation} was the newest when it queued)",
-   "de": "graph: ein Peer baut den Graphen; dieser Lauf wartet nur als Vordertür, ohne Lader ({seconds} s, Generation {generation} war die neueste, als er sich anstellte)"
+   "en": "graph: a peer builds the graph; this run waits as its front door alone, without a loader ({seconds} s, generation {generation} was the newest when it queued){holder}",
+   "de": "graph: ein Peer baut den Graphen; dieser Lauf wartet nur als Vordertür, ohne Lader ({seconds} s, Generation {generation} war die neueste, als er sich anstellte){holder}"
   },
   "resumed": {
    "en": "graph: generation {generation} is current or the wait ended after {seconds} s; starting again with the request time of the first start",

@@ -3,24 +3,61 @@
   "emoji": "📸",
   "status": "open",
   "description": "Get the 🎥️shooting plugin working end to end: native check + tests, guest wasm restage on the react dev lane, react dev serve (?plugin=shooting), proven boot (scene + shot windows, panels) and at least one persisted document mutation via the shell. Pattern follows 26/09/16/FORMS-PLUGIN-END-TO-END.",
-  "summary": "Shooting editor + viewer boot and mutate end to end on the react dev lane (6019): playground app pin, command_from_action bridge, every verb migrated to a bounded tool with exact publication contracts and store owners (the descriptor probe aborted the guest on 35 unclassified verbs), export split into two rows, coalesced camera config edits, empty_document_spr LoadDocument, icon render transport-url resolution + fit lane, self-closing bound test harness, fixture float canonicalization (344/346 tests).",
+  "summary": "Profiled owner inference memory: isolated owners peak 300-575 MB, retention 11-15 MB per owner; the owner-state release was skipped under a blind footprint gate. Made the interval release unconditional (declared limits), floored the footprint by managed bytes, added owner-release test with Python model. Activation still running, no exit code yet. See owner-inference-memory.md.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2786"
   },
   "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings🎯runningplugins🎯runningshooting🎯runningshooting",
   "sessions": [
     "⚪b903f03d-2c25-49e7-bde7-26f68b23d6a5",
-    "08188e9d-f8fe-4877-9c4d-5b85bd94dc77"
+    "08188e9d-f8fe-4877-9c4d-5b85bd94dc77",
+    "27b2c0a3-4ce1-412c-96bb-26021da2ad52"
   ],
   "interactions": [
     {
       "kind": "ticket.reopen",
       "date": "2026-11-04 21:54:38",
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "mac",
       "client": "codex",
       "checkpoint": "39b6ae5d4aab567d4dafbc69cb0e1a9a09c9d377",
       "prompt": "Get shooting plugin working end to end with current native and React paths, maximum parallel fleet and preserved concurrent work."
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-16 17:36:43",
+      "author": "ueli",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "efff7f986f5231a088a66da7c5e33a32529cd3c0",
+      "summary": "Profiled owner inference memory: isolated owners peak 300-575 MB, retention 11-15 MB per owner; the owner-state release was skipped under a blind footprint gate. Made the interval release unconditional (declared limits), floored the footprint by managed bytes, added owner-release test with Python model. Activation still running, no exit code yet. See owner-inference-memory.md.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🕸️graph🗃️📥️inference🗃️🧬️schema⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🕸️graph🗃️📥️inference🗃️🧭️scriptinputs💻🟨️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🧠️memory🗃️🦶️footprint💻🟨️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🧠️memory🗃️🦶️footprint💻🟨️d"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🧠️memory🗃️🦶️footprint🗃️🧪️tests💻🟦️"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-16 17:37:12",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Continue end to end: activation exit 0 after the owner-release fix, green shooting native tests, serve, browser proof of addShot plus undo, then close.",
+      "llm": "opus-5-5"
     }
   ]
 }

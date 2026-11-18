@@ -27,9 +27,11 @@
         "claimTtlMilliseconds": 30000,
         "claimHeartbeatMilliseconds": 8000,
         "claimWaitMaximumMilliseconds": 900000,
+        "leaseTakeOverMilliseconds": 60000,
         "claimRoundsMaximum": 64,
-        "documentMaximumBytes": 1073741824,
-        "entryMaximumDocuments": 4096,
+        "documentMaximumBytes": 268435456,
+        "entryMaximumBytes": 536870912,
+        "entryMaximumDocuments": 32768,
         "lookupTimeoutMilliseconds": 4000,
         "documentTimeoutMilliseconds": 120000,
         "installFileMode": 420,
@@ -84,7 +86,7 @@
         "createdMs": { "type": "integer", "minimum": 0 },
         "documents": {
           "type": "array",
-          "maxItems": 4096,
+          "maxItems": 32768,
           "items": {
             "type": "object",
             "additionalProperties": false,

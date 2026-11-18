@@ -341,3 +341,7 @@ pub fn resolve_shared_border_segments(segments: &[SharedBorderSegment]) -> Resul
 #[cfg(test)]
 #[path = "segments.test.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "native-seams.test.rs"]
+mod native_seams;

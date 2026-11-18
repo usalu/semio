@@ -30,7 +30,7 @@ export const variantOf = (view: View): string => view;
 /** 🎥️ The views of a model in variant order. */
 export const MODEL_VIEWS: readonly View[] = VIEWS;
 
-/** 🧾️ What a model is built from. The `query` is a named pose or one clip (its time is the clock's, not part of the model). */
+/** 🧾️ What a model is built from. The `query` is a named pose or one clip (its time is the clock's, not part of the model); `scales` (default every authored scale) limits the model to those scales, as the 3D playground needs one scale for many assets. */
 export type SpatialRequest = {
   readonly view: View;
   readonly scale: number;
@@ -41,6 +41,7 @@ export type SpatialRequest = {
   readonly forceQuantity?: ForceQuantity;
   readonly range?: DisplayRange;
   readonly theme?: "light" | "dark";
+  readonly scales?: readonly number[];
 };
 
 /** 🏛️ The scene of the model that a request shows: the scale and the mode of the view (`s<scale>-<mode>`); the tessellation of every scene is the one `qualityOf` of the library, the very rule the downloads use. */
@@ -70,7 +71,7 @@ export function scaleChoices(asset: Asset, language: Language): readonly ScaleCh
 export function modelKey(asset: Asset, request: SpatialRequest): string {
   const { query } = request;
   const what = query.kind === "pose" ? ["pose", query.pose] : query.kind === "clip" ? ["clip", query.clip] : [query.kind];
-  return JSON.stringify([asset.id, what, request.environment ?? null, request.thermalQuantity ?? null, request.forceQuantity ?? null, request.range?.mode === "span" ? request.range.spanK : null, request.theme ?? null]);
+  return JSON.stringify([asset.id, what, request.environment ?? null, request.thermalQuantity ?? null, request.forceQuantity ?? null, request.range?.mode === "span" ? request.range.spanK : null, request.theme ?? null, request.scales ?? null]);
 }
 
 /** 🗣️ The spoken description of the model state in a language: the asset, pose or clip with its time, the representation, the scale and the camera. */

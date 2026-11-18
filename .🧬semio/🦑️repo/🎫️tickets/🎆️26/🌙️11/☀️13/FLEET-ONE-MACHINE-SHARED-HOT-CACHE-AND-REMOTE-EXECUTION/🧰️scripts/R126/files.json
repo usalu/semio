@@ -1,0 +1,57 @@
+{
+ "mods": [
+  [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs",
+   "inputs.mjs"
+  ],
+  [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/💾️entries/🟨️.mjs",
+   "entries.mjs"
+  ],
+  [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/💾️entries/🟨️.d.mts",
+   "entries.d.mts"
+  ],
+  [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/📥️reuse/🟨️.mjs",
+   "reuse.mjs"
+  ],
+  [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/📥️reuse/🟨️.d.mts",
+   "reuse.d.mts"
+  ],
+  [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/📥️reuse/🧬️schema/🔣️.json",
+   "reuse-schema.json"
+  ],
+  [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧬️schema/🔣️.json",
+   "limits.json"
+  ],
+  [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs",
+   "nodes.mjs"
+  ],
+  [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🧪️tests/🪂️set-aside/🟦️.ts",
+   "t-set-aside.ts"
+  ]
+ ],
+ "newTests": [
+  [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🧪️tests/🧱️layer-lost/🟦️.ts",
+   "t-layer-lost.ts",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🧪️tests/🧽️walk-maps/🟦️.ts"
+  ],
+  [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🔁️inventory-changed/🟦️.ts",
+   "t-inventory.ts",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧺️presence-batch/🟦️.ts"
+  ],
+  [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🧪️tests/🔁️store-changed/🟦️.ts",
+   "t-owner.ts",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🧪️tests/🧮️known-unit/🟦️.ts"
+  ]
+ ]
+}

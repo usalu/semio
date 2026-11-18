@@ -89,7 +89,7 @@ export function Frieze(props: { readonly rows: readonly Row[]; readonly viewpoin
   const offset = Math.max(margin, (size.width - totalM * pxPerM) / 2);
   const metres = Math.floor(totalM);
   return (
-    <div ref={attach} role="group" aria-label={label} data-frieze="" className={cn("relative min-h-24 w-full flex-1 overflow-hidden", className)}>
+    <div ref={attach} role="group" aria-label={label} data-frieze="" data-border-probe-art="" className={cn("relative min-h-24 w-full flex-1 overflow-hidden", className)}>
       {viewpoint === "elevation" ? null : <p data-frieze-note="" className="absolute left-1 top-1 z-10 m-0 max-w-[90%] bg-background/80 px-single text-[0.65rem] text-muted-foreground">{viewpointWord("viewpoints.friezeNote", language, { view: VIEWPOINT_PHRASES[viewpoint][language] })}</p>}
       {size.width === 0 ? null : items.map((item, index) => (
         <PlacedFigure key={item.row.entry.id} asset={item.row.asset!} selection={null} clock={ambient} view={surfaceView(dark)} viewpoint={viewpoint} scale={scale} language={language} pxPerMm={pxPerMm} xPx={offset + item.x * pxPerM} groundPx={ground} travel={item.lane === null ? undefined : { laneM: item.lane, phaseM: (index * 0.9) % item.lane }} />
@@ -163,9 +163,9 @@ function CategoryCard(props: { readonly category: CategoryId; readonly card: { r
             <button type="button" onClick={() => void catalog.loadCategory(category)} className="text-xs text-primary">{t("category.load")}</button>
           </div>
         ) : progress.state === "failed" ? (
-          <Notice kind="error" compact title={t("state.categoryFailed.title")}>{progress.failure?.[language]}</Notice>
+          <Notice kind="error" compact plain title={t("state.categoryFailed.title")}>{progress.failure?.[language]}</Notice>
         ) : preview.length === 0 ? (
-          progress.state === "loading" ? <div role="status" aria-busy="true" aria-label={t("state.loading.title")} className="h-full min-h-12 animate-pulse bg-muted/60 motion-reduce:animate-none" /> : <Notice kind="unavailable" compact title={t("state.missing.title")}>{t("state.categoryEmpty.body")}</Notice>
+          progress.state === "loading" ? <div role="status" aria-busy="true" aria-label={t("state.loading.title")} className="h-full min-h-12 animate-pulse bg-muted/60 motion-reduce:animate-none" /> : <Notice kind="unavailable" compact plain title={t("state.missing.title")}>{t("state.categoryEmpty.body")}</Notice>
         ) : (
           <Frieze rows={preview} label={t("category.previewLabel", { category: entry?.title[language] ?? category })} ticks={false} className="h-full" maxPxPerM={90} />
         )}
@@ -202,7 +202,7 @@ function HeroCard(props: { readonly card: { readonly revealed: boolean; readonly
       <p className="m-0 max-w-[75ch] text-xs leading-normal text-muted-foreground">{t("hero.lede")}</p>
       <div className="min-h-0 flex-1">
         {frieze.length === 0 ? (
-          manifestState === "failed" ? <Notice kind="error" title={t("state.manifestFailed.title")}>{t("state.manifestFailed.body")}</Notice> : pending || manifestState !== "ready" ? <div role="status" aria-busy="true" aria-label={t("state.loading.title")} className="h-full min-h-24 animate-pulse bg-muted/60 motion-reduce:animate-none" /> : <Notice kind="unavailable" title={t("state.missing.title")}>{t("hero.friezeEmpty")}</Notice>
+          manifestState === "failed" ? <Notice kind="error" plain title={t("state.manifestFailed.title")}>{t("state.manifestFailed.body")}</Notice> : pending || manifestState !== "ready" ? <div role="status" aria-busy="true" aria-label={t("state.loading.title")} className="h-full min-h-24 animate-pulse bg-muted/60 motion-reduce:animate-none" /> : <Notice kind="unavailable" plain title={t("state.missing.title")}>{t("hero.friezeEmpty")}</Notice>
         ) : (
           <Frieze rows={frieze} label={t("hero.friezeLabel")} className="h-full" travel />
         )}
@@ -330,7 +330,7 @@ export function RootLevel(): ReactElement {
     const content: ReactNode = isCategory(page.id) ? <CategoryCard category={page.id} card={card} compact={compact || mode === "swipe" ? compact : false} /> : page.id === "all" ? <HeroCard card={card} /> : page.id === "collections" ? <CollectionsCard card={card} /> : page.id === "compare" ? <CompareCard card={card} /> : <PlaygroundCard card={card} />;
     const place = placementOf(page.id, columns);
     return mode === "strip" ? (
-      <div className="staffage-cell" style={{ gridColumn: `${place.column} / span ${place.span}`, gridRow: place.row }}>
+      <div className="staffage-cell" data-card-grid-cell="" style={{ gridColumn: `${place.column} / span ${place.span}`, gridRow: place.row }}>
         <div className="staffage-card">{content}</div>
       </div>
     ) : (

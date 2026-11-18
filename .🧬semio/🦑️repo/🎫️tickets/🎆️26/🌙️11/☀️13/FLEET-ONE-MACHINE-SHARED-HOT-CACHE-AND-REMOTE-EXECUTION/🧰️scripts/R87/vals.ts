@@ -1,0 +1,7 @@
+import{readdirSync,readFileSync,statSync}from"node:fs";import{brotliDecompressSync}from"node:zlib";
+const d="/Users/ueli/Documents/semio/.cache/b/g/m/inference/selections/8d8f21d74af11ed12bed7540aa42908f48a1a023e5437e26666ef5722ed50089/ce/";
+const names=readdirSync(d+"e").filter(n=>n.endsWith(".br"));console.log("entries",names.length,"values",readdirSync(d+"v").length,"layers",readdirSync(d+"l").length);
+const step=Math.max(1,Math.floor(names.length/Number(process.argv[2]||500)));const vc=new Map<string,number>();let n=0,layers=0,ebytes=0,json=0,sidecarBytes=0,rowsBytes=0;const lay=new Map<string,number>();
+for(let i=0;i<names.length;i+=step){try{const b=readFileSync(d+"e/"+names[i]);ebytes+=b.length;const t=brotliDecompressSync(b).toString("utf8");json+=t.length;const r=JSON.parse(t);n++;vc.set(r.valueDigest,(vc.get(r.valueDigest)??0)+1);layers+=r.layers.length;for(const l of r.layers)lay.set(l,(lay.get(l)??0)+1);sidecarBytes+=JSON.stringify(r.sidecar).length;rowsBytes+=JSON.stringify(r.rows).length;}catch{}}
+const vs=[...vc].sort((a,b)=>b[1]-a[1]);let vbytes=0;for(const[k]of vs.slice(0,200)){try{vbytes+=brotliDecompressSync(readFileSync(d+"v/"+k+".json.br")).length;}catch{}}
+console.log(JSON.stringify({sampled:n,distinctValues:vc.size,topValueUses:vs.slice(0,5).map(x=>x[1]),meanLayers:layers/n,distinctLayersInSample:lay.size,layerShare:lay.size/layers,entryPackedKB:ebytes/n/1024,entryJsonKB:json/n/1024,sidecarKB:sidecarBytes/n/1024,rowsKB:rowsBytes/n/1024,top200ValuesMB:vbytes/1048576}));

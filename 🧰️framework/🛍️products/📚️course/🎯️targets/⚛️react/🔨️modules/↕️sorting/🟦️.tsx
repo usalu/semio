@@ -32,7 +32,7 @@ import { useId, useState, type FocusEvent, type ReactElement } from "react";
 import type { CompareHint, Hint, SheetSortingTask, Slug, SortingAnswer } from "@semio-tech/course";
 import { ItemMockup } from "../🖥️mockup/🟦️.tsx";
 import { localized } from "../🌐️i18n/🟦️.ts";
-import { BodyButton, IconLabel, LiveRegion, useAnnouncement } from "../🪟️chrome/🟦️.tsx";
+import { BodyButton, CELL, CardSection, IconLabel, LiveRegion, RowList, useAnnouncement } from "../🪟️chrome/🟦️.tsx";
 import { DragGrip, GuessField, HintNote, ICON_BUTTON_CLASS, LockedNote, compareText, describedBy, elementId, exampleGuess, hintName, useFocusAfterRender, useHintAnnouncement, type TaskViewProps } from "../🧩️task/🟦️.tsx";
 import { PRESENCE_ANCHORS } from "../👥️presence/👁️view/🟦️.ts";
 import { formatQuantity } from "../📏️quantity/🟦️.ts";
@@ -127,7 +127,7 @@ export function SortingTaskView(props: TaskViewProps<SheetSortingTask, SortingAn
     if (sorted !== order && focus !== undefined) focusAfterRender(focus);
   };
 
-  const release = (event: FocusEvent<HTMLOListElement>): void => {
+  const release = (event: FocusEvent<HTMLElement>): void => {
     if (held !== undefined && !(event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget))) setHeld(undefined);
   };
 
@@ -138,20 +138,24 @@ export function SortingTaskView(props: TaskViewProps<SheetSortingTask, SortingAn
   };
 
   return (
-    <div className="flex flex-col gap-double">
-      <p className="course-prose m-0 text-sm leading-normal">{text("course.sorting.hint", { quantity })}</p>
-      <p className="course-prose m-0 text-xs leading-normal text-muted-foreground">{keys === undefined ? text("course.sorting.guessHint", { example: exampleGuess(task.quantity) }) : text("course.sorting.keysHint")}</p>
+    <>
+      <CardSection className="gap-single">
+        <p className="course-prose m-0 text-sm leading-normal">{text("course.sorting.hint", { quantity })}</p>
+        <p className="course-prose m-0 text-xs leading-normal text-muted-foreground">{keys === undefined ? text("course.sorting.guessHint", { example: exampleGuess(task.quantity) }) : text("course.sorting.keysHint")}</p>
+        {keys === undefined ? <p className="m-0 text-xs text-muted-foreground tabular-nums">{text("course.sorting.guessCount", { done: guessed, total: task.items.length })}</p> : null}
+      </CardSection>
       {keys !== undefined && answer === undefined && !locked ? (
-        <div className="flex flex-col gap-single border-l-2 border-normal ps-double">
-          <p className="m-0 text-xs text-muted-foreground">{text("course.sorting.keepHint")}</p>
-          <BodyButton onClick={keep}>{text("course.sorting.keep")}</BodyButton>
-        </div>
+        <>
+          <CardSection className="gap-single">
+            <p className="m-0 text-xs text-muted-foreground">{text("course.sorting.keepHint")}</p>
+          </CardSection>
+          <BodyButton row onClick={keep}>{text("course.sorting.keep")}</BodyButton>
+        </>
       ) : null}
-      {keys === undefined ? <p className="m-0 text-xs text-muted-foreground tabular-nums">{text("course.sorting.guessCount", { done: guessed, total: task.items.length })}</p> : null}
-      <p className="m-0 text-xs text-muted-foreground" aria-hidden="true">
+      <p {...CELL} className="m-0 px-double py-single text-xs text-muted-foreground" aria-hidden="true">
         ▲ {text("course.sorting.smallest")}
       </p>
-      <ol id={listId} role="list" tabIndex={-1} className="course-rows m-0 flex list-none flex-col gap-single p-0 outline-none" aria-label={text("course.sorting.list", { quantity })} onBlur={release}>
+      <RowList as="ol" id={listId} tabIndex={-1} className="course-rows outline-none" aria-label={text("course.sorting.list", { quantity })} onBlur={release}>
         {shownOrder.map((id, index) => {
           const hint = far.get(id);
           const hintId = hint === undefined ? undefined : elementId(scope, id, "hint");
@@ -160,7 +164,8 @@ export function SortingTaskView(props: TaskViewProps<SheetSortingTask, SortingAn
             <li
               data-icon-host=""
               key={id}
-              className="course-sort border border-normal bg-background px-single py-single"
+              {...CELL}
+              className="course-sort bg-background"
               data-course-item={id}
               data-presence-anchor={PRESENCE_ANCHORS.item(id)}
               data-course-drag={keys === undefined ? undefined : ""}
@@ -212,13 +217,13 @@ export function SortingTaskView(props: TaskViewProps<SheetSortingTask, SortingAn
             </li>
           );
         })}
-      </ol>
-      <p className="m-0 text-xs text-muted-foreground" aria-hidden="true">
+      </RowList>
+      <p {...CELL} className="m-0 px-double py-single text-xs text-muted-foreground" aria-hidden="true">
         ▼ {text("course.sorting.largest")}
       </p>
       {lockedId === undefined ? null : <LockedNote id={lockedId} text={text} />}
       <LiveRegion announcement={announcement} />
       <LiveRegion announcement={hinted} />
-    </div>
+    </>
   );
 }

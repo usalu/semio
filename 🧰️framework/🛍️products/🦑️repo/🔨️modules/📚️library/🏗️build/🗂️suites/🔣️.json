@@ -210,6 +210,7 @@
       "id": "build-memory",
       "budgetMs": 300000,
       "typecheck": "none",
+      "scratch": "checkout",
       "trees": [
         "🧠️memory"
       ],
@@ -888,9 +889,65 @@
       "scratch": "checkout"
     },
     {
+      "id": "build-task-model",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🧮️task-model"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "posix-shell-script",
+        "symlink",
+        "permission-bits"
+      ]
+    },
+    {
+      "id": "build-slots",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🪢️slots"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "python3-command"
+      ],
+      "tools": [
+        "python"
+      ]
+    },
+    {
+      "id": "build-graph-state",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🪪️graph-state"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "python3-command",
+        "symlink",
+        "permission-bits"
+      ],
+      "tools": [
+        "python"
+      ]
+    },
+    {
       "id": "build-inference-projects",
       "budgetMs": 300000,
       "typecheck": "none",
+      "scratch": "checkout",
       "trees": [
         "🕸️graph/📥️inference/📦️project-nodes",
         "🕸️graph/📥️inference/🔎️owner-discovery",

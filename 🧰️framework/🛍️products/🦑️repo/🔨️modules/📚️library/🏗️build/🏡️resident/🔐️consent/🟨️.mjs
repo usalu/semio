@@ -1,4 +1,5 @@
 /** 🔐️ File access consent of the long-lived roles: macOS gives the right to read the Documents, Desktop and Downloads folders of a user to one identity, once per machine; this module says which checkouts need it, which identity it is given to, probes it without ever blocking, and keeps the receipts `repo preflight` reads. */
+import{machinePathV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {fork} from "node:child_process";
 import {createHash} from "node:crypto";
 import {mkdirSync,readdirSync,readFileSync,renameSync,rmSync,writeFileSync} from "node:fs";
@@ -202,8 +203,8 @@ export const ACCESS_PROOF_VERSION_V1=3;
 
 /** 🏔️ The device ids of the root, `.cache`, `.cache/b` and the directories below `.cache/b` (a mounted cache image has another device than the directory it covers; a place the system refuses shows its error code instead): one string that changes when an image is attached or detached or when a place becomes unreadable. */
 export async function mountSignatureV1(root,{stat=lstat,list=readdir}={}){
- const places=[root,join(root,".cache"),join(root,".cache","b")];
- try{const children=await list(join(root,".cache","b"));if(Array.isArray(children))for(const name of children.slice(0,16))places.push(join(root,".cache","b",name));}catch{}
+ const places=[root,machinePathV1(root,".cache"),machinePathV1(root,".cache","b")];
+ try{const children=await list(machinePathV1(root,".cache","b"));if(Array.isArray(children))for(const name of children.slice(0,16))places.push(machinePathV1(root,".cache","b",name));}catch{}
  const out=[];
  for(const place of places){try{out.push(place+":"+String((await stat(place)).dev));}catch(error){out.push(place+":"+(error?.code??"?"));}}
  return out.join("|");

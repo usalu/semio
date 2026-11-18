@@ -9005,6 +9005,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-pack",
  "semio-framework-schema",
+ "semio-framework-value",
  "semio-framework-value-derive",
  "semio-hub-cad",
  "semio-hub-gis",
@@ -10025,11 +10026,13 @@ dependencies = [
 name = "semio-hub-norm"
 version = "0.1.0"
 dependencies = [
+ "semio-framework",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
  "semio-framework-job",
  "semio-framework-pack",
  "semio-framework-test-fixtures",
+ "semio-framework-value",
  "semio-os-kernel",
  "semio-plugin",
  "semio-s-artifact-norm-contract",
@@ -10048,56 +10051,6 @@ dependencies = [
  "semio-s-artifact-norm-din4108-examples",
  "semio-s-artifact-norm-din4108-model",
  "semio-s-artifact-norm-din4108-viewer",
- "semio-s-artifact-norm-en1990",
- "semio-s-artifact-norm-en1990-editor",
- "semio-s-artifact-norm-en1990-examples",
- "semio-s-artifact-norm-en1990-model",
- "semio-s-artifact-norm-en1990-viewer",
- "semio-s-artifact-norm-en1991",
- "semio-s-artifact-norm-en1991-editor",
- "semio-s-artifact-norm-en1991-examples",
- "semio-s-artifact-norm-en1991-model",
- "semio-s-artifact-norm-en1991-viewer",
- "semio-s-artifact-norm-en1992",
- "semio-s-artifact-norm-en1992-editor",
- "semio-s-artifact-norm-en1992-examples",
- "semio-s-artifact-norm-en1992-model",
- "semio-s-artifact-norm-en1992-viewer",
- "semio-s-artifact-norm-en1993",
- "semio-s-artifact-norm-en1993-editor",
- "semio-s-artifact-norm-en1993-examples",
- "semio-s-artifact-norm-en1993-model",
- "semio-s-artifact-norm-en1993-viewer",
- "semio-s-artifact-norm-en1994",
- "semio-s-artifact-norm-en1994-editor",
- "semio-s-artifact-norm-en1994-examples",
- "semio-s-artifact-norm-en1994-model",
- "semio-s-artifact-norm-en1994-viewer",
- "semio-s-artifact-norm-en1995",
- "semio-s-artifact-norm-en1995-editor",
- "semio-s-artifact-norm-en1995-examples",
- "semio-s-artifact-norm-en1995-model",
- "semio-s-artifact-norm-en1995-viewer",
- "semio-s-artifact-norm-en1996",
- "semio-s-artifact-norm-en1996-editor",
- "semio-s-artifact-norm-en1996-examples",
- "semio-s-artifact-norm-en1996-model",
- "semio-s-artifact-norm-en1996-viewer",
- "semio-s-artifact-norm-en1997",
- "semio-s-artifact-norm-en1997-editor",
- "semio-s-artifact-norm-en1997-examples",
- "semio-s-artifact-norm-en1997-model",
- "semio-s-artifact-norm-en1997-viewer",
- "semio-s-artifact-norm-en1998",
- "semio-s-artifact-norm-en1998-editor",
- "semio-s-artifact-norm-en1998-examples",
- "semio-s-artifact-norm-en1998-model",
- "semio-s-artifact-norm-en1998-viewer",
- "semio-s-artifact-norm-en1999",
- "semio-s-artifact-norm-en1999-editor",
- "semio-s-artifact-norm-en1999-examples",
- "semio-s-artifact-norm-en1999-model",
- "semio-s-artifact-norm-en1999-viewer",
  "semio-s-artifact-norm-iso16757",
  "semio-s-artifact-norm-iso16757-editor",
  "semio-s-artifact-norm-iso16757-examples",
@@ -10124,6 +10077,114 @@ dependencies = [
  "semio-framework-async",
  "semio-framework-pack",
  "semio-hub-norm",
+ "semio-plugin",
+]
+
+[[package]]
+name = "semio-hub-norm-eurocode"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-async-macros",
+ "semio-framework-dispatch-macros",
+ "semio-framework-job",
+ "semio-framework-pack",
+ "semio-framework-test-fixtures",
+ "semio-framework-value",
+ "semio-os-kernel",
+ "semio-plugin",
+ "semio-s-artifact-norm-en1990",
+ "semio-s-artifact-norm-en1990-editor",
+ "semio-s-artifact-norm-en1990-examples",
+ "semio-s-artifact-norm-en1990-model",
+ "semio-s-artifact-norm-en1990-viewer",
+ "semio-s-artifact-norm-en1991",
+ "semio-s-artifact-norm-en1991-editor",
+ "semio-s-artifact-norm-en1991-examples",
+ "semio-s-artifact-norm-en1991-model",
+ "semio-s-artifact-norm-en1991-viewer",
+ "semio-s-artifact-norm-en1997",
+ "semio-s-artifact-norm-en1997-editor",
+ "semio-s-artifact-norm-en1997-examples",
+ "semio-s-artifact-norm-en1997-model",
+ "semio-s-artifact-norm-en1997-viewer",
+ "semio-s-artifact-norm-en1998",
+ "semio-s-artifact-norm-en1998-editor",
+ "semio-s-artifact-norm-en1998-examples",
+ "semio-s-artifact-norm-en1998-model",
+ "semio-s-artifact-norm-en1998-viewer",
+ "semio-s-plugin-norm-app-surface",
+ "semio-s-plugin-norm-compliance",
+ "semio-ui-locale",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-hub-norm-eurocode-component"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-pack",
+ "semio-hub-norm-eurocode",
+ "semio-plugin",
+]
+
+[[package]]
+name = "semio-hub-norm-eurocode-materials"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-async-macros",
+ "semio-framework-dispatch-macros",
+ "semio-framework-job",
+ "semio-framework-pack",
+ "semio-framework-test-fixtures",
+ "semio-framework-value",
+ "semio-os-kernel",
+ "semio-plugin",
+ "semio-s-artifact-norm-en1992",
+ "semio-s-artifact-norm-en1992-editor",
+ "semio-s-artifact-norm-en1992-examples",
+ "semio-s-artifact-norm-en1992-model",
+ "semio-s-artifact-norm-en1992-viewer",
+ "semio-s-artifact-norm-en1993",
+ "semio-s-artifact-norm-en1993-editor",
+ "semio-s-artifact-norm-en1993-examples",
+ "semio-s-artifact-norm-en1993-model",
+ "semio-s-artifact-norm-en1993-viewer",
+ "semio-s-artifact-norm-en1994",
+ "semio-s-artifact-norm-en1994-editor",
+ "semio-s-artifact-norm-en1994-examples",
+ "semio-s-artifact-norm-en1994-model",
+ "semio-s-artifact-norm-en1994-viewer",
+ "semio-s-artifact-norm-en1995",
+ "semio-s-artifact-norm-en1995-editor",
+ "semio-s-artifact-norm-en1995-examples",
+ "semio-s-artifact-norm-en1995-model",
+ "semio-s-artifact-norm-en1995-viewer",
+ "semio-s-artifact-norm-en1996",
+ "semio-s-artifact-norm-en1996-editor",
+ "semio-s-artifact-norm-en1996-examples",
+ "semio-s-artifact-norm-en1996-model",
+ "semio-s-artifact-norm-en1996-viewer",
+ "semio-s-artifact-norm-en1999",
+ "semio-s-artifact-norm-en1999-editor",
+ "semio-s-artifact-norm-en1999-examples",
+ "semio-s-artifact-norm-en1999-model",
+ "semio-s-artifact-norm-en1999-viewer",
+ "semio-s-plugin-norm-app-surface",
+ "semio-s-plugin-norm-compliance",
+ "semio-ui-locale",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-hub-norm-eurocode-materials-component"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-pack",
+ "semio-hub-norm-eurocode-materials",
  "semio-plugin",
 ]
 
@@ -10791,6 +10852,7 @@ dependencies = [
  "semio-framework-pack",
  "semio-framework-schema",
  "semio-framework-tool-run",
+ "semio-framework-value",
  "semio-os-kernel",
  "semio-plugin",
  "semio-s-artifact-sourcing-curation",
@@ -18202,6 +18264,7 @@ dependencies = [
  "semio-plugin-decl-tool-contract",
  "semio-plugin-ownership",
  "semio-plugin-retained-command",
+ "semio-ui-contract-values",
  "serde",
  "serde_json",
 ]
@@ -90567,6 +90630,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-ui-border-presentation"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job",
+]
+
+[[package]]
 name = "semio-ui-contract"
 version = "0.1.0"
 dependencies = [
@@ -90688,6 +90758,7 @@ name = "semio-ui-contract-values"
 version = "0.1.0"
 dependencies = [
  "semio-framework-job",
+ "semio-framework-job-testing-caller",
  "semio-framework-value",
  "semio-framework-value-native-owned",
  "semio-framework-value-persistent",
@@ -90719,6 +90790,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-value",
  "semio-framework-value-paged-list",
+ "semio-ui-border-presentation",
  "semio-ui-scene-algebra",
  "semio-ui-scene-camera",
  "semio-ui-scene-mesh",
@@ -91211,6 +91283,7 @@ dependencies = [
  "semio-framework-value",
  "semio-ui-contract",
  "semio-ui-declaration",
+ "semio-ui-draw-contract",
  "semio-ui-locale",
  "semio-ui-theme",
 ]

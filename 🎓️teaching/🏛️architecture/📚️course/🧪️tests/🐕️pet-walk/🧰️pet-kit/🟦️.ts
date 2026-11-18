@@ -160,10 +160,17 @@ export const CIRCLE_LAP_MS = 1000;
 /** 🌀️ How many laps the spec draws round a pet: five quarter turns make a circle, and the first lap begins anew while the pointer comes in. */
 export const CIRCLE_LAPS = 3;
 
-/** 🪝️ How many of its own heights the rope of a grappling gun reaches at most (`ROPE_LONG` of the pets' climbing): on the
- * home screen at 1440 × 900 those are the tops of the bottom row of cards over the footer line, which pets of every
- * kind like to sit on. */
+/** 🪝️ How many of its own heights the rope of a grappling gun reaches at most (`ROPE_LONG` of the pets' climbing): the
+ * ledge of {@link ledgeAdded} stands this many heights over the footer line at most, which is a few more than the lowest
+ * ledge a rope may rise to ({@link ROPE_LEDGE}). */
 export const ROPE_REACH = 8;
+
+/** 🪜️ Where the gear spec puts the ledge a rope is shot at, relative to the page: its width and height in pixels, how far
+ * its top stands over the footer line (about six of the shortest grappler's heights, in a rope's reach) and how far its
+ * left side stands from the window's right edge, in the gutter beside the column of a quiz's page, which no control of
+ * the footer lies under. Cards fill their page, so no card part of the course leaves a perch with room above it and a
+ * corridor beside it for a rope: what the layer surveys as a surface is, by its selector, an element of a card. */
+export const ROPE_LEDGE = { width: 200, height: 24, rise: 300, inset: 250 } as const;
 
 /** 🔁️ How long the gear spec waits for a rope while the hand holds whoever sat on the perch in a rope's reach, before it
  * lets go and clears the way again, in milliseconds of the wall clock: two minutes of the pets' time at eight times the
@@ -334,14 +341,29 @@ export function circleRound(body: Body, cue: "circle" | "countercircle", laps: n
   return Array.from({ length: laps * CIRCLE_POINTS + 1 }, (_, step) => ({ x: middle.x + radius * Math.cos((way * step * 2 * Math.PI) / CIRCLE_POINTS), y: middle.y + radius * Math.sin((way * step * 2 * Math.PI) / CIRCLE_POINTS) }));
 }
 
+/** 🛋️ In the page: puts an empty card part into the main area of the client, a ledge as wide and high as `ledge` says, standing `ledge.rise` pixels over the footer line and `ledge.inset` pixels from the right edge of the window, which no press ever reaches. The pet layer surveys it as the top edge of a card part; its middle, where a pet on the footer line stands under its way up, is what the call returns. */
+export function ledgeAdded(ledge: { readonly width: number; readonly height: number; readonly rise: number; readonly inset: number }): number {
+  const footer = document.querySelector(".course-app > footer")!.getBoundingClientRect().top;
+  const left = window.innerWidth - ledge.inset;
+  const card = document.createElement("div");
+  card.setAttribute("data-card", "");
+  card.style.cssText = `position:fixed;left:${left}px;top:${footer - ledge.rise}px;width:${ledge.width}px;height:${ledge.height}px;pointer-events:none`;
+  const surface = document.createElement("div");
+  surface.setAttribute("data-slot", "window-chrome-body-surface");
+  surface.style.cssText = "width:100%;height:100%;background:currentColor;opacity:0.15";
+  card.append(surface);
+  document.querySelector("#course-main")!.append(card);
+  return left + ledge.width / 2;
+}
+
 /** 🏝️ In the page: a place on the footer line with room for a pet and a circle round it — no part of a card and no pet
- * within `reach` pixels to either side and `room` pixels above the line, no control on the line below it — the one
+ * within `reach` pixels to either side and `room` pixels above the line (the parts of cards of pages behind the screen, which are inert or hidden, are no part), no control on the line below it — the one
  * nearest `near` (the middle of the window when absent), or `null`. */
 export function floorSpot(question: { readonly parts: string; readonly controls: string; readonly reach: number; readonly room: number; readonly near?: number }): { readonly x: number; readonly top: number } | null {
   const footer = document.querySelector(".course-app > footer");
   if (footer === null) return null;
   const top = footer.getBoundingClientRect().top;
-  const blocks = [...[...document.querySelectorAll(question.parts)].map((part) => part.getBoundingClientRect()), ...(window as unknown as { petWalk: Instruments }).petWalk.bodies()];
+  const blocks = [...[...document.querySelectorAll(question.parts)].filter((part) => part.closest("[inert], [hidden]") === null).map((part) => part.getBoundingClientRect()), ...(window as unknown as { petWalk: Instruments }).petWalk.bodies()];
   const spots: number[] = [];
   for (let x = question.reach + 10; x <= window.innerWidth - question.reach - 10; x += 10) {
     if (blocks.some((block) => block.right > x - question.reach && block.left < x + question.reach && block.bottom > top - question.room && block.top < top)) continue;
@@ -553,7 +575,7 @@ export async function expectCast(device: Device, scene: string, present: boolean
         const shown = await shownPets(device);
         return { strangers: shown.filter((id) => !allowed.includes(id)), absent: present && shown.length === 0, twice: shown.length - new Set(shown).size };
       },
-      { timeout: RECAST_MS },
+      { timeout: RECAST_MS, message: `the cast of ${scene}` },
     )
     .toEqual({ strangers: [], absent: false, twice: 0 });
 }

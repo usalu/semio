@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {join} from "node:path";
 import {describeHostReasonV1,hostCapacityDirectoryV1,readHostCapacityStatusV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/📋️status/🟦️.ts";
 import {BUILD_HOST_CAPACITY_POLICY_V1,createCapacityControlV1} from "../../🌡️host-capacity/🎛️control/🟦️.ts";
@@ -25,5 +26,5 @@ export async function readLeaseAdmissionV1(environment:NodeJS.ProcessEnv,languag
 
 /** ▶️ Runs `repo leases status [--json] [--lease-directory=<path>] [--all] [--violations=<n>]` for one checkout. */
 export function runLeasesCliV1(root:string,args:readonly string[],environment:NodeJS.ProcessEnv,write:(line:string)=>void=writeResultLineV1):Promise<number>{
- return runLeasesCommandV1(args,{environment,write,directory:join(root,REPOSITORY_LEASE_DIRECTORY_V1),admission:language=>readLeaseAdmissionV1(environment,language)});
+ return runLeasesCommandV1(args,{environment,write,directory:machinePathV1(root,REPOSITORY_LEASE_DIRECTORY_V1),admission:language=>readLeaseAdmissionV1(environment,language)});
 }

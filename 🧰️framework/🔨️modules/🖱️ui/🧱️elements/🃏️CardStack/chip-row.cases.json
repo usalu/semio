@@ -1,0 +1,7 @@
+{
+  "token": { "file": "../../🎨️styling/🖌️ui/🎨️.css", "declares": ["--chip-row-height: round(nearest, max(1.5rem, calc(7 * var(--ui-spacing))), var(--device-pixel));", "@utility min-h-chip-row {"] },
+  "equalHeight": [
+    { "file": "../🗂️WindowChrome/🟦️.tsx", "mustContain": ["min-h-chip-row"], "mustNotContain": ["min-h-medium"] },
+    { "file": "../🃏️OverviewCard/🟦️.tsx", "mustContain": ["minHeight: \"var(--chip-row-height)\""], "mustNotContain": ["max(1.5rem, calc(7 * var(--ui-spacing)))"] }
+  ]
+}

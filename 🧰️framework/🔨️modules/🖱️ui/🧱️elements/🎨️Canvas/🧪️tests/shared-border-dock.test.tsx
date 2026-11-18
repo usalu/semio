@@ -188,7 +188,7 @@ describe("flush dock boundaries", () => {
       expect(d).not.toBe("");
       const commands = [...d.matchAll(/([ML])\s*([\d.e+-]+)[ ,]+([\d.e+-]+)/gi)].map(match => ({ move: match[1] === "M", x: Number(match[2]), y: Number(match[3]) }));
       const left = index === 0 ? 1 : 0, right = index === 0 ? 584 : 583;
-      const edges = [[1, 1, 108, 1], [108, 1, 108, 31], [108, 31, right, 31], [right, 31, right, 369], [left, 369, right, 369], [left, 31, left, 369], [1, 1, 1, 31]];
+      const edges = [[1, 1, 108, 1], [108, 1, 108, 31], [108, 31, right, 31], [right, 31, right, 369], [left, 369, right, 369], [left, 31, left, 369], [left, 1, left, 31]];
       for (const [x1, y1, x2, y2] of edges as [number, number, number, number][]) {
         const horizontal = y1 === y2, lo = horizontal ? x1 : y1, hi = horizontal ? x2 : y2;
         let covered = new Decimal(0);

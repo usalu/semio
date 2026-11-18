@@ -20,7 +20,7 @@ import { CanvasSkeleton } from "../🦴️Skeletons/🟦️.tsx";
 import { LevelProvider, SurfaceScope } from "../🌈️Surface/🟦️.tsx";
 import { chromeStatusBorderClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️.ts";
 import { type Anchor, ANCHORS } from "../../🔨️modules/⚓️panel-anchor/🟦️.ts";
-import { shellChromeFrameLayerClass } from "../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
+import { useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
 import { UiMobileProvider } from "../../🔨️modules/📱️ui-mobile-context/🟦️.tsx";
 import { GhostProvider, PanelGhostRoot } from "../👻️PanelGhost/🟦️.tsx";
 // #endregion 🔌️Adapters
@@ -54,6 +54,7 @@ const LayoutMobilePanel: React.FC<LayoutMobilePanelProps> = ({ visible = false, 
   const activeNode = findPanelTabNode(tabs, resolvedPath);
   const firstDraggableAlias = visible && activeNode ? panelTabFirstDraggableElementId(activeNode.id) : null;
   useFirstDraggableElementAlias(panelContentRef, firstDraggableAlias);
+  const frameRef = useSharedBorderFrameRef<HTMLDivElement>();
 
   if (!visible || tabs.length === 0) return null;
 
@@ -64,6 +65,8 @@ const LayoutMobilePanel: React.FC<LayoutMobilePanelProps> = ({ visible = false, 
   return (
     <LevelProvider level="panel">
       <PanelGhostRoot
+        ref={frameRef}
+        data-shared-border-frame=""
         data-slot="panel"
         data-panel="mobilePanel"
         data-panel-visible="true"
@@ -72,7 +75,6 @@ const LayoutMobilePanel: React.FC<LayoutMobilePanelProps> = ({ visible = false, 
         className={cn("relative w-full flex-1 min-h-0 text-foreground flex flex-col box-border overflow-hidden", className)}
       >
         <div data-dim aria-hidden className={cn("pointer-events-none absolute inset-0 z-0", glassClass)} />
-        <div data-dim data-slot="chrome-frame" aria-hidden className={shellChromeFrameLayerClass} />
         {showTabBar ? <PanelTabBar activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="mobile" /> : null}
         <Scrollable className="relative z-10 flex-1 min-h-0">
           <div ref={panelContentRef} data-dim data-slot="mobile-panel-content" className="flex min-h-0 flex-1 flex-col">

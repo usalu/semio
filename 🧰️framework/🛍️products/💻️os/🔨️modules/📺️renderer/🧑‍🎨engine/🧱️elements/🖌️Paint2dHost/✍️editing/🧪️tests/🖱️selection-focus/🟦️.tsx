@@ -62,7 +62,7 @@ vi.mock("../../../../📐️Canvas2dHost/📷️camera-math/🟦️.ts",()=>({ca
 afterEach(()=>{cleanup();vi.restoreAllMocks();vi.unstubAllGlobals();});
 
 test("filter and image grid controls consume published scene options",async()=>{
-  vi.stubGlobal("ResizeObserver",class {observe(){} disconnect(){}});vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(null);
+  vi.stubGlobal("ResizeObserver",class {observe(){}unobserve(){} disconnect(){}});vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(null);
   const host=document.createElement("div"),dispatch=vi.fn();
   const props={documentJson:'{"layers":[{"kind":"pixel","id":"p","width":16,"height":16}]}',assetsJson:"{}",assetExtentsJson:"{}",selectionJson:'["p"]',activeUtility:"select",brushSize:1,brushOpacity:1,brushColor:"#000000",brushHardness:1,paintTarget:"pixels" as const,maskValue:255,fillTolerance:24,camera:{current:{x:0,y:0,zoom:1}},container:{current:host},dispatch,onWheel:()=>{},onCameraChange:()=>{}};
   const view=render(<ControlledPixelEditingOverlay {...props} editingOptions={initialEditingOptions}/>);view.container.querySelector("details")!.open=true;
@@ -93,7 +93,7 @@ test("filter and image grid controls consume published scene options",async()=>{
 });
 
 for(const tool of ["Color picker","Magic wand"])test(tool+(tool==="Color picker"?" prepares actual image bytes":" submits its seed without browser source preparation"),async()=>{
-  vi.stubGlobal("ResizeObserver",class {observe(){} disconnect(){}});
+  vi.stubGlobal("ResizeObserver",class {observe(){}unobserve(){} disconnect(){}});
   const row=sourceFixture.browser,data=Uint8ClampedArray.from(row.pixels),close=vi.fn();
   const png=await sharp(Buffer.from(row.pixels),{raw:{width:row.width,height:row.height,channels:4}}).png().toBuffer();
   const bitmap=vi.fn(async(blob:Blob)=>{
@@ -118,7 +118,7 @@ for(const tool of ["Color picker","Magic wand"])test(tool+(tool==="Color picker"
 });
 
 for(const tool of ["Color picker"])test(tool+" cancels encoded source preparation before browser decode",async()=>{
-  vi.stubGlobal("ResizeObserver",class {observe(){} disconnect(){}});
+  vi.stubGlobal("ResizeObserver",class {observe(){}unobserve(){} disconnect(){}});
   vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(null);
   const bitmap=vi.fn();vi.stubGlobal("createImageBitmap",bitmap);
   const step=Base64DecodeCursor.prototype.step,gate=jobStepGate();
@@ -136,7 +136,7 @@ for(const tool of ["Color picker"])test(tool+" cancels encoded source preparatio
 });
 
 for(const action of fixture.actions) test("selection survives focus moving to "+action,async()=>{
-  vi.stubGlobal("ResizeObserver",class {observe(){} disconnect(){}});
+  vi.stubGlobal("ResizeObserver",class {observe(){}unobserve(){} disconnect(){}});
   vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(null);
   const host=document.createElement("div");
   host.getBoundingClientRect=()=>({left:0,top:0,width:fixture.viewportWidth,height:fixture.viewportHeight} as DOMRect);
@@ -169,7 +169,7 @@ for(const action of fixture.actions) test("selection survives focus moving to "+
 });
 
 for(const action of ["Crop to selection"]) test(action+" cancels selection preparation before dispatch",async()=>{
-  vi.stubGlobal("ResizeObserver",class {observe(){} disconnect(){}});
+  vi.stubGlobal("ResizeObserver",class {observe(){}unobserve(){} disconnect(){}});
   vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(null);
   const host=document.createElement("div"),dispatch=vi.fn();
   host.getBoundingClientRect=()=>({left:0,top:0,width:256,height:256} as DOMRect);
@@ -188,7 +188,7 @@ for(const action of ["Crop to selection"]) test(action+" cancels selection prepa
 
 
 for(const kind of ["pixel","group"]) test(kind+" mask target sends coverage strokes and clears the pixel selection",async()=>{
-  vi.stubGlobal("ResizeObserver",class {observe(){} disconnect(){}});
+  vi.stubGlobal("ResizeObserver",class {observe(){}unobserve(){} disconnect(){}});
   vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(null);
   const host=document.createElement("div"),dispatch=vi.fn();
   host.getBoundingClientRect=()=>({left:0,top:0,width:100,height:100} as DOMRect);
@@ -223,7 +223,7 @@ for(const kind of ["pixel","group"]) test(kind+" mask target sends coverage stro
 });
 
 for(const action of fixture.completionActions)for(const completion of fixture.completionCases)test(action.label+" waits for "+completion.outcome.kind+" completion",async()=>{
-  vi.stubGlobal("ResizeObserver",class {observe(){} disconnect(){}});
+  vi.stubGlobal("ResizeObserver",class {observe(){}unobserve(){} disconnect(){}});
   vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(null);
   const host=document.createElement("div");
   let settle!:(value:unknown)=>void;
@@ -252,7 +252,7 @@ for(const action of fixture.completionActions)for(const completion of fixture.co
 });
 
 for(const action of fixture.selectionControls.actions)for(const completion of fixture.completionCases)test(action+" retains published coverage until "+completion.outcome.kind,async()=>{
-  vi.stubGlobal("ResizeObserver",class {observe(){} disconnect(){}});vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(null);
+  vi.stubGlobal("ResizeObserver",class {observe(){}unobserve(){} disconnect(){}});vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(null);
   const {width,height}=fixture.selectionControls;
   let settle!:(value:unknown)=>void;const receipt=new Promise(resolve=>{settle=resolve;}),dispatch=vi.fn((_action:string,_args?:Record<string,unknown>)=>receipt);
   const initial={layerId:"p",target:"pixels",width,height,spans:[{start:0,length:1,coverage:128}]};
@@ -275,7 +275,7 @@ for(const action of fixture.selectionControls.actions)for(const completion of fi
 });
 
 for(const modifier of fixture.selectionControls.keyboardModifiers)test(modifier+" selection shortcuts wait for authoritative receipt",async()=>{
-  vi.stubGlobal("ResizeObserver",class {observe(){} disconnect(){}});vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(null);
+  vi.stubGlobal("ResizeObserver",class {observe(){}unobserve(){} disconnect(){}});vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(null);
   const {width,height}=fixture.selectionControls;
   let settle!:(value:unknown)=>void;const receipt=new Promise(resolve=>{settle=resolve;}),dispatch=vi.fn((_action:string,_args?:Record<string,unknown>)=>receipt);
   const view=render(<PixelEditingOverlay documentJson={JSON.stringify({layers:[{kind:"pixel",id:"p",width,height}]})} assetsJson="{}" assetExtentsJson="{}" selectionJson='["p"]' activeUtility="paintBrush" brushSize={24} brushOpacity={1} brushColor="#2878dc" brushHardness={1} camera={{current:{x:0,y:0,zoom:1}}} container={{current:document.createElement("div")}} dispatch={dispatch} onWheel={()=>{}} onCameraChange={()=>{}}/>);
@@ -291,7 +291,7 @@ for(const modifier of fixture.selectionControls.keyboardModifiers)test(modifier+
 });
 
 for(const row of fixture.selectionIntents)for(const cancellation of [null,...fixture.selectionCancellation])test(row.method+" "+row.mode+" "+(cancellation??"submits intrinsic intent"),async()=>{
-  vi.stubGlobal("ResizeObserver",class {observe(){} disconnect(){}});vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(null);
+  vi.stubGlobal("ResizeObserver",class {observe(){}unobserve(){} disconnect(){}});vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(null);
   const host=document.createElement("div"),dispatch=vi.fn();host.getBoundingClientRect=()=>({left:0,top:0,width:100,height:100} as DOMRect);
   const props={documentJson:'{"layers":[{"kind":"pixel","id":"p","width":64,"height":64}]}',assetsJson:"{}",assetExtentsJson:"{}",selectionJson:'["p"]',activeUtility:"select",brushSize:1,brushOpacity:1,brushColor:"#2878dc",brushHardness:1,camera:{current:{x:0,y:0,zoom:1}},container:{current:host},dispatch,onWheel:()=>{},onCameraChange:()=>{}};
   const view=render(<PixelEditingOverlay {...props}/>),canvas=view.getByRole("application",{name:"Image editor"});
@@ -311,7 +311,7 @@ for(const row of fixture.selectionIntents)for(const cancellation of [null,...fix
 });
 
 for(const inherited of [false,true])test((inherited?"Inherited":"Own")+" layer protection preserves selection and refuses pixel and mask edits",async()=>{
-  vi.stubGlobal("ResizeObserver",class {observe(){} disconnect(){}});
+  vi.stubGlobal("ResizeObserver",class {observe(){}unobserve(){} disconnect(){}});
   vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(null);
   const host=document.createElement("div"),dispatch=vi.fn();
   host.getBoundingClientRect=()=>({left:0,top:0,width:100,height:100} as DOMRect);
@@ -339,7 +339,7 @@ for(const inherited of [false,true])test((inherited?"Inherited":"Own")+" layer p
 });
 
 for(const inherited of [false,true])test((inherited?"Parent":"Layer")+" locking cancels pixel edit preparation before dispatch",async()=>{
-  vi.stubGlobal("ResizeObserver",class {observe(){} disconnect(){}});
+  vi.stubGlobal("ResizeObserver",class {observe(){}unobserve(){} disconnect(){}});
   vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(null);
   const {width,height}=fixture.selectionControls,host=document.createElement("div"),dispatch=vi.fn();
   const editor=(locked:boolean)=>{
@@ -363,7 +363,7 @@ for(const inherited of [false,true])test((inherited?"Parent":"Layer")+" locking 
 });
 
 for(const kind of ["pixel","group"])for(const sample of fixture.affineMaskTargets)test(kind+" strokes preserve "+sample.name+" coordinates",async()=>{
-  vi.stubGlobal("ResizeObserver",class {observe(){} disconnect(){}});
+  vi.stubGlobal("ResizeObserver",class {observe(){}unobserve(){} disconnect(){}});
   vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(null);
   const host=document.createElement("div"),dispatch=vi.fn();
   host.getBoundingClientRect=()=>({left:0,top:0,width:100,height:100} as DOMRect);
@@ -384,7 +384,7 @@ for(const kind of ["pixel","group"])for(const sample of fixture.affineMaskTarget
 import patch,{type Operation} from "fast-json-patch";
 import { paintStrokeRevisionFixture as revisions } from "@semio-tech/framework-surface-ts/testing/fixtures";
 for(const row of revisions.cases)test("active stroke handles target revision "+row.name,async()=>{
-  vi.stubGlobal("ResizeObserver",class {observe(){} disconnect(){}});
+  vi.stubGlobal("ResizeObserver",class {observe(){}unobserve(){} disconnect(){}});
   vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(null);
   const host=document.createElement("div"),dispatch=vi.fn();host.getBoundingClientRect=()=>({left:0,top:0,width:100,height:100} as DOMRect);
   const props={documentJson:JSON.stringify(revisions.document),assetsJson:"{}",assetExtentsJson:"{}",selectionJson:'["paint"]',activeUtility:"paintBrush",brushSize:1,brushOpacity:1,brushColor:"#2878dc",brushHardness:1,camera:{current:{x:0,y:0,zoom:1}},container:{current:host},dispatch,onWheel:()=>{},onCameraChange:()=>{}};
@@ -399,7 +399,7 @@ for(const row of revisions.cases)test("active stroke handles target revision "+r
 });
 
 for(const spans of [[],[{start:1,length:2,coverage:128}]])test("restores shared selection "+spans+" across image content updates",async()=>{
-  vi.stubGlobal("ResizeObserver",class{observe(){}disconnect(){}});vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(null);
+  vi.stubGlobal("ResizeObserver",class{observe(){}unobserve(){}disconnect(){}});vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(null);
   const host=document.createElement("div"),dispatch=vi.fn();
   const props={documentJson:JSON.stringify({layers:[{kind:"pixel",id:"p",width:3,height:2}]}),assetsJson:"{}",assetExtentsJson:"{}",selectionJson:'["p"]',pixelSelectionJson:JSON.stringify({layerId:"p",target:"pixels",width:3,height:2,spans}),activeUtility:"select",brushSize:1,brushOpacity:1,brushColor:"#2878dc",brushHardness:1,paintTarget:"pixels" as const,maskValue:255,fillTolerance:24,editingOptions:initialEditingOptions,camera:{current:{x:0,y:0,zoom:1}},container:{current:host},dispatch,onWheel:()=>{},onCameraChange:()=>{}};
   const view=render(<ControlledPixelEditingOverlay {...props}/>);
@@ -412,7 +412,7 @@ for(const spans of [[],[{start:1,length:2,coverage:128}]])test("restores shared 
 });
 
 test("menu filters and grid changes each dispatch ONE parametric verb",async()=>{
-  vi.stubGlobal("ResizeObserver",class{observe(){}disconnect(){}});vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(null);
+  vi.stubGlobal("ResizeObserver",class{observe(){}unobserve(){}disconnect(){}});vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(null);
   const host=document.createElement("div"),dispatch=vi.fn();
   const view=render(<PixelEditingOverlay documentJson='{"layers":[{"kind":"pixel","id":"p","width":3,"height":2}]}' assetsJson="{}" assetExtentsJson="{}" selectionJson='["p"]' activeUtility="select" brushSize={1} brushOpacity={1} brushColor="#2878dc" brushHardness={1} camera={{current:{x:0,y:0,zoom:1}}} container={{current:host}} dispatch={dispatch} onWheel={()=>{}} onCameraChange={()=>{}}/>);
   const disclosure=view.container.querySelector("details")!;disclosure.open=true;
@@ -433,7 +433,7 @@ test("menu filters and grid changes each dispatch ONE parametric verb",async()=>
   await waitFor(()=>expect(dispatch).toHaveBeenCalledWith("transformImage",{layerId:"p",operation:"resize",x:0,y:0,width:6,height:4,bilinear:true}));
 });
 test("refused completed selection does not replace authoritative coverage",{timeout:20000},async()=>{
-  vi.stubGlobal("ResizeObserver",class{observe(){}disconnect(){}});vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(null);
+  vi.stubGlobal("ResizeObserver",class{observe(){}unobserve(){}disconnect(){}});vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(null);
   const host=document.createElement("div"),dispatch=vi.fn(async()=>({kind:"refused"}));
   const view=render(<ControlledPixelEditingOverlay documentJson='{"layers":[{"kind":"pixel","id":"p","width":3,"height":2}]}' assetsJson="{}" assetExtentsJson="{}" selectionJson='["p"]' activeUtility="select" brushSize={1} brushOpacity={1} brushColor="#2878dc" brushHardness={1} paintTarget="pixels" maskValue={255} fillTolerance={24} editingOptions={initialEditingOptions} camera={{current:{x:0,y:0,zoom:1}}} container={{current:host}} dispatch={dispatch} onWheel={()=>{}} onCameraChange={()=>{}}/>);
   fireEvent.click(view.getByRole("button",{name:"Select all pixels"}));
@@ -443,7 +443,7 @@ test("refused completed selection does not replace authoritative coverage",{time
 });
 
 test("incoming shared coverage cancels an in-flight brush stroke",async()=>{
-  vi.stubGlobal("ResizeObserver",class{observe(){}disconnect(){}});vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(null);
+  vi.stubGlobal("ResizeObserver",class{observe(){}unobserve(){}disconnect(){}});vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(null);
   const host=document.createElement("div"),dispatch=vi.fn();host.getBoundingClientRect=()=>({left:0,top:0,width:100,height:100} as DOMRect);
   const props={documentJson:'{"layers":[{"kind":"pixel","id":"p","width":3,"height":2}]}',assetsJson:"{}",assetExtentsJson:"{}",selectionJson:'["p"]',activeUtility:"paintBrush",brushSize:1,brushOpacity:1,brushColor:"#2878dc",brushHardness:1,paintTarget:"pixels" as const,maskValue:255,fillTolerance:24,editingOptions:initialEditingOptions,camera:{current:{x:0,y:0,zoom:1}},container:{current:host},dispatch,onWheel:()=>{},onCameraChange:()=>{}};
   const view=render(<ControlledPixelEditingOverlay {...props}/>),canvas=view.getByRole("application",{name:"Image editor"});
@@ -456,7 +456,7 @@ test("incoming shared coverage cancels an in-flight brush stroke",async()=>{
 });
 
 test("the bucket dispatches ONE parametric fillRegion click and never floods or fills on the host",async()=>{
-  vi.stubGlobal("ResizeObserver",class {observe(){} disconnect(){}});
+  vi.stubGlobal("ResizeObserver",class {observe(){}unobserve(){} disconnect(){}});
   vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(null);
   const host=document.createElement("div"),dispatch=vi.fn();
   host.getBoundingClientRect=()=>({left:0,top:0,width:100,height:100} as DOMRect);
@@ -471,7 +471,7 @@ test("the bucket dispatches ONE parametric fillRegion click and never floods or 
 });
 
 function strokeCanvas(dispatch:ComponentProps<typeof ControlledPixelEditingOverlay>["dispatch"]){
-  vi.stubGlobal("ResizeObserver",class {observe(){} disconnect(){}});
+  vi.stubGlobal("ResizeObserver",class {observe(){}unobserve(){} disconnect(){}});
   vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(null);
   const host=document.createElement("div");host.getBoundingClientRect=()=>({left:0,top:0,width:100,height:100} as DOMRect);
   const view=render(<PixelEditingOverlay documentJson='{"layers":[{"kind":"pixel","id":"p","width":64,"height":64}]}' assetsJson="{}" assetExtentsJson="{}" selectionJson='["p"]' activeUtility="paintBrush" brushSize={1} brushOpacity={1} brushColor="#2878dc" brushHardness={1} camera={{current:{x:0,y:0,zoom:1}}} container={{current:host}} dispatch={dispatch} onWheel={()=>{}} onCameraChange={()=>{}}/>);
@@ -519,4 +519,19 @@ test("a cancelled streamed stroke aborts its press and a short stroke stays one 
   });
   await waitFor(()=>expect(strokeCalls(dispatch)).toHaveLength(1),10_000);
   expect(strokeCalls(dispatch)[0]).toEqual({layerId:"p",tool:"brush",xs:[2,6,10],ys:[32,32,32]});
+});
+test("the floating panel is one shared-border owner whose fields are boxless cells",()=>{
+  vi.stubGlobal("ResizeObserver",class {observe(){}unobserve(){} disconnect(){}});vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(null);
+  const host=document.createElement("div"),dispatch=vi.fn();
+  const props={documentJson:'{"layers":[{"kind":"pixel","id":"p","width":16,"height":16}]}',assetsJson:"{}",assetExtentsJson:"{}",selectionJson:'["p"]',activeUtility:"select",brushSize:1,brushOpacity:1,brushColor:"#000000",brushHardness:1,paintTarget:"pixels" as const,maskValue:255,fillTolerance:24,camera:{current:{x:0,y:0,zoom:1}},container:{current:host},dispatch,onWheel:()=>{},onCameraChange:()=>{}};
+  const view=render(<ControlledPixelEditingOverlay {...props} editingOptions={initialEditingOptions}/>);
+  const panel=view.container.querySelector<HTMLElement>("section[aria-label]")!;
+  expect(panel.getAttribute("data-slot")).toBe("shared-border-row");
+  expect(panel.className).not.toMatch(/\bborder\b|\bp-2\b/);
+  const fields=[...panel.querySelectorAll<HTMLElement>("[data-shared-border-field]")];
+  expect(fields.length).toBeGreaterThan(3);
+  for(const field of fields)expect(field.className).not.toMatch(/\bborder\b|rounded/);
+  expect(panel.querySelector("select")!.className).not.toMatch(/\bborder\b|rounded/);
+  expect(panel.querySelector("details")!.hasAttribute("data-shared-border-cells")).toBe(true);
+  view.unmount();
 });

@@ -1,4 +1,5 @@
 import { join } from "node:path";
+import { playScopeTargets } from "../🟦️.ts";
 
 export const PLAY_E2E_OWNER = "@semio-tech/semio-tech-play:e2e";
 
@@ -8,10 +9,10 @@ export function playE2eSessionRoot(workspace: string): string {
 }
 
 /** 🎟️ Keeps scoped and full services independent even inside one multi-target build invocation. */
-export function playE2eServiceV1(workspace: string, pane?: string): { readonly root: string; readonly owner: string } {
-  if (pane === undefined) return { root: playE2eSessionRoot(workspace), owner: PLAY_E2E_OWNER };
-  if (pane !== "forms") throw new Error(`Unknown Play E2E pane: ${pane}`);
-  return { root: join(workspace, "🏢️semio-tech/🎡️play/dist/services/forms-e2e"), owner: "@semio-tech/semio-tech-play:forms-e2e" };
+export function playE2eServiceV1(workspace: string, scope?: string): { readonly root: string; readonly owner: string } {
+  if (scope === undefined) return { root: playE2eSessionRoot(workspace), owner: PLAY_E2E_OWNER };
+  playScopeTargets(scope);
+  return { root: join(workspace, `🏢️semio-tech/🎡️play/dist/services/${scope}-e2e`), owner: `@semio-tech/semio-tech-play:${scope}-e2e` };
 }
 
 /** 🧭️ Requires the selected backend’s shared invocation identity before preparing a fresh service generation. */

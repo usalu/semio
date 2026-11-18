@@ -18,7 +18,7 @@ import {resolveLanguageV1} from "../../../../../../../../../📦️packages/🟦
 
 const compareBytes=(left:string,right:string):number=>Buffer.compare(Buffer.from(left),Buffer.from(right));
 const scopeKey=(scope:string)=>generationSha256V1(scope).slice(0,16);
-const evidenceName=/^[a-f0-9]{64}\.(?:frontier|execution)\.ndjson$/u,evidenceSweep=/^[a-f0-9]{64}\.[a-z]+\.ndjson$/u;
+const evidenceName=/^[a-f0-9]{64}\.(?:frontier|execution)\.ndjson$/u;
 
 /** 🧬️ Is a completed complete walk plus the topology it retained; only such a walk may be published. The receipt reads the walk through this consumer-owned shape, so it never imports the Source-owner reader that produces it. */
 export type JavascriptDependencyGenerationWalkV1=Readonly<{
@@ -116,7 +116,7 @@ export async function captureJavascriptDependencyGenerationReceiptV1(workspace:s
  });
 }
 
-const relativeWriteCeilingBytes=65536,sharedRetireGraceMilliseconds=600000;
+const relativeWriteCeilingBytes=8388608,sharedRetireGraceMilliseconds=600000;
 /** 📝️ Writes immutable evidence through the bounded relative-create API in chunks within its write ceiling and removes a partially written file instead of leaving it behind. */
 export async function writeJavascriptDependencyGenerationFilesV1(storeRoot:string,files:readonly Readonly<{name:string;bytes:Uint8Array}>[],checkpoint:()=>void,yieldContinuation:()=>Promise<void>):Promise<void>{
  const state:{unfinished?:string}={};
@@ -191,7 +191,7 @@ async function writeJavascriptDependencyGenerationReceiptV1(workspace:string,sto
  return "published";
 }
 
-/** 🧹️ Removes superseded receipts of one scope and every evidence file no remaining receipt names; failure only costs disk. */
+/** 🧹️ Removes superseded receipts of one scope and every frontier or execution evidence file no remaining receipt names, never the installed-paths or ownership evidence of other receipt kinds; failure only costs disk. */
 export function retireJavascriptDependencyGenerationFilesV1(storeRoot:string,scope:string,graceMilliseconds:number=0):void{
  const directory=join(storeRoot,protocol.directory),aged=(name:string)=>graceMilliseconds<=0||Date.now()-lstatSync(join(directory,name)).mtimeMs>=graceMilliseconds;
  try{
@@ -200,6 +200,6 @@ export function retireJavascriptDependencyGenerationFilesV1(storeRoot:string,sco
    if(name.startsWith(prefix)&&name!==newest&&aged(name)){unlinkSync(join(directory,name));continue;}
    try{const receipt=parseGenerationReceiptV1(readFileSync(join(directory,name)));keep.add(receipt.membership.frontier.name);keep.add(receipt.execution.evidence.name);}catch{}
   }
-  for(const name of names)if(evidenceSweep.test(name)&&!keep.has(name)&&aged(name))unlinkSync(join(directory,name));
+  for(const name of names)if(evidenceName.test(name)&&!keep.has(name)&&aged(name))unlinkSync(join(directory,name));
  }catch{}
 }

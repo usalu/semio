@@ -1,0 +1,60 @@
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:0:666:1:0:shared%20closures%2024%2F24","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 0 of 666 projects · 1 running, longest 0 s: shared closures 24/24
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+graph: waiting for memory headroom (768 of 900 MB reserved, 3 projects running): semio-framework-value-source-turn needs 256 MB and has waited 0 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:0:666:4:0:semio-plugin-original-job-ownership|language%3Acargo|0|0,semio-os-mcp-process-arena|language%3Acargo|0|0,semio-framework-value-testing-effect-bank|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 0 of 666 projects · 4 running, longest 0 s: semio-plugin-original-job-ownership (language:cargo, 0 s, 0 rows), semio-os-mcp-process-arena (language:cargo, 0 s, 0 rows), semio-framework-value-testing-effect-bank (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[repository:command] still running after 2730 s
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:0:666:3:0:semio-plugin-original-job-ownership|language%3Acargo|0|0,semio-framework-value-testing-effect-bank|language%3Acargo|0|0,semio-framework-value-source-turn|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 0 of 666 projects · 3 running, longest 0 s: semio-plugin-original-job-ownership (language:cargo, 0 s, 0 rows), semio-framework-value-testing-effect-bank (language:cargo, 0 s, 0 rows), semio-framework-value-source-turn (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: 0 of 703 projects arrived from the fleet, 2 inferred here, 701 left; the server last progressed 500 s ago, estimated time left: about 24 min
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:2:666:3:0:semio-plugin-original-job-ownership|language%3Acargo|0|0,semio-framework-value-testing-effect-bank|language%3Acargo|0|0,semio-framework-value-source-turn|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 2 of 666 projects · 3 running, longest 0 s: semio-plugin-original-job-ownership (language:cargo, 0 s, 0 rows), semio-framework-value-testing-effect-bank (language:cargo, 0 s, 0 rows), semio-framework-value-source-turn (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:5:666:3:0:semio-plugin-original-job-ownership|language%3Acargo|0|0,semio-framework-value-testing-effect-bank|language%3Acargo|0|0,semio-framework-value-source-turn|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 5 of 666 projects · 3 running, longest 0 s: semio-plugin-original-job-ownership (language:cargo, 0 s, 0 rows), semio-framework-value-testing-effect-bank (language:cargo, 0 s, 0 rows), semio-framework-value-source-turn (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:8:666:4:0:semio-plugin-original-job-ownership|language%3Acargo|0|0,semio-framework-value-testing-effect-bank|language%3Acargo|0|0,semio-framework-value-source-turn|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 8 of 666 projects · 4 running, longest 0 s: semio-plugin-original-job-ownership (language:cargo, 0 s, 0 rows), semio-framework-value-testing-effect-bank (language:cargo, 0 s, 0 rows), semio-framework-value-source-turn (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:10:666:3:0:semio-plugin-original-job-ownership|language%3Acargo|0|0,semio-framework-value-testing-effect-bank|language%3Acargo|0|0,semio-framework-value-source-turn|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 10 of 666 projects · 3 running, longest 0 s: semio-plugin-original-job-ownership (language:cargo, 0 s, 0 rows), semio-framework-value-testing-effect-bank (language:cargo, 0 s, 0 rows), semio-framework-value-source-turn (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:13:666:4:0:semio-plugin-original-job-ownership|language%3Acargo|0|0,semio-framework-value-testing-effect-bank|language%3Acargo|0|0,semio-framework-value-source-turn|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 13 of 666 projects · 4 running, longest 0 s: semio-plugin-original-job-ownership (language:cargo, 0 s, 0 rows), semio-framework-value-testing-effect-bank (language:cargo, 0 s, 0 rows), semio-framework-value-source-turn (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:14:666:2:0:semio-plugin-original-job-ownership|language%3Acargo|0|0,semio-framework-value-source-turn|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 14 of 666 projects · 2 running, longest 0 s: semio-plugin-original-job-ownership (language:cargo, 0 s, 0 rows), semio-framework-value-source-turn (language:cargo, 0 s, 0 rows)
+graph: headroom of 914 MB is below one project (1176 MB), inferring one project at a time
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: 0 of 703 projects arrived from the fleet, 17 inferred here, 686 left; the server last progressed 502 s ago, estimated time left: about 24 min
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:17:666:1:0:repo-policy|project|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 17 of 666 projects · 1 running, longest 0 s: repo-policy (project, 0 s, 0 rows)
+graph: waiting for memory headroom (1176 of 1428 MB reserved, 1 projects running): repo-nx-output-custody needs 901 MB and has waited 3 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+[repository:command] still running after 2740 s
+[repo] still working after 2750 s; last phase started: source.served
+[repository:command] still running after 2750 s
+graph: plan stage inference settled from 6369 to 7039 MB
+Graph: Plan-Stufe inference beruhigt von 6369 auf 7039 MB
+[repository:command] still running after 2760 s
+[repository:command] still running after 2770 s

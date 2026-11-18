@@ -8,6 +8,7 @@ import {cacheAreaDirectoryV1,cacheLedgerV1,cacheRootDirectoryV1,cacheTextV1,form
 import type {MemberScanControlV1,MemberVerifyReportV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts";
 import {formatMachinePlanV1,machinePolicyV1,planMachineBudgetV1,resolveMachineTotalV1,type MachinePolicyV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🎚️machine/🟦️.ts";
 import {dedupeTreeV1} from "../👯️dedupe/🟦️.ts";
+import {collectMachineBoundsV1} from "../../🌡️host-capacity/🧹️disk-recovery/🔌️real/🟦️.ts";
 import {cacheRunnerPortsV1,collectCacheV1,loadCacheSizesV1,machineHostFreeBytesV1,machineUsesV1,reportCacheLedgerV1,type CacheRunnerPortsV1} from "../🏃️runner/🟦️.ts";
 import type {MachinePlanV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🎚️machine/🟦️.ts";
 import {resolveLanguageV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
@@ -92,9 +93,9 @@ export async function runCacheLedgerCommandV1(args:readonly string[],context:Cac
   }
   if(parsed.operation==="dedupe")return runDedupeV1(context,parsed,language,ports);
   const total=await machineTotalV1(context,parsed,ledger),result=await collectCacheV1(context.workspace,ledger,{dryRun:parsed.dryRun,only:parsed.only,machine:{totalBytes:total.bytes,source:total.source}},ports,{language,write:parsed.json?()=>{}:context.write},context.partitions);
-  const host=parsed.only===undefined?await collectHostStoreV1(context,language,parsed,ports):undefined;
-  if(parsed.json)context.write(JSON.stringify({version:1,dryRun:result.dryRun,freedBytes:result.freedBytes,kept:result.kept,removed:result.removed,failed:result.failed,delegated:result.delegated,machine:result.machine,plans:result.plans,hostStore:host},null,2));
-  else{for(const failure of result.failed)context.write(failure.target+"/"+failure.name+": "+failure.message);if(host)context.write(host.line);}
+  const host=parsed.only===undefined?await collectHostStoreV1(context,language,parsed,ports):undefined,bounds=parsed.only===undefined?await collectMachineBoundsOfCommandV1(context,language,parsed,ports):undefined;
+  if(parsed.json)context.write(JSON.stringify({version:1,dryRun:result.dryRun,freedBytes:result.freedBytes,kept:result.kept,removed:result.removed,failed:result.failed,delegated:result.delegated,machine:result.machine,plans:result.plans,hostStore:host,machineBounds:bounds?.freed},null,2));
+  else{for(const failure of result.failed)context.write(failure.target+"/"+failure.name+": "+failure.message);if(host)context.write(host.line);for(const line of bounds?.lines??[])context.write(line);}
   return result.failed.length?1:0;
  }catch(error){
   if(ports.signal.aborted){context.write(cacheTextV1(language,"error.cancelled"));return 130;}
@@ -109,6 +110,13 @@ async function collectHostStoreV1(context:CacheCommandContextV1,language:CacheLa
  const ledger=context.ledger??cacheLedgerV1(),sizes=await loadCacheSizesV1(context.workspace,ledger),external=Object.values(sizes.records).reduce((sum,record)=>sum+record.usedBytes,0);
  const root=casRootV1(context.environment,process.platform,home),adoption=await adoptCasV1({root,places:casPlacesOfWorkspaceV1(context.workspace),signal:ports.signal,dryRun:parsed.dryRun}),result=await collectCasV1({root,policy:CAS_POLICY_V1,areas:await casAreasOfWorkspaceV1(context.workspace,home),externalBytes:external,partition:measureCasPartitionV1(root),signal:ports.signal,dryRun:parsed.dryRun});
  return{line:formatCasAdoptionV1(adoption,language)+"\n"+formatCasCollectionV1(result,CAS_POLICY_V1,language),result:{adoption,collection:result}};
+}
+
+/** 🧺️ Applies the in-process bounds of the machine after the host store: the owner-pool waves, the footprint logs, the read verdicts, the staging and temporary directories of gone owners and the files the replica overwrote, each by its declared age and count; a dry run only reports what would go. A bound that fails is skipped, never the command. @see ../../🌡️host-capacity/🧹️disk-recovery/🧺️bounds/🟦️.ts */
+async function collectMachineBoundsOfCommandV1(context:CacheCommandContextV1,language:CacheLanguageV1,parsed:CacheArgumentsV1,ports:CacheRunnerPortsV1):Promise<{lines:readonly string[];freed:Readonly<Record<string,number>>}|undefined>{
+ const{homedir,tmpdir}=await import("node:os");
+ try{return await collectMachineBoundsV1({workspace:context.workspace,home:context.environment.HOME??(context.environment===process.env?homedir():context.workspace),tmp:context.environment.TMPDIR??(context.environment===process.env?tmpdir():join(context.workspace,".cache","none")),uid:process.getuid?.()??0,environment:context.environment,dryRun:parsed.dryRun},language==="de"?"de":"en",ports.signal);}
+ catch(error){if(ports.signal.aborted)throw error;return undefined;}
 }
 
 /** 🚰️ Binds the graph reclaim to the real retained graph partition, its free space and the two shared scoped recoveries. */

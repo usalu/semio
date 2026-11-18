@@ -31,9 +31,9 @@ describe("select shared boundaries", () => {
     rerender(<Fixture windowed offset={6} />);
     expect(content.style.top).toBe("126px");
     rerender(<Fixture />);
-    expect(content.style.top).toBe("124px");
-    rerender(<Fixture offset={0} />);
     expect(content.style.top).toBe("120px");
+    rerender(<Fixture offset={4} />);
+    expect(content.style.top).toBe("124px");
   });
 
   it("matches independent viewport clamping and preserves a flipped zero gap", () => {

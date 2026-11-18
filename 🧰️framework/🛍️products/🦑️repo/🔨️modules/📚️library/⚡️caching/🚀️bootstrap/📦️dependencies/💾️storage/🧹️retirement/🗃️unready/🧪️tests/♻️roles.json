@@ -53,7 +53,7 @@
       ],
       "kind": "file",
       "members": 1,
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "unready-generation-outside-slot",
@@ -324,7 +324,7 @@
     {
       "kind": "unready-generation",
       "fault": "ready-receipt",
-      "accepted": false
+      "accepted": true
     },
     {
       "kind": "retained-unready",

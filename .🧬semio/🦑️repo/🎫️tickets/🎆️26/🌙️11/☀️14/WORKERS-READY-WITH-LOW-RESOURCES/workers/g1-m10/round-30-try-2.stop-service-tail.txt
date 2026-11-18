@@ -1,0 +1,60 @@
+[script] graph:slice-worker · Verifying input closures: 637 of 1435 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:644:1435","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 644 of 1435 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:665:1435","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 665 of 1435 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:671:1435","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 671 of 1435 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:677:1435","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 677 of 1435 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:678:1435","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 678 of 1435 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:680:1435","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 680 of 1435 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:681:1435","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 681 of 1435 closures
+[repository:command] still running after 430 s
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:685:1435","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 685 of 1435 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:686:1435","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 686 of 1435 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:687:1435","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 687 of 1435 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:688:1435","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 688 of 1435 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:689:1435","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 689 of 1435 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:691:1435","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 691 of 1435 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:692:1435","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 692 of 1435 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:694:1435","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 694 of 1435 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:697:1435","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 697 of 1435 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:700:1435","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 700 of 1435 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:701:1435","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 701 of 1435 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:707:1435","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 707 of 1435 closures
+[repo] still working after 440 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:710:1435","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 710 of 1435 closures
+[repository:command] still running after 440 s
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:711:1435","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 711 of 1435 closures
+[repository:command] still running after 450 s
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:713:1435","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 713 of 1435 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:714:1435","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 714 of 1435 closures
+graph: plan stage verification settled from 6961 to 4279 MB
+Graph: Plan-Stufe verification beruhigt von 6961 auf 4279 MB
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:715:1435","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 715 of 1435 closures
+[repository:command] still running after 460 s
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:716:1435","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 716 of 1435 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:717:1435","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 717 of 1435 closures

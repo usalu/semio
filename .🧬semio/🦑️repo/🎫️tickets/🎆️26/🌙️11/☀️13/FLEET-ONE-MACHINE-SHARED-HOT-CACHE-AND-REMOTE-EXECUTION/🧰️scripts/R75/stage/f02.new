@@ -1,0 +1,217 @@
+import {createHash} from "node:crypto";
+import {fetchGraphEntryV1,publishGraphEntryV1,type GraphDocumentV1,type GraphFleetClientV1} from "../../../../🪪️graph-state/🛰️exchange/🟦️.ts";
+import type {GraphStateV1} from "../../../../🪪️graph-state/🟦️.ts";
+import type {ProjectClaimV1} from "../../../../🪪️graph-state/📦️project-records/🟦️.ts";
+import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+
+/** 📐️ The authored numbers of the pool: poll intervals, retry delays, claim windows, how many child processes a machine runs and how much memory each may hold.
+ * @see ./🧬️schema/🔣️.json */
+export const OWNER_POOL_POLICY_V1=schema.definitions.Policy.const;
+const P=OWNER_POOL_POLICY_V1,ZERO="0".repeat(64),sha=(text:string)=>createHash("sha256").update(text).digest("hex");
+
+/** 🏷️ One owner of the pool as every machine reads it: the name, the kind it is filed under, how long it is expected to run (the claim lives that long) and its project JSON. */
+export type OwnerPoolUnitV1=Readonly<{name:string;kind:string;expectedMilliseconds:number;json:Readonly<Record<string,unknown>>}>;
+/** 🧾️ What a puller needs besides the units: see the schema definition `Head`. */
+export type OwnerPoolHeadV1=Readonly<{version:1;revision?:string;id:string;createdMs:number;publisher:string;identity:string;globals:Readonly<{projectAuthority:string;registryDigest:string;commandRevision:string;late:boolean}>}>;
+/** 📦️ The published pool of one wave: the head, the session the units are inferred in (opaque bytes of the publisher's runtime) and the units in the order the publisher infers them. */
+export type OwnerPoolManifestV1=Readonly<{head:OwnerPoolHeadV1;session:Uint8Array;units:readonly OwnerPoolUnitV1[]}>;
+/** 📍️ One open wave as the pointer lists it. */
+export type OwnerPoolWaveV1=Readonly<{id:string;createdMs:number;units:number}>;
+/** 📍️ The tiny entry machines poll: every open wave, newest last. */
+export type OwnerPoolPointerV1=Readonly<{version:2;waves:readonly OwnerPoolWaveV1[]}>;
+
+const stateOf=(name:string,id:string|undefined):GraphStateV1=>Object.freeze({version:1,frame:Object.freeze({kind:"project-inference" as const,tooling:sha(P.domain+":"+name+(id===undefined?"":":"+id)),implementation:ZERO,platform:"neutral",extra:Object.freeze({})}),names:ZERO,content:ZERO,files:0,contentFiles:0,digest:sha(JSON.stringify([P.domain,name,id??null]))}) as unknown as GraphStateV1;
+
+/** 🧮️ The state a pointer, a manifest or a failure note is stored under: the pointer has one fixed state (a swap replaces it), a manifest one per wave id, a note one per record state, and every one of them its own retention slot (the slot of a state is made of its kind, platform and tooling): with one slot for all manifests the cache kept only the newest wave and collected every older one ten minutes after a newer wave was published, so a wave of 4774 owners was gone as soon as any machine published a wave of 75 and no puller could open it again. */
+export const ownerPoolStateV1=(name:"pointer"|"manifest",id?:string):GraphStateV1=>stateOf(name,name==="pointer"?undefined:id);
+
+/** 🆔️ The id of a wave: the digest of its head parts and its unit names and project JSON, so two machines that publish the same wave publish the same entry. */
+export const ownerPoolIdV1=(head:Omit<OwnerPoolHeadV1,"id"|"createdMs"|"publisher">,units:readonly OwnerPoolUnitV1[])=>sha(JSON.stringify([head.identity,head.globals,units.map(unit=>[unit.name,unit.json])]));
+
+const documentOf=(documents:readonly GraphDocumentV1[],name:string)=>documents.find(row=>row.name===name)?.bytes;
+const encode=(value:unknown)=>Buffer.from(JSON.stringify(value));
+
+/** 🧮️ The state a failure note is stored under: one per record state of the owner (the digest the claim is made by). */
+export const ownerPoolFailureStateV1=(recordDigest:string):GraphStateV1=>stateOf(P.failureName,recordDigest);
+
+/** 🚫️ Tells the fleet that an owner failed with a deterministic cause on this machine, so the other pullers leave it to the machine that runs the wave. Never throws. */
+export async function publishOwnerPoolFailureV1(input:Readonly<{client:GraphFleetClientV1;owner:string;origin:string;recordDigest:string;revision:string;cause:string;now?:()=>number}>):Promise<boolean>{
+ try{return await publishGraphEntryV1({client:input.client,state:ownerPoolFailureStateV1(input.recordDigest),owner:input.owner,documents:[{name:P.failureName,bytes:encode({version:1,revision:input.revision,cause:input.cause.slice(0,300),origin:input.origin,atMs:(input.now??Date.now)()})}]});}catch{return false;}
+}
+
+/** 🔎️ The failure note of a record state if it is younger than the policy's maximum age and of the same record-code revision. */
+export async function readOwnerPoolFailureV1(client:GraphFleetClientV1,recordDigest:string,revision:string,now:()=>number=Date.now):Promise<Readonly<{cause:string;origin:string;atMs:number}>|undefined>{
+ try{
+  const entry=await fetchGraphEntryV1(client,ownerPoolFailureStateV1(recordDigest));
+  if(entry===undefined||entry==="fault")return undefined;
+  const bytes=documentOf(entry.documents,P.failureName);if(bytes===undefined)return undefined;
+  const note=JSON.parse(Buffer.from(bytes).toString("utf8")) as {version:number;revision:string;cause:string;origin:string;atMs:number};
+  return note.version===1&&note.revision===revision&&now()-note.atMs<=P.failureMaximumAgeMilliseconds?note:undefined;
+ }catch{return undefined;}
+}
+
+const readPointerRaw=async(client:GraphFleetClientV1):Promise<OwnerPoolPointerV1|undefined>=>{
+ const entry=await fetchGraphEntryV1(client,ownerPoolStateV1("pointer"));
+ if(entry==="fault")throw new Error("the fleet cache did not answer");
+ if(entry===undefined)return undefined;
+ const bytes=documentOf(entry.documents,P.pointerName);if(bytes===undefined)return undefined;
+ const pointer=JSON.parse(Buffer.from(bytes).toString("utf8")) as OwnerPoolPointerV1;
+ return pointer.version===2&&Array.isArray(pointer.waves)?pointer:undefined;
+};
+
+/** 🧺️ The waves of a pointer that are still open at `now`: not older than the policy's maximum age, at most `wavesKept` of the newest, equal ids once, oldest first. */
+export function ownerPoolOpenWavesV1(waves:readonly OwnerPoolWaveV1[],now:number,policy:typeof P=P):readonly OwnerPoolWaveV1[]{
+ const seen=new Set<string>();
+ return waves.filter(wave=>/^[0-9a-f]{64}$/u.test(wave.id)&&now-wave.createdMs<=policy.manifestMaximumAgeMilliseconds).sort((a,b)=>a.createdMs-b.createdMs||(a.id<b.id?-1:1)).reverse().filter(wave=>!seen.has(wave.id)&&seen.add(wave.id)).slice(0,policy.wavesKept).reverse();
+}
+
+/** ⬆️ Publishes the pool of a wave to the fleet cache: the manifest first, then the pointer with this wave added to the waves that are open (a swap against the pointer read just before, so a wave of another machine is kept and nobody replaces anybody), so a puller that sees the pointer finds the manifest and a new wave never makes a puller drop the wave it is working on. `false` when the fleet refuses (nothing is lost: the publisher infers every owner itself). */
+export async function publishOwnerPoolV1(input:Readonly<{client:GraphFleetClientV1;owner:string;manifest:OwnerPoolManifestV1;now?:()=>number}>):Promise<boolean>{
+ const {client,owner,manifest}=input,{head}=manifest,now=(input.now??Date.now)();
+ const stored=await publishGraphEntryV1({client,state:ownerPoolStateV1("manifest",head.id),owner,documents:[{name:P.headName,bytes:encode(head)},{name:P.sessionName,bytes:manifest.session},{name:P.unitsName,bytes:encode(manifest.units)}]});
+ if(!stored)return false;
+ for(let attempt=0;attempt<4;attempt++){
+  let current:OwnerPoolPointerV1|undefined;try{current=await readPointerRaw(client);}catch{current=undefined;}
+  const waves=ownerPoolOpenWavesV1([...(current?.waves??[]).filter(wave=>wave.id!==head.id),{id:head.id,createdMs:head.createdMs,units:manifest.units.length}],now);
+  if(await publishGraphEntryV1({client,state:ownerPoolStateV1("pointer"),owner,head:true,documents:[{name:P.pointerName,bytes:encode({version:2,waves})}]}))return true;
+ }
+ return false;
+}
+
+/** 📍️ The waves that are open, `undefined` when none is published or every pointer entry is older than the policy's maximum age, and `"fault"` when the fleet cache did not answer: a fault says nothing about the waves, so a puller that gets it keeps what it has (a busy cache server answered one request in five with a fault, and a puller that read "no wave" from it dropped its wave and its session each time). */
+export async function readOwnerPoolPointerV1(client:GraphFleetClientV1,now:()=>number=Date.now):Promise<OwnerPoolPointerV1|undefined|"fault">{
+ try{
+  const pointer=await readPointerRaw(client);if(pointer===undefined)return undefined;
+  const waves=ownerPoolOpenWavesV1(pointer.waves,now());
+  return waves.length===0?undefined:{version:2,waves};
+ }catch{return "fault";}
+}
+
+/** ⬇️ The manifest of one wave, or `undefined` when it is not (yet) readable. */
+export async function readOwnerPoolV1(client:GraphFleetClientV1,id:string):Promise<OwnerPoolManifestV1|undefined>{
+ try{
+  const entry=await fetchGraphEntryV1(client,ownerPoolStateV1("manifest",id));
+  if(entry===undefined||entry==="fault")return undefined;
+  const head=documentOf(entry.documents,P.headName),session=documentOf(entry.documents,P.sessionName),units=documentOf(entry.documents,P.unitsName);
+  if(head===undefined||session===undefined||units===undefined)return undefined;
+  const parsed=JSON.parse(Buffer.from(head).toString("utf8")) as OwnerPoolHeadV1;
+  return parsed.version===1&&parsed.id===id?{head:parsed,session,units:JSON.parse(Buffer.from(units).toString("utf8")) as OwnerPoolUnitV1[]}:undefined;
+ }catch{return undefined;}
+}
+
+/** 🌱️ A deterministic 32 bit number from a text: the first eight hex digits of its digest. */
+export const ownerPoolSeedV1=(text:string)=>parseInt(sha(text).slice(0,8),16)>>>0;
+
+/** 🎲️ The next number in [0, 1) of a small generator (mulberry32) from a state, so a puller's walk is reproducible in tests and across languages. */
+export function ownerPoolRandomV1(state:number):Readonly<{value:number;state:number}>{
+ const next=(state+0x6D2B79F5)>>>0;let t=next;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);
+ return{value:((t^(t>>>14))>>>0)/4294967296,state:next};
+}
+
+/** 🏠️ What the host says about itself for the sizing of the pool: the machine, the memory it has available, how loud it is and what its own work (builds, setup, a wave) holds. */
+export type OwnerPoolHostV1=Readonly<{cores:number;totalMegabytes:number;availableMegabytes:number;pressure:"normal"|"warn"|"critical";load:number|null;swapOutMegabytesPerSecond:number|null;foreground:Readonly<{cpu:number;unrealizedMegabytes:number;waiters:number;oldestWaitMilliseconds?:number}>}>;
+/** 🎯️ How many children the pool runs and why it runs fewer than it could. */
+export type OwnerPoolTargetV1=Readonly<{children:number;reason:"pressure"|"yielding"|"nothing-fits"|"waiting"|null}>;
+
+const clamp=(value:number,low:number,high:number)=>Math.max(low,Math.min(high,value));
+
+/** 🧱️ The two memory limits of one child on this machine: it is replaced when it passes the first once an owner ended (the allocator never gives memory back) and killed when it passes the second. */
+export function ownerPoolChildLimitsV1(totalMegabytes:number,policy:typeof P=P):Readonly<{recycleMegabytes:number;hardMegabytes:number}>{
+ return{recycleMegabytes:clamp(Math.floor(totalMegabytes*policy.childRecycleShareBasisPoints/10000),policy.childRecycleMinimumMegabytes,policy.childRecycleMaximumMegabytes),hardMegabytes:Math.max(policy.childHardMinimumMegabytes,Math.floor(totalMegabytes*policy.childHardShareBasisPoints/10000))};
+}
+
+/** 📏️ What one more child is expected to hold: the `peakPercentile` of the newest `peakSamples` resident sizes the children reported after an owner (nearest rank), plus the margin, so a single giant owner does not price every light one and the price does not jump with the last five; the declared default while nobody reported. These are the children's own measurements, never a share of a parent's growth.
+ * @see ./🧪️tests/🧫️fixtures/🐍️oracle.py */
+export function ownerPoolChildMegabytesV1(samples:readonly number[],policy:typeof P=P):number{
+ const recent=samples.filter(value=>Number.isFinite(value)&&value>0).slice(-policy.peakSamples).sort((a,b)=>a-b);
+ return recent.length===0?policy.childMegabytesDefault:Math.ceil(recent[Math.max(0,Math.ceil(recent.length*policy.peakPercentile/100)-1)]!*(100+policy.peakMarginPercent)/100);
+}
+
+/** ♻️ Whether a child is replaced after an owner: its resident size passed the recycle limit AND grew by at least `recycleGrowthMegabytes` over what it held when it was ready, so a child whose bare start is already near the limit is not restarted after every owner (a start costs far more than a light owner).
+ * @see ./🧪️tests/🧫️fixtures/🐍️oracle.py */
+export const ownerPoolRecycleV1=(input:Readonly<{rss:number;readyRss:number;recycleMegabytes:number}>,policy:typeof P=P)=>input.rss>input.recycleMegabytes&&input.rss>=input.readyRss+policy.recycleGrowthMegabytes;
+
+/** 💾️ Writes the files of a wave to the first directory that takes them (a full or quota-limited temporary directory must not keep the machine from every later wave): the answer is the directory used, the error of the last one when none took them. */
+export function writeOwnerPoolWaveFilesV1(directories:readonly string[],files:Readonly<Record<string,string|Uint8Array>>,io:Readonly<{mkdir(path:string):void;write(path:string,data:string|Uint8Array):void;remove(path:string):void}>):string{
+ let last:unknown;
+ for(const directory of directories){
+  try{io.mkdir(directory);for(const [name,data] of Object.entries(files))io.write(directory+"/"+name,data);return directory;}
+  catch(error){last=error;try{io.remove(directory);}catch{}}
+ }
+ throw last;
+}
+
+/** 🎯️ How many children this machine runs now: none while a request of the machine's own work (a build, the readiness stage of the worker) has waited at least `yieldAfterMilliseconds` and less than `yieldUntilMilliseconds` in the gate (reason `waiting`: the runner ends the children within `yieldKillMilliseconds`, so the memory and cores they hold are free for the waiter at once; a waiter older than the limit was not held up by them, they come back); otherwise every core and every free megabyte that its own work and the system floor leave, one child always (a pool that is starved by the machine's own queue never helps the fleet) except under critical pressure or swap thrash, at most `maximumChildren`. Cores: the machine's, less what its own grants book, less a share while its own requests wait, and less the load that does not come from the children (the load ceiling is `loadCeilingBasisPointsPerCore` per core); memory: the available megabytes less the floor of the system and the part of its grants' reservations they have not touched yet, divided by the size of one child, added to the children that already hold theirs. A pure function.
+ * @see ./🧪️tests/🧫️fixtures/🐍️oracle.py */
+export function ownerPoolTargetV1(input:Readonly<{host:OwnerPoolHostV1;children:number;childMegabytes:number}>,policy:typeof P=P):OwnerPoolTargetV1{
+ const {host}=input,floor=clamp(Math.floor(host.totalMegabytes*policy.floorShareBasisPoints/10000),policy.floorMinimumMegabytes,policy.floorMaximumMegabytes);
+ if(host.pressure==="critical"||host.swapOutMegabytesPerSecond!==null&&host.swapOutMegabytesPerSecond>64)return{children:0,reason:"pressure"};
+ const foreground=host.foreground;
+ if(foreground.waiters>0&&(foreground.oldestWaitMilliseconds??0)>=policy.yieldAfterMilliseconds&&(foreground.oldestWaitMilliseconds??0)<policy.yieldUntilMilliseconds)return{children:0,reason:"waiting"};
+ const reserved=foreground.waiters>0?Math.ceil(host.cores*policy.foregroundCoreShareBasisPoints/10000):0;
+ const byCores=Math.max(0,host.cores-foreground.cpu-reserved),external=host.load===null?0:Math.max(0,host.load-input.children),byLoad=Math.floor(host.cores*policy.loadCeilingBasisPointsPerCore/10000-external);
+ const spare=host.availableMegabytes-floor-foreground.unrealizedMegabytes,byMemory=input.children+Math.floor(spare/Math.max(1,input.childMegabytes));
+ let children=Math.min(byCores,byLoad,byMemory,policy.maximumChildren);
+ if(host.pressure==="warn")children=Math.min(children,Math.max(1,input.children));
+ const wanted=Math.min(host.cores,policy.maximumChildren);
+ if(children<1)return{children:1,reason:byMemory<1?"nothing-fits":"yielding"};
+ return{children,reason:children<wanted?(byMemory<=Math.min(byCores,byLoad)?"nothing-fits":"yielding"):null};
+}
+
+/** 📊️ What one pull run did. */
+export type OwnerPoolStatsV1={claimed:number;published:number;stored:number;held:number;faulted:number;failed:number;refused:number;attempts:number};
+
+const defaultSleep=(milliseconds:number,signal?:AbortSignal)=>new Promise<void>(done=>{const timer=setTimeout(done,milliseconds);signal?.addEventListener("abort",()=>{clearTimeout(timer);done();},{once:true});});
+
+/** 🌐️ Pulls owners of the pool until every one is stored by someone, the signal aborts or `stop` says the wave is over. One puller walks the list from a start that is its own (a digest of its name, so fifteen pullers start apart and never meet before the end), claiming a window of `claimWindow` neighbours in one round trip (neighbours share their imports, so a walk keeps the programs of its process warm), runs as many as `slots()` allows and keeps `prefetchClaims` granted ahead so a finished owner is followed at once; a run of `gallopRun` owners that others hold or stored ends in a jump to another place of the list, and `doneJumps` jumps in a row that find nothing but stored owners end the pull (the wave is done as far as this puller can tell; the supervisor looks again later), so no puller has to look at every owner of a wave. Each owner is claimed by the digest of its record state before it is computed (a lapsed claim returns the owner to the pool, a stored record is never computed again), published when finished and given back when it fails. Nothing here waits for another machine and nothing schedules for one. */
+export async function pullOwnerPoolV1<U extends Readonly<{name:string}>>(input:Readonly<{units:()=>readonly U[];claim(unit:U):Promise<ProjectClaimV1>;run(unit:U):Promise<boolean>;slots():number;puller:string;signal?:AbortSignal;stop?():boolean;busy?(running:number):void;progress?(stats:Readonly<OwnerPoolStatsV1>,running:number):void;done?(unit:U,ok:boolean,milliseconds:number):void;known?:Set<string>;fail?(name:string,message:string,deterministic:boolean,code?:string):void;now?():number;sleep?(milliseconds:number,signal?:AbortSignal):Promise<void>;policy?:typeof P}>):Promise<OwnerPoolStatsV1>{
+ const policy=input.policy??P,now=input.now??Date.now,sleep=input.sleep??defaultSleep,finished=input.known??new Set<string>(),retryAt=new Map<string,number>(),running=new Map<string,Promise<void>>(),ready:{unit:U;claim:Extract<ProjectClaimV1,{state:"granted"}>}[]=[],stats:OwnerPoolStatsV1={claimed:0,published:0,stored:0,held:0,faulted:0,failed:0,refused:0,attempts:0};
+ let random=ownerPoolSeedV1(input.puller),cursor=-1,streak=0,placed=false,jumps=0;
+ const over=()=>input.signal?.aborted===true||input.stop?.()===true,draw=()=>{const next=ownerPoolRandomV1(random);random=next.state;return next.value;};
+ const execute=async(unit:U,claim:Extract<ProjectClaimV1,{state:"granted"}>)=>{
+  const began=now();let ok=false;
+  try{
+   if(await input.run(unit)&&await claim.publish()){stats.published++;ok=true;}
+   else{stats.failed++;input.fail?.(unit.name,"the record was not stored: "+claim.why(),claim.deterministic(),claim.code());await claim.abandon();}
+  }catch(error){stats.failed++;input.fail?.(unit.name,String((error as Error)?.message??error),true);await claim.abandon().catch(()=>undefined);}
+  finally{running.delete(unit.name);finished.add(unit.name);input.done?.(unit,ok,now()-began);input.busy?.(running.size);input.progress?.(stats,running.size);}
+ };
+ const pick=(count:number):U[]=>{
+  const list=input.units(),picked:U[]=[];if(list.length===0)return picked;
+  if(!placed||cursor>=list.length){cursor=Math.floor(draw()*list.length);placed=true;}
+  const queued=new Set(ready.map(row=>row.unit.name));
+  for(let step=0;step<list.length&&picked.length<count;step++){
+   if(cursor<0)cursor=list.length-1;
+   const unit=list[cursor--]!;
+   if(finished.has(unit.name)||running.has(unit.name)||queued.has(unit.name)||(retryAt.get(unit.name)??0)>now())continue;
+   picked.push(unit);
+  }
+  return picked;
+ };
+ const total=()=>input.units().length;
+ while(!over()&&finished.size<total()&&jumps<policy.doneJumps){
+  const slots=Math.max(0,input.slots());
+  let progressed=false;
+  const want=Math.min(policy.claimWindow,slots+policy.prefetchClaims-running.size-ready.length);
+  if(slots>0&&want>0){
+   const picked=pick(want);
+   stats.attempts+=picked.length;
+   const answers=await Promise.all(picked.map(async unit=>({unit,claim:await input.claim(unit).catch(()=>({state:"fault"}) as ProjectClaimV1)})));
+   for(const {unit,claim} of answers){
+    if(claim.state==="stored"){finished.add(unit.name);stats.stored++;streak++;}
+    else if(claim.state==="refused"){finished.add(unit.name);stats.refused++;streak++;}
+    else if(claim.state==="held"){retryAt.set(unit.name,now()+Math.max(2000,Math.min(policy.heldRetryMilliseconds,Math.floor(((unit as {expectedMilliseconds?:number}).expectedMilliseconds??policy.expectedMillisecondsDefault)/4))));stats.held++;streak++;jumps=0;}
+    else if(claim.state==="fault"){retryAt.set(unit.name,now()+policy.faultRetryMilliseconds);stats.faulted++;streak++;jumps=0;}
+    else{ready.push({unit,claim});stats.claimed++;streak=0;jumps=0;progressed=true;}
+   }
+   if(streak>=policy.gallopRun){cursor=Math.floor(draw()*Math.max(1,total()));streak=0;jumps++;}
+  }
+  while(ready.length>0&&running.size<slots&&!over()){const row=ready.shift()!;running.set(row.unit.name,execute(row.unit,row.claim));progressed=true;}
+  input.busy?.(running.size);input.progress?.(stats,running.size);
+  if(over())break;
+  await Promise.race([sleep(progressed?0:policy.sweepPollMilliseconds,input.signal),...running.values()]);
+ }
+ for(const row of ready.splice(0))await row.claim.abandon().catch(()=>undefined);
+ await Promise.allSettled([...running.values()]);
+ return stats;
+}

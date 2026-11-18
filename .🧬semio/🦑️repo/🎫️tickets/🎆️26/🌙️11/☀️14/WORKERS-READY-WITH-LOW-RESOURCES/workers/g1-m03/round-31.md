@@ -1,0 +1,379 @@
+# Round 31 on g1-m03: Observation Only
+
+Observed 2026-11-18T03:01:32Z. I run no setup command. Try 5 of round 30 was stopped with one SIGINT at 20:52:36Z (see `round-30.md`); my runner is ended.
+
+## ready.json (`/Volumes/semio-store/v1/origins/g1-m03/ready.json`)
+
+- state=running stage=workspace (5 of 5) attempts=36 exit=1 refusal=null reason=code-stale ready=False peakMegabytes=10473
+
+```json
+{
+ "version": 1,
+ "origin": "g1-m03",
+ "host": "ueli-workstation-mac-mini-m4-16gb-256gb-03-lan.fritz.box",
+ "platform": "macos",
+ "pid": 8961,
+ "state": "running",
+ "digest": "70ffaf3400025b94daf51cd959760f55a1eeee7b8273995439d71c1e4cdab9c3",
+ "ready": false,
+ "stage": "workspace",
+ "stageIndex": 5,
+ "stageCount": 5,
+ "attempts": 36,
+ "exit": 1,
+ "refusal": null,
+ "reason": {
+  "code": "code-stale",
+  "en": "Stage workspace had run for at least 30 minutes while its code changed and was stopped; started again at once with the new code, what it finished stays stored.",
+  "de": "Stufe workspace lief mindestens 30 Minuten, während sich ihr Code änderte, und wurde beendet; sofort neu gestartet mit dem neuen Code, alles Fertige bleibt gespeichert."
+ },
+ "peakMegabytes": 10473,
+ "tail": [
+  "Reading the project graph slice (420 s): taken 156 of 590."
+ ],
+ "nextAttemptMs": null,
+ "readyMs": null,
+ "startedMs": 1794967336062,
+ "updatedMs": 1794970892029,
+ "containment": null
+}
+```
+
+## Last 30 lines of the running stage's log (`ready-log-workspace.txt`)
+
+```
+Reading the project graph slice (364 s).
+Reading the project graph slice (366 s).
+Reading the project graph slice (368 s).
+Reading the project graph slice (370 s).
+Reading the project graph slice (372 s).
+Reading the project graph slice (374 s).
+Reading the project graph slice (376 s).
+Reading the project graph slice (378 s).
+[repo] still working after 380 s; last phase started: door.script
+Reading the project graph slice (380 s).
+Reading the project graph slice (382 s).
+Reading the project graph slice (384 s).
+Reading the project graph slice (386 s).
+Reading the project graph slice (388 s).
+Reading the project graph slice (390 s).
+Reading the project graph slice (392 s).
+Reading the project graph slice (394 s).
+Reading the project graph slice (396 s).
+Reading the project graph slice (398 s).
+Reading the project graph slice (400 s).
+Reading the project graph slice (402 s): taken 4 of 590.
+Reading the project graph slice (404 s): taken 4 of 590.
+Reading the project graph slice (406 s): taken 26 of 590.
+Reading the project graph slice (408 s): taken 26 of 590.
+[repo] still working after 410 s; last phase started: door.script
+Reading the project graph slice (410 s): taken 26 of 590.
+Reading the project graph slice (412 s): taken 98 of 590.
+Reading the project graph slice (414 s): taken 98 of 590.
+Reading the project graph slice (416 s): taken 98 of 590.
+Reading the project graph slice (418 s): taken 156 of 590.
+```
+
+## Memory
+
+- `memory_pressure | tail -1`: System-wide memory free percentage: 45%
+
+## Five largest processes by resident size (KiB, pid, ppid, elapsed, command)
+
+```
+1181312 15375 14988       48:58 /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/157.0.8103.79/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer) --type=renderer --lang=en-US --num-raster-threads=4 --enable-zero-copy --enable-gpu-memory-buffer-compositor-resources --enable-main-frame-before-acti
+1099328 40555 77936       00:17 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.required=false -c diff.ignoreSubmodules=dirty -c diff.submodule=short -c status.submodule
+864320 36675 17460       07:02 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^SM^ZM-oM-8M^Olibrary/M-pM^_M^OM^WM-oM-8M^Obuild/M-pM^_M^OM-!M-oM-8M^Oresident/M-pM^_M^OM^WM-oM-8M^Oc
+786400 37253 37245       06:06 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --experimental-import-meta-resolve --require /Users/ueli/Documents/semio/.cache/b/d/m/j/d22a22b6385877c52eb2/node_modules/vitest/suppress-warnings.cjs --conditions node --conditions development /Users/ueli/Documents/semio/.cache/b/d/m/j/d22a22b6385877c52e
+521376 60816 60813    05:40:48 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M-$M^]M-oM-8M^Oshared-worktree/M-pM^_M^TM^AM-oM-8M^Oreplica/M-pM^_M^[M^_M-oM-8M^Osupervisor/M-pM^_M^_M-&M
+```
+
+## macOS permission dialog
+
+- I cannot look at the screen from this shell. Processes named UserNotificationCenter (the process that shows such dialogs): 1. I clicked nothing.
+
+## History (one line per observation, about every 10 minutes)
+
+```
+2026-11-15T20:53:31Z state=running stage=tools (4 of 5) attempts=1 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 77%
+2026-11-15T21:03:11Z state=running stage=tools (4 of 5) attempts=1 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 75%
+2026-11-15T21:12:53Z state=running stage=workspace (5 of 5) attempts=0 exit=None refusal=null reason=first-run ready=False peakMegabytes=3042 | System-wide memory free percentage: 74%
+2026-11-15T21:22:32Z state=running stage=workspace (5 of 5) attempts=3 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 47%
+2026-11-15T21:32:11Z state=running stage=workspace (5 of 5) attempts=4 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 34%
+2026-11-15T21:41:52Z state=running stage=workspace (5 of 5) attempts=4 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 13%
+2026-11-15T21:51:51Z state=backoff stage=workspace (5 of 5) attempts=5 exit=1 refusal={"code": "stage-failed", "en": "Stage workspace failed with exit status 1; retrying with back-off.", "de": "Stufe workspace schlug mit Exit-Status 1 fehl; neuer Versuch mit Wartezeit."} reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 80%
+2026-11-15T22:01:30Z state=backoff stage=workspace (5 of 5) attempts=6 exit=1 refusal={"code": "stage-failed", "en": "Stage workspace failed with exit status 1; retrying with back-off.", "de": "Stufe workspace schlug mit Exit-Status 1 fehl; neuer Versuch mit Wartezeit."} reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 76%
+2026-11-15T22:11:08Z state=backoff stage=workspace (5 of 5) attempts=6 exit=1 refusal={"code": "stage-failed", "en": "Stage workspace failed with exit status 1; retrying with back-off.", "de": "Stufe workspace schlug mit Exit-Status 1 fehl; neuer Versuch mit Wartezeit."} reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 76%
+2026-11-15T22:20:47Z state=running stage=workspace (5 of 5) attempts=6 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 75%
+2026-11-15T22:30:26Z state=backoff stage=workspace (5 of 5) attempts=7 exit=1 refusal={"code": "stage-failed", "en": "Stage workspace failed with exit status 1; retrying with back-off.", "de": "Stufe workspace schlug mit Exit-Status 1 fehl; neuer Versuch mit Wartezeit."} reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 73%
+2026-11-15T22:40:05Z state=backoff stage=workspace (5 of 5) attempts=7 exit=1 refusal={"code": "stage-failed", "en": "Stage workspace failed with exit status 1; retrying with back-off.", "de": "Stufe workspace schlug mit Exit-Status 1 fehl; neuer Versuch mit Wartezeit."} reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 61%
+2026-11-15T22:49:44Z state=running stage=workspace (5 of 5) attempts=7 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 26%
+2026-11-15T22:59:27Z state=running stage=workspace (5 of 5) attempts=7 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 71%
+2026-11-15T23:09:06Z state=running stage=workspace (5 of 5) attempts=7 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 45%
+2026-11-15T23:18:48Z state=running stage=workspace (5 of 5) attempts=7 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 39%
+2026-11-15T23:28:28Z state=running stage=workspace (5 of 5) attempts=7 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 45%
+2026-11-15T23:38:09Z state=running stage=workspace (5 of 5) attempts=7 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 78%
+2026-11-15T23:47:47Z state=running stage=workspace (5 of 5) attempts=7 exit=1 refusal=null reason=adopted ready=False peakMegabytes=3042 | System-wide memory free percentage: 80%
+2026-11-15T23:57:26Z state=backoff stage=workspace (5 of 5) attempts=8 exit=1 refusal={"code": "stage-failed", "en": "Stage workspace failed with exit status 1; retrying with back-off.", "de": "Stufe workspace schlug mit Exit-Status 1 fehl; neuer Versuch mit Wartezeit."} reason=adopted ready=False peakMegabytes=3042 | System-wide memory free percentage: 64%
+2026-11-16T00:07:05Z state=backoff stage=workspace (5 of 5) attempts=8 exit=1 refusal={"code": "stage-failed", "en": "Stage workspace failed with exit status 1; retrying with back-off.", "de": "Stufe workspace schlug mit Exit-Status 1 fehl; neuer Versuch mit Wartezeit."} reason=adopted ready=False peakMegabytes=3042 | System-wide memory free percentage: 76%
+2026-11-16T00:16:44Z state=running stage=workspace (5 of 5) attempts=8 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 60%
+2026-11-16T00:26:25Z state=running stage=workspace (5 of 5) attempts=8 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 83%
+2026-11-16T00:36:04Z state=running stage=workspace (5 of 5) attempts=8 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 78%
+2026-11-16T00:45:40Z state=running stage=workspace (5 of 5) attempts=8 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 75%
+2026-11-16T00:55:17Z state=running stage=workspace (5 of 5) attempts=8 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 81%
+2026-11-16T01:04:56Z state=running stage=workspace (5 of 5) attempts=8 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 81%
+2026-11-16T01:14:33Z state=running stage=workspace (5 of 5) attempts=8 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 81%
+2026-11-16T01:24:11Z state=running stage=workspace (5 of 5) attempts=9 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 80%
+2026-11-16T01:33:48Z state=running stage=workspace (5 of 5) attempts=9 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 82%
+2026-11-16T01:43:27Z state=running stage=workspace (5 of 5) attempts=9 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 82%
+2026-11-16T01:53:06Z state=running stage=workspace (5 of 5) attempts=9 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 68%
+2026-11-16T02:02:44Z state=running stage=workspace (5 of 5) attempts=9 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 80%
+2026-11-16T02:12:23Z state=running stage=workspace (5 of 5) attempts=9 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 78%
+2026-11-16T02:22:01Z state=running stage=workspace (5 of 5) attempts=10 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 80%
+2026-11-16T02:22:20Z note: workspace runs 9 and 10 ended with exit 75 after 4206 s and 3383 s: graph plan refused (8722 MB against 6553 MB, 4007 MB available); see round-31.workspace-runs.txt
+2026-11-16T02:31:38Z state=running stage=workspace (5 of 5) attempts=10 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 75%
+2026-11-16T02:41:16Z state=running stage=workspace (5 of 5) attempts=10 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 79%
+2026-11-16T02:50:54Z state=running stage=workspace (5 of 5) attempts=10 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 76%
+2026-11-16T03:00:31Z state=running stage=workspace (5 of 5) attempts=10 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 73%
+2026-11-16T03:10:09Z state=running stage=workspace (5 of 5) attempts=10 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 79%
+2026-11-16T03:19:47Z state=running stage=workspace (5 of 5) attempts=10 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 81%
+2026-11-16T03:29:24Z state=backoff stage=workspace (5 of 5) attempts=11 exit=1 refusal={"code": "stage-failed", "en": "Stage workspace failed with exit status 1; retrying with back-off.", "de": "Stufe workspace schlug mit Exit-Status 1 fehl; neuer Versuch mit Wartezeit."} reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 81%
+2026-11-16T03:39:00Z state=backoff stage=workspace (5 of 5) attempts=11 exit=1 refusal={"code": "stage-failed", "en": "Stage workspace failed with exit status 1; retrying with back-off.", "de": "Stufe workspace schlug mit Exit-Status 1 fehl; neuer Versuch mit Wartezeit."} reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 83%
+2026-11-16T03:48:37Z state=running stage=workspace (5 of 5) attempts=11 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 84%
+2026-11-16T03:58:13Z state=backoff stage=workspace (5 of 5) attempts=12 exit=1 refusal={"code": "stage-failed", "en": "Stage workspace failed with exit status 1; retrying with back-off.", "de": "Stufe workspace schlug mit Exit-Status 1 fehl; neuer Versuch mit Wartezeit."} reason=previous-failed ready=False peakMegabytes=3042 | System-wide memory free percentage: 83%
+2026-11-16T04:07:50Z state=backoff stage=workspace (5 of 5) attempts=12 exit=1 refusal={"code": "stage-failed", "en": "Stage workspace failed with exit status 1; retrying with back-off.", "de": "Stufe workspace schlug mit Exit-Status 1 fehl; neuer Versuch mit Wartezeit."} reason=None ready=False peakMegabytes=3042 | System-wide memory free percentage: 83%
+2026-11-16T04:17:27Z state=running stage=workspace (5 of 5) attempts=12 exit=1 refusal=null reason=adopted ready=False peakMegabytes=3042 | System-wide memory free percentage: 71%
+2026-11-16T04:27:03Z state=running stage=workspace (5 of 5) attempts=12 exit=1 refusal=null reason=adopted ready=False peakMegabytes=3042 | System-wide memory free percentage: 75%
+2026-11-16T04:36:40Z state=running stage=workspace (5 of 5) attempts=12 exit=1 refusal=null reason=adopted ready=False peakMegabytes=3042 | System-wide memory free percentage: 81%
+2026-11-16T04:46:17Z state=running stage=workspace (5 of 5) attempts=12 exit=1 refusal=null reason=stalled ready=False peakMegabytes=3042 | System-wide memory free percentage: 71%
+2026-11-16T04:55:54Z state=running stage=workspace (5 of 5) attempts=12 exit=1 refusal=null reason=stalled ready=False peakMegabytes=3042 | System-wide memory free percentage: 81%
+2026-11-16T05:05:32Z state=running stage=workspace (5 of 5) attempts=12 exit=1 refusal=null reason=stalled ready=False peakMegabytes=3042 | System-wide memory free percentage: 82%
+2026-11-16T05:15:09Z state=running stage=workspace (5 of 5) attempts=12 exit=1 refusal=null reason=stalled ready=False peakMegabytes=3042 | System-wide memory free percentage: 46%
+2026-11-16T05:24:46Z state=running stage=workspace (5 of 5) attempts=12 exit=1 refusal=null reason=adopted ready=False peakMegabytes=6918 | System-wide memory free percentage: 82%
+2026-11-16T05:34:23Z state=running stage=workspace (5 of 5) attempts=12 exit=1 refusal=null reason=adopted ready=False peakMegabytes=7487 | System-wide memory free percentage: 81%
+2026-11-16T05:44:00Z state=running stage=workspace (5 of 5) attempts=13 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=7487 | System-wide memory free percentage: 84%
+2026-11-16T05:53:37Z state=running stage=workspace (5 of 5) attempts=13 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=7487 | System-wide memory free percentage: 45%
+2026-11-16T06:03:15Z state=running stage=workspace (5 of 5) attempts=13 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=7487 | System-wide memory free percentage: 82%
+2026-11-16T06:12:51Z state=running stage=workspace (5 of 5) attempts=13 exit=75 refusal=null reason=stalled ready=False peakMegabytes=7487 | System-wide memory free percentage: 83%
+2026-11-16T06:22:28Z state=running stage=workspace (5 of 5) attempts=13 exit=75 refusal=null reason=stalled ready=False peakMegabytes=7487 | System-wide memory free percentage: 61%
+2026-11-16T06:32:05Z state=running stage=workspace (5 of 5) attempts=13 exit=75 refusal=null reason=stalled ready=False peakMegabytes=7487 | System-wide memory free percentage: 48%
+2026-11-16T06:41:42Z state=running stage=workspace (5 of 5) attempts=13 exit=75 refusal=null reason=stalled ready=False peakMegabytes=7487 | System-wide memory free percentage: 58%
+2026-11-16T06:51:20Z state=running stage=workspace (5 of 5) attempts=13 exit=75 refusal=null reason=stalled ready=False peakMegabytes=7487 | System-wide memory free percentage: 56%
+2026-11-16T07:00:58Z state=running stage=workspace (5 of 5) attempts=13 exit=75 refusal=null reason=stalled ready=False peakMegabytes=7487 | System-wide memory free percentage: 64%
+2026-11-16T07:10:34Z state=running stage=workspace (5 of 5) attempts=13 exit=75 refusal=null reason=stalled ready=False peakMegabytes=7487 | System-wide memory free percentage: 60%
+2026-11-16T07:20:11Z state=running stage=workspace (5 of 5) attempts=13 exit=75 refusal=null reason=stalled ready=False peakMegabytes=7487 | System-wide memory free percentage: 51%
+2026-11-16T07:20:25Z note: no origin is ready; all seven other Macs stand in stage workspace with exit 75 like this one (round-31.fleet-compare.txt)
+2026-11-16T07:29:50Z state=running stage=workspace (5 of 5) attempts=13 exit=75 refusal=null reason=stalled ready=False peakMegabytes=7487 | System-wide memory free percentage: 81%
+2026-11-16T07:39:29Z state=running stage=workspace (5 of 5) attempts=13 exit=75 refusal=null reason=stalled ready=False peakMegabytes=7487 | System-wide memory free percentage: 80%
+2026-11-16T07:49:06Z state=running stage=workspace (5 of 5) attempts=13 exit=75 refusal=null reason=stalled ready=False peakMegabytes=7487 | System-wide memory free percentage: 62%
+2026-11-16T07:58:44Z state=running stage=workspace (5 of 5) attempts=13 exit=75 refusal=null reason=stalled ready=False peakMegabytes=7487 | System-wide memory free percentage: 73%
+2026-11-16T08:08:21Z state=running stage=workspace (5 of 5) attempts=13 exit=75 refusal=null reason=stalled ready=False peakMegabytes=7487 | System-wide memory free percentage: 65%
+2026-11-16T08:17:58Z state=running stage=workspace (5 of 5) attempts=13 exit=75 refusal=null reason=stalled ready=False peakMegabytes=7487 | System-wide memory free percentage: 73%
+2026-11-16T08:27:36Z state=running stage=workspace (5 of 5) attempts=13 exit=75 refusal=null reason=stalled ready=False peakMegabytes=7487 | System-wide memory free percentage: 78%
+2026-11-16T08:37:13Z state=running stage=workspace (5 of 5) attempts=13 exit=75 refusal=null reason=stalled ready=False peakMegabytes=7487 | System-wide memory free percentage: 60%
+2026-11-16T08:46:49Z state=running stage=workspace (5 of 5) attempts=13 exit=75 refusal=null reason=adopted ready=False peakMegabytes=7487 | System-wide memory free percentage: 70%
+2026-11-16T08:56:27Z state=running stage=workspace (5 of 5) attempts=13 exit=75 refusal=null reason=stalled ready=False peakMegabytes=7487 | System-wide memory free percentage: 60%
+2026-11-16T09:06:04Z state=running stage=workspace (5 of 5) attempts=13 exit=75 refusal=null reason=stalled ready=False peakMegabytes=7487 | System-wide memory free percentage: 66%
+2026-11-16T09:15:41Z state=running stage=workspace (5 of 5) attempts=13 exit=75 refusal=null reason=stalled ready=False peakMegabytes=7487 | System-wide memory free percentage: 70%
+2026-11-16T09:25:20Z state=running stage=workspace (5 of 5) attempts=13 exit=75 refusal=null reason=stalled ready=False peakMegabytes=7487 | System-wide memory free percentage: 73%
+2026-11-16T09:34:56Z state=running stage=workspace (5 of 5) attempts=13 exit=75 refusal=null reason=stalled ready=False peakMegabytes=7487 | System-wide memory free percentage: 78%
+2026-11-16T09:44:34Z state=running stage=workspace (5 of 5) attempts=13 exit=75 refusal=null reason=stalled ready=False peakMegabytes=7487 | System-wide memory free percentage: 64%
+2026-11-16T09:54:11Z state=running stage=workspace (5 of 5) attempts=13 exit=75 refusal=null reason=stalled ready=False peakMegabytes=7487 | System-wide memory free percentage: 64%
+2026-11-16T10:03:49Z state=running stage=workspace (5 of 5) attempts=13 exit=75 refusal=null reason=stalled ready=False peakMegabytes=7487 | System-wide memory free percentage: 61%
+2026-11-16T10:13:26Z state=running stage=workspace (5 of 5) attempts=13 exit=75 refusal=null reason=stalled ready=False peakMegabytes=7487 | System-wide memory free percentage: 63%
+2026-11-16T10:13:45Z note: the graph service keeps starting over ('no usable generation (invalidated), building the first one', 1 worker for 4774 projects) after code changes; see round-31.graph-service.txt
+2026-11-16T10:23:04Z state=running stage=workspace (5 of 5) attempts=13 exit=75 refusal=null reason=stalled ready=False peakMegabytes=7487 | System-wide memory free percentage: 63%
+2026-11-16T10:42:39Z state=running stage=workspace (5 of 5) attempts=13 exit=75 refusal=null reason=stalled ready=False peakMegabytes=7487 | System-wide memory free percentage: 69%
+2026-11-16T11:02:43Z state=running stage=workspace (5 of 5) attempts=14 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=7487 | System-wide memory free percentage: 80%
+2026-11-16T11:22:45Z state=running stage=workspace (5 of 5) attempts=14 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=7487 | System-wide memory free percentage: 79%
+2026-11-16T11:42:49Z state=running stage=workspace (5 of 5) attempts=14 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=7487 | System-wide memory free percentage: 84%
+2026-11-16T12:02:51Z state=running stage=workspace (5 of 5) attempts=14 exit=75 refusal=null reason=stalled ready=False peakMegabytes=7487 | System-wide memory free percentage: 81%
+2026-11-16T12:22:54Z state=running stage=workspace (5 of 5) attempts=14 exit=75 refusal=null reason=adopted ready=False peakMegabytes=7487 | System-wide memory free percentage: 79%
+2026-11-16T12:42:56Z state=backoff stage=workspace (5 of 5) attempts=15 exit=1 refusal={"code": "stage-failed", "en": "Stage workspace failed with exit status 1; retrying with back-off.", "de": "Stufe workspace schlug mit Exit-Status 1 fehl; neuer Versuch mit Wartezeit."} reason=stalled ready=False peakMegabytes=9140 | System-wide memory free percentage: 84%
+2026-11-16T13:02:59Z state=running stage=workspace (5 of 5) attempts=15 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=9140 | System-wide memory free percentage: 83%
+2026-11-16T13:23:06Z state=running stage=workspace (5 of 5) attempts=16 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=9470 | System-wide memory free percentage: 84%
+2026-11-16T13:43:09Z state=running stage=workspace (5 of 5) attempts=16 exit=75 refusal=null reason=stalled ready=False peakMegabytes=9470 | System-wide memory free percentage: 84%
+2026-11-16T14:03:12Z state=running stage=workspace (5 of 5) attempts=16 exit=75 refusal=null reason=stalled ready=False peakMegabytes=9470 | System-wide memory free percentage: 82%
+2026-11-16T14:23:15Z state=running stage=workspace (5 of 5) attempts=16 exit=75 refusal=null reason=stalled ready=False peakMegabytes=9470 | System-wide memory free percentage: 80%
+2026-11-16T14:43:17Z state=running stage=workspace (5 of 5) attempts=16 exit=75 refusal=null reason=stalled ready=False peakMegabytes=9470 | System-wide memory free percentage: 79%
+2026-11-16T15:03:20Z state=running stage=workspace (5 of 5) attempts=16 exit=75 refusal=null reason=stalled ready=False peakMegabytes=9470 | System-wide memory free percentage: 84%
+2026-11-16T15:19:20Z state=running stage=workspace (5 of 5) attempts=16 exit=75 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 76%
+2026-11-16T15:28:57Z state=running stage=workspace (5 of 5) attempts=16 exit=75 refusal=null reason=stalled ready=False peakMegabytes=10473 | System-wide memory free percentage: 81%
+2026-11-16T15:38:36Z state=running stage=workspace (5 of 5) attempts=16 exit=75 refusal=null reason=stalled ready=False peakMegabytes=10473 | System-wide memory free percentage: 72%
+2026-11-16T15:48:23Z state=running stage=workspace (5 of 5) attempts=16 exit=75 refusal=null reason=stalled ready=False peakMegabytes=10473 | System-wide memory free percentage: 83%
+2026-11-16T15:58:11Z state=running stage=workspace (5 of 5) attempts=16 exit=75 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 83%
+2026-11-16T16:07:59Z state=running stage=workspace (5 of 5) attempts=16 exit=75 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 84%
+2026-11-16T16:17:39Z state=running stage=workspace (5 of 5) attempts=16 exit=75 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 70%
+2026-11-16T16:27:23Z state=backoff stage=workspace (5 of 5) attempts=17 exit=1 refusal={"code": "stage-failed", "en": "Stage workspace failed with exit status 1; retrying with back-off.", "de": "Stufe workspace schlug mit Exit-Status 1 fehl; neuer Versuch mit Wartezeit."} reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 76%
+2026-11-16T16:37:10Z state=backoff stage=workspace (5 of 5) attempts=17 exit=1 refusal={"code": "stage-failed", "en": "Stage workspace failed with exit status 1; retrying with back-off.", "de": "Stufe workspace schlug mit Exit-Status 1 fehl; neuer Versuch mit Wartezeit."} reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 83%
+2026-11-16T16:46:51Z state=running stage=workspace (5 of 5) attempts=17 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 82%
+2026-11-16T16:56:31Z state=running stage=workspace (5 of 5) attempts=17 exit=1 refusal=null reason=stalled ready=False peakMegabytes=10473 | System-wide memory free percentage: 69%
+2026-11-16T17:06:13Z state=running stage=workspace (5 of 5) attempts=17 exit=1 refusal=null reason=stalled ready=False peakMegabytes=10473 | System-wide memory free percentage: 83%
+2026-11-16T17:15:56Z state=running stage=workspace (5 of 5) attempts=17 exit=1 refusal=null reason=stalled ready=False peakMegabytes=10473 | System-wide memory free percentage: 82%
+2026-11-16T17:25:33Z state=running stage=workspace (5 of 5) attempts=17 exit=1 refusal=null reason=stalled ready=False peakMegabytes=10473 | System-wide memory free percentage: 81%
+2026-11-16T17:35:10Z state=running stage=workspace (5 of 5) attempts=17 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 71%
+2026-11-16T17:44:49Z state=running stage=workspace (5 of 5) attempts=17 exit=1 refusal=null reason=stalled ready=False peakMegabytes=10473 | System-wide memory free percentage: 80%
+2026-11-16T17:54:25Z state=running stage=workspace (5 of 5) attempts=17 exit=1 refusal=null reason=stalled ready=False peakMegabytes=10473 | System-wide memory free percentage: 79%
+2026-11-16T18:04:02Z state=running stage=workspace (5 of 5) attempts=17 exit=1 refusal=null reason=stalled ready=False peakMegabytes=10473 | System-wide memory free percentage: 77%
+2026-11-16T18:13:41Z state=running stage=workspace (5 of 5) attempts=17 exit=1 refusal=null reason=stalled ready=False peakMegabytes=10473 | System-wide memory free percentage: 83%
+2026-11-16T18:23:18Z state=running stage=workspace (5 of 5) attempts=17 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 81%
+2026-11-16T18:32:55Z state=running stage=workspace (5 of 5) attempts=17 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 81%
+2026-11-16T18:42:33Z state=running stage=workspace (5 of 5) attempts=17 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 78%
+2026-11-16T18:52:10Z state=running stage=workspace (5 of 5) attempts=17 exit=1 refusal=null reason=stalled ready=False peakMegabytes=10473 | System-wide memory free percentage: 80%
+2026-11-16T19:01:46Z state=running stage=workspace (5 of 5) attempts=17 exit=1 refusal=null reason=stalled ready=False peakMegabytes=10473 | System-wide memory free percentage: 79%
+2026-11-16T19:11:24Z state=running stage=workspace (5 of 5) attempts=17 exit=1 refusal=null reason=stalled ready=False peakMegabytes=10473 | System-wide memory free percentage: 74%
+2026-11-16T19:21:01Z state=running stage=workspace (5 of 5) attempts=17 exit=1 refusal=null reason=stalled ready=False peakMegabytes=10473 | System-wide memory free percentage: 83%
+2026-11-16T19:30:38Z state=running stage=workspace (5 of 5) attempts=17 exit=1 refusal=null reason=stalled ready=False peakMegabytes=10473 | System-wide memory free percentage: 67%
+2026-11-16T19:40:15Z state=running stage=workspace (5 of 5) attempts=17 exit=1 refusal=null reason=stalled ready=False peakMegabytes=10473 | System-wide memory free percentage: 83%
+2026-11-16T19:49:53Z state=running stage=workspace (5 of 5) attempts=17 exit=1 refusal=null reason=stalled ready=False peakMegabytes=10473 | System-wide memory free percentage: 84%
+2026-11-16T19:59:31Z state=running stage=workspace (5 of 5) attempts=17 exit=1 refusal=null reason=stalled ready=False peakMegabytes=10473 | System-wide memory free percentage: 84%
+2026-11-16T20:09:09Z state=waiting stage=workspace (5 of 5) attempts=17 exit=1 refusal={"code": "stage-failed", "en": "Stage workspace failed with exit status 1; retrying with back-off.", "de": "Stufe workspace schlug mit Exit-Status 1 fehl; neuer Versuch mit Wartezeit."} reason=stalled ready=False peakMegabytes=10473 | System-wide memory free percentage: 77%
+2026-11-16T20:09:26Z note: reason=stalled means the ready child stops the stage after 10 quiet minutes and restarts it; see round-31.graph-service.txt
+2026-11-16T20:18:47Z state=running stage=workspace (5 of 5) attempts=17 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 77%
+2026-11-16T20:28:27Z state=running stage=workspace (5 of 5) attempts=17 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 81%
+2026-11-16T20:38:04Z state=running stage=workspace (5 of 5) attempts=17 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 73%
+2026-11-16T20:47:41Z state=running stage=workspace (5 of 5) attempts=17 exit=1 refusal=null reason=stalled ready=False peakMegabytes=10473 | System-wide memory free percentage: 63%
+2026-11-16T20:57:18Z state=running stage=workspace (5 of 5) attempts=17 exit=1 refusal=null reason=stalled ready=False peakMegabytes=10473 | System-wide memory free percentage: 81%
+2026-11-16T21:06:56Z state=running stage=workspace (5 of 5) attempts=17 exit=1 refusal=null reason=stalled ready=False peakMegabytes=10473 | System-wide memory free percentage: 79%
+2026-11-16T21:16:32Z state=running stage=workspace (5 of 5) attempts=17 exit=1 refusal=null reason=stalled ready=False peakMegabytes=10473 | System-wide memory free percentage: 75%
+2026-11-16T21:26:10Z state=running stage=workspace (5 of 5) attempts=17 exit=1 refusal=null reason=stalled ready=False peakMegabytes=10473 | System-wide memory free percentage: 82%
+2026-11-16T21:35:47Z state=running stage=workspace (5 of 5) attempts=17 exit=1 refusal=null reason=stalled ready=False peakMegabytes=10473 | System-wide memory free percentage: 21%
+2026-11-16T21:45:27Z state=running stage=workspace (5 of 5) attempts=17 exit=1 refusal=null reason=stalled ready=False peakMegabytes=10473 | System-wide memory free percentage: 70%
+2026-11-16T21:55:05Z state=backoff stage=workspace (5 of 5) attempts=18 exit=75 refusal={"code": "stage-failed", "en": "Stage workspace failed with exit status 75; retrying with back-off.", "de": "Stufe workspace schlug mit Exit-Status 75 fehl; neuer Versuch mit Wartezeit."} reason=stalled ready=False peakMegabytes=10473 | System-wide memory free percentage: 82%
+2026-11-16T22:04:44Z state=running stage=workspace (5 of 5) attempts=18 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 83%
+2026-11-16T22:14:23Z state=running stage=workspace (5 of 5) attempts=18 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 83%
+2026-11-16T22:24:01Z state=running stage=workspace (5 of 5) attempts=18 exit=75 refusal=null reason=stalled ready=False peakMegabytes=10473 | System-wide memory free percentage: 83%
+2026-11-16T22:33:38Z state=running stage=workspace (5 of 5) attempts=18 exit=75 refusal=null reason=stalled ready=False peakMegabytes=10473 | System-wide memory free percentage: 81%
+2026-11-16T22:43:17Z state=running stage=workspace (5 of 5) attempts=18 exit=75 refusal=null reason=stalled ready=False peakMegabytes=10473 | System-wide memory free percentage: 84%
+2026-11-16T22:52:57Z state=running stage=workspace (5 of 5) attempts=19 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 77%
+2026-11-16T23:02:36Z state=running stage=workspace (5 of 5) attempts=19 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 82%
+2026-11-16T23:12:14Z state=running stage=workspace (5 of 5) attempts=20 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 82%
+2026-11-16T23:21:51Z state=running stage=workspace (5 of 5) attempts=20 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 80%
+2026-11-16T23:31:29Z state=running stage=workspace (5 of 5) attempts=20 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 61%
+2026-11-16T23:41:07Z state=running stage=workspace (5 of 5) attempts=21 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 82%
+2026-11-16T23:50:45Z state=running stage=workspace (5 of 5) attempts=21 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 81%
+2026-11-17T00:00:23Z state=running stage=workspace (5 of 5) attempts=21 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 83%
+2026-11-17T00:10:00Z state=running stage=workspace (5 of 5) attempts=22 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 78%
+2026-11-17T00:19:38Z state=running stage=workspace (5 of 5) attempts=22 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 81%
+2026-11-17T00:29:16Z state=running stage=workspace (5 of 5) attempts=22 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 83%
+2026-11-17T00:38:54Z state=running stage=workspace (5 of 5) attempts=22 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 81%
+2026-11-17T00:48:32Z state=running stage=workspace (5 of 5) attempts=23 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 83%
+2026-11-17T00:58:09Z state=running stage=workspace (5 of 5) attempts=23 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 83%
+2026-11-17T01:07:47Z state=running stage=workspace (5 of 5) attempts=23 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 80%
+2026-11-17T01:17:25Z state=running stage=workspace (5 of 5) attempts=23 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 75%
+2026-11-17T01:27:02Z state=running stage=workspace (5 of 5) attempts=23 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 79%
+2026-11-17T01:36:40Z state=running stage=workspace (5 of 5) attempts=23 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 73%
+2026-11-17T01:46:17Z state=running stage=workspace (5 of 5) attempts=23 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 74%
+2026-11-17T01:55:55Z state=running stage=workspace (5 of 5) attempts=23 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 70%
+2026-11-17T02:05:32Z state=running stage=workspace (5 of 5) attempts=23 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 76%
+2026-11-17T02:15:09Z state=running stage=workspace (5 of 5) attempts=23 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 79%
+2026-11-17T02:24:46Z state=running stage=workspace (5 of 5) attempts=23 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 78%
+2026-11-17T02:34:23Z state=running stage=workspace (5 of 5) attempts=23 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 80%
+2026-11-17T02:44:03Z state=running stage=workspace (5 of 5) attempts=23 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 63%
+2026-11-17T02:53:40Z state=running stage=workspace (5 of 5) attempts=23 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 59%
+2026-11-17T03:03:19Z state=running stage=workspace (5 of 5) attempts=23 exit=75 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 70%
+2026-11-17T03:22:55Z state=backoff stage=workspace (5 of 5) attempts=24 exit=1 refusal={"code": "stage-failed", "en": "Stage workspace failed with exit status 1; retrying with back-off.", "de": "Stufe workspace schlug mit Exit-Status 1 fehl; neuer Versuch mit Wartezeit."} reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 71%
+2026-11-17T03:43:01Z state=running stage=workspace (5 of 5) attempts=24 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 76%
+2026-11-17T04:03:06Z state=running stage=workspace (5 of 5) attempts=24 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 78%
+2026-11-17T04:23:10Z state=running stage=workspace (5 of 5) attempts=24 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 62%
+2026-11-17T04:43:22Z state=running stage=workspace (5 of 5) attempts=24 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 79%
+2026-11-17T05:03:27Z state=running stage=workspace (5 of 5) attempts=24 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 76%
+2026-11-17T05:23:32Z state=running stage=workspace (5 of 5) attempts=24 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 72%
+2026-11-17T05:43:37Z state=running stage=workspace (5 of 5) attempts=24 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 72%
+2026-11-17T06:03:41Z state=backoff stage=workspace (5 of 5) attempts=25 exit=1 refusal={"code": "stage-failed", "en": "Stage workspace failed with exit status 1; retrying with back-off.", "de": "Stufe workspace schlug mit Exit-Status 1 fehl; neuer Versuch mit Wartezeit."} reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 78%
+2026-11-17T06:23:47Z state=running stage=workspace (5 of 5) attempts=25 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 77%
+2026-11-17T06:43:54Z state=running stage=workspace (5 of 5) attempts=25 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 61%
+2026-11-17T07:03:59Z state=running stage=workspace (5 of 5) attempts=25 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 79%
+2026-11-17T07:24:04Z state=running stage=workspace (5 of 5) attempts=25 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 81%
+2026-11-17T07:44:09Z state=running stage=workspace (5 of 5) attempts=25 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 75%
+2026-11-17T08:04:22Z state=running stage=workspace (5 of 5) attempts=25 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 76%
+2026-11-17T08:24:28Z state=running stage=workspace (5 of 5) attempts=25 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 71%
+2026-11-17T08:44:34Z state=running stage=workspace (5 of 5) attempts=25 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 76%
+2026-11-17T09:04:38Z state=running stage=workspace (5 of 5) attempts=25 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 74%
+2026-11-17T09:24:43Z state=running stage=workspace (5 of 5) attempts=25 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 65%
+2026-11-17T09:44:49Z state=running stage=workspace (5 of 5) attempts=25 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 75%
+2026-11-17T10:05:02Z state=running stage=workspace (5 of 5) attempts=25 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 72%
+2026-11-17T10:25:07Z state=running stage=workspace (5 of 5) attempts=25 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 65%
+2026-11-17T10:45:13Z state=running stage=workspace (5 of 5) attempts=25 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 80%
+2026-11-17T11:05:18Z state=running stage=workspace (5 of 5) attempts=25 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 79%
+2026-11-17T11:25:22Z state=backoff stage=workspace (5 of 5) attempts=26 exit=1 refusal={"code": "stage-failed", "en": "Stage workspace failed with exit status 1; retrying with back-off.", "de": "Stufe workspace schlug mit Exit-Status 1 fehl; neuer Versuch mit Wartezeit."} reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 77%
+2026-11-17T11:45:27Z state=backoff stage=workspace (5 of 5) attempts=27 exit=1 refusal={"code": "stage-failed", "en": "Stage workspace failed with exit status 1; retrying with back-off.", "de": "Stufe workspace schlug mit Exit-Status 1 fehl; neuer Versuch mit Wartezeit."} reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 80%
+2026-11-17T12:05:36Z state=running stage=workspace (5 of 5) attempts=27 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 77%
+2026-11-17T12:25:44Z state=running stage=workspace (5 of 5) attempts=27 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 60%
+2026-11-17T12:45:49Z state=running stage=workspace (5 of 5) attempts=27 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 45%
+2026-11-17T13:05:55Z state=running stage=workspace (5 of 5) attempts=27 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 78%
+2026-11-17T13:26:01Z state=running stage=workspace (5 of 5) attempts=27 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 49%
+2026-11-17T13:46:06Z state=running stage=workspace (5 of 5) attempts=27 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 72%
+2026-11-17T14:01:02Z state=running stage=workspace (5 of 5) attempts=27 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 46%
+2026-11-17T14:10:42Z state=running stage=workspace (5 of 5) attempts=27 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 47%
+2026-11-17T14:20:22Z state=running stage=workspace (5 of 5) attempts=27 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 45%
+2026-11-17T14:30:03Z state=running stage=workspace (5 of 5) attempts=27 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 62%
+2026-11-17T14:39:43Z state=running stage=workspace (5 of 5) attempts=27 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 38%
+2026-11-17T14:49:23Z state=running stage=workspace (5 of 5) attempts=27 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 38%
+2026-11-17T14:59:06Z state=running stage=workspace (5 of 5) attempts=27 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 38%
+2026-11-17T15:08:51Z state=running stage=workspace (5 of 5) attempts=27 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 49%
+2026-11-17T15:18:33Z state=running stage=workspace (5 of 5) attempts=27 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 43%
+2026-11-17T15:28:14Z state=running stage=workspace (5 of 5) attempts=27 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 47%
+2026-11-17T15:37:54Z state=running stage=workspace (5 of 5) attempts=27 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 37%
+2026-11-17T15:47:53Z state=backoff stage=workspace (5 of 5) attempts=28 exit=1 refusal={"code": "stage-failed", "en": "Stage workspace failed with exit status 1; retrying with back-off.", "de": "Stufe workspace schlug mit Exit-Status 1 fehl; neuer Versuch mit Wartezeit."} reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 33%
+2026-11-17T16:07:38Z state=backoff stage=workspace (5 of 5) attempts=29 exit=1 refusal={"code": "stage-failed", "en": "Stage workspace failed with exit status 1; retrying with back-off.", "de": "Stufe workspace schlug mit Exit-Status 1 fehl; neuer Versuch mit Wartezeit."} reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 78%
+2026-11-17T16:27:47Z state=running stage=workspace (5 of 5) attempts=29 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 34%
+2026-11-17T16:37:34Z state=backoff stage=workspace (5 of 5) attempts=30 exit=1 refusal={"code": "stage-failed", "en": "Stage workspace failed with exit status 1; retrying with back-off.", "de": "Stufe workspace schlug mit Exit-Status 1 fehl; neuer Versuch mit Wartezeit."} reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 81%
+2026-11-17T16:47:12Z state=backoff stage=workspace (5 of 5) attempts=30 exit=1 refusal={"code": "stage-failed", "en": "Stage workspace failed with exit status 1; retrying with back-off.", "de": "Stufe workspace schlug mit Exit-Status 1 fehl; neuer Versuch mit Wartezeit."} reason=None ready=False peakMegabytes=10473 | System-wide memory free percentage: 66%
+2026-11-17T16:56:52Z state=running stage=workspace (5 of 5) attempts=30 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 73%
+2026-11-17T17:06:33Z state=running stage=workspace (5 of 5) attempts=30 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 70%
+2026-11-17T17:16:12Z state=running stage=workspace (5 of 5) attempts=30 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 48%
+2026-11-17T17:25:53Z state=running stage=workspace (5 of 5) attempts=30 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 80%
+2026-11-17T17:35:32Z state=running stage=workspace (5 of 5) attempts=30 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 57%
+2026-11-17T17:45:11Z state=running stage=workspace (5 of 5) attempts=30 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 44%
+2026-11-17T17:54:50Z state=running stage=workspace (5 of 5) attempts=30 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 43%
+2026-11-17T18:04:30Z state=running stage=workspace (5 of 5) attempts=30 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 43%
+2026-11-17T18:14:09Z state=running stage=workspace (5 of 5) attempts=30 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 79%
+2026-11-17T18:23:49Z state=running stage=workspace (5 of 5) attempts=30 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 46%
+2026-11-17T18:33:28Z state=running stage=workspace (5 of 5) attempts=30 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 47%
+2026-11-17T18:43:36Z state=running stage=workspace (5 of 5) attempts=30 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 16%
+2026-11-17T19:04:18Z state=running stage=workspace (5 of 5) attempts=31 exit=None refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 77%
+2026-11-17T19:24:00Z state=running stage=workspace (5 of 5) attempts=31 exit=None refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 77%
+2026-11-17T19:44:05Z state=running stage=workspace (5 of 5) attempts=31 exit=None refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 73%
+2026-11-17T20:04:10Z state=running stage=workspace (5 of 5) attempts=31 exit=None refusal=null reason=stalled ready=False peakMegabytes=10473 | System-wide memory free percentage: 65%
+2026-11-17T20:15:44Z state=running stage=workspace (5 of 5) attempts=31 exit=None refusal=null reason=stalled ready=False peakMegabytes=10473 | System-wide memory free percentage: 35%
+2026-11-17T20:25:28Z state=running stage=workspace (5 of 5) attempts=31 exit=None refusal=null reason=stalled ready=False peakMegabytes=10473 | System-wide memory free percentage: 44%
+2026-11-17T20:35:12Z state=running stage=workspace (5 of 5) attempts=31 exit=None refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 40%
+2026-11-17T20:44:57Z state=running stage=workspace (5 of 5) attempts=31 exit=None refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 34%
+2026-11-17T21:04:41Z state=running stage=workspace (5 of 5) attempts=31 exit=None refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 22%
+2026-11-17T21:17:17Z state=backoff stage=workspace (5 of 5) attempts=32 exit=None refusal={"code": "stage-failed", "en": "Stage workspace failed with exit status -; retrying with back-off.", "de": "Stufe workspace schlug mit Exit-Status - fehl; neuer Versuch mit Wartezeit."} reason=None ready=False peakMegabytes=10473 | System-wide memory free percentage: 73%
+2026-11-17T21:36:55Z state=backoff stage=workspace (5 of 5) attempts=33 exit=1 refusal={"code": "stage-failed", "en": "Stage workspace failed with exit status 1; retrying with back-off.", "de": "Stufe workspace schlug mit Exit-Status 1 fehl; neuer Versuch mit Wartezeit."} reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 48%
+2026-11-17T21:44:37Z note: fleet replica agent restarted about 21:21Z (attempt 32 ended without exit code), attempt 33 exit 1 after 1 s; see round-31.graph-service.txt
+2026-11-17T21:53:37Z state=running stage=workspace (5 of 5) attempts=33 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 79%
+2026-11-17T22:13:14Z state=running stage=workspace (5 of 5) attempts=33 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 78%
+2026-11-17T22:26:53Z state=running stage=workspace (5 of 5) attempts=33 exit=1 refusal=null reason=code-stale ready=False peakMegabytes=10473 | System-wide memory free percentage: 54%
+2026-11-17T22:27:06Z note: new reason in ready.json (verbatim): {"code": "code-stale", "en": "Stage workspace had run for at least 30 minutes while its code changed and was stopped; started again at once with the new code, what it finished stays stored.", "de": "Stufe workspace lief mindestens 30 Minuten, während sich ihr Code änderte, und wurde beendet; sofort neu gestartet mit dem neuen Code, 
+2026-11-17T22:36:33Z state=running stage=workspace (5 of 5) attempts=33 exit=1 refusal=null reason=code-stale ready=False peakMegabytes=10473 | System-wide memory free percentage: 34%
+2026-11-17T22:46:14Z state=running stage=workspace (5 of 5) attempts=33 exit=1 refusal=null reason=code-stale ready=False peakMegabytes=10473 | System-wide memory free percentage: 78%
+2026-11-17T22:56:56Z state=backoff stage=workspace (5 of 5) attempts=34 exit=None refusal={"code": "stage-failed", "en": "Stage workspace failed with exit status -; retrying with back-off.", "de": "Stufe workspace schlug mit Exit-Status - fehl; neuer Versuch mit Wartezeit."} reason=code-stale ready=False peakMegabytes=10473 | System-wide memory free percentage: 63%
+2026-11-17T23:07:07Z state=backoff stage=workspace (5 of 5) attempts=34 exit=None refusal={"code": "stage-failed", "en": "Stage workspace failed with exit status -; retrying with back-off.", "de": "Stufe workspace schlug mit Exit-Status - fehl; neuer Versuch mit Wartezeit."} reason=None ready=False peakMegabytes=10473 | System-wide memory free percentage: 35%
+2026-11-17T23:16:50Z state=backoff stage=workspace (5 of 5) attempts=35 exit=1 refusal={"code": "stage-failed", "en": "Stage workspace failed with exit status 1; retrying with back-off.", "de": "Stufe workspace schlug mit Exit-Status 1 fehl; neuer Versuch mit Wartezeit."} reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 58%
+2026-11-17T23:26:31Z state=backoff stage=workspace (5 of 5) attempts=35 exit=1 refusal={"code": "stage-failed", "en": "Stage workspace failed with exit status 1; retrying with back-off.", "de": "Stufe workspace schlug mit Exit-Status 1 fehl; neuer Versuch mit Wartezeit."} reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 41%
+2026-11-17T23:36:12Z state=running stage=workspace (5 of 5) attempts=35 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 65%
+2026-11-17T23:46:08Z state=running stage=workspace (5 of 5) attempts=35 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 47%
+2026-11-17T23:56:02Z state=running stage=workspace (5 of 5) attempts=35 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 39%
+2026-11-18T00:05:50Z state=running stage=workspace (5 of 5) attempts=35 exit=1 refusal=null reason=code-stale ready=False peakMegabytes=10473 | System-wide memory free percentage: 77%
+2026-11-18T00:15:30Z state=running stage=workspace (5 of 5) attempts=35 exit=1 refusal=null reason=code-stale ready=False peakMegabytes=10473 | System-wide memory free percentage: 71%
+2026-11-18T00:25:11Z state=running stage=workspace (5 of 5) attempts=35 exit=1 refusal=null reason=code-stale ready=False peakMegabytes=10473 | System-wide memory free percentage: 55%
+2026-11-18T00:35:20Z state=backoff stage=workspace (5 of 5) attempts=36 exit=1 refusal={"code": "stage-failed", "en": "Stage workspace failed with exit status 1; retrying with back-off.", "de": "Stufe workspace schlug mit Exit-Status 1 fehl; neuer Versuch mit Wartezeit."} reason=None ready=False peakMegabytes=10473 | System-wide memory free percentage: 59%
+2026-11-18T00:45:00Z state=backoff stage=workspace (5 of 5) attempts=36 exit=1 refusal={"code": "stage-failed", "en": "Stage workspace failed with exit status 1; retrying with back-off.", "de": "Stufe workspace schlug mit Exit-Status 1 fehl; neuer Versuch mit Wartezeit."} reason=None ready=False peakMegabytes=10473 | System-wide memory free percentage: 68%
+2026-11-18T00:54:40Z state=running stage=workspace (5 of 5) attempts=36 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 63%
+2026-11-18T01:04:19Z state=running stage=workspace (5 of 5) attempts=36 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 68%
+2026-11-18T01:14:10Z state=running stage=workspace (5 of 5) attempts=36 exit=1 refusal=null reason=previous-failed ready=False peakMegabytes=10473 | System-wide memory free percentage: 71%
+2026-11-18T01:23:50Z state=running stage=workspace (5 of 5) attempts=36 exit=1 refusal=null reason=code-stale ready=False peakMegabytes=10473 | System-wide memory free percentage: 73%
+2026-11-18T01:33:29Z state=running stage=workspace (5 of 5) attempts=36 exit=1 refusal=null reason=code-stale ready=False peakMegabytes=10473 | System-wide memory free percentage: 69%
+2026-11-18T01:43:20Z state=running stage=workspace (5 of 5) attempts=36 exit=1 refusal=null reason=code-stale ready=False peakMegabytes=10473 | System-wide memory free percentage: 66%
+2026-11-18T01:53:14Z state=running stage=workspace (5 of 5) attempts=36 exit=1 refusal=null reason=code-stale ready=False peakMegabytes=10473 | System-wide memory free percentage: 77%
+2026-11-18T02:02:53Z state=running stage=workspace (5 of 5) attempts=36 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 59%
+2026-11-18T02:12:34Z state=running stage=workspace (5 of 5) attempts=36 exit=1 refusal=null reason=adopted ready=False peakMegabytes=10473 | System-wide memory free percentage: 66%
+2026-11-18T02:22:26Z state=running stage=workspace (5 of 5) attempts=36 exit=1 refusal=null reason=code-stale ready=False peakMegabytes=10473 | System-wide memory free percentage: 56%
+2026-11-18T02:32:06Z state=running stage=workspace (5 of 5) attempts=36 exit=1 refusal=null reason=code-stale ready=False peakMegabytes=10473 | System-wide memory free percentage: 55%
+2026-11-18T02:41:46Z state=running stage=workspace (5 of 5) attempts=36 exit=1 refusal=null reason=code-stale ready=False peakMegabytes=10473 | System-wide memory free percentage: 61%
+2026-11-18T02:51:25Z state=running stage=workspace (5 of 5) attempts=36 exit=1 refusal=null reason=code-stale ready=False peakMegabytes=10473 | System-wide memory free percentage: 53%
+2026-11-18T03:01:32Z state=running stage=workspace (5 of 5) attempts=36 exit=1 refusal=null reason=code-stale ready=False peakMegabytes=10473 | System-wide memory free percentage: 45%
+```

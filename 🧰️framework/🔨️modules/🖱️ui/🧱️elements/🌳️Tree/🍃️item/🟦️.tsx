@@ -284,7 +284,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                 </span>
               ) : null}
             </div>
-            <div data-slot="tree-item-control" className={cn(treeItemControlClassName, "gap-double")} onClick={(event) => event.stopPropagation()}>
+            <div data-slot="tree-item-control" data-shared-border-group="" data-shared-border-cells="" className={treeItemControlClassName} onClick={(event) => event.stopPropagation()}>
               <div ref={valueSlotRef} data-slot="tree-item-value" className="contents">
                 {!isExpandable ? (
                   <PropertyValueColumnContext.Provider value={true}>{children}</PropertyValueColumnContext.Provider>

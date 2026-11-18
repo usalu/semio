@@ -1,0 +1,23 @@
+import{setPriority}from"node:os";
+import{runOwnerPoolV1}from"../../../🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🏃️runner/🟨️.mjs";
+import{acquireOwnerPoolGuardV1}from"../../../🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🔒️guard/🟦️.ts";
+import{createOwnerPoolStatusV1}from"../../../🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/📊️status/🟦️.ts";
+import{OWNER_POOL_POLICY_V1 as POOL}from"../../../🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🟦️.ts";
+import{admitRemoteExecutionActionV1,readRemoteExecutionHostViewV1,remoteExecutionOriginV1}from"../../🌡️load/🟦️.ts";
+import type{RemoteExecutionSidecarContextV1}from"../🧰️shared/🟦️.ts";
+
+/** 🏊️ Runs the owner puller of this machine until the signal aborts: one pool process per machine (a pid file; an old process that is still alive is waited for and, when it stays, this one does not pull), at a low priority, with the cache the fleet announces (the explicit overrides of the cache are dropped, as for the graph server), under a memory grant of a fifth of the machine (1.5 to 3 GB) that it returns by ending itself with status 75 once it was passed, and taking an owner only while the single admission decision of the host (`admitRemoteExecutionActionV1`, the lent class: after every request of the machine itself, such as the setup of a worker or a wave of the group server) admits one more build job. Joins every wave of the owner pool that another machine publishes. */
+export async function runPool(context:RemoteExecutionSidecarContextV1):Promise<void>{
+ try{setPriority(10);}catch{}
+ const environment={...context.environment} as Record<string,string|undefined>;
+ for(const name of["SEMIO_REMOTE_CACHE_ENDPOINT","SEMIO_REMOTE_CACHE_ACCESS","SEMIO_REMOTE_CACHE_INSTANCE","SEMIO_REMOTE_CACHE_TOKEN","SEMIO_FLEET_CACHE_ENDPOINT"])delete environment[name];
+ const origin=remoteExecutionOriginV1(context.root,context.environment),status=createOwnerPoolStatusV1({store:context.environment.SEMIO_FLEET_STORE_ROOT,origin,role:"puller"});
+ const guard=await acquireOwnerPoolGuardV1({root:context.root,say:pid=>{context.write(`owner pool: another pool process of this machine (pid ${pid}) is alive, waiting for it / ein anderer Pool-Prozess dieser Maschine (pid ${pid}) lebt, warte auf ihn`);}});
+ if(!guard.acquired){status.update({state:"idle",siblings:1,lastError:`another pool process (pid ${guard.sibling}) is alive / ein anderer Pool-Prozess (pid ${guard.sibling}) lebt`});status.flush();return;}
+ const slots=Math.max(1,Math.min(POOL.maximumConcurrent,(await import("node:os")).availableParallelism()-POOL.reserveCores));
+ const allow=async(running:number):Promise<boolean>=>{try{return admitRemoteExecutionActionV1({view:await readRemoteExecutionHostViewV1(context.environment),running,concurrency:slots,nowMs:Date.now()}).admit;}catch{return false;}};
+ try{
+  const outcome=await(runOwnerPoolV1 as (input:Record<string,unknown>)=>Promise<string|undefined>)({root:context.root,environment,signal:context.signal,say:context.write,work:context.work,allow,siblings:guard.sibling===undefined?0:1,status});
+  if(outcome==="recycle"){guard.release();process.exit(POOL.recycleExitCode);}
+ }finally{guard.release();}
+}

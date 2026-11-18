@@ -114,8 +114,8 @@ export interface NavbarProps {
  * 🕹️ Navbar holds the data fields for a Navbar record.
  *
  * 🪜️ The band stacks at the BASE level, never above it. A chrome-hosted {@link Panel} unfolds INTO this
- * band (see `chromeHostedOpenPanelPositionStyle`: its cap lands exactly on the centered `h-medium`
- * control row, in the slot `PanelChromeTabBar` empties while the panel is open), so a navbar painting
+ * band (see `chromeHostedOpenPanelPositionStyle`: its cap fills exactly the band
+ * from edge to edge, in the slot `PanelChromeTabBar` empties while the panel is open), so a navbar painting
  * above `z-panel` would cover that cap and every row under it. `🎨️ui.css` has always forced
  * `z-index: var(--z-base) !important` here; this class said `z-navbar` and was simply never the truth —
  * a contradiction that cost ticket 26/09/02 three waves of "the navbar covers the catalogue".
@@ -177,7 +177,7 @@ function NavbarBandBody({ normalItems, centeredItems, trailing }: { normalItems:
     <>
       <div ref={rowRef} data-shared-border-group="" className="flex items-center min-w-0 h-full">
         {normalItems.map((item, index) => (
-          <div key={item.key ?? index} className={cn("h-medium flex shrink-0 items-center min-w-0", item.className)}>
+          <div key={item.key ?? index} data-slot="navbar-item" className={cn("h-full flex shrink-0 items-center min-w-0", item.className)}>
             {item.content}
           </div>
         ))}
@@ -186,14 +186,14 @@ function NavbarBandBody({ normalItems, centeredItems, trailing }: { normalItems:
       {centeredItems.map((item, index) => {
         const placement = placements[index] ?? null;
         return (
-          <div key={item.key ?? index} className="pointer-events-none absolute inset-0 flex items-center">
+          <div key={item.key ?? index} className="pointer-events-none absolute inset-0 flex items-stretch">
             <div
               ref={(element) => {
                 centeredRefs.current[index] = element;
               }}
               data-slot="navbar-centered"
               data-shared-border-group=""
-              className={cn("pointer-events-auto absolute h-medium flex items-center", item.className)}
+              className={cn("pointer-events-auto absolute h-full flex items-center", item.className)}
               style={placement === null ? { left: "50%", transform: "translateX(-50%)" } : { left: `${placement.left}px`, maxWidth: `${placement.maxWidth}px` }}
             >
               {item.content}
@@ -226,7 +226,7 @@ function Navbar({ items, label, className, showFullscreenToggle = true, onFullsc
     />
   );
   return (
-    <nav ref={borderRef} id="ui.navbar" aria-label={label} data-slot="navbar" data-shared-border-frame="" data-shared-border-edges="bottom" data-level="base" data-ui-reveal-region="navbar" data-elevation-root="" className={cn("relative h-[var(--navbar-height)]", getLevelZClass("base"), bgClass, className)}>
+    <nav ref={borderRef} id="ui.navbar" aria-label={label} data-slot="navbar" data-shared-border-frame="" data-shared-border-edges="bottom" data-level="base" data-ui-reveal-region="navbar" data-elevation-root="" className={cn("relative h-[var(--navbar-band-height)]", getLevelZClass("base"), bgClass, className)}>
       {paints ? <SurfaceScope level="base" fill="surface">{body}</SurfaceScope> : body}
     </nav>
   );

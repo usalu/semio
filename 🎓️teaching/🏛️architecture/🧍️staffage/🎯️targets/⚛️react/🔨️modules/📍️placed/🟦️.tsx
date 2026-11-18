@@ -13,6 +13,7 @@ import { type StaffageClock } from "../⏱️clock/🟦️.ts";
 import { defaultQuery, depictionOptions, evaluateState, inlineSvg, sceneOf } from "../🧮️pipeline/🟦️.ts";
 import type { Selection } from "../💾️persistence/🟦️.ts";
 import { VIEWPOINT_PHRASES, resolveViewpoint, viewpointWord } from "../🔭️viewpoints/🟦️.ts";
+import { clipDurationS, playable, readTrack, type TrackInput } from "../🧪️playground/🎞️timeline/🟦️.ts";
 
 /** 🎯️ The evaluation query of a placement: a pose, a clip at the clock time plus an offset, or the asset's default clip. */
 export function placementQuery(asset: Asset, selection: Selection | null, timeS: number | null, offsetS = 0): EvaluationQuery {
@@ -35,6 +36,7 @@ export type PlacedFigureProps = {
   readonly selection: Selection | null;
   readonly clock: StaffageClock;
   readonly offsetS?: number;
+  readonly track?: { readonly input: TrackInput; readonly timelineS: number };
   readonly view: View;
   readonly viewpoint: PlanarViewpoint;
   readonly scale: number;
@@ -70,12 +72,12 @@ function useHeldFrame(clock: StaffageClock, active: boolean): number | null {
 
 /** 📦️ Draws one figure with its ground point at (`xPx`, `groundPx`) of the positioned parent. */
 export function PlacedFigure(props: PlacedFigureProps): ReactElement | null {
-  const { asset, selection, clock, offsetS = 0, view, viewpoint, scale, language, pxPerMm, xPx, groundPx, mirrored: mirroredRequest = false, travel, className, label, style } = props;
+  const { asset, selection, clock, offsetS = 0, track, view, viewpoint, scale, language, pxPerMm, xPx, groundPx, mirrored: mirroredRequest = false, travel, className, label, style } = props;
   const mirrored = mirroredRequest && viewpoint === "elevation";
   const ref = useRef<HTMLDivElement | null>(null);
   const [visible, setVisible] = useState(true);
   const timeS = useHeldFrame(clock, visible);
-  const query = useMemo(() => placementQuery(asset, selection, timeS, offsetS), [asset, selection, timeS, offsetS]);
+  const query = useMemo(() => (track === undefined ? placementQuery(asset, selection, timeS, offsetS) : placementQuery(asset, playable(asset, selection), readTrack(track.input, clipDurationS(asset, selection), timeS ?? 0, track.timelineS).clipTimeS, 0)), [asset, selection, timeS, offsetS, track?.input.startS, track?.input.durationS, track?.input.speed, track?.input.loop, track?.input.holdS, track?.input.offsetS, track?.timelineS]);
   const drawingQuery = useMemo(() => drawingQueryOf(asset, query, view), [asset, query, view]);
   const resolution = useMemo(() => resolveViewpoint(asset, viewpoint, scale, language), [asset, viewpoint, scale, language]);
   const drawn = useMemo(() => {

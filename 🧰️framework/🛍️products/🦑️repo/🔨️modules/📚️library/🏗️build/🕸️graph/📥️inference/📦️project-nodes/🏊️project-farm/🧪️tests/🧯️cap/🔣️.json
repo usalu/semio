@@ -1,0 +1,11 @@
+{
+  "capMegabytes": 300,
+  "aloneCapMegabytes": 600,
+  "cases": [
+    { "name": "every job stays under the cap", "jobs": [{ "n": 0, "megabytes": [100] }, { "n": 1, "megabytes": [200] }, { "n": 2, "megabytes": [300] }] },
+    { "name": "one job over the cap is stopped, runs alone and fits", "jobs": [{ "n": 0, "megabytes": [100] }, { "n": 1, "megabytes": [450, 450] }, { "n": 2, "megabytes": [100] }, { "n": 3, "megabytes": [150] }] },
+    { "name": "a job over the cap even alone fails and the others finish", "jobs": [{ "n": 0, "megabytes": [100] }, { "n": 1, "megabytes": [450, 700] }, { "n": 2, "megabytes": [250] }] },
+    { "name": "the cap itself is allowed, one more megabyte is not", "jobs": [{ "n": 0, "megabytes": [300] }, { "n": 1, "megabytes": [301, 600] }, { "n": 2, "megabytes": [301, 601] }] },
+    { "name": "two heavy jobs run alone one after the other", "jobs": [{ "n": 0, "megabytes": [400, 400] }, { "n": 1, "megabytes": [500, 500] }, { "n": 2, "megabytes": [50] }] }
+  ]
+}

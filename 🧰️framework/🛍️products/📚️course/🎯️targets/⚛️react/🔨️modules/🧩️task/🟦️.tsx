@@ -44,15 +44,18 @@ export function describedBy(...ids: readonly (string | undefined)[]): string | u
   return joined === "" ? undefined : joined;
 }
 
-/** 🧱️ The frame of a drop zone (the pool, a category bin): a dashed hairline that the drag highlight fills. */
-export const DROP_ZONE_CLASS = "flex min-w-0 flex-col gap-single border border-dashed border-normal p-double";
+/** 🧱️ The frame of a drop zone (the pool, a category bin): a cell of its section's shared-border group that the drag highlight fills.
+ * Its parts are cells of a group of their own (`GROUP`): padded heading and notes, and a list of rows, all flush, so the
+ * zone has no frame, gap or inset box of its own and every edge is one divider. */
+export const DROP_ZONE_CLASS = "flex min-w-0 flex-col";
 
-/** 🔽️ A select of a task: at least 24 px tall, framed by the hairline, on the page colour. */
-export const SELECT_CLASS = "course-target border border-normal bg-background px-single text-sm text-foreground";
+/** 🔽️ A select of a task: at least 24 px tall, on the page colour, and the trailing cell of its row (`.course-cell`): its
+ * edges are the row's, and its one outline is the divider to its left. */
+export const SELECT_CLASS = "course-target course-cell bg-background px-single text-sm text-foreground";
 
 /** 🔘️ A small square action of a task row (move, unassign). */
 export const ICON_BUTTON_CLASS =
-  "course-target inline-flex min-w-[1.75em] cursor-pointer items-center justify-center border border-normal bg-transparent px-single text-foreground hover:bg-hover-interactive-fill aria-disabled:cursor-not-allowed aria-disabled:opacity-50";
+  "course-target course-cell inline-flex min-w-[1.75em] cursor-pointer items-center justify-center bg-transparent px-single text-foreground hover:bg-hover-interactive-fill aria-disabled:cursor-not-allowed aria-disabled:opacity-50";
 
 /** ⏱️ How long a select-driven task waits before it announces a change: a closed select commits every option the arrow
  * keys pass, so only where the item ends up is spoken. */

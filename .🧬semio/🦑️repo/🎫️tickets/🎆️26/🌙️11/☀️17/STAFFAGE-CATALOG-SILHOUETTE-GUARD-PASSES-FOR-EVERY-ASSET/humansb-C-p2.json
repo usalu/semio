@@ -1,0 +1,6 @@
+[{"op":"shape-add","scale":"50","view":"plan","after":"rail-r","shape":{"kind":"capsule","x0":0.1805,"y0":-0.21,"x1":0.1805,"y1":0.21,"r0":0.02,"r1":0.02,"id":"handle","bone":"hand-truck","role":"body","z":6.52,"filled":true,"tone":0.5,"region":"hand-truck"}},
+{"op":"shape-set","scale":"50","view":"elevation","id":"parcel-a","set":{"points":[[0.06,-0.014],[0.46,-0.014],[0.46,-0.42],[0.06,-0.42]]}},
+{"op":"shape-set","scale":"50","view":"elevation","id":"parcel-b","set":{"points":[[0.46,-0.014],[0.76,-0.014],[0.76,-0.38],[0.46,-0.38]]}},
+{"op":"shape-set","scale":"50","view":"elevation","id":"parcel-c","set":{"d":"M0.76000 -0.01400 L0.97214 -0.01400 L0.99370 -0.01623 L0.98000 -0.03600 L0.98000 -0.30000 L0.76000 -0.30000 Z"}},
+{"op":"shape-set","scale":"50","view":"plan","id":"toe-l","set":{"x1":0.235}},
+{"op":"shape-set","scale":"50","view":"plan","id":"toe-r","set":{"x1":0.235}}]

@@ -26,7 +26,7 @@ const none={root:"/nope",own:()=>{throw Error("no cgroup");},read:()=>{throw Err
 const read=(chain:Chain|undefined,total:number,availableKiB:number|null)=>fleetHostReadingV1({ports:chain===undefined?none:ports(chain),total:()=>total*MiB,environment:{},available:()=>availableKiB===null?undefined:availableKiB*1024});
 const decide=(hostMegabytes:number)=>{const reading={hostMegabytes},admitted=fleetAdmittedMegabytesV1(reading),fit=inferableProjectsV1(admitted),share=fleetGrantMegabytesV1(reading),grant=ownerGrantV1(share,wantedPolicyV1);return{admitted,wave:fit.waveProjects,projects:fit.projects,perProject:Math.round(grant.managedMegabytes*ownerCostPolicyV1.footprintFactor)};};
 const oracle=(host:number)=>{
- const run=spawnSync(python!,["-I","-c","import json,sys\nh=json.load(sys.stdin)['host']\nhalf=h//2\nadmitted=max(0,min(half,h-2048))\nwave=min(48,max(0,int((admitted-2200)//((7200-2200)/48))))\nwave=0 if wave<8 else wave\nshare=min(half,9399) if wave>0 else admitted\nmanaged=int(max(0,int(share-3800))/2/1.25)\nprint(json.dumps({'admitted':admitted,'wave':wave,'projects':wave*4,'perProject':managed*2}))"],{input:JSON.stringify({host}),encoding:"utf8"});
+ const run=spawnSync(python!,["-I","-c","import json,sys\nh=json.load(sys.stdin)['host']\nhalf=h//2\nadmitted=max(0,min(half,h-2048))\nwave=min(48,max(0,int((admitted-2200)//((7200-2200)/48))))\nwave=0 if wave<8 else wave\nshare=min(half,9399) if wave>0 else admitted\nmanaged=int(max(0,int(share-max(2200,min(3072,share*2*3750//10000))))/2/1.25)\nprint(json.dumps({'admitted':admitted,'wave':wave,'projects':wave*4,'perProject':managed*2}))"],{input:JSON.stringify({host}),encoding:"utf8"});
  expect(run.status,run.stderr).toBe(0);return JSON.parse(run.stdout) as {admitted:number;wave:number;projects:number;perProject:number};
 };
 
@@ -50,7 +50,7 @@ for(const row of rows)test("the reading of "+row.name+" is the machine and the d
  const got=decide(reading.hostMegabytes);
  expect(got.wave).toBe(row.wave);
  expect(got).toEqual(oracle(reading.hostMegabytes));
- if(reading.hostMegabytes>=15000){expect(got.perProject).toBeGreaterThanOrEqual(3000);expect(got.perProject).toBeLessThanOrEqual(3600);}
+ if(reading.hostMegabytes>=15000){expect(got.perProject).toBeGreaterThanOrEqual(3800);expect(got.perProject).toBeLessThanOrEqual(4200);}
 });
 
 test("the fault: the host taken as the process's own 4096 MB group is refused with 0 MB per project and a wave of 0, exactly what g1-m04 printed 7 times",()=>{

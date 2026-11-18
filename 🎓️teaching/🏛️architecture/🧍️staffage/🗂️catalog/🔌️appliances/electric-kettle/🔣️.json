@@ -590,25 +590,24 @@
               "filled": true,
               "tone": 0.5,
               "kind": "poly",
-              "points": [
-                [
-                  -0.075,
-                  0.03
-                ],
-                [
-                  0.075,
-                  0.03
-                ],
-                [
-                  0.07,
-                  0.205
-                ],
-                [
-                  -0.07,
-                  0.205
-                ]
-              ],
+              "points": [[-0.075, 0.03], [0.075, 0.03], [0.07, 0.205], [-0.07, 0.205]],
               "closed": true,
+              "region": "shell",
+              "material": "stainless"
+            },
+            {
+              "id": "spout",
+              "bone": "body",
+              "role": "body",
+              "z": 3.35,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.027,
+              "y": 0.164,
+              "w": 0.054,
+              "h": 0.059,
+              "r": 0.01,
               "region": "shell",
               "material": "stainless"
             },
@@ -1951,12 +1950,12 @@
               "material": "pp-plastic",
               "thicknessM": 0.003,
               "resistanceM2KW": 0.012,
-              "heatCapacityJM2K": 3000,
+              "heatCapacityJM2K": 2308,
               "source": "authored-estimate",
               "reference": "incropera-2018"
             }
           ],
-          "heatCapacityJM2K": 3000,
+          "heatCapacityJM2K": 2308,
           "operating": {
             "key": "power",
             "heatW": 40
@@ -1988,12 +1987,12 @@
               "material": "stainless",
               "thicknessM": 0.0007,
               "resistanceM2KW": 0.00004,
-              "heatCapacityJM2K": 2765,
+              "heatCapacityJM2K": 2028,
               "source": "authored-estimate",
               "reference": "incropera-2018"
             }
           ],
-          "heatCapacityJM2K": 2765,
+          "heatCapacityJM2K": 2028,
           "source": "authored-estimate",
           "reference": "incropera-2018",
           "coupled": {
@@ -2027,16 +2026,18 @@
               "material": "water",
               "thicknessM": 0.004,
               "resistanceM2KW": 0.0021,
-              "heatCapacityJM2K": 348800,
+              "heatCapacityJM2K": 270039,
               "source": "authored-estimate",
               "reference": "incropera-2018"
             }
           ],
-          "heatCapacityJM2K": 348800,
+          "heatCapacityJM2K": 270039,
           "operating": {
             "key": "power",
             "heatW": 1955
           },
+          "ratedPowerW": 2000,
+          "ratedPowerBasis": "electrical-input",
           "source": "authored-estimate",
           "reference": "incropera-2018"
         },
@@ -2101,12 +2102,12 @@
               "material": "pp-plastic",
               "thicknessM": 0.003,
               "resistanceM2KW": 0.05,
-              "heatCapacityJM2K": 1500,
+              "heatCapacityJM2K": 857,
               "source": "authored-estimate",
               "reference": "incropera-2018"
             }
           ],
-          "heatCapacityJM2K": 1500,
+          "heatCapacityJM2K": 857,
           "source": "authored-estimate",
           "reference": "incropera-2018"
         }

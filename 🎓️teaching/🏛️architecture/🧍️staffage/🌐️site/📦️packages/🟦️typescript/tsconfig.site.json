@@ -1,4 +1,4 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["../../🟦️.ts", "../../🏗️builder/🌐️vite/🟦️.ts"]
+  "include": ["../../🟦️.ts", "../../🛟️recovery/**/*.ts", "../../🏗️builder/🌐️vite/🟦️.ts"]
 }

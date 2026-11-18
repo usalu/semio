@@ -66,7 +66,7 @@ describe("🕳️ no filled path of the catalog overlaps itself", () => {
   it("has no two subpaths of one filled shape that overlap without one lying inside the other, in any asset, scale or viewpoint", async () => {
     const root = join(STAFFAGE_ROOT, "🗂️catalog");
     const shapes: { asset: string; scale: string; view: string; id: string; rings: number[][][] }[] = [];
-    for (const category of readdirSync(root)) for (const slug of readdirSync(join(root, category), { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => entry.name)) {
+    for (const category of readdirSync(root, { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => entry.name)) for (const slug of readdirSync(join(root, category), { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => entry.name)) {
       const asset = JSON.parse(readFileSync(join(root, category, slug, "🔣️.json"), "utf8")).asset;
       for (const [scale, representation] of Object.entries<any>(asset.representations ?? {})) for (const [view, list] of Object.entries<any>(representation.geometry ?? {})) for (const shape of list as any[]) {
         if (shape.kind !== "path" || shape.filled === false) continue;

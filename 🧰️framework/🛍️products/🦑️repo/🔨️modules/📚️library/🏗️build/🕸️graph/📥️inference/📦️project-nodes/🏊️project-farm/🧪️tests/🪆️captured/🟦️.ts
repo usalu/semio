@@ -7,13 +7,14 @@ import{tmpdir}from"node:os";
 import{basename,dirname,join,relative,sep}from"node:path";
 import{fileURLToPath,pathToFileURL}from"node:url";
 import{deserialize,serialize}from"node:v8";
-import{testPythonV1}from"/Users/Shared/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
+import{testPythonV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import{GRAPH_FARM_WORKER_ROLE_V1,graphFarmIdentityDifferenceV1,graphFarmIdentityV1,sameGraphFarmIdentityV1}from"../../🪆️captured/🟨️.mjs";
 import{createFarmV1,GRAPH_FARM_POLICY_V1}from"../../🏊️pool/🟨️.mjs";
 import{farmGrantEnvironmentV1}from"../🧫️fixtures/🎟️grant/🟨️.mjs";
-import{closeProjectFarmsV1,openProjectFarmV1}from"../../🟨️.mjs";
-import{inferenceRecordIdentityV1}from"/Users/Shared/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs";
-import{buildSourceClosureStreamLoaderV1}from"/Users/Shared/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🟦️.ts";
+import{closeProjectFarmsV1,openProjectFarmV1 as openFarmV1}from"../../🟨️.mjs";
+const openProjectFarmV1=(options:Parameters<typeof openFarmV1>[0])=>openFarmV1({adopt:(()=>({published:1,present:0,declined:false})) as never,...options});
+import{inferenceRecordIdentityV1}from"../../../../../../👁️observation/🟨️.mjs";
+import{buildSourceClosureStreamLoaderV1}from"../../../../../../📥️source/🔏️closure/🟦️.ts";
 
 const here=dirname(fileURLToPath(import.meta.url)),farmDirectory=join(here,"..",".."),fixtures=join(here,"..","🧫️fixtures"),python=testPythonV1();
 const root=(()=>{let at=here;while(basename(at)!=="🧰️framework")at=dirname(at);return dirname(at);})(),rel=(file:string)=>relative(root,file).split(sep).join("/");
@@ -90,7 +91,7 @@ test("a farm in a captured process starts every worker with the snapshot file it
   expect(start!.stdio).toEqual(["ignore","inherit","inherit","ipc"]);
   expect(start!.text).toBe("captured snapshot text");if(process.platform!=="win32")expect(start!.mode).toBe(0o600);
   expect(start!.env.SEMIO_LAW_CAPTURED).toBe("1");expect(start!.env.SEMIO_GRAPH_WORKER).toBe("1");
-  if(adopted){expect(await new Promise<number>(done=>farm.onReady(done))).toBe(GRAPH_FARM_POLICY_V1.loopsPerWorker);expect(await farm.prepare(job("first"))).toBe(false);}
+  if(adopted){expect(await new Promise<number>(done=>farm.onReady(done))).toBe(GRAPH_FARM_POLICY_V1.loopsPerWorker);expect(await farm.prepare(job("first"))).toBe(true);}
   else{await Bun.sleep(50);expect(lines.some(line=>line.includes("(identity differs: implementation)"))).toBe(true);expect(await farm.prepare(job("refused"))).toBe(false);}
   await farm.close();await closeProjectFarmsV1();
  }

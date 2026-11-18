@@ -1,0 +1,5 @@
+[{"kind":"shape","scale":"50","view":"front","id":"breast","set":{"cy":-0.013,"ry":0.087}},
+{"kind":"solid","scale":"50","id":"far-foot","copy":"near-foot","mirror":true},
+{"kind":"shape","scale":"50","view":"front","id":"far-tarsus","set":{"x":0.0345,"w":0.022}},
+{"kind":"shape","scale":"50","view":"front","id":"near-tarsus","set":{"x":-0.0565,"w":0.022}},
+{"kind":"solid","scale":"50","id":"far-thigh","fn":"if (i>0) q.ry = Math.min(q.ry, 0.0145); q.at[2]=0.052;"}]

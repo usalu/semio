@@ -61,8 +61,8 @@ function coursePresenceContractVitePlugin(): OwnedBuildPlugin {
 }
 
 /** 🛡️ The Content-Security-Policy of a release document: everything from the site's own origin, the inline boot scripts
- * and boot style of `html` by their SHA-256 (nothing else inline runs), and connections to `proctorOrigin` alone, over
- * HTTPS and its WebSocket twin. A `meta` policy cannot carry `frame-ancestors`; `_headers` adds it for CDNs that send
+ * and boot style of `html` by their SHA-256 (nothing else inline runs), frames from the site's own origin alone (the
+ * assignment PDFs the course shows in its pages), and connections to `proctorOrigin` alone, over HTTPS and its WebSocket twin. A `meta` policy cannot carry `frame-ancestors`; `_headers` adds it for CDNs that send
  * headers. */
 export function courseContentSecurityPolicy(html: string, proctorOrigin: string): string {
   const hashes = (tag: string): string[] => [...html.matchAll(new RegExp(`<${tag}(?![^>]*\\ssrc=)[^>]*>([\\s\\S]*?)</${tag}>`, "gu"))].map((block) => `'sha256-${createHash("sha256").update(block[1]!).digest("base64")}'`);
@@ -73,6 +73,7 @@ export function courseContentSecurityPolicy(html: string, proctorOrigin: string)
     "style-src-attr 'unsafe-inline'",
     "img-src 'self' data:",
     "font-src 'self'",
+    "frame-src 'self'",
     `connect-src ${proctorOrigin} ${proctorOrigin.replace(/^http/u, "ws")}`,
     "manifest-src 'self'",
     "object-src 'none'",

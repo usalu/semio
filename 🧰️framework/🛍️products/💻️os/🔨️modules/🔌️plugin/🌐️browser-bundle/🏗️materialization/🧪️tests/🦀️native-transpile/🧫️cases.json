@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "reference": "@bytecodealliance/jco 1.39.0 with @bytecodealliance/jco-transpile 0.20.0 (js-component-bindgen 2.16.0)",
+  "cases": [
+    {
+      "name": "plugin-import-maps",
+      "name_option": "comp",
+      "maps": ["semio:framework/pure=./🟨️.js", "semio:framework/host-async=./🟨️.js"],
+      "wit": "package semio:probe@0.1.0;\ninterface pure {\n  record point { x: s32, y: s32 }\n  add: func(a: point, b: point) -> point;\n  label: func(p: point) -> string;\n}\nworld probe {\n  import pure;\n  export pure;\n}\n",
+      "expect": "the native output tree equals the jco output tree byte for byte"
+    },
+    {
+      "name": "no-maps",
+      "name_option": "plain",
+      "maps": [],
+      "wit": "package semio:plain@0.1.0;\nworld plain {\n  export run: func(n: u32) -> list<u32>;\n}\n",
+      "expect": "the native output tree equals the jco output tree byte for byte"
+    }
+  ]
+}

@@ -124,9 +124,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { createReadStream, mkdtempSync, mkdirSync, statSync, writeFileSync } = await import("node:fs");
       const { createHash } = await import("node:crypto");
       const { tmpdir } = await import("node:os");
-      const source = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/📥️installation/🟦️.ts"), "utf8");
+      const source = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🔖️identity/🟦️.ts"), "utf8");
       const body = /\nasync function activationFilesDigest\([^)]*\): Promise<string> \{\n([\s\S]*?)\n\}\n/.exec(source)?.[1];
-      expect(body, "activationFilesDigest moved or changed shape in ♻️activation/📥️installation/🟦️.ts — re-derive activationFilesDigestSync against it").toBeTruthy();
+      expect(body, "activationFilesDigest moved or changed shape in ♻️activation/🔖️identity/🟦️.ts — re-derive activationFilesDigestSync against it").toBeTruthy();
       const reference = new Function("files", "signal", "createHash", "statSync", "createReadStream", `return (async () => {\n${body}\n})();`) as (files: ReadonlyMap<string, string>, signal: AbortSignal, hash: unknown, stat: unknown, read: unknown) => Promise<string>;
       const root = mkdtempSync(join(tmpdir(), "play-activation-digest-"));
       mkdirSync(join(root, "🪞️vendor"), { recursive: true });

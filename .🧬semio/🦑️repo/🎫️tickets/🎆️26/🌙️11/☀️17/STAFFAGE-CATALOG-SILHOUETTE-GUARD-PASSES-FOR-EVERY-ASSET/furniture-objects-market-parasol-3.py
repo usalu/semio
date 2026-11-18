@@ -1,0 +1,12 @@
+import importlib.util, os, json, sys
+spec = importlib.util.spec_from_file_location("l", os.path.join(os.path.dirname(os.path.abspath(__file__)), "furniture-objects-lib.py")); l = importlib.util.module_from_spec(spec); spec.loader.exec_module(l)
+d = l.doc("🪑️objects", "market-parasol")
+n = d.shape(100, "elevation", "crown-hub"); o = d.obj(n)
+d.set(n, "x", -0.07); d.set(n, "h", 0.095); d.set(n, "w", 0.14)
+f = dict(o); f.update({"id": "crown-finial", "x": -0.0125, "y": 0.05, "w": 0.025, "h": 0.061, "role": "detail"})
+d.insert_after(n, f)
+n = d.shape(100, "front", "crown-hub"); o = d.obj(n)
+d.set(n, "h", 0.095)
+f = dict(o); f.update({"id": "crown-finial", "x": -0.0125, "y": 2.4, "w": 0.025, "h": 0.061, "role": "detail"})
+d.insert_after(n, f)
+d.commit()

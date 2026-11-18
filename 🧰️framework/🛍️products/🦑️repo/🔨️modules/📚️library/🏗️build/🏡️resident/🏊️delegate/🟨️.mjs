@@ -38,7 +38,7 @@ export function createWarmPoolV1({command,environment,cwd,size,idleMilliseconds,
  const idle=[];let starting=0,closed=false,spawned=0,served=0,coldServed=0;
  const create=()=>{
   starting++;spawned++;
-   const child=spawnProcess(command[0],command.slice(1),{cwd,env:environment,stdio:["ignore","pipe","pipe","pipe",...(snapshot?["pipe"]:[])]});
+   const child=spawnProcess(command[0],command.slice(1),{cwd,env:environment,stdio:["ignore","pipe","pipe","pipe",...(snapshot?["pipe"]:[])],windowsHide:true});
    if(snapshot){child.stdio[4].on("error",()=>{});child.stdio[4].end(snapshot);}
   const worker={child,state:"starting",bornAt:now(),readyAt:0};
   const control=child.stdio[3];
@@ -105,7 +105,7 @@ export function createDelegatedExecutionPortV1({pool,executors,executorArguments
    if(worker){onSpawn?.();timing("warm");return pool.run(worker,request,{onOutput,signal});}
    timing("cold");
    return new Promise((resolve,reject)=>{
-    const child=spawn(coldCommand[0],[...coldCommand.slice(1),...request.argv],{cwd,env:{...environment,...request.env},stdio:["ignore","pipe","pipe"]});
+    const child=spawn(coldCommand[0],[...coldCommand.slice(1),...request.argv],{cwd,env:{...environment,...request.env},stdio:["ignore","pipe","pipe"],windowsHide:true});
     onSpawn?.();
     const kill=()=>{child.kill("SIGINT");const hard=setTimeout(()=>child.kill("SIGKILL"),2000);hard.unref?.();};signal?.addEventListener("abort",kill,{once:true});
     child.stdout.on("data",chunk=>{void onOutput("stdout",chunk.toString("utf8"));});child.stderr.on("data",chunk=>{void onOutput("stderr",chunk.toString("utf8"));});

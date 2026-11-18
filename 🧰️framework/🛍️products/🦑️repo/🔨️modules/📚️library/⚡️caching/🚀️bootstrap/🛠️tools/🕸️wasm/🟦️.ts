@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import { createIssuedResourceControlV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{fleetFetchContextV1,pinnedFetchV1}from"../../🛰️fleet-fetch/🟦️.ts";
 import { createHash } from "node:crypto";
@@ -84,7 +85,7 @@ export async function prepareBinaryen(workspace: string, store:RepositoryTooling
   requireNativeStorageReservationV1(store.storage,store.control);await store.recheck();if(store.root!==repositoryCachePartitionRootV1(workspace,"tools"))throw new Error("Original declared Binaryen tools partition required");const signal=store.control.signal;signal.throwIfAborted();
   const row = binaryenDistribution(), directory = requireNativeStoragePathV1(store.root,binaryenDirectory(workspace)), parent = dirname(directory);
   regularDirectory(parent); mkdirSync(parent, { recursive: true });
-  return withResourceLeases({ directory: join(workspace, ".cache/b/l/m/data"), signal,control:store.control, resources: [{ resource: binaryenIdentity(), mode: "exclusive" }] }, async () => {
+  return withResourceLeases({ directory: machinePathV1(workspace, ".cache/b/l/m/data"), signal,control:store.control, resources: [{ resource: binaryenIdentity(), mode: "exclusive" }] }, async () => {
     let present = true;
     try { lstatSync(directory); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; present = false; }
     if (present) return preparedBinaryen(workspace);

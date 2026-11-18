@@ -1,0 +1,124 @@
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { availableParallelism, freemem, hostname, setPriority, tmpdir, totalmem } from "node:os";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { graphChildEnvironmentV1 } from "../../../../../🧠️memory/🐏️child-environment/🟨️.mjs";
+import { graphFleetClientV1 } from "../../../../../🪪️graph-state/🛰️exchange/🟦️.ts";
+import { graphFleetSettingsV1 } from "../../../../../🪪️graph-state/🧶️nx/🟦️.ts";
+import { remoteCacheFetchV1 } from "../../../../../🌐️remote-cache/🛰️fleet/🟦️.ts";
+import { OWNER_POOL_POLICY_V1 as P, ownerPoolChildLimitsV1, ownerPoolChildMegabytesV1, ownerPoolTargetV1, readOwnerPoolPointerV1, readOwnerPoolV1 } from "../🟦️.ts";
+import schema from "../🧬️schema/🔣️.json" with { type: "json" };
+
+const MEGABYTE = 1048576, T = schema.definitions.Texts.const, REASONS = { yielding: "reasonYielding", revision: "reasonRevision", "too-small": "reasonTooSmall", "no-wave": "reasonNoWave", "nothing-fits": "reasonNothingFits", pressure: "reasonNothingFits", off: "reasonOff" };
+const sleep = (milliseconds, signal) => new Promise(done => { const timer = setTimeout(done, milliseconds); signal?.addEventListener("abort", () => { clearTimeout(timer); done(); }, { once: true }); });
+const fill = (text, fields) => text.replace(/\{(\w+)\}/gu, (_all, name) => String(fields[name] ?? ""));
+
+/** 🔔️ One message of the pool texts, English and German in one line. */
+export const ownerPoolTextV1 = (key, fields = {}) => ["en", "de"].map(language => fill(T[language][key], fields)).join(" / ");
+
+/** 🏠️ The capacity a machine has when nobody tells the pool more: its cores less one, and the free memory its operating system reports (a standalone puller or a test; the sidecar brings the host view of the capacity gate). */
+export const defaultOwnerPoolCapacityV1 = async ({ children, childMegabytes }) => ownerPoolTargetV1({ host: { cores: availableParallelism(), totalMegabytes: Math.round(totalmem() / MEGABYTE), availableMegabytes: Math.round(freemem() / MEGABYTE), pressure: "normal", load: null, swapOutMegabytesPerSecond: null, foreground: { cpu: 1, unrealizedMegabytes: 0, waiters: 0 } }, children, childMegabytes });
+
+/** 🌐️ The supervisor of the pool of this machine: it follows the waves the pointer lists (a new wave is added, none replaces the one a child works on), writes each wave once to a private directory, and keeps as many CHILD PROCESSES running as the machine's capacity allows (`capacity` is asked every `targetPollMilliseconds`; at most two children start per look and one is drained per look, so a change of the host's load moves the pool smoothly). It claims, infers and publishes nothing itself: its memory stays small whatever the owners take, a child that passed its memory limit after an owner is replaced by the child itself, one that passed the hard limit is killed, and a supervisor that ends makes its children stop after their owner. It schedules nothing and waits for nobody. */
+export async function runOwnerPoolV1({ root, environment, signal, say = () => {}, capacity = defaultOwnerPoolCapacityV1, siblings = 0, fleetRoot = root, work, status, pollMilliseconds = P.pointerPollMilliseconds, targetPollMilliseconds = P.targetPollMilliseconds, once = false, driver, childEntry = fileURLToPath(new URL("../🧒️child/🟨️.mjs", import.meta.url)), spawn = Bun.spawn, now = Date.now, priority = P.childPriority, observe }) {
+  const settings = environment[P.environmentOff] === "off" ? undefined : graphFleetSettingsV1(fleetRoot, environment);
+  const reasonOf = key => ({ reason: key, reasonText: key === null ? null : { en: T.en[REASONS[key]], de: T.de[REASONS[key]] } });
+  if (settings === undefined) { status?.update({ state: "off", ...reasonOf("off") }); return; }
+  const total = Math.round(totalmem() / MEGABYTE);
+  status?.update({ state: "idle", siblings });
+  if (total < P.minimumTotalMegabytes) { status?.update({ state: "too-small", ...reasonOf("too-small") }); say(ownerPoolTextV1("tooSmall", { megabytes: total, minimum: P.minimumTotalMegabytes })); return; }
+  const client = graphFleetClientV1(settings, { fetch: remoteCacheFetchV1(environment, { root: fleetRoot }) }), limits = ownerPoolChildLimitsV1(total), base = mkdtempSync(join(realpathSync(tmpdir()), "semio-owner-pool-"));
+  const waves = new Map(), children = new Set(), samples = [], finishedAt = [], totals = { claimed: 0, published: 0, stored: 0, held: 0, failed: 0, attempts: 0, recycled: 0 }, failures = {}, portTotals = { diverged: 0, resent: 0, kept: 0, shed: 0 };
+  let lastPointerAt = -Infinity, pointerWaves = [], tick = 0;
+  const add = stats => { for (const key of ["claimed", "published", "stored", "held", "failed", "attempts"]) totals[key] += stats?.[key] ?? 0; };
+  const live = () => { const sum = { ...totals }; for (const child of children) for (const key of ["claimed", "published", "stored", "held", "failed", "attempts"]) sum[key] += child.stats?.[key] ?? 0; return sum; };
+  const loadWave = async wave => {
+    const manifest = await readOwnerPoolV1(client, wave.id);
+    if (manifest === undefined) return false;
+    const dir = join(base, wave.id.slice(0, 16));
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, "head.json"), JSON.stringify(manifest.head)); writeFileSync(join(dir, "session.bin"), manifest.session); writeFileSync(join(dir, "units.json"), JSON.stringify(manifest.units));
+    Object.assign(wave, { dir, head: manifest.head, units: manifest.units.length, state: "open", children: 0, backoffUntil: 0 });
+    return true;
+  };
+  const refresh = async () => {
+    let pointer = await readOwnerPoolPointerV1(client, now);
+    for (let attempt = 0; pointer === "fault" && attempt < P.pointerRetryMilliseconds.length && !signal.aborted; attempt++) { await sleep(Math.max(P.pointerRetryMilliseconds[attempt], Math.min(client.breakerRemainingMilliseconds?.() ?? 0, P.pointerBreakerWaitMaximumMilliseconds)), signal); pointer = await readOwnerPoolPointerV1(client, now); }
+    if (pointer === "fault") { status?.update({ lastError: ownerPoolTextV1("cacheFault") }); return; }
+    pointerWaves = pointer?.waves ?? [];
+    const ids = new Set(pointerWaves.map(wave => wave.id));
+    for (const wave of pointerWaves) if (!waves.has(wave.id)) { const entry = { id: wave.id, createdMs: wave.createdMs, state: "loading", children: 0, units: wave.units, backoffUntil: 0 }; if (await loadWave(entry)) { waves.set(wave.id, entry); say(ownerPoolTextV1("joined", { id: wave.id.slice(0, 12), units: wave.units, children: children.size })); } }
+    for (const [id, wave] of waves) if (!ids.has(id) && wave.children === 0) { rmSync(wave.dir, { recursive: true, force: true }); waves.delete(id); }
+  };
+  const active = () => [...waves.values()].map(wave => { if (wave.state === "done" && now() - wave.doneAt >= P.reopenMilliseconds) wave.state = "open"; return wave; }).filter(wave => wave.state === "open" && wave.backoffUntil <= now()).sort((a, b) => b.createdMs - a.createdMs).slice(0, P.wavesActive);
+  const childMegabytes = () => ownerPoolChildMegabytesV1(samples);
+  const launch = wave => {
+    const file = join(wave.dir, `child-${++tick}.json`), puller = `${hostname()}:${process.pid}:${tick}:${now()}`;
+    writeFileSync(file, JSON.stringify({ dir: wave.dir, root, fleetRoot, puller, recycleMegabytes: limits.recycleMegabytes, lifetimeMilliseconds: P.childLifetimeMilliseconds, driver: driver ?? null }));
+    const proc = spawn([process.execPath, childEntry, file], { stdin: "pipe", stdout: "pipe", stderr: "inherit", env: { ...environment, ...graphChildEnvironmentV1(), [P.childEnvironment]: "1" } });
+    try { setPriority(proc.pid, priority); } catch {}
+    const child = { id: tick, proc, wave, startedMs: now(), rss: 0, running: 0, stats: undefined, port: undefined, drained: false, killed: false };
+    children.add(child); wave.children++;
+    void (async () => {
+      const decoder = new TextDecoder(); let rest = "";
+      try { for await (const chunk of proc.stdout) { rest += decoder.decode(chunk, { stream: true }); let at; while ((at = rest.indexOf("\n")) >= 0) { const line = rest.slice(0, at); rest = rest.slice(at + 1); try { onLine(child, JSON.parse(line)); } catch {} } } } catch {}
+    })();
+    void proc.exited.then(code => { onExit(child, code); });
+    return child;
+  };
+  const onLine = (child, line) => {
+    observe?.(child.id, line, now());
+    if (typeof line.rss === "number") { child.rss = line.rss; if (line.rss > limits.hardMegabytes && !child.killed) { child.killed = true; try { child.proc.kill("SIGKILL"); } catch {} status?.update({ lastError: `a child held ${line.rss} MB, above ${limits.hardMegabytes} MB, and was stopped` }); } }
+    if (line.t === "beat") { child.running = line.running ?? 0; if (line.stats) child.stats = line.stats; if (line.port) child.port = line.port; }
+    else if (line.t === "done") { if (line.ok) finishedAt.push(now()); if (line.rss > 0) samples.push(line.rss); if (samples.length > 64) samples.splice(0, samples.length - 64); }
+    else if (line.t === "fail") { if (typeof line.code === "string" && line.code !== "") failures[line.code] = (failures[line.code] ?? 0) + 1; status?.update({ lastError: `${line.name}: ${line.message}`.slice(0, 300), failures: { ...failures } }); }
+    else if (line.t === "end") { child.stats = line.stats ?? child.stats; child.port = line.port ?? child.port; child.reason = line.reason; child.message = line.message; }
+  };
+  const onExit = (child, code) => {
+    children.delete(child); child.wave.children--; add(child.stats); for (const key of Object.keys(portTotals)) portTotals[key] += child.port?.[key] ?? 0;
+    if (child.reason === "recycled" || code === P.recycleExitCode) { totals.recycled++; say(ownerPoolTextV1("recycled", { megabytes: child.rss, limit: limits.recycleMegabytes })); }
+    else if (code === 0) { if (child.wave.state === "open") child.wave.state = "finishing"; }
+    else if (child.reason === "revision" || code === 76) { child.wave.state = "declined"; status?.update(reasonOf("revision")); say(ownerPoolTextV1("declined", { reason: "revision" })); }
+    else if (code === 77 || child.reason === "open") { child.wave.backoffUntil = now() + 30000; status?.update({ lastError: (child.message ?? "a child could not open the wave").slice(0, 300) }); }
+    else if (!child.drained && !child.killed) { if (now() - child.startedMs < 10000) child.wave.backoffUntil = now() + 30000; status?.update({ lastError: ownerPoolTextV1("childEnded", { reason: `exit ${code}` }).slice(0, 300) }); }
+    if (child.wave.state === "finishing" && child.wave.children === 0) { child.wave.state = "done"; child.wave.doneAt = now(); }
+  };
+  const drain = child => { if (child.drained) return; child.drained = true; try { child.proc.stdin.write("drain\n"); child.proc.stdin.flush?.(); } catch {} };
+  const rate = () => { const at = now() - P.rateWindowMilliseconds; while (finishedAt.length > 0 && finishedAt[0] < at) finishedAt.shift(); return Math.round(finishedAt.length * 60000 / P.rateWindowMilliseconds * 10) / 10; };
+  const report = (target, reason) => {
+    const sum = live(), port = { ...portTotals }, open = active();
+    for (const child of children) for (const key of Object.keys(port)) port[key] += child.port?.[key] ?? 0;
+    const newest = open[0] ?? [...waves.values()].sort((a, b) => b.createdMs - a.createdMs)[0];
+    status?.update({ failures: { ...failures }, kept: port.kept, resent: port.resent, diverged: port.diverged, shed: port.shed, state: children.size > 0 ? "pulling" : waves.size > 0 ? "idle" : "idle", wave: newest?.id ?? null, units: [...waves.values()].reduce((count, wave) => count + wave.units, 0), waves: waves.size, children: children.size, target, slots: target, running: [...children].reduce((count, child) => count + child.running, 0), claimed: sum.claimed, published: sum.published, stored: sum.stored, held: sum.held, failed: sum.failed, claimAttempts: sum.attempts, recycled: totals.recycled, ownersPerMinute: rate(), childMegabytes: childMegabytes(), rssMegabytes: Math.round(process.memoryUsage().rss / MEGABYTE) + [...children].reduce((count, child) => count + child.rss, 0), ...reasonOf(children.size === 0 && waves.size === 0 ? "no-wave" : reason) });
+    if (work !== undefined) work.busy = [...children].some(child => child.running > 0);
+  };
+  try {
+    while (!signal.aborted) {
+      if (now() - lastPointerAt >= pollMilliseconds) { lastPointerAt = now(); try { await refresh(); } catch (error) { status?.update({ lastError: String(error?.message ?? error).slice(0, 200) }); } }
+      const open = active();
+      let target = { children: 0, reason: null };
+      if (work?.restartPending === true) target = { children: 0, reason: null };
+      else if (open.length > 0) { try { target = await capacity({ children: children.size, childMegabytes: childMegabytes() }); } catch { target = { children: 1, reason: null }; } }
+      const have = [...children].filter(child => !child.drained);
+      if (target.reason === "waiting") {
+        for (const child of children) {
+          if (!child.drained) drain(child);
+          child.yieldedMs ??= now();
+          if (now() - child.yieldedMs >= P.yieldKillMilliseconds && !child.killed) { child.killed = true; try { child.proc.kill("SIGKILL"); } catch {} }
+        }
+      } else if (have.length < target.children) for (let step = 0; step < 2 && have.length + step < target.children; step++) { const wave = open.sort((a, b) => a.children - b.children || b.createdMs - a.createdMs)[0]; if (wave === undefined) break; launch(wave); }
+      else if (have.length > target.children) drain(have.sort((a, b) => b.startedMs - a.startedMs)[0]);
+      for (const child of children) if ((child.wave.state === "declined" || !waves.has(child.wave.id)) && !child.drained) drain(child);
+      report(target.children, target.reason);
+      if (once && waves.size > 0 && [...waves.values()].every(wave => wave.state !== "open" || wave.backoffUntil > now()) && children.size === 0) break;
+      await sleep(targetPollMilliseconds, signal);
+    }
+  } finally {
+    for (const child of children) drain(child);
+    const until = now() + P.drainGraceMilliseconds;
+    while (children.size > 0 && now() < until) await sleep(200);
+    for (const child of children) { try { child.proc.kill("SIGKILL"); } catch {} }
+    status?.update({ state: "idle", running: 0, children: 0 }); status?.flush?.();
+    rmSync(base, { recursive: true, force: true });
+  }
+}

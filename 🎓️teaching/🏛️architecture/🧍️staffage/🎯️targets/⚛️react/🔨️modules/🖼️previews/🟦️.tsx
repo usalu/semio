@@ -55,22 +55,22 @@ export function UnavailableNotice(props: { readonly row: Row; readonly compact?:
   const { t, language, catalog } = useArchive();
   const snapshot = useCatalog(catalog);
   const { row, compact, className } = props;
-  if (row.status === "pending") return <Notice kind="loading" compact={compact} className={className} title={t("state.loading.title")} />;
+  if (row.status === "pending") return <Notice kind="loading" compact={compact} plain={compact === true} className={className} title={t("state.loading.title")} />;
   if (row.status === "failed")
     return (
-      <Notice kind="error" compact={compact} className={className} title={t("state.categoryFailed.title")} actions={compact ? undefined : <Button icon="rotate-cw" onClick={() => void catalog.retryCategory(row.entry.category)}>{t("action.retry")}</Button>}>
+      <Notice kind="error" compact={compact} plain={compact === true} className={className} title={t("state.categoryFailed.title")} actions={compact ? undefined : <Button icon="rotate-cw" onClick={() => void catalog.retryCategory(row.entry.category)}>{t("action.retry")}</Button>}>
         {compact ? null : snapshot.categories[row.entry.category].failure?.[language]}
       </Notice>
     );
   if (row.status === "missing")
     return (
-      <Notice kind="unavailable" compact={compact} className={className} title={t("state.missing.title")}>
+      <Notice kind="unavailable" compact={compact} plain={compact === true} className={className} title={t("state.missing.title")}>
         {compact ? null : t("state.missing.body")}
       </Notice>
     );
   const issues = row.issues ?? [];
   return (
-    <Notice kind="error" compact={compact} className={className} title={t("state.invalid.title")}>
+    <Notice kind="error" compact={compact} plain={compact === true} className={className} title={t("state.invalid.title")}>
       {compact ? (
         issues[0]?.message[language]
       ) : (
@@ -121,10 +121,10 @@ function ReadyPreview(props: { readonly asset: Asset; readonly viewpoint: Planar
   const dark = useDarkSurface();
   const clock = usePreviewClock(asset, ambient);
   const resolution = useMemo(() => resolveViewpoint(asset, viewpoint, scale, language), [asset, viewpoint, scale, language]);
-  if (!resolution.available) return <Notice kind="unavailable" compact className={cn("h-full overflow-hidden", className)} title={viewpointWord("viewpoints.unavailable", language, { view: VIEWPOINT_PHRASES[viewpoint][language] })}>{compact ? null : resolution.message[language]}</Notice>;
+  if (!resolution.available) return <Notice kind="unavailable" compact plain className={cn("h-full overflow-hidden", className)} title={viewpointWord("viewpoints.unavailable", language, { view: VIEWPOINT_PHRASES[viewpoint][language] })}>{compact ? null : resolution.message[language]}</Notice>;
   return (
     <div aria-hidden="true" inert className={cn("relative h-full min-h-0 w-full overflow-hidden", className)} data-preview={asset.id}>
-      <FigureBoundary resetKey={asset} fallback={(message) => <Notice kind="error" compact title={asset.title[language]}>{compact ? null : message}</Notice>}>
+      <FigureBoundary resetKey={asset} fallback={(message) => <Notice kind="error" compact plain title={asset.title[language]}>{compact ? null : message}</Notice>}>
         <StaffageFigure asset={asset} {...(query === undefined ? {} : { query })} clock={clock} view={view ?? surfaceView(dark, solid)} viewpoint={viewpoint} scale={{ denominator: scale }} language={language} fit="contain" transparent annotations={QUIET} />
       </FigureBoundary>
     </div>

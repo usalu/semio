@@ -136,8 +136,9 @@ export function ChromeControlHint({ id, text, always = false, children }: { read
  * focus moves away, Escape, or a press lands elsewhere. Conformance case `💬️row-semantics` (`revealReason`), the same hint
  * the wgpu renderer paints. A caller wraps its action ALWAYS and passes `reason: undefined` while the action can run: the
  * wrapper then holds no reason element, and the action keeps its element — and the focus on it — when it becomes refused
- * or runnable again (a focused Edit that its own press made refused says why at once, instead of being remounted). */
-export function DisabledReasonHint({ id, reason, children }: { readonly id: string; readonly reason: string | undefined; readonly children: React.ReactElement }): React.ReactNode {
+ * or runnable again (a focused Edit that its own press made refused says why at once, instead of being remounted). `bare` attaches
+ * the hint to the child itself instead of a wrapper `span`, so a framed control stays a direct child of its shared-border cells owner. */
+export function DisabledReasonHint({ id, reason, children, bare = false }: { readonly id: string; readonly reason: string | undefined; readonly children: React.ReactElement<Record<string, unknown>>; readonly bare?: boolean }): React.ReactNode {
   const flow = useFlow();
   const floatingHost = useShellFloatingSurfaceHost();
   const triggerRef = React.useRef<HTMLSpanElement>(null);
@@ -183,21 +184,32 @@ export function DisabledReasonHint({ id, reason, children }: { readonly id: stri
   }, [flow.inline, revealed, reason]);
 
   const shown = revealed && reason !== undefined && floatingHost !== null;
+  const triggerHandlers = {
+    onPointerEnter: (event: React.PointerEvent) => (event.pointerType === "touch" ? undefined : revealAfterDelay()),
+    onPointerLeave: (event: React.PointerEvent) => (event.pointerType === "touch" ? undefined : conceal()),
+    onFocusCapture: reveal,
+    onBlurCapture: conceal,
+    onClickCapture: reveal,
+    onKeyDownCapture: (event: React.KeyboardEvent) => (event.key === "Escape" ? conceal() : undefined),
+  };
+  const childRef = children.props.ref as React.Ref<HTMLElement> | undefined;
+  const bareTrigger = bare
+    ? React.cloneElement(children, {
+        ...triggerHandlers,
+        ref: (node: HTMLElement | null) => {
+          (triggerRef as React.MutableRefObject<HTMLElement | null>).current = node;
+          if (typeof childRef === "function") childRef(node);
+          else if (childRef) (childRef as React.MutableRefObject<HTMLElement | null>).current = node;
+        },
+      })
+    : null;
   return (
     <>
-      <span
-        ref={triggerRef}
-        data-slot="disabled-reason-hint"
-        className="inline-flex max-w-full"
-        onPointerEnter={(event) => (event.pointerType === "touch" ? undefined : revealAfterDelay())}
-        onPointerLeave={(event) => (event.pointerType === "touch" ? undefined : conceal())}
-        onFocusCapture={reveal}
-        onBlurCapture={conceal}
-        onClickCapture={reveal}
-        onKeyDownCapture={(event) => (event.key === "Escape" ? conceal() : undefined)}
-      >
-        {children}
-      </span>
+      {bareTrigger ?? (
+        <span ref={triggerRef} data-slot="disabled-reason-hint" className="inline-flex max-w-full" {...triggerHandlers}>
+          {children}
+        </span>
+      )}
       {reason === undefined ? null : shown ? (
         createPortal(
           <span

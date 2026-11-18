@@ -1,11 +1,12 @@
 /** 🧮️ Contract: a graph plan books the memory of its slice worker in the machine-wide gate before the worker starts and holds it until it is released, so a build that does not fit beside it queues behind it in the fair queue, starts when the plan ends, and a plan that waits can be cancelled without leaving a waiter behind. */
 import {afterAll,expect,test} from "bun:test";
 import {existsSync,mkdtempSync,readdirSync,readFileSync,realpathSync,rmSync} from "node:fs";
+import {Database} from "bun:sqlite";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {newHostCapacityIdV1,readHostCapacityPolicyV1,withHostCapacityV1,type HostSampleV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
 import buildPolicy from "../../../🔣️policy.json" with {type:"json"};
-import {reserveGraphPlanCapacityV1} from "../../🟦️.ts";
+import {graphPlanObserverV1,reserveGraphPlanCapacityV1} from "../../🟦️.ts";
 
 const roots:string[]=[],fresh=()=>{const root=mkdtempSync(join(realpathSync(tmpdir()),"plan-capacity-"));roots.push(root);return root;};
 afterAll(()=>{for(const root of roots)rmSync(root,{recursive:true,force:true});});
@@ -24,7 +25,7 @@ test("with the gate off a plan reserves nothing and is never refused",async()=>{
 },60000);
 
 test("a plan books its megabytes, a build that does not fit beside it queues behind it and starts when the plan is released, and the booking records the worker it observes",async()=>{
- const directory=fresh(),environment:NodeJS.ProcessEnv={LANG:"en_US.UTF-8"},order:string[]=[];
+ const directory=fresh(),environment:NodeJS.ProcessEnv={LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_DIRECTORY:directory},order:string[]=[];
  const reservation=await reserveGraphPlanCapacityV1({megabytes:20000,environment,directory,policy:fast,write:()=>undefined,sample});
  expect(grants(directory).length).toBe(1);
  const grant=JSON.parse(readFileSync(join(directory,"grants",grants(directory)[0]!),"utf8"));
@@ -47,4 +48,26 @@ test("a plan that waits for memory is cancelled by its signal, rejects with the 
  const waiting=reserveGraphPlanCapacityV1({megabytes:6000,environment,directory,policy:fast,write:()=>undefined,signal:controller.signal,sample:async()=>({host:host({availableMegabytes:300,pressure:"critical"}),swappedOutMegabytes:0})}).then(()=>undefined,error=>error);
  expect(await until(()=>queue(directory).length===1)).toBe(true);controller.abort(new Error("plan cancelled"));
  expect((await waiting).message).toBe("plan cancelled");expect(queue(directory)).toEqual([]);expect(grants(directory)).toEqual([]);
+},60000);
+
+const table:readonly (readonly [number,number,number])[]=[[process.pid,1,300],[7001,process.pid,4000],[7002,7001,1000],[7003,7002,700],[7004,1,900]];
+const oracle=(root:number)=>{const database=new Database(":memory:");database.run("create table process(pid integer primary key,parent integer,megabytes integer)");for(const row of table)database.run("insert into process values (?,?,?)",[...row]);
+ const total=database.query("with recursive tree(pid) as (select ? union select process.pid from process join tree on process.parent=tree.pid) select coalesce(sum(megabytes),0) as total from process where pid in (select pid from tree)").get(root) as {total:number};database.close();return total.total;};
+const tree=async(pid:number)=>oracle(pid);
+
+test("the observer of a plan counts the attached worker tree once and nothing for the service that holds the grant",async()=>{
+ let worker:number|undefined;const observe=graphPlanObserverV1(()=>worker,tree);
+ expect(await observe(process.pid)).toBe(0);worker=7001;
+ expect(await observe(7001)).toBe(5700);expect(await observe(process.pid)).toBe(0);expect(oracle(process.pid)).toBe(6000);expect(oracle(7001)).toBe(5700);
+});
+
+test("the booking of a plan shows the memory of its worker tree once, not the worker twice (the service is its parent), so no build waits behind a shortage that is not there",async()=>{
+ const directory=fresh(),beating=readHostCapacityPolicyV1({...buildPolicy.hostCapacity,wait:{...buildPolicy.hostCapacity.wait,pollMilliseconds:10,progressMilliseconds:20,sampleMaximumAgeMilliseconds:0,heartbeatMilliseconds:20}});
+ const reservation=await reserveGraphPlanCapacityV1({megabytes:8000,environment:{LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_DIRECTORY:directory},directory,policy:beating,write:()=>undefined,sample,observe:tree});
+ const read=()=>{const name=grants(directory)[0];return name===undefined?undefined:JSON.parse(readFileSync(join(directory,"grants",name),"utf8")).observedMegabytes as number|undefined;};
+ await new Promise(done=>setTimeout(done,200));expect(read()??0).toBe(0);
+ reservation.attach(7001);
+ expect(await until(()=>(read()??0)>0)).toBe(true);
+ for(let beat=0;beat<5;beat++){await new Promise(done=>setTimeout(done,30));expect(read()).toBe(oracle(7001));}
+ reservation.release();expect(await until(()=>grants(directory).length===0)).toBe(true);
 },60000);

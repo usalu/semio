@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {repositoryCargoPlanningPortV1,repositoryCargoSourceMemoV1} from "../../../🏃️process/🦀️cargo/🚪️launcher/🟦️.ts";
 import {profilePhaseV1,repoProfileV1} from "../../../🏗️build/⏱️profile/🟨️.mjs";
 import {observeCargoPlanningPortV1} from "./⏱️observation/🟦️.ts";
@@ -41,7 +42,7 @@ export function workspaceCargoVersion(repoRoot = getWorkspaceRoot()): string {
 
 /** 🏗️ Authors explicit repository compiler storage for one source owner. */
 export function repositoryCargoArtifactBuildPolicyV1(cwd: string, root = getWorkspaceRoot(), environment: Readonly<Record<string,string|undefined>> = process.env): CargoArtifactBuildPolicyV1 {
-  return { version: 1, compilerConfiguration: join(root,".cargo/config.toml"), mode: readBuildMode(environment.SEMIO_BUILD_MODE), cwd: resolve(cwd), buildDirectory: cargoDirectories(root, environment).build, leaseDirectory: join(root, ".cache", "b", "l", "m", "data"), captureDirectory: environment.SEMIO_TEST_ARTIFACT_DIR ? resolve(environment.SEMIO_TEST_ARTIFACT_DIR) : resolve(cwd, "dist"), budgetMs: buildBudgetMs() };
+  return { version: 1, compilerConfiguration: join(root,".cargo/config.toml"), mode: readBuildMode(environment.SEMIO_BUILD_MODE), cwd: resolve(cwd), buildDirectory: cargoDirectories(root, environment).build, leaseDirectory: machinePathV1(root, ".cache", "b", "l", "m", "data"), captureDirectory: environment.SEMIO_TEST_ARTIFACT_DIR ? resolve(environment.SEMIO_TEST_ARTIFACT_DIR) : resolve(cwd, "dist"), budgetMs: buildBudgetMs() };
 }
 /** 🛤️ The crates whose lane an artifact build takes: the `-p` packages of its arguments, else the package of its manifest (so the same product keeps getting the same warm lane), else the manifest path. */
 export function cargoLaneCratesV1(args: readonly string[], manifest: string, root: string): string[] {

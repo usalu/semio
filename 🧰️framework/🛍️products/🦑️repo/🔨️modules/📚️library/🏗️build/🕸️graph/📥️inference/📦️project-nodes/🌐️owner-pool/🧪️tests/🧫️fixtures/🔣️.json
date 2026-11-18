@@ -1,0 +1,1608 @@
+{
+ "version": 1,
+ "policy": {
+  "floorShareBasisPoints": 1250,
+  "floorMinimumMegabytes": 1536,
+  "floorMaximumMegabytes": 4096,
+  "foregroundCoreShareBasisPoints": 2500,
+  "loadCeilingBasisPointsPerCore": 15000,
+  "maximumChildren": 32,
+  "childRecycleShareBasisPoints": 600,
+  "childRecycleMinimumMegabytes": 1200,
+  "childRecycleMaximumMegabytes": 3000,
+  "childHardShareBasisPoints": 3000,
+  "childHardMinimumMegabytes": 3072,
+  "peakSamples": 32,
+  "peakMarginPercent": 15,
+  "childMegabytesDefault": 800,
+  "peakPercentile": 75,
+  "recycleGrowthMegabytes": 600,
+  "yieldAfterMilliseconds": 5000,
+  "minimumShareBasisPoints": 2500,
+  "ownHoldShareBasisPoints": 1500,
+  "swapActiveMegabytesPerSecond": 1,
+  "swapOutMegabytesPerSecond": 64
+ },
+ "target": [
+  {
+   "name": "an idle 8 core 16 GB worker runs a child per core",
+   "host": {
+    "cores": 8,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 12000,
+    "pressure": "normal",
+    "load": null,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 0,
+     "unrealizedMegabytes": 0,
+     "waiters": 0
+    }
+   },
+   "children": 0,
+   "childMegabytes": 800
+  },
+  {
+   "name": "an idle 16 core 64 GB machine is limited by its cores",
+   "host": {
+    "cores": 16,
+    "totalMegabytes": 65536,
+    "availableMegabytes": 50000,
+    "pressure": "normal",
+    "load": null,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 0,
+     "unrealizedMegabytes": 0,
+     "waiters": 0
+    }
+   },
+   "children": 0,
+   "childMegabytes": 800
+  },
+  {
+   "name": "its own builds book 6 of 8 cores: the pool keeps the rest",
+   "host": {
+    "cores": 8,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 9000,
+    "pressure": "normal",
+    "load": null,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 6,
+     "unrealizedMegabytes": 0,
+     "waiters": 0
+    }
+   },
+   "children": 2,
+   "childMegabytes": 800
+  },
+  {
+   "name": "its own requests wait: a quarter of the cores is kept for them",
+   "host": {
+    "cores": 8,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 12000,
+    "pressure": "normal",
+    "load": null,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 0,
+     "unrealizedMegabytes": 0,
+     "waiters": 3
+    }
+   },
+   "children": 0,
+   "childMegabytes": 800
+  },
+  {
+   "name": "a machine whose own work holds every core still keeps one child",
+   "host": {
+    "cores": 8,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 9000,
+    "pressure": "normal",
+    "load": null,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 8,
+     "unrealizedMegabytes": 0,
+     "waiters": 5
+    }
+   },
+   "children": 0,
+   "childMegabytes": 800
+  },
+  {
+   "name": "memory binds: 4 GB available less the 2 GB floor leaves two children",
+   "host": {
+    "cores": 8,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 4096,
+    "pressure": "normal",
+    "load": null,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 0,
+     "unrealizedMegabytes": 0,
+     "waiters": 0
+    }
+   },
+   "children": 0,
+   "childMegabytes": 800
+  },
+  {
+   "name": "memory binds with children that already hold theirs",
+   "host": {
+    "cores": 8,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 5000,
+    "pressure": "normal",
+    "load": 3,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 0,
+     "unrealizedMegabytes": 0,
+     "waiters": 0
+    }
+   },
+   "children": 3,
+   "childMegabytes": 900
+  },
+  {
+   "name": "the reservations its grants have not touched yet are kept free up to a share of the memory",
+   "host": {
+    "cores": 8,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 9000,
+    "pressure": "normal",
+    "load": null,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 0,
+     "unrealizedMegabytes": 5000,
+     "waiters": 0
+    }
+   },
+   "children": 0,
+   "childMegabytes": 800
+  },
+  {
+   "name": "external load above the ceiling still leaves a quarter of the cores while the memory fits (the busy group server)",
+   "host": {
+    "cores": 10,
+    "totalMegabytes": 32768,
+    "availableMegabytes": 9300,
+    "pressure": "normal",
+    "load": 42.7,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 0,
+     "unrealizedMegabytes": 0,
+     "waiters": 0
+    }
+   },
+   "children": 1,
+   "childMegabytes": 800
+  },
+  {
+   "name": "the load the children themselves cause is not counted against them",
+   "host": {
+    "cores": 8,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 12000,
+    "pressure": "normal",
+    "load": 6,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 0,
+     "unrealizedMegabytes": 0,
+     "waiters": 0
+    }
+   },
+   "children": 2,
+   "childMegabytes": 800
+  },
+  {
+   "name": "critical pressure stops the pool",
+   "host": {
+    "cores": 8,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 12000,
+    "pressure": "critical",
+    "load": null,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 0,
+     "unrealizedMegabytes": 0,
+     "waiters": 0
+    }
+   },
+   "children": 4,
+   "childMegabytes": 800
+  },
+  {
+   "name": "swap thrash stops the pool",
+   "host": {
+    "cores": 8,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 12000,
+    "pressure": "normal",
+    "load": null,
+    "swapOutMegabytesPerSecond": 200,
+    "foreground": {
+     "cpu": 0,
+     "unrealizedMegabytes": 0,
+     "waiters": 0
+    }
+   },
+   "children": 4,
+   "childMegabytes": 800
+  },
+  {
+   "name": "warn pressure never grows the pool",
+   "host": {
+    "cores": 8,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 12000,
+    "pressure": "warn",
+    "load": null,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 0,
+     "unrealizedMegabytes": 0,
+     "waiters": 0
+    }
+   },
+   "children": 2,
+   "childMegabytes": 800
+  },
+  {
+   "name": "warn pressure with no child yet starts one",
+   "host": {
+    "cores": 8,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 12000,
+    "pressure": "warn",
+    "load": null,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 0,
+     "unrealizedMegabytes": 0,
+     "waiters": 0
+    }
+   },
+   "children": 0,
+   "childMegabytes": 800
+  },
+  {
+   "name": "nothing available keeps one child and says why",
+   "host": {
+    "cores": 8,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 1000,
+    "pressure": "normal",
+    "load": null,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 0,
+     "unrealizedMegabytes": 0,
+     "waiters": 0
+    }
+   },
+   "children": 0,
+   "childMegabytes": 800
+  },
+  {
+   "name": "the maximum bounds a very large machine",
+   "host": {
+    "cores": 128,
+    "totalMegabytes": 524288,
+    "availableMegabytes": 400000,
+    "pressure": "normal",
+    "load": null,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 0,
+     "unrealizedMegabytes": 0,
+     "waiters": 0
+    }
+   },
+   "children": 0,
+   "childMegabytes": 800
+  },
+  {
+   "name": "a 4 core 8 GB laptop idle",
+   "host": {
+    "cores": 4,
+    "totalMegabytes": 8192,
+    "availableMegabytes": 5000,
+    "pressure": "normal",
+    "load": null,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 0,
+     "unrealizedMegabytes": 0,
+     "waiters": 0
+    }
+   },
+   "children": 0,
+   "childMegabytes": 800
+  },
+  {
+   "name": "a 2 core 4 GB machine",
+   "host": {
+    "cores": 2,
+    "totalMegabytes": 4096,
+    "availableMegabytes": 2500,
+    "pressure": "normal",
+    "load": null,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 0,
+     "unrealizedMegabytes": 0,
+     "waiters": 0
+    }
+   },
+   "children": 0,
+   "childMegabytes": 800
+  },
+  {
+   "name": "a request that waited 4 s does not make the pool yield yet",
+   "host": {
+    "cores": 8,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 12000,
+    "pressure": "normal",
+    "load": null,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 0,
+     "unrealizedMegabytes": 0,
+     "waiters": 1,
+     "oldestWaitMilliseconds": 4999
+    }
+   },
+   "children": 6,
+   "childMegabytes": 800
+  },
+  {
+   "name": "a request that waited 5 s makes the pool yield every child",
+   "host": {
+    "cores": 8,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 12000,
+    "pressure": "normal",
+    "load": null,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 0,
+     "unrealizedMegabytes": 0,
+     "waiters": 1,
+     "oldestWaitMilliseconds": 5000
+    }
+   },
+   "children": 6,
+   "childMegabytes": 800
+  },
+  {
+   "name": "a request that waited 9 min still does",
+   "host": {
+    "cores": 8,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 12000,
+    "pressure": "normal",
+    "load": null,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 0,
+     "unrealizedMegabytes": 0,
+     "waiters": 1,
+     "oldestWaitMilliseconds": 599999
+    }
+   },
+   "children": 6,
+   "childMegabytes": 800
+  },
+  {
+   "name": "a request older than 10 min is still held up by the children: there is no time after which they come back",
+   "host": {
+    "cores": 8,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 12000,
+    "pressure": "normal",
+    "load": null,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 0,
+     "unrealizedMegabytes": 0,
+     "waiters": 1,
+     "oldestWaitMilliseconds": 600000
+    }
+   },
+   "children": 0,
+   "childMegabytes": 800
+  },
+  {
+   "name": "critical pressure still wins over the wait",
+   "host": {
+    "cores": 8,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 12000,
+    "pressure": "critical",
+    "load": null,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 0,
+     "unrealizedMegabytes": 0,
+     "waiters": 1,
+     "oldestWaitMilliseconds": 9000
+    }
+   },
+   "children": 3,
+   "childMegabytes": 800
+  },
+  {
+   "name": "measured idle cores grow the pool by as many children although the load is high",
+   "host": {
+    "cores": 10,
+    "totalMegabytes": 32768,
+    "availableMegabytes": 9300,
+    "pressure": "normal",
+    "load": 42.7,
+    "idleCores": 4,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 0,
+     "unrealizedMegabytes": 0,
+     "waiters": 0
+    }
+   },
+   "children": 3,
+   "childMegabytes": 800
+  },
+  {
+   "name": "no idle core measured keeps the children it has and the quarter of the cores",
+   "host": {
+    "cores": 10,
+    "totalMegabytes": 32768,
+    "availableMegabytes": 20000,
+    "pressure": "normal",
+    "load": 42.7,
+    "idleCores": 0,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 0,
+     "unrealizedMegabytes": 0,
+     "waiters": 0
+    }
+   },
+   "children": 5,
+   "childMegabytes": 800
+  },
+  {
+   "name": "the machine's own farm books every core: the pool still runs a quarter of the cores while the memory fits and nothing waits",
+   "host": {
+    "cores": 8,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 12000,
+    "pressure": "normal",
+    "load": null,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 8,
+     "unrealizedMegabytes": 0,
+     "waiters": 0
+    }
+   },
+   "children": 1,
+   "childMegabytes": 800
+  },
+  {
+   "name": "the server of 09:41: a read holds 9966 MB untouched, nine idle farm workers book every core, the host is loaded by other processes",
+   "host": {
+    "cores": 10,
+    "totalMegabytes": 32768,
+    "availableMegabytes": 15851,
+    "pressure": "normal",
+    "load": 43.45,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 11,
+     "unrealizedMegabytes": 9966,
+     "waiters": 0
+    },
+    "idleCores": 0
+   },
+   "children": 1,
+   "childMegabytes": 1064
+  },
+  {
+   "name": "a 16 GB worker whose own read books every core while idle cores exist: the idle cores and the capped hold admit children",
+   "host": {
+    "cores": 8,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 9000,
+    "pressure": "normal",
+    "load": 6,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 8,
+     "unrealizedMegabytes": 5200,
+     "waiters": 0
+    },
+    "idleCores": 3
+   },
+   "children": 2,
+   "childMegabytes": 1100
+  },
+  {
+   "name": "a 16 GB worker whose read waits and asks for 3000 MB: the capped hold plus the asked memory is held back and the booked cores count",
+   "host": {
+    "cores": 8,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 9000,
+    "pressure": "normal",
+    "load": 6,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 6,
+     "unrealizedMegabytes": 5200,
+     "waiters": 2,
+     "oldestWaitMilliseconds": 1000,
+     "waitingMegabytes": 3000
+    },
+    "idleCores": 3
+   },
+   "children": 2,
+   "childMegabytes": 1100
+  },
+  {
+   "name": "a memory bound pool says the number that blocks the next child",
+   "host": {
+    "cores": 8,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 6000,
+    "pressure": "normal",
+    "load": 2,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 0,
+     "unrealizedMegabytes": 3000,
+     "waiters": 0
+    },
+    "idleCores": 6
+   },
+   "children": 2,
+   "childMegabytes": 1237
+  },
+  {
+   "name": "no read runs: the pool gets the whole budget above the floor",
+   "host": {
+    "cores": 8,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 11000,
+    "pressure": "normal",
+    "load": 0,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 0,
+     "unrealizedMegabytes": 0,
+     "waiters": 0
+    },
+    "idleCores": 8
+   },
+   "children": 0,
+   "childMegabytes": 1000
+  },
+  {
+   "name": "below the floor one child still runs and the free number is zero",
+   "host": {
+    "cores": 8,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 1500,
+    "pressure": "normal",
+    "load": 0,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 0,
+     "unrealizedMegabytes": 0,
+     "waiters": 0
+    },
+    "idleCores": 8
+   },
+   "children": 1,
+   "childMegabytes": 1000
+  },
+  {
+   "name": "a read whose farm waits for 1536 MB the gate holds back on paper: the machine has 19 GB free, the pool keeps the asked memory free and the rest of the budget",
+   "host": {
+    "cores": 10,
+    "totalMegabytes": 32768,
+    "availableMegabytes": 19038,
+    "pressure": "normal",
+    "load": 30.41,
+    "swapOutMegabytesPerSecond": 0,
+    "foreground": {
+     "cpu": 9,
+     "unrealizedMegabytes": 15939,
+     "waiters": 1,
+     "waitingMegabytes": 1536,
+     "oldestWaitMilliseconds": 0
+    },
+    "idleCores": 6
+   },
+   "children": 1,
+   "childMegabytes": 1064
+  },
+  {
+   "name": "a waiting request of unknown size holds the whole reservation: the pool runs no child it cannot afford",
+   "host": {
+    "cores": 10,
+    "totalMegabytes": 32768,
+    "availableMegabytes": 19038,
+    "pressure": "normal",
+    "load": 2,
+    "swapOutMegabytesPerSecond": 0,
+    "foreground": {
+     "cpu": 2,
+     "unrealizedMegabytes": 15939,
+     "waiters": 1,
+     "oldestWaitMilliseconds": 0
+    },
+    "idleCores": 6
+   },
+   "children": 1,
+   "childMegabytes": 1064
+  },
+  {
+   "children": 6,
+   "childMegabytes": 1000,
+   "host": {
+    "cores": 8,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 3000,
+    "pressure": "normal",
+    "load": null,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 8,
+     "unrealizedMegabytes": 3000,
+     "waiters": 0,
+     "ask": {
+      "megabytes": 9000,
+      "alone": true
+     }
+    },
+    "idleCores": 0
+   },
+   "name": "a read asks for the whole machine: every child of a 16 GB worker stops, there is no time after which they come back"
+  },
+  {
+   "children": 0,
+   "childMegabytes": 900,
+   "host": {
+    "cores": 4,
+    "totalMegabytes": 8192,
+    "availableMegabytes": 5000,
+    "pressure": "normal",
+    "load": null,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 1,
+     "unrealizedMegabytes": 0,
+     "waiters": 0,
+     "ask": {
+      "megabytes": 4000,
+      "alone": true
+     }
+    }
+   },
+   "name": "an alone owner of an 8 GB worker with no child yet starts none"
+  },
+  {
+   "children": 6,
+   "childMegabytes": 1000,
+   "host": {
+    "cores": 8,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 4000,
+    "pressure": "normal",
+    "load": null,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 4,
+     "unrealizedMegabytes": 0,
+     "waiters": 0,
+     "ask": {
+      "megabytes": 5000,
+      "alone": false
+     }
+    },
+    "idleCores": 4
+   },
+   "name": "a read claim of 5000 MB that fits once the children give back 3048 MB drains four of six"
+  },
+  {
+   "children": 3,
+   "childMegabytes": 1000,
+   "host": {
+    "cores": 8,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 3000,
+    "pressure": "normal",
+    "load": null,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 4,
+     "unrealizedMegabytes": 0,
+     "waiters": 0,
+     "ask": {
+      "megabytes": 9000,
+      "alone": false
+     }
+    },
+    "idleCores": 4
+   },
+   "name": "a read claim that does not fit even without the pool drains nothing"
+  },
+  {
+   "children": 4,
+   "childMegabytes": 1000,
+   "host": {
+    "cores": 8,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 3000,
+    "pressure": "normal",
+    "load": null,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 4,
+     "unrealizedMegabytes": 0,
+     "waiters": 1,
+     "waitingMegabytes": 9000,
+     "oldestWaitMilliseconds": 86400000
+    },
+    "idleCores": 4
+   },
+   "name": "a request that waited a day for memory the children do not hold is no reason to stop them"
+  },
+  {
+   "children": 4,
+   "childMegabytes": 1000,
+   "host": {
+    "cores": 8,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 5000,
+    "pressure": "normal",
+    "load": null,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 4,
+     "unrealizedMegabytes": 0,
+     "waiters": 1,
+     "waitingMegabytes": 6000,
+     "oldestWaitMilliseconds": 86400000
+    },
+    "idleCores": 4
+   },
+   "name": "a request that waits for memory the children hold stops them however long it waits"
+  },
+  {
+   "children": 8,
+   "childMegabytes": 800,
+   "host": {
+    "cores": 8,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 12000,
+    "pressure": "normal",
+    "load": null,
+    "swapOutMegabytesPerSecond": 33,
+    "foreground": {
+     "cpu": 0,
+     "unrealizedMegabytes": 0,
+     "waiters": 0
+    },
+    "idleCores": 8
+   },
+   "name": "light swap cuts the pool in proportion before anything else stops"
+  },
+  {
+   "children": 8,
+   "childMegabytes": 800,
+   "host": {
+    "cores": 8,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 12000,
+    "pressure": "normal",
+    "load": null,
+    "swapOutMegabytesPerSecond": 64,
+    "foreground": {
+     "cpu": 0,
+     "unrealizedMegabytes": 0,
+     "waiters": 0
+    },
+    "idleCores": 8
+   },
+   "name": "swap at the stop of the farm ends the pool"
+  },
+  {
+   "children": 0,
+   "childMegabytes": 900,
+   "host": {
+    "cores": 4,
+    "totalMegabytes": 8192,
+    "availableMegabytes": 2000,
+    "pressure": "normal",
+    "load": null,
+    "swapOutMegabytesPerSecond": null,
+    "foreground": {
+     "cpu": 3,
+     "unrealizedMegabytes": 0,
+     "waiters": 0,
+     "ask": {
+      "megabytes": 500,
+      "alone": false
+     }
+    }
+   },
+   "name": "a read that holds the memory leaves the pool no child instead of a forced one"
+  }
+ ],
+ "limits": [
+  {
+   "total": 4096
+  },
+  {
+   "total": 8192
+  },
+  {
+   "total": 16384
+  },
+  {
+   "total": 32768
+  },
+  {
+   "total": 65536
+  },
+  {
+   "total": 131072
+  }
+ ],
+ "childMegabytes": [
+  {
+   "samples": []
+  },
+  {
+   "samples": [
+    600
+   ]
+  },
+  {
+   "samples": [
+    500,
+    700,
+    900
+   ]
+  },
+  {
+   "samples": [
+    100,
+    200,
+    300,
+    400,
+    500,
+    600,
+    2000
+   ]
+  },
+  {
+   "samples": [
+    0,
+    -5,
+    800
+   ]
+  },
+  {
+   "samples": [
+    524,
+    530,
+    2100,
+    520,
+    515,
+    540,
+    510,
+    2200,
+    525,
+    530,
+    522,
+    518
+   ]
+  },
+  {
+   "samples": [
+    1000,
+    1000,
+    1000,
+    1000,
+    1000,
+    1000,
+    1000,
+    1000,
+    1000,
+    1000,
+    3000,
+    3000,
+    3000,
+    3000,
+    3000,
+    3000,
+    3000,
+    3000,
+    3000,
+    3000
+   ]
+  },
+  {
+   "samples": [
+    1800,
+    1900,
+    2000
+   ],
+   "live": [
+    450,
+    500,
+    520,
+    540,
+    600,
+    650
+   ]
+  },
+  {
+   "samples": [],
+   "live": [
+    500,
+    600,
+    700
+   ]
+  },
+  {
+   "samples": [
+    900,
+    1000
+   ],
+   "live": []
+  },
+  {
+   "samples": [
+    1000
+   ],
+   "live": [
+    0,
+    -5
+   ]
+  }
+ ],
+ "walk": [
+  {
+   "puller": "g1-m01:1",
+   "n": 4774,
+   "draws": 6
+  },
+  {
+   "puller": "g1-m01:2",
+   "n": 4774,
+   "draws": 6
+  },
+  {
+   "puller": "g1-m02:1",
+   "n": 4774,
+   "draws": 6
+  },
+  {
+   "puller": "host:1:2:3",
+   "n": 50,
+   "draws": 6
+  },
+  {
+   "puller": "x",
+   "n": 1,
+   "draws": 6
+  }
+ ],
+ "expect": {
+  "target": [
+   {
+    "children": 8,
+    "reason": null
+   },
+   {
+    "children": 16,
+    "reason": null
+   },
+   {
+    "children": 2,
+    "reason": "yielding"
+   },
+   {
+    "children": 6,
+    "reason": "yielding"
+   },
+   {
+    "children": 1,
+    "reason": "yielding"
+   },
+   {
+    "children": 2,
+    "reason": "nothing-fits"
+   },
+   {
+    "children": 6,
+    "reason": "nothing-fits"
+   },
+   {
+    "children": 5,
+    "reason": "nothing-fits"
+   },
+   {
+    "children": 3,
+    "reason": "yielding"
+   },
+   {
+    "children": 8,
+    "reason": null
+   },
+   {
+    "children": 0,
+    "reason": "pressure"
+   },
+   {
+    "children": 0,
+    "reason": "pressure"
+   },
+   {
+    "children": 2,
+    "reason": "yielding"
+   },
+   {
+    "children": 1,
+    "reason": "yielding"
+   },
+   {
+    "children": 1,
+    "reason": "nothing-fits"
+   },
+   {
+    "children": 32,
+    "reason": null
+   },
+   {
+    "children": 4,
+    "reason": null
+   },
+   {
+    "children": 1,
+    "reason": "nothing-fits"
+   },
+   {
+    "children": 6,
+    "reason": "yielding"
+   },
+   {
+    "children": 0,
+    "reason": "waiting"
+   },
+   {
+    "children": 0,
+    "reason": "waiting"
+   },
+   {
+    "children": 0,
+    "reason": "waiting"
+   },
+   {
+    "children": 0,
+    "reason": "pressure"
+   },
+   {
+    "children": 7,
+    "reason": "yielding"
+   },
+   {
+    "children": 5,
+    "reason": "yielding"
+   },
+   {
+    "children": 2,
+    "reason": "yielding"
+   },
+   {
+    "children": 3,
+    "reason": "yielding"
+   },
+   {
+    "children": 5,
+    "reason": "yielding"
+   },
+   {
+    "children": 3,
+    "reason": "nothing-fits"
+   },
+   {
+    "children": 3,
+    "reason": "nothing-fits"
+   },
+   {
+    "children": 8,
+    "reason": null
+   },
+   {
+    "children": 1,
+    "reason": "nothing-fits"
+   },
+   {
+    "children": 4,
+    "reason": "yielding"
+   },
+   {
+    "children": 0,
+    "reason": "nothing-fits"
+   },
+   {
+    "children": 0,
+    "reason": "waiting"
+   },
+   {
+    "children": 0,
+    "reason": "waiting"
+   },
+   {
+    "children": 2,
+    "reason": "nothing-fits"
+   },
+   {
+    "children": 3,
+    "reason": "nothing-fits"
+   },
+   {
+    "children": 4,
+    "reason": "nothing-fits"
+   },
+   {
+    "children": 0,
+    "reason": "waiting"
+   },
+   {
+    "children": 3,
+    "reason": "yielding"
+   },
+   {
+    "children": 0,
+    "reason": "pressure"
+   },
+   {
+    "children": 0,
+    "reason": "nothing-fits"
+   }
+  ],
+  "limits": [
+   {
+    "recycleMegabytes": 1200,
+    "hardMegabytes": 3072
+   },
+   {
+    "recycleMegabytes": 1200,
+    "hardMegabytes": 3072
+   },
+   {
+    "recycleMegabytes": 1200,
+    "hardMegabytes": 4915
+   },
+   {
+    "recycleMegabytes": 1966,
+    "hardMegabytes": 9830
+   },
+   {
+    "recycleMegabytes": 3000,
+    "hardMegabytes": 19660
+   },
+   {
+    "recycleMegabytes": 3000,
+    "hardMegabytes": 39321
+   }
+  ],
+  "childMegabytes": [
+   800,
+   690,
+   1035,
+   690,
+   920,
+   610,
+   3450,
+   2070,
+   805,
+   1150,
+   1150
+  ],
+  "walk": [
+   [
+    146,
+    3173,
+    949,
+    1538,
+    398,
+    837
+   ],
+   [
+    967,
+    3537,
+    719,
+    2144,
+    4073,
+    4109
+   ],
+   [
+    1746,
+    3112,
+    1444,
+    4632,
+    2117,
+    3996
+   ],
+   [
+    41,
+    15,
+    10,
+    36,
+    10,
+    39
+   ],
+   [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ]
+  ],
+  "recycle": [
+   false,
+   true,
+   false,
+   true,
+   false
+  ],
+  "limit": [
+   {
+    "limit": "none",
+    "needMegabytes": 800,
+    "freeMegabytes": 3552,
+    "heldMegabytes": 0,
+    "floorMegabytes": 2048
+   },
+   {
+    "limit": "none",
+    "needMegabytes": 800,
+    "freeMegabytes": 33104,
+    "heldMegabytes": 0,
+    "floorMegabytes": 4096
+   },
+   {
+    "limit": "cores",
+    "needMegabytes": 800,
+    "freeMegabytes": 6952,
+    "heldMegabytes": 0,
+    "floorMegabytes": 2048
+   },
+   {
+    "limit": "cores",
+    "needMegabytes": 800,
+    "freeMegabytes": 5152,
+    "heldMegabytes": 0,
+    "floorMegabytes": 2048
+   },
+   {
+    "limit": "cores",
+    "needMegabytes": 800,
+    "freeMegabytes": 6152,
+    "heldMegabytes": 0,
+    "floorMegabytes": 2048
+   },
+   {
+    "limit": "memory",
+    "needMegabytes": 800,
+    "freeMegabytes": 448,
+    "heldMegabytes": 0,
+    "floorMegabytes": 2048
+   },
+   {
+    "limit": "memory",
+    "needMegabytes": 900,
+    "freeMegabytes": 252,
+    "heldMegabytes": 0,
+    "floorMegabytes": 2048
+   },
+   {
+    "limit": "memory",
+    "needMegabytes": 800,
+    "freeMegabytes": 495,
+    "heldMegabytes": 2457,
+    "floorMegabytes": 2048
+   },
+   {
+    "limit": "load",
+    "needMegabytes": 800,
+    "freeMegabytes": 3604,
+    "heldMegabytes": 0,
+    "floorMegabytes": 4096
+   },
+   {
+    "limit": "none",
+    "needMegabytes": 800,
+    "freeMegabytes": 5152,
+    "heldMegabytes": 0,
+    "floorMegabytes": 2048
+   },
+   {
+    "limit": "pressure",
+    "needMegabytes": 800,
+    "freeMegabytes": 9952,
+    "heldMegabytes": 0,
+    "floorMegabytes": 2048
+   },
+   {
+    "limit": "pressure",
+    "needMegabytes": 800,
+    "freeMegabytes": 9952,
+    "heldMegabytes": 0,
+    "floorMegabytes": 2048
+   },
+   {
+    "limit": "cores",
+    "needMegabytes": 800,
+    "freeMegabytes": 9952,
+    "heldMegabytes": 0,
+    "floorMegabytes": 2048
+   },
+   {
+    "limit": "cores",
+    "needMegabytes": 800,
+    "freeMegabytes": 9152,
+    "heldMegabytes": 0,
+    "floorMegabytes": 2048
+   },
+   {
+    "limit": "memory",
+    "needMegabytes": 800,
+    "freeMegabytes": 0,
+    "heldMegabytes": 0,
+    "floorMegabytes": 2048
+   },
+   {
+    "limit": "none",
+    "needMegabytes": 800,
+    "freeMegabytes": 370304,
+    "heldMegabytes": 0,
+    "floorMegabytes": 4096
+   },
+   {
+    "limit": "none",
+    "needMegabytes": 800,
+    "freeMegabytes": 264,
+    "heldMegabytes": 0,
+    "floorMegabytes": 1536
+   },
+   {
+    "limit": "memory",
+    "needMegabytes": 800,
+    "freeMegabytes": 164,
+    "heldMegabytes": 0,
+    "floorMegabytes": 1536
+   },
+   {
+    "limit": "cores",
+    "needMegabytes": 800,
+    "freeMegabytes": 9952,
+    "heldMegabytes": 0,
+    "floorMegabytes": 2048
+   },
+   {
+    "limit": "waiting",
+    "needMegabytes": 800,
+    "freeMegabytes": 9952,
+    "heldMegabytes": 0,
+    "floorMegabytes": 2048
+   },
+   {
+    "limit": "waiting",
+    "needMegabytes": 800,
+    "freeMegabytes": 9952,
+    "heldMegabytes": 0,
+    "floorMegabytes": 2048
+   },
+   {
+    "limit": "waiting",
+    "needMegabytes": 800,
+    "freeMegabytes": 9952,
+    "heldMegabytes": 0,
+    "floorMegabytes": 2048
+   },
+   {
+    "limit": "pressure",
+    "needMegabytes": 800,
+    "freeMegabytes": 9952,
+    "heldMegabytes": 0,
+    "floorMegabytes": 2048
+   },
+   {
+    "limit": "load",
+    "needMegabytes": 800,
+    "freeMegabytes": 2004,
+    "heldMegabytes": 0,
+    "floorMegabytes": 4096
+   },
+   {
+    "limit": "load",
+    "needMegabytes": 800,
+    "freeMegabytes": 15904,
+    "heldMegabytes": 0,
+    "floorMegabytes": 4096
+   },
+   {
+    "limit": "cores",
+    "needMegabytes": 800,
+    "freeMegabytes": 9152,
+    "heldMegabytes": 0,
+    "floorMegabytes": 2048
+   },
+   {
+    "limit": "load",
+    "needMegabytes": 1064,
+    "freeMegabytes": 4712,
+    "heldMegabytes": 4915,
+    "floorMegabytes": 4096
+   },
+   {
+    "limit": "load",
+    "needMegabytes": 1100,
+    "freeMegabytes": 1195,
+    "heldMegabytes": 2457,
+    "floorMegabytes": 2048
+   },
+   {
+    "limit": "memory",
+    "needMegabytes": 1100,
+    "freeMegabytes": 395,
+    "heldMegabytes": 5457,
+    "floorMegabytes": 2048
+   },
+   {
+    "limit": "memory",
+    "needMegabytes": 1237,
+    "freeMegabytes": 258,
+    "heldMegabytes": 2457,
+    "floorMegabytes": 2048
+   },
+   {
+    "limit": "none",
+    "needMegabytes": 1000,
+    "freeMegabytes": 952,
+    "heldMegabytes": 0,
+    "floorMegabytes": 2048
+   },
+   {
+    "limit": "memory",
+    "needMegabytes": 1000,
+    "freeMegabytes": 0,
+    "heldMegabytes": 0,
+    "floorMegabytes": 2048
+   },
+   {
+    "limit": "cores",
+    "needMegabytes": 1064,
+    "freeMegabytes": 5299,
+    "heldMegabytes": 6451,
+    "floorMegabytes": 4096
+   },
+   {
+    "limit": "memory",
+    "needMegabytes": 1064,
+    "freeMegabytes": 0,
+    "heldMegabytes": 15939,
+    "floorMegabytes": 4096
+   },
+   {
+    "limit": "waiting",
+    "needMegabytes": 1000,
+    "freeMegabytes": 0,
+    "heldMegabytes": 2457,
+    "floorMegabytes": 2048
+   },
+   {
+    "limit": "waiting",
+    "needMegabytes": 900,
+    "freeMegabytes": 3464,
+    "heldMegabytes": 0,
+    "floorMegabytes": 1536
+   },
+   {
+    "limit": "memory",
+    "needMegabytes": 1000,
+    "freeMegabytes": 0,
+    "heldMegabytes": 5000,
+    "floorMegabytes": 2048
+   },
+   {
+    "limit": "memory",
+    "needMegabytes": 1000,
+    "freeMegabytes": 952,
+    "heldMegabytes": 0,
+    "floorMegabytes": 2048
+   },
+   {
+    "limit": "memory",
+    "needMegabytes": 1000,
+    "freeMegabytes": 952,
+    "heldMegabytes": 0,
+    "floorMegabytes": 2048
+   },
+   {
+    "limit": "waiting",
+    "needMegabytes": 1000,
+    "freeMegabytes": 0,
+    "heldMegabytes": 6000,
+    "floorMegabytes": 2048
+   },
+   {
+    "limit": "cores",
+    "needMegabytes": 800,
+    "freeMegabytes": 9952,
+    "heldMegabytes": 0,
+    "floorMegabytes": 2048
+   },
+   {
+    "limit": "pressure",
+    "needMegabytes": 800,
+    "freeMegabytes": 9952,
+    "heldMegabytes": 0,
+    "floorMegabytes": 2048
+   },
+   {
+    "limit": "memory",
+    "needMegabytes": 900,
+    "freeMegabytes": 464,
+    "heldMegabytes": 0,
+    "floorMegabytes": 1536
+   }
+  ]
+ },
+ "recycle": [
+  {
+   "rss": 1334,
+   "readyRss": 900,
+   "recycleMegabytes": 1200
+  },
+  {
+   "rss": 1334,
+   "readyRss": 700,
+   "recycleMegabytes": 1200
+  },
+  {
+   "rss": 1100,
+   "readyRss": 300,
+   "recycleMegabytes": 1200
+  },
+  {
+   "rss": 2500,
+   "readyRss": 1900,
+   "recycleMegabytes": 1200
+  },
+  {
+   "rss": 2499,
+   "readyRss": 1900,
+   "recycleMegabytes": 1200
+  }
+ ]
+}

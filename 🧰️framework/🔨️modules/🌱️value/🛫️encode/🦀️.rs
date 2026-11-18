@@ -243,9 +243,18 @@ impl<'a> NativeEncodeControl<'a> {
     pub fn step(&mut self)->Result<(),ValueError>{self.advance(1)}
     /// 📦️ Bounds local storage; original allocation ports require their quoted actual effect.
     pub fn charge(&mut self,bytes:usize)->Result<(),ValueError>{
-        if !matches!(self.allocation,allocation::NativeEncodeAllocationBinding::Local)||self.scoped_allocation.is_some(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native original allocation requires its quoted actual effect"))}
         let next=self.owned_bytes().checked_add(bytes).filter(|next|*next<=self.maximum_bytes).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"native encoding ownership exceeds caller limit"))?;
-        if !self.started||bytes>65536{self.checkpoint()?;}let request=NativeAllocationRequest{bytes,owned_bytes:self.owned_bytes(),next_owned_bytes:next,maximum_bytes:self.maximum_bytes};self.ledger.as_mut().expect("original encode ledger is lent").commit(request)?;Ok(())
+        if !self.started||bytes>65536{self.checkpoint()?;}let request=NativeAllocationRequest{bytes,owned_bytes:self.owned_bytes(),next_owned_bytes:next,maximum_bytes:self.maximum_bytes};
+        let forwarded:Option<&mut (dyn NativeSendAllocationLoan+'_)>=match self.scoped_allocation.as_deref_mut(){Some(port)=>Some(port),None=>match &mut self.allocation{allocation::NativeEncodeAllocationBinding::Forwarded(port)=>Some(&mut **port),allocation::NativeEncodeAllocationBinding::Local=>None}};
+        if let Some(port)=forwarded{
+            if !semio_framework_value_control_contract::NativeAllocationLoan::matches_transaction(&*port,None){return Ok(())}
+            let mut slot=None;semio_framework_value_control_contract::NativeAllocationLoan::begin(&mut *port,request,false,&mut slot)?;
+            let verdict=slot.as_mut().and_then(|state|state.take_verdict());semio_framework_value_control_contract::NativeAllocationLoan::finish(&mut *port,&mut slot)?;
+            if let Some(Err(refusal))=verdict{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,format!("{refusal:?}")))}
+            if let Some(ledger)=self.ledger.as_mut(){ledger.commit(request)?}
+            return Ok(())
+        }
+        self.ledger.as_mut().expect("original encode ledger is lent").commit(request)?;Ok(())
     }
     /// 🗂️ Reserves a known typed frontier before creating its slots.
     pub fn allocate_vec<T>(&mut self,count:usize)->Result<Vec<T>,ValueError>{let bytes=count.checked_mul(size_of::<T>()).filter(|bytes|*bytes<=isize::MAX as usize).ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit, "native encoding collection size overflow"))?;self.charge(bytes)?;let mut output=Vec::new();output.try_reserve_exact(count).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "native encoding collection allocation failed"))?;Ok(output)}

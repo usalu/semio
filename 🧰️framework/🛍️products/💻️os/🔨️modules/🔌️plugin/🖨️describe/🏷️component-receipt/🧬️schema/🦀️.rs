@@ -11,8 +11,8 @@ use serde::{Deserialize, Serialize};
 pub const COMPONENT_RECEIPT_SCHEMA: &str = "semio.plugin.component-receipt/v1";
 /// 🎯️ The one component target triple (`ComponentReceiptV1.target`).
 pub const COMPONENT_TARGET: &str = "wasm32-wasip2";
-/// 🧱️ The 256 MiB bound of the one shipped profile (`ComponentProfilePolicies.release.maximumBytes`).
-pub const SHIPPED_COMPONENT_MAX_BYTES: u64 = 268_435_456;
+/// 🧱️ The 1 GiB bound of the one shipped profile (`ComponentProfilePolicies.release.maximumBytes`).
+pub const SHIPPED_COMPONENT_MAX_BYTES: u64 = 1_073_741_824;
 /// 🧯️ The local-only 512 MiB cap of `prototype` (`ComponentProfilePolicies.prototype.maximumBytes`).
 pub const ITERATE_COMPONENT_MAX_BYTES: u64 = 536_870_912;
 /// 🪶️ The fewest bytes a component can have (`ComponentReceiptV1.wasmBytes.minimum`).

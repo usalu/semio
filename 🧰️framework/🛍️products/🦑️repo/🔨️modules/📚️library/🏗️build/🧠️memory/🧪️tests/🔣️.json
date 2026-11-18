@@ -23,6 +23,7 @@
   "serviceHostShare": 0.6,
   "serviceMinimumMegabytes": 2048,
   "initialOwnerMegabytes": 256,
+  "floorOwnerMegabytes": 64,
   "safetyMarginBasisPoints": 1000,
   "parentManagedMegabytes": 1536,
   "parentHostShare": 0.0625,
@@ -32,11 +33,13 @@
   "collectAboveMegabytes": 768,
   "collectGrowthMegabytes": 384,
   "collectMinimumIntervalMilliseconds": 3000,
+  "collectDutyPercent": 10,
   "hostAvailableFloorMegabytes": 1536,
   "budgetEnvironment": "SEMIO_GRAPH_MEMORY_MB",
   "heapEnvironment": "BUN_JSC_forceRAMSize",
   "planEnvironment": "SEMIO_HOST_CAPACITY_PLAN",
   "limitEnvironment": "SEMIO_GRAPH_MEMORY_LIMIT_MB",
+  "planCeilingEnvironment": "SEMIO_GRAPH_PLAN_CEILING_MB",
   "peakSamples": 8,
   "peakCeilingMegabytes": 4608,
   "stopCollectMinimumMilliseconds": 1000,
@@ -48,7 +51,7 @@
  },
  "messages": {
   "en": {
-   "waiting": "graph: waiting for memory headroom ({used} of {budget} MB reserved, {running} projects running): {key} needs {need} MB and has waited {seconds} s; after {limit} s it runs alone if it fits the {available} MB one project is granted, otherwise the run is refused with exit 75",
+   "waiting": "graph: waiting for memory headroom ({used} of {budget} MB reserved, {running} projects running): {key} needs {need} MB and has waited {seconds} s; after {limit} s it runs beside the others as soon as it fits the memory that is really free and the {available} MB one project is granted, otherwise the run is refused with exit 75",
    "serial": "graph: headroom of {budget} MB is below one project ({used} MB), inferring one project at a time",
    "resumed": "graph: headroom of {budget} MB again ({used} MB taken), resuming",
    "learning": "graph: no memory peak learned for {kind} projects yet ({used} MB assumed, {budget} MB headroom), inferring one at a time: {key} has waited {seconds} s for the running project, at most {limit} s",
@@ -58,7 +61,7 @@
    "fleet": "graph: waited {seconds} s for memory headroom, asking the fleet to infer the remaining {count} project(s)"
   },
   "de": {
-   "waiting": "Graph: wartet auf Speicherreserve ({used} von {budget} MB reserviert, {running} Projekte laufen): {key} braucht {need} MB und wartet seit {seconds} s; nach {limit} s läuft es allein, wenn es in die {available} MB passt, die ein Projekt bekommt, sonst wird der Lauf mit Exit 75 abgewiesen",
+   "waiting": "Graph: wartet auf Speicherreserve ({used} von {budget} MB reserviert, {running} Projekte laufen): {key} braucht {need} MB und wartet seit {seconds} s; nach {limit} s läuft es neben den anderen, sobald es in den wirklich freien Speicher und in die {available} MB passt, die ein Projekt bekommt, sonst wird der Lauf mit Exit 75 abgewiesen",
    "serial": "Graph: Reserve von {budget} MB unter einem Projekt ({used} MB), Projekte werden einzeln abgeleitet",
    "resumed": "Graph: Reserve von {budget} MB wieder da ({used} MB belegt), es geht weiter",
    "learning": "Graph: für {kind}-Projekte ist noch kein Speicherbedarf gelernt ({used} MB angenommen, {budget} MB Reserve), Projekte werden einzeln abgeleitet: {key} wartet seit {seconds} s auf das laufende Projekt, höchstens {limit} s",
@@ -164,7 +167,7 @@
     "LANG": "en_US"
    },
    "expect": [
-    "graph: waiting for memory headroom (1234 of 3072 MB reserved, 5 projects running): @semio-tech/stdio-semio-rs needs 465 MB and has waited 12 s; after 60 s it runs alone if it fits the 2048 MB one project is granted, otherwise the run is refused with exit 75"
+    "graph: waiting for memory headroom (1234 of 3072 MB reserved, 5 projects running): @semio-tech/stdio-semio-rs needs 465 MB and has waited 12 s; after 60 s it runs beside the others as soon as it fits the memory that is really free and the 2048 MB one project is granted, otherwise the run is refused with exit 75"
    ]
   },
   {
@@ -183,7 +186,7 @@
     "LANG": "de_DE"
    },
    "expect": [
-    "Graph: wartet auf Speicherreserve (1234 von 3072 MB reserviert, 5 Projekte laufen): @semio-tech/stdio-semio-rs braucht 465 MB und wartet seit 12 s; nach 60 s läuft es allein, wenn es in die 2048 MB passt, die ein Projekt bekommt, sonst wird der Lauf mit Exit 75 abgewiesen"
+    "Graph: wartet auf Speicherreserve (1234 von 3072 MB reserviert, 5 Projekte laufen): @semio-tech/stdio-semio-rs braucht 465 MB und wartet seit 12 s; nach 60 s läuft es neben den anderen, sobald es in den wirklich freien Speicher und in die 2048 MB passt, die ein Projekt bekommt, sonst wird der Lauf mit Exit 75 abgewiesen"
    ]
   },
   {
@@ -200,8 +203,8 @@
    },
    "environment": {},
    "expect": [
-    "graph: waiting for memory headroom (1234 of 3072 MB reserved, 5 projects running): @semio-tech/stdio-semio-rs needs 465 MB and has waited 12 s; after 60 s it runs alone if it fits the 2048 MB one project is granted, otherwise the run is refused with exit 75",
-    "Graph: wartet auf Speicherreserve (1234 von 3072 MB reserviert, 5 Projekte laufen): @semio-tech/stdio-semio-rs braucht 465 MB und wartet seit 12 s; nach 60 s läuft es allein, wenn es in die 2048 MB passt, die ein Projekt bekommt, sonst wird der Lauf mit Exit 75 abgewiesen"
+    "graph: waiting for memory headroom (1234 of 3072 MB reserved, 5 projects running): @semio-tech/stdio-semio-rs needs 465 MB and has waited 12 s; after 60 s it runs beside the others as soon as it fits the memory that is really free and the 2048 MB one project is granted, otherwise the run is refused with exit 75",
+    "Graph: wartet auf Speicherreserve (1234 von 3072 MB reserviert, 5 Projekte laufen): @semio-tech/stdio-semio-rs braucht 465 MB und wartet seit 12 s; nach 60 s läuft es neben den anderen, sobald es in den wirklich freien Speicher und in die 2048 MB passt, die ein Projekt bekommt, sonst wird der Lauf mit Exit 75 abgewiesen"
    ]
   },
   {

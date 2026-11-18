@@ -1,0 +1,143 @@
+{
+ "50": {
+  "chainstay": "chainstay-l,chainstay-r",
+  "seatstay": "seatstay-l,seatstay-r",
+  "seat-tube": "seat-tube",
+  "seat-post": "seat-post,seat-collar",
+  "saddle": "saddle",
+  "main-beam": "main-beam",
+  "head-riser": "head-riser,head-cup",
+  "rear-rack": "rack-deck,rack-rim,rack-strut-l,rack-strut-r",
+  "rear-fender": "fender-r",
+  "rear-light": "rear-light",
+  "box-shell": "box-wall-l,box-wall-r,box-floor,box-rear-wall,box-front-wall,box-nose",
+  "battery-case": "battery-case",
+  "motor-housing": "motor-housing",
+  "chainring": "chainring",
+  "crank-arms": "crank-arm-n,crank-arm-f",
+  "pedal-a": "pedal-n",
+  "pedal-b": "pedal-f",
+  "stand-leg": "stand-leg-l,stand-leg-r",
+  "stand-foot": "stand-foot",
+  "bar-stem": "stem,stem-cross,cockpit-plate",
+  "handlebar": "handlebar-l,handlebar-r,grip-l,grip-r",
+  "steer-rod": "steer-rod",
+  "fork-leg": "fork-leg-l,fork-leg-r",
+  "head-lamp": "head-lamp,head-lamp-bracket",
+  "front-fender": "fender-f",
+  "crate-lower": "crate-lower",
+  "crate-upper": "crate-upper",
+  "brake-lever": "brake-lever-l,brake-lever-r"
+ },
+ "100": {
+  "elevation": {
+   "chainstay": "chainstay-l,chainstay-r",
+   "seatstay": "seatstay-l,seatstay-r",
+   "seat-tube": "seat-tube",
+   "main-beam": "main-beam",
+   "bar-stem": "stem,stem-cross,cockpit-plate",
+   "fork-leg": "fork-leg-l,fork-leg-r,fork-crown",
+   "steer-rod": "steer-rod,head-riser",
+   "stand-leg": "stand-leg-l,stand-leg-r,stand-hinge",
+   "saddle": "saddle",
+   "handlebar": "handlebar-l,handlebar-r,grip-l,grip-r",
+   "box-shell": "box-wall-l,box-wall-r,box-floor,box-rear-wall,box-front-wall,box-nose",
+   "crate-lower": "crate-lower",
+   "crate-upper": "crate-upper",
+   "battery-case": "battery-case",
+   "motor-housing": "motor-housing",
+   "rear-fender": "fender-r",
+   "front-fender": "fender-f",
+   "rear-light": "rear-light",
+   "head-lamp": "head-lamp",
+   "rear-rack": "rack-deck,rack-strut-l,rack-strut-r",
+   "crank-arms": "crank-axle,crank-arm-n,crank-arm-f,pedal-n,pedal-f"
+  },
+  "front": {
+   "rear-fender": "fender-r",
+   "rear-rack": "rack-deck,rack-strut-l,rack-strut-r",
+   "seat-tube": "seat-tube",
+   "saddle": "saddle",
+   "motor-housing": "motor-housing",
+   "crate": "crate-lower,crate-upper",
+   "box-shell": "box-wall-l,box-wall-r,box-floor,box-rear-wall,box-front-wall,box-nose",
+   "bar-stem": "stem,stem-cross,cockpit-plate",
+   "handlebar": "handlebar-l,handlebar-r,grip-l,grip-r",
+   "steer-fork": "fork-leg-l,fork-leg-r,fork-crown",
+   "front-fender": "fender-f",
+   "head-lamp": "head-lamp",
+   "pedal-a": "pedal-n,crank-arm-n",
+   "pedal-b": "pedal-f,crank-arm-f",
+   "stand-leg-l": "stand-leg-l,stand-hinge",
+   "stand-leg-r": "stand-leg-r"
+  },
+  "plan": {
+   "rear-fender": "fender-r",
+   "rear-rack": "rack-deck,rack-strut-l,rack-strut-r",
+   "rear-stays": "chainstay-l,chainstay-r,seatstay-l,seatstay-r",
+   "seat-tube": "seat-tube",
+   "battery-case": "battery-case",
+   "saddle": "saddle",
+   "main-beam": "main-beam",
+   "motor-housing": "motor-housing",
+   "crank-arms": "crank-axle,crank-arm-n,pedal-n",
+   "crank-arms-f": "crank-arm-f,pedal-f",
+   "steer-rod": "steer-rod,head-riser",
+   "crate": "crate-lower,crate-upper",
+   "box-shell": "box-wall-l,box-wall-r,box-floor,box-rear-wall,box-front-wall,box-nose",
+   "bar-stem": "stem,stem-cross,cockpit-plate",
+   "handlebar-l": "handlebar-l,grip-l",
+   "handlebar-r": "handlebar-r,grip-r",
+   "fork": "fork-leg-l,fork-leg-r,fork-crown",
+   "front-fender": "fender-f",
+   "head-lamp": "head-lamp",
+   "stand-leg-l": "stand-leg-l,stand-hinge",
+   "stand-leg-r": "stand-leg-r"
+  }
+ },
+ "200": {
+  "elevation": {
+   "chainstay": "chainstay-l,chainstay-r",
+   "seatstay": "seatstay-l,seatstay-r",
+   "seat-tube": "seat-tube",
+   "main-beam": "main-beam",
+   "bar-stem": "stem",
+   "steer-rod": "steer-rod",
+   "stand-leg": "stand-leg-l,stand-leg-r,stand-web",
+   "saddle": "saddle",
+   "handlebar": "bars-envelope",
+   "box-shell": "box-wall-l,box-wall-r,box-floor,box-rear-wall,box-front-wall,box-nose",
+   "crate-lower": "crate-lower",
+   "crate-upper": "crate-upper",
+   "battery-case": "battery-case",
+   "motor-housing": "motor-housing",
+   "rear-fender": "fender-r"
+  },
+  "front": {
+   "rear-column": "seat-tube,saddle,rack-deck,fender-r,battery-case,motor-housing,seatstay-l,seatstay-r,chainstay-l,chainstay-r,main-beam,steer-rod",
+   "crate": "crate-lower,crate-upper",
+   "box-shell": "box-wall-l,box-wall-r,box-floor,box-rear-wall,box-front-wall,box-nose",
+   "bars": "stem,bars-envelope",
+   "fork": "fork-leg-l,fork-leg-r,fork-crown",
+   "stand": "stand-leg-l,stand-leg-r,stand-web"
+  },
+  "plan": {
+   "rear-frame": "seat-tube,saddle,rack-deck,fender-r,battery-case,motor-housing,seatstay-l,seatstay-r,chainstay-l,chainstay-r,main-beam,steer-rod",
+   "crate": "crate-lower,crate-upper",
+   "box-shell": "box-wall-l,box-wall-r,box-floor,box-rear-wall,box-front-wall,box-nose",
+   "bars": "stem,bars-envelope",
+   "fork": "fork-leg-l,fork-leg-r,fork-crown",
+   "stand-l": "stand-leg-l,stand-web",
+   "stand-r": "stand-leg-r"
+  }
+ },
+ "500": {
+  "plan": {
+   "frame-spine": "chainstay-l,chainstay-r,seatstay-l,seatstay-r,seat-tube,main-beam,steer-rod,rack-deck,head-riser",
+   "stand": "stand-web"
+  },
+  "front": {
+   "stand": "stand-web"
+  }
+ }
+}

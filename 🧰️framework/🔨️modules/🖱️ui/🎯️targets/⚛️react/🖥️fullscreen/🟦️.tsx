@@ -128,7 +128,7 @@ export function NavbarTrailingChromeSlot({
   }, [root]);
 
   return (
-    <div ref={shellRef} key="navbarTrailingChrome" data-slot="navbar-trailing-chrome" className="ms-auto flex h-medium shrink-0 min-w-fit items-center gap-single" style={parkedMinWidth > 0 ? { minWidth: parkedMinWidth } : undefined}>
+    <div ref={shellRef} key="navbarTrailingChrome" data-slot="navbar-trailing-chrome" className="ms-auto flex h-full shrink-0 min-w-fit items-stretch" style={parkedMinWidth > 0 ? { minWidth: parkedMinWidth } : undefined}>
       {beforeFullscreen}
       {showFullscreenToggle ? <NavbarFullscreenToggle onToggle={onFullscreenToggle} /> : null}
     </div>

@@ -78,6 +78,7 @@ impl RetirementQueue {
     /// 🧾️ Borrows the original queue turn receipt, including genuine failed-child effects.
     pub fn step_progress(&self)->RetainedCloneProgress{self.step_progress}
     pub fn step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{self.step_with(body,effect,|owner,effect|semio_framework_value_retirement::close_owner(owner,body,effect))}
+    fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{cursor_turn(self.step(body,effect))}
     fn requires_original_control(&self)->bool{self.selected().is_some_and(|owner|!owner.terminal_is_empty()&&owner.requires_original_control())}
     fn step_with(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,invoke:impl FnOnce(&mut dyn ErasedSnapshotRetirement,&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll)->OriginalRetirementPoll {let mut work=0;self.step_progress=empty_progress();
         let result=match self.step_original(body,effect,invoke,&mut work){Ok(step)=>{self.step_progress=step.progress();Ok(step)},Err(RetirementPollExit::Failed(error))=>{if error.retained_progress()!=empty_progress(){self.step_progress=error.retained_progress();}Err(RetirementPollExit::Failed(error.with_retained_progress(self.step_progress)))},Err(pending)=>Err(pending)};
@@ -122,6 +123,7 @@ impl RetireOwned for RetirementQueue {
 }
 fn cursor_turn(poll:OriginalRetirementPoll)->RetirementStep{retirement::erased_cursor_turn(poll)}
 impl RetirementCursor for RetirementQueue {
+ semio_framework_value_retirement::native_retirement_reply!();
  fn requires_original_birth(&self)->bool{RetirementQueue::requires_original_birth(self)}
  fn close_original_birth_step(&mut self,original:&mut semio_framework_value_retirement_contract::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->RetirementStep{cursor_turn(RetirementQueue::close_original_birth_step(self,original,grant))}
  fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{RetirementQueue::next_computational_work(self,body)}

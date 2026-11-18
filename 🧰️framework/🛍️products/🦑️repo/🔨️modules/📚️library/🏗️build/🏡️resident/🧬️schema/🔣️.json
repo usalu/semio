@@ -217,7 +217,7 @@
     "targets": {
      "type": "array",
      "minItems": 1,
-     "maxItems": 4096,
+     "maxItems": 152768,
      "uniqueItems": true,
      "items": {
       "$ref": "#/definitions/TargetRef"
@@ -345,7 +345,7 @@
    "properties": {
     "tasks": {
      "type": "array",
-     "maxItems": 65536,
+     "maxItems": 152768,
      "items": {
       "$ref": "#/definitions/PlanTask"
      }
@@ -440,6 +440,32 @@
     }
    }
   },
+  "HostOwner": {
+   "description": "HostOwnerV1: why a service lives. `launchd`: a launchd job keeps it; `foreground`: run by `repo service host run`; `direct`: started implicitly by a repo command (pid is that command) and ended after the short idle time.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["route", "pid", "idleSeconds"],
+   "properties": {
+    "route": {"enum": ["launchd", "direct", "foreground"]},
+    "pid": {"type": "integer", "minimum": 0},
+    "idleSeconds": {"type": "integer", "minimum": 0}
+   }
+  },
+  "HostIdentity": {
+   "description": "HostIdentityV1: what one graph service is keyed by (sealed implementation digest, checkout root, machine state root) and where it lives.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["implementation", "root", "state", "tag", "directory", "endpoint", "log"],
+   "properties": {
+    "implementation": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "root": {"type": "string"},
+    "state": {"type": "string"},
+    "tag": {"type": "string", "pattern": "^[0-9a-f]{12}$"},
+    "directory": {"type": "string"},
+    "endpoint": {"type": "string"},
+    "log": {"type": "string"}
+   }
+  },
   "HostWorkspace": {
    "type": "object",
    "additionalProperties": false,
@@ -516,6 +542,12 @@
     "startedAt": {
      "type": "integer",
      "minimum": 0
+    },
+    "identity": {
+     "$ref": "#/definitions/HostIdentity"
+    },
+    "owner": {
+     "$ref": "#/definitions/HostOwner"
     },
     "rssMb": {
      "type": "number",
@@ -631,6 +663,9 @@
     },
     "stopping": {
      "type": "boolean"
+    },
+    "owner": {
+     "$ref": "#/definitions/HostOwner"
     }
    }
   },
@@ -920,7 +955,8 @@
       "custody",
       "idle",
       "start",
-      "load"
+      "load",
+      "alive"
      ]
     },
     "done": {
@@ -1092,7 +1128,8 @@
     "environment",
     "internal",
     "disk",
-    "memory"
+    "memory",
+    "handover"
    ]
   },
   "Refused": {
@@ -1719,6 +1756,8 @@
     "startCeilingMilliseconds": 900000,
     "startLivenessMilliseconds": 3000,
     "reattachMaximum": 5,
+    "requestKeepaliveMilliseconds": 10000,
+    "planSilenceMilliseconds": 120000,
     "startPollMilliseconds": 50,
     "lockStaleMilliseconds": 120000,
     "takeoverMilliseconds": 15000,
@@ -1750,8 +1789,12 @@
      "settleWaitMilliseconds": 5000
     },
     "sliceRestartExitCode": 75,
-    "sliceRestartMaximum": 3,
-    "serviceRevisionFiles": ["🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🧱️limit/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🌡️pressure/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts", "🏡️resident/🏗️composition/🌐️host/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/🍎️launchd/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🧵️process/🟨️.mjs", "🏡️resident/🔐️consent/🟨️.mjs", "🏡️resident/🔐️consent/🔎️sample/🟨️.mjs", "🏡️resident/🏛️service/🧯️failure/🟨️.mjs", "🏡️resident/🏛️service/🌐️host/🟨️.mjs", "🏡️resident/🔄️reload/🟨️.mjs", "🌐️remote-execution/🛰️sidecar/🧮️closure/🟦️.ts", "🧭️invocation/🔄️reload/🟦️.ts", "🏡️resident/🧬️schema/🔣️.json", "🧠️memory/🟨️.mjs", "../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts"],
+    "sliceRestartBackoffMilliseconds": [250, 1000, 4000, 12000, 30000],
+    "sliceRestartSettleMilliseconds": 900000,
+    "sliceRestartProgressMilliseconds": 60000,
+    "sliceRestartTotalMaximum": 120,
+    "sliceRestartSameCauseMaximum": 3,
+    "serviceRevisionFiles": ["🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🧱️limit/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🌡️pressure/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/🍎️launchd/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🧵️process/🟨️.mjs", "🏡️resident/🔐️consent/🟨️.mjs", "🏡️resident/🔐️consent/🔎️sample/🟨️.mjs", "🏡️resident/🏛️service/🧯️failure/🟨️.mjs", "🏡️resident/🏛️service/🌐️host/🟨️.mjs", "🏡️resident/🔄️reload/🟨️.mjs", "🌐️remote-execution/🛰️sidecar/🧮️closure/🟦️.ts", "🧭️invocation/🔄️reload/🟦️.ts", "🏡️resident/🧬️schema/🔣️.json", "🧠️memory/🟨️.mjs", "../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts", "🌡️host-capacity/🟦️.ts", "🧠️memory/🦶️footprint/🟨️.mjs"],
     "sliceHostElasticity": {
      "maximumMegabytes": 8192,
      "hostShareBasisPoints": 7500,
@@ -1771,6 +1814,7 @@
     "maximumQueued": 64,
     "maximumClients": 64,
     "idleShutdownMilliseconds": 900000,
+    "implicitIdleShutdownMilliseconds": 120000,
     "pinReleaseMilliseconds": 20000,
     "maximumResidentBytes": 536870912,
     "residentCheckMilliseconds": 5000,
@@ -1783,12 +1827,11 @@
      5000
     ],
     "watcherRestartsBeforePortable": 3,
-    "memoMaximumEntries": 65536,
-    "digestCacheMaximumFiles": 262144,
-    "outputSignatureMaximumEntries": 2048,
+    "memoMaximumEntries": 262144,
+    "digestCacheMaximumFiles": 1048576,
     "replayMaximumBytes": 1048576,
     "frontierMaximumEntries": 64,
-    "journalMaximumEvents": 262144,
+    "journalMaximumEvents": 1048576,
     "graphInputNames": [
      "project.json",
      "📋️project.json",
@@ -1908,14 +1951,22 @@
       "graph": "Re-reading the project graph after a configuration change.",
       "host-start": "Starting the repo graph service for this host.",
       "host-wait": "Waiting for the repo graph service ({elapsed} ms).",
+      "host-alive": "The graph service holds this request and is working on it ({seconds} s).",
+      "host-silent": "The graph service sent nothing for {seconds} s although it should hold the request; the request is treated as lost and asked again.",
       "host-load": "Loading the project graph of {workspace}.",
       "host-plan": "Planning {targets} targets.",
+      "host-plan-roster": "Planning the selected targets and what they need.",
+      "host-plan-roster": "Planning the selected targets and what they need.",
       "host-unknown-workspace": "The workspace {workspace} does not match its root.",
       "host-unknown-target": "Unknown target {target}.",
       "host-stale": "The repo graph service runs other code than this client and retires; a fresh one is started.",
       "host-unavailable": "The repo graph service did not become ready: {reason}.",
       "host-started": "The repo graph service is running (pid {pid}, {workspaces} workspaces, {megabytes} MB).",
       "host-down": "No repo graph service is running on this host.",
+      "host-owner-direct": "Owner: started implicitly by a repo command (pid {pid}); ends after {seconds} s without a client.",
+      "host-owner-launchd": "Owner: its launchd job keeps it; ends after {seconds} s idle.",
+      "host-owner-foreground": "Owner: run in the foreground (pid {pid}); ends after {seconds} s idle.",
+      "host-identity": "Identity: code {code}, checkout {root}, machine state {state}, since {started}; {inFlight} running, {queued} waiting; socket {endpoint}, log {log}.",
       "host-reload-pending": "The repo graph service runs superseded code ({next}); it is replaced after a quiet period of {seconds} s at the latest.",
       "host-reload-draining": "The repo graph service drains for its replacement ({next}): plans in flight run to completion (cut only after {seconds} s without progress).",
       "host-reload-blocked": "The repo graph service keeps running its code: the newer code ({next}) cannot be sealed ({reason}).",
@@ -1942,7 +1993,8 @@
       "invalid": "The request is invalid: {reason}.",
       "deadline": "The request exceeded its deadline of {milliseconds} ms.",
       "environment": "The request runs with {key}={value} but the resident service was started with {actual}; running in this process instead.",
-      "internal": "The resident service met an unexpected failure (reference {reference}); try again, the details under that reference are in the service log {log}.",
+      "internal": "The resident service met an unexpected failure (reference {reference}): {message}{frames}; try again, the details under that reference are in the service log {log}.",
+      "internal-repeated": "The resident service met the same unexpected failure {count} times in a row (reference {reference}): {message}{frames}; it is deterministic and trying again does not help, the code or the install on this machine has to change first; the details under that reference are in the service log {log}.",
       "access-denied": "macOS denied the resident service access to {place} (your {folder} folder) while it answered a request (reference {reference}; the service was started as route {route}, pid {pid}, parent pid {ppid}). The service has stopped itself and never serves without access. If the command started the service again under your own session and this message returns, send the line that starts with `where:` below reference {reference} in {log}. Otherwise switch on {folder} Folder for `repo` ({identity}) under System Settings, Privacy & Security, Files & Folders (or Full Disk Access), then run the command again, or keep the checkout outside Documents, Desktop and Downloads. Details: {log}.",
       "consent-denied": "macOS does not let `repo` read your {folder} folder: {place} is refused, so {root} cannot be read. Open System Settings, Privacy & Security, Files & Folders, switch on {folder} Folder for `repo` ({identity}) (or give it Full Disk Access) or click \"Allow\" on the dialog \"repo would like to access files in your {folder} folder\", then run the command again. The consent is asked once per machine; a checkout outside Documents, Desktop and Downloads needs none.",
       "consent-waiting": "A macOS dialog waits for your answer: \"repo would like to access files in your {folder} folder\" ({identity}). Click \"Allow\" in the session of the logged-in user (or switch on {folder} Folder for `repo` under System Settings, Privacy & Security, Files & Folders), then run the command again. {root} cannot be read before that.",
@@ -1966,36 +2018,54 @@
       "host-slice-owners-waiting": "Reading the project graph slice ({seconds} s): {phase} {done} of {total}; running (name, kind, seconds, rows): {owners}; waiting for memory headroom ({used} of {budget} MB reserved).",
       "host-slice-owners-reserving": "Reading the project graph slice ({seconds} s): {phase} {done} of {total}; running (name, kind, seconds, rows): {owners}; waiting for memory: {used} MB are asked for ({minimum} MB are enough to start), {budget} MB are free above the {floor} MB floor of this machine; the request is refused after {limit} s if nothing of ours runs and not even {minimum} MB are free.",
       "host-slice-owners-reduced": "Reading the project graph slice ({seconds} s): {phase} {done} of {total}; running (name, kind, seconds, rows): {owners}; the host has {budget} MB available, so only {used} MB are reserved and the owners are re-inferred in smaller waves (slower, but it never waits for memory the host cannot give).",
-      "host-slice-owners-restarted": "Reading the project graph slice ({seconds} s): the code on this machine changed under the slice worker (it ended with exit code {kind}), so it is started again with the current code, attempt {used} of {budget}.",
+      "host-slice-owners-restarted": "Reading the project graph slice ({seconds} s): the code on this machine changed under the slice worker (it ended with exit code {kind}), so it is started again with the current code in {limit} s; the replica has not settled for {used} of {budget} s (the wait ends the plan only when no worker lasts that long).",
+      "host-slice-owners-cut": "Reading the project graph slice ({seconds} s): the slice worker grew to {kind} MB, more than the {limit} MB a plan may take on this machine, so the work is cut smaller (step {used} of {budget}: fewer projects at once and smaller waves) and continues; projects already inferred are kept and nothing is repeated.",
+      "host-slice-owners-handoff": "Reading the project graph slice ({seconds} s): the owners {kind} are too heavy for this machine, so they are handed to the fleet (a wanted marker is published) and waited for, and the read starts again when another machine has inferred and published them (attempt {used} of {budget}); everything else already inferred is kept.",
       "host-slice-owners-serial": "Reading the project graph slice ({seconds} s): {phase} {done} of {total}; running (name, kind, seconds, rows): {owners}; headroom of {budget} MB is below one project ({used} MB), one at a time.",
       "host-slice-owners-resumed": "Reading the project graph slice ({seconds} s): {phase} {done} of {total}; running (name, kind, seconds, rows): {owners}; headroom of {budget} MB again ({used} MB taken), resuming.",
+      "host-slice-owners-queued-root": "Reading the project graph slice ({seconds} s): waiting for the load of this checkout that is running ahead of this one ({used} load(s) of {budget} workers busy); both share one fact store, so this one starts when that one has ended.",
+      "host-slice-owners-queued-leader": "Reading the project graph slice ({seconds} s): waiting for the load of this checkout that is running ahead of this one ({used} load(s) of {budget} workers busy; leader: {kind} {done} of {total}); both share one fact store, so this one starts when that one has ended.",
+      "host-slice-owners-queued-pool": "Reading the project graph slice ({seconds} s): waiting for a free slice worker ({used} of {budget} workers busy, {limit} load(s) ahead).",
       "host-slice-owners-stopped": "Reading the project graph slice ({seconds} s): {phase} {done} of {total}; running (name, kind, seconds, rows): {owners}; a {kind} project was stopped because it took {used} MB and its limit is {budget} MB.",
       "host-memory-pressure-psi": "The plan was cancelled: the service has been stalled by memory pressure for {seconds} s (processes waited {value}% of the time for memory, limit {limit}%); try again later or ask for a smaller selection.",
       "host-memory-pressure-events": "The plan was cancelled: the service's memory limit has throttled it for {seconds} s ({value} events per second, limit {limit}); try again later or ask for a smaller selection.",
       "host-memory-pressure-free": "The plan was cancelled: the host has had only {value} MB of free memory (floor {limit} MB) for {seconds} s; try again later or ask for a smaller selection.",
       "host-memory-budget": "The plan cannot continue: the service holds {current} MB of its {limit} MB memory limit (safety margin {margin} MB), so it was cancelled to keep the service up; try again later or ask for a smaller selection.",
-      "host-slice-restarts": "The plan cannot continue: the slice worker ended {restarts} times in a row with exit code {exit} because the code on this machine kept changing under it; try again once the replica has settled.",
+      "host-slice-owners-restarted-cause": "Reading the project graph slice ({seconds} s): the slice worker ended with exit code {kind} and said: {cause}. It is started again in {limit} s (the replica has not settled for {used} of {budget} s).",
+      "host-slice-worker-failing": "The plan cannot continue: the slice worker ended {count} times in a row with exit code {exit} and the same text: {cause}",
+      "host-slice-restarts": "The plan cannot continue: the slice worker ended {restarts} times in a row with exit code {exit} and the replica did not settle within the declared time because the code on this machine kept changing under it; try again once the replica has settled.",
       "host-stalled": "The plan was cancelled: the slice load made no progress for {minutes} minutes; the service keeps running, try again later.",
       "host-graph-plan-too-heavy": "The project graph could not be read on this machine yet: the plan stage {stage} (during {operation}) grew to {megabytes} MB, more than the {limit} MB this machine gives a plan, and only {available} MB of memory were available (at least {reserve} MB are kept in reserve) after it gave back what it could. It was stopped before the host ran short of memory. Nothing is wrong with your tree; run the command again when a machine with free memory serves the graph, or read the graph on a larger machine.",
       "host-graph-plan-settled": "graph: plan stage {stage} settled from {from} to {to} MB",
       "host-graph-memory-refused": "The project graph could not be read on this machine yet: {key} needs {need} MB, but one project is granted {granted} MB here and {free} MB were free after {seconds} s, so the read was refused before the host ran short of memory. Nothing is wrong with your tree; run the command again later, or let the fleet infer it.",
-      "host-graph-owner-too-heavy": "The project graph could not be read on this machine yet: {named} need(s) more memory than this machine can give one project ({limit} MB). Even alone, with nothing else of the read running, it does not fit. The inference was stopped (or not started) before the host ran short of memory. Nothing is wrong with your tree; run the command again when a machine with free memory serves the graph, or read the graph on a larger machine.",
+      "host-lease-refused": "The project graph could not be read on this machine yet: it waited {seconds} s for {requested} ({mode}) while holding {held}, and the lease is held by process {holderPid} ({holderCommand}) for {holderSeconds} s. That process is a cache image operation of this machine (a maintenance, a retirement or a publication); nothing is wrong with the graph. Wait until it has ended and run the command again; the lease status names the holder.",
+      "host-lease-refused-unregistered": "The project graph could not be read on this machine yet: it waited {seconds} s for {requested} ({mode}) while holding {held}, and the lease is held by no process of the lease registry (a process of older code on this machine, or a claim queue ahead of this read). Nothing is wrong with the graph. Wait until the holder has ended and run the command again; the lease status names every holder it knows.",
+      "host-graph-owner-too-heavy": "The project graph could not be read on this machine yet: {named} need(s) more memory than this machine can give one project ({limit} MB); {producers} machine(s) of the fleet delivered records for this read. Even alone, with nothing else of the read running, it does not fit. The inference was stopped (or not started) before the host ran short of memory. Nothing is wrong with your tree; run the command again when a machine with free memory serves the graph, or read the graph on a larger machine.",
       "host-relative-call-refused": "A filesystem call of the resident service was refused with EPERM for {place} ({reads} readings agreed), but the service itself reads the same place by path without a refusal ({found}), so this is not the proven missing macOS file access consent: the service keeps running and nothing was changed. Run the command again; if this message returns, send the line that starts with `where:` below reference {reference} in {log}.",
       "host-graph-wanted-expired": "The project graph could not be read on this machine: it can infer only {local} of the stale projects, the fleet was asked for {wanted} and delivered {arrived} within {seconds} s, {missing} are still missing{heavy}. Nothing is wrong with your tree; run the command again when a machine with free memory serves the graph, or read the graph on a larger machine.",
+      "host-graph-handover": "The graph read hands over so that it continues on current code; what it finished is kept ({message}).",
       "host-plans": "Plans: {total} asked, {hits} from memory, {computed} computed (last {seconds} s, {budget} over budget); owners re-inferred {reinferred}, cut off {cutoff}; capture {files} files, {probes} probes."
      },
      "de": {
       "graph": "Lese den Projektgraphen nach einer Konfigurationsänderung neu.",
       "host-start": "Starte den Repo-Graphdienst dieses Rechners.",
       "host-wait": "Warte auf den Repo-Graphdienst ({elapsed} ms).",
+      "host-alive": "Der Graphdienst hält diese Anfrage und arbeitet daran ({seconds} s).",
+      "host-silent": "Der Graphdienst hat {seconds} s lang nichts gesendet, obwohl er die Anfrage halten sollte; die Anfrage geht verloren und wird neu gestellt.",
       "host-load": "Lese den Projektgraphen von {workspace}.",
       "host-plan": "Plane {targets} Ziele.",
+      "host-plan-roster": "Plane die gewählten Ziele und was sie brauchen.",
+      "host-plan-roster": "Plane die gewählten Ziele und was sie brauchen.",
       "host-unknown-workspace": "Der Arbeitsbereich {workspace} passt nicht zu seinem Wurzelverzeichnis.",
       "host-unknown-target": "Unbekanntes Ziel {target}.",
       "host-stale": "Der Repo-Graphdienst führt anderen Code als dieser Client aus und tritt ab; ein frischer wird gestartet.",
       "host-unavailable": "Der Repo-Graphdienst ist nicht bereit geworden: {reason}.",
       "host-started": "Der Repo-Graphdienst läuft (pid {pid}, {workspaces} Arbeitsbereiche, {megabytes} MB).",
       "host-down": "Auf diesem Rechner läuft kein Repo-Graphdienst.",
+      "host-owner-direct": "Besitzer: von einem repo-Befehl implizit gestartet (pid {pid}); endet nach {seconds} s ohne Client.",
+      "host-owner-launchd": "Besitzer: sein launchd-Job hält ihn; endet nach {seconds} s Leerlauf.",
+      "host-owner-foreground": "Besitzer: im Vordergrund ausgeführt (pid {pid}); endet nach {seconds} s Leerlauf.",
+      "host-identity": "Identität: Code {code}, Checkout {root}, Maschinenzustand {state}, seit {started}; {inFlight} laufen, {queued} warten; Socket {endpoint}, Log {log}.",
       "host-reload-pending": "Der Repo-Graphdienst führt überholten Code aus ({next}); er wird spätestens nach einer Ruhezeit von {seconds} s ersetzt.",
       "host-reload-draining": "Der Repo-Graphdienst läuft für seine Ablösung ({next}) aus: laufende Pläne laufen zu Ende (Abbruch erst nach {seconds} s ohne Fortschritt).",
       "host-reload-blocked": "Der Repo-Graphdienst führt seinen Code weiter aus: der neuere Code ({next}) lässt sich nicht versiegeln ({reason}).",
@@ -2022,7 +2092,8 @@
       "invalid": "Die Anfrage ist ungültig: {reason}.",
       "deadline": "Die Anfrage hat ihre Frist von {milliseconds} ms überschritten.",
       "environment": "Die Anfrage läuft mit {key}={value}, der residente Dienst wurde aber mit {actual} gestartet; der Befehl läuft stattdessen in diesem Prozess.",
-      "internal": "Der residente Dienst ist auf einen unerwarteten Fehler gestoßen (Referenz {reference}); versuche es erneut, die Einzelheiten zu dieser Referenz stehen im Dienstprotokoll {log}.",
+      "internal": "Der residente Dienst ist auf einen unerwarteten Fehler gestoßen (Referenz {reference}): {message}{frames}; versuche es erneut, die Einzelheiten zu dieser Referenz stehen im Dienstprotokoll {log}.",
+      "internal-repeated": "Der residente Dienst ist {count} Mal hintereinander auf denselben unerwarteten Fehler gestoßen (Referenz {reference}): {message}{frames}; er ist deterministisch und ein erneuter Versuch hilft nicht, zuerst muss sich der Code oder die Installation auf diesem Rechner ändern; die Einzelheiten zu dieser Referenz stehen im Dienstprotokoll {log}.",
       "access-denied": "macOS hat dem residenten Dienst den Zugriff auf {place} (dein Ordner {folder}) verweigert, während er eine Anfrage beantwortete (Referenz {reference}; der Dienst wurde über die Route {route} gestartet, pid {pid}, Eltern-pid {ppid}). Der Dienst hat sich selbst beendet und bedient nie ohne Zugriff. Wenn der Befehl den Dienst unter deiner eigenen Sitzung erneut gestartet hat und diese Meldung wiederkehrt, sende die Zeile, die mit `where:` beginnt, unter der Referenz {reference} in {log}. Sonst schalte unter Systemeinstellungen, Datenschutz & Sicherheit, Dateien & Ordner den Ordner {folder} für `repo` ({identity}) ein (oder Voller Festplattenzugriff) und führe den Befehl erneut aus, oder halte das Verzeichnis außerhalb von Dokumente, Schreibtisch und Downloads. Einzelheiten: {log}.",
       "consent-denied": "macOS erlaubt `repo` nicht, deinen Ordner {folder} zu lesen: {place} wird verweigert, daher kann {root} nicht gelesen werden. Öffne Systemeinstellungen, Datenschutz & Sicherheit, Dateien & Ordner, schalte den Ordner {folder} für `repo` ({identity}) ein (oder gib ihm Voller Festplattenzugriff) oder klicke bei der Abfrage „repo möchte auf Dateien in deinem Ordner {folder} zugreifen“ auf „Erlauben“ und führe den Befehl dann erneut aus. Die Erlaubnis wird einmal pro Rechner gefragt; ein Verzeichnis außerhalb von Dokumente, Schreibtisch und Downloads braucht keine.",
       "consent-waiting": "Eine macOS-Abfrage wartet auf deine Antwort: „repo möchte auf Dateien in deinem Ordner {folder} zugreifen“ ({identity}). Klicke in der Sitzung des angemeldeten Benutzers auf „Erlauben“ (oder schalte unter Systemeinstellungen, Datenschutz & Sicherheit, Dateien & Ordner den Ordner {folder} für `repo` ein) und führe den Befehl dann erneut aus. Davor kann {root} nicht gelesen werden.",
@@ -2046,22 +2117,32 @@
       "host-slice-owners-waiting": "Lese den Projektgraph-Ausschnitt ({seconds} s): {phase} {done} von {total}; laufen (Name, Art, Sekunden, Zeilen): {owners}; wartet auf Speicherreserve ({used} von {budget} MB reserviert).",
       "host-slice-owners-reserving": "Lese den Projektgraph-Ausschnitt ({seconds} s): {phase} {done} von {total}; laufen (Name, Art, Sekunden, Zeilen): {owners}; wartet auf Speicher: {used} MB werden angefragt ({minimum} MB genügen zum Start), {budget} MB sind über der Untergrenze von {floor} MB dieses Rechners frei; die Anfrage wird nach {limit} s abgelehnt, wenn nichts von uns läuft und nicht einmal {minimum} MB frei sind.",
       "host-slice-owners-reduced": "Lese den Projektgraph-Ausschnitt ({seconds} s): {phase} {done} von {total}; laufen (Name, Art, Sekunden, Zeilen): {owners}; der Rechner hat {budget} MB verfügbar, daher werden nur {used} MB reserviert und die Projekte in kleineren Wellen neu abgeleitet (langsamer, aber ohne Warten auf Speicher, den der Rechner nicht geben kann).",
-      "host-slice-owners-restarted": "Lese den Projektgraph-Ausschnitt ({seconds} s): der Code dieses Rechners hat sich unter dem Ausschnitt-Worker geändert (Exit-Code {kind}); er wird mit dem aktuellen Code neu gestartet, Versuch {used} von {budget}.",
+      "host-slice-owners-restarted": "Lese den Projektgraph-Ausschnitt ({seconds} s): der Code dieses Rechners hat sich unter dem Ausschnitt-Worker geändert (Exit-Code {kind}); er wird in {limit} s mit dem aktuellen Code neu gestartet; das Replikat ist seit {used} von {budget} s nicht zur Ruhe gekommen (das Warten beendet den Plan erst, wenn kein Worker so lange durchhält).",
+      "host-slice-owners-cut": "Lese den Projektgraph-Ausschnitt ({seconds} s): der Ausschnitt-Worker ist auf {kind} MB gewachsen, mehr als die {limit} MB, die ein Plan auf diesem Rechner nehmen darf; die Arbeit wird daher kleiner geschnitten (Stufe {used} von {budget}: weniger Projekte gleichzeitig und kleinere Wellen) und läuft weiter; bereits abgeleitete Projekte bleiben erhalten, nichts wird wiederholt.",
+      "host-slice-owners-handoff": "Lese den Projektgraph-Ausschnitt ({seconds} s): die Eigner {kind} sind für diesen Rechner zu schwer; sie werden an die Flotte übergeben (eine Anforderungsmarke wird veröffentlicht) und abgewartet, und das Lesen beginnt von neuem, sobald eine andere Maschine sie abgeleitet und veröffentlicht hat (Versuch {used} von {budget}); alles übrige bereits Abgeleitete bleibt erhalten.",
       "host-slice-owners-serial": "Lese den Projektgraph-Ausschnitt ({seconds} s): {phase} {done} von {total}; laufen (Name, Art, Sekunden, Zeilen): {owners}; Reserve von {budget} MB unter einem Projekt ({used} MB), einzeln.",
       "host-slice-owners-resumed": "Lese den Projektgraph-Ausschnitt ({seconds} s): {phase} {done} von {total}; laufen (Name, Art, Sekunden, Zeilen): {owners}; Reserve von {budget} MB wieder da ({used} MB belegt), es geht weiter.",
+      "host-slice-owners-queued-root": "Lese den Projektgraph-Ausschnitt ({seconds} s): warte auf die vorausgehende Ladung dieses Checkouts ({used} Ladung(en) von {budget} Workern aktiv); beide teilen einen Faktenspeicher, daher beginnt diese, wenn jene beendet ist.",
+      "host-slice-owners-queued-leader": "Lese den Projektgraph-Ausschnitt ({seconds} s): warte auf die vorausgehende Ladung dieses Checkouts ({used} Ladung(en) von {budget} Workern aktiv; Vorgänger: {kind} {done} von {total}); beide teilen einen Faktenspeicher, daher beginnt diese, wenn jene beendet ist.",
+      "host-slice-owners-queued-pool": "Lese den Projektgraph-Ausschnitt ({seconds} s): warte auf einen freien Slice-Worker ({used} von {budget} Workern belegt, {limit} Ladung(en) davor).",
       "host-slice-owners-stopped": "Lese den Projektgraph-Ausschnitt ({seconds} s): {phase} {done} von {total}; laufen (Name, Art, Sekunden, Zeilen): {owners}; ein {kind}-Projekt wurde angehalten, weil es {used} MB nahm und seine Grenze {budget} MB ist.",
       "host-memory-pressure-psi": "Der Plan wurde abgebrochen: der Dienst steht seit {seconds} s unter Speicherdruck (Prozesse warteten {value}% der Zeit auf Speicher, Grenze {limit}%); versuche es später erneut oder frage eine kleinere Auswahl an.",
       "host-memory-pressure-events": "Der Plan wurde abgebrochen: das Speicherlimit des Dienstes bremst ihn seit {seconds} s aus ({value} Ereignisse pro Sekunde, Grenze {limit}); versuche es später erneut oder frage eine kleinere Auswahl an.",
       "host-memory-pressure-free": "Der Plan wurde abgebrochen: dem Rechner standen seit {seconds} s nur {value} MB freier Speicher zur Verfügung (Untergrenze {limit} MB); versuche es später erneut oder frage eine kleinere Auswahl an.",
       "host-memory-budget": "Der Plan kann nicht fortgesetzt werden: der Dienst belegt {current} MB seines Speicherlimits von {limit} MB (Sicherheitsabstand {margin} MB); er wurde abgebrochen, damit der Dienst am Leben bleibt; später erneut versuchen oder eine kleinere Auswahl anfragen.",
+      "host-slice-owners-restarted-cause": "Lese den Projektgraph-Ausschnitt ({seconds} s): der Ausschnitt-Worker endete mit Exit-Code {kind} und meldete: {cause}. Er wird in {limit} s neu gestartet (das Replikat ist seit {used} von {budget} s nicht zur Ruhe gekommen).",
+      "host-slice-worker-failing": "Der Plan kann nicht fortgesetzt werden: der Ausschnitt-Worker endete {count}-mal hintereinander mit Exit-Code {exit} und demselben Text: {cause}",
       "host-slice-restarts": "Der Plan kann nicht fortgesetzt werden: der Ausschnitt-Worker endete {restarts}-mal hintereinander mit Exit-Code {exit}, weil sich der Code dieses Rechners immer wieder unter ihm geändert hat; versuche es erneut, sobald das Replikat zur Ruhe gekommen ist.",
       "host-stalled": "Der Plan wurde abgebrochen: das Laden des Ausschnitts machte {minutes} Minuten lang keinen Fortschritt; der Dienst läuft weiter, versuche es später erneut.",
       "host-graph-plan-too-heavy": "Der Projektgraph konnte auf diesem Rechner noch nicht gelesen werden: die Plan-Stufe {stage} (während {operation}) ist auf {megabytes} MB gewachsen, mehr als die {limit} MB, die diese Maschine einem Plan gibt, und nur {available} MB Speicher waren verfügbar (mindestens {reserve} MB bleiben in Reserve), nachdem er zurückgegeben hat, was er konnte. Sie wurde gestoppt, bevor dem Rechner der Speicher ausging. An deinem Baum ist nichts falsch; führe den Befehl erneut aus, sobald ein Rechner mit freiem Speicher den Graphen bereitstellt, oder lies den Graphen auf einem größeren Rechner.",
       "host-graph-plan-settled": "Graph: Plan-Stufe {stage} beruhigt von {from} auf {to} MB",
       "host-graph-memory-refused": "Der Projektgraph konnte auf diesem Rechner noch nicht gelesen werden: {key} braucht {need} MB, aber ein Projekt erhält hier {granted} MB und nach {seconds} s waren {free} MB frei; das Lesen wurde abgelehnt, bevor dem Rechner der Speicher ausging. An deinem Baum ist nichts falsch; führe den Befehl später erneut aus, oder lass die Flotte es ableiten.",
-      "host-graph-owner-too-heavy": "Der Projektgraph konnte auf diesem Rechner noch nicht gelesen werden: {named} braucht/brauchen mehr Speicher, als dieser Rechner einem Projekt geben kann ({limit} MB). Auch allein, wenn sonst nichts vom Lesen läuft, passt es nicht. Die Berechnung wurde gestoppt (oder gar nicht begonnen), bevor dem Rechner der Speicher ausging. An deinem Baum ist nichts falsch; führe den Befehl erneut aus, sobald ein Rechner mit freiem Speicher den Graphen bereitstellt, oder lies den Graphen auf einem größeren Rechner.",
+      "host-lease-refused": "Der Projektgraph konnte auf diesem Rechner noch nicht gelesen werden: er wartete {seconds} s auf {requested} ({mode}), während er {held} hielt, und die Lease wird von Prozess {holderPid} ({holderCommand}) seit {holderSeconds} s gehalten. Dieser Prozess ist eine Cache-Image-Operation dieses Rechners (eine Wartung, eine Stilllegung oder eine Veröffentlichung); am Graphen ist nichts falsch. Warten, bis sie beendet ist, und den Befehl erneut ausführen; der Lease-Status nennt den Halter.",
+      "host-lease-refused-unregistered": "Der Projektgraph konnte auf diesem Rechner noch nicht gelesen werden: er wartete {seconds} s auf {requested} ({mode}), während er {held} hielt, und die Lease wird von keinem Prozess der Lease-Registrierung gehalten (ein Prozess mit älterem Code auf diesem Rechner oder eine Warteschlange vor dieser Leseanfrage). Am Graphen ist nichts falsch. Warten, bis der Halter beendet ist, und den Befehl erneut ausführen; der Lease-Status nennt jeden Halter, den er kennt.",
+      "host-graph-owner-too-heavy": "Der Projektgraph konnte auf diesem Rechner noch nicht gelesen werden: {named} braucht/brauchen mehr Speicher, als dieser Rechner einem Projekt geben kann ({limit} MB); {producers} Rechner der Flotte haben für dieses Lesen Datensätze geliefert. Auch allein, wenn sonst nichts vom Lesen läuft, passt es nicht. Die Berechnung wurde gestoppt (oder gar nicht begonnen), bevor dem Rechner der Speicher ausging. An deinem Baum ist nichts falsch; führe den Befehl erneut aus, sobald ein Rechner mit freiem Speicher den Graphen bereitstellt, oder lies den Graphen auf einem größeren Rechner.",
       "host-relative-call-refused": "Ein Dateisystemaufruf des residenten Dienstes wurde für {place} mit EPERM abgelehnt ({reads} Messungen stimmten überein), aber der Dienst selbst liest denselben Ort über den Pfad ohne Ablehnung ({found}); das ist daher nicht die belegte fehlende macOS-Dateizugriffserlaubnis: der Dienst läuft weiter und nichts wurde verändert. Führe den Befehl erneut aus; wenn diese Meldung wiederkehrt, sende die Zeile, die mit `where:` beginnt, unter der Referenz {reference} in {log}.",
       "host-graph-wanted-expired": "Der Projektgraph konnte auf diesem Rechner nicht gelesen werden: er kann nur {local} der veralteten Projekte selbst ableiten, die Flotte wurde um {wanted} gebeten und lieferte innerhalb von {seconds} s {arrived}, {missing} fehlen noch{heavy}. An deinem Baum ist nichts falsch; führe den Befehl erneut aus, sobald ein Rechner mit freiem Speicher den Graphen bereitstellt, oder lies den Graphen auf einem größeren Rechner.",
+      "host-graph-handover": "Das Lesen des Graphen wird übergeben und läuft auf aktuellem Code weiter; Fertiges bleibt erhalten ({message}).",
       "host-plans": "Pläne: {total} angefragt, {hits} aus dem Speicher, {computed} berechnet (zuletzt {seconds} s, {budget} über dem Budget); Eigentümer neu abgeleitet {reinferred}, abgeschnitten {cutoff}; Erfassung {files} Dateien, {probes} Proben."
      }
     }

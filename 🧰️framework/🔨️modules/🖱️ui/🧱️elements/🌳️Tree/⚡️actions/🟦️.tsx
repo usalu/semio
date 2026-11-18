@@ -8,7 +8,7 @@ import { Action } from "../../⚡️ActionGroup/🟦️.tsx";
 import { DisabledReasonHint } from "../../💡️ChromeControlHint/🟦️.tsx";
 
 /** ⚡️ Layout of the section header action cluster. */
-export const treeHeaderActionsClassName = "flex flex-shrink-0 items-center gap-single";
+export const treeHeaderActionsClassName = "flex flex-shrink-0 items-stretch";
 
 export type TreeActionPlacement = "row" | "menu";
 
@@ -237,11 +237,9 @@ function TreeRowActionButton({ action }: { readonly action: TreeSectionAction })
     />
   );
   return (
-    <span>
-      <DisabledReasonHint id={reasonId} reason={reason || undefined}>
-        {button}
-      </DisabledReasonHint>
-    </span>
+    <DisabledReasonHint id={reasonId} reason={reason || undefined} bare>
+      {button}
+    </DisabledReasonHint>
   );
 }
 
@@ -258,7 +256,7 @@ export const renderTreeHeaderActions = (actions: TreeHeaderAction[]) => {
     return null;
   }
   return (
-    <div data-slot="tree-header-actions" data-ui-reveal-region="" className={treeHeaderActionsClassName}>
+    <div data-slot="tree-header-actions" data-ui-reveal-region="" data-shared-border-cell="" data-shared-border-group="" data-shared-border-cells="" className={treeHeaderActionsClassName}>
       {rowActions.map((action, index) => renderTreeHeaderAction(action, action.id ?? index))}
     </div>
   );

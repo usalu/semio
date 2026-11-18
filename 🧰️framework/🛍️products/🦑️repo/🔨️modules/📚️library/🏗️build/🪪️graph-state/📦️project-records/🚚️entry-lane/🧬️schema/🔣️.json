@@ -1,0 +1,31 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "semio:graph-state:project-records:entries",
+ "title": "Closure entries in the fleet cache / Closure-Einträge im Flotten-Cache",
+ "description": "A closure entry is shared on its own, named by the digest of its recipe with the checkout root replaced by the root token, so the same recipe has the same name on every machine whatever its path; its validity is decided by the taker against its own tree (file digests, registered source analyses), never by the name. The documents of an entry are the neutral bundles of the entry and of the shared entries its value refers to, as they travel with a project record. / Ein Closure-Eintrag wird für sich geteilt, benannt nach dem Digest seines Rezepts mit dem Token statt der Checkout-Wurzel: dasselbe Rezept heisst auf jeder Maschine gleich, egal wo sie liegt; ob er gilt, entscheidet der Empfänger an seinem eigenen Baum.",
+ "definitions": {
+  "Policy": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["form", "waitMilliseconds", "waitBudgetMilliseconds", "expectedMilliseconds", "fetchConcurrency", "offersInFlight", "claimStaleMilliseconds", "claimWaitMilliseconds", "refusedMilliseconds"],
+   "properties": {
+    "form": { "type": "string" },
+    "waitMilliseconds": { "type": "integer", "minimum": 1 },
+    "waitBudgetMilliseconds": { "type": "integer", "minimum": 1 },
+    "expectedMilliseconds": { "type": "integer", "minimum": 1 },
+    "fetchConcurrency": { "type": "integer", "minimum": 1 },
+    "offersInFlight": { "type": "integer", "minimum": 1 },
+    "claimStaleMilliseconds": { "type": "integer", "minimum": 1 },
+    "claimWaitMilliseconds": { "type": "integer", "minimum": 1 },
+    "refusedMilliseconds": { "type": "integer", "minimum": 1 }
+   },
+   "const": { "form": "closure-entry-v1", "waitMilliseconds": 120000, "waitBudgetMilliseconds": 1800000, "expectedMilliseconds": 30000, "fetchConcurrency": 2, "offersInFlight": 1, "claimStaleMilliseconds": 120000, "claimWaitMilliseconds": 60000, "refusedMilliseconds": 600000 }
+  },
+  "Texts": {
+   "const": {
+    "en": { "summary": "closure entries: {fetched} taken from the fleet, {prefetched} taken in bulk, {computed} derived here, {published} stored, {refused} not stored" },
+    "de": { "summary": "Closure-Einträge: {fetched} aus der Flotte übernommen, {prefetched} gesammelt übernommen, {computed} hier abgeleitet, {published} abgelegt, {refused} nicht abgelegt" }
+   }
+  }
+ }
+}

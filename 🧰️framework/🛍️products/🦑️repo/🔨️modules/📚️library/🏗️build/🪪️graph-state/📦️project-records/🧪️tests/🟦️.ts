@@ -84,9 +84,9 @@ test("an unreachable cache or an unusable record ends in computing locally, an o
 },60000);
 
 test("a seeded record is only a candidate: the seam looks it up again against this tree before it returns it, and a changed opened file refutes it while a file outside the closure does not",()=>{
- const source=readFileSync(new URL("../../../👁️observation/🟨️.mjs",import.meta.url),"utf8"),at=source.indexOf("if(!reused&&port){gate=await port.gate(info)");
+ const source=readFileSync(new URL("../../../👁️observation/🟨️.mjs",import.meta.url),"utf8"),at=source.indexOf("if(!reused&&port){gate=await lookupLapAsyncV1(\"gate\",()=>port.gate(info))");
  expect(at).toBeGreaterThan(0);
- expect(source.slice(at,at+200)).toContain("if(gate?.seeded)reused=await lookup();");
+ expect(source.slice(at,at+500)).toContain("if(gate?.seeded)reused=await lookup();");
  expect(source.slice(at-300,at)).toContain("let reused=await lookup();");
  const directory=temp("law"),inside=join(directory,"in.ts"),outside=join(directory,"out.ts");
  writeFileSync(inside,"export const a=1");writeFileSync(outside,"export const b=1");

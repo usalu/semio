@@ -15,6 +15,7 @@ impl ArtifactStoreRevisionAccumulatorRetirement {
 }
 
 impl ErasedSnapshotRetirement for ArtifactStoreRevisionAccumulatorRetirement {
+    fn next_computational_work(&self, _body: usize) -> Result<u64, ValueError> { Ok(u64::from(!self.terminal_is_empty())) }
         fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.owner.next_demand(body) }
     fn close_step(&mut self,_body:usize,effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll { self.owner.step(effect.grant().maximum_copy_bytes,effect) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { self.owner.next_copy_byte_demand() }
@@ -35,6 +36,7 @@ impl ArtifactStoreCursorRetirement {
 }
 
 impl ErasedSnapshotRetirement for ArtifactStoreCursorRetirement {
+    fn next_computational_work(&self, _body: usize) -> Result<u64, ValueError> { Ok(u64::from(!self.terminal_is_empty())) }
         fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.owner.next_demand(body) }
     fn close_step(&mut self,_body:usize,effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll { self.owner.step(effect.grant().maximum_copy_bytes,effect) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { self.owner.next_copy_byte_demand() }
@@ -62,6 +64,7 @@ impl ArtifactStoreMutationDagRetirement {
 }
 
 impl ErasedSnapshotRetirement for ArtifactStoreMutationDagRetirement {
+    fn next_computational_work(&self, _body: usize) -> Result<u64, ValueError> { Ok(u64::from(!self.terminal_is_empty())) }
     fn close_step(&mut self,_body:usize,effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, RetirementPollExit> {
         let grant = effect.grant();
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
@@ -155,6 +158,7 @@ if let Some(value) = self.pending.as_ref().or_else(|| ledger.last()) { return Ok
 }
 
 impl<T: Send + Sync + 'static> ErasedSnapshotRetirement for ArtifactStoreHistoryLedgerRetirement<T> {
+    fn next_computational_work(&self, _body: usize) -> Result<u64, ValueError> { Ok(u64::from(!self.terminal_is_empty())) }
     fn close_step(&mut self,_body:usize,effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, RetirementPollExit> {
         let grant = effect.grant();
         use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, admit_retained_clone_progress};
@@ -350,6 +354,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + Sync + 'static> ErasedSnapshotRe
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.release_bytes) }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.depth) }
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { self.demands(body) }
+    fn next_computational_work(&self, body: usize) -> Result<u64, ValueError> { match self.active.as_ref() { Some(active) if !active.terminal_is_empty() => active.next_computational_work(body), _ => Ok(u64::from(!self.terminal_is_empty())) } }
 }
 
 impl<P, Mutation> Drop for ArtifactStoreVcsRetirement<P, Mutation> {

@@ -1,0 +1,41 @@
+## last 40 lines of /home/deck/native-bootstrap-round-28-try-12.log
+[script] {"owner":"repository:build","command":"repo","stage":"loading"}
+[script] {"owner":"repository:build","command":"repo","stage":"running"}
+Starting the repo graph service for this host.
+Waiting for the repo graph service (25 ms).
+Waiting for the repo graph service (2054 ms).
+Waiting for the repo graph service (4078 ms).
+[repo] still working after 5 s; last phase started: door.script
+Waiting for the repo graph service (6101 ms).
+Waiting for the repo graph service (8125 ms).
+[repo] still working after 10 s; last phase started: door.script
+Waiting for the repo graph service (10144 ms).
+Waiting for the repo graph service (12170 ms).
+Loading the project graph of d09b06e73429.
+Planning 1 targets.
+[capacity] run: work has to run, waiting 0s to grow the reservation from 512 MB to 8190 MB: not enough free memory (1250 MB spare above the 1981 MB floor; 1 running, 0 ahead); behind graph-plan (running, 1 job(s), 6339 MB)
+[repo] still working after 20 s; last phase started: door.script
+[capacity] run: work has to run, waiting 5s to grow the reservation from 512 MB to 8190 MB: not enough free memory (1534 MB spare above the 1981 MB floor; 1 running, 0 ahead); behind graph-plan (running, 1 job(s), 6339 MB)
+[capacity] run: work has to run, waiting 11s to grow the reservation from 512 MB to 8190 MB: not enough free memory (1449 MB spare above the 1981 MB floor; 1 running, 0 ahead); behind graph-plan (running, 1 job(s), 6339 MB)
+[capacity] run: work has to run, waiting 17s to grow the reservation from 512 MB to 8190 MB: not enough free memory (1934 MB spare above the 1981 MB floor; 1 running, 0 ahead); behind graph-plan (running, 1 job(s), 6339 MB)
+[capacity] run: work has to run, waiting 22s to grow the reservation from 512 MB to 8190 MB: not enough free memory (1964 MB spare above the 1981 MB floor; 1 running, 0 ahead); behind graph-plan (running, 1 job(s), 6339 MB)
+[capacity] run: work has to run, waiting 28s to grow the reservation from 512 MB to 8190 MB: not enough free memory (1891 MB spare above the 1981 MB floor; 1 running, 0 ahead); behind graph-plan (running, 1 job(s), 6339 MB)
+[capacity] run: reservation grown from 512 MB to 3510 MB with 2 of 8 job(s) after 31s: the host cannot carry more right now (8675 MB available, 1981 MB floor); the run grows to more jobs once memory and cores free up
+[repo] still working after 50 s; last phase started: door.script
+[repo] still working after 80 s; last phase started: door.script
+[capacity] run: grown from 2 to 6 of 8 job(s) after 105s, reservation 3510 MB -> 6318 MB: memory freed up and nothing of ours waits (8529 MB available, 1981 MB floor); work that starts from now on uses the new jobs
+[repo] still working after 110 s; last phase started: door.script
+[repo] still working after 140 s; last phase started: door.script
+[repo] still working after 170 s; last phase started: door.script
+[repo] still working after 200 s; last phase started: door.script
+[repo] still working after 230 s; last phase started: door.script
+[repo] still working after 260 s; last phase started: door.script
+[repo] still working after 290 s; last phase started: door.script
+[repo] still working after 320 s; last phase started: door.script
+[repo] still working after 350 s; last phase started: door.script
+[repo] still working after 380 s; last phase started: door.script
+[repo] still working after 410 s; last phase started: door.script
+[repo] still working after 440 s; last phase started: door.script
+The project graph could not be read on this machine yet: the plan stage inference (during inference) grew to 9602 MB, more than the 6339 MB this machine gives a plan, and only 2676 MB of memory were available (at least 2048 MB are kept in reserve) after it gave back what it could. It was stopped before the host ran short of memory. Nothing is wrong with your tree; run the command again when a machine with free memory serves the graph, or read the graph on a larger machine.
+end 2026-11-15T15:00:34Z
+native_rc=75

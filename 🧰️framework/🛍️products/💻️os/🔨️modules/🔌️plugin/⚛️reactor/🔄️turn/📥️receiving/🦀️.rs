@@ -75,7 +75,7 @@ impl RetainedResponse{
  pub fn terminal(&self)->bool{self.finished&&self.birth.terminal_is_empty()&&self.metadata.is_none()&&self.request.is_none()&&self.input.is_none()&&self.fields.is_none()&&self.request_result.is_none()&&self.request_closing.is_none()&&self.closing.is_none()&&self.witness.source_is_returned()&&self.output.is_none()&&self.failure.is_none()}
 }
 impl Drop for RetainedResponse{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal(),"original response requires source retirement before terminal drop")}}
-thread_local!{static RESPONSES:RefCell<[Option<RetainedResponse>;requests::REQUEST_SLOTS]>=const{RefCell::new([const{None};requests::REQUEST_SLOTS])};static RESPONSE_CURSOR:Cell<usize>=const{Cell::new(0)};}
+thread_local!{static RESPONSES:RefCell<semio_framework_async::LazySlots<RetainedResponse,{requests::REQUEST_SLOTS}>>=const{RefCell::new(semio_framework_async::LazySlots::new())};static RESPONSE_CURSOR:Cell<usize>=const{Cell::new(0)};}
 #[doc(hidden)]
 pub fn retain_completed<PA:semio_plugin_reactor_app::PluginApp>(runtime:&semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>,donor:&mut Option<Event>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
  let Some(Event::Completed{req,..})=donor.as_ref()else{return Ok(false)};let req=*req;

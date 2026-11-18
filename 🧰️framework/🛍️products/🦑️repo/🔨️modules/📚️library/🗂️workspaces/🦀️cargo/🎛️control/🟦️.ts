@@ -7,7 +7,7 @@ const yieldMarks=new WeakMap<CargoAccounting,number>();
 
 /** 🎛️ Admits cumulative work and ownership before continuing, retaining real cancellation and yielding. */
 export class CargoController {
- constructor(readonly operation:CargoControl,readonly accounting:CargoAccounting){
+ readonly operation:CargoControl; readonly accounting:CargoAccounting; constructor(operation:CargoControl,accounting:CargoAccounting){this.operation=operation;this.accounting=accounting;
   if(typeof operation.signal?.aborted!=="boolean"||typeof operation.remainingMilliseconds!=="function"||typeof operation.onProgress!=="function"||typeof operation.yieldContinuation!=="function")throw Error("Cargo control requires its actual signal, deadline and progress continuation");
   for(const value of[operation.maximumUnits,operation.maximumOwnedBytes,operation.maximumDepth,accounting.completed,accounting.ownedBytes])if(!Number.isSafeInteger(value)||value<0)throw Error("Cargo control limit is invalid");
   if(accounting.completed>operation.maximumUnits||accounting.ownedBytes>operation.maximumOwnedBytes)throw Error("Cargo accounting exceeds its explicit authority");

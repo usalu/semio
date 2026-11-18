@@ -8,6 +8,28 @@ import { blockListPresentationFixture as fixture } from "@semio-tech/ui/testing/
 afterEach(() => cleanup());
 
 describe("BlockList presentation parity", () => {
+  it("draws steps, blocks and the palette as shared-border rows without a native border or gap", () => {
+    const node = { surfaceId: "form-design", controllerId: "forms", blockList: { steps: fixture.steps, palette: fixture.palette } };
+    const view = render(<UiDriverProvider driver={DEFAULT_UI_DRIVER}><BlockListHost node={node as never} onAction={vi.fn()} /></UiDriverProvider>);
+    const steps = view.container.querySelectorAll<HTMLElement>(".semio-step-card");
+    expect(steps.length).toBeGreaterThan(0);
+    for (const step of steps) {
+      expect(step.getAttribute("data-slot")).toBe("shared-border-row");
+      expect(step.getAttribute("data-orientation")).toBe("vertical");
+      expect(step.hasAttribute("data-shared-border-frame")).toBe(false);
+      expect(step.parentElement?.hasAttribute("data-shared-border-cell")).toBe(true);
+    }
+    for (const block of view.container.querySelectorAll<HTMLElement>(".semio-block-card")) {
+      expect(block.hasAttribute("data-shared-border-frame")).toBe(false);
+      expect(block.parentElement?.hasAttribute("data-shared-border-cell")).toBe(true);
+    }
+    const palette = view.container.querySelector(".semio-palette") as HTMLElement;
+    expect(palette.getAttribute("data-slot")).toBe("shared-border-row");
+    expect(view.container.querySelector(".semio-block-list-host")?.hasAttribute("data-shared-border-frame")).toBe(true);
+    expect(view.container.querySelector(".semio-step-card, .semio-block-card, .semio-palette > div")?.className).not.toMatch(/\brounded\b|\bborder\b/);
+    view.unmount();
+  });
+
   it("selects authored page and question targets through accessible controls", () => {
     for (const selection of fixture.selectionCases) {
       const onAction = vi.fn();

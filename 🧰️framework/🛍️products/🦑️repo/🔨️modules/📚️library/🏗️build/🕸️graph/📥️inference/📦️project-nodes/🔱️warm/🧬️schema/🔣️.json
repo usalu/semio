@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:graph:inference:project-nodes:warm:v1",
+  "title": "Warming the closure entries of the stored owners in short-lived children",
+  "description": "EN: Before the parent takes the stored owner records one by one on its single thread, the owners are split into lanes (stable by record key, the costliest spread evenly) and every owner is settled by a child of the project farm: the child reads the stored record, brings the closure entries it names up to date (deriving the stale ones into the closure store, in its own capped process) and appends one durable row to a part file of its own. The parent only schedules, tells the summed progress and holds no per-owner object. A try that is restarted skips every owner with a durable row whose key and record stamp still match, so tries make monotonic progress. DE: Bevor der Elternprozess die gespeicherten Owner-Einträge einzeln in seinem einen Thread übernimmt, werden die Owner in Bahnen geteilt (stabil nach Eintragsschlüssel, die teuersten gleichmäßig verteilt) und jeder Owner wird von einem Kind der Projekt-Farm abgeglichen: das Kind liest den gespeicherten Eintrag, bringt die genannten Closure-Einträge auf den neuesten Stand (veraltete werden im eigenen begrenzten Prozess in den Closure-Speicher abgeleitet) und hängt eine dauerhafte Zeile an eine eigene Teildatei an. Der Elternprozess plant nur, meldet den summierten Fortschritt und hält kein Objekt je Owner. Ein neu gestarteter Versuch überspringt jeden Owner mit dauerhafter Zeile, deren Schlüssel und Eintragsstempel noch passen, so machen Versuche monotonen Fortschritt.",
+  "$defs": {
+    "outcome": { "enum": ["settled", "other", "absent"], "description": "EN: settled = the record of the key was read and its closure entries are up to date; other = a record of another key was read and settled; absent = no stored record. DE: settled = der Eintrag des Schlüssels wurde gelesen und seine Closure-Einträge sind aktuell; other = ein Eintrag eines anderen Schlüssels wurde gelesen und abgeglichen; absent = kein gespeicherter Eintrag." },
+    "partRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["v", "n", "k", "d", "o", "t"],
+      "properties": {
+        "v": { "const": 1 },
+        "n": { "type": "string", "minLength": 1, "description": "EN: owner name. DE: Owner-Name." },
+        "k": { "type": "string", "pattern": "^[0-9a-f]{24}$", "description": "EN: first 24 hex digits of the sha256 of the record key text. DE: erste 24 Hexziffern des sha256 des Schlüsseltexts." },
+        "d": { "type": "string", "description": "EN: size and modification time of the stored record file when it was read. DE: Größe und Änderungszeit der Eintragsdatei beim Lesen." },
+        "o": { "$ref": "#/$defs/outcome" },
+        "t": { "type": "integer", "minimum": 0, "description": "EN: epoch milliseconds when the row was written. DE: Epochenmillisekunden beim Schreiben." },
+        "c": { "type": "integer", "minimum": 0, "description": "EN: cpu milliseconds the child spent. DE: CPU-Millisekunden des Kindes." },
+        "m": { "type": "integer", "minimum": 0, "description": "EN: megabytes the child grew by. DE: Megabyte, um die das Kind wuchs." }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "properties": {
+        "directory": { "const": "warm" },
+        "maximumAgeMilliseconds": { "const": 1200000 },
+        "progressMilliseconds": { "const": 5000 },
+        "minimumOwners": { "const": 64 },
+        "parentMegabytes": { "const": 1500 },
+        "childMegabytes": { "const": 1700 }
+      }
+    }
+  }
+}

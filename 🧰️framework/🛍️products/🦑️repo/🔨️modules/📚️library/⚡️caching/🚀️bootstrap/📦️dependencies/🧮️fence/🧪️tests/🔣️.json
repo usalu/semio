@@ -1,0 +1,120 @@
+{
+ "runs": [
+  {
+   "name": "a worker whose full fence takes 330 s",
+   "steps": [
+    {
+     "name": "first fence is always full",
+     "nowMs": 0,
+     "final": false,
+     "durationMs": 330000,
+     "due": true
+    },
+    {
+     "name": "10 s after it, interim: skipped",
+     "nowMs": 340000,
+     "final": false,
+     "durationMs": 0,
+     "due": false
+    },
+    {
+     "name": "final: always full",
+     "nowMs": 350000,
+     "final": true,
+     "durationMs": 330000,
+     "due": true
+    },
+    {
+     "name": "20 s after it, interim: skipped",
+     "nowMs": 700000,
+     "final": false,
+     "durationMs": 0,
+     "due": false
+    },
+    {
+     "name": "29 minutes after it, interim: skipped",
+     "nowMs": 2400000,
+     "final": false,
+     "durationMs": 0,
+     "due": false
+    },
+    {
+     "name": "30 minutes after it, interim: the gap cap makes it full",
+     "nowMs": 2480000,
+     "final": false,
+     "durationMs": 330000,
+     "due": true
+    }
+   ]
+  },
+  {
+   "name": "a worker whose full fence takes 3 s",
+   "steps": [
+    {
+     "name": "first fence is always full",
+     "nowMs": 0,
+     "final": false,
+     "durationMs": 3000,
+     "due": true
+    },
+    {
+     "name": "10 s after it, interim: skipped (needs 24 s)",
+     "nowMs": 13000,
+     "final": false,
+     "durationMs": 0,
+     "due": false
+    },
+    {
+     "name": "24 s after it, interim: full",
+     "nowMs": 27000,
+     "final": false,
+     "durationMs": 3000,
+     "due": true
+    }
+   ]
+  },
+  {
+   "name": "a machine whose fence is instant",
+   "steps": [
+    {
+     "name": "first",
+     "nowMs": 0,
+     "final": false,
+     "durationMs": 0,
+     "due": true
+    },
+    {
+     "name": "every interim fence is full",
+     "nowMs": 1,
+     "final": false,
+     "durationMs": 0,
+     "due": true
+    },
+    {
+     "name": "again",
+     "nowMs": 2,
+     "final": false,
+     "durationMs": 0,
+     "due": true
+    }
+   ]
+  }
+ ],
+ "platforms": [
+  {
+   "name": "darwin",
+   "fenceMilliseconds": 3000,
+   "bindingMilliseconds": 300
+  },
+  {
+   "name": "linux",
+   "fenceMilliseconds": 4000,
+   "bindingMilliseconds": 300
+  },
+  {
+   "name": "win32",
+   "fenceMilliseconds": 330000,
+   "bindingMilliseconds": 300
+  }
+ ]
+}

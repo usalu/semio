@@ -1,0 +1,114 @@
+{
+ "version": 1,
+ "volatile": [
+  "unit.json"
+ ],
+ "cases": [
+  {
+   "name": "unit with manifest",
+   "outputs": [
+    {
+     "path": "unit.json",
+     "hash": "ca0df2c95aa144c1d0ff2ff3c8f967fdc1de9ef0c4120b3726416701b519d619"
+    },
+    {
+     "path": "out/libx.rlib",
+     "hash": "5e98457726bed4aae7c323ba59bdff9fa5569f53d57039a1bbb99959124bc9a2"
+    },
+    {
+     "path": "out/libx.rmeta",
+     "hash": "044ada5768c6bda34719e564a4ef46373c3364b0c1fcfbeaab6a9eebc5e24480"
+    }
+   ],
+   "fingerprint": "c1292677b8a213df92c9c42458bfa5de349b2336cbb75498c27f63e689a83ecb",
+   "manifest": true
+  },
+  {
+   "name": "same unit, other timestamps",
+   "outputs": [
+    {
+     "path": "unit.json",
+     "hash": "29c1b289e7522195b362e44f54e05470b69ad20540ab60a18a05e5bf6951f13d"
+    },
+    {
+     "path": "out/libx.rlib",
+     "hash": "5e98457726bed4aae7c323ba59bdff9fa5569f53d57039a1bbb99959124bc9a2"
+    },
+    {
+     "path": "out/libx.rmeta",
+     "hash": "044ada5768c6bda34719e564a4ef46373c3364b0c1fcfbeaab6a9eebc5e24480"
+    }
+   ],
+   "fingerprint": "c1292677b8a213df92c9c42458bfa5de349b2336cbb75498c27f63e689a83ecb",
+   "manifest": true
+  },
+  {
+   "name": "same unit, other order",
+   "outputs": [
+    {
+     "path": "out/libx.rmeta",
+     "hash": "044ada5768c6bda34719e564a4ef46373c3364b0c1fcfbeaab6a9eebc5e24480"
+    },
+    {
+     "path": "unit.json",
+     "hash": "153812ae5fea0b73a011bf28bd7cea93644437c3fe3260b7b2d7e1e2f9f46bde"
+    },
+    {
+     "path": "out/libx.rlib",
+     "hash": "5e98457726bed4aae7c323ba59bdff9fa5569f53d57039a1bbb99959124bc9a2"
+    }
+   ],
+   "fingerprint": "c1292677b8a213df92c9c42458bfa5de349b2336cbb75498c27f63e689a83ecb",
+   "manifest": true
+  },
+  {
+   "name": "unit with other bytes",
+   "outputs": [
+    {
+     "path": "unit.json",
+     "hash": "ca0df2c95aa144c1d0ff2ff3c8f967fdc1de9ef0c4120b3726416701b519d619"
+    },
+    {
+     "path": "out/libx.rlib",
+     "hash": "45aa0ff87e207d656844ef7d3fd3c6a5db7c94ab50c2b26d16a1ad6160bf2b92"
+    },
+    {
+     "path": "out/libx.rmeta",
+     "hash": "044ada5768c6bda34719e564a4ef46373c3364b0c1fcfbeaab6a9eebc5e24480"
+    }
+   ],
+   "fingerprint": "d592714f0149d451fc07cfbfcea7386f50d1459fcd2b0ea8cb0d4cde44f5402c",
+   "manifest": true
+  },
+  {
+   "name": "record without manifest",
+   "outputs": [
+    {
+     "path": "record.br",
+     "hash": "70ce871f8a3d3fb449bc3c3ace6547cef02dfc74ffe48d912532a724bfdbe5b9"
+    }
+   ],
+   "fingerprint": "27e28f01a4b428d3e3b96180b929bab4f23d44ec9930f899a4e2ee55cbb10a1d",
+   "manifest": false
+  },
+  {
+   "name": "duplicate digests count once",
+   "outputs": [
+    {
+     "path": "a",
+     "hash": "0967115f2813a3541eaef77de9d9d5773f1c0c04314b0bbfe4ff3b3b1c55b5d5"
+    },
+    {
+     "path": "b",
+     "hash": "0967115f2813a3541eaef77de9d9d5773f1c0c04314b0bbfe4ff3b3b1c55b5d5"
+    },
+    {
+     "path": "unit.json",
+     "hash": "2396a1256ac4b1c6849c931ddb8018bdd984bb2383be21bb819a33b95d8d603f"
+    }
+   ],
+   "fingerprint": "310ca4f5383d9d870ee6c7312b244364d63aa31fd123f09e7eba69aea9b15229",
+   "manifest": true
+  }
+ ]
+}

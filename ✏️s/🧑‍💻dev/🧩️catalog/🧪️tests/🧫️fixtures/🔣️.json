@@ -37,6 +37,8 @@
     "lowpoly",
     "mathematical",
     "norm",
+    "norm-eurocode",
+    "norm-eurocode-materials",
     "note",
     "playbook",
     "playbook-module-procedural",

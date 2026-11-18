@@ -2,7 +2,7 @@
 """R29 payload: folds the overlay (tool rows, schema bounds, corpus rows, native toolchain by reference, stamp) into edits.json (whole-file anchored replacements) and baseline.json."""
 import json,os,sys,hashlib
 HERE=os.path.dirname(os.path.abspath(__file__))
-R="/Users/Shared/semio/"
+R="/Users/ueli/Documents/semio/"
 ovl=sys.argv[1]
 assert os.path.realpath(ovl).startswith("/private/tmp/claude-501/")
 edits=[];base={}

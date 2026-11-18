@@ -24,4 +24,14 @@ describe("tabs painted boundary discovery", () => {
     expect(beta.getAttribute("data-shared-border-frame")).toBe("");
     expect(alpha.hasAttribute("data-shared-border-frame")).toBe(false);
   });
+
+  it("keeps the active chip flush with its list and the list flush with the panel", () => {
+    const { getByRole, container } = render(<Tabs defaultValue="alpha"><TabsList><TabsTrigger value="alpha">Alpha</TabsTrigger><TabsTrigger value="beta">Beta</TabsTrigger></TabsList></Tabs>);
+    const list = getByRole("tablist");
+    const alpha = getByRole("tab", { name: "Alpha" });
+    expect(list.className.split(" ")).toContain("p-0");
+    expect(list.className).not.toMatch(/(^|\s)p-single(\s|$)/);
+    expect(alpha.className).not.toContain("calc(100%");
+    expect(container.querySelector('[data-slot="tabs"]')!.className.split(" ")).toContain("gap-0");
+  });
 });

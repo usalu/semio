@@ -5,6 +5,8 @@ import {readFileSync} from "node:fs";
 import {createSlicePoolV1} from "../../🏗️composition/🌐️host/👷️slice-pool/🟨️.mjs";
 import {planGuardVerdictV1} from "../../🏗️composition/🌐️host/👷️slice-pool/🧱️limit/🟨️.mjs";
 import {hostPressureLevelV1} from "../../🏗️composition/🌐️host/👷️slice-pool/🌡️pressure/🟨️.mjs";
+import {GRAPH_CUT_POLICY_V1} from "../../../🧠️memory/✂️cut/🟨️.mjs";
+import {GRAPH_MEMORY_POLICY_V1} from "../../../🧠️memory/🟨️.mjs";
 import {HOST_POLICY_V1,renderBothV1} from "../../📨️protocol/🎚️policy/🟨️.mjs";
 
 const elasticity=HOST_POLICY_V1.sliceHostElasticity as {maximumMegabytes:number;hostCapBasisPoints:number;minimumMegabytes:number},guard=HOST_POLICY_V1.slicePlanGuard as {reserveMegabytes:number;ceilingBasisPoints:number;settleWaitMilliseconds:number},MiB=1048576;
@@ -37,7 +39,7 @@ test("the limits are the schema's: 2048 MB reserve, 60 % ceiling",()=>{
 type Fake={emit:(event:string,value:unknown)=>void;sent:unknown[]};
 const harness=(options:{observed:()=>number;availableMegabytes?:number;pressure?:()=>string|undefined;answer?:(worker:Fake,set:(megabytes:number)=>void)=>void;wait?:number}) => {
  const workers:Fake[]=[],lines:string[]=[],state={terminated:0};
- const pool=createSlicePoolV1({workerUrl:new URL("file:///unused.mjs"),maximum:1,graceMilliseconds:50,sampleMilliseconds:10,hostMegabytes:16384,elasticity,unlearnedMegabytes:2048,
+ const pool=createSlicePoolV1({workerUrl:new URL("file:///unused.mjs"),maximum:1,cutPolicy:{...GRAPH_CUT_POLICY_V1,levels:0},graceMilliseconds:50,sampleMilliseconds:10,hostMegabytes:16384,elasticity,unlearnedMegabytes:2048,
   planGuard:{...guard,settleWaitMilliseconds:options.wait??guard.settleWaitMilliseconds},report:(line:string)=>{lines.push(line);},hostPressure:options.pressure??(()=>"normal"),
   headroom:()=>({limitBytes:Infinity,currentBytes:0,...options.availableMegabytes===undefined?{}:{availableBytes:options.availableMegabytes*MiB}}),
   reserve:async({megabytes}:{megabytes:number})=>({megabytes,attach:()=>undefined,release:()=>undefined}),
@@ -108,4 +110,17 @@ test("a refusal before the plan stages begin names the phase the worker reports 
  const{pool,started}=harness({observed:()=>8770,availableMegabytes:2803,pressure:()=>"critical",answer:worker=>worker.emit("message",{type:"settled"})}),run=pool.run({root:"/tmp/plan-guard"}).then(()=>undefined,error=>error),worker=await started();
  worker.emit("message",{type:"progress",phase:"verification",done:33,total:4553});
  const error:any=await run;await pool.close();expect(error?.code).toBe("plan-memory");expect(error.stage).toBe("verification");expect(error.operation).toBe("verification");
+});
+
+test("the pool names the declared plan limit to every worker it starts, so the worker keeps its own tree under it, and names none where the limit is off",async()=>{
+ const environments:Record<string,string|undefined>[]=[],name=GRAPH_MEMORY_POLICY_V1.planCeilingEnvironment;
+ const run=async(planLimitMegabytes:number)=>{
+  const pool=createSlicePoolV1({workerUrl:new URL("file:///unused.mjs"),maximum:1,cutPolicy:{...GRAPH_CUT_POLICY_V1,levels:0},graceMilliseconds:50,sampleMilliseconds:10,hostMegabytes:16384,elasticity,unlearnedMegabytes:2048,planLimitMegabytes,
+   reserve:async({megabytes}:{megabytes:number})=>({megabytes,attach:()=>undefined,release:()=>undefined}),
+   createWorker:(_url:URL,_data:unknown,environment:Record<string,string|undefined>)=>{environments.push(environment);return{pid:4242,on:(event:string,listener:(value:unknown)=>void)=>{if(event==="message")queueMicrotask(()=>listener({type:"done",graph:{}}));},send:()=>true,terminate:async()=>0};}});
+  expect(await pool.run({root:"/tmp/plan-ceiling"})).toEqual({graph:{}});await pool.close();
+ };
+ const limit=Math.min(elasticity.maximumMegabytes,Math.floor(16384*elasticity.hostCapBasisPoints/10000));
+ await run(limit);await run(Infinity);
+ expect(environments.map(environment=>environment[name])).toEqual([String(limit),undefined]);expect(limit).toBe(6553);
 });

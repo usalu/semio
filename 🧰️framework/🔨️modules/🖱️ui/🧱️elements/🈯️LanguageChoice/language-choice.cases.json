@@ -1,0 +1,7 @@
+{
+  "cases": [
+    { "name": "no language chosen", "options": [["en", "English"], ["de", "Deutsch"]], "value": null, "checked": [false, false], "tabStops": 1 },
+    { "name": "german chosen", "options": [["en", "English"], ["de", "Deutsch"]], "value": "de", "checked": [false, true], "tabStops": 1 },
+    { "name": "three languages", "options": [["en", "English"], ["de", "Deutsch"], ["fr", "Français"]], "value": "en", "checked": [true, false, false], "tabStops": 1 }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Slice memory report / Speicherbericht des Slice-Workers",
+  "description": "EN: What the slice worker that reads the project graph writes next to the readiness files of its machine while it reads (every intervalMilliseconds and the moment the plan guard stops a plan): the phase it is in, the memory counters of the process, the heap statistics (most numerous object types), the sizes of the caches it holds and what every part of the read says about itself (owners taken, fetched, inferred, wanted, in flight, retained collections), so that a machine nobody has a shell on can be diagnosed from the store. The file is bounded by fileBytes (sources are dropped, largest first, until it fits). DE: Was der Slice-Worker, der den Projektgraphen liest, neben den Bereitschaftsdateien seiner Maschine schreibt, solange er liest (alle intervalMilliseconds und im Moment, in dem die Plan-Wache einen Plan stoppt): die Phase, die Speicherzähler des Prozesses, die Heap-Statistik (häufigste Objekttypen), die Größen der gehaltenen Caches und was jeder Teil des Lesens über sich sagt (Eigner übernommen, geholt, abgeleitet, gewünscht, in Arbeit, gehaltene Sammlungen), damit eine Maschine ohne Shell aus dem Speicher diagnostiziert werden kann. Die Datei ist durch fileBytes begrenzt (Quellen fallen, größte zuerst, bis sie passt).",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "directory": ".cache/f",
+        "name": "slice-memory.json",
+        "fileBytes": 98304,
+        "collectionsTop": 20,
+        "collectionsBytes": 32768,
+        "collectionSample": 16,
+        "collectMinimumHeapMegabytes": 2500,
+        "intervalMilliseconds": 30000,
+        "topTypes": 14,
+        "stopLines": 400,
+        "progressMilliseconds": 5000,
+        "censusChildren": 8,
+        "censusTimeoutMilliseconds": 5000
+      }
+    },
+    "Report": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "atMs", "reason", "pid", "uptimeSeconds", "phase", "memory", "sources"],
+      "properties": {
+        "version": { "const": 1 },
+        "atMs": { "type": "integer", "minimum": 0 },
+        "reason": { "enum": ["start", "interval", "plan-stop", "end"] },
+        "pid": { "type": "integer", "minimum": 1 },
+        "uptimeSeconds": { "type": "number", "minimum": 0 },
+        "phase": { "type": "object", "additionalProperties": false, "required": ["name", "done", "total"], "properties": { "name": { "type": "string" }, "done": { "type": "number" }, "total": { "type": "number" } } },
+        "stage": { "type": "object", "additionalProperties": false, "required": ["stage", "operation", "managedMegabytes", "residentMegabytes"], "properties": { "stage": { "type": "string" }, "operation": { "type": "string" }, "managedMegabytes": { "type": "number" }, "residentMegabytes": { "type": "number" } } },
+        "memory": { "type": "object", "additionalProperties": false, "required": ["rss", "heapUsed", "heapTotal", "external", "arrayBuffers"], "properties": { "rss": { "type": "number" }, "heapUsed": { "type": "number" }, "heapTotal": { "type": "number" }, "external": { "type": "number" }, "arrayBuffers": { "type": "number" } } },
+        "heap": { "type": "object", "additionalProperties": false, "required": ["heapMegabytes", "extraMegabytes", "objectCount", "types"], "properties": { "heapMegabytes": { "type": "number" }, "extraMegabytes": { "type": "number" }, "objectCount": { "type": "integer" }, "types": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["type", "count"], "properties": { "type": { "type": "string" }, "count": { "type": "integer" } } } } } },
+        "stop": { "type": "object", "additionalProperties": false, "required": ["stage", "operation", "usedMegabytes", "budgetMegabytes"], "properties": { "stage": { "type": "string" }, "operation": { "type": "string" }, "usedMegabytes": { "type": "number" }, "budgetMegabytes": { "type": "number" } } },
+        "collections": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["name", "entries", "estimatedBytes"], "properties": { "name": { "type": "string" }, "entries": { "type": "integer", "minimum": 0 }, "estimatedBytes": { "type": "integer", "minimum": 0 } } } },
+        "sources": { "type": "object" },
+        "dropped": { "type": "array", "items": { "type": "string" } },
+        "guard": { "description": "EN: The number the plan guard compares with its limit, with its parts (the managed bytes of the process: heapUsed plus external; children, resident pages and mapped files are not in it). DE: Die Zahl, die die Plan-Wache mit ihrem Limit vergleicht, mit ihren Teilen (die verwalteten Bytes des Prozesses: heapUsed plus external; Kindprozesse, residente Seiten und abgebildete Dateien gehören nicht dazu).", "type": "object", "additionalProperties": false, "required": ["measure", "megabytes", "heapUsed", "external"], "properties": { "measure": { "const": "heapUsed+external" }, "megabytes": { "type": "number" }, "heapUsed": { "type": "number" }, "external": { "type": "number" } } },
+        "footprintMegabytes": { "description": "EN: The physical footprint of this process (macOS phys_footprint, Linux smaps_rollup), measured outside the report tick. DE: Der physische Fußabdruck dieses Prozesses (macOS phys_footprint, Linux smaps_rollup), außerhalb des Berichtstakts gemessen.", "type": "number" },
+        "treeFootprintMegabytes": { "description": "EN: The physical footprint of this process and its children together (what the slice ceiling gate judges); only while children exist. DE: Der physische Fußabdruck dieses Prozesses und seiner Kinder zusammen (was die Slice-Obergrenze beurteilt); nur solange Kinder existieren.", "type": "number" },
+        "processes": { "description": "EN: The process table of this process and its descendants (ps): the resident and virtual megabytes of the process itself, the count and summed resident megabytes of its children and the largest of them with their roles. DE: Die Prozesstabelle dieses Prozesses und seiner Nachfahren (ps): residente und virtuelle Megabyte des Prozesses selbst, Anzahl und summierte residente Megabyte der Kinder und die größten davon mit ihren Rollen.", "type": "object", "additionalProperties": false, "required": ["count", "rssMegabytes", "children"], "properties": { "self": { "type": "object", "additionalProperties": false, "required": ["rssMegabytes", "vszMegabytes"], "properties": { "rssMegabytes": { "type": "number" }, "vszMegabytes": { "type": "number" } } }, "count": { "type": "integer", "minimum": 0 }, "rssMegabytes": { "type": "number" }, "children": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["pid", "role", "rssMegabytes", "vszMegabytes"], "properties": { "pid": { "type": "integer" }, "role": { "type": "string" }, "rssMegabytes": { "type": "number" }, "vszMegabytes": { "type": "number" } } } } } }
+      }
+    }
+  }
+}

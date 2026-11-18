@@ -24,7 +24,7 @@ test("engineering matrix is closed, bilingual and covers all fifteen norm artifa
 });
 
 test("every matrix artifact is served on the port the generated playground catalog declares", () => {
-  const norm = new Map(playgrounds.filter(playground => playground.pluginId === "norm").map(playground => [playground.variant, playground.ports]));
+  const norm = new Map(playgrounds.filter(playground => /^norm(-|$)/.test(playground.pluginId)).map(playground => [playground.variant, playground.ports]));
   expect(norm.size).toBe(15);
   for (const artifact of matrix.artifacts) expect(artifact.ports).toEqual(norm.get(artifact.variant)!);
 });

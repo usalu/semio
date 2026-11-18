@@ -3,7 +3,7 @@
 //! trapping and dismissal (see `crate::tui::engine::Tui::open_palette`). Every string comes from the app.
 
 use semio_ui_tui_core::cell::{attr, Cell, CellBuffer};
-use crate::dialog::paint_frame;
+use crate::dialog::{paint_frame, paint_frame_rule};
 use semio_ui_tui_core::event::{mods, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
 use semio_ui_tui_core::geometry::{Pos, Rect, Size};
 use semio_ui_tui_core::text::{display_width, truncate_to};
@@ -177,7 +177,7 @@ pub fn paint_palette(p: &PaletteState, theme: &Theme, rect: Rect, buf: &mut Cell
     buf.put_str(Pos { x: inner.x, y: inner.y }, "\u{203a}", theme.role(Role::Accent), bg, attr::BOLD, inner);
     let (text, color) = if p.query.is_empty() { (p.placeholder.as_str(), muted) } else { (p.query.as_str(), fg) };
     buf.put_str(Pos { x: inner.x + 2, y: inner.y }, text, color, bg, 0, inner);
-    buf.hline(Pos { x: inner.x, y: rect.y + 2 }, inner.width, '\u{2500}', theme.role(Role::BorderNormal), bg);
+    paint_frame_rule(buf, rect, rect.y + 2, theme, Surface::Dialog, Role::BorderNormal);
     let list = list_rect(rect);
     if p.visible.is_empty() {
         buf.put_str(Pos { x: list.x + 1, y: list.y }, &p.empty_text, muted, bg, 0, list);

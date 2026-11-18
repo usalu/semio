@@ -1,3 +1,5 @@
+import Ajv from"ajv";
+import{readFileSync}from"node:fs";
 import{afterAll,expect,test}from"bun:test";
 import{mkdtempSync,rmSync}from"node:fs";
 import{tmpdir}from"node:os";
@@ -10,7 +12,7 @@ import{publishWantedV1,readServedV1,wantedPolicyV1,wantedTextV1}from"../../🟦�
 import{emptyOwnerCostTableV1,recordOwnerCostV1}from"../../💰️cost/🟦️.ts";
 import type{GraphFleetClientV1}from"../../../🛰️exchange/🟦️.ts";
 import{readPriorityV1,writePendingV1}from"../../../../🕸️graph/🕰️generations/🧭️steering/🟨️.mjs";
-import{createGraphReadWatchV1,graphReadEndTextV1,runWantedServerV1,wantedServerPolicyV1,yieldToInteractiveV1,type GraphYieldViewV1,type WantedInferV1}from"../../🛠️server/🟦️.ts";
+import{createGraphReadWatchV1,graphReadEndTextV1,graphReadStopRowV1,runWantedServerV1,wantedServerPolicyV1,yieldToInteractiveV1,type GraphYieldViewV1,type WantedInferV1}from"../../🛠️server/🟦️.ts";
 
 /** 🛠️ Contract: a machine with headroom serves the live requests of the others and tells the requester which projects are done; when nobody asks it refreshes the fleet generation after the worktree went quiet (or the generation got old), never without headroom, and a failing read answers nobody and is not retried at once. */
 const scratch:string[]=[];
@@ -100,7 +102,7 @@ test("Law: a read is watched by its progress, not by a budget: waves, in English
  time=4500;expect(watch.verdict()).toBe("stalled");expect(watch.silentMilliseconds()).toBe(2000);
  for(let generation=7;time<9500;generation++){time+=900;watch.feed(`graph: generation ${generation} published\n`);expect(watch.verdict()).toBe("go");}
  time=10000;watch.feed("graph: generation 99 published\n");expect(watch.verdict(),"the maximum ends even a read that makes progress").toBe("too-long");
- expect(graphReadEndTextV1("stalled","en")).toContain("no wave was published for 25 min");expect(graphReadEndTextV1("stalled","de")).toContain("seit 25 min");
+ expect(graphReadEndTextV1("stalled","en")).toContain("nothing advanced for 25 min");expect(graphReadEndTextV1("stalled","de")).toContain("seit 25 min");
  expect(graphReadEndTextV1("too-long","en")).toContain("12 h");expect(graphReadEndTextV1("too-long","de")).toContain("12 h");
 });
 
@@ -267,3 +269,26 @@ test("Law: the progress record is honest: it advances when a read starts or a wa
   expect(done?.generation).toBe(7);expect(done?.remainingMilliseconds).toBe(0);expect(done?.total).toBe(6);
  }finally{await server.stop(true);}
 },60000);
+
+const ownersLine=(running:number,done:number,elapsed:number)=>`[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"build:graph-phase:owners:${running}:5101:9:${done}:framework-os-kernel|language%3Acargo|${done}|62,repo|project|${done}|45:waiting|5608|1","mode":"shared","elapsedMs":${elapsed}}}\n`;
+
+test("R57 law: a read that finishes owners but publishes no wave for longer than the stall limit is alive; a read whose counters stand still is stopped",()=>{
+ const policy={...wantedServerPolicyV1,inferStallMilliseconds:25*60000,inferMaximumMilliseconds:12*3600000};let time=0;
+ const watch=createGraphReadWatchV1(policy,()=>time);
+ for(let minute=1;minute<=60;minute++){time=minute*60000;watch.feed(ownersLine(15-(minute%3),minute*60,time));expect(watch.verdict(),"minute "+minute).toBe("go");}
+ expect(watch.generation()).toBeNull();expect(watch.counters()["build:graph-phase:owners"]).toEqual([15,5101,9,3600]);
+ const frozen=time;
+ for(let minute=1;minute<=24;minute++){time=frozen+minute*60000;watch.feed(ownersLine(9,3600,time));expect(watch.verdict(),"a counter that went back or stood still is no progress, minute "+minute).toBe("go");}
+ time=frozen+25*60000;watch.feed(ownersLine(15,3600,time));expect(watch.verdict()).toBe("stalled");
+ watch.feed(ownersLine(15,3601,time));expect(watch.verdict(),"one more owner finished").toBe("go");
+ watch.feed(`[script] {"activity":{"resource":"build:graph-phase:files:10:20"}}\n`);expect(watch.counters()["build:graph-phase:files"]).toEqual([10,20]);
+});
+
+test("R57 law: the line a stop writes names the verdict, the silence and the counters, and equals the schema",()=>{
+ const policy={...wantedServerPolicyV1,inferStallMilliseconds:1000};let time=0;const watch=createGraphReadWatchV1(policy,()=>time);
+ watch.feed(ownersLine(15,885,1));time=1500;
+ const row=graphReadStopRowV1(watch,"stalled",11,12,7);
+ expect(row).toEqual({version:1,verdict:"stalled",atMs:7,silentMilliseconds:1500,generation:null,counters:{"build:graph-phase:owners":[15,5101,9,885]},runner:11,read:12});
+ const schema=JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json",import.meta.url),"utf8"));
+ expect(new Ajv({strict:false}).compile(schema.definitions.ReadStop)(row)).toBe(true);
+});

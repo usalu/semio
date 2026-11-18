@@ -8,15 +8,15 @@
  * `ShardClient`, the client-side transport this worker pairs with). V8 reserves a 4 GiB guard region
  * per wasm module per worker — one-worker-per-plugin capped the browser at ~20 plugins; this is the
  * change that lifts that ceiling. */
-import { compilerCapacityWorkerCountV1, type CompilerAdmissionControl } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { captureOwnedCommandV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
-import { resolveWorkspaceBin, runNodeBinStatus } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { runCmdStatus } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { rewritePreview2ShimImportSource } from "../🕸️imports/🟦️.ts";
 import type { PluginWebMaterializeContext } from "./🧾️contract/🟦️.ts";
 import { optimizePluginCoreModules, optimizePluginCoreModulesAsync } from "./🪶️wasm-opt/🟦️.ts";
 import { stripWasmDebugSectionsV1 } from "./🪶️strip-debug/🟦️.ts";
+import { nativeTranspileArgsV1, nativeTranspileBinaryV1, PLUGIN_COMPONENT_IMPORT_MAPS_V1 } from "./🦀️native-transpile/🟦️.ts";
 import { rewriteJcoAsyncResultLiftingAt, rewriteJcoComponentAssetUrlsAt } from "./🧬️jco-module-rewrites/🟦️.ts";
 
 export function rewritePreview2ShimImports(componentJsPath: string, preview2VendorDir: string): void {
@@ -29,24 +29,13 @@ export function rewritePreview2ShimImports(componentJsPath: string, preview2Vend
 }
 
 export function transpilePluginComponent(artifact: string, outDir: string, componentBase: string, ctx: PluginWebMaterializeContext): void {
-  if (
-    runNodeBinStatus(
-      ["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase, "--map", "semio:framework/pure=./🟨️.js", "--map", "semio:framework/host-async=./🟨️.js"],
-      ctx.repoRoot,
-    ) !== 0
-  ) {
-    throw new Error(`jco transpile failed for ${artifact}`);
+  if (runCmdStatus(nativeTranspileBinaryV1(ctx.repoRoot), [...nativeTranspileArgsV1(artifact, outDir, componentBase, PLUGIN_COMPONENT_IMPORT_MAPS_V1)], { cwd: ctx.repoRoot }) !== 0) {
+    throw new Error(`native transpile failed for ${artifact}`);
   }
   rewriteJcoAsyncResultLiftingAt(join(outDir, `${componentBase}.js`));
   rewriteJcoComponentAssetUrlsAt(join(outDir, `${componentBase}.js`));
   optimizePluginCoreModules(outDir, componentBase, ctx);
   rewritePreview2ShimImports(join(outDir, `${componentBase}.js`), ctx.preview2VendorDir);
-}
-
-function spawnNodeBinAsync(args: readonly string[], cwd: string, signal?: AbortSignal, environment: Readonly<Record<string, string | undefined>> = process.env, control?: CompilerAdmissionControl): Promise<string> {
-  const binName = args[0]!;
-  const resolved = resolveWorkspaceBin(binName, cwd);
-  return captureOwnedCommandV1("node", [`--v8-pool-size=${compilerCapacityWorkerCountV1(environment)}`, resolved ?? binName, ...args.slice(1)], cwd, { env: { ...environment, UV_THREADPOOL_SIZE: String(compilerCapacityWorkerCountV1(environment)) }, ...(signal ? { signal } : {}), ...(control ? { control } : {}) });
 }
 
 /** 🧬️ The location-independent half of a component's transpile: jco's module files with the async result lifting and the versioned core asset URLs
@@ -56,10 +45,10 @@ export async function transpilePluginComponentModulesAsync(artifact: string, out
   const slim = join(dirname(outDir), `${componentBase}.nodebug.wasm`);
   try {
     writeFileSync(slim, stripWasmDebugSectionsV1(readFileSync(artifact)));
-    await spawnNodeBinAsync(["@bytecodealliance/jco", "transpile", slim, "-o", outDir, "--name", componentBase, "--map", "semio:framework/pure=./🟨️.js", "--map", "semio:framework/host-async=./🟨️.js"], ctx.repoRoot, ctx.signal, ctx.environment, ctx.control);
+    await captureOwnedCommandV1(nativeTranspileBinaryV1(ctx.repoRoot, ctx.environment ?? process.env), [...nativeTranspileArgsV1(slim, outDir, componentBase, PLUGIN_COMPONENT_IMPORT_MAPS_V1)], ctx.repoRoot, { env: { ...(ctx.environment ?? process.env) }, ...(ctx.signal ? { signal: ctx.signal } : {}), ...(ctx.control ? { control: ctx.control } : {}) });
   } catch (cause) {
     ctx.signal?.throwIfAborted();
-    throw new Error(`jco transpile failed for ${artifact}`, { cause });
+    throw new Error(`native transpile failed for ${artifact}`, { cause });
   } finally {
     rmSync(slim, { force: true });
   }
@@ -67,7 +56,7 @@ export async function transpilePluginComponentModulesAsync(artifact: string, out
   rewriteJcoComponentAssetUrlsAt(join(outDir, `${componentBase}.js`));
 }
 
-/** 🚀️ Async twin of {@link transpilePluginComponent}: the same jco invocation (no `--async-mode` flag, `pure` and `host-async` mapped to one shim, see
+/** 🚀️ Async twin of {@link transpilePluginComponent}: the same transpile invocation, native (no `--async-mode` flag, `pure` and `host-async` mapped to one shim, see
  * that function's doc), the ship-mode `wasm-opt` pass and the preview2 shim import rewrite, spawned without blocking so several components overlap. */
 export async function transpilePluginComponentAsync(artifact: string, outDir: string, componentBase: string, ctx: PluginWebMaterializeContext): Promise<void> {
   await transpilePluginComponentModulesAsync(artifact, outDir, componentBase, ctx);

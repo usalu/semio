@@ -33,3 +33,7 @@ impl NativeEncodeControl<'_>{
  }
 }
 
+impl<'a> NativeEncodeControl<'a>{
+ /// 🎟️ Installs the caller's original work loan for the whole life of this control: the resident twin of [`NativeEncodeControl::with_work_recipient`] for runs whose decoder and encoder must share one loan lifetime.
+ pub fn install_work_recipient(&mut self,loan:&'a mut OriginalWorkLoan<'a>)->Result<(),ValueError>{self.action.validate_recipient(loan)?;self.action.rebind_pending(loan);self.action.recipient=Some(loan);Ok(())}
+}

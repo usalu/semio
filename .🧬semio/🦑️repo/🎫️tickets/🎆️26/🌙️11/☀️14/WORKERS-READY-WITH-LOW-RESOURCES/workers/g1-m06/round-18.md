@@ -322,3 +322,135 @@ Waiting for host capacity was cancelled by SIGINT
 end 2026-11-15T11:57:56Z
 native_rc=130
 ```
+
+## Try 12
+
+- start 2026-11-15T12:01:27Z, end 2026-11-16T02:02:52Z, `native_rc=75`, hard stop: memory pressure level 4 in two samples in a row.
+- Pressure levels of the 30 s samples (count, level):  23 pressure_level=1; 797 pressure_level=2; 731 pressure_level=4;. Peak resident of any process: 1355232 KB.
+- Slice worker sampler (5 s), row with the largest resident size: `2026-11-16T01:58:34Z pid=29560 rss=3897MB footprint=[bun [29560]: 64-bit    Footprint: 3955 MB (16384 bytes per page)] last=[graph: 260 of 703 projects arrived from the fleet, 51 inferred here, 392 left; the server last progressed 15 s ago, estimated time left: about 9 min]`; closure entries before: 0; closure entries after: 42567.
+- Launcher after the try: inode 5101653 mtime 2026-11-16T02:47:23+0100 /Users/ueli/.local/share/semio/launcher/bin/repo Identifier=tech.semio.repo CDHash=3f4bbfeb8ae668c405b7e88a2df8a1909043512c ; marker absent.
+- Setup tasks: succeeded 0, failed 0 (none).
+
+```
+[capacity] run: sized at 5% of the default from 14 earlier run(s) of its class
+[capacity] waiting 0s for run: memory pressure is critical (need 512 MB; 1134 MB spare above the 2048 MB floor, load 3.42; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 6s for run: memory pressure is critical (need 512 MB; 1055 MB spare above the 2048 MB floor, load 3.3; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 11s for run: memory pressure is critical (need 512 MB; 1208 MB spare above the 2048 MB floor, load 3.36; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 17s for run: memory pressure is raised (need 512 MB; 1174 MB spare above the 2048 MB floor, load 3.25; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 22s for run: memory pressure is raised (need 512 MB; 1215 MB spare above the 2048 MB floor, load 4.46; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 28s for run: memory pressure is raised (need 512 MB; 1292 MB spare above the 2048 MB floor, load 5.23; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 33s for run: memory pressure is raised (need 512 MB; 1137 MB spare above the 2048 MB floor, load 4.97; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 39s for run: memory pressure is raised (need 512 MB; 1353 MB spare above the 2048 MB floor, load 4.81; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 44s for run: memory pressure is raised (need 512 MB; 1223 MB spare above the 2048 MB floor, load 4.5; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 50s for run: memory pressure is raised (need 512 MB; 1238 MB spare above the 2048 MB floor, load 4.3; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 56s for run: memory pressure is raised (need 512 MB; 1182 MB spare above the 2048 MB floor, load 5.64; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 62s for run: memory pressure is critical (need 512 MB; 1310 MB spare above the 2048 MB floor, load 5.23; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 67s for run: memory pressure is raised (need 512 MB; 1229 MB spare above the 2048 MB floor, load 5.05; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 72s for run: memory pressure is raised (need 512 MB; 1375 MB spare above the 2048 MB floor, load 4.89; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 78s for run: memory pressure is raised (need 512 MB; 1226 MB spare above the 2048 MB floor, load 4.58; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 84s for run: memory pressure is critical (need 512 MB; 1129 MB spare above the 2048 MB floor, load 4.37; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 89s for run: memory pressure is raised (need 512 MB; 1161 MB spare above the 2048 MB floor, load 4.26; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 95s for run: memory pressure is raised (need 512 MB; 1093 MB spare above the 2048 MB floor, load 4.72; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 100s for run: memory pressure is critical (need 512 MB; 1603 MB spare above the 2048 MB floor, load 4.58; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 105s for run: memory pressure is raised (need 512 MB; 1443 MB spare above the 2048 MB floor, load 4.46; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 110s for run: memory pressure is raised (need 512 MB; 1523 MB spare above the 2048 MB floor, load 4.1; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 116s for run: memory pressure is raised (need 512 MB; 1260 MB spare above the 2048 MB floor, load 4.09; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] admitted run after 120s although memory pressure is raised: nothing of ours is running and memory holds
+[capacity] run: sized at 27% of the default from 14 earlier run(s) of its class
+[capacity] run: sized at 98% of the default from 3 earlier run(s) of its class
+[capacity] dependencies: sized at 24% of the default from 14 earlier run(s) of its class
+[capacity] waiting 0s for dependencies: memory pressure is critical (need 1486 MB; 1564 MB spare above the 2048 MB floor, load 4.3; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 5s for dependencies: memory pressure is raised (need 1486 MB; 1737 MB spare above the 2048 MB floor, load 4.12; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 11s for dependencies: not enough free memory (need 1486 MB; 1444 MB spare above the 2048 MB floor, load 3.88; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 17s for dependencies: memory pressure is raised (need 1486 MB; 1650 MB spare above the 2048 MB floor, load 4.85; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 22s for dependencies: memory pressure is critical (need 1486 MB; 1342 MB spare above the 2048 MB floor, load 4.86; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 27s for dependencies: not enough free memory (need 1486 MB; 1397 MB spare above the 2048 MB floor, load 4.47; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 33s for dependencies: memory pressure is critical (need 1486 MB; 1340 MB spare above the 2048 MB floor, load 4.27; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 38s for dependencies: not enough free memory (need 1486 MB; 1469 MB spare above the 2048 MB floor, load 5.21; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 44s for dependencies: memory pressure is critical (need 1486 MB; 1329 MB spare above the 2048 MB floor, load 4.96; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 49s for dependencies: memory pressure is critical (need 1486 MB; 1287 MB spare above the 2048 MB floor, load 4.64; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 54s for dependencies: not enough free memory (need 1486 MB; 1128 MB spare above the 2048 MB floor, load 4.91; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 60s for dependencies: memory pressure is critical (need 1486 MB; 1186 MB spare above the 2048 MB floor, load 4.59; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 65s for dependencies: not enough free memory (need 1486 MB; 1342 MB spare above the 2048 MB floor, load 5.51; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 71s for dependencies: not enough free memory (need 1486 MB; 1433 MB spare above the 2048 MB floor, load 20.6; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 76s for dependencies: memory pressure is critical (need 1486 MB; 1402 MB spare above the 2048 MB floor, load 29.31; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 82s for dependencies: not enough free memory (need 1486 MB; 1225 MB spare above the 2048 MB floor, load 48.34; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 87s for dependencies: not enough free memory (need 1486 MB; 1101 MB spare above the 2048 MB floor, load 57.28; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 93s for dependencies: not enough free memory (need 1486 MB; 1091 MB spare above the 2048 MB floor, load 67.43; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 99s for dependencies: memory pressure is critical (need 1486 MB; 1029 MB spare above the 2048 MB floor, load 63.71; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 104s for dependencies: not enough free memory (need 1486 MB; 1121 MB spare above the 2048 MB floor, load 59.01; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 110s for dependencies: memory pressure is critical (need 1486 MB; 1294 MB spare above the 2048 MB floor, load 54.36; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 115s for dependencies: not enough free memory (need 1486 MB; 1181 MB spare above the 2048 MB floor, load 51.85; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 121s for dependencies: memory pressure is critical (need 1486 MB; 1124 MB spare above the 2048 MB floor, load 48.02; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 126s for dependencies: memory pressure is critical (need 1486 MB; 1153 MB spare above the 2048 MB floor, load 41.18; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 132s for dependencies: not enough free memory (need 1486 MB; 1076 MB spare above the 2048 MB floor, load 38.04; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 137s for dependencies: not enough free memory (need 1486 MB; 1178 MB spare above the 2048 MB floor, load 37.08; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 143s for dependencies: memory pressure is critical (need 1486 MB; 1147 MB spare above the 2048 MB floor, load 34.19; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 149s for dependencies: memory pressure is critical (need 1486 MB; 1169 MB spare above the 2048 MB floor, load 31.53; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 154s for dependencies: not enough free memory (need 1486 MB; 1156 MB spare above the 2048 MB floor, load 30.37; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 160s for dependencies: not enough free memory (need 1486 MB; 1172 MB spare above the 2048 MB floor, load 28.09; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 166s for dependencies: not enough free memory (need 1486 MB; 1235 MB spare above the 2048 MB floor, load 26.24; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 171s for dependencies: memory pressure is critical (need 1486 MB; 1329 MB spare above the 2048 MB floor, load 22.6; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 177s for dependencies: memory pressure is critical (need 1486 MB; 1242 MB spare above the 2048 MB floor, load 21.19; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 182s for dependencies: memory pressure is critical (need 1486 MB; 1199 MB spare above the 2048 MB floor, load 19.73; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 188s for dependencies: memory pressure is critical (need 1486 MB; 1182 MB spare above the 2048 MB floor, load 18.39; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 193s for dependencies: not enough free memory (need 1486 MB; 1358 MB spare above the 2048 MB floor, load 17.16; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 198s for dependencies: memory pressure is critical (need 1486 MB; 1319 MB spare above the 2048 MB floor, load 16.02; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 204s for dependencies: not enough free memory (need 1486 MB; 1182 MB spare above the 2048 MB floor, load 14.82; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 209s for dependencies: not enough free memory (need 1486 MB; 1255 MB spare above the 2048 MB floor, load 13.71; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 215s for dependencies: memory pressure is critical (need 1486 MB; 1431 MB spare above the 2048 MB floor, load 12.7; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 220s for dependencies: memory pressure is critical (need 1486 MB; 1198 MB spare above the 2048 MB floor, load 12.88; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 225s for dependencies: memory pressure is critical (need 1486 MB; 1330 MB spare above the 2048 MB floor, load 12.09; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 231s for dependencies: memory pressure is critical (need 1486 MB; 1214 MB spare above the 2048 MB floor, load 11.44; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 236s for dependencies: not enough free memory (need 1486 MB; 1158 MB spare above the 2048 MB floor, load 11.08; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 242s for dependencies: not enough free memory (need 1486 MB; 1203 MB spare above the 2048 MB floor, load 9.68; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 247s for dependencies: not enough free memory (need 1486 MB; 1218 MB spare above the 2048 MB floor, load 9.07; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 252s for dependencies: not enough free memory (need 1486 MB; 1332 MB spare above the 2048 MB floor, load 10.34; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 257s for dependencies: memory pressure is critical (need 1486 MB; 1388 MB spare above the 2048 MB floor, load 9.67; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 263s for dependencies: not enough free memory (need 1486 MB; 1248 MB spare above the 2048 MB floor, load 9.14; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 268s for dependencies: memory pressure is critical (need 1486 MB; 1258 MB spare above the 2048 MB floor, load 8.49; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 274s for dependencies: memory pressure is critical (need 1486 MB; 1338 MB spare above the 2048 MB floor, load 7.97; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 279s for dependencies: not enough free memory (need 1486 MB; 1332 MB spare above the 2048 MB floor, load 7.49; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 285s for dependencies: memory pressure is critical (need 1486 MB; 1375 MB spare above the 2048 MB floor, load 6.89; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 291s for dependencies: memory pressure is critical (need 1486 MB; 1316 MB spare above the 2048 MB floor, load 6.5; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 296s for dependencies: not enough free memory (need 1486 MB; 1375 MB spare above the 2048 MB floor, load 6.06; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 302s for dependencies: memory pressure is critical (need 1486 MB; 1094 MB spare above the 2048 MB floor, load 37.54; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 307s for dependencies: not enough free memory (need 1486 MB; 1215 MB spare above the 2048 MB floor, load 59.03; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 313s for dependencies: not enough free memory (need 1486 MB; 1314 MB spare above the 2048 MB floor, load 60.87; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 318s for dependencies: memory pressure is critical (need 1486 MB; 1186 MB spare above the 2048 MB floor, load 73.78; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 324s for dependencies: memory pressure is critical (need 1486 MB; 1292 MB spare above the 2048 MB floor, load 78.36; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 329s for dependencies: not enough free memory (need 1486 MB; 1199 MB spare above the 2048 MB floor, load 86.74; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 335s for dependencies: memory pressure is critical (need 1486 MB; 1256 MB spare above the 2048 MB floor, load 96.37; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 341s for dependencies: memory pressure is critical (need 1486 MB; 1314 MB spare above the 2048 MB floor, load 92.01; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 346s for dependencies: swap use is above its ceiling (need 1486 MB; 1359 MB spare above the 2048 MB floor, load 104.02; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 351s for dependencies: not enough free memory (need 1486 MB; 1341 MB spare above the 2048 MB floor, load 119.66; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 357s for dependencies: memory pressure is critical (need 1486 MB; 1070 MB spare above the 2048 MB floor, load 111.44; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 363s for dependencies: not enough free memory (need 1486 MB; 1156 MB spare above the 2048 MB floor, load 102.68; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 368s for dependencies: memory pressure is critical (need 1486 MB; 1148 MB spare above the 2048 MB floor, load 94.54; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 373s for dependencies: not enough free memory (need 1486 MB; 1480 MB spare above the 2048 MB floor, load 87.13; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 379s for dependencies: not enough free memory (need 1486 MB; 1323 MB spare above the 2048 MB floor, load 80.31; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] admitted dependencies after 383s although memory pressure is raised: nothing of ours is running and memory holds
+[capacity] waiting 0s for run: memory pressure is critical (need 512 MB; 972 MB spare above the 2048 MB floor, load 47.71; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] admitted run: 1 job(s), 512 MB reserved (2993 MB available, 2048 MB floor)
+[capacity] the memory footprint of running process trees cannot be read on darwin (Command failed: footprint -f bytes --noCategories -p 72824 -p 35901 -p 35891); the resident set is used instead, which can overstate what a process holds
+[capacity] Der Speicher-Fußabdruck laufender Prozessbäume kann unter darwin nicht gelesen werden (Command failed: footprint -f bytes --noCategories -p 72824 -p 35901 -p 35891); stattdessen gilt der residente Speicher, der überschätzen kann, was ein Prozess hält
+Reading the project graph slice (943 s): flush 1 of 1.
+Reading the project graph slice (945 s): flush 1 of 1.
+[capacity] Der Speicher-Fußabdruck laufender Prozessbäume kann unter darwin nicht gelesen werden (Command failed: footprint -f bytes --noCategories -p 72824 -p 35901 -p 35891); stattdessen gilt der residente Speicher, der überschätzen kann, was ein Prozess hält
+The project graph could not be read on this machine yet: the plan stage inference (during inference) grew to 7556 MB, more than the 6553 MB this machine gives a plan, and only 1599 MB of memory were available (at least 2048 MB are kept in reserve) after it gave back what it could. It was stopped before the host ran short of memory. Nothing is wrong with your tree; run the command again when a machine with free memory serves the graph, or read the graph on a larger machine.
+end 2026-11-16T02:02:52Z
+native_rc=75
+```
+
+## Summary of Round 18 (written 2026-11-16T03:11:16Z)
+
+Not ready, 12 tries, no setup task ran in tries 1, 10, 11 and 12 (the ones I read in full); marker absent. I read no round between 18 and 31: try 10 ran 7 h and try 12 ran 14 h, and from about 02:00Z to 03:10Z on 2026-11-16 reads under `~/Documents` blocked for my shell (cause not measured; they answer again). I start nothing further: round 31 says to stop.
+
+| Tries | Start to end (UTC) | `native_rc` | How it ended |
+| --- | --- | --- | --- |
+| 1 to 9 | 11-15 04:06 to 04:43, about 85 s each | 75 | try 1: "The stamps moved again after the restart: run the command again." Tries 2 to 9 are in the blocks above. |
+| 10 | 11-15 04:46 to 11:52 | 1 | my runner sent SIGINT on pressure level 4 in two samples in a row ("Internal error: Original Script process interrupted") |
+| 11 | 11-15 11:56 to 11:57 | 130 | same stop rule, while "Waiting for host capacity" |
+| 12 | 11-15 12:01 to 11-16 02:02 | 75 | "the plan stage inference (during inference) grew to 7556 MB, more than the 6553 MB this machine gives a plan, and only 1599 MB of memory were available"; my runner also recorded a level 4 stop |
+
+Rounds 23 and later say memory pressure is no stop rule; my runner still applied the round 18 rule (level 4 twice in a row) in tries 10 to 12 because I had not read those rounds.

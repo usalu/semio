@@ -269,7 +269,7 @@ test("on a host that reports only machine-wide headroom the peak of an owner is 
 });
 
 test("the learned peak of a kind is the largest of its last samples: an outlier leaves after the window, the persisted samples never outgrow it, and a root project kind does not decide for the crates",async()=>{
- const window=memory.GRAPH_MEMORY_POLICY_V1.peakSamples,time=new FakeTime(),stored:{value:Record<string,number[]>}={value:{"language:cargo":[3000*MEGABYTE],"root:language:cargo":[4600*MEGABYTE]}};
+ const window=memory.GRAPH_MEMORY_POLICY_V1.peakSamples,time=new FakeTime(),stored:{value:Record<string,number[]>}={value:{"language:cargo":[2000*MEGABYTE],"root:language:cargo":[4600*MEGABYTE]}};
  let live=0,done=0;
  const governor=memory.createMemoryGovernorV1({workers:4,headroom:()=>3000*MEGABYTE-live,estimateBytes:256*MEGABYTE,peaks:{read:()=>stored.value,write:value=>{stored.value=structuredClone(value);}},now:time.now,sleep:time.sleep});
  const crate=async()=>{live+=100*MEGABYTE;await time.sleep(1000);live-=100*MEGABYTE;done++;};
@@ -337,6 +337,18 @@ test("a headroom below the estimate with nothing running starts the project at o
  expect(started.a).toBe(0);expect(started.b!).toBeGreaterThanOrEqual(bound);expect(started.b!).toBeLessThan(bound+1000);
  expect(started.c!,"every admission and completion is progress and restarts the bound, so c runs one bound after b is done").toBeGreaterThanOrEqual(started.b!+5000);expect(started.c!).toBeLessThan(started.b!+5000+bound+1000);
  void a;
+ governor.dispose();
+});
+
+test("a project above the grant that the free memory still holds is not refused: it waits for the running project and then runs",async()=>{
+ const time=new FakeTime(),started:Record<string,number>={},lines:string[]=[];
+ const governor=memory.createMemoryGovernorV1({workers:2,headroom:()=>1000*MEGABYTE,ownerLimitBytes:400*MEGABYTE,peaks:learnedPeaks(900),now:time.now,sleep:time.sleep,report:line=>lines.push(line),environment:{SEMIO_LANGUAGE:"en"}});
+ const first=holdOwner(governor,time,"first",200000,started),second=holdOwner(governor,time,"second",1000,started);
+ let done=false;void second.then(()=>{done=true;});
+ await time.drive(()=>done);
+ await first.catch(()=>undefined);
+ expect(started.second!).toBeGreaterThanOrEqual(200000);
+ expect(lines.some(line=>line.includes("but one project is granted"))).toBe(false);
  governor.dispose();
 });
 

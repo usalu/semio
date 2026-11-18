@@ -9,6 +9,7 @@ import {HERE,sleep,waitFor} from "../🟦️.ts";
 import {createHostServiceV1} from "../../🏛️service/🌐️host/🟨️.mjs";
 import {createGraphPlannerPortV1} from "../../🔌️ports/🧭️plan/🟨️.mjs";
 import {hostEndpointsV1} from "../../📨️protocol/📍️endpoint/🏠️host/🟨️.mjs";
+import {GRAPH_CUT_POLICY_V1} from "../../../🧠️memory/✂️cut/🟨️.mjs";
 import {createSlicePoolV1} from "../../🏗️composition/🌐️host/👷️slice-pool/🟨️.mjs";
 import {createReaperV1} from "../../🏗️composition/🌐️host/👷️slice-pool/🧹️reap/🟨️.mjs";
 import {createPressureWatchV1,cgroupMeasuresV1} from "../../🏗️composition/🌐️host/👷️slice-pool/🌡️pressure/🟨️.mjs";
@@ -244,7 +245,7 @@ describe("every slice load gets a hard memory limit of its own where cgroups are
  });
  test("a plan reserves its limit through the capacity gate before its worker starts, attaches the worker to the reservation and gives it back when the load ends, even when the load fails",async()=>{
   const log:string[]=[],listeners:Record<string,(value:unknown)=>void>={},fake={pid:4242,on:(event:string,listener:(value:unknown)=>void)=>{listeners[event]=listener;},terminate:async()=>0},limiter={create:async()=>({attach:async()=>undefined,onBreach:()=>undefined,release:async()=>undefined})};
-  const harness=(answer:"done"|"error")=>createSlicePoolV1({workerUrl:new URL("file:///unused.mjs"),maximum:1,graceMilliseconds:50,headroom,marginMegabytes:L.marginMegabytes,limiter:limiter as never,learned:{read:()=>0,write:()=>undefined},reserve:async({megabytes}:{megabytes:number})=>{log.push("reserve "+megabytes);return{attach:(pid:number)=>{log.push("attach "+pid);},release:()=>{log.push("release");}};},createWorker:()=>{log.push("worker");queueMicrotask(()=>listeners.message?.(answer==="done"?{type:"done",graph:{}}:{type:"error",message:"broken"}));return fake;}});
+  const harness=(answer:"done"|"error")=>createSlicePoolV1({hostMegabytes:0,workerUrl:new URL("file:///unused.mjs"),maximum:1,graceMilliseconds:50,headroom,marginMegabytes:L.marginMegabytes,limiter:limiter as never,learned:{read:()=>0,write:()=>undefined},reserve:async({megabytes}:{megabytes:number})=>{log.push("reserve "+megabytes);return{attach:(pid:number)=>{log.push("attach "+pid);},release:()=>{log.push("release");}};},createWorker:()=>{log.push("worker");queueMicrotask(()=>listeners.message?.(answer==="done"?{type:"done",graph:{}}:{type:"error",message:"broken"}));return fake;}});
   const pool=harness("done");await pool.run({root:base});await pool.close();await waitFor(()=>log.at(-1)==="release",5000);
   expect(log).toEqual(["reserve "+L.expect.memoryMaxMegabytes,"worker","attach 4242","release"]);
   log.length=0;const failing=harness("error");await expect(failing.run({root:base})).rejects.toThrow("broken");await failing.close();await waitFor(()=>log.at(-1)==="release",5000);
@@ -252,7 +253,7 @@ describe("every slice load gets a hard memory limit of its own where cgroups are
  });
  test("a plan that waits for its reservation reports the wait, starts no worker while it waits, and a cancellation during the wait ends it without a worker",async()=>{
   const log:string[]=[],progress:any[]=[],controller=new AbortController();let started=0;
-  const pool=createSlicePoolV1({workerUrl:new URL("file:///unused.mjs"),maximum:1,heartbeatMilliseconds:20,headroom:()=>({limitBytes:L.headroom.limitMegabytes*MiB,currentBytes:L.headroom.currentMegabytes*MiB,availableBytes:1024*MiB}),marginMegabytes:L.marginMegabytes,limiter:{create:async()=>undefined} as never,reserve:({signal}:{signal:AbortSignal})=>new Promise((_resolve,reject)=>{signal.addEventListener("abort",()=>reject(signal.reason),{once:true});}),createWorker:()=>{started++;throw new Error("no worker may start");}});
+  const pool=createSlicePoolV1({hostMegabytes:0,workerUrl:new URL("file:///unused.mjs"),maximum:1,heartbeatMilliseconds:20,headroom:()=>({limitBytes:L.headroom.limitMegabytes*MiB,currentBytes:L.headroom.currentMegabytes*MiB,availableBytes:1024*MiB}),marginMegabytes:L.marginMegabytes,limiter:{create:async()=>undefined} as never,reserve:({signal}:{signal:AbortSignal})=>new Promise((_resolve,reject)=>{signal.addEventListener("abort",()=>reject(signal.reason),{once:true});}),createWorker:()=>{started++;throw new Error("no worker may start");}});
   const running=pool.run({root:base},{signal:controller.signal,onProgress:(_ms:number,detail:any)=>progress.push(detail)}).then(()=>undefined,error=>error);
   expect(await waitFor(()=>progress.length>=2,5000)).toBe(true);
   expect(progress[0]).toMatchObject({phase:"reservation",done:0,total:L.expect.memoryMaxMegabytes,decision:{key:"reserving",used:L.expect.memoryMaxMegabytes,budget:1024}});
@@ -260,7 +261,7 @@ describe("every slice load gets a hard memory limit of its own where cgroups are
  });
  test("the host availability reads MemAvailable in kilobytes",()=>{expect(createHostAvailableBytesV1({platform:"linux",read:()=>"MemTotal: 1 kB\nMemAvailable:    2048 kB\n",total:()=>2**40,environment:{}})()).toBe(2048*1024);});
  test("a load is placed in its own cgroup with the computed limits and the group is killed and removed when the load ends",async()=>{
-  const m=modelled(),pool=createSlicePoolV1({workerUrl:new URL("./🧒️spawning-worker.mjs",import.meta.url),maximum:1,graceMilliseconds:200,headroom,marginMegabytes:L.marginMegabytes,limiter:createCgroupLimiterV1("/cg/semio-jobs",m.ports)});
+  const m=modelled(),pool=createSlicePoolV1({hostMegabytes:0,workerUrl:new URL("./🧒️spawning-worker.mjs",import.meta.url),maximum:1,graceMilliseconds:200,headroom,marginMegabytes:L.marginMegabytes,limiter:createCgroupLimiterV1("/cg/semio-jobs",m.ports)});
   await pool.run({root:base,mode:"done"});
   const dir=[...m.files.keys()].find(path=>path.endsWith("/memory.max"))!.replace("/memory.max","");
   expect(Number(m.files.get(dir+"/memory.max"))).toBe(L.expect.memoryMaxMegabytes*MiB);expect(m.files.has(dir+"/memory.high")).toBe(false);expect(m.files.get(dir+"/memory.swap.max")).toBe("0");expect(m.files.get(dir+"/memory.oom.group")).toBe("1");
@@ -269,7 +270,7 @@ describe("every slice load gets a hard memory limit of its own where cgroups are
  },30000);
  test("an overrun kills only that load: typed memory-budget error, process gone, group killed",async()=>{
   const m=modelled();let child=0,job=0;
-  const pool=createSlicePoolV1({workerUrl:new URL("./🧒️spawning-worker.mjs",import.meta.url),maximum:1,graceMilliseconds:200,heartbeatMilliseconds:100,headroom,marginMegabytes:L.marginMegabytes,limiter:createCgroupLimiterV1("/cg/semio-jobs",m.ports)});
+  const pool=createSlicePoolV1({hostMegabytes:0,workerUrl:new URL("./🧒️spawning-worker.mjs",import.meta.url),maximum:1,graceMilliseconds:200,heartbeatMilliseconds:100,cutPolicy:{...GRAPH_CUT_POLICY_V1,levels:0},headroom,marginMegabytes:L.marginMegabytes,limiter:createCgroupLimiterV1("/cg/semio-jobs",m.ports)});
   const running=pool.run({root:base,mode:"abort"},{onProgress:(_ms:number,detail:any)=>{if(detail?.phase==="child"){child=detail.done;job=detail.total;}}}).then(()=>undefined,error=>error);
   expect(await waitFor(()=>child>0,15000)).toBe(true);
   const dir=[...m.files.keys()].find(path=>path.endsWith("/memory.max"))!.replace("/memory.max","");

@@ -1,5 +1,6 @@
 import { artifactFrontierIsGenesisForV1, artifactFrontierIsEditedForV1, type DocumentScope, type ArtifactFrontier } from "@semio-tech/framework/document/scope";
 import { decodePackValue } from "@semio-tech/framework/packs";
+import { Button, SharedBorderRow, SharedBorderRowCell } from "@semio-tech/ui-react";
 import React from "react";
 import { GIS_MAP_INFERENCE_PORT_CODE_TEXT_V1, GIS_MAP_INFERENCE_PORT_CONTROL_TEXT_V1, GIS_MAP_INFERENCE_PORT_TEXT_V1, gisMapInferencePortAffordancesV1, gisMapInferencePortRoleV1, gisMapInferencePortTerminalV1, projectGisMapInferencePreviewOverlayV1, parseGisMapInferencePortStatusV1, type GisMapInferencePortStatusV1 } from "../🧬️schema/🟦️.ts";
 import type { InferencePortUiAction, InstalledServicePresentationV1, ServiceMountedViewV1 } from "@semio-tech/framework/inference/service";
@@ -51,12 +52,20 @@ export function InferencePortPanel({
           <path d={overlay.path} fill="currentColor" fillOpacity="0.18" stroke="currentColor" strokeWidth="1.5" />
         </svg>
       ) : null}
-      {status.total > 0 && !terminal ? <progress aria-label={control.progress[locale]} value={status.completed} max={status.total} /> : null}
-      {chrome.request ? <button type="button" onClick={() => onAction({ kind: "propose", payload: { requestId: crypto.randomUUID().replaceAll("-", "") } })}>{control.request[locale]}</button> : null}
-      {chrome.cancel ? <button type="button" onClick={() => onAction({ kind: "cancel" })}>{control.cancel[locale]}</button> : null}
-      {chrome.reject ? <button type="button" onClick={() => onAction({ kind: "cancel" })}>{control.reject[locale]}</button> : null}
-      {chrome.approve ? <button type="button" onClick={() => onAction({ kind: "approve" })}>{control.approve[locale]}</button> : null}
-      <button type="button" onClick={() => onAction({ kind: "close" })}>{control.close[locale]}</button>
+      <SharedBorderRow orientation="vertical">
+        {status.total > 0 && !terminal ? (
+          <SharedBorderRowCell>
+            <progress className="w-full" aria-label={control.progress[locale]} value={status.completed} max={status.total} />
+          </SharedBorderRowCell>
+        ) : null}
+        <SharedBorderRow>
+          {chrome.request ? <Button type="button" variant="outline" icon="arrow-right" className="flex-1" onClick={() => onAction({ kind: "propose", payload: { requestId: crypto.randomUUID().replaceAll("-", "") } })}>{control.request[locale]}</Button> : null}
+          {chrome.cancel ? <Button type="button" variant="outline" icon="x" className="flex-1" onClick={() => onAction({ kind: "cancel" })}>{control.cancel[locale]}</Button> : null}
+          {chrome.reject ? <Button type="button" variant="outline" icon="x" className="flex-1" onClick={() => onAction({ kind: "cancel" })}>{control.reject[locale]}</Button> : null}
+          {chrome.approve ? <Button type="button" variant="outline" icon="check" className="flex-1" onClick={() => onAction({ kind: "approve" })}>{control.approve[locale]}</Button> : null}
+          <Button type="button" variant="outline" icon="x" className="flex-1" onClick={() => onAction({ kind: "close" })}>{control.close[locale]}</Button>
+        </SharedBorderRow>
+      </SharedBorderRow>
     </section>
   );
 }

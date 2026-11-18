@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {existsSync,readFileSync,readdirSync,statSync} from "node:fs";
 import {join,resolve} from "node:path";
 import {readLeaseReportV1,type LeaseHolderV1} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/📋️status/🟦️.ts";
@@ -31,7 +32,7 @@ const standingOf=(row:NonNullable<LeaseHolderV1["standing"]>):FleetStandingFactV
 
 /** 🔒️ Leases: holders, waiters and cycles of the checkout's lease directory, with the history of the kinds of hold the waiters queue behind. */
 export const readFleetLeasesV1:FleetReaderV1=async context=>{
- const directory=resolve(join(context.root,REPOSITORY_LEASE_DIRECTORY_FLEET_V1)),report=readLeaseReportV1(directory,context.environment,context.now(),0),registry=leaseRegistryRootV1(context.environment);
+ const directory=resolve(machinePathV1(context.root,REPOSITORY_LEASE_DIRECTORY_FLEET_V1)),report=readLeaseReportV1(directory,context.environment,context.now(),0),registry=leaseRegistryRootV1(context.environment);
  const holders:FleetHolderFactV1[]=report.holders.map(row=>({pid:row.pid,resource:row.resource,mode:row.mode,class:row.class,heldSeconds:row.heldSeconds,...row.command===undefined?{}:{command:row.command},...row.session===undefined?{}:{session:row.session},...row.agent===undefined?{}:{agent:row.agent},...row.standing===undefined?{}:{standing:standingOf(row.standing)}}));
  const waiters:FleetWaiterFactV1[]=report.waiters.map(row=>({pid:row.pid,resource:row.resource,mode:row.mode,class:row.class,waitedSeconds:row.waitedSeconds,blockers:[...row.blockers],...row.position===undefined?{}:{position:row.position},...row.command===undefined?{}:{command:row.command},...row.session===undefined?{}:{session:row.session},...row.agent===undefined?{}:{agent:row.agent},...row.priority===undefined?{}:{priority:row.priority},historyKey:leaseHistoryKeyV1(row.resource,row.command??"")}));
  const history:Record<string,readonly number[]>={};

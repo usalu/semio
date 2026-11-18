@@ -22,9 +22,9 @@ type DescriptorAction = { id: string; semantics?: { execution?: { interactiveJob
 type DescriptorApp = { id: string; role: string; actions?: DescriptorAction[]; windowKinds?: { id: string; actions?: DescriptorAction[] }[] };
 type Descriptor = { manifest: { apps: DescriptorApp[] } };
 
-/** 🧭️ Resolves the committed test plan against the source owner and deployed component. */
-export function normPackageTestPlan(plugin: string, repoRoot: string): { descriptor: string; suites: string[] } {
-  return { descriptor: join(repoRoot, plan.descriptor), suites: plan.suites.map(path => join(plugin, path)) };
+/** 🧭️ Resolves the committed test plan against the source owner and the deployed descriptors of the three plugins that split the norm families. */
+export function normPackageTestPlan(plugin: string, repoRoot: string): { descriptors: string[]; suites: string[] } {
+  return { descriptors: plan.descriptors.map(path => join(repoRoot, path)), suites: plan.suites.map(path => join(plugin, path)) };
 }
 
 /** 🏃️ Runs the `TestScript` command under the caller's roots and invocation. */
@@ -32,7 +32,7 @@ export async function runTestScript(context: Readonly<{ root: string; repoRoot: 
   const plugin = join(context.root, "..", "..");
   const fixture = JSON.parse(readFileSync(join(plugin, "📇️registry", "🧬️contract", "🧪️tests", "🧫️fixtures", "🧫️retained-command-dispositions", "🔣️.json"), "utf8")) as RetainedFixture;
   const testPlan = normPackageTestPlan(plugin, context.repoRoot);
-  const descriptor = JSON.parse(readFileSync(testPlan.descriptor, "utf8")) as Descriptor;
+  const descriptors = testPlan.descriptors.map(path => JSON.parse(readFileSync(path, "utf8")) as Descriptor);
   const failures: string[] = [];
   const expect = (ok: boolean, message: string) => {
     if (!ok) failures.push(message);
@@ -55,7 +55,7 @@ export async function runTestScript(context: Readonly<{ root: string; repoRoot: 
     expect(!route.publicationLanes.includes("host-only") || route.publicationLanes.length === 1, `route ${route.id} pairs host-only with another lane`);
   }
 
-  const editors = new Map(descriptor.manifest.apps.filter((app) => app.role === "editor").map((app) => [app.id, app]));
+  const editors = new Map(descriptors.flatMap(descriptor => descriptor.manifest.apps).filter((app) => app.role === "editor").map((app) => [app.id, app]));
   let classified = 0;
   let identities = 0;
   for (const app of fixture.apps) {

@@ -1,0 +1,555 @@
+{
+ "lease": [
+  {
+   "name": "no lease is free",
+   "lease": null,
+   "nowMs": 100000,
+   "staleMs": 60000,
+   "process": "alive",
+   "expect": {
+    "state": "free",
+    "reason": "none"
+   }
+  },
+  {
+   "name": "an old lease has expired even if its process lives",
+   "lease": {
+    "pid": 10,
+    "startMs": 1000,
+    "wallMs": 0
+   },
+   "nowMs": 100000,
+   "staleMs": 60000,
+   "process": "alive",
+   "expect": {
+    "state": "free",
+    "reason": "expired"
+   },
+   "processStartMs": 1000
+  },
+  {
+   "name": "a fresh lease of a live process with the recorded start is held",
+   "lease": {
+    "pid": 10,
+    "startMs": 1000,
+    "wallMs": 90000
+   },
+   "nowMs": 100000,
+   "staleMs": 60000,
+   "process": "alive",
+   "expect": {
+    "state": "held",
+    "reason": "held"
+   },
+   "processStartMs": 1000
+  },
+  {
+   "name": "a start time within the tolerance is the same process",
+   "lease": {
+    "pid": 10,
+    "startMs": 1000,
+    "wallMs": 90000
+   },
+   "nowMs": 100000,
+   "staleMs": 60000,
+   "process": "alive",
+   "expect": {
+    "state": "held",
+    "reason": "held"
+   },
+   "processStartMs": 9000
+  },
+  {
+   "name": "a fresh lease of a process that is gone is free at once",
+   "lease": {
+    "pid": 10,
+    "startMs": 1000,
+    "wallMs": 90000
+   },
+   "nowMs": 100000,
+   "staleMs": 60000,
+   "process": "gone",
+   "expect": {
+    "state": "free",
+    "reason": "owner-gone"
+   }
+  },
+  {
+   "name": "a fresh lease whose pid belongs to a younger process is free (the pid was reused)",
+   "lease": {
+    "pid": 10,
+    "startMs": 1000,
+    "wallMs": 90000
+   },
+   "nowMs": 100000,
+   "staleMs": 60000,
+   "process": "alive",
+   "expect": {
+    "state": "free",
+    "reason": "pid-reused"
+   },
+   "processStartMs": 500000
+  },
+  {
+   "name": "a lease without a recorded start is held while its pid lives",
+   "lease": {
+    "pid": 10,
+    "wallMs": 90000
+   },
+   "nowMs": 100000,
+   "staleMs": 60000,
+   "process": "alive",
+   "expect": {
+    "state": "held",
+    "reason": "held"
+   },
+   "processStartMs": 500000
+  },
+  {
+   "name": "an unknown process state keeps the lease",
+   "lease": {
+    "pid": 10,
+    "startMs": 1000,
+    "wallMs": 90000
+   },
+   "nowMs": 100000,
+   "staleMs": 60000,
+   "process": "unknown",
+   "expect": {
+    "state": "held",
+    "reason": "held"
+   }
+  },
+  {
+   "name": "expiry wins over a gone process",
+   "lease": {
+    "pid": 10,
+    "startMs": 1000,
+    "wallMs": 0
+   },
+   "nowMs": 100000,
+   "staleMs": 60000,
+   "process": "gone",
+   "expect": {
+    "state": "free",
+    "reason": "expired"
+   }
+  }
+ ],
+ "tree": [
+  {
+   "name": "a chain is stopped from the leaf up",
+   "table": [
+    {
+     "pid": 100,
+     "ppid": 1,
+     "startMs": 1000000
+    },
+    {
+     "pid": 101,
+     "ppid": 100,
+     "startMs": 1000100
+    },
+    {
+     "pid": 102,
+     "ppid": 101,
+     "startMs": 1000200
+    },
+    {
+     "pid": 300,
+     "ppid": 1,
+     "startMs": 500000
+    }
+   ],
+   "root": {
+    "pid": 100,
+    "startMs": 1000000
+   },
+   "known": [],
+   "self": 999,
+   "kill": [
+    102,
+    101,
+    100
+   ]
+  },
+  {
+   "name": "an orphan recorded earlier is stopped with its children, its exited parent is not",
+   "table": [
+    {
+     "pid": 100,
+     "ppid": 1,
+     "startMs": 1000000
+    },
+    {
+     "pid": 102,
+     "ppid": 101,
+     "startMs": 1000300
+    },
+    {
+     "pid": 103,
+     "ppid": 102,
+     "startMs": 1000400
+    }
+   ],
+   "root": {
+    "pid": 100,
+    "startMs": 1000000
+   },
+   "known": [
+    {
+     "pid": 102,
+     "startMs": 1000300
+    },
+    {
+     "pid": 101,
+     "startMs": 1000100
+    }
+   ],
+   "self": 999,
+   "kill": [
+    103,
+    100,
+    102
+   ]
+  },
+  {
+   "name": "a recorded pid that another process uses now is never touched",
+   "table": [
+    {
+     "pid": 100,
+     "ppid": 1,
+     "startMs": 1000000
+    },
+    {
+     "pid": 102,
+     "ppid": 1,
+     "startMs": 9000000
+    }
+   ],
+   "root": {
+    "pid": 100,
+    "startMs": 1000000
+   },
+   "known": [
+    {
+     "pid": 102,
+     "startMs": 1000300
+    }
+   ],
+   "self": 999,
+   "kill": [
+    100
+   ]
+  },
+  {
+   "name": "a process that started before its recorded parent is not its child (the parent pid was reused)",
+   "table": [
+    {
+     "pid": 100,
+     "ppid": 1,
+     "startMs": 1000000
+    },
+    {
+     "pid": 105,
+     "ppid": 100,
+     "startMs": 400000
+    }
+   ],
+   "root": {
+    "pid": 100,
+    "startMs": 1000000
+   },
+   "known": [],
+   "self": 999,
+   "kill": [
+    100
+   ]
+  },
+  {
+   "name": "this process and its ancestors are never stopped",
+   "table": [
+    {
+     "pid": 100,
+     "ppid": 1,
+     "startMs": 1000000
+    },
+    {
+     "pid": 101,
+     "ppid": 100,
+     "startMs": 1000100
+    },
+    {
+     "pid": 200,
+     "ppid": 101,
+     "startMs": 1000200
+    },
+    {
+     "pid": 201,
+     "ppid": 200,
+     "startMs": 1000300
+    }
+   ],
+   "root": {
+    "pid": 100,
+    "startMs": 1000000
+   },
+   "known": [],
+   "self": 200,
+   "kill": [
+    201
+   ]
+  },
+  {
+   "name": "the system pids are never stopped",
+   "table": [
+    {
+     "pid": 3,
+     "ppid": 0,
+     "startMs": 1000
+    },
+    {
+     "pid": 50,
+     "ppid": 3,
+     "startMs": 2000
+    }
+   ],
+   "root": {
+    "pid": 3,
+    "startMs": 1000
+   },
+   "known": [],
+   "self": 999,
+   "kill": [
+    50
+   ]
+  },
+  {
+   "name": "grandchildren go before children, equal depth by pid",
+   "table": [
+    {
+     "pid": 100,
+     "ppid": 1,
+     "startMs": 1000000
+    },
+    {
+     "pid": 110,
+     "ppid": 100,
+     "startMs": 1000100
+    },
+    {
+     "pid": 111,
+     "ppid": 100,
+     "startMs": 1000100
+    },
+    {
+     "pid": 120,
+     "ppid": 110,
+     "startMs": 1000200
+    },
+    {
+     "pid": 121,
+     "ppid": 111,
+     "startMs": 1000200
+    },
+    {
+     "pid": 130,
+     "ppid": 120,
+     "startMs": 1000300
+    }
+   ],
+   "root": {
+    "pid": 100,
+    "startMs": 1000000
+   },
+   "known": [],
+   "self": 999,
+   "kill": [
+    130,
+    120,
+    121,
+    110,
+    111,
+    100
+   ]
+  },
+  {
+   "name": "a root that is gone does not hide the recorded orphans",
+   "table": [
+    {
+     "pid": 150,
+     "ppid": 9,
+     "startMs": 7000
+    },
+    {
+     "pid": 151,
+     "ppid": 150,
+     "startMs": 7100
+    }
+   ],
+   "root": {
+    "pid": 100,
+    "startMs": 1000000
+   },
+   "known": [
+    {
+     "pid": 150,
+     "startMs": 7000
+    }
+   ],
+   "self": 999,
+   "kill": [
+    151,
+    150
+   ]
+  },
+  {
+   "name": "a root that is another process now is not stopped",
+   "table": [
+    {
+     "pid": 100,
+     "ppid": 1,
+     "startMs": 9000000
+    },
+    {
+     "pid": 101,
+     "ppid": 100,
+     "startMs": 9000100
+    }
+   ],
+   "root": {
+    "pid": 100,
+    "startMs": 1000000
+   },
+   "known": [],
+   "self": 999,
+   "kill": []
+  },
+  {
+   "name": "a parent cycle in the table ends",
+   "table": [
+    {
+     "pid": 100,
+     "ppid": 1,
+     "startMs": 1000000
+    },
+    {
+     "pid": 101,
+     "ppid": 102,
+     "startMs": 1000100
+    },
+    {
+     "pid": 102,
+     "ppid": 101,
+     "startMs": 1000100
+    }
+   ],
+   "root": {
+    "pid": 100,
+    "startMs": 1000000
+   },
+   "known": [],
+   "self": 999,
+   "kill": [
+    100
+   ]
+  }
+ ],
+ "deadline": [
+  {
+   "name": "inside the soft cap it runs",
+   "elapsedMs": 1000000,
+   "softMs": 3600000,
+   "sinceProgressMs": 0,
+   "verdict": "run"
+  },
+  {
+   "name": "exactly at the soft cap it runs",
+   "elapsedMs": 3600000,
+   "softMs": 3600000,
+   "sinceProgressMs": 1000000000,
+   "verdict": "run"
+  },
+  {
+   "name": "past the soft cap with a counter that moved a moment ago it goes on",
+   "elapsedMs": 4000000,
+   "softMs": 3600000,
+   "sinceProgressMs": 1000,
+   "verdict": "extended"
+  },
+  {
+   "name": "past the soft cap with the counters still for longer than the limit it is stopped as stalled",
+   "elapsedMs": 4000000,
+   "softMs": 3600000,
+   "sinceProgressMs": 700000,
+   "verdict": "stalled"
+  },
+  {
+   "name": "a counter that moved exactly the limit ago still counts",
+   "elapsedMs": 4000000,
+   "softMs": 3600000,
+   "sinceProgressMs": 600000,
+   "verdict": "extended"
+  },
+  {
+   "name": "at the hard cap with progress it goes on",
+   "elapsedMs": 14400000,
+   "softMs": 3600000,
+   "sinceProgressMs": 0,
+   "verdict": "extended"
+  },
+  {
+   "name": "past the hard cap it is stopped whatever the counters do",
+   "elapsedMs": 14400001,
+   "softMs": 3600000,
+   "sinceProgressMs": 0,
+   "verdict": "timeout"
+  }
+ ],
+ "progress": [
+  {
+   "name": "the ownership walk counter of the last line that has one",
+   "lines": [
+    "[script] bun:dependency-storage remains active on dependencies:store-ownership:frontier:477056 (exclusive, 62 s)",
+    "[repo] still working after 80 s; last phase started: source.served"
+   ],
+   "key": "store-ownership:frontier:477056"
+  },
+  {
+   "name": "a repeated line is the same key",
+   "lines": [
+    "[script] bun:dependency-storage remains active on dependencies:store-ownership:frontier:2080320 (exclusive, 3461 s)",
+    "[repository:command] still running after 3550 s",
+    "[repo] still working after 3560 s; last phase started: source.served"
+   ],
+   "key": "store-ownership:frontier:2080320"
+  },
+  {
+   "name": "the provider check counts edges",
+   "lines": [
+    "Checking declared package providers: 7748 edges"
+   ],
+   "key": "Checking declared package providers: 7748 edges"
+  },
+  {
+   "name": "the walk report line of the producer",
+   "lines": [
+    "[DATA] Store ownership walk {\"operation\":\"frontier\",\"completedOperations\":1234,\"perSecond\":98}"
+   ],
+   "key": "\"completedOperations\":1234"
+  },
+  {
+   "name": "heartbeats alone are no progress",
+   "lines": [
+    "[repo] still working after 3560 s; last phase started: source.served",
+    "[repository:command] still running after 3560 s"
+   ],
+   "key": null
+  },
+  {
+   "name": "no lines",
+   "lines": [],
+   "key": null
+  }
+ ]
+}

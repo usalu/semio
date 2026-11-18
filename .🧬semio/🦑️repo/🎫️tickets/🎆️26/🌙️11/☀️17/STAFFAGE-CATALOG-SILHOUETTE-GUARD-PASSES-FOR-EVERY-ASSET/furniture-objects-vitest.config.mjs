@@ -1,0 +1,1 @@
+export default { test: { root: "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests", include: ["🧬️schema-conformance/🟦️.ts", "⚡️asset-power/🟦️.ts", "✂️section-views/🟦️.ts", "🧊️volumes-rules/🟦️.ts", "🧊️three-views/🟦️.ts", "🕳️fill-rule/🟦️.ts", "🧍️plan-projection/🟦️.ts"], testTimeout: 600000 } };

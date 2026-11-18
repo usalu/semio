@@ -1,0 +1,109 @@
+{
+ "rounds": [
+  0,
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12,
+  13,
+  14,
+  15
+ ],
+ "ledgers": [
+  {
+   "language": "en",
+   "total": 10,
+   "states": {
+    "a": "present",
+    "b": "fetched",
+    "c": "inferred",
+    "d": "stale",
+    "e": "miss"
+   },
+   "wanted": [
+    "d",
+    "e",
+    "a"
+   ],
+   "running": 2
+  },
+  {
+   "language": "de",
+   "total": 4700,
+   "states": {},
+   "wanted": [],
+   "running": 0
+  },
+  {
+   "language": "xx",
+   "total": 3,
+   "states": {
+    "a": "stale",
+    "b": "stale",
+    "c": "present"
+   },
+   "wanted": [
+    "a",
+    "b",
+    "c"
+   ],
+   "running": 1
+  }
+ ],
+ "cuts": [
+  null,
+  64,
+  12,
+  8,
+  4,
+  2,
+  1
+ ],
+ "splits": [
+  {
+   "names": [
+    "o0",
+    "o1",
+    "o2",
+    "o3",
+    "o4",
+    "o5"
+   ],
+   "heavy": [
+    "o1",
+    "o4"
+   ]
+  },
+  {
+   "names": [
+    "a",
+    "b"
+   ],
+   "heavy": []
+  },
+  {
+   "names": [
+    "a",
+    "b"
+   ],
+   "heavy": [
+    "a",
+    "b"
+   ]
+  },
+  {
+   "names": [],
+   "heavy": [
+    "x"
+   ]
+  }
+ ]
+}

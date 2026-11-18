@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "cases": [
+    { "id": "folded", "clicks": [], "actions": false, "search": false },
+    { "id": "actions-only", "clicks": ["engagement"], "actions": true, "search": false },
+    { "id": "search-only", "clicks": ["search"], "actions": false, "search": true },
+    { "id": "opening-search-closes-actions", "clicks": ["engagement", "search"], "actions": false, "search": true },
+    { "id": "opening-actions-closes-search", "clicks": ["engagement", "search", "engagement"], "actions": true, "search": false },
+    { "id": "closing-the-shown-pane-leaves-none", "clicks": ["engagement", "search", "search"], "actions": false, "search": false }
+  ]
+}

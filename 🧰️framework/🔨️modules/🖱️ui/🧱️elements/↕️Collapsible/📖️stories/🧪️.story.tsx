@@ -8,7 +8,7 @@
 
 // #endregion 🧲️Header
 
-import { Button, Collapsible, CollapsibleContent, CollapsibleTrigger, Section, uiDataLabel } from "@semio-tech/ui-react";
+import { Button, Collapsible, CollapsibleContent, CollapsibleTrigger, Section, SharedBorderRow, SharedBorderRowCell, uiDataLabel } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "../../../🧪️tests/📚️storybook-types/🟦️.ts";
 import { useState } from "react";
@@ -34,25 +34,29 @@ export const Default: Story = {
   render: () => {
     const [isOpen, setIsOpen] = useState(true);
     return (
-      <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-96 space-y-2">
-        <div className="flex items-center justify-between space-x-4 pb-2">
-          <div className="flex items-center gap-double">
+      <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-96">
+        <SharedBorderRow>
+          <SharedBorderRowCell className="flex-1 gap-double">
             <Box className="size-tiny" />
             <h4 className="text-sm font-semibold">Capsule Variants (3)</h4>
-          </div>
+          </SharedBorderRowCell>
           <CollapsibleTrigger asChild>
             <Button variant="ghost" icon={<ChevronDown className={`size-small transition-transform ${isOpen ? "rotate-180" : ""}`} />}>
               <span className="sr-only">Toggle</span>
             </Button>
           </CollapsibleTrigger>
-        </div>
-        <div className="border px-4 py-2 text-sm flex items-center justify-between">
-          <span>Capsule J</span>
-          <span className="text-xs text-muted-foreground">2.5m × 4.0m</span>
-        </div>
-        <CollapsibleContent className="space-y-2">
-          <div className="border px-4 py-2 text-sm">Capsule L</div>
-          <div className="border px-4 py-2 text-sm">Capsule P</div>
+        </SharedBorderRow>
+        <SharedBorderRow orientation="vertical" edges={["right", "bottom", "left"]}>
+          <SharedBorderRowCell className="justify-between text-sm">
+            <span>Capsule J</span>
+            <span className="text-xs text-muted-foreground">2.5m × 4.0m</span>
+          </SharedBorderRowCell>
+        </SharedBorderRow>
+        <CollapsibleContent asChild>
+          <SharedBorderRow orientation="vertical" edges={["right", "bottom", "left"]}>
+            <SharedBorderRowCell className="text-sm">Capsule L</SharedBorderRowCell>
+            <SharedBorderRowCell className="text-sm">Capsule P</SharedBorderRowCell>
+          </SharedBorderRow>
         </CollapsibleContent>
       </Collapsible>
     );
@@ -80,20 +84,20 @@ export const SectionDefault: Story = {
 export const StepsDefault: Story = {
   render: () => (
     <div className="w-96">
-      <ol className="flex flex-col gap-medium">
-        <li className="border p-single">
+      <SharedBorderRow as="ol" orientation="vertical">
+        <SharedBorderRowCell as="li" className="flex-col items-start">
           <h3 className="font-semibold">Step 1: Create a Kit</h3>
           <p className="text-sm text-muted-foreground">Initialize a new kit with types and qualities.</p>
-        </li>
-        <li className="border p-single">
+        </SharedBorderRowCell>
+        <SharedBorderRowCell as="li" className="flex-col items-start">
           <h3 className="font-semibold">Step 2: Add Types</h3>
           <p className="text-sm text-muted-foreground">Define the building blocks of your design.</p>
-        </li>
-        <li className="border p-single">
+        </SharedBorderRowCell>
+        <SharedBorderRowCell as="li" className="flex-col items-start">
           <h3 className="font-semibold">Step 3: Create a Design</h3>
           <p className="text-sm text-muted-foreground">Compose types into a complete design.</p>
-        </li>
-      </ol>
+        </SharedBorderRowCell>
+      </SharedBorderRow>
     </div>
   ),
 };

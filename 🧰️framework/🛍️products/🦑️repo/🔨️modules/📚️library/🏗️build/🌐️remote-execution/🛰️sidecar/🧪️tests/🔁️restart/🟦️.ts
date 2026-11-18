@@ -1,11 +1,14 @@
 /** 🔁️ Contract: a sidecar restarts only for a byte of the files it loads, only after its closure was quiet (or at the latest after the maximum deferral), drains its work first, and says which files changed and how long the restart was deferred. */
 import {afterAll,expect,test} from "bun:test";
+import {spawnSync} from "node:child_process";
+import {fileURLToPath} from "node:url";
+import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import {appendFileSync,mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import {createSidecarClosureWatchV1,createSidecarRestartDebounceV1} from "../../🧮️closure/🟦️.ts";
 import {superviseGraphChildV1} from "../../👷️agent/🟦️.ts";
-import {createSidecarRestartV1,sidecarRestartPolicyV1,sidecarRestartTextV1} from "../../🟦️.ts";
+import {createSidecarRestartV1,sidecarRestartPolicyForV1,sidecarRestartPolicyV1,sidecarRestartTextV1} from "../../🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json" with {type:"json"};
 
 const scratch:string[]=[];
@@ -17,9 +20,9 @@ const tree=()=>{
  const inside=write(root,"a.ts","export const a=1;\n"),outside=write(root,"outside.ts","export const b=1;\n");
  return{root,inside,outside,watch:createSidecarClosureWatchV1([join(root,"main.ts")],[],root)};
 };
-const policy={quietMilliseconds:90_000,maximumDeferralMilliseconds:600_000,graceMilliseconds:300_000,serveDeferralMilliseconds:3_600_000};
+const policy={quietMilliseconds:90_000,maximumDeferralMilliseconds:600_000,graceMilliseconds:300_000,serveDeferralMilliseconds:3_600_000,minimumIntervalMilliseconds:0};
 const SECOND=1000;
-const rig=(role:"agent"|"cache"|"graph",watch:ReturnType<typeof tree>["watch"],overrides:Partial<typeof policy>={},work?:{busy:boolean;restartPending:boolean;wake?:()=>void})=>{
+const rig=(role:"agent"|"cache"|"graph"|"ready"|"pool",watch:ReturnType<typeof tree>["watch"],overrides:Partial<typeof policy>={},work?:{busy:boolean;restartPending:boolean;wake?:()=>void})=>{
  let clock=1_000_000;const lines:string[]=[],events:string[]=[],timers:{ms:number;run:()=>void}[]=[];
  const restart=createSidecarRestartV1({role,watch,...work===undefined?{}:{work},policy:{...policy,...overrides},begin:()=>events.push(`begin@${clock}`),drain:()=>events.push(`drain@${clock}`),abort:()=>events.push(`abort@${clock}`),write:line=>lines.push(line),now:()=>clock,after:(ms,run)=>{timers.push({ms,run});}});
  return{lines,events,timers,restart,at:()=>clock,advance:(ms:number)=>{clock+=ms;restart.tick();}};
@@ -184,3 +187,63 @@ test("the agent runs the graph server as a child of its own: new code (75) start
  const off=superviseGraphChildV1({...context,signal:new AbortController().signal,environment:{...context.environment,SEMIO_GRAPH_SERVER:"off"}},entry);
  await Bun.sleep(300);await off.stop();expect(starts(),"switched off").toBe(0);
 },60000);
+
+test("a ready role restarts for new code even in the middle of a stage, because the next child adopts the detached stage: it takes no new stage while the restart waits, restarts when the quiet period is over and never waits for the stage",()=>{
+ expect(sidecarRestartPolicyForV1("ready").serveDeferralMilliseconds).toBe(0);expect(sidecarRestartPolicyForV1("graph").serveDeferralMilliseconds).toBe(3_600_000);expect(sidecarRestartPolicyForV1("pool").serveDeferralMilliseconds).toBe(600_000);
+ expect(sidecarRestartPolicyForV1("ready").quietMilliseconds).toBe(90_000);
+ const world=tree(),work={busy:true,restartPending:false} as {busy:boolean;restartPending:boolean;wake?:()=>void},test=rig("ready",world.watch,{serveDeferralMilliseconds:sidecarRestartPolicyForV1("ready").serveDeferralMilliseconds},work);
+ appendFileSync(world.inside,"// edit\n");test.advance(30*SECOND);
+ expect(test.events).toEqual([]);expect(work.restartPending).toBe(true);expect(test.lines.length).toBe(1);expect(test.lines[0]).toContain("ready:");expect(test.lines[0]).not.toContain("serve in flight");
+ for(let tick=0;tick<4;tick++)test.advance(30*SECOND);
+ expect(test.events.map(event=>event.split("@")[0])).toEqual(["begin","abort"]);expect(work.busy).toBe(true);expect(test.lines[test.lines.length-1]).toContain("quiet period over");
+});
+
+test("a graph role in the middle of a serve still waits for it, up to the serve deferral",()=>{
+ const world=tree(),work={busy:true,restartPending:false} as {busy:boolean;restartPending:boolean;wake?:()=>void},test=rig("graph",world.watch,{},work);
+ for(let tick=0;tick<80;tick++){if(tick%10===0)appendFileSync(world.inside,`// ${tick}\n`);test.advance(30*SECOND);}
+ expect(test.events).toEqual([]);expect(work.restartPending).toBe(true);expect(test.lines[0]).toContain("graph: code changed (");
+ const before=test.at();work.busy=false;work.wake?.();
+ expect(test.events).toEqual([`begin@${before}`,`abort@${before}`]);
+});
+
+test("the pool role never stops taking work for a pending restart, waits 90 s of quiet and hands over at most once in 10 minutes, however often its closure is edited",()=>{
+ expect(sidecarRestartPolicyForV1("pool")).toMatchObject({quietMilliseconds:90_000,maximumDeferralMilliseconds:600_000,minimumIntervalMilliseconds:600_000});
+ const world=tree(),work={busy:false,restartPending:false},test=rig("pool",world.watch,sidecarRestartPolicyForV1("pool"),work);
+ appendFileSync(world.inside,"// 1\n");
+ for(let tick=0;tick<30;tick++){appendFileSync(world.inside,`// ${tick}\n`);test.advance(6*SECOND);expect(work.restartPending,"the pool keeps taking owners").toBe(false);}
+ expect(test.events,"edited every 6 s for 3 min: nothing yet (and not before 10 min of life)").toEqual([]);
+ for(let tick=0;tick<80&&test.events.length===0;tick++)test.advance(6*SECOND);
+ expect(test.events.length,"one handover after the quiet period once the process is 10 minutes old").toBe(2);
+ expect(Number(test.events[0]!.replace("begin@",""))-1_000_000,"not before 10 minutes of life").toBeGreaterThanOrEqual(600*SECOND);
+});
+
+const drainRun=(row:(typeof fixture.drain)[number]):{abortAt:number;lines:string[];events:string[]}=>{
+ const world=tree(),work={busy:true,running:2,restartPending:false},test=rig("agent",world.watch,{graceMilliseconds:row.graceMs,drainMaximumMilliseconds:row.drainMaxMs,drainPollMilliseconds:row.pollMs} as never,work);
+ appendFileSync(world.inside,"// x\n");
+ for(let tick=0;tick<8&&test.events.length===0;tick++)test.advance(30*SECOND);
+ let elapsed=0,abortAt=-1;
+ for(let guard=0;guard<100000&&abortAt<0;guard++){
+  const timer=test.timers.shift()!;
+  elapsed+=timer.ms;test.advance(timer.ms);work.busy=elapsed<row.busyUntilMs;timer.run();
+  if(test.events.some(event=>event.startsWith("abort@")))abortAt=elapsed;
+ }
+ return{abortAt,lines:test.lines,events:test.events};
+};
+
+test("an agent that serves actions for other agents is drained, never aborted: it waits past the grace until they end by their own deadline, bounded only by the drain maximum, and says so once in both languages",()=>{
+ const results=fixture.drain.map(row=>drainRun(row));
+ expect(results.map(row=>row.abortAt)).toEqual(fixture.drain.map(row=>row.abortAtMs));
+ const waited=results[1]!;
+ expect(waited.lines.filter(line=>line.includes("still running after the grace")).length,"told once").toBe(1);
+ expect(waited.lines.some(line=>line.includes("never aborted")&&line.includes("nie abgebrochen")&&line.includes("2 remote action(s)"))).toBe(true);
+ expect(waited.events.filter(event=>event.startsWith("abort@")).length).toBe(1);
+ const bounded=results[3]!;expect(bounded.lines.some(line=>line.includes("the bound of the drain")&&line.includes("Grenze des Auslaufens"))).toBe(true);
+ expect(results[0]!.lines.some(line=>line.includes("never aborted"))).toBe(false);
+ expect(sidecarRestartPolicyForV1("agent").drainMaximumMilliseconds).toBe(7_200_000);
+});
+
+test("the Python oracle derives the same abort times of the drain",()=>{
+ const here=(name:string)=>fileURLToPath(new URL(name,import.meta.url)),run=spawnSync("python3",["-I",here("./🐍️.py"),here("./🧫️fixtures/🔣️.json")],{encoding:"utf8"});
+ expect(run.status,run.stderr).toBe(0);
+ expect(JSON.parse(run.stdout)).toEqual(fixture.drain.map(row=>drainRun(row).abortAt));
+});

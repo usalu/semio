@@ -22,7 +22,7 @@
 
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactElement, type ReactNode } from "react";
 import { type Anchor, type CourseView, type Cursor, type Place, type PresenceState } from "@semio-tech/course";
-import { Icon, presenceColor, presencePaint } from "@semio-tech/ui-react/chrome";
+import { Icon, SharedBorderRow, SharedBorderRowCell, presenceColor, presencePaint } from "@semio-tech/ui-react/chrome";
 import { type CourseLocale, type CourseText } from "../🌐️i18n/🟦️.ts";
 import { cn } from "../🪟️chrome/🟦️.tsx";
 import { CoursePresence } from "./🧭️rooms/🟦️.ts";
@@ -385,11 +385,11 @@ export function CardPresence(props: { readonly anchor: Anchor; readonly accepts:
 }
 /** 🚥️ The online count for the navbar: a people icon and the number, the words for assistive technology and wide
  * screens. Nothing until the roster room is joined. */
-export function PresenceStatus(props: { readonly text: CourseText }): ReactElement | null {
+export function PresenceStatus(props: { readonly text: CourseText; readonly cell?: boolean }): ReactElement | null {
   const { roster } = usePresenceView();
   if (roster === undefined) return null;
   return (
-    <p data-presence-status="" className="m-0 flex min-w-0 items-center gap-single text-xs text-muted-foreground md:px-single">
+    <p data-presence-status="" {...(props.cell ? { "data-shared-border-cell": "" } : undefined)} className={cn("m-0 flex min-w-0 items-center gap-single text-xs text-muted-foreground md:px-single", props.cell && "px-single py-1")}>
       <Icon icon="users" size="small" className="shrink-0" />
       <span aria-hidden="true" className="tabular-nums md:hidden">
         {roster.online}
@@ -405,28 +405,28 @@ export function PresenceFooter(props: { readonly course?: CourseView; readonly t
   if (roster === undefined && props.following === undefined) return null;
   const { text, locale, course } = props;
   return (
-    <section data-presence-footer="" data-following={props.following} aria-label={text("course.presence.whoIsWhere")} className="flex min-w-0 max-w-full flex-wrap items-center gap-single py-single text-xs">
-      <PresenceStatus text={text} />
-      {props.waiting ? <span role="status">{text("course.presence.followWaiting", { name: props.followingName ?? props.following ?? "" })}</span> : null}
-      <ul role="list" className="relative m-0 flex min-w-0 max-h-[25vh] list-none flex-wrap gap-single overflow-auto p-0">
+    <SharedBorderRow as="section" framed={false} data-presence-footer="" data-following={props.following} aria-label={text("course.presence.whoIsWhere")} className="max-w-full flex-wrap text-xs">
+      <PresenceStatus text={text} cell />
+      {props.waiting ? <SharedBorderRowCell role="status">{text("course.presence.followWaiting", { name: props.followingName ?? props.following ?? "" })}</SharedBorderRowCell> : null}
+      <SharedBorderRow as="ul" framed={false} role="list" className="relative m-0 max-h-[25vh] min-w-0 list-none flex-wrap overflow-auto p-0">
         {(roster?.learners ?? []).map((learner) => {
           const own = learner.tag === me;
           const label = `${learner.display}${own ? ` (${text("course.presence.you")})` : ""}`;
           const where = `${placeText(learner.place, course, text, locale)}${learner.active ? "" : ` (${text("course.presence.away")})`}`;
-          return (
-            <li key={learner.tag} className="flex items-center">
-              {own ? <span className="inline-flex items-center gap-single px-single"><OnlineMark colour={colours.get(learner.tag) ?? 0} text={text} /><span>{label}</span><span className="sr-only"> · {where}</span></span> : (
-                <button type="button" data-follow-user={learner.tag} aria-label={text("course.presence.follow", { name: learner.display })} aria-pressed={props.following === learner.tag} disabled={learner.view === undefined} title={where} onClick={() => props.onFollow(learner.tag)} className="course-target inline-flex cursor-pointer items-center gap-single border border-normal px-single py-single text-foreground hover:bg-hover-interactive-fill disabled:cursor-default disabled:opacity-60">
-                  <OnlineMark colour={colours.get(learner.tag) ?? 0} text={text} /><span>{label}</span>
-                </button>
-              )}
-            </li>
+          return own ? (
+            <SharedBorderRowCell as="li" key={learner.tag} className="gap-single"><OnlineMark colour={colours.get(learner.tag) ?? 0} text={text} /><span>{label}</span><span className="sr-only"> · {where}</span></SharedBorderRowCell>
+          ) : (
+            <SharedBorderRowCell as="li" key={learner.tag} className="p-0">
+              <button type="button" data-follow-user={learner.tag} aria-label={text("course.presence.follow", { name: learner.display })} aria-pressed={props.following === learner.tag} disabled={learner.view === undefined} title={where} onClick={() => props.onFollow(learner.tag)} className="course-target inline-flex h-full w-full cursor-pointer items-center gap-single border-0 px-single py-1 text-foreground hover:bg-hover-interactive-fill disabled:cursor-default disabled:opacity-60">
+                <OnlineMark colour={colours.get(learner.tag) ?? 0} text={text} /><span>{label}</span>
+              </button>
+            </SharedBorderRowCell>
           );
         })}
-      </ul>
-      {props.following === undefined ? null : <button type="button" data-follow-stop="" onClick={props.onStop} className="course-target cursor-pointer border border-normal px-single py-single text-foreground hover:bg-hover-interactive-fill">{text("course.presence.stopFollowing")}</button>}
+      </SharedBorderRow>
+      {props.following === undefined ? null : <SharedBorderRowCell className="p-0"><button type="button" data-follow-stop="" onClick={props.onStop} className="course-target h-full w-full cursor-pointer border-0 px-single py-1 text-foreground hover:bg-hover-interactive-fill">{text("course.presence.stopFollowing")}</button></SharedBorderRowCell>}
       <span role="status" className="sr-only">{props.following === undefined ? "" : text("course.presence.following", { name: roster?.learners.find((learner) => learner.tag === props.following)?.display ?? props.followingName ?? props.following })}</span>
-    </section>
+    </SharedBorderRow>
   );
 }
 

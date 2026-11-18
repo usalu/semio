@@ -8,7 +8,8 @@ import {testPythonV1} from "../../../../../../🔨️modules/🏃️process/📦
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import {formatHlcV1} from "../../📒️journal/🟦️.ts";
-import {applyIndexV1,crlfScriptsV1,diffTreeV1,emptyTreeV1,foldRegistersV1,forgetGitV1,gitCandidatesV1,gitGuardsV1,gitPinsHashV1,gitStateV1,gitViewDeltaV1,gitViewV1,GIT_PINS_V1,GIT_VIEW_PINS_V1,spellingV1,volumeV1,INDEX_BASE_V1,INDEX_PREFIX_V1,indexRealmV1,linearizeRefV1,mergeTreesV1,missingObjectsV1,normaliseGitConfigV1,sweepGitGarbageV1,publishIndexV1,readTreeV1,requestRebaseV1,resolveGitV1,stageHealthV1,unmergedV1,updateIndexV1,verifyIndexV1,writeTreeV1,type IndexHostV1} from "../🟦️.ts";
+import {refusePathV1} from "../../🚧️boundary/🟦️.ts";
+import {applyIndexV1,assembleViewV1,crlfScriptsV1,diffTreeV1,emptyTreeV1,foldRegistersV1,forgetGitV1,gitCandidatesV1,gitGuardsV1,gitPinsHashV1,gitStateV1,gitViewDeltaV1,gitViewV1,GIT_PINS_V1,GIT_VIEW_PINS_V1,spellingV1,volumeV1,INDEX_BASE_V1,INDEX_PREFIX_V1,indexRealmV1,linearizeRefV1,mergeTreesV1,missingObjectsV1,normaliseGitConfigV1,sweepGitGarbageV1,publishIndexV1,readTreeV1,requestRebaseV1,resolveGitV1,stageHealthV1,unmergedV1,updateIndexV1,verifyIndexV1,writeTreeV1,type IndexHostV1} from "../🟦️.ts";
 
 type Tree={path:string;mode:string;file:string};
 type Fold=(typeof fixture.folds)[number];
@@ -146,21 +147,22 @@ gitTest("the view of a real repository equals what git plumbing says, never touc
  put("added.txt","added\n");cli(root,["add","added.txt"]);put("added.txt","added and changed\n");
  put("untracked.txt","u\n");put("ünï/日本 \u{1F9EC}.txt","u\n");put("line\nbreak.txt","u\n");put("dir with space/x y.txt","u\n");
  const names=(args:string[]):string[]=>cli(root,args).split("\0").filter(Boolean).map(name=>name.normalize("NFC"));
- const deleted=new Set(names(["ls-files","-d","-z"])),modified=names(["ls-files","-m","-z"]).filter(name=>!deleted.has(name)),untracked=names(["ls-files","-o","--exclude-standard","-z"]);
+ const deleted=new Set(names(["ls-files","-d","-z"])),modified=names(["ls-files","-m","-z"]).filter(name=>!deleted.has(name)),untracked=names(["ls-files","-o","--exclude-standard","-z"]),carried=untracked.filter(name=>refusePathV1(name)===undefined);
  const cached=cli(root,["diff","--cached","--name-status","-z","--no-renames"]).split("\0").filter(Boolean),letters=new Map<string,string>();
  for(let index=0;index+1<cached.length;index+=2)letters.set(cached[index+1]!.normalize("NFC"),cached[index]!);
- const lines=[...untracked.map(name=>`?? ${name}`),...[...new Set([...modified,...deleted])].map(name=>`${letters.get(name)??" "}${deleted.has(name)?"D":"M"} ${name}`)].sort((left,right)=>Buffer.compare(Buffer.from(left),Buffer.from(right)));
+ const lines=[...carried.map(name=>`?? ${name}`),...[...new Set([...modified,...deleted])].map(name=>`${letters.get(name)??" "}${deleted.has(name)?"D":"M"} ${name}`)].sort((left,right)=>Buffer.compare(Buffer.from(left),Buffer.from(right)));
  const before=statSync(join(root,".git","index"),{bigint:true});
  utimesSync(join(root,"b.txt"),new Date(1e12),new Date(1e12));
  const view=(await gitViewV1(root))!;
  expect(view).not.toBeNull();
  expect(view.lines).toEqual(lines);
- expect(view).toMatchObject({staged:letters.size,modified:modified.length,deleted:deleted.size,untracked:untracked.length,digest:createHash("sha256").update(lines.join("\n")).digest("hex")});
+ expect(view).toMatchObject({staged:letters.size,modified:modified.length,deleted:deleted.size,untracked:carried.length,digest:createHash("sha256").update(lines.join("\n")).digest("hex")});
  expect(view.staged).toBe(6);
  expect(view.lines).toContain(" D d e.txt");
  expect(view.lines).toContain("AM added.txt");
  expect(view.lines).toContain("MM c.txt");
- expect(view.lines).toContain("?? line\nbreak.txt");
+ expect(untracked).toContain("line\nbreak.txt");
+ expect(view.lines).not.toContain("?? line\nbreak.txt");
  expect(view.lines.some(line=>line.startsWith("M  b.txt")||line.includes("gone.txt")||line.includes("moved"))).toBe(false);
  const after=statSync(join(root,".git","index"),{bigint:true});
  expect([after.ino,after.mtimeNs,after.size]).toEqual([before.ino,before.mtimeNs,before.size]);
@@ -218,10 +220,10 @@ gitTest("an incremental view equals the complete view after every kind of change
 type Register={hlc:string;operation:"link"|"delete";target?:string};
 const stamp=(offset:number,origin:string)=>formatHlcV1({ms:1_700_000_000_000+offset,counter:0},origin);
 function fake(worktree:string,options:{server?:boolean;origin?:string}={}){
- const manifest=new Map<string,Register>(),applied=new Map<string,Register>(),queue=new Set<string>(),events:Record<string,unknown>[]=[],origin=options.origin??"g1-m01";
+ const manifest=new Map<string,Register>(),applied=new Map<string,Register>(),queue=new Set<string>(),events:Record<string,unknown>[]=[],origin=options.origin??(options.server===true?"g1-server":"g1-m01");
  let clock=1_800_000_000_000,tick=100;
  const value:IndexHostV1={
-  worktree,server:options.server??false,now:()=>clock,
+  worktree,server:options.server??false,archivist:"g1-server",now:()=>clock,
   base:()=>manifest.get(INDEX_BASE_V1),
   each:visit=>{for(const [path,entry] of manifest)if(path.startsWith(INDEX_PREFIX_V1))visit(path,entry);},
   held:visit=>{for(const [path,entry] of applied)visit(path,entry);},
@@ -333,7 +335,7 @@ gitTest("an object that has not arrived is a waiting state with one event, the s
  expect(files(root)).toContain(`100644 ${late} late.txt`);
 });
 
-gitTest("a held index.lock backs off from one to thirty seconds, is reported once, becomes stale after ten minutes, and the apply completes when it is gone",async()=>{
+gitTest("a held index.lock backs off from one to thirty seconds and is reported once; a member removes a lock older than ten minutes by itself and completes, the archivist keeps it as a degraded state for its operator",async()=>{
  const root=repository("lock"),host=fake(root),base=blobOf(root,"base\n"),entry=blobOf(root,"entry\n");
  host.receive(INDEX_BASE_V1,{hlc:stamp(1,"g1-server"),operation:"link",target:`tree ${treeFrom(root,{"base.txt":base})}`});
  await applyIndexV1(host);
@@ -349,9 +351,8 @@ gitTest("a held index.lock backs off from one to thirty seconds, is reported onc
  expect(host.queue.size).toBe(1);
  utimesSync(lock,(Date.now()-700_000)/1000,(Date.now()-700_000)/1000);
  host.advance(60_000);await applyIndexV1(host);
- expect(await stageHealthV1(root)).toEqual({state:"degraded",reason:"index-lock-stale"});
- expect(Number(host.events.find(event=>event.reason==="index-lock-stale")!.seconds)).toBeGreaterThanOrEqual(600);
- rmSync(lock);
+ expect(existsSync(lock)).toBe(false);
+ expect(Number(host.events.find(event=>event.event==="repaired"&&event.reason==="index-lock-stale")!.seconds)).toBeGreaterThanOrEqual(600);
  host.advance(60_000);
  expect((await applyIndexV1(host)).queued).toBe(0);
  expect(await stageHealthV1(root)).toEqual({state:"shared",reason:null});
@@ -362,7 +363,7 @@ gitTest("the paths an interrupted apply was writing are not published as local e
  const root=repository("crash"),host=fake(root,{server:true}),one=blobOf(root,"1\n"),remote=blobOf(root,"remote\n"),mine=blobOf(root,"mine\n");
  staging(root,"a.txt",one);
  await publishIndexV1(host);
- host.receive(`${INDEX_PREFIX_V1}r.txt`,{hlc:stamp(900,"g1-m02"),operation:"link",target:`100644 ${remote}`});
+ host.receive(`${INDEX_PREFIX_V1}r.txt`,{hlc:stamp(900,"g1-server"),operation:"link",target:`100644 ${remote}`});
  staging(root,"r.txt",remote);staging(root,"m.txt",mine);
  mkdirSync(join(root,".cache","f"),{recursive:true});
  writeFileSync(join(root,".cache","f","git-index.json"),JSON.stringify({version:1,state:"shared",reason:null,since:0,applying:{base:false,paths:["r.txt"]}}));
@@ -370,7 +371,7 @@ gitTest("the paths an interrupted apply was writing are not published as local e
  const before=[...host.manifest.keys()];
  await publishIndexV1(host);
  expect([...host.manifest.keys()].filter(path=>!before.includes(path))).toEqual([`${INDEX_PREFIX_V1}m.txt`]);
- expect(host.manifest.get(`${INDEX_PREFIX_V1}r.txt`)!.hlc).toBe(stamp(900,"g1-m02"));
+ expect(host.manifest.get(`${INDEX_PREFIX_V1}r.txt`)!.hlc).toBe(stamp(900,"g1-server"));
 });
 
 gitTest("a very large change is published as entries in batches and never as a new base, and the fold of the registers equals the stage",async()=>{
@@ -384,7 +385,7 @@ gitTest("a very large change is published as entries in batches and never as a n
  expect(await verifyIndexV1(host)).toMatchObject({ok:true,skipped:false});
 });
 
-gitTest("index registers obey the path and link policy: names no operating system holds and absolute links are neither published nor applied, the rest of the batch goes through",async()=>{
+gitTest("a change the entry policy cannot represent (names no operating system holds, absolute links) is carried as the base tree instead: the archivist loses nothing, a member ends with the exact tree",async()=>{
  const root=repository("policy"),host=fake(root,{server:true}),mate=repository("policy-mate"),other=fake(mate);
  staging(root,"first.txt",blobOf(root,"first\n"));
  await publishIndexV1(host);
@@ -395,15 +396,17 @@ gitTest("index registers obey the path and link policy: names no operating syste
  staging(root,"safe-link",blobOf(root,"ok.txt"),"120000");
  staging(root,"abs-link",blobOf(root,"/etc/passwd"),"120000");
  const result=await publishIndexV1(host);
- expect(result).toMatchObject({published:2,base:false});
- expect([...host.manifest.keys()].filter(path=>path.startsWith(INDEX_PREFIX_V1)).sort()).toEqual([`${INDEX_PREFIX_V1}ok.txt`,`${INDEX_PREFIX_V1}safe-link`]);
+ expect(result).toMatchObject({published:1,base:true});
+ expect([...host.manifest.keys()].filter(path=>path.startsWith(INDEX_PREFIX_V1))).toEqual([]);
  expect(host.events.filter(event=>event.event==="skipped").map(event=>event.reason).sort()).toEqual(["unrepresentable","unrepresentable","unrepresentable","unsafe-link"]);
- const tree=treeFrom(mate,{"first.txt":blobOf(mate,"first\n")});
+ expect(host.events.some(event=>event.event==="published"&&event.reason==="unrepresentable")).toBe(true);
+ expect(host.manifest.get(INDEX_BASE_V1)!.target).toBe(`tree ${cli(root,["write-tree"]).trim()}`);
+ const tree=treeFrom(mate,{"first.txt":blobOf(mate,"first\n"),"a:b.txt":blobOf(mate,"colon\n")});
  other.receive(INDEX_BASE_V1,{hlc:stamp(1,"g1-server"),operation:"link",target:`tree ${tree}`});
- other.receive(`${INDEX_PREFIX_V1}a:b.txt`,{hlc:stamp(2,"g1-server"),operation:"link",target:`100644 ${blobOf(mate,"colon\n")}`});
  other.receive(`${INDEX_PREFIX_V1}fine.txt`,{hlc:stamp(3,"g1-server"),operation:"link",target:`100644 ${blobOf(mate,"fine\n")}`});
+ other.receive(`${INDEX_PREFIX_V1}mine.txt`,{hlc:stamp(4,"g1-m02"),operation:"link",target:`100644 ${blobOf(mate,"mine\n")}`});
  await applyIndexV1(other);
- expect(files(mate).map(line=>line.split(" ").slice(2).join(" "))).toEqual(["fine.txt","first.txt"]);
+ expect(files(mate).map(line=>line.split(" ").slice(2).join(" "))).toEqual(["a:b.txt","fine.txt","first.txt"]);
  expect(other.queue.size).toBe(0);
 });
 
@@ -419,8 +422,8 @@ gitTest("a rebase request publishes a base and lists the registers of other mach
  const root=repository("rebase"),host=fake(root,{server:true}),other=blobOf(root,"other\n");
  staging(root,"a.txt",blobOf(root,"a\n"));
  await publishIndexV1(host);
- host.manifest.set(`${INDEX_PREFIX_V1}y.txt`,{hlc:stamp(900,"g1-m02"),operation:"link",target:`100644 ${other}`});
- host.manifest.set(`${INDEX_PREFIX_V1}gone.txt`,{hlc:stamp(901,"g1-m03"),operation:"delete"});
+ host.manifest.set(`${INDEX_PREFIX_V1}y.txt`,{hlc:stamp(900,"g1-server"),operation:"link",target:`100644 ${other}`});
+ host.manifest.set(`${INDEX_PREFIX_V1}gone.txt`,{hlc:stamp(901,"g1-server"),operation:"delete"});
  await requestRebaseV1(root);
  forgetGitV1(root);
  await publishIndexV1(host);
@@ -428,7 +431,7 @@ gitTest("a rebase request publishes a base and lists the registers of other mach
  expect(published).toHaveLength(1);
  expect(published[0]).toMatchObject({count:1,path:INDEX_BASE_V1});
  const lines=kind(join(root,".cache","f",String(published[0]!.lost))).split("\n").filter(Boolean);
- expect(lines).toEqual([`y.txt\tg1-m02\t100644 ${other}`]);
+ expect(lines).toEqual([`y.txt\tg1-server\t100644 ${other}`]);
 });
 
 const operations=[["index.version","4"],["core.untrackedCache","true"],["core.splitIndex","true"]] as const;
@@ -440,7 +443,7 @@ gitTest.each([...operations.map(([key,value])=>[`${key}=${value}`,[[key,value]]]
  cli(root,["status","--porcelain"]);
  await publishIndexV1(host);
  const entry=blobOf(root,"entry\n");
- host.receive(`${INDEX_PREFIX_V1}e.txt`,{hlc:stamp(900,"g1-m02"),operation:"link",target:`100644 ${entry}`});
+ host.receive(`${INDEX_PREFIX_V1}e.txt`,{hlc:stamp(900,"g1-server"),operation:"link",target:`100644 ${entry}`});
  await applyIndexV1(host);
  staging(root,"local.txt",blobOf(root,"local\n"));
  await publishIndexV1(host);
@@ -460,7 +463,7 @@ gitTest("a sparse index keeps working through publish and apply",async()=>{
  const host=fake(root,{server:true});
  await publishIndexV1(host);
  const entry=blobOf(root,"entry\n");
- host.receive(`${INDEX_PREFIX_V1}e2.txt`,{hlc:stamp(900,"g1-m02"),operation:"link",target:`100644 ${entry}`});
+ host.receive(`${INDEX_PREFIX_V1}e2.txt`,{hlc:stamp(900,"g1-server"),operation:"link",target:`100644 ${entry}`});
  await applyIndexV1(host);
  expect(files(root)).toEqual(expect.arrayContaining([`100644 ${entry} e2.txt`]));
  expect(await verifyIndexV1(host)).toMatchObject({ok:true});
@@ -662,4 +665,159 @@ test("dead temporary files of git writers in the pack directory are swept after 
  expect(second).toEqual({files:3,bytes:3000});
  expect(readdirSync(directory).sort()).toEqual(["pack-1.idx","pack-1.pack"]);
  expect(await sweepGitGarbageV1(join(root,"missing"))).toEqual({files:0,bytes:0});
+});
+
+test("the view leaves out every path the replica never carries, untracked, modified or deleted (a member that adopted the stage of the archivist reads a tracked path it cannot hold as deleted), so machines agree",()=>{
+ const far="deep/"+Array.from({length:8},(_,index)=>String(index).repeat(36)).join("/")+"/leaf.txt";
+ const shared=["?? ok/a.txt"," M tracked.txt","AM staged.txt"," D gone.txt"],local=["?? worker/round-1.txt.sample-2026-11-15T01:45:25Z.txt",`?? ${far}`,"?? trailing./x.txt","?? dev/aux.txt","?? bad\\name.txt"];
+ const without=assembleViewV1(shared,[]),holding=assembleViewV1([...shared,...local],[]);
+ expect(far.length).toBeGreaterThan(256);
+ expect(holding.lines).toEqual(without.lines);
+ expect(holding.digest).toBe(without.digest);
+ expect(holding).toMatchObject({modified:2,deleted:1,untracked:1});
+ const tracked=assembleViewV1([...shared," M worker/tracked:colon.txt",` D ${far}`],["M worker/tracked:colon.txt"]);
+ expect(tracked.lines).toEqual(without.lines);
+ expect(tracked.digest).toBe(without.digest);
+ expect(tracked.staged).toBe(1);
+});
+
+gitTest("a view read from disk agrees between a machine holding refused files and links and one without them, and between disk modes",async()=>{
+ const make=(label:string,extra:boolean,mode:number):string=>{
+  const root=repository(label);
+  mkdirSync(join(root,"src"),{recursive:true});writeFileSync(join(root,"src/run.sh"),"echo\n");writeFileSync(join(root,"a.txt"),"a\n");
+  cli(root,["add","-A"]);cli(root,["commit","-q","-m","base"]);
+  chmodSync(join(root,"src/run.sh"),mode);
+  writeFileSync(join(root,"shared.txt"),"s\n");symlinkSync("a.txt",join(root,"inner-link"));
+  if(extra){
+   mkdirSync(join(root,"workers"),{recursive:true});writeFileSync(join(root,"workers/x.txt.sample-2026-11-15T01:45:25Z.txt"),"x\n");
+   symlinkSync("/etc/hosts",join(root,"absolute-link"));symlinkSync("../../outside",join(root,"climbing-link"));
+   const long=join(root,...Array.from({length:9},(_,index)=>`${String(index).repeat(30)}`));mkdirSync(long,{recursive:true});writeFileSync(join(long,"leaf.txt"),"l\n");
+  }
+  return root;
+ };
+ const plain=make("carried-plain",false,0o644),holding=make("carried-holding",true,0o755),one=(await gitViewV1(plain))!,two=(await gitViewV1(holding))!;
+ expect(two.lines).toEqual(one.lines);
+ expect(two.digest).toBe(one.digest);
+ expect(one.lines).toContain("?? inner-link");
+ expect(one.lines).toContain("?? shared.txt");
+ const step=async(label:string,root:string):Promise<void>=>{
+  writeFileSync(join(root,"workers-two.txt"),"w\n");symlinkSync("/etc/hosts",join(root,"another-absolute"));
+  const next=await gitViewDeltaV1(root,(await gitViewV1(root))!,{paths:["workers-two.txt","another-absolute"],restage:null}),full=(await gitViewV1(root))!;
+  expect(next,label).not.toBeNull();expect(next!.lines,label).toEqual(full.lines);expect(next!.digest,label).toBe(full.digest);
+  expect(full.lines,label).toContain("?? workers-two.txt");expect(full.lines.some(line=>line.includes("another-absolute")),label).toBe(false);
+ };
+ await step("plain",plain);await step("holding",holding);
+});
+
+
+const debugOf=(root:string,path:string):string=>cli(root,["ls-files","--debug","--",path]);
+const treeFiles=(root:string,tree:string):string[]=>cli(root,["ls-tree","-r",tree]).split("\n").filter(Boolean).map(line=>{const [head,path]=line.split("\t");const [mode,,oid]=head!.split(" ");return `${mode} ${oid} ${path}`;});
+
+gitTest("the stage of the archivist wins on a member: a stage a person made is replaced once, kept under lost, the stat data of unchanged entries survives, entries of other machines are void and nothing is published",async()=>{
+ const root=repository("archivist-wins"),member=fake(root);
+ writeFileSync(join(root,"a.txt"),"a\n");writeFileSync(join(root,"b.txt"),"b\n");
+ cli(root,["add","a.txt","b.txt"]);
+ const a=blobOf(root,"a\n"),c=blobOf(root,"c\n"),d=blobOf(root,"d\n"),stat=debugOf(root,"a.txt");
+ const tree=treeFrom(root,{"a.txt":a,"c.txt":c});
+ member.receive(INDEX_BASE_V1,{hlc:stamp(1,"g1-server"),operation:"link",target:`tree ${tree}`});
+ member.receive(`${INDEX_PREFIX_V1}ghost.txt`,{hlc:stamp(2,"g1-m02"),operation:"link",target:`100644 ${d}`});
+ await applyIndexV1(member);
+ expect(files(root)).toEqual([`100644 ${a} a.txt`,`100644 ${c} c.txt`]);
+ expect(debugOf(root,"a.txt")).toBe(stat);
+ expect(member.queue.size).toBe(0);
+ expect(member.events.filter(event=>event.event==="overwritten")).toHaveLength(1);
+ const names=lostEntries(root).filter(name=>name.startsWith("index-"));
+ expect(names).toHaveLength(1);
+ expect(files(root,{GIT_INDEX_FILE:join(root,".cache","f","lost",names[0]!)})).toEqual([`100644 ${a} a.txt`,`100644 ${blobOf(root,"b\n")} b.txt`]);
+ const count=member.manifest.size,before=member.events.length;
+ staging(root,"mine.txt",blobOf(root,"mine\n"));
+ cli(root,["rm","-q","--cached","a.txt"]);
+ const result=await publishIndexV1(member);
+ expect(result).toMatchObject({published:0,base:false});
+ expect(member.manifest.size).toBe(count);
+ expect(files(root)).toEqual([`100644 ${a} a.txt`,`100644 ${c} c.txt`]);
+ expect(member.events.slice(before).filter(event=>event.event==="overwritten")).toHaveLength(1);
+ expect(lostEntries(root).filter(name=>name.startsWith("index-"))).toHaveLength(2);
+ expect(await writeTreeV1(root)).toBe(tree);
+ expect(await publishIndexV1(member)).toMatchObject({published:0});
+ expect(lostEntries(root).filter(name=>name.startsWith("index-"))).toHaveLength(2);
+ expect(existsSync(join(root,".git","index.lock"))).toBe(false);
+ expect(existsSync(join(root,".cache","f","tmp"))?readdirSync(join(root,".cache","f","tmp")):[]).toEqual([]);
+});
+
+gitTest("an index that is absent, corrupt, unmerged or far off is rebuilt from the tree of the archivist, with the old file kept and no worktree file touched",async()=>{
+ const root=repository("far-off"),member=fake(root),a=blobOf(root,"a\n"),b=blobOf(root,"b\n");
+ writeFileSync(join(root,"a.txt"),"a\n");
+ const tree=treeFrom(root,{"a.txt":a,"deep/b.txt":b});
+ member.receive(INDEX_BASE_V1,{hlc:stamp(1,"g1-server"),operation:"link",target:`tree ${tree}`});
+ await applyIndexV1(member);
+ const expected=treeFiles(root,tree),worktree=readdirSync(root).sort();
+ const settle=async():Promise<void>=>{forgetGitV1(root);member.advance(60_000);await publishIndexV1(member);};
+ writeFileSync(join(root,".git","index"),"this is not an index\n");
+ await settle();
+ expect(files(root)).toEqual(expected);
+ expect(lostEntries(root).filter(name=>name.startsWith("index-"))).toHaveLength(1);
+ rmSync(join(root,".git","index"));
+ await settle();
+ expect(files(root)).toEqual(expected);
+ cli(root,["update-index","--index-info"],`100644 ${a} 1\ta.txt\n100644 ${b} 2\ta.txt\n100644 ${a} 3\ta.txt\n`);
+ expect(await unmergedV1(root)).toBe(3);
+ await settle();
+ expect(await unmergedV1(root)).toBe(0);
+ expect(files(root)).toEqual(expected);
+ cli(root,["update-index","--index-info"],Array.from({length:300},(_,index)=>`100644 ${b} 0\tstale/f${index}.txt\n`).join(""));
+ await settle();
+ expect(files(root)).toEqual(expected);
+ expect(await gitStateV1(root)).toMatchObject({indexTree:tree});
+ expect(readdirSync(root).sort()).toEqual(worktree);
+ expect(readFileSync(join(root,"a.txt"),"utf8")).toBe("a\n");
+ expect(lostEntries(root).filter(name=>name.startsWith("index-")).length).toBeLessThanOrEqual(3);
+ expect(member.events.filter(event=>event.event==="error")).toEqual([]);
+ expect((await stageHealthV1(root)).state).toBe("shared");
+});
+
+gitTest("a tree whose objects have not arrived leaves the stage untouched with one waiting event and is adopted when they arrive; a held index.lock makes the member wait and the lock is never overwritten",async()=>{
+ const root=repository("adopt-wait"),mate=repository("adopt-mate"),member=fake(root),have=blobOf(root,"have\n"),late=blobOf(mate,"late\n");
+ staging(root,"mine.txt",blobOf(root,"mine\n"));
+ blobOf(mate,"have\n");
+ const tree=treeFrom(mate,{"have.txt":have,"late.txt":late});
+ for(const oid of [tree]){const dir=join(root,".git","objects",oid.slice(0,2));mkdirSync(dir,{recursive:true});writeFileSync(join(dir,oid.slice(2)),readFileSync(join(mate,".git","objects",oid.slice(0,2),oid.slice(2))));}
+ member.receive(INDEX_BASE_V1,{hlc:stamp(1,"g1-server"),operation:"link",target:`tree ${tree}`});
+ const before=files(root);
+ for(let round=0;round<3;round++){member.advance(40_000);await applyIndexV1(member);}
+ expect(member.events.filter(event=>event.reason==="objects-missing")).toHaveLength(1);
+ expect(await stageHealthV1(root)).toEqual({state:"waiting",reason:"objects-missing"});
+ expect(files(root)).toEqual(before);
+ expect(existsSync(join(root,".git","index.lock"))).toBe(false);
+ const dir=join(root,".git","objects",late.slice(0,2));mkdirSync(dir,{recursive:true});
+ writeFileSync(join(dir,late.slice(2)),readFileSync(join(mate,".git","objects",late.slice(0,2),late.slice(2))));
+ writeFileSync(join(root,".git","index.lock"),"held by someone else");
+ member.advance(40_000);await applyIndexV1(member);
+ expect(await stageHealthV1(root)).toEqual({state:"waiting",reason:"index-busy"});
+ expect(readFileSync(join(root,".git","index.lock"),"utf8")).toBe("held by someone else");
+ expect(files(root)).toEqual(before);
+ rmSync(join(root,".git","index.lock"));
+ member.advance(40_000);await applyIndexV1(member);
+ expect(await stageHealthV1(root)).toEqual({state:"shared",reason:null});
+ expect(files(root)).toEqual(treeFiles(mate,tree));
+ expect(member.queue.size).toBe(0);
+});
+
+gitTest("the archivist carries a tree with unrepresentable paths as the base, so a member reaches the exact tree of the archivist and the verify of the fold agrees",async()=>{
+ const archivist=repository("long-archivist"),mate=repository("long-member"),server=fake(archivist,{server:true}),member=fake(mate);
+ const long=`${"d".repeat(120)}/${"e".repeat(120)}/${"f".repeat(60)}/leaf.txt`;
+ expect(long.length).toBeGreaterThan(256);
+ staging(archivist,"first.txt",blobOf(archivist,"first\n"));
+ await publishIndexV1(server);
+ staging(archivist,long,blobOf(archivist,"long\n"));staging(archivist,"fine.txt",blobOf(archivist,"fine\n"));
+ await publishIndexV1(server);
+ expect(server.manifest.get(INDEX_BASE_V1)!.target).toBe(`tree ${cli(archivist,["write-tree"]).trim()}`);
+ const tree=cli(archivist,["write-tree"]).trim();
+ expect(Bun.spawnSync(["cp","-R",`${join(archivist,".git","objects")}/.`,join(mate,".git","objects")]).exitCode).toBe(0);
+ for(const [path,entry] of server.manifest)member.receive(path,entry);
+ await applyIndexV1(member);
+ expect(await writeTreeV1(mate)).toBe(tree);
+ expect(treeFiles(mate,tree)).toContain(`100644 ${blobOf(mate,"long\n")} ${long}`);
+ expect(await verifyIndexV1(member)).toMatchObject({ok:true,skipped:false});
+ expect(member.queue.size).toBe(0);
 });

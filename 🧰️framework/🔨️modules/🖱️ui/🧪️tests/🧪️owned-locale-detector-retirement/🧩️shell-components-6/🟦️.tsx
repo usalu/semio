@@ -389,6 +389,30 @@ describe("Shell components", () => {
       expect(item?.textContent).toContain("CConfirmSelection");
       expect(item?.className).toContain("aspect-auto");
       expect(item?.className).not.toContain("aspect-square");
+      expect(item?.className.split(/\s+/)).toContain("min-h-0");
+      expect(item?.className.split(/\s+/)).not.toContain("min-h-medium");
+    });
+
+    it("ToggleGroup items drop the min height in horizontal groups and keep it in vertical ones", () => {
+      const items = [{ value: "a", id: "a", icon: "circle-dot", text: "A" }, { value: "b", id: "b", icon: "circle-dot", text: "B" }];
+      const horizontal = render(<ui.ToggleGroup kind="single" value="a" items={items} />);
+      const horizontalItem = horizontal.container.querySelector('[data-slot="toggle-group-item"]') as HTMLElement;
+      expect(horizontalItem.className.split(/\s+/)).toContain("min-h-0");
+      expect(horizontalItem.className.split(/\s+/)).not.toContain("min-h-medium");
+      horizontal.unmount();
+      const vertical = render(<ui.ToggleGroup kind="single" value="a" orientation="vertical" items={items} />);
+      const verticalItem = vertical.container.querySelector('[data-slot="toggle-group-item"]') as HTMLElement;
+      expect(verticalItem.className.split(/\s+/)).not.toContain("min-h-0");
+    });
+
+    it("tree value cells justify through a generated utility and scroll areas hide the native scrollbar", async () => {
+      const { treeItemControlClassName } = await import("../../../🧱️elements/🌳️Tree/🎨️chrome/🟦️.tsx");
+      expect(treeItemControlClassName).toContain("[justify-content:var(--tree-value-justify,flex-end)]");
+      expect(treeItemControlClassName).not.toContain("justify-[var(");
+      const { readFileSync } = await import("node:fs");
+      const { join } = await import("node:path");
+      const css = readFileSync(join(import.meta.dirname, "../../../🎨️styling/🖌️ui/🎨️.css"), "utf8");
+      expect(css).toMatch(/\[data-slot="scroll-area"\],\s*\.ui-scrollbar-hidden\s*\{\s*scrollbar-width: none;/);
     });
 
     it("Search focuses its input when active", async () => {

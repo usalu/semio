@@ -9,11 +9,11 @@
  */
 import { SVG_NAMESPACE, mmPerMetre } from "@teaching/staffage";
 import type { Language, PlanarViewpoint } from "@teaching/staffage";
-import type { Background } from "../../💾️persistence/🟦️.ts";
+import type { Background, Playground } from "../../💾️persistence/🟦️.ts";
 
-/** 📍️ Where a placement projects on the line in a viewpoint, from its one 3D position (x along the line, z sideways, the asset's left +): the horizontal position along the paper in metres, the lift above the ground line in metres (plan only: paper up is +z), and the nearness that orders overlapping figures (larger is nearer and painted later). The side elevation looks along z (smaller z is nearer), the front elevation along -x (larger x is nearer), the plan has no overlap order. */
-export function linePosition(viewpoint: PlanarViewpoint, placement: { readonly xM: number; readonly zM: number }, lengthM: number): { readonly horizontalM: number; readonly liftM: number; readonly nearness: number } {
-  if (viewpoint === "front") return { horizontalM: lengthM / 2 + placement.zM, liftM: 0, nearness: placement.xM };
+/** 📍️ Where a placement projects on the stage in a viewpoint, from its one 3D position (x ahead, z sideways, the asset's left +): the horizontal position along the paper in metres, the lift above the line in metres (plan only: paper up is +z), and the nearness that orders overlapping figures (larger is nearer and painted later). The side elevation looks along z (smaller z is nearer) and spans the ground length, the front elevation looks along -x (larger x is nearer) and spans the ground depth with z = 0 in its middle, the plan has no overlap order. */
+export function linePosition(viewpoint: PlanarViewpoint, placement: { readonly xM: number; readonly zM: number }, extent: Pick<Playground, "lengthM" | "depthM">): { readonly horizontalM: number; readonly liftM: number; readonly nearness: number } {
+  if (viewpoint === "front") return { horizontalM: extent.depthM / 2 + placement.zM, liftM: 0, nearness: placement.xM };
   if (viewpoint === "plan") return { horizontalM: placement.xM, liftM: placement.zM, nearness: 0 };
   return { horizontalM: placement.xM, liftM: 0, nearness: -placement.zM };
 }

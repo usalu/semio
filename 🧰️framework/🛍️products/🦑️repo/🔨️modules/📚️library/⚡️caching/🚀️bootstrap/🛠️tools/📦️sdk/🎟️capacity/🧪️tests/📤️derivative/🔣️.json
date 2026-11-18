@@ -7,7 +7,7 @@
         "copyAllocatedBytes": 4096,
         "inputBytes": 0
       },
-      "minimumAvailableBytes": 95686656
+      "minimumAvailableBytes": 222564352
     },
     {
       "material": {
@@ -16,7 +16,7 @@
         "copyAllocatedBytes": 23171072,
         "inputBytes": 262144
       },
-      "minimumAvailableBytes": 885755904
+      "minimumAvailableBytes": 1012633600
     },
     {
       "material": {
@@ -25,7 +25,7 @@
         "copyAllocatedBytes": 23171072,
         "inputBytes": 16777216
       },
-      "minimumAvailableBytes": 902270976
+      "minimumAvailableBytes": 1029148672
     }
   ],
   "valid": [
@@ -35,8 +35,8 @@
         "entries": 3,
         "copyAllocatedBytes": 4096
       },
-      "minimumAvailableBytes": 138612736,
-      "minimumDerivativeAvailableBytes": 112463872
+      "minimumAvailableBytes": 289607680,
+      "minimumDerivativeAvailableBytes": 239341568
     },
     {
       "material": {
@@ -44,8 +44,8 @@
         "entries": 2048,
         "copyAllocatedBytes": 16777216
       },
-      "minimumAvailableBytes": 289406976,
-      "minimumDerivativeAvailableBytes": 263258112
+      "minimumAvailableBytes": 440401920,
+      "minimumDerivativeAvailableBytes": 390135808
     },
     {
       "material": {
@@ -53,8 +53,8 @@
         "entries": 8192,
         "copyAllocatedBytes": 67108864
       },
-      "minimumAvailableBytes": 742391808,
-      "minimumDerivativeAvailableBytes": 716242944
+      "minimumAvailableBytes": 893386752,
+      "minimumDerivativeAvailableBytes": 843120640
     }
   ],
   "invalid": [

@@ -211,7 +211,7 @@ export function createResidentServiceV1(options){
  const outputsValid=async entry=>{
   if(state.trust==="exact"&&!state.outputsInvalid(entry.id))return true;
   if(entry.outputSignature===undefined)return state.trust==="exact"?false:entry.outputs.length===0;
-  const current=await outputSignatureV1(root,entry.outputs,policy.outputSignatureMaximumEntries);
+  const current=await outputSignatureV1(root,entry.outputs);
   if(current===entry.outputSignature){state.clearOutputsInvalid(entry.id);return true;}
   return false;
  };
@@ -250,7 +250,7 @@ export function createResidentServiceV1(options){
   if(result.exit===0&&task.cacheable&&stdout.length+stderr.length<=policy.replayMaximumBytes){
    const keyAfter=await state.taskKey(id);
    if(keyAfter===keyBefore){
-    const outputs=task.outputs,outputSignature=outputs.length?await outputSignatureV1(root,outputs,policy.outputSignatureMaximumEntries):undefined;
+    const outputs=task.outputs,outputSignature=outputs.length?await outputSignatureV1(root,outputs):undefined;
     state.memo.set(id,{id,key:keyBefore,exit:0,finishedAt:now(),replay:{stdout,stderr},outputs,outputSignature});
    }
   }

@@ -10,9 +10,8 @@
   ],
   "maximumItems": 1,
   "maximumWork": 1,
-  "body": 64,
+  "body": 10,
   "remaining": [
-    2,
     1,
     0
   ],

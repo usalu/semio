@@ -1,0 +1,289 @@
+{
+  "schema": "semio.quiz/v1",
+  "id": "zipf",
+  "emoji": "📉",
+  "title": {
+    "en": "Zipf pool",
+    "de": "Zipf-Pool"
+  },
+  "description": {
+    "en": "Reference quiz",
+    "de": "Referenzquiz"
+  },
+  "tasks": [
+    {
+      "kind": "sorting",
+      "id": "bands",
+      "title": {
+        "en": "Bands",
+        "de": "Bänder"
+      },
+      "prompt": {
+        "en": "Sort",
+        "de": "Sortieren"
+      },
+      "quantity": {
+        "label": {
+          "en": "Power",
+          "de": "Leistung"
+        },
+        "unit": "W",
+        "scale": "logarithmic",
+        "prefixed": true,
+        "additive": true
+      },
+      "draw": 5,
+      "pool": {
+        "seconds": 300,
+        "distribution": {
+          "kind": "zipf",
+          "exponent": 1.5
+        },
+        "slots": [
+          [
+            "band-0-a",
+            "band-0-b"
+          ],
+          [
+            "band-1-a",
+            "band-1-b"
+          ],
+          [
+            "band-2-a",
+            "band-2-b"
+          ],
+          [
+            "band-3-a",
+            "band-3-b"
+          ],
+          [
+            "band-4-a",
+            "band-4-b"
+          ],
+          [
+            "band-5-a",
+            "band-5-b"
+          ],
+          [
+            "band-6-a",
+            "band-6-b"
+          ],
+          [
+            "band-7-a",
+            "band-7-b"
+          ],
+          [
+            "band-8-a",
+            "band-8-b"
+          ],
+          [
+            "band-9-a",
+            "band-9-b"
+          ],
+          [
+            "band-10-a",
+            "band-10-b"
+          ],
+          [
+            "band-11-a",
+            "band-11-b"
+          ]
+        ]
+      },
+      "items": [
+        {
+          "id": "band-0-a",
+          "label": {
+            "en": "Band 0 a",
+            "de": "Band 0 a"
+          },
+          "value": 1
+        },
+        {
+          "id": "band-0-b",
+          "label": {
+            "en": "Band 0 b",
+            "de": "Band 0 b"
+          },
+          "value": 3
+        },
+        {
+          "id": "band-1-a",
+          "label": {
+            "en": "Band 1 a",
+            "de": "Band 1 a"
+          },
+          "value": 10
+        },
+        {
+          "id": "band-1-b",
+          "label": {
+            "en": "Band 1 b",
+            "de": "Band 1 b"
+          },
+          "value": 30
+        },
+        {
+          "id": "band-2-a",
+          "label": {
+            "en": "Band 2 a",
+            "de": "Band 2 a"
+          },
+          "value": 100
+        },
+        {
+          "id": "band-2-b",
+          "label": {
+            "en": "Band 2 b",
+            "de": "Band 2 b"
+          },
+          "value": 300
+        },
+        {
+          "id": "band-3-a",
+          "label": {
+            "en": "Band 3 a",
+            "de": "Band 3 a"
+          },
+          "value": 1000
+        },
+        {
+          "id": "band-3-b",
+          "label": {
+            "en": "Band 3 b",
+            "de": "Band 3 b"
+          },
+          "value": 3000
+        },
+        {
+          "id": "band-4-a",
+          "label": {
+            "en": "Band 4 a",
+            "de": "Band 4 a"
+          },
+          "value": 10000
+        },
+        {
+          "id": "band-4-b",
+          "label": {
+            "en": "Band 4 b",
+            "de": "Band 4 b"
+          },
+          "value": 30000
+        },
+        {
+          "id": "band-5-a",
+          "label": {
+            "en": "Band 5 a",
+            "de": "Band 5 a"
+          },
+          "value": 100000
+        },
+        {
+          "id": "band-5-b",
+          "label": {
+            "en": "Band 5 b",
+            "de": "Band 5 b"
+          },
+          "value": 300000
+        },
+        {
+          "id": "band-6-a",
+          "label": {
+            "en": "Band 6 a",
+            "de": "Band 6 a"
+          },
+          "value": 1000000
+        },
+        {
+          "id": "band-6-b",
+          "label": {
+            "en": "Band 6 b",
+            "de": "Band 6 b"
+          },
+          "value": 3000000
+        },
+        {
+          "id": "band-7-a",
+          "label": {
+            "en": "Band 7 a",
+            "de": "Band 7 a"
+          },
+          "value": 10000000
+        },
+        {
+          "id": "band-7-b",
+          "label": {
+            "en": "Band 7 b",
+            "de": "Band 7 b"
+          },
+          "value": 30000000
+        },
+        {
+          "id": "band-8-a",
+          "label": {
+            "en": "Band 8 a",
+            "de": "Band 8 a"
+          },
+          "value": 100000000
+        },
+        {
+          "id": "band-8-b",
+          "label": {
+            "en": "Band 8 b",
+            "de": "Band 8 b"
+          },
+          "value": 300000000
+        },
+        {
+          "id": "band-9-a",
+          "label": {
+            "en": "Band 9 a",
+            "de": "Band 9 a"
+          },
+          "value": 1000000000
+        },
+        {
+          "id": "band-9-b",
+          "label": {
+            "en": "Band 9 b",
+            "de": "Band 9 b"
+          },
+          "value": 3000000000
+        },
+        {
+          "id": "band-10-a",
+          "label": {
+            "en": "Band 10 a",
+            "de": "Band 10 a"
+          },
+          "value": 10000000000
+        },
+        {
+          "id": "band-10-b",
+          "label": {
+            "en": "Band 10 b",
+            "de": "Band 10 b"
+          },
+          "value": 30000000000
+        },
+        {
+          "id": "band-11-a",
+          "label": {
+            "en": "Band 11 a",
+            "de": "Band 11 a"
+          },
+          "value": 100000000000
+        },
+        {
+          "id": "band-11-b",
+          "label": {
+            "en": "Band 11 b",
+            "de": "Band 11 b"
+          },
+          "value": 300000000000
+        }
+      ]
+    }
+  ]
+}

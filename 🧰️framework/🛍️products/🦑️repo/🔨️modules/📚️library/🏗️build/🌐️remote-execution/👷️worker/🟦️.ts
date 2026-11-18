@@ -36,7 +36,7 @@ export type RemoteExecutionExecutionV1=Readonly<{
 /** 🏁️ How executing one action ended. */
 export type RemoteExecutionExecutionResultV1=Readonly<{outcome:"completed"|"failed"|"cancelled";status:RemoteExecutionTaskStatusV1;actionResult:Uint8Array|null}>;
 
-class MissingBlob extends Error{constructor(readonly digest:RemoteExecutionDigestV1){super(`Missing blob ${digest.hash}/${digest.size}`);}}
+class MissingBlob extends Error{readonly digest:RemoteExecutionDigestV1; constructor(digest:RemoteExecutionDigestV1){super(`Missing blob ${digest.hash}/${digest.size}`);this.digest=digest;}}
 
 const sha256=(data:Uint8Array|string):string=>createHash("sha256").update(data).digest("hex");
 const digestOf=(data:Uint8Array):RemoteExecutionDigestV1=>({hash:sha256(data),size:data.length});
@@ -58,7 +58,7 @@ async function limited<T>(items:readonly T[],limit:number,work:(item:T)=>Promise
 /** 💽️ The worker's local, bounded, content-addressed blob cache: every blob is fetched once, verified against its digest and written atomically; least recently used blobs are evicted beyond the bound. */
 export class RemoteExecutionBlobCacheV1{
  private readonly pending=new Map<string,Promise<string>>();
- constructor(readonly directory:string,private readonly content:RemoteExecutionContentV1,private readonly maximumBytes:number){}
+ readonly directory:string; private readonly content:RemoteExecutionContentV1; private readonly maximumBytes:number; constructor(directory:string,content:RemoteExecutionContentV1,maximumBytes:number){this.directory=directory;this.content=content;this.maximumBytes=maximumBytes;}
 
  private location(hash:string):string{return join(this.directory,hash.slice(0,2),hash);}
 

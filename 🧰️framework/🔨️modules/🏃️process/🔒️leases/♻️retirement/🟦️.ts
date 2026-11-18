@@ -21,9 +21,14 @@ export const resourceLeaseRetirementMessagesV1=Object.freeze({...scanSchema.defi
 export interface ResourceLeaseDatabaseV1{exec(sql:string):void;read(sql:string,...values:string[]):Record<string,unknown>|undefined;close():void;}
 /** 📸️ Retains the exact immediate owned candidate before SQLite opens it. */
 export type ResourceLeaseCandidateV1=Readonly<{path:string;directory:string;file:Readonly<{dev:number;ino:number;mtimeMs:number}>;parent:Readonly<{dev:number;ino:number}>;allocatedBytes:number}>;
+/** 🔌️ How a lease database is opened: the hosting runtime's system SQLite by default; a test replaces it to simulate a full disk or an exhausted quota. */
+export type ResourceLeaseOpenPortV1=(path:string,options:Readonly<{readonly:boolean;readwrite:boolean;create:boolean}>)=>SqliteDatabaseV1;
+let openPort:ResourceLeaseOpenPortV1=(path,options)=>new SqliteDatabaseV1(path,{...options});
+/** 🧪️ Runs `body` with every lease database opened through `port`, then restores the previous port. */
+export async function withResourceLeaseOpenPortV1<T>(port:ResourceLeaseOpenPortV1,body:()=>Promise<T>):Promise<T>{const previous=openPort;openPort=port;try{return await body();}finally{openPort=previous;}}
 /** 🗃️ Opens one lease database through the hosting runtime's system SQLite; closing is idempotent. */
 export async function openResourceLeaseDatabaseV1(path:string,readonly=false,create=!readonly):Promise<ResourceLeaseDatabaseV1>{
- const database=new SqliteDatabaseV1(path,{readonly,readwrite:!readonly,create});let closed=false;
+ const database=openPort(path,{readonly,readwrite:!readonly,create});let closed=false;
  return{exec:sql=>database.exec(sql),read:(sql,...values)=>{const statement=database.prepare(sql);try{return statement.get(...values) as Record<string,unknown>|undefined;}finally{statement.finalize();}},close:()=>{if(!closed){database.close(true);closed=true;}}};
 }
 /** 🚥️ Recognizes only actual SQLite contention and the owner's closed nonwaiting refusal. */

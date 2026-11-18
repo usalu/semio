@@ -3,14 +3,15 @@ import type { LayeredDirection, LayeredLanding } from "../../../🔨️modules/�
 import { type IconName, Icon } from "../../🔣️Icons/🟦️.tsx";
 import * as React from "react";
 import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
+import { useSharedBorderFrameRef } from "../../🗂️WindowChrome/shared-border.ts";
 import type { LayeredInsets, LayeredLabels, LayeredPane } from "../📋️types/🟦️.ts";
 
 const HINT_ICONS: { readonly [D in LayeredDirection]: IconName } = { up: "arrow-up", left: "arrow-left", right: "arrow-right", down: "arrow-down" };
 const HINT_PLACES: { readonly [D in LayeredDirection]: string } = {
-  up: "left-1/2 -translate-x-1/2 max-w-[calc(100%-6rem)] min-h-[28px] flex-row px-single",
-  down: "left-1/2 -translate-x-1/2 max-w-[calc(100%-6rem)] min-h-[28px] flex-row px-single",
-  left: "top-1/2 -translate-y-1/2 max-h-[45%] w-[28px] flex-col py-single",
-  right: "top-1/2 -translate-y-1/2 max-h-[45%] w-[28px] flex-col py-single",
+  up: "inset-x-0 h-[28px] flex-row px-single",
+  down: "inset-x-0 h-[28px] flex-row px-single",
+  left: "w-[28px] flex-col py-single",
+  right: "w-[28px] flex-col py-single",
 };
 const HINT_TEXT: { readonly [D in LayeredDirection]: string } = {
   up: "min-w-0 truncate",
@@ -19,17 +20,20 @@ const HINT_TEXT: { readonly [D in LayeredDirection]: string } = {
   right: "min-h-0 overflow-hidden text-ellipsis whitespace-nowrap [writing-mode:vertical-rl]",
 };
 
-/** 📏️ Where the hint of `direction` stands: inside the app's chrome at the top and the bottom, in the room the cells keep free at the sides. */
-function hintPlace(direction: LayeredDirection, insets: Required<LayeredInsets>): React.CSSProperties {
+/** 📏️ Where the hint of `direction` stands: a bar filling its whole 28 px band, flush with the app's chrome at the top and the bottom and with the view's edge at the sides, so the band holds no gap between the chrome (or the edge) and the card. The top and bottom bars span the full width, the side bars the height between them. */
+function hintPlace(direction: LayeredDirection, insets: Required<LayeredInsets>, directions: ReadonlySet<LayeredDirection>): React.CSSProperties {
   switch (direction) {
     case "up":
-      return { top: `calc(${insets.top} + var(--spacing-single))` };
+      return { top: insets.top };
     case "down":
-      return { bottom: `calc(${insets.bottom} + var(--spacing-single))` };
+      return { bottom: insets.bottom };
     case "left":
-      return { left: "4px" };
     case "right":
-      return { right: "4px" };
+      return {
+        [direction]: 0,
+        top: directions.has("up") ? `calc(${insets.top} + 28px)` : insets.top,
+        bottom: directions.has("down") ? `calc(${insets.bottom} + 28px)` : insets.bottom,
+      };
   }
 }
 
@@ -38,6 +42,41 @@ export interface LayeredNeighbour extends LayeredLanding {
   readonly direction: LayeredDirection;
   readonly pane: LayeredPane;
 }
+
+const LayeredNeighbourHint = /* @__PURE__ */ React.memo(function LayeredNeighbourHint(props: {
+  readonly neighbour: LayeredNeighbour;
+  readonly moving: boolean;
+  readonly insets: Required<LayeredInsets>;
+  readonly directions: ReadonlySet<LayeredDirection>;
+  readonly label: LayeredLabels["neighbour"];
+  readonly onGo: (neighbour: LayeredNeighbour) => void;
+}): React.ReactElement {
+  const { neighbour, moving } = props;
+  const frame = useSharedBorderFrameRef<HTMLButtonElement>();
+  return (
+    <button
+      ref={frame}
+      type="button"
+      data-shared-border-frame=""
+      data-layered-neighbour={neighbour.direction}
+      data-pane={neighbour.pane.id}
+      data-level="dialog"
+      aria-label={props.label(neighbour.pane, neighbour.direction)}
+      aria-hidden={moving || undefined}
+      tabIndex={moving ? -1 : undefined}
+      onClick={() => props.onGo(neighbour)}
+      className={cn(
+        "ui-glass absolute z-[32] inline-flex items-center justify-center gap-[4px] border-0 text-xs font-medium text-foreground outline-none transition-opacity duration-150 focus-visible:ring-2 focus-visible:ring-ring",
+        HINT_PLACES[neighbour.direction],
+        moving && "pointer-events-none opacity-0",
+      )}
+      style={hintPlace(neighbour.direction, props.insets, props.directions)}
+    >
+      <Icon icon={HINT_ICONS[neighbour.direction]} size="small" className="shrink-0" />
+      <span className={HINT_TEXT[neighbour.direction]}>{neighbour.pane.shortLabel ?? neighbour.pane.label}</span>
+    </button>
+  );
+});
 
 /** 🧩️ The hints of the swiped overview: at each edge of the view behind which a page lies, that page's label with an arrow — the page a swipe
  * the other way brings in — at the top and bottom edges across, at the sides along them. Each hint is a button that goes there. While the strip
@@ -50,29 +89,11 @@ export const LayeredNeighbourHints = /* @__PURE__ */ React.memo(function Layered
   readonly label: LayeredLabels["neighbour"];
   readonly onGo: (neighbour: LayeredNeighbour) => void;
 }): React.ReactElement {
+  const directions = React.useMemo(() => new Set(props.neighbours.map(({ direction }) => direction)), [props.neighbours]);
   return (
     <>
       {props.neighbours.map((neighbour) => (
-        <button
-          key={neighbour.direction}
-          type="button"
-          data-layered-neighbour={neighbour.direction}
-          data-pane={neighbour.pane.id}
-          data-level="dialog"
-          aria-label={props.label(neighbour.pane, neighbour.direction)}
-          aria-hidden={props.moving || undefined}
-          tabIndex={props.moving ? -1 : undefined}
-          onClick={() => props.onGo(neighbour)}
-          className={cn(
-            "ui-glass absolute z-[32] inline-flex items-center justify-center gap-[4px] border border-border-normal text-xs font-medium text-foreground outline-none transition-opacity duration-150 hover:border-border-emphasized focus-visible:ring-2 focus-visible:ring-ring",
-            HINT_PLACES[neighbour.direction],
-            props.moving && "pointer-events-none opacity-0",
-          )}
-          style={hintPlace(neighbour.direction, props.insets)}
-        >
-          <Icon icon={HINT_ICONS[neighbour.direction]} size="small" className="shrink-0" />
-          <span className={HINT_TEXT[neighbour.direction]}>{neighbour.pane.shortLabel ?? neighbour.pane.label}</span>
-        </button>
+        <LayeredNeighbourHint key={neighbour.direction} neighbour={neighbour} moving={props.moving} insets={props.insets} directions={directions} label={props.label} onGo={props.onGo} />
       ))}
     </>
   );

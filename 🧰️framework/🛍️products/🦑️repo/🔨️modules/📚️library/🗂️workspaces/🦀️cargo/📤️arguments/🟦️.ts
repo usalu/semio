@@ -14,7 +14,7 @@ const slash=(value:string):string=>value.replaceAll("\\","/");
 const isTable=(value:unknown):value is CargoTomlTable=>Boolean(value)&&typeof value==="object"&&!Array.isArray(value);
 const table=(value:unknown):CargoTomlTable=>{if(!isTable(value))throw Error("Cargo requires an owned table");return value;};
 const opaque=new Set(["node_modules","target","dist","build","🤖️generated","🗑️generated","coverage","temp","compose"]);
-class ModelOwners {readonly scopes:CargoWorkspaceScope[]=[];readonly packages:CargoWorkspacePackage[]=[];scopesComplete=false;packagesComplete=false;scopeState:"empty"|"running"|"refused"|"complete"="empty";packageState:"empty"|"running"|"refused"|"complete"="empty";scopeManifest:string|null=null;constructor(readonly root:string){} }
+class ModelOwners {readonly scopes:CargoWorkspaceScope[]=[];readonly packages:CargoWorkspacePackage[]=[];scopesComplete=false;packagesComplete=false;scopeState:"empty"|"running"|"refused"|"complete"="empty";packageState:"empty"|"running"|"refused"|"complete"="empty";scopeManifest:string|null=null;readonly root:string; constructor(root:string){this.root=root;} }
 const models=new WeakMap<object,ModelOwners>();
 
 /** 🔏️ Allocates an explicit partial owner only after the caller admits it. */

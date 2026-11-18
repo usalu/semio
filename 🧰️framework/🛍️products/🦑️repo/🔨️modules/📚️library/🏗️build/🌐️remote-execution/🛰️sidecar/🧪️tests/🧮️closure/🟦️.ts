@@ -2,7 +2,7 @@ import {afterAll,expect,test} from "bun:test";
 import {appendFileSync,copyFileSync,mkdirSync,mkdtempSync,rmSync,utimesSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {dirname,join,relative,sep} from "node:path";
-import {createSidecarClosureWatchV1,sidecarImportsV1} from "../../🧮️closure/🟦️.ts";
+import {createSidecarClosureWatchV1,sidecarClosureIgnoredV1,sidecarImportsV1} from "../../🧮️closure/🟦️.ts";
 import {remoteExecutionSidecarEntriesV1,remoteExecutionSidecarWatchV1} from "../../🟦️.ts";
 
 const scratch:string[]=[];
@@ -72,3 +72,14 @@ test("a real sidecar restarts for a change in the code it runs and for nothing e
  expect(stderr.match(/code changed/gu)?.length,"one restart for one change").toBe(1);
  child.kill("SIGTERM");expect(await child.exited,"stops in order when asked").toBe(0);
 },60000);
+
+test("a text catalogue below a texts folder is words only: editing it every few seconds never changes the closure of a role, editing the schema or code beside it does",()=>{
+ const root=directory();
+ write(root,"main.ts",'import texts from "./📖️texts/🔣️.json" with {type:"json"};import schema from "./🧬️schema/🔣️.json" with {type:"json"};export const run=[texts,schema];');
+ const text=write(root,"📖️texts/🔣️.json",'{"a":1}'),schema=write(root,"🧬️schema/🔣️.json",'{"b":1}');
+ const watch=createSidecarClosureWatchV1([join(root,"main.ts")],[],root);
+ for(let edit=0;edit<5;edit++){appendFileSync(text," ");expect(watch.changed(),"texts edit "+edit).toBe(false);}
+ expect([...watch.closure().files.keys()].some(path=>path.includes("📖️texts")),"still part of the copy a test or a launcher runs").toBe(true);expect(watch.changes()).toEqual([]);
+ appendFileSync(schema," ");expect(watch.changed(),"a schema beside it").toBe(true);
+ expect(sidecarClosureIgnoredV1("/x/y/📖️texts/🔣️.json")).toBe(true);expect(sidecarClosureIgnoredV1("/x/y/📖️textsX/a.json")).toBe(false);expect(sidecarClosureIgnoredV1("C:\\x\\📖️texts\\a.json")).toBe(true);
+});

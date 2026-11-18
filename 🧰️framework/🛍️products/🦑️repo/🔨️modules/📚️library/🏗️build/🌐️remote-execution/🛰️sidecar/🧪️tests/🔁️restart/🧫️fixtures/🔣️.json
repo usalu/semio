@@ -1,0 +1,9 @@
+{
+ "drain": [
+  {"name": "no foreign work: aborted at the grace", "graceMs": 300000, "pollMs": 5000, "drainMaxMs": 7200000, "busyUntilMs": 0, "abortAtMs": 300000},
+  {"name": "an action that ends after the grace is waited for, never aborted", "graceMs": 300000, "pollMs": 5000, "drainMaxMs": 7200000, "busyUntilMs": 1203000, "abortAtMs": 1205000},
+  {"name": "an action that ends exactly on a poll is let go at that poll", "graceMs": 300000, "pollMs": 5000, "drainMaxMs": 7200000, "busyUntilMs": 600000, "abortAtMs": 600000},
+  {"name": "a flag that never clears is bounded by the drain maximum", "graceMs": 300000, "pollMs": 5000, "drainMaxMs": 3600000, "busyUntilMs": 99999999, "abortAtMs": 3600000},
+  {"name": "an action that ends before the grace is irrelevant: aborted at the grace", "graceMs": 300000, "pollMs": 5000, "drainMaxMs": 7200000, "busyUntilMs": 120000, "abortAtMs": 300000}
+ ]
+}

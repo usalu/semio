@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:nx-platform-class:v1",
+  "title": "Nx Platform Class",
+  "description": "🧭️ Which Nx tasks may share one hash across operating systems and architectures. Every task hash carries the platform of the machine by default (a runtime input); a task whose output cannot depend on the platform drops it, so the same task on a Linux, a Windows and a macOS machine has the same key and exactly one of them computes it. The class is judged from the effective target, never from a name alone: a target stays platform-keyed when it is native, reaches a native toolchain input, runs a toolchain command or declares itself bound.",
+  "oneOf": [{ "$ref": "#/definitions/Policy" }],
+  "definitions": {
+    "Policy": {
+      "type": "object",
+      "const": {
+        "version": 1,
+        "platformRuntimes": [
+          "repo tools exec --light node -- -p \"process.platform.concat(process.arch)\"",
+          "node -p \"process.platform.concat(process.arch)\""
+        ],
+        "canonicalRuntime": "repo tools exec --light node -- -p \"process.platform.concat(process.arch)\"",
+        "independentTargets": ["build", "check", "typecheck", "lint", "generate", "generator", "generator-manifests", "graph-generate", "graph-wire-check", "check-generated", "canonical-architecture"],
+        "metadataKey": "platform",
+        "boundInputs": ["nativeSources", "nativeTestSources", "cargoToolchain", "go", "uv", "dotnet"],
+        "allowedRuntimePatterns": [
+          "^(repo tools exec --light )?(node|bun)( --)?( --version)?$",
+          "^bun \"[^\"]+\"( [a-z]+)?$"
+        ],
+        "boundEnvironmentPatterns": ["^(CARGO|RUST|CC$|CXX$|CFLAGS|LDFLAGS|GO|DOTNET|NUGET|UV_|PYTHON|CMAKE|MSBUILD|SDKROOT)"],
+        "boundCommandPatterns": ["\\b(cargo|rustc|rustup|go|dotnet|uv|python3?|cmake|wasm-pack|wasm-opt|wasm-bindgen)\\b"],
+        "boundMetadata": ["rustBuildIntent", "rustUnitAggregate", "hostPlatformOutputsV1", "componentStoreV1"]
+      }
+    },
+    "Class": { "enum": ["independent", "platform"] },
+    "Verdict": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["class", "reason"],
+      "properties": {
+        "class": { "$ref": "#/definitions/Class" },
+        "reason": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

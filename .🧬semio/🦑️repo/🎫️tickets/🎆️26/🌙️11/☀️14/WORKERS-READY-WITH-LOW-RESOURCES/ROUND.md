@@ -1,4 +1,24 @@
-round: 28
+round: 31
+
+Round 31 = STOP running setup yourself (20:55 UTC). Label files `round-31`.
+- What changed: every worker now drives its own setup without any session. The fleet agent on your machine runs a `ready` child that performs the stages `native → repo-mcp → dependencies → tools → workspace` by itself, retries, and writes its state to the store (`origins/<your origin>/ready.json`, `ready-log-<stage>.txt`, `ready-timings.json`). The group server reads those files.
+- Why this round: a session that runs `native-bootstrap.sh` or `repo tools setup all` at the same time now competes with that child. Seen today: the child only observes while a session runs (`observing … human-running`), and on g1-m03 a `native-storage` lease timed out because both ran at once.
+- Do this: finish or stop (one SIGINT) the try that is running, then do NOT start another try, do not run `native-bootstrap.sh`, `repo tools setup all` or any other setup command. Do not delete or edit anything under `.cache/f/ready`.
+- Then only observe, every 10 minutes, and write `round-31.md` in your worker folder: the content of your machine's `ready.json` (state, stage, try, exit, refusal, reason), the last 30 lines of the running stage's log, `memory_pressure | tail -1` (Linux: `MemAvailable`), the five largest processes by resident size with their command lines, and whether a macOS permission dialog is waiting on screen (if one is, say which; do not click it yourself unless it is the "Allow … to access files in your Documents folder" dialog for the semio tools, which you may allow).
+- If `ready.json` says `ready: true`: run `repo preflight --lang en`, report its exit code and last 20 lines, and stop.
+- g1-m06: this machine reports load above 80 and raised memory pressure for over an hour. Report `uptime`, `memory_pressure | tail -3`, and `ps -axo pid,ppid,rss,pcpu,etime,command | sort -k3 -nr | head -25`, and do not start anything.
+
+Round 30 = round 29 with a change that ends the dead end `graph-plan-too-heavy` (16:55 UTC). Label files `round-30`. Do NOT interrupt a running try; start a fresh series with the next one once your replica reports agreement.
+- What changed: a graph read that grows past the memory this machine gives a plan is no longer refused with exit 75. The service now cuts the work smaller and goes on: it starts the same read again with half the projects at once and half the owners per wave, and again, down to one project at a time (6 steps). Projects already inferred are kept on disk, so a step repeats nothing. A 16 GB Mac starts at step 1 (four projects at a time), an 8 GB machine at step 2, and a machine remembers the step that worked.
+- What you will see: a progress line `Reading the project graph slice (0 s): the slice worker grew to N MB, more than the M MB a plan may take on this machine, so the work is cut smaller (step k of 6: fewer projects at once and smaller waves) and continues; projects already inferred are kept and nothing is repeated.` once per step. Copy every such line.
+- What to expect: setup's graph part should now finish on a Mac with 16 GB (and on an 8 GB machine), slower but without (this is the expected result, not yet seen on a worker) the exit 75 `The project graph could not be read on this machine yet: the plan stage inference ... grew to N MB`. That refusal can still appear only after step 6 of 6 (one project at a time); if it does, copy it with all the `cut smaller` lines before it and the largest resident size you saw.
+- Take the new code with your next `repo` call (the graph service reloads itself once, one slower start), then run `W/native-bootstrap.sh "$HOME/native-bootstrap-round-30.log"` again. No other rule changes; the fleet wait lines (`waiting for the fleet`) and the stop rules of round 29 stay.
+- Report as before, plus: the highest step reached per try (`step k of 6`), the peak resident size of the graph child, and whether `native_rc` is 0.
+
+Round 29 = round 28 with facts (15:15 UTC). Label files `round-29`.
+- The group server was down from 14:50 to 15:01 UTC (its worktree moved to its canonical place; the store address did not change) and the fleet code changed (digest `32b23f76…`). A try that failed or stood still in that window is not a result: wait until your replica reports agreement, then start a fresh series, 5 minutes apart, no try limit.
+- The server's read is no longer thrown away when its services restart, light projects are admitted many at a time, and a held request is answered project by project. `waiting for the fleet: x of N` should now grow; copy the largest x per try.
+- g1-m03, g1-m06, g1-m07, g1-m08, g1-m10: nothing arrived from you for hours. Start again with this round.
 
 Round 28 = round 27 with facts (10:40 UTC). Do NOT interrupt a running try. Label files `round-28`.
 - Code change: the graph service reloads itself at your next `repo` call (one slower start). On Linux it recreates its memory group with a limit taken from the machine (60 % of RAM, 9508 MB on g1-m04) and no longer lets the kernel kill a plan at 40 %.

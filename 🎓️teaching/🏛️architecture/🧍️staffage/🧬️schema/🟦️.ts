@@ -647,9 +647,20 @@ export type HydronicCircuit = { readonly key: Slug; readonly rows: readonly Circ
 /** 🫗️ The inside of a `coupled` region: the water of the region `region` of the same asset. `wetFraction` is the share of the outer area behind which the water stands (fill level over wall height); only that share conducts, `filmM2KW` is the water-side resistance referred to the wetted area. */
 export type WaterCoupling = { readonly region: Slug; readonly wetFraction: number; readonly filmM2KW: number };
 
+/** 🔌️ What a nameplate power states.
+ * - `electrical-input`: the electrical power an appliance, device, lamp or electric heater draws (a heat pump counts its compressor and fan input, not its heating capacity);
+ * - `fuel-input`: the fuel (gas, propane, charcoal) heat input of a burner or fire;
+ * - `rated-output`: the rated output of a prime mover: a combustion engine, a traction or drive motor, a generating set;
+ * - `passive`: the element draws no power (radiator, coil, collector, cylinder, valve, resistor): 0 W, stated explicitly. */
+export const POWER_BASES = ["electrical-input", "fuel-input", "rated-output", "passive"] as const;
+
+/** 🔌️ One of {@link POWER_BASES}. */
+export type PowerBasis = (typeof POWER_BASES)[number];
+
 /** 🔥️ A thermal region: one surface patch with its area, shape for convection correlations, layers and model parameters. The outermost
  * layer's material (or `material` when there are no layers) gives emissivity and solar absorptivity. `hidden` explains why a region
- * facing away from the viewer is not drawn in elevation (e.g. a canopy underside); every other region is drawn at every authored scale. */
+ * facing away from the viewer is not drawn in elevation (e.g. a canopy underside); every other region is drawn at every authored scale.
+ * `ratedPowerW` (≥ 0, on any region) is the nameplate power of the element the region represents, stated once per element with its `ratedPowerBasis` ({@link POWER_BASES}); the `source` and `reference` of the region cover it, and the asset's total power is the sum of these ratings plus the metabolic heat of its bodies (never derived from `operating.heatW`, which is released heat). @see ../🔨️modules/🌡️thermal/⚡️power/🟦️.ts */
 export type ThermalRegion = {
   readonly id: Slug;
   readonly title: Text;
@@ -666,6 +677,8 @@ export type ThermalRegion = {
   readonly body?: { readonly segment: "head" | "trunk" | "arm" | "hand" | "leg" | "foot" | "tail" | "wing"; readonly metabolicShare: number; readonly skinFraction: number; readonly subject?: Slug };
   readonly leaf?: { readonly stomatalConductanceMaxMS: number; readonly leafAreaIndex: number; readonly photosynthesis: "c3" | "c4" | "cam" };
   readonly operating?: { readonly key: Slug; readonly heatW: number };
+  readonly ratedPowerW?: number;
+  readonly ratedPowerBasis?: PowerBasis;
   readonly conditioned?: { readonly interiorTempC: number; readonly interiorFilmM2KW: number };
   readonly hydronic?: HydronicCircuit;
   readonly coupled?: WaterCoupling;
@@ -827,6 +840,7 @@ export type ManifestEntry = {
   readonly title: Text;
   readonly heightM: number;
   readonly widthM: number;
+  readonly powerW: number;
   readonly poses: readonly Slug[];
   readonly clips: readonly Slug[];
   readonly representations: Readonly<Record<RepresentationKey, "authored" | "unavailable">>;

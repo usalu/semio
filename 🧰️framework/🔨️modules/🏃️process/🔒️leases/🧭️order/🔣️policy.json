@@ -11,6 +11,9 @@
     "graceMilliseconds": 15000,
     "pollMilliseconds": 250
   },
+  "groundWait": {
+    "boundMilliseconds": 1800000
+  },
   "cycle": {
     "intervalMilliseconds": 500
   },
@@ -172,6 +175,28 @@
         {
           "kind": "prefix",
           "value": "selected-rust-"
+        }
+      ]
+    },
+    {
+      "id": "image-mapping",
+      "rank": 7,
+      "scope": "generation",
+      "owner": "native-storage",
+      "ground": {
+        "reason": {
+              "en": "The mapping of a native image is the ground every image operation stands on: its shared readers wait only for a maintenance or retirement writer, and those writers take every other lease without waiting (try-locks), so a task that holds anything may wait for it without closing a cycle; the cycle detector still enforces that, and the wait is bounded by the speed-scaled ground wait bound.",
+              "de": "Die Abbildung eines nativen Images ist der Grund, auf dem jede Image-Operation steht: ihre geteilten Leser warten nur auf einen Wartungs- oder Stilllegungsschreiber, und diese Schreiber nehmen jede andere Lease ohne zu warten (Try-Locks); eine Task, die etwas hält, darf deshalb auf sie warten, ohne einen Zyklus zu schließen; der Zyklusdetektor erzwingt das weiterhin, und das Warten ist durch die geschwindigkeitsskalierte Grundwartegrenze begrenzt."
+      }
+      },
+      "title": {
+        "en": "Native image parent mapping transactions",
+        "de": "Abbildungs-Transaktionen der Eltern nativer Images"
+      },
+      "match": [
+        {
+          "kind": "prefix",
+          "value": "native-storage-mapping:"
         }
       ]
     },

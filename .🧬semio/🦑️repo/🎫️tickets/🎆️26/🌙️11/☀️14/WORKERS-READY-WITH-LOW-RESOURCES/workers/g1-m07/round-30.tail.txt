@@ -1,0 +1,85 @@
+#### round-30
+end 2026-11-15T19:52:57Z
+native_rc=7
+-- last 15 lines
+Reading the project graph slice (102 s): verification 1298 of 3575.
+Reading the project graph slice (104 s): verification 1298 of 3575.
+Reading the project graph slice (106 s): verification 1299 of 3575.
+Reading the project graph slice (108 s): verification 1299 of 3575.
+[repo] still working after 110 s; last phase started: door.script
+Reading the project graph slice (110 s): verification 1300 of 3575.
+Reading the project graph slice (112 s): verification 1300 of 3575.
+Reading the project graph slice (114 s): verification 1301 of 3575.
+Reading the project graph slice (116 s): verification 1301 of 3575.
+Reading the project graph slice (118 s): verification 1302 of 3575.
+Reading the project graph slice (120 s): verification 1304 of 3575.
+Reading the project graph slice (122 s): verification 1305 of 3575.
+Reading the project graph slice (124 s): verification 1306 of 3575.
+end 2026-11-15T19:52:57Z
+native_rc=7
+#### round-30-try-2
+Reading the project graph slice (0 s): the slice worker grew to 10030 MB, more than the 6553 MB a plan may take on this machine, so the work is cut smaller (step 2 of 6: fewer projects at once and smaller waves) and continues; projects already inferred are kept and nothing is repeated.
+Reading the project graph slice (0 s): the slice worker grew to 10448 MB, more than the 6553 MB a plan may take on this machine, so the work is cut smaller (step 3 of 6: fewer projects at once and smaller waves) and continues; projects already inferred are kept and nothing is repeated.
+Reading the project graph slice (0 s): the slice worker grew to 10631 MB, more than the 6553 MB a plan may take on this machine, so the work is cut smaller (step 4 of 6: fewer projects at once and smaller waves) and continues; projects already inferred are kept and nothing is repeated.
+Reading the project graph slice (0 s): the slice worker grew to 10552 MB, more than the 6553 MB a plan may take on this machine, so the work is cut smaller (step 5 of 6: fewer projects at once and smaller waves) and continues; projects already inferred are kept and nothing is repeated.
+Reading the project graph slice (0 s): the slice worker grew to 9954 MB, more than the 6553 MB a plan may take on this machine, so the work is cut smaller (step 6 of 6: fewer projects at once and smaller waves) and continues; projects already inferred are kept and nothing is repeated.
+The project graph could not be read on this machine yet: the plan stage inference (during inference) grew to 9921 MB, more than the 6553 MB this machine gives a plan, and only 6984 MB of memory were available (at least 2048 MB are kept in reserve) after it gave back what it could. It was stopped before the host ran short of memory. Nothing is wrong with your tree; run the command again when a machine with free memory serves the graph, or read the graph on a larger machine.
+end 2026-11-15T20:30:03Z
+native_rc=75
+-- last 15 lines
+Reading the project graph slice (94 s): verification 3575 of 3575.
+Reading the project graph slice (96 s): verification 3575 of 3575.
+Reading the project graph slice (98 s): verification 3575 of 3575.
+Reading the project graph slice (100 s): verification 3575 of 3575.
+Reading the project graph slice (102 s): verification 3575 of 3575.
+Reading the project graph slice (104 s): verification 3575 of 3575.
+Reading the project graph slice (106 s): verification 3575 of 3575.
+Reading the project graph slice (108 s): verification 3575 of 3575.
+Reading the project graph slice (110 s): verification 3575 of 3575.
+Reading the project graph slice (112 s): verification 3575 of 3575.
+[repo] still working after 1760 s; last phase started: door.script
+Reading the project graph slice (114 s): verification 3575 of 3575.
+The project graph could not be read on this machine yet: the plan stage inference (during inference) grew to 9921 MB, more than the 6553 MB this machine gives a plan, and only 6984 MB of memory were available (at least 2048 MB are kept in reserve) after it gave back what it could. It was stopped before the host ran short of memory. Nothing is wrong with your tree; run the command again when a machine with free memory serves the graph, or read the graph on a larger machine.
+end 2026-11-15T20:30:03Z
+native_rc=75
+#### round-30-try-3
+Reading the project graph slice (0 s): the slice worker grew to 9959 MB, more than the 6553 MB a plan may take on this machine, so the work is cut smaller (step 2 of 6: fewer projects at once and smaller waves) and continues; projects already inferred are kept and nothing is repeated.
+Reading the project graph slice (0 s): the slice worker grew to 10744 MB, more than the 6553 MB a plan may take on this machine, so the work is cut smaller (step 3 of 6: fewer projects at once and smaller waves) and continues; projects already inferred are kept and nothing is repeated.
+Reading the project graph slice (0 s): the slice worker grew to 10051 MB, more than the 6553 MB a plan may take on this machine, so the work is cut smaller (step 4 of 6: fewer projects at once and smaller waves) and continues; projects already inferred are kept and nothing is repeated.
+end 2026-11-15T21:08:25Z
+native_rc=7
+-- last 15 lines
+Reading the project graph slice (150 s): flush 1 of 1.
+[repo] still working after 1940 s; last phase started: door.script
+Reading the project graph slice (152 s): flush 1 of 1.
+Reading the project graph slice (154 s): flush 1 of 1.
+Reading the project graph slice (156 s): flush 1 of 1.
+Reading the project graph slice (158 s): flush 1 of 1.
+Reading the project graph slice (160 s): flush 1 of 1.
+Reading the project graph slice (162 s): flush 1 of 1.
+Reading the project graph slice (164 s): flush 1 of 1.
+Reading the project graph slice (166 s): flush 1 of 1.
+Reading the project graph slice (168 s): flush 1 of 1.
+Reading the project graph slice (170 s): flush 1 of 1.
+Reading the project graph slice (172 s): flush 1 of 1.
+end 2026-11-15T21:08:25Z
+native_rc=7
+#### round-30-try-4
+end 2026-11-15T21:29:02Z
+native_rc=7
+-- last 15 lines
+Reading the project graph slice (823 s): flush 1 of 1.
+Reading the project graph slice (825 s): flush 1 of 1.
+[repo] still working after 830 s; last phase started: door.script
+Reading the project graph slice (827 s): flush 1 of 1.
+Reading the project graph slice (829 s): flush 1 of 1.
+Reading the project graph slice (831 s): flush 1 of 1.
+Reading the project graph slice (833 s): flush 1 of 1.
+Reading the project graph slice (835 s): flush 1 of 1.
+Reading the project graph slice (837 s): flush 1 of 1.
+Reading the project graph slice (839 s): flush 1 of 1.
+Reading the project graph slice (841 s): flush 1 of 1.
+Reading the project graph slice (843 s): flush 1 of 1.
+Reading the project graph slice (845 s): flush 1 of 1.
+end 2026-11-15T21:29:02Z
+native_rc=7

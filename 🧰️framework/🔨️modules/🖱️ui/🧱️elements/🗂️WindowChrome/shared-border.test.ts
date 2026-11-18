@@ -2,10 +2,12 @@ import { describe, expect, test, vi } from "vitest";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { JSDOM } from "jsdom";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import Ajv from "ajv/dist/2020.js";
 import cases from "./compositor.cases.json";
 import schema from "./compositor.schema.json";
-import { BorderCompositor, retainSharedBorderRoot, useSharedBorderFrameRef, useSharedWindowBorder } from "./shared-border.ts";
+import { BorderCompositor, flushWithUndrawnParentEdge, isSharedBorderCellFrame, retainSharedBorderRoot, useSharedBorderFrameRef, useSharedWindowBorder } from "./shared-border.ts";
 import { measureWindowSilhouetteMetrics } from "./🟦️.tsx";
 import { createWindowSilhouetteGeometry } from "../🔲️WindowSilhouette/🟦️.tsx";
 
@@ -397,5 +399,123 @@ describe("root border compositor", () => {
       Object.assign(globalThis, previous);
       dom.window.close();
     }
+  });
+  test("framed controls that are direct children of a cells owner are cells: the owner paints one frame, they register none", () => {
+    const { row: size, cells, expectedOverlays, rowPaths } = cases.cellFrames;
+    const dom = new JSDOM('<div class="semio-scope"><div id="row" data-shared-border-frame data-shared-border-cells>' + '<div class="cell" data-shared-border-frame></div>'.repeat(cells) + '<div id="wrapper"><div id="deep" data-shared-border-frame></div></div></div></div>');
+    const previous = { Element: globalThis.Element, MutationObserver: globalThis.MutationObserver };
+    Object.assign(globalThis, { Element: dom.window.Element, MutationObserver: dom.window.MutationObserver });
+    const root = dom.window.document.querySelector<HTMLElement>(".semio-scope")!;
+    const row = root.querySelector<HTMLElement>("#row")!, deep = root.querySelector<HTMLElement>("#deep")!;
+    const rect = (left: number, top: number, width: number, height: number) => ({ left, top, right: left + width, bottom: top + height, width, height }) as DOMRect;
+    row.getBoundingClientRect = () => rect(0, 0, size.width, size.height);
+    const items = [...root.querySelectorAll<HTMLElement>(".cell")];
+    items.forEach((item, index) => { item.getBoundingClientRect = () => rect(index * (size.width / cells), 0, size.width / cells, size.height); });
+    deep.getBoundingClientRect = () => rect(0, size.height + 50, 40, size.height);
+    expect([...items, row, deep].map(isSharedBorderCellFrame)).toEqual([...items.map(() => true), false, false]);
+    const compositor = new BorderCompositor(root);
+    try {
+      compositor.schedule();
+      const owned = [...row.querySelectorAll(":scope > svg[data-shared-border-overlay] path")].map(path => path.getAttribute("d"));
+      expect(owned.sort()).toEqual([...rowPaths].sort());
+      expect(items.every(item => !item.hasAttribute("data-shared-border-attached") && !item.querySelector("svg"))).toBe(true);
+      expect(root.querySelectorAll("[data-shared-border-overlay]")).toHaveLength(expectedOverlays + 1);
+      expect(deep.querySelector("svg[data-shared-border-overlay]")).not.toBeNull();
+      row.dispatchEvent(new dom.window.MouseEvent("pointerover", { bubbles: true }));
+      items[1]!.dispatchEvent(new dom.window.MouseEvent("pointerover", { bubbles: true }));
+      expect(row.querySelector(':scope > svg [data-shared-border-state="hover"]')).not.toBeNull();
+      expect(items.every(item => !item.querySelector("svg"))).toBe(true);
+      items[0]!.removeAttribute("data-shared-border-frame");
+      deep.parentElement!.setAttribute("data-shared-border-cells", "");
+      compositor.schedule();
+      expect(deep.querySelector("svg[data-shared-border-overlay]")).toBeNull();
+      expect(deep.hasAttribute("data-shared-border-attached")).toBe(false);
+    } finally {
+      compositor.dispose();
+      Object.assign(globalThis, previous);
+      dom.window.close();
+    }
+  });
+  test("interlocked cards: every coincident segment of a stack or grid is painted by exactly one owner", () => {
+    for (const fixture of cases.interlock) {
+      const dom = new JSDOM('<div class="semio-scope">' + fixture.windows.map(window => `<div id="${window.id}"></div>`).join("") + "</div>");
+      const previous = { Element: globalThis.Element, MutationObserver: globalThis.MutationObserver };
+      Object.assign(globalThis, { Element: dom.window.Element, MutationObserver: dom.window.MutationObserver });
+      const root = dom.window.document.querySelector<HTMLElement>(".semio-scope")!;
+      const compositor = new BorderCompositor(root);
+      const painted = new Map<string, { left: number; top: number; segments: readonly { d: string }[] }>();
+      for (const window of fixture.windows) {
+        const element = root.querySelector<HTMLElement>(`#${window.id}`)!;
+        element.getBoundingClientRect = () => ({ left: window.left, top: window.top, right: window.left + window.width, bottom: window.top + window.height, width: window.width, height: window.height }) as DOMRect;
+        compositor.windows.set(window.id, { element, geometry: createWindowSilhouetteGeometry({ width: window.width, height: window.height, top: window.topEdge, bottom: window.bottomEdge }), state: "normal", update: segments => painted.set(window.id, { left: window.left, top: window.top, segments }) });
+      }
+      try {
+        compositor.schedule();
+        for (const line of fixture.lines) {
+          const spans: { id: string; at: number; low: number; high: number }[] = [];
+          for (const [id, { left, top, segments }] of painted) for (const segment of segments) {
+            const points = [...segment.d.matchAll(/(-?\d+(?:\.\d+)?) (-?\d+(?:\.\d+)?)/g)].map(match => ({ x: left + Number(match[1]), y: top + Number(match[2]) }));
+            points.slice(1).forEach((to, index) => {
+              const from = points[index]!;
+              const along = line.axis === "h" ? [from.x, to.x] : [from.y, to.y];
+              const normal = line.axis === "h" ? [from.y, to.y] : [from.x, to.x];
+              if (Math.abs(normal[0]! - normal[1]!) < 0.01 && Math.abs(normal[0]! - line.at) <= 1) spans.push({ id, at: normal[0]!, low: Math.max(line.from, Math.min(...along)), high: Math.min(line.to, Math.max(...along)) });
+            });
+          }
+          const live = spans.filter(span => span.high - span.low > 1.5);
+          const normals = [...new Set(live.map(span => span.at))];
+          expect({ name: fixture.name, straight: Math.max(...normals) - Math.min(...normals) < 0.01 }).toEqual({ name: fixture.name, straight: true });
+          const doubled = live.some((a, i) => live.some((b, j) => j > i && a.id !== b.id && Math.min(a.high, b.high) - Math.max(a.low, b.low) > 1.5));
+          const sorted = [...live].sort((a, b) => a.low - b.low);
+          let reach = line.from;
+          for (const span of sorted) if (span.low <= reach + 1.5) reach = Math.max(reach, span.high);
+          expect({ name: fixture.name, line, doubled, covered: reach >= line.to - 1.5 }).toEqual({ name: fixture.name, line, doubled: false, covered: true });
+        }
+      } finally {
+        compositor.dispose();
+        Object.assign(globalThis, previous);
+        dom.window.close();
+      }
+    }
+  });
+  test("band controls flush with the navbar or footer share its edges and paint no outer edge the band leaves open", () => {
+    const dom = new JSDOM('<div class="semio-scope"><nav data-shared-border-frame data-shared-border-edges="bottom"><div data-shared-border-frame data-shared-border-edges="top right bottom left"></div></nav><footer data-shared-border-frame data-shared-border-edges="top"><div data-shared-border-frame></div></footer></div>');
+    const rect = (left: number, top: number, right: number, bottom: number) => ({ left, top, right, bottom, width: right - left, height: bottom - top }) as DOMRect;
+    const [group, inset] = [dom.window.document.querySelector<HTMLElement>("nav > div")!, dom.window.document.querySelector<HTMLElement>("footer > div")!];
+    const nav = dom.window.document.querySelector<HTMLElement>("nav")!, footer = dom.window.document.querySelector<HTMLElement>("footer")!;
+    nav.getBoundingClientRect = () => rect(0, 0, 400, 28);
+    footer.getBoundingClientRect = () => rect(0, 72, 400, 100);
+    const flush = (side: string) => flushWithUndrawnParentEdge(group, rect(10, 0, 90, 28), side);
+    expect([flush("top"), flush("bottom"), flush("left"), flush("right")]).toEqual([true, false, false, false]);
+    expect(flushWithUndrawnParentEdge(group, rect(10, 3, 90, 25), "top")).toBe(false);
+    expect(flushWithUndrawnParentEdge(inset, rect(10, 72, 90, 100), "bottom")).toBe(true);
+    expect(flushWithUndrawnParentEdge(inset, rect(10, 72, 90, 100), "top")).toBe(false);
+    dom.window.close();
+  });
+  test("navbar and footer items span the band height and stretch their framed controls", () => {
+    const here = import.meta.dirname;
+    const navbar = readFileSync(resolve(here, "../🔝️Navbar/🟦️.tsx"), "utf8");
+    expect(navbar.split("\n").filter(line => !line.trimStart().startsWith("*") && line.includes("h-medium"))).toEqual([]);
+    expect(navbar.match(/h-full flex/g)?.length).toBe(2);
+    const css = readFileSync(resolve(here, "../../🎨️styling/🖌️ui/🎨️.css"), "utf8");
+    expect(css).toMatch(/:is\(\[data-slot="navbar"\], \[data-slot="footer"\]\) \[data-shared-border-frame\]:not\([^)]*\) \{\s*height: auto;/);
+  });
+
+  test("elements defer their edges to the shared mechanism instead of stacking native ones", () => {
+    const here = import.meta.dirname;
+    const read = (path: string) => readFileSync(resolve(here, path), "utf8");
+    const layout = read("../📐️Layout/🟦️.tsx");
+    expect(layout).not.toContain("chrome-frame");
+    expect(layout).toMatch(/ref=\{frameRef\}\s+data-shared-border-frame=""/);
+    const canvas = read("../🎨️Canvas/🟦️.tsx");
+    expect(canvas).toMatch(/data-slot="app-mode-nav" data-shared-border-frame="" data-shared-border-cells="" data-shared-border-edges="bottom"/);
+    expect(canvas).not.toMatch(/"[^"]*\bborder-b\b[^"]*"/);
+    const history = read("../🕰️HistoryTable/🟦️.tsx");
+    expect(history).not.toContain("border-[var(--border)]");
+    expect(history.match(/data-slot="history-row-divider"/g)?.length).toBe(1);
+    expect(history).toContain("index < sorted.length - 1");
+    const css = read("../../🎨️styling/🖌️ui/🎨️.css");
+    expect(css).not.toMatch(/data-slot="(chrome-frame|side-panel-tabs|mobile-panel-tabs|accordion-item)"/);
+    expect(css).toMatch(/table > tbody > tr:last-child \{\s*border-bottom-width: 0;/);
   });
 });

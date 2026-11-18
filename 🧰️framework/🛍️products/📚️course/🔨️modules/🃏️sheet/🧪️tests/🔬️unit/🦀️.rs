@@ -362,3 +362,45 @@ fn pooled_selections_agree_with_numpy() {
         }
     }
 }
+
+#[test]
+fn zipf_pools_deal_the_committed_items_and_weight_slots_exactly() {
+    let quiz: Quiz = serde_json::from_str(include_str!("../../../../🧫️fixtures/📉️zipf-pools/🔣️.json")).unwrap();
+    assert!(crate::validation::quiz_issues(&quiz).is_empty());
+    let vectors: Vec<serde_json::Value> = serde_json::from_str(include_str!("../../../../🧫️fixtures/📉️zipf-pools/🧾️expected.json")).unwrap();
+    for vector in vectors {
+        for challenge in CHALLENGES {
+            let sheet = sheet_of(&quiz, vector["seed"].as_u64().unwrap() as u32, challenge);
+            let mut items: Vec<_> = sheet.tasks[0].items().iter().map(|item| item.id.clone()).collect();
+            items.sort();
+            assert_eq!(serde_json::to_value(items).unwrap(), vector["items"]);
+        }
+    }
+    let slots = &quiz.tasks[0].pool().unwrap().slots;
+    let weights: Vec<f64> = (1..=slots.len()).map(|rank| (rank as f64).powf(-1.5)).collect();
+    fn walk(weights: &[f64], remaining: &[usize], probability: f64, picks: &mut Vec<usize>, count: usize, inclusion: &mut [f64]) {
+        if picks.len() == count {
+            picks.iter().for_each(|&slot| inclusion[slot] += probability);
+            return;
+        }
+        let total: f64 = remaining.iter().map(|&slot| weights[slot]).sum();
+        for &slot in remaining {
+            picks.push(slot);
+            walk(weights, &remaining.iter().copied().filter(|&other| other != slot).collect::<Vec<_>>(), probability * weights[slot] / total, picks, count, inclusion);
+            picks.pop();
+        }
+    }
+    let mut inclusion = vec![0.0; slots.len()];
+    walk(&weights, &(0..slots.len()).collect::<Vec<_>>(), 1.0, &mut Vec::new(), 5, &mut inclusion);
+    let deals = 4000u32;
+    let mut counts = vec![0usize; slots.len()];
+    for index in 0..deals {
+        let sheet = sheet_of(&quiz, crate::randomness::run_seed(&format!("deal-{index}")), Challenge::Medium);
+        for item in sheet.tasks[0].items() {
+            counts[slots.iter().position(|slot| slot.contains(&item.id)).unwrap()] += 1;
+        }
+    }
+    for (slot, count) in counts.iter().enumerate() {
+        assert!((*count as f64 / f64::from(deals) - inclusion[slot]).abs() < 0.03, "slot {slot}");
+    }
+}

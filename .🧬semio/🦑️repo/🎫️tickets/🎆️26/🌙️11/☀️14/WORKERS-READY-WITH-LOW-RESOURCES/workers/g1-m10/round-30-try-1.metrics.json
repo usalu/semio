@@ -1,0 +1,29 @@
+{
+  "round": 30,
+  "try": 1,
+  "start": "2026-11-15T17:39:10+00:00",
+  "end": "2026-11-15T19:17:09+00:00",
+  "wall_seconds": 5878.4802523749995,
+  "wrapper_rc": 0,
+  "native_rc": 75,
+  "native_rc_from_log": true,
+  "marker": false,
+  "ready": false,
+  "stop_reason": null,
+  "peak_run_rss_mib": 988.5,
+  "peak_slice_rss_mib": 7991.640625,
+  "peak_system_rss_mib": 7871.953125,
+  "peak_at": {
+    "at": "2026-11-15T19:09:13+00:00",
+    "progress": "graph: 0 of 703 projects arrived from the fleet, 191 inferred here, 512 left; the server last progressed 132 s ago, estimated time left: about 31 min",
+    "run_mib": 42.6875,
+    "slice_mib": 7991.640625
+  },
+  "closure_entries_before": 35031,
+  "closure_entries_after": 35074,
+  "dependency_wait_line": null,
+  "service_logs": [
+    "/var/folders/n2/f4tcy7ks04sb8njd18x7l1lh0000gn/T/semio-repo/501/host-e9fb7654b9f7.log",
+    "/var/folders/n2/f4tcy7ks04sb8njd18x7l1lh0000gn/T/semio-repo/501/host-b79757bed7da.log"
+  ]
+}

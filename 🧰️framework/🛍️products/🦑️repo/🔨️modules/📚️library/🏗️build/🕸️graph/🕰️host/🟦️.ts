@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import type {BuildGraphPartStubV1,BuildGraphV1} from "../📋️model/🟦️.ts";
 import * as observationV1 from "../../👁️observation/🟨️.mjs";
 import {encodeGenerationPinV1,generationPinOwnerV1} from "../🕰️generations/🧷️pin/🟨️.mjs";
@@ -41,6 +42,8 @@ import {readBuildGraphLeanV1,readBuildGraphV1} from "../📜️contract/🟦️.
 import {recordSealedGenerationPinV1} from "../📍️pin/🟦️.ts";
 import {announceGraphWaveV1} from "../📈️wave-row/🟨️.mjs";
 import {settleWaveMemoryV1} from "../../🧠️memory/🦶️footprint/🟨️.mjs";
+import {settleGraphMemoryV1} from "../../🧠️memory/🧽️settle/🟨️.mjs";
+import {leanSliceV1} from "../../🧠️memory/🪜️plan-stage/🟨️.mjs";
 
 
 /** 🪶️ The fact kinds a generation row is checked with from the file system alone (stamps, hashes, listings, existence): they never need the installed parsers, so a stale one answers before the parser material is imported and installed. */
@@ -49,8 +52,8 @@ export const PARSER_FREE_HOLD_KINDS_V1:ReadonlySet<string>=new Set(["file","exis
 export function splitHoldRowsV1<T extends{kind:string}>(rows:readonly T[]):{free:T[];parsed:T[]}{const free:T[]=[],parsed:T[]=[];for(const row of rows)(PARSER_FREE_HOLD_KINDS_V1.has(row.kind)?free:parsed).push(row);return{free,parsed};}
 
 /** 🕰️ Binds the repository to the graph generation load: shared reader custody, the builder custody, the bounded facts lease, fact checks that understand environment rows, the membership frontier and the partial inference. */
-export function generationHostV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,registry:BuildOwnerRegistryV1,compact=false){
-  const registryDigest=createHash("sha256").update(JSON.stringify(registry)).digest("hex"),state={files:[] as string[],stable:new Set<string>(),carry:false},leaseDirectory=join(root,".cache/b/l/m/data");
+export function generationHostV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,registry:BuildOwnerRegistryV1,compact=false,scope?:string){
+  const registryDigest=createHash("sha256").update(JSON.stringify(registry)).digest("hex"),state={files:[] as string[],stable:new Set<string>(),carry:false},leaseDirectory=machinePathV1(root,".cache/b/l/m/data");
   const read=async(path:string)=>{try{return await readFile(join(root,path),"utf8");}catch(error){if(["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??""))return undefined;throw error;}};
   const statFile=async(path:string)=>{try{const status=await lstat(join(root,path));return status.isFile()?{size:status.size,mtimeMs:status.mtimeMs}:undefined;}catch(error){if(["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??""))return undefined;throw error;}};
   const scan={on:false,done:0,total:0,tick:undefined as undefined|((done:number)=>void)};
@@ -134,7 +137,7 @@ export function generationHostV1(root:string,invocation:ScriptInvocation,phaseCo
     observationV1.useStableDirectoriesV1(state.stable);
     return live;
   };
-  const exchange=remoteGenerationExchangeV1({environment:process.env,workspace:root,identity:async()=>buildGraphGenerationIdentityV1(registry),cursors:{
+  const exchange=remoteGenerationExchangeV1({environment:process.env,workspace:root,identity:async()=>buildGraphGenerationIdentityV1(registry),...scope===undefined?{}:{scope},cursors:{
     snapshotFor:async generation=>{const entry=cursorStore.get("g"+generation);if(!entry||entry.carry)return undefined;const bytes=await journalPort.manifest.store.bytes(entry.instance);return bytes?{instance:entry.instance,bytes}:undefined;},
     install:async(generation,snapshot)=>{await journalPort.manifest.store.putBytes(snapshot.instance,snapshot.bytes);cursorStore.set("g"+generation,{instance:snapshot.instance,seq:0});},
     distance:async snapshot=>{await journalPort.manifest.store.putBytes(snapshot.instance,snapshot.bytes);const since=await journalPort.manifest.since({instance:snapshot.instance,seq:0});return since.complete?since.rows.length:undefined;}
@@ -147,7 +150,7 @@ export function generationHostV1(root:string,invocation:ScriptInvocation,phaseCo
     async identity(){requireCurrentFormatStampsV1(graphFormatStampsV1,"graph generation","refuse");return buildGraphGenerationIdentityV1(registry);},
     async implementationRows(){const producer=await import("../📥️inference/🟨️.mjs");await producer.libraryBootstrap;const rows:{kind:"digest";path:string;fact:{sha256:string;size:number;mtimeMs:number}}[]=[];for(const row of [...loadedGraphImplementationRowsV1,...producer.loadedImplementationRowsV1]){const inside=relative(root,row.path);if(inside===""||inside.startsWith("..")||isAbsolute(inside))continue;rows.push({...row,path:inside.split(sep).join("/")});}return producer.classifyImplementationRowsV1(rows);},
     release:async(options?:{more?:boolean})=>{observationV1.releaseInferenceMemoryV1();(await import("../../📥️inputs/🟨️.mjs")).releaseInputMemoryV1();if(!state.carry&&options?.more!==true){(await import("../📥️inference/🧭️script-inputs/🟨️.mjs")).resetClosureEntriesV1();setupSharesV1.delete(invocation);}graphStringInternerV1.clear();createMemoryPortsV1().collect();if(options?.more===true)(await import("../../🧠️memory/🧽️settle/🟨️.mjs")).reportRetainedGraphMemoryV1();},
-    releaseCutoff:async()=>{observationV1.releaseInferenceMemoryV1();graphStringInternerV1.clear();createMemoryPortsV1().collect();},
+    releaseCutoff:async()=>{observationV1.releaseInferenceMemoryV1();graphStringInternerV1.clear();createMemoryPortsV1().collect();if(leanSliceV1({residentMegabytes:process.memoryUsage().rss/1048576}).lean)await settleGraphMemoryV1({force:true,report:()=>undefined});},
     carryClosures:(on:boolean)=>{state.carry=on;},
     builderIdle:(request:GenerationPrefetchRequestV1)=>builderIdleV1({root,invocation,phaseControl,request}),
     attach:<T>(request:GenerationPrefetchRequestV1,recheck:()=>Promise<T|undefined>)=>attachToBuilderV1<T>({look:()=>builderLookV1({root,invocation,phaseControl,request}),recheck,say:(key,fields)=>{process.stderr.write(renderCustodyMessageV1(key,fields,resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language as "en"|"de")+"\n");},signal:invocation.control.signal}),
@@ -182,6 +185,7 @@ export function generationHostV1(root:string,invocation:ScriptInvocation,phaseCo
     expansionLimits:{maximumProjects:32,maximumBytes:Math.floor(graphDeclarationV1("../👁️observation/📥️reuse/🧬️schema/🔣️.json").definitions.Policy.const.maximumTextBytes/4)},
     readLean:(value:unknown)=>readBuildGraphLeanV1(value),
     readGraph:(value:unknown)=>readBuildGraphV1(value),
+    waveDone:async(info:{generation:number;done:number;total:number}):Promise<void>=>{const generation=info.generation;await announceGraphWaveV1({generation,info});await settleWaveMemoryV1({generation,release:()=>{observationV1.releaseInferenceMemoryV1();graphStringInternerV1.clear();}});if(process.env.SEMIO_GRAPH_BACKGROUND==="1")carriedStagesV1.yield=await(await import("../../🪪️graph-state/🙋️wanted/🛠️server/🟦️.ts")).yieldBackgroundGraphV1({generation,signal:invocation.control.signal,language:resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language as "en"|"de"});},
     published:async(generation:number,info?:{done:number;total:number})=>{seams.published(generation);await announceGraphWaveV1({generation,info});await settleWaveMemoryV1({generation,release:()=>{observationV1.releaseInferenceMemoryV1();graphStringInternerV1.clear();}});if(process.env.SEMIO_GRAPH_BACKGROUND==="1")carriedStagesV1.yield=await(await import("../../🪪️graph-state/🙋️wanted/🛠️server/🟦️.ts")).yieldBackgroundGraphV1({generation,signal:invocation.control.signal,language:resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language as "en"|"de"});},
     sealed:(record:{generation:number;manifest:string;owners:readonly string[];covered:ReadonlySet<string>|undefined;atMs:number})=>{seams.commit(record);recordSealedGenerationPinV1(encodeGenerationPinV1({owner:generationPinOwnerV1(process.env),...record}));},
     clock:(control:ResourceLeaseControl)=>{const clock=createGraphPhaseClockV1({publish:resource=>control.publish({resource,mode:"shared",elapsedMs:0}),write:writeGraphPhaseRowV1});clockOf=clock;return Object.freeze({...clock,end:async(phase:string,details?:Record<string,unknown>)=>{const row=await clock.end(phase,details);if(phase==="facts")seams.factsVerified();return row;}});},
@@ -196,7 +200,7 @@ export function generationHostV1(root:string,invocation:ScriptInvocation,phaseCo
 /** 🧹️ After a build, removes the observation blocks no record names any more once a record directory holds many more blocks than its records can name (each re-inference supersedes blocks, and a graph store whose inventory is exhausted refuses every command), outside the builder custody, group by group under the writer lease of the group, and never lets a failing sweep fail the build. */
 async function sweepSupersededBlocksV1(root:string,image:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,say:(key:string,fields:Record<string,string|number>)=>void):Promise<void>{
   try{
-    const scan=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts"),directory=join(root,".cache/b/l/m/data");
+    const scan=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts"),directory=machinePathV1(root,".cache/b/l/m/data");
     const timedOut=(error:unknown)=>/timed out/iu.test(String((error as Error).message)),resourceOf=(kind:"selection"|"dataset"|"canonical",identity:string)=>buildGraphWriterResourceV1(root,kind,identity);
     const report=await scan.supersedeBuildGraphObservationBlocksV1(image,{lease:scan.createSweepLeasePortV1({
       acquire:async(kind,identity)=>{try{return await acquireResourceLease({directory,resource:resourceOf(kind,identity),mode:"exclusive",signal:invocation.control.signal,control:phaseControl,timeoutMs:0});}catch(error){if(timedOut(error))return undefined;throw error;}},

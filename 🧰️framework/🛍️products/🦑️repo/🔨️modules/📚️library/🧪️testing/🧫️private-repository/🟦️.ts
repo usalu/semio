@@ -1,9 +1,11 @@
 import {retirePrivateRepositoryRootV1} from "./🪦️retirement/🟦️.ts";
 /** 🧫️ A private repository per test process: its own store, caches, lease images and scratch, so no test touches the checkout's live store. @see ../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts */
-import {mkdir,mkdtemp,readdir} from "node:fs/promises";
-import {readFileSync,realpathSync,writeFileSync} from "node:fs";
+import {mkdir,mkdtemp} from "node:fs/promises";
+import {realpathSync,rmSync} from "node:fs";
 import {join,resolve} from "node:path";
 import {afterAll} from "bun:test";
+import {detachDiskImagesUnderV1} from "../../../../../../🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🖼️images/🟦️.ts";
+import {sweepLeakedSandboxImagesV1,writeSandboxOwnerV1} from "../../../../../../🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🧹️image-sweep/🟦️.ts";
 import {privateRepositoryStartDirectoryV1,testCheckoutRootV1,requirePrivateRepositoryWorkspaceV1,privateRepositoryParentsV1,privateRepositoryDeepestV1,privateRepositoryInvocationV1,withPrivateRepositoryWorkingDirectoryV1,type PrivateRepositoryProfileV1} from "./📥️invocation/🟦️.ts";
 export {testCheckoutRootV1,testToolchainDirectoryV1,testNxToolkitDirectoryV1,requirePrivateRepositoryWorkspaceV1,type PrivateRepositoryProfileV1} from "./📥️invocation/🟦️.ts";
 
@@ -18,21 +20,21 @@ export interface PrivateRepositoryWorkspaceV1{readonly root:string;readonly owne
 async function retirePrivateRootV1(root:string):Promise<void>{
  await privateRepositoryInvocationV1(root)(async original=>retirePrivateRepositoryRootV1(root,original,createIssuedResourceControlV1(original,"repository:private-retire",0)),{owner:"private-repository-retirement",maximumElapsedMilliseconds:120000});
 }
-/** 🧹️ Retires the private repositories a killed test process left behind: those whose recorded owner process is gone. */
-async function reapStalePrivateRootsV1(parent:string):Promise<void>{
- let names:string[];try{names=await readdir(parent);}catch{return;}
- for(const name of names){
-  if(!/^r[A-Za-z0-9]{6}$/u.test(name))continue;const root=join(parent,name);let owner:number;try{owner=Number(readFileSync(join(root,".owner"),"utf8"));}catch{continue;}
-  if(!Number.isSafeInteger(owner)||owner<=0||owner===process.pid)continue;try{process.kill(owner,0);continue;}catch(error){if((error as NodeJS.ErrnoException).code!=="ESRCH")continue;}
-  try{await retirePrivateRootV1(realpathSync(root));}catch(error){process.stderr.write("[test] stale-private-repository-kept:"+root+" "+String((error as Error).message)+"\n");}
- }
+/** 🧹️ Sweeps the private repositories a killed test process left behind: images of dead owners (identity by pid and start time) are detached nested first and the dead directories removed. */
+function reapStalePrivateRootsV1(parent:string):void{
+ try{sweepLeakedSandboxImagesV1({parents:[parent]});}catch(error){process.stderr.write("[test] stale-private-repository-sweep-failed:"+parent+" "+String((error as Error).message)+"\n");}
+}
+/** 🪝️ Detaches the images and removes the root of a private repository when its owning process ends, also on failure, timeout and signal exit. */
+function releasePrivateRootAtExitV1(root:string):void{
+ const release=()=>{try{detachDiskImagesUnderV1(root);rmSync(root,{recursive:true,force:true});}catch{}};
+ process.once("exit",release);
 }
 /** 🏗️ Creates the private repository below the first scratch parent that leaves room for the deepest store path, or adopts the one a parent test process published in `SEMIO_PRIVATE_REPOSITORY`. */
 async function openPrivateRepositoryWorkspaceV1(profile:PrivateRepositoryProfileV1):Promise<PrivateRepositoryWorkspaceV1>{
  const adopted=process.env.SEMIO_PRIVATE_REPOSITORY;let root:string,owned:boolean;
  if(adopted){root=realpathSync(resolve(adopted));owned=false;}
  else if(!testRunnerV1)throw Error("private-repository-needs-runner-or-parent");
- else{const parents=privateRepositoryParentsV1(repositoryCheckoutRootV1(privateRepositoryStartDirectoryV1)??testCheckoutRootV1(),profile),parent=parents.find(path=>privateRepositoryDeepestV1(join(path,"r000000"),profile)<=256);if(parent===undefined)throw Error("private-repository-parent-too-deep:"+parents.join(","));await mkdir(parent,{recursive:true});await reapStalePrivateRootsV1(parent);root=realpathSync(await mkdtemp(join(parent,"r")));writeFileSync(join(root,".owner"),String(process.pid));owned=true;process.env.SEMIO_PRIVATE_REPOSITORY=root;}
+ else{const parents=privateRepositoryParentsV1(repositoryCheckoutRootV1(privateRepositoryStartDirectoryV1)??testCheckoutRootV1(),profile),parent=parents.find(path=>privateRepositoryDeepestV1(join(path,"r000000"),profile)<=256);if(parent===undefined)throw Error("private-repository-parent-too-deep:"+parents.join(","));await mkdir(parent,{recursive:true});reapStalePrivateRootsV1(parent);root=realpathSync(await mkdtemp(join(parent,"r")));writeSandboxOwnerV1(root);releasePrivateRootAtExitV1(root);owned=true;process.env.SEMIO_PRIVATE_REPOSITORY=root;}
  requirePrivateRepositoryWorkspaceV1(root);
  const invoke=privateRepositoryInvocationV1(root);
  return Object.freeze({root,owned,invoke,within:<T,>(body:()=>Promise<T>)=>withPrivateRepositoryWorkingDirectoryV1(root,body),

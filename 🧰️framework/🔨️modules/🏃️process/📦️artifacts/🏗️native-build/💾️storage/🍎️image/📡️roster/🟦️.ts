@@ -2,6 +2,7 @@ import {AsyncLocalStorage} from "node:async_hooks";
 import {setTimeout as pause} from "node:timers/promises";
 import {nativeImageInventoryV1,type NativeImageInventoryPolicyV1} from "../📥️information/🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json" with {type:"json"};
+import {recordSandboxImagesV1} from "../../../../../🧪️testing/🏖️sandbox/🧹️image-sweep/🟦️.ts";
 
 const protocol=schema.definitions.ImageProtocol.const;
 
@@ -49,8 +50,12 @@ export function createNativeImageRosterV1(options:Readonly<{now:()=>number}>):Na
 /** 🧲️ The process-wide roster every persistent image reads. */
 export const nativeImageRosterV1=createNativeImageRosterV1({now:()=>performance.now()});
 
-/** 🧹️ Forgets every snapshot that began before this process changed the kernel image set: a snapshot taken before a detach would still list the detached image, one taken before an attach would miss the new mount. */
-export function invalidateNativeImageRosterV1():void{nativeImageRosterV1.invalidate();}
+/** 🧹️ Forgets every snapshot that began before this process changed the kernel image set and, inside a private test repository, registers the images it attached in the ledger of that repository (device, image, pid and start time of this process): a snapshot taken before a detach would still list the detached image, one taken before an attach would miss the new mount. */
+export function invalidateNativeImageRosterV1():void{
+ nativeImageRosterV1.invalidate();
+ const root=process.env.SEMIO_PRIVATE_REPOSITORY;
+ if(root)try{recordSandboxImagesV1(root);}catch{}
+}
 
 /** 🔁️ Accepted roster view with the shape of the unshared observer; arrivals during one capture share the next. */
 export async function observeSharedNativeImageInventoryV1<T>(capture:()=>Promise<string>,accept:(information:Record<string,unknown>,text:string)=>T,policy:NativeImageInventoryPolicyV1):Promise<T>{return (await nativeImageRosterV1.observe({capture,accept,policy})).value;}

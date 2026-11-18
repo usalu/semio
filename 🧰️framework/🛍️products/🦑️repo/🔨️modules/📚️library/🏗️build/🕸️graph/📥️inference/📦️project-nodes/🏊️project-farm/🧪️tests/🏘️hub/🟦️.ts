@@ -41,10 +41,10 @@ test("a project that a worker fails goes back to the pool once: the second try i
  await new Promise<number>(done=>farm.onReady(done));
  expect(await farm.prepare(job("a")),"first try failed, second adopted").toBe(true);
  expect(script.jobs.length).toBe(2);
- script.failures=2;
- expect(await farm.prepare(job("b")),"both tries failed: the parent infers it").toBe(false);
- expect(script.jobs.length).toBe(4);
- expect(lines.filter(line=>line.includes("scripted failure")).length).toBe(3);
+ script.failures=3;
+ await expect(farm.prepare(job("b")),"three tries failed: refused, never inferred by the parent").rejects.toMatchObject({code:"graph.farm-job-failed"});
+ expect(script.jobs.length).toBe(5);
+ expect(lines.filter(line=>line.includes("scripted failure")).length).toBe(4);
  await farm.close();await closeProjectFarmsV1();
  expect(children.every(child=>child.exitCode===0)).toBe(true);
  const empty=open(scratch(),"farm_hub_retry_2",{failures:0,jobs:[],tag:"x"},{spawnProcess:(()=>{throw new Error("no worker can start");}) as never});

@@ -1,0 +1,108 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/library/testing/slice-lab/home/v1",
+  "title": "Slice lab home: the account directory of a lab machine, its read-only seeds, its refused downloads, the stage table",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "directory": "h",
+        "shimDirectory": ".local/bin",
+        "downloadLog": "downloads.log",
+        "downloadEnvironment": "SEMIO_SLICE_LAB_DOWNLOADS",
+        "refusedPrograms": ["curl", "wget", "brew", "apt-get", "dnf", "pacman", "zypper", "sudo"],
+        "refusedExit": 22,
+        "forcedEnvironment": {"GOTOOLCHAIN": "local", "GOPROXY": "off", "NPM_CONFIG_REGISTRY": "http://127.0.0.1:9/", "BUN_CONFIG_REGISTRY": "http://127.0.0.1:9/", "NPM_CONFIG_OFFLINE": "true", "HOMEBREW_NO_AUTO_UPDATE": "1", "CARGO_NET_OFFLINE": "true", "RUSTUP_OFFLINE": "1"},
+        "proxy": "",
+        "proxyOptIn": "SEMIO_SLICE_LAB_PROXY",
+        "noProxy": "127.0.0.1,localhost,[::1],0.0.0.0",
+        "droppedEnvironment": ["CARGO_HOME", "RUSTUP_HOME", "DOTNET_ROOT", "GOPATH", "GOROOT", "GOCACHE", "GOMODCACHE", "GOBIN", "BUN_INSTALL", "XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_CONFIG_HOME", "NPM_CONFIG_CACHE", "npm_config_cache", "PIP_CACHE_DIR", "UV_CACHE_DIR", "UV_TOOL_DIR", "SEMIO_GO_ROOT", "SEMIO_HOME", "PLAYWRIGHT_BROWSERS_PATH", "HOMEBREW_CACHE", "CARGO_TARGET_DIR", "SCCACHE_DIR", "RUSTC_WRAPPER"],
+        "pathValuedEnvironment": ["HOME", "TMPDIR", "XDG_RUNTIME_DIR", "XDG_CACHE_HOME", "SEMIO_MACHINE_STATE_DIRECTORY", "SEMIO_HOST_CAPACITY_DIRECTORY", "SEMIO_LEASE_REGISTRY_DIRECTORY", "SEMIO_FLEET_STORE_ROOT", "SEMIO_FLEET_ROOT", "SEMIO_WORKSPACE_ROOT"],
+        "seeds": [
+          {"id": "launcher", "path": ".local/share/semio/launcher", "kind": "tree", "tools": []},
+          {"id": "runtimes", "path": "Library/Caches/semio/runtimes", "kind": "tree", "tools": []},
+          {"id": "cargo", "path": ".cargo", "kind": "tree", "tools": ["rustup", "rust", "cargo-nextest", "cargo-llvm-cov", "wasm-pack", "wasm-bindgen", "trunk"]},
+          {"id": "rustup", "path": ".rustup", "kind": "tree", "tools": ["rustup", "rust", "cargo-nextest", "cargo-llvm-cov", "wasm-pack", "wasm-bindgen", "trunk"]},
+          {"id": "dotnet", "path": ".dotnet", "kind": "tree", "tools": ["dotnet"]},
+          {"id": "go", "path": ".local/go", "kind": "tree", "tools": ["go"]},
+          {"id": "uv-bin", "path": ".local/bin/uv", "kind": "file", "tools": ["uv"]},
+          {"id": "uvx-bin", "path": ".local/bin/uvx", "kind": "file", "tools": ["uv"]},
+          {"id": "uv", "path": ".local/share/uv", "kind": "tree", "tools": ["uv", "python-main", "python-oracle", "cmake", "ninja"]}
+        ],
+        "links": [
+          {"name": "repo", "to": ".local/share/semio/launcher/bin/repo", "tools": []},
+          {"name": "dotnet", "to": ".dotnet/dotnet", "tools": ["dotnet"]},
+          {"name": "go", "to": ".local/go/bin/go", "tools": ["go"]},
+          {"name": "gofmt", "to": ".local/go/bin/gofmt", "tools": ["go"]},
+          {"name": "cargo", "to": ".cargo/bin/cargo", "tools": ["rust", "rustup"]},
+          {"name": "rustc", "to": ".cargo/bin/rustc", "tools": ["rust", "rustup"]},
+          {"name": "rustup", "to": ".cargo/bin/rustup", "tools": ["rust", "rustup"]}
+        ],
+        "kinds": {
+          "typescript": ["bun", "node"],
+          "go": ["bun", "go"],
+          "rust": ["bun", "rustup", "rust", "cargo-nextest", "cargo-llvm-cov"],
+          "wasm": ["bun", "rustup", "rust", "wasm-opt", "wasm-pack", "wasm-bindgen", "trunk"],
+          "python": ["bun", "uv", "python-main", "python-oracle"],
+          "dotnet": ["bun", "dotnet"],
+          "cmake": ["bun", "uv", "cmake", "ninja"]
+        },
+        "nativeTools": ["node", "rustup", "rust", "dotnet", "uv", "go"],
+        "registry": {"url": "http://127.0.0.1:9/", "files": {".npmrc": "registry={url}\n", ".bunfig.toml": "[install]\nregistry = \"{url}\"\n"}},
+        "warmConcurrency": 8,
+        "stageEnvironment": {
+          "dependencies": {"unset": ["CARGO_NET_OFFLINE", "RUSTUP_OFFLINE"], "set": {"HTTPS_PROXY": "http://127.0.0.1:9", "HTTP_PROXY": "http://127.0.0.1:9", "ALL_PROXY": "http://127.0.0.1:9", "https_proxy": "http://127.0.0.1:9", "http_proxy": "http://127.0.0.1:9", "NO_PROXY": "127.0.0.1,localhost,[::1]", "no_proxy": "127.0.0.1,localhost,[::1]"}}
+        },
+        "primeTools": ["uv"],
+        "warm": [
+          {"stage": "dependencies", "partition": "d", "items": [{"id": "bun-cache", "path": "bun-cache", "tools": []}]},
+          {"stage": "tools", "partition": "t", "items": [
+            {"id": "downloads", "path": "downloads", "tools": []},
+            {"id": "repo-watch", "path": "repo-watch", "tools": []},
+            {"id": "bun", "path": "bun", "tools": ["bun"]},
+            {"id": "go", "path": "native/go", "tools": ["go"]},
+            {"id": "uv", "path": "native/uv", "tools": ["uv"]},
+            {"id": "cmake", "path": "native/cmake", "tools": ["cmake"]},
+            {"id": "ninja", "path": "native/ninja", "tools": ["ninja"]},
+            {"id": "cargo-nextest", "path": "native/cargo-nextest", "tools": ["cargo-nextest"]},
+            {"id": "cargo-llvm-cov", "path": "native/cargo-llvm-cov", "tools": ["cargo-llvm-cov"]},
+            {"id": "dotnet", "path": "native/dotnet", "tools": ["dotnet"]},
+            {"id": "python", "path": "python", "tools": ["python-main", "python-oracle"]},
+            {"id": "binaryen", "path": "binaryen", "tools": ["wasm-opt"]}
+          ]}
+        ],
+        "stageNames": ["native", "repo-mcp", "dependencies", "tools", "workspace"],
+        "liveWatch": [".cargo", ".rustup", ".dotnet", ".local/bin", ".local/share/semio", ".local/go", "Library/Caches/semio/runtimes", "Library/LaunchAgents", ".zshrc", ".zprofile", ".bashrc", ".bash_profile", ".profile"],
+        "temporaryWatch": ["/tmp/semio-repo"],
+        "liveStateWatch": ["", "b", "f", "boot-recovery"]
+      }
+    },
+    "Options": {
+      "enum": ["workspace", "all"]
+    },
+    "Texts": {
+      "const": {
+        "en": {
+          "refused": "download refused by the slice lab (no network use without permission): {program} {arguments}",
+          "unknownKind": "unknown toolchain kind {kind}; declared kinds: {kinds}",
+          "stageHeader": "stage | seconds | verdict",
+          "seedHeader": "seed | method | seconds",
+          "tools": "tools prepared for this slice: {tools}",
+          "toolsAll": "tools prepared: all (the kinds of the slice are not declared)",
+          "liveChanged": "paths outside the lab seam that changed during the run: {count}{sample}",
+          "downloads": "downloads the stages tried and the lab refused: {count}{sample}"
+        },
+        "de": {
+          "refused": "Download vom Slice-Labor abgelehnt (keine Netznutzung ohne Erlaubnis): {program} {arguments}",
+          "unknownKind": "unbekannte Werkzeugart {kind}; deklarierte Arten: {kinds}",
+          "stageHeader": "Stufe | Sekunden | Urteil",
+          "seedHeader": "Saat | Verfahren | Sekunden",
+          "tools": "für diesen Ausschnitt vorbereitete Werkzeuge: {tools}",
+          "toolsAll": "vorbereitete Werkzeuge: alle (die Arten des Ausschnitts sind nicht deklariert)",
+          "liveChanged": "Pfade ausserhalb der Labornaht, die sich während des Laufs geändert haben: {count}{sample}",
+          "downloads": "Downloads, welche die Stufen versucht und das Labor abgelehnt hat: {count}{sample}"
+        }
+      }
+    }
+  }
+}

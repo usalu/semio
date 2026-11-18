@@ -2,7 +2,7 @@
  *
  * Every finding is an {@link Issue} with a stable rule id: `volume-empty`, `volume-duplicate-id`, `volume-bone`, `volume-material`, `volume-region`, `volume-weights-bone`, `volume-weights-count`, `volume-weights-sum`,
  * `volume-size`, `volume-non-finite`, `volume-extrude-range`, `volume-profile-degenerate`, `volume-profile-self-intersecting`, `volume-hole-outside`, `volume-holes-overlap`, `volume-loft-sections`, `volume-repeat`,
- * `volume-transform`, `volume-of`, `volume-layer`, `volume-member`, `volume-anchor` and `volume-envelope`, applied to every list (body, thermal, structure) of every authored scale; `volume-region` also covers the thermal solids. Profiles are simple polygons: at least three distinct points, a non-zero area, no edge touching or crossing a non-adjacent edge; holes lie strictly inside the outline and
+ * `volume-transform`, `volume-of`, `volume-layer`, `volume-member`, `volume-anchor`, `volume-envelope`, `volume-id`, `volume-field` and `volume-section-faces`, applied to every list (body, thermal, structure) of every authored scale; `volume-region` also covers the thermal solids. Profiles are simple polygons: at least three distinct points, a non-zero area, no edge touching or crossing a non-adjacent edge; holes lie strictly inside the outline and
  * apart from each other. A revolve profile is a simple open polyline of [axial, radial] points with non-negative radial values.
  *
  * THE REFERENCE for the polygon rules is shapely (`Polygon.is_valid`), see `🧪️tests/🧊️volume-schema/🐍️.py`.
@@ -12,8 +12,8 @@
  * @see ../../../🧬️schema/🔣️.json — `Volumes`, `VolumeSolid`, `ThermalSolid`, `StructuralSolid`
  * @see ../🟦️.ts — `validateAsset`, which runs these rules
  */
-import { VOLUME_LISTS, VOLUME_REPEAT_MAX, VOLUME_WEIGHTS_MAX } from "../../../🧬️schema/🟦️.ts";
-import type { Asset, ExportFormat, Text, Vector2, VolumeSolid } from "../../../🧬️schema/🟦️.ts";
+import { SECTION_FACES, VOLUME_LISTS, VOLUME_REPEAT_MAX, VOLUME_WEIGHTS_MAX } from "../../../🧬️schema/🟦️.ts";
+import type { Asset, ExportFormat, Text, Vector2, VolumeList, VolumeSolid, VolumeSolidKind } from "../../../🧬️schema/🟦️.ts";
 import type { Issue } from "../🟦️.ts";
 import { authoredVolumes, isReference } from "../🧊️volumes/🧱️lists/🟦️.ts";
 import * as portable from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
@@ -138,6 +138,9 @@ export function volumeIssues(asset: Asset): readonly Issue[] {
         const bez = `Körper "${solid.id}" von ${list} 1:${volume.denominator}`;
         if (seen.has(solid.id)) add(`${p}.id`, "volume-duplicate-id", `${label} repeats an id already used in its list.`, `${bez} wiederholt eine in der Liste schon verwendete Id.`);
         seen.add(solid.id);
+        if (!SLUG.test(solid.id)) add(`${p}.id`, "volume-id", `${label} has an id that is not a slug (lower-case words of letters and digits joined by single hyphens).`, `${bez} hat eine Id, die kein Slug ist (kleingeschriebene Wörter aus Buchstaben und Ziffern, durch einzelne Bindestriche verbunden).`);
+        fieldIssues(solid, list, p, label, bez, add);
+        if (solid.sectionFaces !== undefined && !(Array.isArray(solid.sectionFaces) && solid.sectionFaces.length > 0 && new Set(solid.sectionFaces).size === solid.sectionFaces.length && solid.sectionFaces.every((face) => SECTION_FACES.includes(face)))) add(`${p}.sectionFaces`, "volume-section-faces", `${label} has sectionFaces that are not a non-empty list of distinct faces of ${SECTION_FACES.join(", ")}; leave the member out for no section face.`, `${bez} hat sectionFaces, die keine nichtleere Liste verschiedener Flächen aus ${SECTION_FACES.join(", ")} sind; ohne Schnittfläche das Mitglied weglassen.`);
         if ((solid as { envelope?: boolean }).envelope === true && volume.denominator === finest) add(`${p}.envelope`, "volume-envelope", `${label} is an envelope prism, but 1:${volume.denominator} is the finest authored scale and has no finer lattice to stand for.`, `${bez} ist ein Hüllprisma, aber 1:${volume.denominator} ist der feinste erstellte Maßstab und hat kein feineres Gitter, für das es steht.`);
         if (isReference(solid)) {
           if (list === "body") return;
@@ -168,6 +171,45 @@ export function volumeIssues(asset: Asset): readonly Issue[] {
 }
 
 type Add = (path: string, code: string, en: string, de: string) => void;
+
+const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+const SOLID_REQUIRED = ["id", "kind", "bone", "material", "role", "tone"];
+
+const SOLID_OPTIONAL = ["slender", "envelope", "texture", "sectionFaces", "weights", "transform", "repeat", "tags"];
+
+const KIND_FIELDS: Readonly<Record<VolumeSolidKind, { readonly required: readonly string[]; readonly optional: readonly string[] }>> = {
+  box: { required: ["size"], optional: ["cornerRadius"] },
+  ellipsoid: { required: ["radii"], optional: [] },
+  capsule: { required: ["p0", "p1", "r0", "r1"], optional: ["lateralScale"] },
+  revolve: { required: ["profile", "axis", "origin"], optional: ["sweepRad", "lateralScale"] },
+  extrude: { required: ["profile", "plane", "from", "to"], optional: ["holes", "taperTo"] },
+  loft: { required: ["sections", "capStart", "capEnd"], optional: [] },
+};
+
+const LIST_FIELDS: Readonly<Record<VolumeList, { readonly required: readonly string[]; readonly optional: readonly string[] }>> = {
+  body: { required: [], optional: [] },
+  thermal: { required: ["region"], optional: ["layer"] },
+  structure: { required: ["member", "part"], optional: ["anchor"] },
+};
+
+/** 🛂️ The members of one solid: exactly those the schema defines for its list and kind (or, in `thermal` and `structure`, for a `{ of }` reference: `id`, `of`, `sectionFaces` and the binding of the list), none missing, none unknown, none `null`; a reference is never `slender` and takes its tags from the body solid it names. */
+function fieldIssues(solid: object, list: VolumeList, p: string, label: string, bez: string, add: Add): void {
+  const entry = solid as Readonly<Record<string, unknown>>;
+  const bound = LIST_FIELDS[list];
+  const reference = list !== "body" && isReference(solid);
+  const kind = reference ? undefined : KIND_FIELDS[entry.kind as VolumeSolidKind];
+  if (!reference && kind === undefined) return add(`${p}.kind`, "volume-field", `${label} has the kind ${JSON.stringify(entry.kind)}, which is none of box, ellipsoid, capsule, revolve, extrude and loft.`, `${bez} hat die Art ${JSON.stringify(entry.kind)}, die keine von box, ellipsoid, capsule, revolve, extrude und loft ist.`);
+  const required = reference ? ["id", "of", ...bound.required] : [...SOLID_REQUIRED, ...kind!.required, ...bound.required];
+  const allowed = new Set(reference ? ["sectionFaces", ...required, ...bound.optional] : [...SOLID_OPTIONAL, ...required, ...kind!.optional, ...bound.optional]);
+  const what = reference ? `a ${list} reference` : `a ${list} solid of kind ${entry.kind as string}`;
+  const was = reference ? `eine ${list}-Referenz` : `ein ${list}-Körper der Art ${entry.kind as string}`;
+  for (const key of Object.keys(entry)) {
+    if (!allowed.has(key)) add(`${p}.${key}`, "volume-field", `${label} has the member "${key}", which ${what} does not define.`, `${bez} hat das Mitglied "${key}", das ${was} nicht kennt.`);
+    else if (entry[key] === null) add(`${p}.${key}`, "volume-field", `${label} has the member "${key}" set to null; leave it out.`, `${bez} hat das Mitglied "${key}" auf null gesetzt; es ist wegzulassen.`);
+  }
+  for (const key of required) if (entry[key] === undefined) add(`${p}.${key}`, "volume-field", `${label} lacks the member "${key}", which ${what} requires.`, `${bez} fehlt das Mitglied "${key}", das ${was} verlangt.`);
+}
 
 function weightIssues(solid: VolumeSolid, p: string, bones: ReadonlySet<string>, add: Add): void {
   const weights = solid.weights;

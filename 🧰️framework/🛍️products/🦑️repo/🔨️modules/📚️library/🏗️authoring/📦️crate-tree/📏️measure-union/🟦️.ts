@@ -19,7 +19,7 @@ export class MeasureUnion {
   private bytes: number;
   private lines: number;
 
-  constructor(private readonly excluded: ReadonlySet<string> = new Set(), floor: MeasureTotals = { files: 0, bytes: 0, lines: 0 }) {
+  private readonly excluded:ReadonlySet<string>; constructor(excluded: ReadonlySet<string> = new Set(), floor: MeasureTotals = { files: 0, bytes: 0, lines: 0 }) {this.excluded=excluded;
     this.files = floor.files;
     this.bytes = floor.bytes;
     this.lines = floor.lines;

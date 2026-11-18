@@ -1,0 +1,1010 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: AGPL-3.0-only
+# #region 🔖️Header
+# Zero-touch macOS/Linux worker provisioning of the shared worktree fleet, from an empty disk. Idempotent: every step probes before it changes anything and prints what it does.
+# Operators run it once per fleet machine, as root or through sudo; it changes system settings (fstab or LaunchDaemons, /etc profile files, system services), so it is never run by the build.
+# 🧭️Usage: bash "<this file>" <group-id> <origin-id> [--user <account>] [--archive <directory>] [--first-machine | --server] [--plan] [--force] [--relocate-from <worktree>]
+#   group-id   a group of the topology (g1..g5); origin-id  unique machine name matching ^[a-z0-9][a-z0-9-]{0,39}$;
+#   --user     the account that owns the worktree and runs the replica daemon (default: the sudo caller); the worktree is the topology template resolved against the real home folder of that account (macOS ~/Documents/semio, Linux ~/semio, from dscl or getent, never the HOME of root);
+#   --archive  a directory with manifest.json and the archive it names (worktree-<16 hex>.tar) (default: <store>/v1/bootstrap of the group, mounted read-only for the purpose; a new group server passes the bootstrap directory of a peer group mount).
+#   --plan     a worktree that already holds the account's own repository is adopted, not refused: with --plan the script mounts the store, prints the dry run of the adoption (`join --adopt --dry-run`, or `relocate --dry-run` when the machine moves) and stops before it installs services or changes the worktree; on an empty worktree it stops before the archive is fetched and extracts nothing;
+#   --force    adopts a repository that shares no commit with the fleet (otherwise refused);
+#   --relocate-from  the worktree of an already joined machine that moves to the canonical path (found automatically from the installed replica service when it differs): the services stop, `relocate` takes the identity (the origin id never changes) and adopts the store in the new tree, the services start at the new path, `relocate --phase finish` verifies and retires the old tree (never deleted);
+#   --first-machine  the first machine of the fleet: a checkout is at the canonical path and the store is empty; `seed` publishes it instead of `join` (refused when the store already has origins; never use it twice);
+#   --server   this machine is the group server, on the platform that the topology names for it (linux or macos; a Windows server uses the PowerShell script): the script writes the exports, mounts the peers read-only, installs the remote cache and relay services next to the replica (the cache tokens file must exist: it is never written here), its daily compaction passes --collect-blobs (the only machine that deletes unreferenced blobs), and, unless --first-machine is also given, one `relay --once` round copies the other groups into its still empty store before it settles and joins; it needs --archive (a peer group's bootstrap directory) when the worktree is empty. On Linux the store is the local export bind-mounted at the store mount (no NFS client entry); on macOS the store root is the exported folder itself (--store);
+# The script needs the topology file next to it (../🔣️.json): the early steps run before the repo launcher exists, so they read the worktree path and the NFS export from it with the JSON walker of the region 🔎️Json (awk: any key order, whitespace and unknown keys); the topology command re-derives the same values later and the script refuses any difference.
+# Re-running is safe: when .cache/f/machine.json exists, its origin and group must equal the arguments (otherwise the script stops before it changes anything); `join` is then skipped, while the mounts, limits and services are installed again.
+# Linux workers get /etc/sysctl.d/90-semio-fleet.conf with fs.inotify.max_user_watches >= 1048576 and max_user_instances, applied and verified (the tree has ~122k directories).
+# Steps: canonical worktree, bootstrap archive (verify its sha256 against manifest.json, extract with the OS tar), the standalone `repo` launcher (built from the checkout by the launcher installer; it needs no compiler and no package), system limits, store mount and NFS client, clock synchronisation check, cache environment, replica and compact services (daily compaction timer or task), `bootstrap-settle`, `join`, service start, and only then, as the last step, the repository's native bootstrap (build tools, Node.js, Rust, .NET, uv, `repo-mcp:install`, `workspace:setup`).
+# Joining the fleet never depends on the native build: a fix for a broken build arrives through the shared worktree itself, so the machine must already be syncing when the native bootstrap runs. The native bootstrap runs last with its output in .cache/f/native-bootstrap.log (ignored local state); a completion marker .cache/f/native-bootstrap.done is written only after it succeeded. When it fails (or the build tools are missing and cannot be installed), the script prints in English the failing command and the log, leaves the marker absent so that the next run retries it, and exits with code 3; the fleet setup stays as it is. `preflight` shows the same state as the warning `native-build`.
+# Exit codes: 0 fleet ready and native build complete; 1 error (usage errors 2), nothing after the failing step ran; 3 fleet ready, native build pending (the machine syncs; run the script again after the cause is fixed or the fix has arrived); 4 fleet ready but the macOS agents wait for the consent to read the worktree folder (accept the prompt in the logged-in session, then run `preflight`); 5 the fleet code of the checkout is older than this script and the store offers no newer sealed code (a fleet command failed on an unknown option or a missing module; the message names the checkout; nothing after that step ran).
+# Fleet code is never older than this script: before its first `fleet` or `replica` call on a checkout that has not joined yet (an old checkout to adopt, a tree just extracted from the bootstrap archive, a relocation target), the script reads the digest that the group server attests from the store, verifies the sealed code snapshot of that digest (`v1/bootstrap/code/<digest>/sealed.json`: size and sha256 of every file) and copies each sealed file into the worktree as the worker account; every replaced file that differs is kept under .cache/f/lost/provision-code-<stamp>/<path>, nothing is deleted, and the counts replaced / added / identical are printed. --plan does the same (the plan cannot run on older code). A joined machine, a server and the first machine are skipped: their replica keeps the code current. The kit this script comes from is published by the group server from the same sealed files (`v1/bootstrap/kit`, receipt `published`).
+# macOS services that run `repo` (replica, compact, relay, cache) are LaunchAgents of the account in its graphical session: a launchd job cannot read ~/Documents without a consent, the consent is given once to the launcher (the process that launchd starts stays the responsible binary after it execs the runtime, so a runtime update does not ask again) and a LaunchDaemon has no session to ask in. The store mounts stay LaunchDaemons.
+# A tree that this script extracted itself is marked in .cache/f/bootstrap-extract (`started` while tar runs, `complete` after it, removed after `join`): until the machine has joined, a later run settles such a tree and never adopts it, and extracts again over one whose extraction was interrupted. A worktree that already holds a checkout skips the archive; a worktree that is neither empty (a lone root .git is tolerated) nor a checkout is refused. The first machine of a fleet has no archive: put a checkout at the canonical path and pass --first-machine.
+# Tokens of the cache server are not written here (the profile files are world-readable): the runbook says how to give the account SEMIO_REMOTE_CACHE_TOKEN.
+# #endregion 🔖️Header
+set -euo pipefail
+
+MODULES="🧰️framework/🛍️products/🦑️repo/🔨️modules"
+NATIVE_BOOTSTRAP="$MODULES/🔩️native/🥾️bootstrap/🐚️.sh"
+LAUNCHER_INSTALL="$MODULES/🚀️launcher/📥️install/🐚️.sh"
+EXIT_NATIVE_PENDING=3
+EXIT_CONSENT=4
+EXIT_FLEET_CODE_OLD=5
+TOPOLOGY_RELATIVE="$MODULES/🤝️shared-worktree/🗺️topology"
+
+say() { printf '[fleet-provision] %s\n' "$*"; }
+fail() { printf '[fleet-provision] ERROR: %s\n' "$*" >&2; exit 1; }
+usage() { printf 'usage: provision <group-id> <origin-id> [--user <account>] [--archive <directory>] [--first-machine | --server] [--plan] [--force] [--relocate-from <worktree>]\n' >&2; exit 2; }
+
+ORIGINAL=("$@")
+[ $# -ge 2 ] || usage
+GROUP_ID=$1; ORIGIN_ID=$2; shift 2
+ARCHIVE=""; FIRST_MACHINE=0; SERVER=0; PLAN=0; FORCE_ADOPT=0; FORCE_FLAG=""; OLD_WORKTREE=""; WORKER_USER=${SUDO_USER:-}
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --archive) [ $# -ge 2 ] || usage; ARCHIVE=$2; shift 2 ;;
+    --user) [ $# -ge 2 ] || usage; WORKER_USER=$2; shift 2 ;;
+    --first-machine) FIRST_MACHINE=1; shift ;;
+    --server) SERVER=1; shift ;;
+    --plan) PLAN=1; shift ;;
+    --force) FORCE_ADOPT=1; FORCE_FLAG=--force; shift ;;
+    --relocate-from) [ $# -ge 2 ] || usage; OLD_WORKTREE=$2; shift 2 ;;
+    *) usage ;;
+  esac
+done
+[[ $GROUP_ID =~ ^[a-z][a-z0-9]{0,15}$ ]] || fail "group id must match ^[a-z][a-z0-9]{0,15}\$: $GROUP_ID"
+[[ $ORIGIN_ID =~ ^[a-z0-9][a-z0-9-]{0,39}$ ]] || fail "origin id must match ^[a-z0-9][a-z0-9-]{0,39}\$: $ORIGIN_ID"
+
+if [ "$(id -u)" -ne 0 ]; then
+  say "not root: re-running through sudo"
+  exec sudo -E env "PATH=$PATH" bash "${BASH_SOURCE[0]}" "${ORIGINAL[@]}"
+fi
+[ -n "$WORKER_USER" ] || WORKER_USER=$(logname 2>/dev/null || true)
+[ -n "$WORKER_USER" ] || fail "pass --user <account>: no sudo caller found"
+id -u "$WORKER_USER" >/dev/null 2>&1 || fail "unknown account: $WORKER_USER"
+
+case "$(uname -s)" in
+  Darwin) PLATFORM=macos; WORKER_HOME=$(dscl . -read "/Users/$WORKER_USER" NFSHomeDirectory | awk '{print $2}'); UTF8_LOCALE=en_US.UTF-8 ;;
+  Linux) PLATFORM=linux; WORKER_HOME=$(getent passwd "$WORKER_USER" | cut -d: -f6); UTF8_LOCALE=C.UTF-8 ;;
+  *) fail "macOS or Linux required (Windows: use the PowerShell script next to this one)" ;;
+esac
+{ [ -n "$WORKER_HOME" ] && [ -d "$WORKER_HOME" ]; } || fail "the account $WORKER_USER has no home directory"
+
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+TOPOLOGY_JSON=""
+for candidate in "$SCRIPT_DIR"/../🔣*.json; do TOPOLOGY_JSON=$candidate; done
+[ -f "$TOPOLOGY_JSON" ] || fail "the topology file was not found next to this script: $SCRIPT_DIR/.."
+
+# #region 🔎️Json
+# Facts are read from JSON by walking it, never by text patterns: key order, whitespace, nesting, unknown keys and braces or quotes inside strings cannot change an answer. A new machine has only POSIX tools, so this is awk (LC_ALL=C: bytes, so emoji paths pass through and the walk stays linear); no jq, no Python. `json_flat` prints one `path<TAB>value` line per scalar (`groups[0].nfs.host`, `worktree.macos`; `\"`, `\\`, `\/` and `\u0020`..`\u007e` are decoded, other escapes stay as written), refuses malformed JSON and duplicate keys (exit 1, reason on stderr). / Fakten werden aus JSON gelesen, indem man es durchläuft, nie mit Textmustern.
+JSON_FLAT_AWK='
+function fail(message) { printf "json: %s at byte %d\n", message, i > "/dev/stderr"; failed = 1; exit 1 }
+function child(   found) {
+  if (depth == 0) return ""
+  if (kind[depth] == "o") return (base[depth] == "" ? key[depth] : base[depth] "." key[depth])
+  return base[depth] "[" position[depth] "]"
+}
+function emit(value,   found) {
+  found = child()
+  if (found in seen) fail("duplicate key " found)
+  seen[found] = 1
+  printf "%s\t%s\n", found, value
+  if (depth == 0) done = 1
+}
+function wantsKey() { return depth > 0 && kind[depth] == "o" && expectKey[depth] }
+{ text = text $0 "\n" }
+END {
+  size = length(text); i = 1; depth = 0; done = 0
+  if (substr(text, 1, 3) == "\357\273\277") i = 4
+  while (i <= size) {
+    c = substr(text, i, 1)
+    if (c == " " || c == "\t" || c == "\n" || c == "\r" || c == ":") { i++; continue }
+    if (done) fail("text after the document")
+    if (c == ",") {
+      if (depth == 0) fail("comma outside a container")
+      if (kind[depth] == "a") position[depth]++; else expectKey[depth] = 1
+      i++; continue
+    }
+    if (c == "{" || c == "[") {
+      if (wantsKey()) fail("key expected")
+      found = child(); depth++; kind[depth] = (c == "{" ? "o" : "a"); base[depth] = found
+      position[depth] = 0; key[depth] = ""; expectKey[depth] = (c == "{"); i++; continue
+    }
+    if (c == "}" || c == "]") {
+      if (depth == 0 || (c == "}") != (kind[depth] == "o")) fail("unbalanced " c)
+      depth--; if (depth == 0) done = 1
+      i++; continue
+    }
+    if (c == "\"") {
+      value = ""; closed = 0; i++
+      while (i <= size) {
+        c = substr(text, i, 1)
+        if (c == "\"") { closed = 1; i++; break }
+        if (c == "\\") {
+          e = substr(text, i + 1, 1)
+          if (e == "\"" || e == "\\" || e == "/") { value = value e; i += 2; continue }
+          if (e == "u" && substr(text, i + 2, 2) == "00") {
+            high = index("0123456789abcdef", tolower(substr(text, i + 4, 1))); low = index("0123456789abcdef", tolower(substr(text, i + 5, 1)))
+            code = (high - 1) * 16 + (low - 1)
+            if (high && low && code >= 32 && code < 127) { value = value sprintf("%c", code); i += 6; continue }
+          }
+          value = value c e
+          i += 2; continue
+        }
+        value = value c; i++
+      }
+      if (!closed) fail("unterminated string")
+      if (wantsKey()) { key[depth] = value; expectKey[depth] = 0 } else emit(value)
+      continue
+    }
+    value = ""
+    while (i <= size) {
+      c = substr(text, i, 1)
+      if (c == "," || c == "}" || c == "]" || c == " " || c == "\t" || c == "\n" || c == "\r" || c == ":" || c == "\"") break
+      value = value c; i++
+    }
+    if (value == "") fail("unexpected character " c)
+    if (wantsKey()) fail("key expected")
+    emit(value)
+  }
+  if (!done || depth != 0) fail("incomplete document")
+}
+'
+json_flat() { LC_ALL=C awk "$JSON_FLAT_AWK"; }
+json_fact() { printf '%s\n' "$1" | JSON_KEY=$2 LC_ALL=C awk 'BEGIN { key = ENVIRON["JSON_KEY"] } { at = index($0, "\t"); if (!found && substr($0, 1, at - 1) == key) { value = substr($0, at + 1); found = 1 } } END { if (found) print value }'; }
+json_group() { printf '%s\n' "$1" | JSON_KEY=$2 LC_ALL=C awk 'BEGIN { id = ENVIRON["JSON_KEY"] } { at = index($0, "\t"); name = substr($0, 1, at - 1); if (name ~ /^groups\[[0-9]+\]\.id$/ && substr($0, at + 1) == id) { count++; path = substr(name, 1, length(name) - 3) } } END { if (count == 1) print path }'; }
+json_seal_files() {
+  LC_ALL=C awk -v summary="$1" '
+  BEGIN { FS = "\t" }
+  $1 ~ /^files\[[0-9]+\]\.(path|bytes|sha256|executable)$/ {
+    number = $1; sub(/^files\[/, "", number); sub(/\].*$/, "", number); index_of = number + 0
+    field = $1; sub(/^files\[[0-9]+\]\./, "", field)
+    value = substr($0, index($0, "\t") + 1); listed[index_of] = 1; if (index_of > last) last = index_of
+    if (field == "path") path[index_of] = value; else if (field == "bytes") bytes[index_of] = value
+    else if (field == "sha256") hash[index_of] = value; else execute[index_of] = value
+  }
+  END {
+    found = 0; expected = 0
+    for (n = 0; n <= last; n++) if (n in listed) {
+      expected++
+      if (n in path && bytes[n] ~ /^[0-9]+$/ && hash[n] ~ /^[0-9a-f][0-9a-f]*$/ && length(hash[n]) == 64 && (execute[n] == "true" || execute[n] == "false")) {
+        found++; printf "%d\t%s\t%s\t%s\n", (execute[n] == "true"), bytes[n], hash[n], path[n]
+      }
+    }
+    printf "%d %d\n", expected, found > summary
+  }'
+}
+# #endregion 🔎️Json
+TOPOLOGY_FLAT=$(json_flat < "$TOPOLOGY_JSON") || fail "the topology file is not valid JSON, see the reason above: $TOPOLOGY_JSON / die Topologie-Datei ist kein gültiges JSON, siehe Grund oben: $TOPOLOGY_JSON"
+WORKTREE_TEMPLATE=$(json_fact "$TOPOLOGY_FLAT" "worktree.$PLATFORM")
+case "$WORKTREE_TEMPLATE" in
+  "~/"*) WORKTREE=${WORKER_HOME%/}/${WORKTREE_TEMPLATE#"~/"} ;;
+  ""|"~"*) fail "the topology has no usable worktree template for $PLATFORM: $WORKTREE_TEMPLATE" ;;
+  *) WORKTREE=$WORKTREE_TEMPLATE ;;
+esac
+GROUP_PATH=$(json_group "$TOPOLOGY_FLAT" "$GROUP_ID")
+NFS_HOST=$(json_fact "$TOPOLOGY_FLAT" "$GROUP_PATH.nfs.host")
+NFS_EXPORT=$(json_fact "$TOPOLOGY_FLAT" "$GROUP_PATH.nfs.export")
+if [ -n "${SEMIO_FLEET_GROUP:-}${SEMIO_FLEET_NFS_HOST:-}${SEMIO_FLEET_NETWORK:-}${SEMIO_FLEET_CACHE_ENDPOINT:-}" ]; then
+  { [ -n "${SEMIO_FLEET_GROUP:-}" ] && [ -n "${SEMIO_FLEET_NFS_HOST:-}" ] && [ -n "${SEMIO_FLEET_NETWORK:-}" ]; } || fail "SEMIO_FLEET_GROUP, SEMIO_FLEET_NFS_HOST and SEMIO_FLEET_NETWORK are set together"
+  if [ "$SEMIO_FLEET_GROUP" = "$GROUP_ID" ]; then NFS_HOST=$SEMIO_FLEET_NFS_HOST; fi
+fi
+NFS_SOURCE="$NFS_HOST:$NFS_EXPORT"
+{ [ -n "$WORKTREE" ] && [ "$NFS_SOURCE" != ":" ]; } || fail "the topology has no worktree for $PLATFORM or no group $GROUP_ID: $TOPOLOGY_JSON"
+SERVER_PLATFORM=$(json_fact "$TOPOLOGY_FLAT" "$GROUP_PATH.server.platform")
+SERVER_PROTOCOL=$(json_fact "$TOPOLOGY_FLAT" "$GROUP_PATH.server.protocol")
+{ [ -n "$SERVER_PLATFORM" ] && [ -n "$SERVER_PROTOCOL" ]; } || fail "the topology has no server for group $GROUP_ID: $TOPOLOGY_JSON"
+[ "$SERVER_PROTOCOL" != smb ] || fail "group $GROUP_ID shares its store over SMB, which only Windows workers mount: use the PowerShell script on a Windows machine"
+[ "$SERVER" = 0 ] || [ "$SERVER_PLATFORM" = "$PLATFORM" ] || fail "the topology puts the server of $GROUP_ID on $SERVER_PLATFORM, this machine is $PLATFORM: provision it without --server, or change the one topology file"
+JOINED=0
+MACHINE=$WORKTREE/.cache/f/machine.json
+if [ -f "$MACHINE" ]; then
+  MACHINE_FLAT=$(json_flat < "$MACHINE") || fail "$MACHINE is not valid JSON, see the reason above: remove the worktree state first / $MACHINE ist kein gültiges JSON"
+  MACHINE_ORIGIN=$(json_fact "$MACHINE_FLAT" originId); MACHINE_GROUP=$(json_fact "$MACHINE_FLAT" groupId)
+  { [ -n "$MACHINE_ORIGIN" ] && [ -n "$MACHINE_GROUP" ]; } || fail "$MACHINE has no originId and groupId: remove the worktree state first"
+  [ "$MACHINE_ORIGIN" = "$ORIGIN_ID" ] || fail "$MACHINE belongs to origin $MACHINE_ORIGIN, not $ORIGIN_ID: pass that origin, or remove the worktree state first"
+  [ "$MACHINE_GROUP" = "$GROUP_ID" ] || fail "$MACHINE belongs to group $MACHINE_GROUP, not $GROUP_ID: pass that group, or remove the worktree state first"
+  JOINED=1
+fi
+
+entry_directory() { if [ "$PLATFORM" = macos ]; then printf '%s' "${WORKER_HOME%/}/Library/Application Support/semio/fleet/entry"; else printf '%s' "${WORKER_HOME%/}/.local/share/semio/fleet/entry"; fi; }
+detect_installed_worktree() {
+  local file
+  file=$(entry_directory)/worktree
+  if [ -f "$file" ]; then head -n 1 "$file"; return 0; fi
+  if [ "$PLATFORM" = macos ]; then
+    for file in "$WORKER_HOME/Library/LaunchAgents/tech.semio.fleet.replica.plist" /Library/LaunchDaemons/tech.semio.fleet.replica.plist; do
+      [ -f "$file" ] || continue
+      sed -n 's/.*<key>WorkingDirectory<\/key><string>\([^<]*\)<\/string>.*/\1/p' "$file" | head -n 1 | sed -e 's/&lt;/</g' -e 's/&gt;/>/g' -e 's/&amp;/\&/g'
+      return 0
+    done
+  else
+    file=/etc/systemd/system/semio-fleet-replica@.service
+    [ ! -f "$file" ] || sed -n 's/^WorkingDirectory=//p' "$file" | head -n 1
+  fi
+}
+RELOCATE=0
+if [ -z "$OLD_WORKTREE" ] && [ "$JOINED" = 0 ]; then
+  INSTALLED=$(detect_installed_worktree || true)
+  [ -z "$INSTALLED" ] || OLD_WORKTREE=${INSTALLED%/"$MODULES/🤝️shared-worktree/🔁️replica"}
+fi
+if [ -n "$OLD_WORKTREE" ] && [ "$OLD_WORKTREE" != "$WORKTREE" ] && [ "$JOINED" = 0 ] && [ -f "$OLD_WORKTREE/.cache/f/machine.json" ]; then
+  OLD_FLAT=$(json_flat < "$OLD_WORKTREE/.cache/f/machine.json") || fail "$OLD_WORKTREE/.cache/f/machine.json is not valid JSON, see the reason above / ist kein gültiges JSON"
+  [ "$(json_fact "$OLD_FLAT" originId)" = "$ORIGIN_ID" ] || fail "$OLD_WORKTREE belongs to origin $(json_fact "$OLD_FLAT" originId), not $ORIGIN_ID: origin ids never change and are never reused, pass that origin"
+  [ "$(json_fact "$OLD_FLAT" groupId)" = "$GROUP_ID" ] || fail "$OLD_WORKTREE belongs to group $(json_fact "$OLD_FLAT" groupId), not $GROUP_ID: pass that group"
+  RELOCATE=1
+fi
+
+host_resolves() {
+  local answer
+  answer=$(dscacheutil -q host -a name "$1" 2>/dev/null || true)
+  printf '%s\n' "$answer" | grep -q '^ip_address:'
+}
+filter_unresolved_exports() (
+  source=$1
+  temporary=$(mktemp)
+  while IFS= read -r line || [ -n "$line" ]; do
+    case $line in
+      ""|\#*) printf '%s\n' "$line" >> "$temporary"; continue ;;
+    esac
+    noglob=0
+    case $- in *f*) noglob=1 ;; esac
+    set -f
+    set -- $line
+    [ "$noglob" = 1 ] || set +f
+    kept=$1
+    shift
+    network=0
+    hosts=0
+    while [ $# -gt 0 ]; do
+      token=$1
+      shift
+      case $token in
+        -network|-mask)
+          [ $# -gt 0 ] || fail "export option $token needs a value: $line"
+          next=$1
+          shift
+          kept="$kept $token $next"
+          [ "$token" != "-network" ] || network=1
+          ;;
+        -*) kept="$kept $token" ;;
+        *)
+          if host_resolves "$token"; then kept="$kept $token"; hosts=1
+          else say "WARNING: $token does not resolve, so it is left out of the export until that peer exists"; fi
+          ;;
+      esac
+    done
+    if [ "$network" = 1 ] || [ "$hosts" = 1 ]; then printf '%s\n' "$kept" >> "$temporary"
+    else say "WARNING: $line has no reachable client, so the export line was left out"; fi
+  done < "$source"
+  cat "$temporary" > "$source"
+  rm -f "$temporary"
+)
+CLEANUP_MOUNT=""; CLEANUP_DIRECTORY=""
+SKEW_MARK=/var/tmp/semio-fleet-code-old-$$
+cleanup() {
+  [ -z "$CLEANUP_MOUNT" ] || umount "$CLEANUP_MOUNT" 2>/dev/null || true
+  [ -z "$CLEANUP_MOUNT" ] || rmdir "$CLEANUP_MOUNT" 2>/dev/null || true
+  [ -z "$CLEANUP_DIRECTORY" ] || rm -rf "$CLEANUP_DIRECTORY"
+  if [ -f "$SKEW_MARK" ]; then rm -f "$SKEW_MARK"; exit "$EXIT_FLEET_CODE_OLD"; fi
+}
+trap cleanup EXIT
+
+LANGUAGE_CHOICE=${SEMIO_LANGUAGE:-en}
+fleet_address_env() {
+  [ -z "${SEMIO_FLEET_GROUP:-}" ] || printf 'SEMIO_FLEET_GROUP=%s\n' "$SEMIO_FLEET_GROUP"
+  [ -z "${SEMIO_FLEET_NFS_HOST:-}" ] || printf 'SEMIO_FLEET_NFS_HOST=%s\n' "$SEMIO_FLEET_NFS_HOST"
+  [ -z "${SEMIO_FLEET_NETWORK:-}" ] || printf 'SEMIO_FLEET_NETWORK=%s\n' "$SEMIO_FLEET_NETWORK"
+  [ -z "${SEMIO_FLEET_CACHE_ENDPOINT:-}" ] || printf 'SEMIO_FLEET_CACHE_ENDPOINT=%s\n' "$SEMIO_FLEET_CACHE_ENDPOINT"
+}
+run_as() {
+  if [ "$WORKER_USER" = root ]; then env "PATH=$WORKER_HOME/.local/bin:$PATH" "SEMIO_LANGUAGE=$LANGUAGE_CHOICE" "SEMIO_WORKSPACE_ROOT=$WORKTREE" ${SEMIO_FLEET_GROUP:+SEMIO_FLEET_GROUP=$SEMIO_FLEET_GROUP} ${SEMIO_FLEET_NFS_HOST:+SEMIO_FLEET_NFS_HOST=$SEMIO_FLEET_NFS_HOST} ${SEMIO_FLEET_NETWORK:+SEMIO_FLEET_NETWORK=$SEMIO_FLEET_NETWORK} ${SEMIO_FLEET_CACHE_ENDPOINT:+SEMIO_FLEET_CACHE_ENDPOINT=$SEMIO_FLEET_CACHE_ENDPOINT} "$@"; else sudo -u "$WORKER_USER" -H env "PATH=$WORKER_HOME/.local/bin:$PATH" "SEMIO_LANGUAGE=$LANGUAGE_CHOICE" "SEMIO_WORKSPACE_ROOT=$WORKTREE" ${SEMIO_FLEET_GROUP:+SEMIO_FLEET_GROUP=$SEMIO_FLEET_GROUP} ${SEMIO_FLEET_NFS_HOST:+SEMIO_FLEET_NFS_HOST=$SEMIO_FLEET_NFS_HOST} ${SEMIO_FLEET_NETWORK:+SEMIO_FLEET_NETWORK=$SEMIO_FLEET_NETWORK} ${SEMIO_FLEET_CACHE_ENDPOINT:+SEMIO_FLEET_CACHE_ENDPOINT=$SEMIO_FLEET_CACHE_ENDPOINT} "$@"; fi
+}
+skew_message() {
+  printf "[fleet-provision] ERROR: the checkout's fleet code is older than this script and the store offers no newer sealed code: %s / der Fleet-Code des Checkouts ist älter als dieses Skript und der Store bietet keinen neueren versiegelten Code: %s\n" "$WORKTREE" "$WORKTREE" >&2
+  printf '[fleet-provision] exit code %s: update the checkout to the current fleet revision, or run this script again once the group server has sealed the current code / Checkout auf die aktuelle Fleet-Revision bringen oder das Skript erneut starten, sobald der Gruppenserver den aktuellen Code versiegelt hat\n' "$EXIT_FLEET_CODE_OLD" >&2
+}
+skew_fail() { skew_message; exit "$EXIT_FLEET_CODE_OLD"; }
+skew_guard() {
+  local errors status=0
+  errors=$(mktemp)
+  { "$@" 2>&1 1>&3 3>&- | tee "$errors" >&2; } 3>&1 || status=$?
+  if [ "$status" != 0 ] && grep -Eq 'Unknown option|unknown option|Cannot find module|Cannot find package|Module not found|ERR_MODULE_NOT_FOUND|Could not resolve' "$errors"; then
+    rm -f "$errors"
+    skew_message
+    : > "$SKEW_MARK"
+    exit "$EXIT_FLEET_CODE_OLD"
+  fi
+  rm -f "$errors"
+  return "$status"
+}
+fleet() { (cd "$WORKTREE" && skew_guard run_as repo "$WORKTREE/$TOPOLOGY_RELATIVE/📜️script.ts" "$@"); }
+replica() { local operation=$1; shift; (cd "$WORKTREE" && skew_guard run_as repo "$FLEET_REPLICA_DIRECTORY/📜️script.ts" "$operation" "$@"); }
+sed_escape() { printf '%s' "$1" | sed -e 's/[\\&|]/\\&/g'; }
+fill() { sed -e "s|__WORKER_USER__|$(sed_escape "$WORKER_USER")|g" -e "s|__WORKER_HOME__|$(sed_escape "${WORKER_HOME%/}")|g"; }
+fill_plist() { sed -e "s|__WORKER_USER__|$(sed_escape "$(printf '%s' "$WORKER_USER" | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g')")|g" -e "s|__WORKER_HOME__|$(sed_escape "$(printf '%s' "${WORKER_HOME%/}" | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g')")|g"; }
+WORKER_UID=$(id -u "$WORKER_USER")
+server_part() { fleet server-plan --group "$GROUP_ID" --part "$1"; }
+sha256_of() { if command -v sha256sum >/dev/null 2>&1; then sha256sum "$1" | cut -d' ' -f1; else shasum -a 256 "$1" | cut -d' ' -f1; fi; }
+CHANGED=0; UNITS_CHANGED=0
+install_text() {
+  local path=$1 mode=$2 content=$3 tmp
+  tmp=$(mktemp)
+  printf '%s\n' "$content" > "$tmp"
+  if [ -f "$path" ] && cmp -s "$tmp" "$path"; then
+    say "unchanged $path"; CHANGED=0
+  else
+    mkdir -p "$(dirname "$path")"; install -m "$mode" "$tmp" "$path"; say "wrote $path"; CHANGED=1; UNITS_CHANGED=1
+  fi
+  rm -f "$tmp"
+}
+write_block() {
+  local file=$1 content=$2 begin="# >>> semio fleet" end="# <<< semio fleet" tmp
+  tmp=$(mktemp); [ -f "$file" ] || : > "$file"
+  awk -v b="$begin" -v e="$end" '$0==b{skip=1;next} $0==e{skip=0;next} !skip' "$file" > "$tmp"
+  printf '%s\n%s\n%s\n' "$begin" "$content" "$end" >> "$tmp"
+  if cmp -s "$tmp" "$file"; then say "unchanged $file"; CHANGED=0; else cat "$tmp" > "$file"; say "updated $file"; CHANGED=1; fi
+  rm -f "$tmp"
+}
+ensure_daemon_logs() {
+  local plist=$1 path
+  [ -f "$plist" ] || return 0
+  while IFS= read -r path; do
+    [ -n "$path" ] || continue
+    mkdir -p "$(dirname "$path")"
+    if [ -e "$path" ]; then chown "$WORKER_USER" "$path"; chmod 644 "$path"
+    else install -m 644 -o "$WORKER_USER" /dev/null "$path"; created=1; say "service log $path"; fi
+  done <<EOF
+$(sed -nE 's/.*<key>Standard(Out|Error)Path<\/key><string>([^<]*)<\/string>.*/\2/p' "$plist" | sort -u)
+EOF
+}
+install_daemon() {
+  local target=$1 label
+  label=$(basename "$target" .plist)
+  install_text "$target" 644 "$2"
+  chown root:wheel "$target"
+  if [ "$CHANGED" = 1 ]; then launchctl bootout "system/$label" 2>/dev/null || true; fi
+}
+agent_domain_present() { launchctl print "gui/$WORKER_UID" >/dev/null 2>&1; }
+retire_system_daemon() {
+  local label=$1 plist=/Library/LaunchDaemons/$1.plist
+  [ -f "$plist" ] || return 0
+  launchctl bootout "system/$label" 2>/dev/null || true
+  rm -f "$plist"
+  say "removed the system daemon $label: the macOS services that run repo are LaunchAgents of $WORKER_USER, because only a session can ask for the consent to read the worktree folder"
+}
+install_agent() {
+  local target=$1 label
+  label=$(basename "$target" .plist)
+  retire_system_daemon "$label"
+  run_as mkdir -p "$(dirname "$target")"
+  install_text "$target" 644 "$2"
+  chown "$WORKER_USER" "$target"
+  if [ "$CHANGED" = 1 ] && agent_domain_present; then launchctl bootout "gui/$WORKER_UID/$label" 2>/dev/null || true; fi
+}
+load_agent() {
+  local label created=0
+  label=$(basename "$1" .plist)
+  ensure_daemon_logs "$1"
+  if ! agent_domain_present; then say "WARNING: $WORKER_USER has no graphical login session, so $label starts at the next login (log in at the screen, then accept the prompt that asks for the worktree folder)"; return 0; fi
+  if launchctl print "gui/$WORKER_UID/$label" >/dev/null 2>&1; then say "already loaded $label"; [ "$created" = 0 ] || launchctl kickstart -k "gui/$WORKER_UID/$label"
+  else launchctl bootstrap "gui/$WORKER_UID" "$1"; say "loaded $label"; fi
+}
+stop_services() {
+  local label
+  if [ "$PLATFORM" = macos ]; then
+    for label in replica compact relay cache; do
+      launchctl bootout "gui/$WORKER_UID/tech.semio.fleet.$label" 2>/dev/null || true
+      launchctl bootout "system/tech.semio.fleet.$label" 2>/dev/null || true
+    done
+  else
+    systemctl stop "semio-fleet-replica@$WORKER_USER.service" "semio-fleet-compact@$WORKER_USER.timer" "semio-fleet-compact@$WORKER_USER.service" semio-fleet-relay.service semio-fleet-cache.service 2>/dev/null || true
+  fi
+}
+load_daemon() {
+  local label created=0
+  label=$(basename "$1" .plist)
+  ensure_daemon_logs "$1"
+  if launchctl print "system/$label" >/dev/null 2>&1; then say "already loaded $label"; [ "$created" = 0 ] || launchctl kickstart -k "system/$label"
+  else launchctl bootstrap system "$1"; say "loaded $label"; fi
+}
+install_nfs_server() {
+  command -v exportfs >/dev/null 2>&1 && return 0
+  say "installing the NFS server"
+  if command -v apt-get >/dev/null 2>&1; then apt-get install -y nfs-kernel-server
+  elif command -v dnf >/dev/null 2>&1; then dnf install -y nfs-utils
+  elif command -v zypper >/dev/null 2>&1; then zypper --non-interactive install nfs-kernel-server
+  elif command -v pacman >/dev/null 2>&1; then pacman -S --noconfirm nfs-utils
+  else fail "install an NFS server (exportfs) first"; fi
+}
+install_nfs_client() {
+  command -v mount.nfs >/dev/null 2>&1 && return 0
+  say "installing the NFS client"
+  if command -v apt-get >/dev/null 2>&1; then apt-get install -y nfs-common
+  elif command -v dnf >/dev/null 2>&1; then dnf install -y nfs-utils
+  elif command -v zypper >/dev/null 2>&1; then zypper --non-interactive install nfs-client
+  elif command -v pacman >/dev/null 2>&1; then pacman -S --noconfirm nfs-utils
+  else fail "install an NFS client (mount.nfs) first"; fi
+}
+fetch_archive() {
+  local source=$1 target=$2 attempt expected actual name stem manifest
+  for attempt in 1 2 3 4 5; do
+    [ -f "$source/manifest.json" ] || fail "no bootstrap archive in $source: run bootstrap-archive on the group server (its relay refreshes it on a schedule) or pass --archive <directory>"
+    manifest=$(json_flat < "$source/manifest.json") || fail "unreadable $source/manifest.json"
+    name=$(json_fact "$manifest" archive)
+    case $name in worktree-*.tar) stem=${name#worktree-}; stem=${stem%.tar} ;; *) stem="" ;; esac
+    case $stem in *[!0-9a-f]*) stem="" ;; esac
+    [ "${#stem}" = 16 ] || name=""
+    { [ -n "$name" ] && [ -f "$source/$name" ]; } || fail "the bootstrap manifest in $source names no archive that exists: run bootstrap-archive on the group server (its relay refreshes it on a schedule) or pass --archive <directory>"
+    expected=$(json_fact "$manifest" sha256)
+    EXPECTED_FILES=$(json_fact "$manifest" files)
+    case $expected in *[!0-9a-f]*) expected="" ;; esac
+    case $EXPECTED_FILES in *[!0-9]*) EXPECTED_FILES="" ;; esac
+    { [ "${#expected}" = 64 ] && [ -n "$EXPECTED_FILES" ]; } || fail "unreadable $source/manifest.json"
+    cp "$source/$name" "$target"
+    actual=$(sha256_of "$target")
+    if [ "$actual" = "$expected" ]; then say "archive verified: sha256 $expected, $EXPECTED_FILES files"; return 0; fi
+    say "the archive differs from manifest.json (refreshed while it was copied?), attempt $attempt of 5"; sleep 20
+  done
+  fail "the archive in $source never matched its manifest.json"
+}
+
+# #region 🧬️Overlay
+mount_store_readonly() {
+  local target=$1
+  if [ "$PLATFORM" = linux ] && [ "$SERVER_PLATFORM" = linux ]; then mount -t nfs4 -o ro,vers=4.2 "$NFS_SOURCE" "$target"
+  elif [ "$PLATFORM" = linux ]; then mount -t nfs -o ro,vers=3,nolock "$NFS_SOURCE" "$target"
+  elif [ "$SERVER_PLATFORM" = linux ]; then mount_nfs -o ro,vers=4 "$NFS_SOURCE" "$target"
+  else mount_nfs -o ro,vers=3,nolocks "$NFS_SOURCE" "$target"; fi
+}
+overlay_safe_path() { case "$1" in ""|/*|*'\'*|*//*|.|..|./*|../*|*/.|*/..|*/./*|*/../*) return 1 ;; esac; return 0; }
+overlay_problem() { OVERLAY_PROBLEM=$1; return 1; }
+overlay_open_store() {
+  OVERLAY_V1=""
+  if [ -n "$ARCHIVE" ] && [ -d "$ARCHIVE/code" ]; then OVERLAY_V1=$(cd "$ARCHIVE/.." && pwd); return 0; fi
+  if [ -z "$CLEANUP_MOUNT" ]; then
+    [ "$PLATFORM" = macos ] || install_nfs_client
+    CLEANUP_MOUNT=$(mktemp -d /var/tmp/semio-store.XXXXXX)
+    mount_store_readonly "$CLEANUP_MOUNT" || { rmdir "$CLEANUP_MOUNT" 2>/dev/null || true; CLEANUP_MOUNT=""; return 1; }
+  fi
+  OVERLAY_V1=$CLEANUP_MOUNT/v1
+}
+overlay_digest() {
+  local v1=$1 attested="" seal name created best="" newest=-1
+  if [ -f "$v1/origins/$GROUP_ID-server/attest.json" ]; then attested=$(json_fact "$(json_flat < "$v1/origins/$GROUP_ID-server/attest.json" 2>/dev/null || true)" code); fi
+  case $attested in *[!0-9a-f]*) attested="" ;; esac
+  [ "${#attested}" = 64 ] || attested=""
+  if [ -n "$attested" ] && [ -f "$v1/bootstrap/code/$attested/sealed.json" ]; then printf '%s' "$attested"; return 0; fi
+  for seal in "$v1"/bootstrap/code/*/sealed.json; do
+    [ -f "$seal" ] || continue
+    name=$(basename "$(dirname "$seal")")
+    [ "${#name}" = 64 ] || continue
+    case $name in *[!0-9a-f]*) continue ;; esac
+    created=$(json_fact "$(json_flat < "$seal" 2>/dev/null || true)" createdMs)
+    case $created in ""|*[!0-9]*) continue ;; esac
+    if [ "$created" -gt "$newest" ]; then newest=$created; best=$name; fi
+  done
+  printf '%s' "$best"
+}
+overlay_stage() {
+  local code=$1/bootstrap/code/$2 stage=$3 path bytes hash bit expected found
+  OVERLAY_PROBLEM=""
+  json_flat < "$code/sealed.json" > "$stage/seal" 2> "$stage/seal.error" || { overlay_problem "the seal is not valid JSON ($(head -n 1 "$stage/seal.error")) / das Siegel ist kein gültiges JSON"; return 1; }
+  [ "$(json_fact "$(cat "$stage/seal")" version)" = 1 ] || { overlay_problem "the seal is not version 1 / das Siegel ist nicht Version 1"; return 1; }
+  [ "$(json_fact "$(cat "$stage/seal")" digest)" = "$2" ] || { overlay_problem "the seal names another digest than its folder / das Siegel nennt einen anderen Digest als sein Ordner"; return 1; }
+  json_seal_files "$stage/summary" < "$stage/seal" > "$stage/entries"
+  read -r expected found < "$stage/summary"
+  { [ "$found" = "$expected" ] && [ "$found" -gt 0 ]; } || { overlay_problem "the seal lists $expected files but $found readable ones / das Siegel nennt $expected Dateien, aber $found lesbare"; return 1; }
+  : > "$stage/list"
+  while IFS=$'\t' read -r bit bytes hash path; do
+    overlay_safe_path "$path" || { overlay_problem "unsafe path in the seal: $path / unsicherer Pfad im Siegel: $path"; return 1; }
+    mkdir -p "$(dirname "$stage/files/$path")"
+    cp "$code/files/$path" "$stage/files/$path" 2>/dev/null || { overlay_problem "missing $path / fehlt $path"; return 1; }
+    { [ "$(wc -c < "$stage/files/$path" | tr -d ' ')" = "$bytes" ] && [ "$(sha256_of "$stage/files/$path")" = "$hash" ]; } || { overlay_problem "changed $path / geändert $path"; return 1; }
+    printf '%s %s\n' "$bit" "$path" >> "$stage/list"
+  done < "$stage/entries"
+}
+overlay_apply_script() {
+  cat <<'APPLY'
+stage=$1; worktree=$2; keep=$3
+replaced=0; added=0; identical=0
+bit_of() { if [ "$1" = 1 ]; then printf 755; else printf 644; fi; }
+while IFS= read -r line; do
+  bit=${line%% *}; path=${line#* }
+  source=$stage/files/$path
+  target=$worktree/$path
+  if [ -f "$target" ] && [ ! -L "$target" ] && cmp -s "$source" "$target"; then
+    if { [ "$bit" = 1 ] && [ ! -x "$target" ]; } || { [ "$bit" != 1 ] && [ -x "$target" ]; }; then chmod "$(bit_of "$bit")" "$target" || exit 1; fi
+    identical=$((identical + 1)); continue
+  fi
+  mkdir -p "$(dirname "$target")" || exit 1
+  if [ -e "$target" ] || [ -L "$target" ]; then
+    mkdir -p "$(dirname "$keep/$path")" || exit 1
+    cp -pP "$target" "$keep/$path" || exit 1
+    replaced=$((replaced + 1))
+  else
+    added=$((added + 1))
+  fi
+  temporary=$target.provision-code.$$
+  cp "$source" "$temporary" || exit 1
+  chmod "$(bit_of "$bit")" "$temporary" || { rm -f "$temporary"; exit 1; }
+  mv -f "$temporary" "$target" || { rm -f "$temporary"; exit 1; }
+done < "$stage/list"
+printf '%s %s %s\n' "$replaced" "$added" "$identical"
+APPLY
+}
+overlay_code() {
+  local v1 digest stage keep counts replaced added identical
+  if [ "$JOINED" = 1 ] || [ "$SERVER" = 1 ] || [ "$FIRST_MACHINE" = 1 ]; then
+    say "fleet code: not overlaid, the replica of this machine keeps it current (joined machine, group server or first machine) / Fleet-Code: nicht überlagert, das Replikat dieser Maschine hält ihn aktuell (beigetretene Maschine, Gruppenserver oder erste Maschine)"
+    return 0
+  fi
+  say "step 2b: fleet code of the checkout brought to the sealed code of the fleet$([ "$PLAN" = 0 ] || printf ' (also in --plan: the plan cannot run on older code)') / Fleet-Code des Checkouts auf den versiegelten Code der Flotte gebracht$([ "$PLAN" = 0 ] || printf ' (auch mit --plan: der Plan läuft nicht auf älterem Code)')"
+  if ! overlay_open_store; then say "WARNING: the store could not be read, the fleet code of the checkout stays as it is / Der Store ließ sich nicht lesen, der Fleet-Code des Checkouts bleibt unverändert"; return 0; fi
+  digest=$(overlay_digest "$OVERLAY_V1")
+  if [ -z "$digest" ]; then say "WARNING: the store holds no sealed code, the fleet code of the checkout stays as it is / Der Store enthält keinen versiegelten Code, der Fleet-Code des Checkouts bleibt unverändert"; return 0; fi
+  stage=$(mktemp -d /var/tmp/semio-overlay.XXXXXX)
+  chmod 755 "$stage"
+  if ! overlay_stage "$OVERLAY_V1" "$digest" "$stage"; then
+    rm -rf "$stage"
+    say "WARNING: the sealed code $digest is not intact ($OVERLAY_PROBLEM), the fleet code of the checkout stays as it is / Der versiegelte Code $digest ist nicht intakt, der Fleet-Code des Checkouts bleibt unverändert"
+    return 0
+  fi
+  overlay_apply_script > "$stage/apply.sh"
+  chmod -R a+rX "$stage"
+  keep=$WORKTREE/.cache/f/lost/provision-code-$(date +%Y%m%d-%H%M%S)
+  if ! counts=$(run_as sh "$stage/apply.sh" "$stage" "$WORKTREE" "$keep"); then
+    rm -rf "$stage"
+    fail "the sealed code $digest could not be copied into $WORKTREE (files kept so far: $keep) / der versiegelte Code $digest ließ sich nicht nach $WORKTREE kopieren"
+  fi
+  rm -rf "$stage"
+  read -r replaced added identical <<< "$counts"
+  say "fleet code $digest: replaced $replaced, added $added, identical $identical / Fleet-Code $digest: ersetzt $replaced, hinzugefügt $added, identisch $identical"
+  if [ "$replaced" != 0 ]; then say "the replaced files are kept in $keep / die ersetzten Dateien liegen in $keep"; fi
+}
+# #endregion 🧬️Overlay
+
+BOOTSTRAP_MARKER=$WORKTREE/.cache/f/native-bootstrap.done
+BOOTSTRAP_LOG=$WORKTREE/.cache/f/native-bootstrap.log
+LAUNCHER_BIN=$WORKER_HOME/.local/share/semio/launcher/bin
+TOOLCHAIN_PROBLEM=""
+bootstrap_needed() { [ ! -f "$BOOTSTRAP_MARKER" ] || [ ! -x "$WORKER_HOME/.local/bin/repo" ]; }
+toolchain_packages() {
+  case "$1" in
+    apt-get) printf 'apt-get install -y build-essential pkg-config curl git unzip' ;;
+    dnf) printf 'dnf install -y gcc gcc-c++ make pkgconf-pkg-config curl git unzip' ;;
+    zypper) printf 'zypper install -y gcc gcc-c++ make pkg-config curl git unzip' ;;
+    pacman) printf 'pacman -S --noconfirm base-devel pkgconf curl git unzip' ;;
+    *) printf 'the C/C++ toolchain (cc, c++, make), pkg-config, curl, git and unzip of your distribution' ;;
+  esac
+}
+check_toolchain() {
+  local tool missing="" manager=""
+  if [ "$PLATFORM" = macos ]; then
+    for tool in cc c++ make git curl; do command -v "$tool" >/dev/null 2>&1 || missing="$missing $tool"; done
+    xcode-select -p >/dev/null 2>&1 || missing="$missing xcode-command-line-tools"
+    [ -z "$missing" ] || { TOOLCHAIN_PROBLEM="missing build tools:$missing: install the Xcode Command Line Tools with 'xcode-select --install' (cc, c++, make, git, curl), then run again"; return 1; }
+    command -v pkg-config >/dev/null 2>&1 || say "WARNING: pkg-config is missing: the bootstrap installs it with Homebrew (brew install pkg-config cairo pango), install Homebrew first if the machine has none"
+    return 0
+  fi
+  for tool in cc c++ make pkg-config curl git unzip; do command -v "$tool" >/dev/null 2>&1 || missing="$missing $tool"; done
+  [ -n "$missing" ] || return 0
+  for tool in apt-get dnf zypper pacman; do if command -v "$tool" >/dev/null 2>&1; then manager=$tool; break; fi; done
+  if [ "$WORKER_USER" = root ] || run_as sudo -n true >/dev/null 2>&1; then
+    say "missing build tools:$missing: the native bootstrap installs them ($(toolchain_packages "$manager"))"
+  else
+    TOOLCHAIN_PROBLEM="$WORKER_USER has no passwordless sudo, so the bootstrap cannot install packages, and these tools are missing:$missing: install them as root first ($(toolchain_packages "$manager")), or give the account passwordless sudo for the run"
+    return 1
+  fi
+}
+native_consent() {
+  say "NATIVE BUILD WAITS FOR THE macOS CONSENT: $ORIGIN_ID is a member of group $GROUP_ID and syncs, but the native build ended with code $EXIT_CONSENT: macOS keeps repo from reading $WORKTREE"
+  say "click \"Allow\" on the dialog \"repo would like to access files in your Documents folder\" in the session of $WORKER_USER, or switch on Documents Folder for repo under System Settings > Privacy & Security > Files & Folders (or give repo Full Disk Access); macOS asks once per machine and gives the consent to the launcher $WORKER_HOME/.local/share/semio/launcher/bin/repo; then run this script again (preflight names the role that still lacks it)"
+  [ ! -f "$BOOTSTRAP_LOG" ] || { say "log: $BOOTSTRAP_LOG (last lines below)"; tail -n 15 "$BOOTSTRAP_LOG" | sed 's/^/[fleet-provision]   | /'; }
+  say "exit code $EXIT_CONSENT: fleet ready, the native build waits for the consent to read $WORKTREE"
+  exit "$EXIT_CONSENT"
+}
+native_pending() {
+  local command=$1 reason=$2
+  say "NATIVE BUILD PENDING: $ORIGIN_ID is a member of group $GROUP_ID and syncs, but its native build is not ready"
+  say "failing command: $command"
+  say "reason: $reason"
+  if [ -f "$BOOTSTRAP_LOG" ]; then
+    say "log: $BOOTSTRAP_LOG (last lines below)"
+    tail -n 15 "$BOOTSTRAP_LOG" | sed 's/^/[fleet-provision]   | /'
+  fi
+  say "the completion marker $BOOTSTRAP_MARKER was not written: run this script again to retry the native bootstrap once the cause is fixed (a fix for a broken build arrives through the shared worktree itself); preflight shows it as the warning native-build"
+  say "exit code $EXIT_NATIVE_PENDING: fleet ready, native build pending"
+  exit "$EXIT_NATIVE_PENDING"
+}
+# A cold graph build needs a 7 to 8 GB heap (README of the repo tool). Linux workers get swap up to this much memory in total, so a small machine becomes slow instead of having its graph worker killed for lack of memory; normally the graph comes from the remote cache of the group and never builds cold.
+COLD_GRAPH_MEMORY_MB=16384
+SWAP_FILE=/var/lib/semio-swap
+swap_shortfall_mb() { awk -v want="$COLD_GRAPH_MEMORY_MB" '/^MemTotal:/ {ram=$2/1024} /^SwapTotal:/ {swap=$2/1024} END {need=want-ram-swap; print (need > 0 ? int(need) + 1 : 0)}' "${1:-/proc/meminfo}"; }
+ensure_swap() {
+  local need
+  need=$(swap_shortfall_mb)
+  if [ "$need" = 0 ]; then say "memory: RAM and swap together cover ${COLD_GRAPH_MEMORY_MB} MB, the heap of a cold graph build"; return 0; fi
+  if [ ! -f "$SWAP_FILE" ]; then
+    { fallocate -l "${need}M" "$SWAP_FILE" 2>/dev/null || dd if=/dev/zero of="$SWAP_FILE" bs=1M count="$need" status=none; } || { say "WARNING: $SWAP_FILE of $need MB could not be created: a cold graph build may be killed for lack of memory"; rm -f "$SWAP_FILE"; return 0; }
+    chmod 600 "$SWAP_FILE"; mkswap "$SWAP_FILE" >/dev/null
+  fi
+  swapon "$SWAP_FILE" 2>/dev/null || { say "WARNING: swapon $SWAP_FILE failed (a container shares the swap of its host): a cold graph build may be killed for lack of memory"; return 0; }
+  grep -q "^$SWAP_FILE " /etc/fstab || printf '%s none swap sw 0 0\n' "$SWAP_FILE" >> /etc/fstab
+  say "swap: $SWAP_FILE of $(( $(stat -c %s "$SWAP_FILE") / 1048576 )) MB in use, RAM and swap together cover ${COLD_GRAPH_MEMORY_MB} MB"
+}
+# The build tools find the remote cache in the fleet facts of the group store; the native bootstrap runs through sudo without a login shell, so it gets the operator's write token of the account (when it has one) through a file that only the account can read.
+native_environment() {
+  local token="${SEMIO_REMOTE_CACHE_TOKEN:-}" file
+  for file in "$WORKER_HOME/.profile" "$WORKER_HOME/.zprofile"; do
+    [ -n "$token" ] || [ ! -f "$file" ] || token=$(sed -n "s/^export SEMIO_REMOTE_CACHE_TOKEN=//p" "$file" | tail -n 1 | tr -d "'\"")
+  done
+  [ -z "$token" ] || printf "SEMIO_REMOTE_CACHE_TOKEN='%s'\n" "$token"
+}
+native_bootstrap() {
+  local command="bash $WORKTREE/$NATIVE_BOOTSTRAP setup" status environment="$WORKTREE/.cache/f/native-environment"
+  if [ "$NEEDS_NATIVE" = 0 ]; then say "native bootstrap complete ($BOOTSTRAP_MARKER)"; return 0; fi
+  say "step 9: native bootstrap, the last step (the machine already syncs: a failure here leaves the fleet setup as it is)"
+  run_as rm -f "$BOOTSTRAP_MARKER"
+  check_toolchain || native_pending "the build tool check before $command" "$TOOLCHAIN_PROBLEM"
+  run_as mkdir -p "$(dirname "$BOOTSTRAP_LOG")"
+  # shellcheck disable=SC2016
+  native_environment | run_as sh -c 'umask 077; cat > "$1"' sh "$environment"
+  # shellcheck disable=SC2016
+  if run_as env "SEMIO_WORKSPACE_ROOT=$WORKTREE" sh -c 'set -a; . "$1"; set +a; exec bash "$2" setup' sh "$environment" "$WORKTREE/$NATIVE_BOOTSTRAP" 2>&1 | run_as tee "$BOOTSTRAP_LOG"; then status=0; else status=${PIPESTATUS[0]}; fi
+  run_as rm -f "$environment"
+  [ "$status" != "$EXIT_CONSENT" ] || native_consent
+  [ "$status" = 0 ] || native_pending "$command" "it exited with code $status"
+  [ -x "$WORKER_HOME/.local/bin/repo" ] || native_pending "$command" "it did not install $WORKER_HOME/.local/bin/repo"
+  date -u +%Y-%m-%dT%H:%M:%SZ | run_as tee "$BOOTSTRAP_MARKER" >/dev/null
+  say "recorded the completed bootstrap in $BOOTSTRAP_MARKER"
+}
+check_time_sync() {
+  if [ "$PLATFORM" = macos ]; then
+    case "$(systemsetup -getusingnetworktime 2>/dev/null || true)" in
+      *": On"*) say "network time is on" ;;
+      *) if systemsetup -setusingnetworktime on >/dev/null 2>&1; then say "switched network time on"; else say "WARNING: network time could not be read or switched on: turn on System Settings > General > Date & Time > Set time and date automatically"; fi ;;
+    esac
+    return 0
+  fi
+  if ! command -v timedatectl >/dev/null 2>&1; then say "WARNING: timedatectl is missing: install and enable chrony (apt-get install chrony, dnf install chrony, zypper install chrony, pacman -S chrony): a clock more than 60 s off holds back the events of other machines"; return 0; fi
+  if [ "$(timedatectl show -p NTPSynchronized --value 2>/dev/null)" != yes ]; then timedatectl set-ntp true >/dev/null 2>&1 || true; sleep 5; fi
+  if [ "$(timedatectl show -p NTPSynchronized --value 2>/dev/null)" = yes ]; then say "clock synchronized (NTPSynchronized=yes)"
+  else say "WARNING: the clock is not synchronized: install and enable chrony (apt-get install chrony, dnf install chrony, zypper install chrony, pacman -S chrony), a clock more than 60 s off holds back the events of other machines"; fi
+}
+
+say "group $GROUP_ID, origin $ORIGIN_ID, platform $PLATFORM, account $WORKER_USER"
+
+NEEDS_NATIVE=0
+if bootstrap_needed; then NEEDS_NATIVE=1; fi
+
+say "step 1: canonical worktree $WORKTREE"
+run_as mkdir -p "$WORKTREE"
+ADOPT=0; EXTRACT=0; SETTLE=0
+EXTRACT_MARKER=$WORKTREE/.cache/f/bootstrap-extract
+EXTRACT_STATE=""
+if [ "$JOINED" = 0 ] && [ -f "$EXTRACT_MARKER" ]; then EXTRACT_STATE=$(tr -d '\n\r' < "$EXTRACT_MARKER"); fi
+if [ "$EXTRACT_STATE" = complete ]; then
+  SETTLE=1; say "the worktree holds the tree that an earlier run of this script extracted: it is settled, not adopted, the archive is skipped"
+elif [ -n "$EXTRACT_STATE" ]; then
+  EXTRACT=1; say "an earlier run stopped while it extracted the bootstrap archive: the archive is extracted again over it"
+elif [ -f "$WORKTREE/$LAUNCHER_INSTALL" ]; then
+  if [ "$JOINED" = 0 ] && [ "$RELOCATE" = 0 ] && [ -n "$(ls -A "$WORKTREE" | grep -vx '\.cache')" ]; then ADOPT=1; say "the worktree already holds a repository: it is adopted into the fleet (nothing is refused, every difference is kept in .cache/f/lost and reported), the archive is skipped"
+  else say "the worktree already holds a checkout: the archive is skipped"; fi
+elif [ -n "$(ls -A "$WORKTREE" | grep -vx '\.git')" ]; then
+  fail "$WORKTREE holds files but no fleet module ($LAUNCHER_INSTALL is missing): update that repository to a revision that contains the fleet module, or move it away. The bootstrap archive is only for a machine without any checkout"
+elif [ "$FIRST_MACHINE" = 1 ]; then
+  fail "--first-machine needs a complete checkout at $WORKTREE: the first machine has no archive to extract"
+else
+  EXTRACT=1
+fi
+if [ "$EXTRACT" = 1 ] && [ "$PLAN" = 1 ]; then
+  if [ -n "$EXTRACT_STATE" ]; then say "plan: an earlier run stopped while it extracted the bootstrap archive: nothing was extracted now, a plain provisioning would extract it again, settle the tree and join"
+  else say "plan: the worktree is empty: nothing was extracted, a plain provisioning would extract the bootstrap archive, settle the tree and join"; fi
+  exit 0
+fi
+if [ "$EXTRACT" = 1 ]; then
+  say "step 2: bootstrap archive into the empty worktree"
+  [ "$PLATFORM" = macos ] || install_nfs_client
+  SOURCE=$ARCHIVE
+  [ -n "$SOURCE" ] || [ "$SERVER" = 0 ] || fail "a group server takes the archive of a peer group: pass --archive <peer mount>/v1/bootstrap"
+  if [ -z "$SOURCE" ]; then
+    CLEANUP_MOUNT=$(mktemp -d /var/tmp/semio-store.XXXXXX)
+    mount_store_readonly "$CLEANUP_MOUNT"
+    SOURCE=$CLEANUP_MOUNT/v1/bootstrap
+  fi
+  CLEANUP_DIRECTORY=$(mktemp -d /var/tmp/semio-bootstrap.XXXXXX)
+  chmod 755 "$CLEANUP_DIRECTORY"
+  fetch_archive "$SOURCE" "$CLEANUP_DIRECTORY/worktree.tar"
+  chmod 644 "$CLEANUP_DIRECTORY/worktree.tar"
+  say "extracting with tar into $WORKTREE"
+  run_as mkdir -p "$(dirname "$EXTRACT_MARKER")"
+  printf 'started\n' | run_as tee "$EXTRACT_MARKER" >/dev/null
+  run_as env "LC_ALL=$UTF8_LOCALE" tar -xf "$CLEANUP_DIRECTORY/worktree.tar" -C "$WORKTREE"
+  FOUND=$(tar -tf "$CLEANUP_DIRECTORY/worktree.tar" | wc -l | tr -d ' ')
+  [ "$FOUND" = "$EXPECTED_FILES" ] || fail "the archive lists $FOUND entries, manifest.json says $EXPECTED_FILES: refresh the archive on the group server and run again"
+  printf 'complete\n' | run_as tee "$EXTRACT_MARKER" >/dev/null
+  SETTLE=1; NEEDS_NATIVE=1
+fi
+
+release_foreign_namespace() {
+  local link=$1 root=$2 target resolved
+  [ -L "$link" ] || return 0
+  root=$(cd "$root" && pwd -P)
+  target=$(readlink "$link")
+  case "$target" in
+    /*) ;;
+    *) target=$root/$target ;;
+  esac
+  if [ -d "$target" ]; then resolved=$(cd "$target" && pwd -P); else resolved=$target; fi
+  case "$resolved/" in
+    "$root/"*) return 0 ;;
+  esac
+  rm "$link"
+  say "removed $link: it pointed outside $root, so the launcher publishes the workspace links itself"
+}
+
+release_foreign_namespace "$WORKTREE/node_modules" "$WORKTREE"
+overlay_code
+say "step 3: standalone repo launcher (built from the checkout; the native bootstrap comes last)"
+if [ -x "$WORKER_HOME/.local/bin/repo" ]; then
+  say "repo launcher present for $WORKER_USER"
+else
+  run_as env "XDG_DATA_HOME=$WORKER_HOME/.local/share" bash "$WORKTREE/$LAUNCHER_INSTALL" "$LAUNCHER_BIN" || fail "the repo launcher could not be built by $WORKTREE/$LAUNCHER_INSTALL: the machine cannot join without it, fix the cause and run again"
+  [ -x "$LAUNCHER_BIN/repo" ] || fail "the launcher installer did not install $LAUNCHER_BIN/repo"
+  run_as mkdir -p "$WORKER_HOME/.local/bin"
+  run_as ln -sfn "$LAUNCHER_BIN/repo" "$WORKER_HOME/.local/bin/repo"
+  say "installed the launcher $LAUNCHER_BIN/repo and linked it as $WORKER_HOME/.local/bin/repo"
+fi
+mkdir -p /usr/local/bin
+if [ "$PLATFORM" = macos ] && [ -x "$LAUNCHER_BIN/repo" ]; then
+  ln -sfn "$LAUNCHER_BIN/repo" /usr/local/bin/repo
+  say "linked /usr/local/bin/repo to the launcher $LAUNCHER_BIN/repo for the service definitions: macOS gives the file access consent to that one identity, while $WORKER_HOME/.local/bin/repo is replaced by the native command whenever it is rebuilt"
+else
+  ln -sfn "$WORKER_HOME/.local/bin/repo" /usr/local/bin/repo
+  say "linked /usr/local/bin/repo for the service definitions"
+fi
+
+FACTS=$(fleet facts --group "$GROUP_ID" --platform "$PLATFORM" --shell sh --home "$WORKER_HOME" | grep '^FLEET_')
+eval "$FACTS"
+{ [ "$FLEET_WORKTREE" = "$WORKTREE" ] && [ "$FLEET_NFS_SOURCE" = "$NFS_SOURCE" ]; } || fail "the topology file next to this script differs from the one in the worktree ($FLEET_WORKTREE, $FLEET_NFS_SOURCE): copy the topology directory from the worktree and run again"
+{ [ "$FLEET_SERVER_PLATFORM" = "$SERVER_PLATFORM" ] && [ "$FLEET_SERVER_PROTOCOL" = "$SERVER_PROTOCOL" ]; } || fail "the topology file next to this script differs from the one in the worktree (server $FLEET_SERVER_PLATFORM/$FLEET_SERVER_PROTOCOL): copy the topology directory from the worktree and run again"
+STORE_ROOT=$FLEET_STORE_MOUNT
+if [ "$SERVER" = 1 ] && [ "$PLATFORM" != linux ]; then STORE_ROOT=$FLEET_SERVER_DIRECTORY; fi
+say "canonical worktree $FLEET_WORKTREE, store $FLEET_NFS_SOURCE at $FLEET_STORE_MOUNT, cache $FLEET_CACHE_ENDPOINT"
+
+say "step 4: system limits, store and NFS client"
+if [ "$PLATFORM" = linux ]; then
+  command -v systemctl >/dev/null 2>&1 || fail "systemd is required"
+  SYSCTL_TARGET=$(fleet mount-plan --group "$GROUP_ID" --platform linux --part sysctl-path)
+  install_text "$SYSCTL_TARGET" 644 "$(fleet mount-plan --group "$GROUP_ID" --platform linux --part sysctl)"
+  sysctl -p "$SYSCTL_TARGET" >/dev/null || fail "sysctl could not apply $SYSCTL_TARGET (inside a container the host must raise these limits)"
+  while IFS='=' read -r key wanted; do
+    [ -n "$key" ] || continue
+    [ "$(sysctl -n "$key")" -ge "$wanted" ] || fail "$key is $(sysctl -n "$key"), below the $wanted that the tree of ~122k directories needs"
+    say "$key = $(sysctl -n "$key")"
+  done < "$SYSCTL_TARGET"
+  ensure_swap
+  install_nfs_client
+  mkdir -p "$FLEET_STORE_MOUNT"
+  if [ "$SERVER" = 1 ]; then
+    install_nfs_server
+    install -d -o "$WORKER_USER" "$FLEET_SERVER_DIRECTORY" "$FLEET_SERVER_CACHE_DIRECTORY"
+    install -d -m 0750 -o root -g "$(id -gn "$WORKER_USER")" /etc/semio
+    install_text "$(server_part exports-target)" 644 "$(server_part exports)"
+    SERVER_SYSCTL_TARGET=$(server_part sysctl-target)
+    install_text "$SERVER_SYSCTL_TARGET" 644 "$(server_part sysctl)"
+    sysctl -p "$SERVER_SYSCTL_TARGET" >/dev/null || fail "sysctl could not apply $SERVER_SYSCTL_TARGET"
+    while IFS='=' read -r key wanted; do
+      [ -n "$key" ] || continue
+      [ "$(sysctl -n "$key")" = "$wanted" ] || fail "$key is $(sysctl -n "$key"), not the $wanted that stops the NFS server from granting delegations (a macOS client stalls 4 s on every head that another client holds a delegation on)"
+      say "$key = $wanted"
+    done < "$SERVER_SYSCTL_TARGET"
+    write_block /etc/fstab "$(server_part fstab)"
+    PEER_MOUNTS=$(server_part fstab | awk '$3!="none"{print $2}')
+    PEER_STRICT=$(server_part fstab | awk '/lookupcache=none/{print $2}')
+    for path in $PEER_MOUNTS; do mkdir -p "$path"; done
+    systemctl daemon-reload
+    systemctl enable --now nfs-server || systemctl enable --now nfs-kernel-server
+    exportfs -ra
+    if mountpoint -q "$FLEET_STORE_MOUNT"; then say "already mounted $FLEET_STORE_MOUNT"; else mount "$FLEET_STORE_MOUNT"; say "bind-mounted $FLEET_SERVER_DIRECTORY at $FLEET_STORE_MOUNT"; fi
+    for path in $PEER_MOUNTS; do
+      if mountpoint -q "$path"; then
+        say "already mounted $path"
+        if grep -qx "$path" <<< "$PEER_STRICT" && ! findmnt -no OPTIONS "$path" | grep -q 'lookupcache=none'; then say "WARNING: $path is mounted without lookupcache=none of the mount plan: the relay sees a replaced head up to a minute late (measured: 3 s at the 95th percentile and half of the edits of the other group skipped); stop the relay, unmount it and run this script again"; fi
+      elif mount "$path"; then say "mounted $path"; else say "WARNING: $path is not mounted: is the server of that group up? It is retried at boot (nofail) and by this script"; fi
+    done
+  else
+    FSTAB_FOREIGN=$(awk -v mp="$FLEET_STORE_MOUNT" -v src="$FLEET_NFS_SOURCE" '$1 !~ /^#/ && $2==mp && $1!=src' /etc/fstab)
+    [ -z "$FSTAB_FOREIGN" ] || fail "/etc/fstab already mounts another source at $FLEET_STORE_MOUNT: $FSTAB_FOREIGN"
+    FSTAB_CHANGED=0
+    if grep -qxF "$FLEET_FSTAB_LINE" /etc/fstab; then say "unchanged /etc/fstab"; else
+      FSTAB_TMP=$(mktemp)
+      awk -v mp="$FLEET_STORE_MOUNT" -v src="$FLEET_NFS_SOURCE" '!($1 !~ /^#/ && $2==mp && $1==src)' /etc/fstab > "$FSTAB_TMP"
+      printf '%s\n' "$FLEET_FSTAB_LINE" >> "$FSTAB_TMP"
+      cat "$FSTAB_TMP" > /etc/fstab; rm -f "$FSTAB_TMP"
+      FSTAB_CHANGED=1; say "set in /etc/fstab: $FLEET_FSTAB_LINE"
+    fi
+    systemctl daemon-reload
+    if mountpoint -q "$FLEET_STORE_MOUNT"; then
+      say "already mounted $FLEET_STORE_MOUNT"
+      [ "$FSTAB_CHANGED" = 0 ] || say "WARNING: the mount plan changed; $FLEET_STORE_MOUNT keeps its old options until it is unmounted and mounted again (stop the replica services first)"
+    else mount "$FLEET_STORE_MOUNT"; say "mounted $FLEET_STORE_MOUNT"; fi
+  fi
+elif [ "$SERVER" = 1 ]; then
+  install -d -o "$WORKER_USER" "$FLEET_SERVER_DIRECTORY" "$FLEET_SERVER_CACHE_DIRECTORY"
+  install -d -m 0750 -o "$WORKER_USER" /etc/semio
+  write_block /etc/exports "$(server_part exports | fill)"
+  filter_unresolved_exports /etc/exports
+  write_block /etc/nfs.conf "$(server_part nfs-conf)"
+  NFS_CONF_CHANGED=$CHANGED
+  nfsd checkexports || fail "/etc/exports is not valid: nothing was exported"
+  nfsd enable
+  if [ "$NFS_CONF_CHANGED" = 1 ]; then nfsd restart; else nfsd update || true; fi
+  say "exporting $FLEET_SERVER_DIRECTORY through nfsd (the server's own store root, no mount)"
+  PEER_TARGET=$(server_part peer-mount-target)
+  install_daemon "$PEER_TARGET" "$(server_part peer-mount-unit)"
+  load_daemon "$PEER_TARGET"
+else
+  MOUNT_PLIST=$(fleet mount-plan --group "$GROUP_ID" --platform macos --part plist-path)
+  install_daemon "$MOUNT_PLIST" "$(fleet mount-plan --group "$GROUP_ID" --platform macos --part plist)"
+  MOUNT_PLAN_CHANGED=$CHANGED
+  load_daemon "$MOUNT_PLIST"
+  if grep -q " on $FLEET_STORE_MOUNT " <<< "$(mount)"; then
+    say "already mounted $FLEET_STORE_MOUNT"
+    [ "$MOUNT_PLAN_CHANGED" = 0 ] || say "WARNING: the mount plan changed; $FLEET_STORE_MOUNT keeps its old options until it is unmounted and mounted again (stop the replica service first, then sudo umount $FLEET_STORE_MOUNT)"
+  else mkdir -p "$FLEET_STORE_MOUNT"; mount_nfs -o "$FLEET_MOUNT_OPTIONS" "$FLEET_NFS_SOURCE" "$FLEET_STORE_MOUNT"; say "mounted $FLEET_STORE_MOUNT"; fi
+fi
+
+say "step 4b: clock"
+check_time_sync
+
+if [ "$PLAN" = 1 ]; then
+  say "plan: nothing below this line is installed or changed"
+  if [ "$RELOCATE" = 1 ]; then replica relocate --dry-run --worktree "$OLD_WORKTREE" --to "$WORKTREE"
+  elif [ "$ADOPT" = 1 ]; then replica join --adopt --dry-run --group "$GROUP_ID" --origin "$ORIGIN_ID" --store "$STORE_ROOT"
+  elif [ "$SETTLE" = 1 ]; then say "the worktree holds no repository to adopt: a plain provisioning would settle the tree that this script extracted and join"
+  else say "the worktree holds no repository to adopt: a plain provisioning would $([ "$JOINED" = 1 ] && printf 'refresh the services of the joined machine' || printf 'settle the checkout and join')"; fi
+  exit 0
+fi
+
+xml_escape() {
+  local value=$1
+  shopt -u patsub_replacement 2>/dev/null || :
+  value=${value//&/&amp;}
+  value=${value//</&lt;}
+  value=${value//>/&gt;}
+  value=${value//\"/&quot;}
+  printf '%s' "$value"
+}
+plist_with_environment() {
+  local plist extra line name value marker
+  shopt -u patsub_replacement 2>/dev/null || :
+  plist=$(cat)
+  extra="<key>SEMIO_WORKSPACE_ROOT</key><string>$(xml_escape "$WORKTREE")</string><key>SEMIO_LANGUAGE</key><string>$(xml_escape "$LANGUAGE_CHOICE")</string>"
+  while IFS= read -r line; do
+    [ -n "$line" ] || continue
+    line=${line#export }
+    name=${line%%=*}
+    value=${line#*=}
+    extra="${extra}<key>$(xml_escape "$name")</key><string>$(xml_escape "$value")</string>"
+  done <<< "${ENVIRONMENT:-}"
+  marker="<key>EnvironmentVariables</key><dict>"
+  printf '%s' "${plist/$marker/$marker$extra}"
+}
+say "step 5: machine environment (the cache endpoint comes from the fleet facts, never from a profile)"
+ENVIRONMENT=$(fleet_address_env | sed 's/^/export /')
+if [ "$PLATFORM" = linux ]; then
+  install_text /etc/profile.d/semio-fleet.sh 644 "$ENVIRONMENT"
+else
+  while IFS= read -r line; do
+    [ -n "$line" ] || continue
+    assignment=${line#export }
+    if launchctl setenv "${assignment%%=*}" "${assignment#*=}"; then say "launchctl setenv ${assignment%%=*}"
+    else say "WARNING: launchctl setenv ${assignment%%=*} was refused: System Integrity Protection does not allow it. The variable is in /etc/zshenv, /etc/profile and the LaunchDaemon environment"; fi
+  done <<< "$ENVIRONMENT"
+  write_block /etc/zshenv "$ENVIRONMENT"
+  write_block /etc/profile "$ENVIRONMENT"
+fi
+
+say "step 6: replica and compact services (installed, started after join)"
+say "step 6a: the boot program outside the worktree (the service entry never depends on replicated code)"
+ENTRY_DIRECTORY=$(entry_directory)
+ENTRY_PROGRAM=$(ls "$FLEET_REPLICA_DIRECTORY"/🥾️entry/*.mjs 2>/dev/null | head -n 1)
+[ -n "$ENTRY_PROGRAM" ] || skew_fail
+ENTRY_RESULT=$(cd "$WORKTREE" && run_as env -u XDG_DATA_HOME -u SEMIO_FLEET_ENTRY_DIR repo "$ENTRY_PROGRAM" install --worktree "$WORKTREE" --store "$STORE_ROOT" --take-over | tail -n 1 || true)
+say "boot program: ${ENTRY_RESULT:-no result}"
+[ -f "$ENTRY_DIRECTORY/entry.json" ] || fail "the boot program could not be installed into $ENTRY_DIRECTORY (${ENTRY_RESULT:-no result}): the services would have nothing to run, fix the cause and run again"
+UNITS_CHANGED=0
+SERVICE_TARGET=$(fleet worker-service --group "$GROUP_ID" --platform "$PLATFORM" --part target | fill)
+COMPACT_TARGET=$(fleet worker-service --group "$GROUP_ID" --platform "$PLATFORM" --part compact-target | fill)
+ROLE=worker; [ "$SERVER" = 0 ] || ROLE=server
+if [ "$PLATFORM" = linux ]; then
+  install_text "$SERVICE_TARGET" 644 "$(fleet worker-service --group "$GROUP_ID" --platform linux | fill)"
+  install_text "$COMPACT_TARGET" 644 "$(fleet worker-service --group "$GROUP_ID" --platform linux --part compact-definition --role "$ROLE" | fill)"
+  install_text "$(fleet worker-service --group "$GROUP_ID" --platform linux --part timer-target)" 644 "$(fleet worker-service --group "$GROUP_ID" --platform linux --part timer-definition)"
+  UNIT=$(basename "$SERVICE_TARGET")
+  INSTANCE=${UNIT/@/@$WORKER_USER}
+  TIMER=semio-fleet-compact@$WORKER_USER.timer
+  systemctl daemon-reload
+  systemctl enable "$INSTANCE"
+else
+  install_agent "$SERVICE_TARGET" "$(fleet worker-service --group "$GROUP_ID" --platform macos | fill_plist | plist_with_environment)"
+  install_agent "$COMPACT_TARGET" "$(fleet worker-service --group "$GROUP_ID" --platform macos --part compact-definition --role "$ROLE" | fill_plist | plist_with_environment)"
+fi
+
+if [ "$SERVER" = 1 ]; then
+  say "step 6b: group server services (remote cache and relay)"
+  TOKENS=$(server_part cache-environment-target)
+  [ -f "$TOKENS" ] || fail "$TOKENS does not exist: create it with the real tokens (lines of: server-plan --group $GROUP_ID --part cache-environment), then run again"
+  while IFS= read -r line; do
+    token=${line%%=*}
+    grep -q "^$token=[^<]" "$TOKENS" || fail "$TOKENS has no real value for $token"
+  done <<< "$(server_part cache-environment)"
+  if [ "$PLATFORM" = linux ]; then
+    chown "root:$(id -gn "$WORKER_USER")" "$TOKENS"; chmod 640 "$TOKENS"
+    install_text "$(server_part cache-target)" 644 "$(server_part cache-unit | fill)"
+    install_text "$(server_part relay-target)" 644 "$(server_part relay-unit | fill)"
+    CACHE_UNIT=$(basename "$(server_part cache-target)"); RELAY_UNIT=$(basename "$(server_part relay-target)")
+    systemctl daemon-reload
+    systemctl enable "$CACHE_UNIT" "$RELAY_UNIT"
+  else
+    chown "$WORKER_USER" "$TOKENS"; chmod 600 "$TOKENS"
+    CACHE_TARGET=$(server_part cache-target | fill); RELAY_TARGET=$(server_part relay-target | fill)
+    install_agent "$CACHE_TARGET" "$(server_part cache-unit | fill_plist | plist_with_environment)"
+    install_agent "$RELAY_TARGET" "$(server_part relay-unit | fill_plist | plist_with_environment)"
+  fi
+fi
+
+say "step 7: settle the extracted tree and join (first machine: seed)"
+if [ "$JOINED" = 1 ]; then
+  say "already joined as $ORIGIN_ID in group $GROUP_ID: join is skipped, the mounts and services above were refreshed"
+elif [ "$FIRST_MACHINE" = 1 ]; then
+  [ -z "$(ls -A "$STORE_ROOT/v1/origins" 2>/dev/null)" ] || fail "the store already has origins: this is not the first machine of the fleet, run without --first-machine"
+  replica seed --group "$GROUP_ID" --origin "$ORIGIN_ID" --store "$STORE_ROOT"
+elif [ "$RELOCATE" = 1 ]; then
+  say "relocating $ORIGIN_ID from $OLD_WORKTREE to $WORKTREE: the services stop, the identity moves (the origin id stays), the store is adopted in the new tree"
+  stop_services
+  replica relocate --worktree "$OLD_WORKTREE" --to "$WORKTREE" --phase prepare
+  replica relocate --worktree "$OLD_WORKTREE" --to "$WORKTREE" --phase move --wait 60 $FORCE_FLAG || fail "the move did not finish: the old worktree $OLD_WORKTREE is untouched, run this script again to continue where it stopped"
+elif [ "$ADOPT" = 1 ]; then
+  replica join --adopt --group "$GROUP_ID" --origin "$ORIGIN_ID" --store "$STORE_ROOT" $FORCE_FLAG || fail "the adoption did not finish: nothing was lost (see .cache/f/lost), run this script again to continue where it stopped"
+else
+  RELAY_PEERS=$(server_part relay-peers 2>/dev/null || true)
+  if [ "$SERVER" = 1 ] && [ -n "$RELAY_PEERS" ]; then replica relay --once --group "$GROUP_ID" --store "$STORE_ROOT" --peers "$RELAY_PEERS"; fi
+  replica bootstrap-settle --store "$STORE_ROOT"
+  replica join --group "$GROUP_ID" --origin "$ORIGIN_ID" --store "$STORE_ROOT"
+  run_as rm -f "$EXTRACT_MARKER"
+fi
+
+say "step 8: start the services"
+if [ "$PLATFORM" = linux ]; then
+  STARTED=("$INSTANCE"); [ "$SERVER" = 0 ] || STARTED+=("$CACHE_UNIT" "$RELAY_UNIT")
+  [ "$UNITS_CHANGED" = 0 ] || systemctl try-restart "${STARTED[@]}"
+  systemctl enable --now "${STARTED[@]}" "$TIMER"
+  say "started ${STARTED[*]} and $TIMER"
+else
+  for target in "$SERVICE_TARGET" "$COMPACT_TARGET"; do load_agent "$target"; done
+  if [ "$SERVER" = 1 ]; then for target in "$CACHE_TARGET" "$RELAY_TARGET"; do load_agent "$target"; done; fi
+fi
+ACCESS_PENDING=0
+if [ "$PLATFORM" = macos ]; then
+  say "waiting up to 90 s for the replica agent to run: the first start asks once, in the session of $WORKER_USER, for the consent to read the worktree folder"
+  for _ in $(seq 1 45); do
+    case "$(replica status --json 2>/dev/null || true)" in *'"daemon":{"running":true'*) ACCESS_PENDING=0; break ;; *) ACCESS_PENDING=1 ;; esac
+    sleep 2
+  done
+  [ "$ACCESS_PENDING" = 0 ] || say "WARNING: worktree-access-denied or waiting for the consent: accept the prompt \"repo would like to access files in your Documents folder\" in the session of $WORKER_USER, or switch it on in System Settings > Privacy & Security > Files & Folders (or Full Disk Access) for repo, then run preflight; the agent starts by itself afterwards"
+fi
+if [ "$RELOCATE" = 1 ] && [ "$ACCESS_PENDING" = 0 ]; then
+  replica relocate --worktree "$OLD_WORKTREE" --to "$WORKTREE" --phase finish --wait 120 || fail "the new worktree or the fleet does not agree yet: the old worktree $OLD_WORKTREE stays as it is, fix the cause and run this script again"
+  say "the old worktree $OLD_WORKTREE is retired (marker .cache/f/relocated.json) and not deleted: delete it yourself when you are sure"
+fi
+say "fleet ready: $ORIGIN_ID is a member of group $GROUP_ID and syncs"
+native_bootstrap
+if [ "$ACCESS_PENDING" = 1 ]; then
+  say "exit code 4: fleet ready, but the macOS agents wait for the consent to read $WORKTREE"
+  exit 4
+fi
+say "done: $ORIGIN_ID is a member of group $GROUP_ID and its native build is complete"

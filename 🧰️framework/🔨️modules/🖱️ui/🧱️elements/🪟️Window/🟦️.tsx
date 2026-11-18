@@ -27,6 +27,7 @@ import { windowMeasuresDefaultWidthPx, windowMeasuresMinWidthPx, windowMeasuresM
 import { useChromePanelSafeArea, chromePanelSafeAreaStyle } from "../../🔨️modules/🛟️chrome-safe-area/🟦️.tsx";
 import { panelResizeEdgeAccentClass, windowMeasuresBodyClass, windowEngagementBodyClass, utilityBarBodyClass } from "../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
 import { useUiMobile } from "../../🔨️modules/📱️ui-mobile-context/🟦️.tsx";
+import { type WindowPaneId, type WindowPaneOpen, resolveWindowPaneExpansion, windowPaneExclusiveMaxWidthPx, windowQuickActionsCovered } from "../../🔨️modules/🪟️window-pane-exclusivity/🟦️.ts";
 import { GhostRegionShell } from "../👻️PanelGhost/🟦️.tsx";
 // #endregion 🔌️Adapters
 
@@ -124,6 +125,8 @@ function useWindowUtilityBarMaxHeightPx(enabled: boolean, bodyRef: React.RefObje
   return maxHeightPx;
 }
 
+const windowQuickActionsWidthVar = "--window-quick-actions-width";
+
 const Window: React.FC<WindowProps> = ({
   id,
   children,
@@ -170,6 +173,13 @@ const Window: React.FC<WindowProps> = ({
   const windowRef = reactHostPort.useRef<HTMLDivElement>(null);
   const windowBodyRef = reactHostPort.useRef<HTMLDivElement>(null);
   const measuresOverlayRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const [controlsWidthPx, setControlsWidthPx] = reactHostPort.useState(0);
+  const controlsRef = reactHostPort.useCallback((node: HTMLDivElement | null) => {
+    if (!node) return setControlsWidthPx(0);
+    setControlsWidthPx(node.getBoundingClientRect().width);
+    if (typeof ResizeObserver === "undefined") return;
+    new ResizeObserver(() => setControlsWidthPx(node.getBoundingClientRect().width)).observe(node);
+  }, []);
   const [measuresFoldedInternal, setMeasuresFoldedInternal] = reactHostPort.useState(true);
   const measuresFolded = measuresFoldedProp ?? measuresFoldedInternal;
   const setMeasuresFolded = (folded: boolean) => {
@@ -189,9 +199,10 @@ const Window: React.FC<WindowProps> = ({
     if (actionsFoldedProp === undefined) setActionsFoldedInternal(folded);
   };
   const [searchFolded, setSearchFolded] = reactHostPort.useState(true);
+  const [bodyNarrow, setBodyNarrow] = reactHostPort.useState(false);
+  const exclusive = mobile || bodyNarrow;
   const [measuresWidthPx, setMeasuresWidthPx] = reactHostPort.useState(windowMeasuresDefaultWidthPx);
   const [measuresResizeLeftActive, setMeasuresResizeLeftActive] = reactHostPort.useState(false);
-  const utilityBarMaxHeightPx = useWindowUtilityBarMaxHeightPx(!utilityBarFolded && !!utilityBar, windowBodyRef);
   const readMeasuresMaxWidthPx = reactHostPort.useCallback(() => {
     const body = windowBodyRef.current;
     const bodyRect = body?.getBoundingClientRect();
@@ -200,14 +211,47 @@ const Window: React.FC<WindowProps> = ({
   }, []);
   const measuresMaxWidthPx = readMeasuresMaxWidthPx();
   const quickActionsRef = reactHostPort.useRef<HTMLDivElement | null>(null);
-  const quickActionsSafeArea = useChromePanelSafeArea({ hostRef: windowBodyRef, affordanceRef: quickActionsRef, anchor: "top-left", yieldAxis: "either", gapPx: uiSpacingPx(1), enabled: !mobile });
+  const quickActionsSafeArea = useChromePanelSafeArea({ hostRef: windowBodyRef, affordanceRef: quickActionsRef, anchor: "top-left", yieldAxis: "either", gapPx: 0, enabled: !mobile });
   const engagementVisible = !!(engagement || actionPane);
-  const engagementExpanded = engagementVisible && !actionsFolded;
   const searchVisible = !!search;
-  const searchExpanded = searchVisible && !searchFolded;
-  const setEngagementBarFolded = (folded: boolean) => {
-    setActionsFolded(folded);
+  const rawOpen: WindowPaneOpen = { engagement: engagementVisible && !actionsFolded, search: searchVisible && !searchFolded, measures: !!measures && !measuresFolded, utility: !!utilityBar && !utilityBarFolded };
+  const lastOpenedRef = reactHostPort.useRef<{ last: WindowPaneId | null; seen: WindowPaneOpen }>({ last: null, seen: { engagement: false, search: false, measures: false, utility: false } });
+  for (const pane of ["utility", "measures", "search", "engagement"] as const) if (rawOpen[pane] && !lastOpenedRef.current.seen[pane]) lastOpenedRef.current.last = pane;
+  lastOpenedRef.current.seen = rawOpen;
+  const expanded = resolveWindowPaneExpansion(rawOpen, lastOpenedRef.current.last, exclusive);
+  const engagementExpanded = expanded.engagement;
+  const searchExpanded = expanded.search;
+  const measuresExpanded = expanded.measures;
+  const utilityExpanded = expanded.utility;
+  const quickActionsCovered = windowQuickActionsCovered(expanded, exclusive);
+  const utilityBarMaxHeightPx = useWindowUtilityBarMaxHeightPx(utilityExpanded, windowBodyRef);
+  const togglePane = (pane: WindowPaneId, shown: boolean, setFolded: (folded: boolean) => void) => {
+    if (shown) return setFolded(true);
+    lastOpenedRef.current.last = pane;
+    setFolded(false);
+    if (!exclusive) return;
+    if (pane !== "engagement" && rawOpen.engagement) setActionsFolded(true);
+    if (pane !== "search" && rawOpen.search) setSearchFolded(true);
+    if (pane !== "measures" && rawOpen.measures) setMeasuresFolded(true);
+    if (pane !== "utility" && rawOpen.utility) setUtilityBarFolded(true);
   };
+
+  reactHostPort.useLayoutEffect(() => {
+    const body = windowBodyRef.current;
+    if (!body) return;
+    const sync = () => {
+      const width = body.getBoundingClientRect().width;
+      setBodyNarrow(width > 0 && width < windowPaneExclusiveMaxWidthPx);
+      const quickWidth = quickActionsRef.current?.getBoundingClientRect().width ?? 0;
+      if (quickWidth > 0) body.style.setProperty(windowQuickActionsWidthVar, `${Math.ceil(quickWidth)}px`);
+      else body.style.removeProperty(windowQuickActionsWidthVar);
+    };
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(body);
+    if (quickActionsRef.current) ro.observe(quickActionsRef.current);
+    return () => ro.disconnect();
+  }, [engagementVisible, engagementExpanded, quickActionsCovered, engagement?.options?.length]);
 
   useShellKeydown(
     shellScope?.rootRef ?? NULL_SHELL_ROOT_REF,
@@ -228,7 +272,7 @@ const Window: React.FC<WindowProps> = ({
       if (event.defaultPrevented || event.isComposing) return;
       if (event.key.length !== 1 || event.key === " " || event.ctrlKey || event.metaKey || event.altKey) return;
       if (!shouldRouteKeysToWindowSearch(event.target)) return;
-      setSearchFolded(false);
+      togglePane("search", false, setSearchFolded);
     },
     [active, search, searchExpanded],
   );
@@ -254,7 +298,7 @@ const Window: React.FC<WindowProps> = ({
       if (overlay) ro.observe(overlay);
     }
     return () => ro.disconnect();
-  }, [active, engagement, search, measures, actionPane, engagementExpanded, searchExpanded, measuresFolded]);
+  }, [active, engagement, search, measures, actionPane, engagementExpanded, searchExpanded, measuresExpanded]);
 
   if (!isVisible) return null;
 
@@ -262,7 +306,7 @@ const Window: React.FC<WindowProps> = ({
   const hasControls = hasWindowControls || controls;
 
   const controlsContent = hasControls && (
-    <div data-dim className="flex items-stretch gap-[var(--gap-standard)]">
+    <div data-dim data-slot="window-controls" data-shared-border-group="" data-shared-border-cells="" className="flex items-stretch">
       {controls}
       {hasWindowControls && (
         <ActionGroup id={childElementId("framework.window", id, "windowControls")}>
@@ -303,7 +347,7 @@ const Window: React.FC<WindowProps> = ({
           className,
         )}
       >
-        {hasControls ? <div className="absolute top-1 right-1 z-panel flex items-stretch gap-[var(--gap-standard)]">{controlsContent}</div> : null}
+        {hasControls ? <div ref={controlsRef} data-slot="window-controls-anchor" className="absolute top-0 right-0 z-panel flex items-stretch">{controlsContent}</div> : null}
         <div ref={windowBodyRef} data-slot="window-body" className={cn("relative flex min-w-0 flex-col overflow-hidden", fill ? "min-h-0 flex-1" : "h-auto shrink-0")}>
           <PaneHost className={cn("flex min-w-0 flex-col", fill ? "min-h-0 flex-1" : undefined)}>{error ? <DefaultErrorDisplay error={error} /> : loading && skeleton ? skeleton : children}</PaneHost>
           {measures ? (
@@ -313,11 +357,12 @@ const Window: React.FC<WindowProps> = ({
               overlayRef={measuresOverlayRef}
               hostRef={windowBodyRef}
               anchor="top-right"
+              inlineEdgeReservePx={controlsWidthPx}
               icon={WINDOW_PANE_MEASURES_ICON}
               label={windowOptionsLabel}
-              folded={measuresFolded}
-              onFoldToggle={() => setMeasuresFolded(!measuresFolded)}
-              toggleId={childElementId("framework.window", id, "measures", measuresFolded ? "unfold" : "fold")}
+              folded={!measuresExpanded}
+              onFoldToggle={() => togglePane("measures", measuresExpanded, setMeasuresFolded)}
+              toggleId={childElementId("framework.window", id, "measures", measuresExpanded ? "fold" : "unfold")}
               size={measuresWidthPx}
               onSizeChange={setMeasuresWidthPx}
               minSize={windowMeasuresMinWidthPx}
@@ -327,22 +372,22 @@ const Window: React.FC<WindowProps> = ({
               bodySlot="window-measures-body"
               bodyClassName={windowMeasuresBodyClass}
               stackClassName={cn("relative", panelResizeEdgeAccentClass("left", measuresResizeLeftActive))}
-              stackDataAttrs={{ "data-level": "pane", "data-folded": measuresFolded ? "true" : undefined }}
+              stackDataAttrs={{ "data-level": "pane", "data-folded": measuresExpanded ? undefined : "true" }}
               dimWhenOpen
             >
               {measures}
             </Pane>
           ) : null}
-          {engagementVisible && !engagementExpanded && engagement?.options?.length ? (
+          {engagementVisible && !engagementExpanded && !quickActionsCovered && engagement?.options?.length ? (
             <div
               ref={quickActionsRef}
               data-slot="window-engagement-quick-actions"
               data-safe-area-block={quickActionsSafeArea.blockPx || undefined}
               data-safe-area-inline={quickActionsSafeArea.inlinePx || undefined}
               className={cn("pointer-events-auto absolute flex min-w-0 items-stretch", getLevelZClass("pane"))}
-              style={chromePanelSafeAreaStyle("top-left", quickActionsSafeArea, { block: windowChromeClearedTopOffset })}
+              style={chromePanelSafeAreaStyle("top-left", quickActionsSafeArea, { block: "var(--chip-row-height)", inline: "0px" })}
             >
-              <ActionGroup id={childElementId("framework.window", id, "engagement", "quick")}>
+              <ActionGroup id={childElementId("framework.window", id, "engagement", "quick")} data-shared-border-edges="right bottom left">
                 {engagement.options.map((option) => (
                   <ActionGroupItem key={option.id} id={option.id} icon={option.icon} text={typeof option.label === "string" ? option.label : undefined} aria-pressed={option.pressed} data-state={option.pressed === undefined ? undefined : option.pressed ? "on" : "off"} className={cn(option.pressed && interactiveActiveFillClass)} onClick={option.onPress} disabled={option.disabled} />
                 ))}
@@ -358,11 +403,14 @@ const Window: React.FC<WindowProps> = ({
               icon={WINDOW_PANE_ACTIONS_ICON}
               label={actionLabel}
               folded={!engagementExpanded}
-              onFoldToggle={() => setEngagementBarFolded(!actionsFolded)}
+              onFoldToggle={() => togglePane("engagement", engagementExpanded, setActionsFolded)}
               toggleId={childElementId("framework.window", id, "engagement", "toggle")}
               stackSlot="window-engagement-zone"
               bodySlot="window-engagement-body"
               bodyClassName={windowEngagementBodyClass}
+              className={!engagementExpanded && !quickActionsCovered && engagement?.options?.length ? "min-w-[var(--window-quick-actions-width,0px)]" : undefined}
+              stackClassName={!engagementExpanded && !quickActionsCovered && engagement?.options?.length ? "w-full" : undefined}
+              stackDataAttrs={{ "data-pane-chip-fill": !engagementExpanded && !quickActionsCovered && engagement?.options?.length ? "true" : undefined }}
               dimWhenOpen
             >
               {engagement ? <Engagement {...engagement} /> : null}
@@ -379,7 +427,7 @@ const Window: React.FC<WindowProps> = ({
               label={searchLabel}
               folded={!searchExpanded}
               onFoldToggle={() => {
-                setSearchFolded(searchExpanded);
+                togglePane("search", searchExpanded, setSearchFolded);
                 if (!searchExpanded && search.input) queueMicrotask(() => focusActiveSearchInput());
               }}
               toggleId={childElementId("framework.window", id, "search", "toggle")}
@@ -398,15 +446,15 @@ const Window: React.FC<WindowProps> = ({
             anchor="bottom-left"
             icon={WINDOW_PANE_UTILITIES_ICON}
             label={utilitiesLabel}
-            folded={utilityBarFolded}
+            folded={!utilityExpanded}
             toggleDisabled={!utilityBar}
-            onFoldToggle={() => setUtilityBarFolded(!utilityBarFolded)}
-            toggleId={childElementId("framework.window", id, "utilityBar", utilityBarFolded ? "unfold" : "fold")}
+            onFoldToggle={() => togglePane("utility", utilityExpanded, setUtilityBarFolded)}
+            toggleId={childElementId("framework.window", id, "utilityBar", utilityExpanded ? "fold" : "unfold")}
             stackSlot="utility-bar"
             bodySlot="utility-bar-body"
             bodyClassName={utilityBarBodyClass}
             bodyStyle={utilityBarMaxHeightPx > 0 ? { maxHeight: utilityBarMaxHeightPx } : undefined}
-            stackDataAttrs={{ "data-level": "pane", "data-folded": utilityBarFolded ? "true" : undefined }}
+            stackDataAttrs={{ "data-level": "pane", "data-folded": utilityExpanded ? undefined : "true" }}
             dimWhenOpen={Boolean(utilityBar)}
           >
             {utilityBar}

@@ -2353,6 +2353,36 @@
               "y": 0.1025,
               "w": 1.4,
               "h": 0.015
+            },
+            {
+              "id": "sill-back-below",
+              "bone": "sill",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.85,
+              "region": "sill",
+              "material": "plaster",
+              "kind": "rect",
+              "x": 0.8,
+              "y": 0.1175,
+              "w": 1.4,
+              "h": 0.09
+            },
+            {
+              "id": "sill-back-plaster-below",
+              "bone": "sill",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.85,
+              "region": "sill",
+              "material": "plaster",
+              "kind": "rect",
+              "x": 0.8,
+              "y": 0.2075,
+              "w": 1.4,
+              "h": 0.015
             }
           ]
         },
@@ -2712,6 +2742,22 @@
               "h": 0.25
             },
             {
+              "id": "lintel-back",
+              "bone": "lintel",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.35,
+              "region": "lintel",
+              "material": "concrete",
+              "hatch": "concrete-stipple",
+              "kind": "rect",
+              "x": 0.0875,
+              "y": 2.25,
+              "w": 0.135,
+              "h": 0.25
+            },
+            {
               "id": "sill",
               "bone": "sill",
               "role": "body",
@@ -2725,6 +2771,22 @@
               "x": -0.2225,
               "y": 0.83333,
               "w": 0.34,
+              "h": 0.08334
+            },
+            {
+              "id": "sill-back",
+              "bone": "sill",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.35,
+              "region": "sill",
+              "material": "concrete",
+              "hatch": "concrete-stipple",
+              "kind": "rect",
+              "x": 0.1175,
+              "y": 0.83333,
+              "w": 0.105,
               "h": 0.08334
             }
           ],
@@ -2866,6 +2928,22 @@
               "y": -0.2225,
               "w": 1.4,
               "h": 0.34
+            },
+            {
+              "id": "sill-back-below",
+              "bone": "sill",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.35,
+              "region": "sill",
+              "material": "concrete",
+              "hatch": "concrete-stipple",
+              "kind": "rect",
+              "x": 0.8,
+              "y": 0.1175,
+              "w": 1.4,
+              "h": 0.105
             }
           ]
         },
@@ -3088,7 +3166,7 @@
               "kind": "rect",
               "x": -0.2225,
               "y": 2.25,
-              "w": 0.34,
+              "w": 0.445,
               "h": 0.25
             },
             {
@@ -3103,7 +3181,7 @@
               "kind": "rect",
               "x": -0.2225,
               "y": 0.83333,
-              "w": 0.34,
+              "w": 0.445,
               "h": 0.08334
             }
           ],
@@ -3151,7 +3229,7 @@
               "x": 0.8,
               "y": -0.2225,
               "w": 1.4,
-              "h": 0.34
+              "h": 0.445
             }
           ]
         },

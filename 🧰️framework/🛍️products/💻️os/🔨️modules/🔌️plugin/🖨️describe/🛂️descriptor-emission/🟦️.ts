@@ -12,7 +12,7 @@ import { captureOwnedCommandV1 } from "../../../../../../🔨️modules/🏃️p
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { CATALOG_DESCRIPTOR_MAX_BYTES } from "../../📇️registry/✅️catalog-verification/🟦️.ts";
 import { verifySemanticDescriptorPairBytesV1 } from "../../📇️registry/✅️catalog-verification/🧬️descriptor-pair/🟦️.ts";
-import { ITERATE_COMPONENT_MAX_BYTES } from "../🏷️component-receipt/🟦️.ts";
+import { ITERATE_COMPONENT_MAX_BYTES, SHIPPED_COMPONENT_MAX_BYTES } from "../🏷️component-receipt/🟦️.ts";
 import { CRATE_NAME, DESCRIPTOR_JSON_FILENAME, DESCRIPTOR_PACK_FILENAME, FRESH_IO_CHUNK_BYTES } from "../🏗️component-build/🟦️.ts";
 import { freshPathIsWithin } from "../🧾️source-epoch/🟦️.ts";
 export type DescriptorEmissionRequestV1 = Readonly<{
@@ -97,7 +97,7 @@ function emissionArtifact(root: string, path: string, label: string, maximum: nu
  * committed one, written over it, or kept local (ticket 26/09/23 wave A2). Every stage is cancellable and deadline bounded. */
 /** 📏️ Validates bounded filesystem inputs and deadline DATA without selecting or executing any emitter. */
 export async function validateDescriptorEmissionInputV1(repoRoot:string,request:DescriptorEmissionRequestV1,control:DescriptorEmissionValidationControlV1):Promise<Readonly<{artifactRoot:string;component:Readonly<{path:string;sha256:string}>;startedAt:number;budgetMs:number}>>{
- const startedAt=Date.now(),budgetMs=control.deadlineMs??buildBudgetMs();emissionGuard(control,startedAt,budgetMs,"validate");const artifactRoot=emissionDirectory(repoRoot,request.artifactRoot,"artifact root"),component=emissionArtifact(artifactRoot,request.component,"component",ITERATE_COMPONENT_MAX_BYTES);emissionGuard(control,startedAt,budgetMs,"emit");return Object.freeze({artifactRoot,component,startedAt,budgetMs});
+ const startedAt=Date.now(),budgetMs=control.deadlineMs??buildBudgetMs();emissionGuard(control,startedAt,budgetMs,"validate");const artifactRoot=emissionDirectory(repoRoot,request.artifactRoot,"artifact root"),component=emissionArtifact(artifactRoot,request.component,"component",Math.max(ITERATE_COMPONENT_MAX_BYTES,SHIPPED_COMPONENT_MAX_BYTES));emissionGuard(control,startedAt,budgetMs,"emit");return Object.freeze({artifactRoot,component,startedAt,budgetMs});
 }
 export function emitSemanticDescriptorV1(repoRoot:string,request:DescriptorEmissionRequestV1,control:DescriptorEmissionControlV1):Promise<SemanticDescriptorEmissionV1>{
  requireIssuedResourceControlInvocationV1(control.compiler,control.invocation);return withDescriptorEmitterTaskV1(control.emitter,control.invocation,async tool=>{

@@ -2402,6 +2402,8 @@
             "key": "burner",
             "heatW": 120
           },
+          "ratedPowerW": 2500,
+          "ratedPowerBasis": "fuel-input",
           "source": "authored-estimate",
           "reference": "incropera-2018"
         },

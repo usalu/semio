@@ -1,4 +1,5 @@
 /** 🔌 The two seams of the graph generation host (membership proof and fact checks) answered from the watcher journal: the dirty set since the cursor at which the generation was last verified decides what is stat'ed again, and a journal that cannot vouch is announced as one verify epoch (the unchanged scan of the host, then trusted again). No service has to answer: the journal is read directly. */
+import {rebaseTextV1} from "../../../👁️observation/🏚️relocation/🟨️.mjs";
 import {GRAPH_HOOKS_POLICY_V1,advanceFrontierByDirtySetV1,classifyChangesV1,derivedDirtySetV1,dirtyIndexV1,dirtySetFromRowsV1} from "../🟨️.mjs";
 
 const TRUSTED=new Set(GRAPH_HOOKS_POLICY_V1.trustedKinds),FILE_ROWS=new Set(GRAPH_HOOKS_POLICY_V1.fileRowKinds),cursorKey=generation=>"g"+generation;
@@ -6,10 +7,24 @@ const slashed=path=>String(path).replaceAll("\\","/");
 
 /** 📐 Maps the path of a fact row to a workspace-relative path; undefined where the row lies outside the workspace (the journal cannot see it). */
 export function relativeFactPathV1(root,path){
- const base=slashed(root).replace(/\/+$/u,""),text=slashed(path);
+ const base=slashed(root).replace(/\/+$/u,""),text=slashed(rebaseTextV1(String(path)));
  if(text===base)return "";
  if(text.startsWith(base+"/"))return text.slice(base.length+1);
  return undefined;
+}
+
+/** 🧺️ Every workspace-relative path a fact index names (a path string, an element of a `[importer, specifier]` key), so a later journal delta can be tested against the inputs of a plan made from it; undefined where the index cannot be walked by string. */
+export function factPathsOfIndexV1(root,index){
+ if(typeof index.stringCount!=="number"||typeof index.textOf!=="function")return undefined;
+ const out=new Set(),add=text=>{const path=rowFilePathV1(root,text);if(path!==undefined)out.add(path);};
+ try{
+  for(let at=0;at<index.stringCount;at++){
+   const text=index.textOf(at);if(typeof text!=="string"||text==="")continue;
+   if(text[0]==="["){try{const key=JSON.parse(text);if(Array.isArray(key)){for(const part of key)if(typeof part==="string")add(part);continue;}}catch{}}
+   add(text);
+  }
+ }catch{return undefined;}
+ return out;
 }
 
 const parentOfPath=path=>{const cut=path.lastIndexOf("/");return cut<0?"":path.slice(0,cut);};
@@ -140,11 +155,21 @@ export function journalGraphSeamsV1({root,journal,store,ports,digest,membership,
   async unchanged(live,signal){
    const seen=observed;
    if(!seen||seen.live!==live||!seen.cursor)return false;
-   try{const now=await journal.cursor(signal);return now!==undefined&&now.instance===seen.cursor.instance&&now.seq===seen.cursor.seq&&await install()===seen.install;}catch{return false;}
+   try{
+    const now=await journal.cursor(signal);
+    if(now===undefined||now.instance!==seen.cursor.instance||await install()!==seen.install)return false;
+    if(now.seq===seen.cursor.seq)return true;
+    const reach=seen.pending?.factPaths;
+    if(reach===undefined||now.seq<seen.cursor.seq)return false;
+    const answer=await journal.since({instance:seen.cursor.instance,seq:seen.cursor.seq},signal);
+    if(!answer.complete)return false;
+    for(const[,directory,path]of answer.rows)if(directory||reach.has(path)||reach.has(parentOfPath(path)))return false;
+    return true;
+   }catch{return false;}
   },
   async membership(previous,signal){
    const live=await observe(previous,signal);
-   observed={live,cursor:pending?.cursor,install:pending?.install};
+   observed={live,cursor:pending?.cursor,install:pending?.install,pending};
    return live;
   },
   /** 🔢️ The doubt of each row as the journal sees it (1 where the row must be checked, 2 where only a region the journal cannot see makes it doubtful and the caller may vouch for it by stamps), or undefined when no dirty set vouches (an epoch): rows the journal does not name are vouched for without any call. */
@@ -156,7 +181,7 @@ export function journalGraphSeamsV1({root,journal,store,ports,digest,membership,
   doubtfulIds(index,ids){
    const held=pending;
    if(!held?.index||typeof index.rowPathIdOf!=="function")return undefined;
-   if(held.idsOf!==index){held.idsOf=index;held.idTrusted=new Int8Array(index.stringCount).fill(-1);held.idFiled=new Int8Array(index.stringCount).fill(-1);}
+   if(held.idsOf!==index){held.idsOf=index;held.factPaths=factPathsOfIndexV1(root,index);held.idTrusted=new Int8Array(index.stringCount).fill(-1);held.idFiled=new Int8Array(index.stringCount).fill(-1);}
    return Uint8Array.from(ids,id=>{
     const kind=index.rowKindOf(id);
     if(kind===GRAPH_HOOKS_POLICY_V1.resolveKind)return resolveRowDoubtfulV1(root,index.rows[id],held.index,held.excluded,held.installed)?1:0;

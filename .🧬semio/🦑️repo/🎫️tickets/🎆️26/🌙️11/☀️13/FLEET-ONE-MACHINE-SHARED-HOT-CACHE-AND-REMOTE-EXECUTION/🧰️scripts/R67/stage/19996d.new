@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:graph-state:refusal:v1",
+  "title": "Why a write to the fleet cache did not end up stored, as a code, whether to try again and whether other machines would hit the same wall",
+  "description": "Every write of the graph exchange ends in a stored entry or in exactly one refusal. A refusal comes from the answer of the cache (HTTP status and the first words of its body), from the client (no answer in time, no connection, the breaker of the machine is open) or from the limits the client checks before it sends anything. `transient` says that the same bytes may be accepted later (the caller keeps the finished work and tries again with a back-off); `deterministic` says that every machine would meet the same refusal (the caller writes a failure note so that the others stop inferring the owner); `stored` says that the cache already holds an entry for the key, so the work is not lost and not repeated. The rows are evaluated in order, the first row that matches wins.",
+  "definitions": {
+    "Hex": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "Code": {"type": "string", "enum": ["no-answer", "unreachable", "breaker-open", "denied", "unsupported", "diverged", "head-moved", "conflict", "too-large", "blob-missing", "malformed", "aborted", "capacity", "server-error", "rejected", "claim-lost", "no-upload", "limit-document", "limit-entry", "limit-documents"]},
+    "Row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "when", "transient", "deterministic", "stored", "en", "de"],
+      "properties": {
+        "code": {"$ref": "#/definitions/Code"},
+        "when": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "answer": {"type": "string", "enum": ["timeout", "network", "breaker", "local"]},
+            "status": {"type": "array", "items": {"type": "integer"}, "minItems": 1, "maxItems": 2},
+            "body": {"type": "string"}
+          }
+        },
+        "transient": {"type": "boolean"},
+        "deterministic": {"type": "boolean"},
+        "stored": {"type": "boolean"},
+        "en": {"type": "string"},
+        "de": {"type": "string"}
+      }
+    },
+    "Policy": {
+      "const": {
+        "version": 1,
+        "bodyCharacters": 160,
+        "rows": [
+          {"code": "no-answer", "when": {"answer": "timeout"}, "transient": true, "deterministic": false, "stored": false, "en": "the fleet cache did not answer in time", "de": "der Flottenspeicher antwortete nicht rechtzeitig"},
+          {"code": "unreachable", "when": {"answer": "network"}, "transient": true, "deterministic": false, "stored": false, "en": "the fleet cache could not be reached", "de": "der Flottenspeicher war nicht erreichbar"},
+          {"code": "breaker-open", "when": {"answer": "breaker"}, "transient": true, "deterministic": false, "stored": false, "en": "an earlier request of this machine got no answer, the cache is left alone for a while", "de": "eine frühere Anfrage dieser Maschine blieb ohne Antwort, der Flottenspeicher bleibt eine Weile unberührt"},
+          {"code": "claim-lost", "when": {"answer": "local", "body": "claim-lost"}, "transient": true, "deterministic": false, "stored": false, "en": "the claim lapsed before the upload", "de": "der Anspruch lief vor dem Upload ab"},
+          {"code": "no-upload", "when": {"answer": "local", "body": "no-upload"}, "transient": false, "deterministic": false, "stored": false, "en": "this machine may not upload", "de": "diese Maschine darf nicht hochladen"},
+          {"code": "limit-document", "when": {"answer": "local", "body": "limit-document"}, "transient": false, "deterministic": true, "stored": false, "en": "a document is above the limit of the entry", "de": "ein Dokument liegt über der Grenze des Eintrags"},
+          {"code": "limit-entry", "when": {"answer": "local", "body": "limit-entry"}, "transient": false, "deterministic": true, "stored": false, "en": "the entry is above the limit", "de": "der Eintrag liegt über der Grenze"},
+          {"code": "limit-documents", "when": {"answer": "local", "body": "limit-documents"}, "transient": false, "deterministic": true, "stored": false, "en": "the entry has more documents than allowed", "de": "der Eintrag hat mehr Dokumente als erlaubt"},
+          {"code": "diverged", "when": {"status": [409], "body": "another origin stored a different result"}, "transient": false, "deterministic": false, "stored": true, "en": "another machine already stored a different record under this key", "de": "eine andere Maschine hat unter diesem Schlüssel bereits einen anderen Eintrag gespeichert"},
+          {"code": "head-moved", "when": {"status": [409], "body": "the head moved"}, "transient": true, "deterministic": false, "stored": false, "en": "the head moved while it was written", "de": "der Kopfeintrag bewegte sich während des Schreibens"},
+          {"code": "conflict", "when": {"status": [409]}, "transient": true, "deterministic": false, "stored": false, "en": "the cache reports a conflict", "de": "der Flottenspeicher meldet einen Konflikt"},
+          {"code": "denied", "when": {"status": [401, 403]}, "transient": true, "deterministic": false, "stored": false, "en": "the cache denied the request", "de": "der Flottenspeicher verweigerte die Anfrage"},
+          {"code": "unsupported", "when": {"status": [404, 405]}, "transient": false, "deterministic": false, "stored": false, "en": "the cache does not support this request", "de": "der Flottenspeicher unterstützt diese Anfrage nicht"},
+          {"code": "too-large", "when": {"status": [413]}, "transient": false, "deterministic": true, "stored": false, "en": "the cache says the entry is too large", "de": "der Flottenspeicher meldet den Eintrag als zu groß"},
+          {"code": "blob-missing", "when": {"status": [400], "body": "is not in the content store"}, "transient": true, "deterministic": false, "stored": false, "en": "a blob of the entry vanished from the cache before the result was written", "de": "ein Blob des Eintrags verschwand vor dem Schreiben des Ergebnisses aus dem Flottenspeicher"},
+          {"code": "malformed", "when": {"status": [400]}, "transient": false, "deterministic": true, "stored": false, "en": "the cache says the entry is malformed", "de": "der Flottenspeicher meldet den Eintrag als fehlerhaft"},
+          {"code": "aborted", "when": {"status": [499]}, "transient": true, "deterministic": false, "stored": false, "en": "the connection ended before the cache had the whole entry", "de": "die Verbindung endete, bevor der Flottenspeicher den ganzen Eintrag hatte"},
+          {"code": "capacity", "when": {"status": [507]}, "transient": true, "deterministic": false, "stored": false, "en": "the cache has no room left", "de": "der Flottenspeicher hat keinen Platz mehr"},
+          {"code": "server-error", "when": {"status": [500, 599]}, "transient": true, "deterministic": false, "stored": false, "en": "the cache failed internally", "de": "der Flottenspeicher scheiterte intern"},
+          {"code": "rejected", "when": {}, "transient": true, "deterministic": false, "stored": false, "en": "the cache refused the request", "de": "der Flottenspeicher lehnte die Anfrage ab"}
+        ]
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "answer", "expect"],
+      "properties": {
+        "name": {"type": "string"},
+        "answer": {"oneOf": [{"type": "integer"}, {"type": "string", "enum": ["timeout", "network", "breaker", "claim-lost", "no-upload", "limit-document", "limit-entry", "limit-documents"]}]},
+        "body": {"type": "string"},
+        "expect": {"type": "object", "additionalProperties": false, "required": ["code", "transient", "deterministic", "stored"], "properties": {"code": {"$ref": "#/definitions/Code"}, "transient": {"type": "boolean"}, "deterministic": {"type": "boolean"}, "stored": {"type": "boolean"}}}
+      }
+    },
+    "Fixture": {"type": "object", "additionalProperties": false, "required": ["cases"], "properties": {"cases": {"type": "array", "items": {"$ref": "#/definitions/Case"}}}}
+  },
+  "oneOf": [{"$ref": "#/definitions/Policy"}]
+}

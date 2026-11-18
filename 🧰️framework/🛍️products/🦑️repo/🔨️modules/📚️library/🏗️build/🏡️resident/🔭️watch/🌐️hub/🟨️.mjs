@@ -28,7 +28,7 @@ export function createWatchHubV1({binary,spawnHub=spawn,maximumRoots=64}){
  };
  const start=()=>{
   if(hub)return hub;
-  const child=spawnHub(binary,["serve"],{stdio:["pipe","pipe","ignore"]});
+  const child=spawnHub(binary,["serve"],{stdio:["pipe","pipe","ignore"],windowsHide:true});
   hub=child;buffer=Buffer.alloc(0);
   child.stdout.on("data",chunk=>{
    buffer=Buffer.concat([buffer,chunk]);

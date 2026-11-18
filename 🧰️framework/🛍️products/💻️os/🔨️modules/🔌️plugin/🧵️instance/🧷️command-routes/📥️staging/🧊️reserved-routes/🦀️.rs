@@ -36,6 +36,14 @@ use crate::commands_instance_root::catalogue_snapshot_from_document;
 use crate::commands_instance_root::note_shell_command_label;
 use semio_plugin_instance_docs::docs_plugin_app_impl::history_changed_event;
 
+/// 🎟️ Lends the commit unit's own caller Work to every identity hop, since the identity cannot borrow the context beside the unit.
+struct ReservedIdentityWork<'w>(&'w mut semio_framework_job::NativeEncoderWork);
+impl semio_os_kernel::os_vcs::io::binary::entity_identity::control::IdentityWorkLender for ReservedIdentityWork<'_> {
+    fn lend(&mut self, control: &mut semio_framework_value::NativeEncodeControl<'_>, operation: &mut dyn FnMut(&mut semio_framework_value::NativeEncodeControl<'_>) -> Result<(), semio_framework_value::ValueError>) -> Result<(), semio_framework_value::ValueError> {
+        self.0.lend(control, |control| operation(control))
+    }
+}
+
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> CommandCtx<'ctx, A, M, X> {
     /// 🧮️ One reserved gesture's work, in the STAGED EDIT ROWS every other capacity in the
     /// runtime is counted in — never the bare item count the route used to hand its job, which
@@ -161,12 +169,14 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let publication = commit.permit.lease.publication_claim.clone();
         let mut progress = commit.permit.identity_progress;
         let mut observer = |next: semio_framework_value::native_encoding::NativeEncodeProgress| { progress = next; !token.is_cancelled_now() && !publication.is_cancelled() };
-        let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::resume(receipt, &mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>);
+        let mut work = cx.native_encoder_work();
+        let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::resume(receipt, &mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).with_work_lender(Box::new(ReservedIdentityWork(&mut work)));
         let result = match self.run_framework_reserved_commit_unit_admitted(commit, &mut identity,cx).await {
             Ok(output) => self.child_composition.follow_derivable_children(&mut *self.stores, &mut identity).await.map(|_| output).map_err(Into::into),
             Err(fault) => Err(fault),
         };
         commit.permit.identity = Some(identity.pause().map_err(|error| plugin_sdk_fault(error.to_string()))?);
+        cx.consume_fuel(work.performed());
         drop(observer);
         commit.permit.identity_progress = progress;
         result

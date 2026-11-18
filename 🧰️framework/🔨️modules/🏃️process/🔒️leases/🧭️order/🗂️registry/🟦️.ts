@@ -8,7 +8,7 @@ import {leaseHistoryKeyV1,leaseStandingSnapshotV1,observeLeaseStandingV1,probeLe
 import standingSchema from "../../📈️standing/🧬️schema/🔣️.json" with {type:"json"};
 
 /** 🗂️ One process's published leases for one lease directory: what it holds and what it waits for. */
-export type LeaseRegistryEntryV1=Readonly<{version:1;pid:number;startedAtMs:number;updatedAtMs:number;command:string;directory:string;session?:string;standing:LeaseStandingV1;holds:readonly Readonly<{resource:string;mode:LeaseModeV1;sinceMs:number;task:number}>[];waits:readonly Readonly<{resource:string;mode:LeaseModeV1;sinceMs:number;task:number;queued:boolean}>[];ancestry?:Readonly<Record<string,readonly number[]>>}>;
+export type LeaseRegistryEntryV1=Readonly<{version:1;pid:number;startedAtMs:number;updatedAtMs:number;command:string;directory:string;session?:string;owner?:string;standing:LeaseStandingV1;holds:readonly Readonly<{resource:string;mode:LeaseModeV1;sinceMs:number;task:number}>[];waits:readonly Readonly<{resource:string;mode:LeaseModeV1;sinceMs:number;task:number;queued:boolean}>[];ancestry?:Readonly<Record<string,readonly number[]>>}>;
 type Snapshot=Readonly<{ancestry?:Readonly<Record<string,readonly number[]>>;holds:readonly Readonly<{directory:string;resource:string;mode:LeaseModeV1;atMs:number;task:number}>[];waits:readonly Readonly<{directory:string;resource:string;mode:LeaseModeV1;sinceMs:number;task:number;queued:boolean}>[]}>;
 type Source=Readonly<{snapshot:()=>Snapshot;cycle:(nodes:readonly LeaseNodeV1[],from:string)=>LeaseCycleV1|undefined}>;
 
@@ -85,6 +85,9 @@ let timer:ReturnType<typeof setTimeout>|undefined,heartbeat:ReturnType<typeof se
 const rootNow=():string=>leaseRegistryRootV1();
 const entryPath=(directory:string):string=>join(leaseRegistryFolderV1(rootNow(),directory),`${process.pid}-${startedAtMs}.json`);
 const command=():string=>process.argv.slice(1).join(" ").slice(0,240);
+/** 🏷️ The environment variable whose value a stage runner puts into every process it starts: the entry of a process that holds a lease carries it as `owner`, the proof of who started the process.
+ * @see ../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🌲️process-tree/🧹️containment/🧬️schema/🔣️.json */
+export const LEASE_OWNER_ENVIRONMENT_V1="SEMIO_LEASE_OWNER";
 
 function flush(directory:string):void{
  if(disabled||!source)return;
@@ -95,7 +98,7 @@ function flush(directory:string):void{
   const folder=leaseRegistryFolderV1(rootNow(),directory);mkdirSync(folder,{recursive:true,mode:0o700});
   if(!written.has(directory)){writeFileSync(join(folder,"directory.json"),JSON.stringify({version:1,directory}));if(!exitHooked){exitHooked=true;observeLeaseStandingV1(()=>{for(const known of written)leaseRegistryV1.changed(known,policies.get(known)!);});process.once("exit",()=>{for(const known of written)try{rmSync(entryPath(known),{force:true});}catch{}});}}
   probeLeaseActivityV1();
-  const address=agentSessionAddressOfEnvironmentV1(process.env),text=JSON.stringify({version:1,pid:process.pid,startedAtMs,updatedAtMs:Date.now(),command:command(),directory,...address===undefined?{}:{session:address},standing:leaseStandingSnapshotV1(address!==undefined),holds,waits,...Object.keys(ancestry).length?{ancestry}:{}});
+  const address=agentSessionAddressOfEnvironmentV1(process.env),text=JSON.stringify({version:1,pid:process.pid,startedAtMs,updatedAtMs:Date.now(),command:command(),directory,...address===undefined?{}:{session:address},...process.env[LEASE_OWNER_ENVIRONMENT_V1]?{owner:process.env[LEASE_OWNER_ENVIRONMENT_V1]}:{},standing:leaseStandingSnapshotV1(address!==undefined),holds,waits,...Object.keys(ancestry).length?{ancestry}:{}});
   if(text.length>(policy?.registry.maximumEntryBytes??65536))throw Error("Bounded lease registry entry required");
   const temporary=`${path}.tmp`;writeFileSync(temporary,text);renameSync(temporary,path);written.add(directory);
   if(!heartbeat){heartbeat=setInterval(()=>{for(const known of written)flush(known);},HEARTBEAT_MILLISECONDS);heartbeat.unref();}
@@ -150,11 +153,13 @@ export const leaseRegistryV1=Object.freeze({
  ownHolds(directory:string):readonly Readonly<{resource:string;mode:LeaseModeV1;sinceMs:number}>[]{
   return source?source.snapshot().holds.filter(row=>row.directory===directory).map(row=>({resource:row.resource,mode:row.mode,sinceMs:row.atMs})):[];
  },
- holderOf(directory:string,resource:string,mode:LeaseModeV1):Readonly<{pid:number;heldSeconds:number}>|undefined{
+ holderOf(directory:string,resource:string,mode:LeaseModeV1,ownTask?:number):Readonly<{pid:number;heldSeconds:number;command?:string;self?:true}>|undefined{
+  const own=source?.snapshot().holds.find(row=>row.directory===directory&&row.resource===resource&&row.task!==ownTask&&(row.mode==="exclusive"||mode==="exclusive"));
+  if(own)return Object.freeze({pid:process.pid,heldSeconds:Math.max(0,Math.floor((Date.now()-own.atMs)/1000)),command:command(),self:true as const});
   for(const entry of readLeaseRegistryEntriesV1(rootNow(),directory,Date.now(),false)){
    if(entry.pid===process.pid)continue;
    const hold=entry.holds.find(row=>row.resource===resource&&(row.mode==="exclusive"||mode==="exclusive"));
-   if(hold)return Object.freeze({pid:entry.pid,heldSeconds:Math.max(0,Math.floor((Date.now()-hold.sinceMs)/1000))});
+   if(hold)return Object.freeze({pid:entry.pid,heldSeconds:Math.max(0,Math.floor((Date.now()-hold.sinceMs)/1000)),command:entry.command.slice(0,240)});
   }
   return undefined;
  },

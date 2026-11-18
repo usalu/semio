@@ -25,3 +25,8 @@ Step 0 (`repo tools setup all`): never exit 0, see `round-16.tools-setup.report.
 - Peaks: run process 2337 MiB, slice workers 8084 MiB (below the 8192 MiB stop), system top 7160 MiB; peak sample 09:19:26Z at `1049 inferred here, 637 left`. Closure entries 34694 before, 34962 after.
 - Tail: round-27.try2.tail.txt (also round-27-try-2.tail.txt); state.json says native_rc 7.
 - Pending: fix the helper's stop rule, then run try 3 (try 2's stop does not count as a repo error).
+
+## Try 3 (helper fixed: no pressure stop)
+- 2026-11-15T15:25:16Z to 15:36:57Z, wall 701 s, **native_rc=75**, marker absent, ready false. (Started late: waited for the user's approval of the helper fix; round 29 says the 14:50-15:01Z server outage and new fleet code make tries in that window not a result.)
+- End (verbatim start): `The project graph could not be read on this machine yet: the plan stage inference (during inference) grew to 9940 MB, more than the 6553 MB this machine gives a plan, and only 2813 MB of memory were available (at least 2048 MB are kept in reserve) after it gave back what it could.`
+- Peaks: run process 1071 MiB, slice workers 2795 MiB, system top 2280 MiB; closure entries 34989 before, 35031 after. Tail: round-27-try-3.tail.txt. Superseded by round 29.

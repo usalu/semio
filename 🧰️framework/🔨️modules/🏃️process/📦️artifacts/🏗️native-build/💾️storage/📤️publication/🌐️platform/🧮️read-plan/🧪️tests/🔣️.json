@@ -1,0 +1,2313 @@
+{
+ "decisions": [
+  {
+   "name": "recording pass hashes",
+   "mode": "all",
+   "fileRoot": 0,
+   "mtimeNs": "1000000000000",
+   "ctimeNs": "1000000000000",
+   "recordedAtNs": "900000000000000",
+   "hashed": true
+  },
+  {
+   "name": "all hashes without a recording time",
+   "mode": "all",
+   "fileRoot": 3,
+   "mtimeNs": "1",
+   "ctimeNs": "1",
+   "hashed": true
+  },
+  {
+   "name": "changed vouches by stamp for an old file",
+   "mode": "changed",
+   "fileRoot": 0,
+   "mtimeNs": "1000000000000",
+   "ctimeNs": "1000000000000",
+   "recordedAtNs": "900000000000000",
+   "hashed": false
+  },
+  {
+   "name": "changed hashes without a recording time",
+   "mode": "changed",
+   "fileRoot": 0,
+   "mtimeNs": "1000000000000",
+   "ctimeNs": "1000000000000",
+   "hashed": true
+  },
+  {
+   "name": "changed hashes a racy file by modification time",
+   "mode": "changed",
+   "fileRoot": 0,
+   "mtimeNs": "899999000000000",
+   "ctimeNs": "1000000000000",
+   "recordedAtNs": "900000000000000",
+   "hashed": true
+  },
+  {
+   "name": "changed hashes a racy file by change time",
+   "mode": "changed",
+   "fileRoot": 0,
+   "mtimeNs": "1000000000000",
+   "ctimeNs": "899996000000000",
+   "recordedAtNs": "900000000000000",
+   "hashed": true
+  },
+  {
+   "name": "changed vouches just outside the window",
+   "mode": "changed",
+   "fileRoot": 0,
+   "mtimeNs": "899994999999999",
+   "ctimeNs": "899994999999999",
+   "recordedAtNs": "900000000000000",
+   "hashed": false
+  },
+  {
+   "name": "changed hashes exactly at the window edge minus one",
+   "mode": "changed",
+   "fileRoot": 0,
+   "mtimeNs": "899995000000001",
+   "ctimeNs": "899995000000001",
+   "recordedAtNs": "900000000000000",
+   "hashed": true
+  },
+  {
+   "name": "changed vouches exactly at the window edge",
+   "mode": "changed",
+   "fileRoot": 0,
+   "mtimeNs": "899995000000000",
+   "ctimeNs": "899995000000000",
+   "recordedAtNs": "900000000000000",
+   "hashed": false
+  },
+  {
+   "name": "root hashes the selected root",
+   "mode": "root",
+   "rootIndex": 2,
+   "fileRoot": 2,
+   "mtimeNs": "1000000000000",
+   "ctimeNs": "1000000000000",
+   "recordedAtNs": "900000000000000",
+   "hashed": true
+  },
+  {
+   "name": "root vouches for another root",
+   "mode": "root",
+   "rootIndex": 2,
+   "fileRoot": 1,
+   "mtimeNs": "1000000000000",
+   "ctimeNs": "1000000000000",
+   "recordedAtNs": "900000000000000",
+   "hashed": false
+  },
+  {
+   "name": "root hashes a racy file of another root",
+   "mode": "root",
+   "rootIndex": 2,
+   "fileRoot": 1,
+   "mtimeNs": "899996000000000",
+   "ctimeNs": "899996000000000",
+   "recordedAtNs": "900000000000000",
+   "hashed": true
+  }
+ ],
+ "counts": [
+  {
+   "name": "probe of 64 roots with 10000 files",
+   "roots": 64,
+   "files": 10000,
+   "passes": [
+    "all",
+    "all",
+    "all",
+    "root x64",
+    "changed x64",
+    "changed",
+    "changed"
+   ],
+   "hashed": 40000
+  },
+  {
+   "name": "single root",
+   "roots": 1,
+   "files": 100,
+   "passes": [
+    "all",
+    "all",
+    "all",
+    "root x1",
+    "changed x1",
+    "changed",
+    "changed"
+   ],
+   "hashed": 400
+  }
+ ],
+ "allowances": [
+  {
+   "name": "empty group",
+   "roots": [],
+   "files": [],
+   "chunkBytes": 65536,
+   "allowance": 8192
+  },
+  {
+   "name": "one root one file",
+   "roots": [
+    "a/b"
+   ],
+   "files": [
+    {
+     "path": "x/y.json",
+     "bytes": 10
+    }
+   ],
+   "chunkBytes": 65536,
+   "allowance": 21504
+  },
+  {
+   "name": "windows tool tree of 512 files of 128 KiB under 64 roots",
+   "roots": [
+    "tools/win32-x64/r0",
+    "tools/win32-x64/r1",
+    "tools/win32-x64/r2",
+    "tools/win32-x64/r3",
+    "tools/win32-x64/r4",
+    "tools/win32-x64/r5",
+    "tools/win32-x64/r6",
+    "tools/win32-x64/r7",
+    "tools/win32-x64/r8",
+    "tools/win32-x64/r9",
+    "tools/win32-x64/r10",
+    "tools/win32-x64/r11",
+    "tools/win32-x64/r12",
+    "tools/win32-x64/r13",
+    "tools/win32-x64/r14",
+    "tools/win32-x64/r15",
+    "tools/win32-x64/r16",
+    "tools/win32-x64/r17",
+    "tools/win32-x64/r18",
+    "tools/win32-x64/r19",
+    "tools/win32-x64/r20",
+    "tools/win32-x64/r21",
+    "tools/win32-x64/r22",
+    "tools/win32-x64/r23",
+    "tools/win32-x64/r24",
+    "tools/win32-x64/r25",
+    "tools/win32-x64/r26",
+    "tools/win32-x64/r27",
+    "tools/win32-x64/r28",
+    "tools/win32-x64/r29",
+    "tools/win32-x64/r30",
+    "tools/win32-x64/r31",
+    "tools/win32-x64/r32",
+    "tools/win32-x64/r33",
+    "tools/win32-x64/r34",
+    "tools/win32-x64/r35",
+    "tools/win32-x64/r36",
+    "tools/win32-x64/r37",
+    "tools/win32-x64/r38",
+    "tools/win32-x64/r39",
+    "tools/win32-x64/r40",
+    "tools/win32-x64/r41",
+    "tools/win32-x64/r42",
+    "tools/win32-x64/r43",
+    "tools/win32-x64/r44",
+    "tools/win32-x64/r45",
+    "tools/win32-x64/r46",
+    "tools/win32-x64/r47",
+    "tools/win32-x64/r48",
+    "tools/win32-x64/r49",
+    "tools/win32-x64/r50",
+    "tools/win32-x64/r51",
+    "tools/win32-x64/r52",
+    "tools/win32-x64/r53",
+    "tools/win32-x64/r54",
+    "tools/win32-x64/r55",
+    "tools/win32-x64/r56",
+    "tools/win32-x64/r57",
+    "tools/win32-x64/r58",
+    "tools/win32-x64/r59",
+    "tools/win32-x64/r60",
+    "tools/win32-x64/r61",
+    "tools/win32-x64/r62",
+    "tools/win32-x64/r63"
+   ],
+   "files": [
+    {
+     "path": "bin/sub/dir/f0.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f1.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f2.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f3.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f4.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f5.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f6.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f7.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f8.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f9.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f10.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f11.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f12.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f13.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f14.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f15.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f16.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f17.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f18.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f19.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f20.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f21.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f22.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f23.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f24.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f25.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f26.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f27.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f28.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f29.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f30.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f31.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f32.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f33.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f34.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f35.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f36.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f37.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f38.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f39.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f40.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f41.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f42.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f43.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f44.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f45.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f46.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f47.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f48.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f49.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f50.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f51.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f52.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f53.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f54.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f55.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f56.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f57.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f58.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f59.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f60.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f61.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f62.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f63.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f64.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f65.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f66.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f67.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f68.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f69.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f70.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f71.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f72.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f73.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f74.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f75.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f76.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f77.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f78.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f79.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f80.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f81.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f82.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f83.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f84.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f85.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f86.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f87.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f88.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f89.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f90.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f91.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f92.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f93.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f94.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f95.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f96.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f97.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f98.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f99.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f100.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f101.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f102.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f103.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f104.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f105.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f106.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f107.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f108.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f109.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f110.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f111.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f112.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f113.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f114.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f115.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f116.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f117.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f118.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f119.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f120.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f121.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f122.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f123.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f124.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f125.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f126.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f127.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f128.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f129.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f130.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f131.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f132.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f133.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f134.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f135.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f136.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f137.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f138.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f139.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f140.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f141.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f142.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f143.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f144.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f145.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f146.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f147.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f148.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f149.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f150.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f151.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f152.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f153.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f154.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f155.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f156.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f157.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f158.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f159.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f160.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f161.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f162.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f163.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f164.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f165.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f166.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f167.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f168.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f169.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f170.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f171.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f172.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f173.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f174.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f175.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f176.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f177.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f178.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f179.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f180.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f181.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f182.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f183.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f184.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f185.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f186.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f187.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f188.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f189.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f190.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f191.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f192.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f193.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f194.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f195.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f196.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f197.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f198.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f199.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f200.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f201.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f202.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f203.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f204.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f205.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f206.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f207.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f208.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f209.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f210.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f211.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f212.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f213.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f214.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f215.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f216.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f217.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f218.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f219.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f220.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f221.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f222.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f223.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f224.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f225.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f226.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f227.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f228.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f229.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f230.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f231.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f232.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f233.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f234.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f235.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f236.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f237.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f238.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f239.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f240.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f241.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f242.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f243.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f244.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f245.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f246.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f247.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f248.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f249.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f250.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f251.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f252.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f253.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f254.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f255.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f256.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f257.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f258.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f259.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f260.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f261.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f262.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f263.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f264.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f265.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f266.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f267.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f268.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f269.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f270.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f271.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f272.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f273.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f274.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f275.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f276.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f277.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f278.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f279.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f280.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f281.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f282.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f283.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f284.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f285.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f286.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f287.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f288.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f289.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f290.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f291.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f292.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f293.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f294.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f295.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f296.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f297.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f298.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f299.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f300.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f301.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f302.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f303.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f304.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f305.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f306.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f307.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f308.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f309.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f310.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f311.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f312.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f313.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f314.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f315.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f316.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f317.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f318.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f319.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f320.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f321.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f322.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f323.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f324.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f325.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f326.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f327.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f328.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f329.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f330.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f331.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f332.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f333.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f334.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f335.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f336.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f337.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f338.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f339.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f340.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f341.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f342.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f343.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f344.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f345.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f346.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f347.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f348.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f349.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f350.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f351.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f352.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f353.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f354.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f355.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f356.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f357.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f358.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f359.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f360.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f361.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f362.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f363.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f364.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f365.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f366.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f367.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f368.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f369.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f370.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f371.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f372.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f373.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f374.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f375.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f376.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f377.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f378.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f379.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f380.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f381.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f382.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f383.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f384.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f385.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f386.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f387.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f388.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f389.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f390.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f391.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f392.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f393.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f394.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f395.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f396.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f397.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f398.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f399.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f400.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f401.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f402.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f403.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f404.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f405.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f406.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f407.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f408.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f409.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f410.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f411.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f412.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f413.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f414.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f415.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f416.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f417.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f418.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f419.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f420.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f421.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f422.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f423.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f424.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f425.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f426.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f427.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f428.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f429.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f430.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f431.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f432.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f433.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f434.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f435.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f436.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f437.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f438.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f439.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f440.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f441.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f442.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f443.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f444.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f445.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f446.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f447.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f448.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f449.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f450.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f451.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f452.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f453.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f454.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f455.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f456.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f457.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f458.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f459.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f460.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f461.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f462.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f463.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f464.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f465.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f466.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f467.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f468.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f469.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f470.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f471.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f472.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f473.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f474.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f475.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f476.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f477.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f478.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f479.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f480.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f481.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f482.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f483.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f484.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f485.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f486.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f487.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f488.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f489.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f490.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f491.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f492.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f493.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f494.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f495.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f496.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f497.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f498.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f499.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f500.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f501.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f502.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f503.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f504.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f505.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f506.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f507.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f508.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f509.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f510.dll",
+     "bytes": 131072
+    },
+    {
+     "path": "bin/sub/dir/f511.dll",
+     "bytes": 131072
+    }
+   ],
+   "chunkBytes": 65536,
+   "allowance": 8232960
+  },
+  {
+   "name": "a file of 8 MiB and an empty file",
+   "roots": [
+    "t"
+   ],
+   "files": [
+    {
+     "path": "big.bin",
+     "bytes": 8388608
+    },
+    {
+     "path": "empty",
+     "bytes": 0
+    }
+   ],
+   "chunkBytes": 65536,
+   "allowance": 550400
+  }
+ ],
+ "windows": {
+  "note": "declared model from reading the descriptor module of the Windows layer, not measured: a chunk write passes at least this many checkpoints (two around every native call, one per guard, three guards per write); the real m05 run staged 2584 chunk steps in 11259 s before the fixed cap of 65536 refused it",
+  "checkpointsPerChunkStep": 40,
+  "chunkSteps": 2584,
+  "oldFixedCap": 65536
+ }
+}

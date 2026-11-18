@@ -52,14 +52,12 @@
   min-width: 3em;
 }
 
-/* 🏠️ The overview's cards over the glass, fixed on a grid while the pages pan behind it: the card layer takes its
-   track lists from home (`--course-home-columns`, `--course-home-rows`) with no gaps (the spacing lies inside the cells),
-   and each card is compact and centred in its cell. Extra rows scroll inside the card layer. A card that is taller
-   than its cell starts at the top of its cell (never above it, under the navbar) and scrolls inside it, so it never
-   lies over the card below. Where the learner swipes through the grid instead (below 768 px) the overview places
-   every card on its page itself. DOM order is reading order at every width. */
+/* 🏠️ The overview's cards over the glass, tiled edge to edge on the design system's card grid (`data-card-grid`): the card
+   layer takes its track lists from home (`--course-home-columns`, `--course-home-rows`), has no gaps and no cell padding, and
+   each card fills its cell, so neighbours share one border line and the first row starts on the navbar's bottom line; the
+   text spacing lies inside the cards. Extra rows scroll inside the card layer. Where the learner swipes through the grid
+   instead (below 768 px) the overview places every card on its page itself. DOM order is reading order at every width. */
 .course-home-grid {
-  display: grid;
   overflow-x: hidden;
   overflow-y: auto;
   pointer-events: auto;
@@ -68,31 +66,40 @@
 }
 
 .course-home-cell {
-  display: flex;
-  min-width: 0;
-  min-height: 0;
-  align-items: safe center;
-  justify-content: safe center;
-  padding: var(--spacing-double);
-  overflow-y: auto;
+  overflow: hidden;
 }
 
-/* 🃏️ The card itself takes the width — the overview hosts each card in a `display: contents` element, which has no box
-   to size, and a card whose content measures its own room (a size container) cannot be sized by that content: left to
+/* 🃏️ The card itself takes the whole cell — the overview hosts each card in a `display: contents` element, which has no
+   box to size, and a card whose content measures its own room (a size container) cannot be sized by that content: left to
    its content it collapses to its title. */
+.course-home-cell > .course-home-card {
+  display: flex;
+  flex-direction: column;
+}
+
 .course-home-cell [data-overview-card] {
   inline-size: 100%;
+  flex: 1 1 auto;
+  min-block-size: 0;
 }
 
-/* 👆️ A card the learner swipes to (phones, short windows, large text) is as wide as the screen leaves it, up to a
-   width that keeps its lines readable on a wide one; its width never follows its content, which its card lays out for
-   the width it gets. */
+/* 👆️ A card the learner swipes to (phones, short windows, large text) fills the room its page leaves it — the whole width
+   between the swipe hints and, at least, the whole height from the navbar to the footer — so its edges are the page's; its
+   width never follows its content, which its card lays out for the width it gets. */
 .course-home-entry {
-  inline-size: min(100%, 36rem);
+  display: flex;
+  inline-size: 100%;
+  min-block-size: 100%;
+}
+
+.course-home-entry > .course-home-card {
+  display: flex;
+  flex-direction: column;
 }
 
 .course-home-entry [data-overview-card] {
   inline-size: 100%;
+  flex: 1 1 auto;
 }
 
 .course-home-card {
@@ -127,7 +134,6 @@
 .course-page {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-double);
 }
 
 /* 📐️ Adaptive layouts. Every part is laid out by hand for the room it actually has — the width of its own card, task

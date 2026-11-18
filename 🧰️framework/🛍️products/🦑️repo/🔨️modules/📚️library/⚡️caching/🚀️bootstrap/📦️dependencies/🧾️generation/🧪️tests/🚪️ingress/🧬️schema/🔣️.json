@@ -79,7 +79,7 @@
    "required": ["sizes", "chunkCeiling"],
    "properties": {
     "sizes": {"type": "array", "minItems": 1, "items": {"type": "integer", "minimum": 0, "maximum": 33554432}},
-    "chunkCeiling": {"const": 65536}
+    "chunkCeiling": {"const": 8388608}
    }
   }
  }

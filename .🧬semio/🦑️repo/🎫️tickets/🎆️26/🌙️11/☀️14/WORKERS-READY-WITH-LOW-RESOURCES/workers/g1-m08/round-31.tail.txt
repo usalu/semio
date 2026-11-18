@@ -1,0 +1,21 @@
+2026-11-17T22:50:58.856Z workspace-failed
+Reading the project graph slice (1499 s): owners done 590 of 590.
+Reading the project graph slice (1501 s): owners done 590 of 590.
+Reading the project graph slice (1503 s): owners done 590 of 590.
+Reading the project graph slice (1505 s): owners done 590 of 590.
+[repo] still working after 1521 s; last phase started: door.script
+Reading the project graph slice (1507 s): owners done 590 of 590.
+Reading the project graph slice (1509 s): owners done 590 of 590.
+Reading the project graph slice (1511 s): owners done 590 of 590.
+Reading the project graph slice (1513 s): owners done 590 of 590.
+Reading the project graph slice (1515 s): owners done 590 of 590.
+The graph service holds this request and is working on it (1528 s).
+[repo] still working after 1551 s; last phase started: door.script
+The graph service holds this request and is working on it (1539 s).
+The graph service holds this request and is working on it (1549 s).
+The graph service holds this request and is working on it (1560 s).
+[repo] still working after 1581 s; last phase started: door.script
+The graph service holds this request and is working on it (1570 s).
+The graph service holds this request and is working on it (1580 s).
+Internal error: Closed scoped plan required: /scope/targets must contain at most 4096 item(s) (6276 tasks, 2504 edges, 259 projects, 4443 scope targets)
+Geschlossener Plan erforderlich: /scope/targets must contain at most 4096 item(s) (6276 tasks, 2504 edges, 259 projects, 4443 scope targets)

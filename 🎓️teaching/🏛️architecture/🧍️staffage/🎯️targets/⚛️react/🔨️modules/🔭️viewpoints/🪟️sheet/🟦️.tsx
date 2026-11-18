@@ -97,17 +97,16 @@ export function ThreeViewSheet(props: ThreeViewSheetProps): ReactElement {
                 />
               </FigureBoundary>
             ) : (
-              <div data-notice="unavailable" className="flex h-full min-w-0 flex-col gap-single overflow-auto border border-dashed border-border bg-muted/40 p-double pt-6 text-xs text-foreground">
-                <p className="m-0 text-sm font-semibold">{viewpointWord("viewpoints.unavailable", language, { view: phrase })}</p>
-                <p className="m-0">{resolution.message[language]}</p>
+              <Notice kind="unavailable" plain live={false} className="h-full overflow-auto pt-6" title={viewpointWord("viewpoints.unavailable", language, { view: phrase })}>
+                <p className="m-0 text-foreground">{resolution.message[language]}</p>
                 {resolution.details === undefined ? null : (
                   <details>
                     <summary>{viewpointWord("viewpoints.failedDetails", language)}</summary>
                     <code className="font-mono">{resolution.details}</code>
                   </details>
                 )}
-                <p className="m-0 text-muted-foreground">{viewpointWord("viewpoints.nothingInstead", language)}</p>
-              </div>
+                <p className="m-0">{viewpointWord("viewpoints.nothingInstead", language)}</p>
+              </Notice>
             )}
             <button
               type="button"

@@ -17735,6 +17735,7 @@ dependencies = [
  "semio-plugin-decl-tool-contract",
  "semio-plugin-ownership",
  "semio-plugin-retained-command",
+ "semio-ui-contract-values",
  "serde",
  "serde_json",
 ]
@@ -24386,6 +24387,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-ui-border-presentation"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job",
+]
+
+[[package]]
 name = "semio-ui-contract"
 version = "0.1.0"
 dependencies = [
@@ -24539,6 +24547,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-value",
  "semio-framework-value-paged-list",
+ "semio-ui-border-presentation",
  "semio-ui-scene-algebra",
  "semio-ui-scene-camera",
  "semio-ui-scene-mesh",
@@ -25225,6 +25234,7 @@ dependencies = [
  "semio-framework-value",
  "semio-ui-contract",
  "semio-ui-declaration",
+ "semio-ui-draw-contract",
  "semio-ui-locale",
  "semio-ui-theme",
 ]
@@ -25286,6 +25296,7 @@ dependencies = [
  "semio-ui-wgpu-controls",
  "semio-ui-wgpu-events",
  "semio-ui-wgpu-layout",
+ "semio-ui-wgpu-light",
  "semio-ui-wgpu-mounted-layout",
  "semio-ui-wgpu-widget-kit",
 ]

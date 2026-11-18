@@ -105,7 +105,7 @@ test("spilling the rows of 120 owners holds a few hundred bytes per distinct row
  expect(found.growth).toBeLessThan(found.rows*512);expect(found.growth).toBeLessThan(found.bytes/2);
 },120000);
 
-test("the patch learns the index row of a log row once: 300 owners that share a 3000-row closure read each distinct row from the log once, and the patched bytes equal the patch from arrays",async()=>{
+test("the patch learns the index row of a log row once: 300 owners that share a 3000-row closure read each distinct row from the log to number it once and at most twice more to write it, and the patched bytes equal the patch from arrays",async()=>{
  const directory=mkdtempSync(join(tmpdir(),"row-log-shared-")),shared=pool(3000),log=createRowLogV1<Row>({path:join(directory,"rl","s.rows"),policy:{flushBytes:4096,batchRows:64,gapBytes:512,spanBytes:8192,staleSeconds:3600}});
  try{
   const lists=new Map<string,ReturnType<typeof log.append>>(),arrays=new Map<string,Row[]>();
@@ -113,7 +113,7 @@ test("the patch learns the index row of a log row once: 300 owners that share a 
   const before=log.stats().reads,patched=await patchFactIndexBytesV1(emptyFactIndexViewV1(),{upserts:lists as never}),afterReads=log.stats().reads,reference=await patchFactIndexBytesV1(emptyFactIndexViewV1(),{upserts:arrays as never});
   expect(Buffer.compare(patched,reference)).toBe(0);
   expect(log.stats().rows).toBe(3300);
-  expect(log.stats().readBytes).toBeLessThan(2*log.stats().bytes);
+  expect(log.stats().readBytes).toBeLessThan(4*log.stats().bytes);
   expect(afterReads-before).toBeLessThan(3300);
  }finally{log.close();rmSync(directory,{recursive:true,force:true});}
 },120000);

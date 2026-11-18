@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:process:artifacts:native-build:storage:publication:platform:read-plan:v1",
+  "title": "Which staged artifact input files a read hashes, and in which order its directories are walked",
+  "description": "The checkpoints of a staging or a read are counted against an allowance derived from the work itself (`WorkAllowance`): every operation of the staged group (a root, a file, a chunk) may pass `checkpointsPerOperation` checkpoints, because the filesystem layer of a platform calls the checkpoint a different number of times for one operation (the Windows layer brackets every native call with two checkpoints and re-reads the facts of the directory on every guard; the POSIX layer does neither), so a fixed number of checkpoints stopped a Windows worker after 11 000 s of correct staging with `Immutable input physical work capacity exceeded`. The allowance grows with the batch and never below its structure; a loop that does not end is still stopped, at the allowance of the batch it belongs to. A staged input group is read again many times: before the first producer, before each producer of one root, after each producer and at each funding measurement. Hashing every byte of every file on every read made the work grow with the number of roots times the number of files (a Linux worker was still reading file number 30000 after 90 minutes). The bytes of a file are proven when they are recorded; a later read proves them again only for the files it can not vouch for by their stamp: mode `all` hashes every file (the recording pass, the complete fresh read before the first producer, the first read of an observed group); mode `root` hashes the files of the one issued root and vouches for the others by stamp; mode `changed` vouches by stamp for every file. A stamp (device, inode, mode, link count, size, modification and change time in nanoseconds) names a file that was not written since: a rewrite changes the change time. A file is racy, and is hashed anyway, when its newest time lies within `settleNanoseconds` before the start of the pass that recorded the bytes (a rewrite inside the clock granularity would not change the stamp), or when no recording time is known. Directories are walked once each, from their parent, not once per file from the root. A file is written and read back in steps of one chunk (`ChunkPlan`): the chunk is a power of two of base64 characters between 2^minimumEncodedExponent (256 KiB) and 2^maximumEncodedExponent (8 MiB) that is at most a `batchDivisor`-th of the bytes of the batch and at most a `memoryDivisor`-th of the free memory, so a batch is a few dozen steps and not one step for every 48 KiB: every step costs a write or a read call of the filesystem layer with its guards and its facts, one progress line and one yield, and the layer of a loaded Windows worker needs seconds for these, which made 165 MB a matter of hours. A step is one call of the layer, one progress line and one check after the yield; a cut-off run is cancelled at the next step.",
+  "definitions": {
+    "Policy": {"const": {"version": 1, "settleNanoseconds": "5000000000", "modes": ["all", "root", "changed"]}},
+    "ChunkPlan": {"const": {"version": 1, "minimumEncodedExponent": 18, "maximumEncodedExponent": 23, "batchDivisor": 4, "memoryDivisor": 128}},
+    "WorkAllowance": {"const": {"version": 1, "checkpointsPerOperation": 512, "operationsBase": 16, "operationsPerRoot": 8, "operationsPerFile": 8, "operationsPerChunk": 6}},
+    "AllowanceCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "roots", "files", "chunkBytes", "allowance"],
+      "properties": {
+        "name": {"type": "string"},
+        "roots": {"type": "array", "items": {"type": "string"}},
+        "files": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["path", "bytes"], "properties": {"path": {"type": "string"}, "bytes": {"type": "integer", "minimum": 0}}}},
+        "chunkBytes": {"type": "integer", "minimum": 1},
+        "allowance": {"type": "integer", "minimum": 0}
+      }
+    },
+    "DecisionCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "mode", "fileRoot", "mtimeNs", "ctimeNs", "hashed"],
+      "properties": {
+        "name": {"type": "string"},
+        "mode": {"enum": ["all", "root", "changed"]},
+        "rootIndex": {"type": "integer", "minimum": 0},
+        "fileRoot": {"type": "integer", "minimum": 0},
+        "mtimeNs": {"type": "string"},
+        "ctimeNs": {"type": "string"},
+        "recordedAtNs": {"type": "string"},
+        "hashed": {"type": "boolean"}
+      }
+    },
+    "CountCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "roots", "files", "passes", "hashed"],
+      "properties": {"name": {"type": "string"}, "roots": {"type": "integer"}, "files": {"type": "integer"}, "passes": {"type": "array", "items": {"enum": ["all", "root", "changed"]}}, "hashed": {"type": "integer"}}
+    }
+  }
+}

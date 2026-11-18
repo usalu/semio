@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import{createHash}from"node:crypto";
 import{mkdir,readFile,rename,rm,writeFile}from"node:fs/promises";
 import{dirname,join}from"node:path";
@@ -53,7 +54,7 @@ export function createTaskRecorderV1({directory,cas,now=Date.now}){
 /** 🏭️ The task state of the host service: per workspace the shared workspace graph (the one the closure settler runs on) and the recorder below `<root>/.cache/b/g/m/task-keys`, both over the host content store. */
 export function createHostTaskStateV1({cas}){
  return async({root})=>{
-  const cacheRoot=join(root,".cache/b/g/m"),settler=sharedClosureSettlerV1({workspaceRoot:root,cacheRoot,blobs:cas});
+  const cacheRoot=machinePathV1(root,".cache/b/g/m"),settler=sharedClosureSettlerV1({workspaceRoot:root,cacheRoot,blobs:cas});
   return{graph:settler.graph,recorder:createTaskRecorderV1({directory:join(cacheRoot,"task-keys"),cas})};
  };
 }

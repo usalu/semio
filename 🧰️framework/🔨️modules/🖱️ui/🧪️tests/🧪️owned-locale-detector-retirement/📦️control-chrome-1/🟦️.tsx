@@ -4,7 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { TestSource, Tests2Vitest, Tests2Dependencies } from "../🧰️harness/🟦️.ts";
 
 export async function registerControlChrome1Tests(vitest: Tests2Vitest, dependencies: Tests2Dependencies, testSource: TestSource): Promise<void> {
-  const { borderNormalBottomClass, borderNormalClass, borderNormalTopClass, Button, ButtonGroup, ButtonGroupItem, CheckIcon, Command, CommandItem, CommandList, COMPACT_UI_DRIVER, DEFAULT_UI_DRIVER, FindInViewIcon, Footer, humanizeControlId, humanizeControlSegment, isInternalChromeControlId, LevelProvider, Mode, modeDockTabClassName, Navbar, navbarFillItem, Pane, PaneHost, Panel, PanelChromeTabBar, panelKindFromPanelToggleControlId, PanelRightIcon, panelTabButtonDividerClass, renderToStaticMarkup, resolveControlLabelId, resolveTranslationLabel, resolveWindowSilhouetteBorderKind, RibbonItem, RibbonZone, Search, SearchIcon, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, shellChromeBorderClass, shellChromeFrameLayerClass, singleTreeLeaf, Toggle, ToggleGroup, uiDataLabel, UiDriverProvider, uiI18n, Window } = dependencies;
+  const { borderNormalBottomClass, borderNormalClass, borderNormalTopClass, Button, ButtonGroup, ButtonGroupItem, CheckIcon, Command, CommandItem, CommandList, COMPACT_UI_DRIVER, DEFAULT_UI_DRIVER, FindInViewIcon, Footer, humanizeControlId, humanizeControlSegment, isInternalChromeControlId, LevelProvider, Mode, modeDockTabClassName, Navbar, navbarFillItem, Pane, PaneHost, Panel, PanelChromeTabBar, panelKindFromPanelToggleControlId, PanelRightIcon, panelTabButtonDividerClass, renderToStaticMarkup, resolveControlLabelId, resolveTranslationLabel, resolveWindowSilhouetteBorderKind, RibbonItem, RibbonZone, Search, SearchIcon, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, shellChromeBorderClass, singleTreeLeaf, Toggle, ToggleGroup, uiDataLabel, UiDriverProvider, uiI18n, Window } = dependencies;
   const { describe, expect, it } = vitest;
 
 describe("control chrome", () => {
@@ -312,8 +312,6 @@ describe("control chrome", () => {
       it("uses normal shell edges on panel/pane frame, navbar bottom, and footer top with CSS hover emphasis", () => {
         expect(shellChromeBorderClass).toContain("border-normal");
         expect(shellChromeBorderClass).not.toContain("border-emphasized");
-        expect(shellChromeFrameLayerClass).not.toContain("border-normal");
-        expect(shellChromeFrameLayerClass).not.toContain("border-emphasized");
         const navbarMarkup = renderToStaticMarkup(<Navbar items={[{ key: "a", content: "Nav" }]} />);
         expect(navbarMarkup).toContain('data-slot="navbar"');
         expect(navbarMarkup).not.toContain(borderNormalBottomClass);
@@ -376,8 +374,7 @@ describe("control chrome", () => {
         expect(css).toContain("background-color: var(--border-emphasized-color)");
         expect(css).toMatch(/\[data-window-silhouette\]:hover > \[data-window-silhouette-border\]\[data-kind="normal"\]:not\(\[data-pending\]\) path/);
         expect(css).not.toMatch(/\[data-window-silhouette\]:hover \[data-window-silhouette-border\]\[data-kind="normal"\]:not\(\[data-pending\]\) path/);
-        expect(css).toMatch(/:is\(\[data-slot="panel"\],\s*\[data-slot="pane"\]\):hover\s*\[data-slot="chrome-frame"\]/);
-        expect(css).not.toMatch(/:is\(\[data-slot="panel"\],\s*\[data-slot="pane"\]\):focus-within\s*\[data-slot="chrome-frame"\]/);
+        expect(css).not.toContain('data-slot="chrome-frame"');
         expect(css).toContain("@utility bg-hover-interactive-fill");
         expect(css).toContain("--hover-ink: var(--color-emphasized)");
         expect(css).toContain("--muted-foreground: var(--color-emphasized)");

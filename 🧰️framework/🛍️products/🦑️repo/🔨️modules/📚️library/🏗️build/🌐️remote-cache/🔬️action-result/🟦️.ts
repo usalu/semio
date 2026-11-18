@@ -6,6 +6,9 @@ export type RemoteCacheDigestV1=Readonly<{hash:string;size:number}>;
 /** 📦️ What an action result points at: blobs it needs in the content store (outputs and streams that are not inline) and the output trees whose files it needs as well. */
 export type RemoteCacheActionResultV1=Readonly<{references:readonly RemoteCacheDigestV1[];trees:readonly RemoteCacheDigestV1[]}>;
 
+/** 🔖️ An action result with the references split by whether they are volatile: `stable` holds the digests of every output except the files named as volatile (their bytes carry times), `manifest` says whether such a file was present. */
+export type RemoteCacheStableResultV1=Readonly<{references:readonly RemoteCacheDigestV1[];trees:readonly RemoteCacheDigestV1[];stable:readonly RemoteCacheDigestV1[];manifest:boolean;paths:readonly string[]}>;
+
 /** 🚦️ How far an uploaded action result is checked: not at all, for a well-formed message, or additionally for every blob it names. */
 export type RemoteCacheValidationV1="off"|"structure"|"complete";
 
@@ -61,7 +64,16 @@ function digest(field:Field,what:string):RemoteCacheDigestV1{
 
 /** 🔬️ Decodes Bazel's `ActionResult` message strictly: every field of a known number must have its wire type, paths must not be empty, digests must be lowercase sha256 with a consistent size, inline contents must match their digest. Unknown fields are skipped, so newer protocol revisions stay accepted. Throws with the first problem. */
 export function parseRemoteCacheActionResultV1(bytes:Uint8Array):RemoteCacheActionResultV1{
- const references:RemoteCacheDigestV1[]=[],trees:RemoteCacheDigestV1[]=[],reference=(value:RemoteCacheDigestV1):void=>{if(value.size>0)references.push(value);};
+ const {references,trees}=decodeActionResult(bytes,[]);
+ return Object.freeze({references,trees});
+}
+
+/** 🔖️ `parseRemoteCacheActionResultV1` that also answers which digests are stable when the output files named in `volatile` are left out (see `RemoteCacheStableResultV1`). Throws with the first problem. */
+export function parseRemoteCacheStableResultV1(bytes:Uint8Array,volatile:readonly string[]):RemoteCacheStableResultV1{return decodeActionResult(bytes,volatile);}
+
+function decodeActionResult(bytes:Uint8Array,volatile:readonly string[]):RemoteCacheStableResultV1{
+ const references:RemoteCacheDigestV1[]=[],trees:RemoteCacheDigestV1[]=[],stable:RemoteCacheDigestV1[]=[],paths:string[]=[];let manifest=false;
+ const reference=(value:RemoteCacheDigestV1,named=false):void=>{if(value.size>0){references.push(value);if(!named)stable.push(value);}};
  for(const field of fields(bytes)){
   if(field.number===2){
    expect(field,2,"output_files");let path="",entry:RemoteCacheDigestV1|undefined,contents:Uint8Array|undefined;
@@ -72,9 +84,10 @@ export function parseRemoteCacheActionResultV1(bytes:Uint8Array):RemoteCacheActi
     else if(part.number===5){expect(part,2,"output_files.contents");contents=part.data;}
    }
    if(path==="")fail("output_files.path is required");
+   paths.push(path);
    if(entry===undefined)fail("output_files.digest is required");
    else if(contents!==undefined){if(contents.length!==entry.size||createHash("sha256").update(contents).digest("hex")!==entry.hash)fail("output_files.contents does not match its digest");}
-   else reference(entry);
+   else{const named=volatile.includes(path);manifest||=named;reference(entry,named);}
   }else if(field.number===3){
    expect(field,2,"output_directories");let path="",tree:RemoteCacheDigestV1|undefined;
    for(const part of fields(field.data)){
@@ -95,7 +108,7 @@ export function parseRemoteCacheActionResultV1(bytes:Uint8Array):RemoteCacheActi
    if(path==="")fail("output_symlinks.path is required");
   }
  }
- return Object.freeze({references:Object.freeze(references),trees:Object.freeze(trees)});
+ return Object.freeze({references:Object.freeze(references),trees:Object.freeze(trees),stable:Object.freeze(stable),manifest,paths:Object.freeze(paths)});
 }
 
 /** 🌳️ Decodes a `Tree` blob (a root directory and its children) and returns the digests of every file inside; directory nodes are checked for shape only because their content travels inside the tree. Throws with the first problem. */

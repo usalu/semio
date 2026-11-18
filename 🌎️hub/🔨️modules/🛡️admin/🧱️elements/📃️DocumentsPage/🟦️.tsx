@@ -8,6 +8,7 @@
 import * as React from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table, uiDataLabel, type TableColumn } from "@semio-tech/ui-react";
 import type { DocumentView, SpaceView } from "@semio-tech/framework-os";
+import { AdminPage } from "../📄️AdminPage/🟦️.tsx";
 import { useAdminT } from "../📚️I18n/🟦️.tsx";
 import { useAdminSession } from "../🔑️AdminSession/🟦️.tsx";
 // #endregion 🔌️Adapters
@@ -62,9 +63,10 @@ export function DocumentsPage(): React.ReactElement {
   ];
 
   return (
-    <div className="flex h-full w-full flex-col gap-single overflow-auto p-single">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-emphasized">{t("admin.documents.title")}</h1>
+    <AdminPage
+      title={t("admin.documents.title")}
+      data-slot="admin-documents"
+      actions={
         <Select id="admin-documents-space-select" value={spaceId} onValueChange={setSpaceId}>
           <SelectTrigger id="admin-documents-space" className="w-48">
             <SelectValue />
@@ -78,8 +80,9 @@ export function DocumentsPage(): React.ReactElement {
             ))}
           </SelectContent>
         </Select>
-      </div>
+      }
+    >
       <Table columns={columns} data={documents} emptyMessage={uiDataLabel(t("admin.documents.empty"))} getRowId={(row) => `document:${row.descriptor.spaceId}:${row.descriptor.documentId}`} />
-    </div>
+    </AdminPage>
   );
 }

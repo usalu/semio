@@ -606,3 +606,28 @@ fn the_tree_and_wizard_filter_cursor_columns_follow_the_active_mode() {
     }
 }
 //#endregion 🎚️Width Modes
+
+//#region 🔗️FrameJunctions
+#[test]
+fn a_table_rule_reaches_the_scroll_track_when_the_rows_overflow() {
+    let rect = Rect::new(0, 0, 24, 6);
+    let widget = WidgetState::Table(table());
+    let buf = paint(&widget, rect, true);
+    let header_rule: String = buf.row_text(1).chars().take(24).collect();
+    assert!(header_rule.chars().all(|c| c == '\u{2500}'), "the header rule spans the whole width, scroll track column included: {header_rule:?}");
+}
+
+#[test]
+fn a_divider_meeting_a_wall_joins_it_with_tee_junctions() {
+    let rect = Rect::new(1, 1, 6, 1);
+    let mut buf = CellBuffer::new(Size { width: 8, height: 3 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+    for y in 0..3 {
+        for x in [0, 7] {
+            buf.put_border(x, y, Cell { ch: '\u{2502}', fg: [1, 1, 1], bg: [0, 0, 0], attrs: 0, width: 1 });
+        }
+    }
+    WidgetState::Divider(semio_ui_tui_widgets::widget::DividerState { label: None }).paint(&theme(), rect, &mut buf, false);
+    assert_eq!(buf.row_text(1), "\u{251c}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2524}");
+    assert_eq!(buf.row_text(0).chars().next(), Some('\u{2502}'), "walls elsewhere stay vertical");
+}
+//#endregion 🔗️FrameJunctions

@@ -11,6 +11,7 @@
 import * as React from "../../⚛️react-port/🟦️.ts";
 import { OsShellConfig, type StoragePort } from "@semio-tech/framework";
 import { applyLocalFoldersConfigMutation, LOCAL_FOLDERS_CONFIG_SCHEMA, type LocalFolderBinding, type LocalFolderBindings, type LocalFoldersConfigMutation } from "@semio-tech/framework/config/mutations";
+import { Button, SharedBorderRow, SharedBorderRowCell } from "@semio-tech/ui-react";
 // #endregion 🔌️Adapters
 
 //#region 🔖️EventLog
@@ -93,15 +94,15 @@ export function localFolderNameV1(path: string): string {
 export function LocalFolderReconnectBand(props: Readonly<{ message: string; reconnect: string; forget: string; label: string; busy: boolean; onReconnect: () => void; onForget: () => void }>): React.ReactElement {
   const { message, reconnect, forget, label, busy, onReconnect, onForget } = props;
   return (
-    <div role="status" aria-live="polite" aria-label={label} data-semio-folder-reconnect={busy ? "reconnecting" : "offered"} className="pointer-events-auto flex max-w-[90vw] flex-wrap items-center gap-single rounded-sm border border-normal bg-menu px-double py-single text-sm shadow-sm">
-      <span id="s-folder-reconnect-message">{message}</span>
-      <button type="button" id="s-folder-reconnect" className="min-h-medium px-tiny underline" disabled={busy} aria-busy={busy} onClick={onReconnect}>
+    <SharedBorderRow role="status" aria-live="polite" aria-label={label} data-semio-folder-reconnect={busy ? "reconnecting" : "offered"} className="max-w-[90vw] bg-menu text-sm">
+      <SharedBorderRowCell className="px-double py-single"><span id="s-folder-reconnect-message">{message}</span></SharedBorderRowCell>
+      <Button icon="folder-open" type="button" variant="outline" id="s-folder-reconnect" disabled={busy} aria-busy={busy} onClick={onReconnect}>
         {reconnect}
-      </button>
-      <button type="button" id="s-folder-forget" className="min-h-medium px-tiny underline" disabled={busy} onClick={onForget}>
+      </Button>
+      <Button icon="trash-2" type="button" variant="outline" id="s-folder-forget" disabled={busy} onClick={onForget}>
         {forget}
-      </button>
-    </div>
+      </Button>
+    </SharedBorderRow>
   );
 }
 //#endregion 🔖️Reconnect

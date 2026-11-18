@@ -1,0 +1,80 @@
+import Ajv from"ajv";
+import{afterAll,expect,test}from"bun:test";
+import{spawnSync}from"node:child_process";
+import{createHash}from"node:crypto";
+import{mkdirSync,mkdtempSync,rmSync,utimesSync,writeFileSync}from"node:fs";
+import{tmpdir}from"node:os";
+import{join}from"node:path";
+import{fileURLToPath}from"node:url";
+import{FRESH_POLICY_V1,fileDigestV1,freshVerdictV1,observedDigestsV1,refreshStateV1}from"../🟦️.ts";
+import{directoryFactOfV1,observationRowFreshV1}from"../../../../👁️observation/🟨️.mjs";
+import schema from"../🧬️schema/🔣️.json"with{type:"json"};
+import fixture from"./🔣️.json"with{type:"json"};
+
+/** 🌱️ Contract: a stored record that no longer holds is told apart from one that does by the digests of the files it read (equal to an independent Python model on the fixture), a record younger than the minimum age is never judged stale, the claim state of a refresh differs from the state of the record and from the refresh of any other stale entry, and the digest of a file follows its content.
+ * @see ../🟦️.ts */
+const scratch:string[]=[],here=(name:string)=>fileURLToPath(new URL(name,import.meta.url));
+afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true});});
+
+test("the rows, the verdicts and the refresh states equal the fixture, the schema and the Python oracle",()=>{
+ expect(new Ajv({strict:false}).validate({$ref:"#/definitions/Policy",definitions:schema.definitions},FRESH_POLICY_V1)).toBe(true);
+ const run=spawnSync("python3",["-I",here("./🐍️.py"),here("../🧬️schema/🔣️.json"),here("./🔣️.json")],{encoding:"utf8"});
+ expect(run.status,run.stderr).toBe(0);
+ const oracle=JSON.parse(run.stdout) as {digests:string[][][];verdicts:unknown[];states:string[]};
+ expect(fixture.verdicts.map(row=>observedDigestsV1(row.rows as never).map(each=>[each.path,each.sha256]))).toEqual(oracle.digests);
+ expect(fixture.verdicts.map(row=>freshVerdictV1({rows:row.rows as never,hashOf:path=>(row.tree as Record<string,string>)[path],createdMs:row.createdMs,now:row.now,closureHolds:(row as {closures?:Record<string,boolean>}).closures===undefined?undefined:each=>(row as {closures:Record<string,boolean>}).closures[each.path]===true,rowHolds:(row as {holds?:Record<string,boolean>}).holds===undefined?undefined:each=>(row as {holds:Record<string,boolean>}).holds[each.kind+":"+each.path]===true}))).toEqual(oracle.verdicts);
+ expect(fixture.states.map(row=>refreshStateV1({digest:row.digest} as never,row.noteHash).digest)).toEqual(oracle.states);
+ expect(oracle.verdicts.map((row:any)=>row.fresh)).toEqual([true,false,false,true,true,true,false,true,true,false,true]);
+});
+
+test("a refresh is claimed under a state of its own for every stale entry",()=>{
+ const state={version:1,frame:{kind:"project-inference"},digest:"d".repeat(64)} as never;
+ const one=refreshStateV1(state,"1".repeat(64)),two=refreshStateV1(state,"2".repeat(64));
+ expect(one.digest).not.toBe((state as {digest:string}).digest);expect(one.digest).not.toBe(two.digest);expect(refreshStateV1(state,"1".repeat(64)).digest).toBe(one.digest);
+});
+
+test("the digest of a file follows its content and a missing file has none",()=>{
+ const dir=mkdtempSync(join(tmpdir(),"fresh-"));scratch.push(dir);const file=join(dir,"a.txt");
+ writeFileSync(file,"one");const first=fileDigestV1(file);expect(first).toMatch(/^[0-9a-f]{64}$/u);expect(fileDigestV1(file)).toBe(first);
+ writeFileSync(file,"two");utimesSync(file,new Date(Date.now()+5000),new Date(Date.now()+5000));expect(fileDigestV1(file)).not.toBe(first);
+ expect(fileDigestV1(join(dir,"absent"))).toBeUndefined();
+});
+
+const closureDigestV1=(root:string,files:readonly string[])=>createHash("sha256").update(JSON.stringify(files.map(file=>[file,fileDigestV1(join(root,file))]))).digest("hex");
+
+test("an edit of an unrelated file or a restamp keeps every record fresh, a changed closure file makes stale exactly the records whose closure reaches it",()=>{
+ const root=mkdtempSync(join(tmpdir(),"closure-"));scratch.push(root);
+ const put=(name:string,text:string)=>writeFileSync(join(root,name),text);
+ put("a.ts","a");put("b.ts","b");put("shared.ts","s");put("unrelated.ts","u");
+ const closures:Record<string,readonly string[]>={one:["a.ts","shared.ts"],two:["b.ts","shared.ts"]};
+ const record=(name:string)=>({rows:[{kind:"file",path:join(root,"a.ts"),fact:{sha256:fileDigestV1(join(root,"a.ts"))}},{kind:"closure",path:name,fact:JSON.stringify(closureDigestV1(root,closures[name]!))}],createdMs:0,now:10*FRESH_POLICY_V1.minimumAgeMilliseconds});
+ const first={one:record("one"),two:record("two")};
+ const judge=(name:"one"|"two")=>freshVerdictV1({rows:first[name].rows,hashOf:fileDigestV1,closureHolds:row=>JSON.stringify(closureDigestV1(root,closures[row.path]!))===row.fact,createdMs:0,now:first[name].now});
+ expect([judge("one").fresh,judge("two").fresh]).toEqual([true,true]);
+ const later=new Date(Date.now()+60000);utimesSync(join(root,"unrelated.ts"),later,later);put("unrelated.ts","a comment edit of a file no record reads");utimesSync(join(root,"shared.ts"),later,later);
+ expect([judge("one").fresh,judge("two").fresh]).toEqual([true,true]);
+ put("b.ts","b changed");utimesSync(join(root,"b.ts"),new Date(Date.now()+120000),new Date(Date.now()+120000));
+ expect([judge("one").fresh,judge("two").fresh]).toEqual([true,false]);
+ put("shared.ts","shared changed");utimesSync(join(root,"shared.ts"),new Date(Date.now()+180000),new Date(Date.now()+180000));
+ expect([judge("one").fresh,judge("two").fresh]).toEqual([false,false]);
+});
+
+test("a listing row is judged by the same question the taker asks: a file added to the directory makes the record stale, an unrelated edit does not",()=>{
+ const root=mkdtempSync(join(tmpdir(),"fresh-listing-"));scratch.push(root);
+ writeFileSync(join(root,"a.ts"),"a");writeFileSync(join(root,"b.ts"),"b");
+ const rows=[{kind:"file",path:join(root,"a.ts"),fact:{sha256:fileDigestV1(join(root,"a.ts"))}},{kind:"readdirNames",path:root,fact:directoryFactOfV1("readdirNames",root)}];
+ const judge=()=>freshVerdictV1({rows,hashOf:fileDigestV1,rowHolds:row=>observationRowFreshV1(row),createdMs:0,now:10*FRESH_POLICY_V1.minimumAgeMilliseconds});
+ expect(judge()).toEqual({fresh:true,stale:0,checked:2});
+ writeFileSync(join(root,"b.ts"),"b edited");expect(judge().fresh).toBe(true);
+ writeFileSync(join(root,"c.ts"),"c");
+ expect(judge()).toEqual({fresh:false,stale:1,checked:2});
+ expect(freshVerdictV1({rows,hashOf:fileDigestV1,createdMs:0,now:10*FRESH_POLICY_V1.minimumAgeMilliseconds}).fresh,"no decider: the old verdict").toBe(true);
+});
+
+test("a record of the size of the largest shared closure entry is still judged, a stale file in its last row is found",()=>{
+ const rows=Array.from({length:440001},(_,index)=>({kind:"file",path:"p"+index,fact:{sha256:"a".repeat(64)}})),stale="p440000";
+ const verdict=freshVerdictV1({rows:rows as never,hashOf:path=>path===stale?"b".repeat(64):"a".repeat(64),createdMs:0,now:FRESH_POLICY_V1.minimumAgeMilliseconds+1});
+ const oracle=spawnSync("python3",["-I","-c","import json,sys;rows=json.load(sys.stdin);print(sum(1 for r in rows if r['path']=='"+stale+"'))"],{input:JSON.stringify(rows),encoding:"utf8",maxBuffer:1<<28});
+ expect(oracle.status,oracle.stderr).toBe(0);
+ expect(verdict).toEqual({fresh:false,stale:Number(oracle.stdout.trim()),checked:440001});
+});

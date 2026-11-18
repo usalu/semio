@@ -1025,6 +1025,26 @@
       "name": "extruded solid without sweep",
       "patch": [{ "op": "replace", "path": "/representations/50/geometry/front/id=torso/solid", "value": { "kind": "extruded", "z0": -0.1, "z1": 0.1 } }],
       "expectCodes": ["solid-sweep"]
+    },
+    {
+      "name": "ellipse shape with followTip",
+      "patch": [{ "op": "replace", "path": "/representations/50/geometry/plan/id=head/followTip", "value": true }],
+      "expectCodes": ["shape-field"]
+    },
+    {
+      "name": "rect shape with closed",
+      "patch": [{ "op": "replace", "path": "/representations/50/geometry/elevation/id=foot-l/closed", "value": true }],
+      "expectCodes": ["shape-field"]
+    },
+    {
+      "name": "shape without its tone",
+      "patch": [{ "op": "remove", "path": "/representations/50/geometry/elevation/id=head/tone" }],
+      "expectCodes": ["shape-field"]
+    },
+    {
+      "name": "representation with an empty sections member",
+      "patch": [{ "op": "replace", "path": "/representations/50/sections", "value": {} }],
+      "expectCodes": ["section-empty"]
     }
   ],
   "manifest": {
@@ -1175,6 +1195,7 @@
         },
         "heightM": 1.73,
         "widthM": 0.37,
+        "powerW": 131.2,
         "poses": [
           "stand",
           "stride-left-forward",
@@ -1244,6 +1265,19 @@
       ]
     },
     {
+      "name": "power differs by more than 0.5 W",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/entries/0/powerW",
+          "value": 150
+        }
+      ],
+      "expectCodes": [
+        "manifest-power-mismatch"
+      ]
+    },
+    {
       "name": "pose list differs",
       "patch": [
         {
@@ -1284,6 +1318,7 @@
             },
             "heightM": 1.73,
             "widthM": 0.37,
+            "powerW": 131.2,
             "poses": [
               "stand",
               "stride-left-forward",
@@ -1353,6 +1388,7 @@
             },
             "heightM": 1.73,
             "widthM": 0.37,
+            "powerW": 131.2,
             "poses": [
               "stand",
               "stride-left-forward",

@@ -195,5 +195,7 @@ if (import.meta.vitest) {
   await registerTests1(import.meta.vitest, testDependencies, testSource);
   const { registerTests2 } = await import("./🧪️tests/🪝️hookorder/🟦️.tsx");
   await registerTests2(import.meta.vitest, testDependencies, testSource);
+  const { registerTests3 } = await import("./🧪️tests/🧱️repl-aside-frame/🟦️.ts");
+  await registerTests3(import.meta.vitest, testDependencies, testSource);
 }
 // #endregion 🧪️Tests

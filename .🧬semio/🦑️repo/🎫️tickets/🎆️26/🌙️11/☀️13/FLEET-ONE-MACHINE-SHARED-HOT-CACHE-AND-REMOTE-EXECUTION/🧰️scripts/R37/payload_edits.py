@@ -1,5 +1,5 @@
 import os,re
-LIVE="/Users/Shared/semio/"
+LIVE="/Users/ueli/Documents/semio/"
 LIB="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/"
 INP=LIB+"🏗️build/📥️inputs/"
 MJS=INP+"🟨️.mjs"

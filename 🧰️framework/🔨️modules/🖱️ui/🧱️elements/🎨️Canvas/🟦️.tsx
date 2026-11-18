@@ -8,6 +8,8 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
+import { borderNormalBottomClass } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
+import { useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
 import { CanvasSkeleton } from "../🦴️Skeletons/🟦️.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../🔽️Select/🟦️.tsx";
 import { Navbar, type NavbarItem } from "../🔝️Navbar/🟦️.tsx";
@@ -127,7 +129,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
               {dropZone && (dropZone.kind === "split" || dropZone.kind === "root-split") ? (
                 <div data-slot="mode-dock-drop-indicator" className="pointer-events-none absolute inset-0 z-panel">
                   <div
-                    className="absolute rounded-sm border-2 border-accent bg-accent/20"
+                    className="absolute border border-accent bg-accent/20"
                     style={(() => {
                       if (dropZone.kind === "root-split") {
                         const side = dropZone.side;
@@ -190,11 +192,12 @@ const App: React.FC<AppProps> = ({ modes, activeModeId, onActiveModeChange, chil
   const activeMode = modes.find((mode) => mode.id === activeModeId) ?? modes[0];
   const body = children ?? activeMode?.children;
   const showModeNav = chrome && modes.length > 1 && !!onActiveModeChange;
+  const navRef = useSharedBorderFrameRef<HTMLDivElement>();
 
   return (
     <div data-slot="app" className={cn("flex h-full min-h-0 w-full flex-col", className)}>
       {showModeNav ? (
-        <div data-slot="app-mode-nav" className="flex shrink-0 items-center gap-[var(--padding-standard)] border-b p-[var(--padding-standard)]">
+        <div ref={navRef} data-slot="app-mode-nav" data-shared-border-frame="" data-shared-border-cells="" data-shared-border-edges="bottom" className={cn("flex shrink-0 items-stretch", borderNormalBottomClass)}>
           <Select id="app.mode.select" value={activeModeId} onValueChange={onActiveModeChange}>
             <SelectTrigger className="w-[min(100%,16rem)]">
               <SelectValue placeholder={modeLabel} />

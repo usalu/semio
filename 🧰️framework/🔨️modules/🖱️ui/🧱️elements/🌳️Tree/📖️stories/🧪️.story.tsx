@@ -9,7 +9,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { Button, ControlDef, ControlTree, ControlTreeFolderSettings, Input, LevelProvider, Tree, TreeContent, TreeItem, reactHostPort } from "@semio-tech/ui-react";
+import { Button, ControlDef, ControlTree, ControlTreeFolderSettings, Input, LevelProvider, SharedBorderRow, SharedBorderRowCell, Tree, TreeContent, TreeItem, reactHostPort } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "../../../🧪️tests/📚️storybook-types/🟦️.ts";
 import type React from "react";
@@ -164,11 +164,13 @@ const ControlTreeDemo = () => {
   ];
   return (
     <LevelProvider level="panel">
-      <div className="ui-surface border p-2 w-[20rem]" data-level="panel">
-        <div className="mb-2">
-          <input type="text" placeholder="Filter controls..." value={filterText} onChange={(e) => setFilterText(e.target.value)} className="w-full h-6 px-2 text-xs border bg-transparent text-foreground placeholder:text-muted-foreground" />
-        </div>
-        <ControlTree controls={controls} filterText={filterText} folderSettings={folderSettings} />
+      <div className="ui-surface w-[20rem]" data-level="panel">
+        <SharedBorderRow orientation="vertical">
+          <Input aria-label="Filter controls" placeholder="Filter controls..." value={filterText} onChange={(e) => setFilterText(e.target.value)} />
+          <SharedBorderRowCell className="block p-0">
+            <ControlTree controls={controls} filterText={filterText} folderSettings={folderSettings} />
+          </SharedBorderRowCell>
+        </SharedBorderRow>
       </div>
     </LevelProvider>
   );

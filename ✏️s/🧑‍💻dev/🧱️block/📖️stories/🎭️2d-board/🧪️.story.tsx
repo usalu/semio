@@ -17,6 +17,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
+import { Button, SharedBorderRow } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useCallback, useMemo, useState, type ReactElement } from "react";
 
@@ -57,28 +58,28 @@ function Block2dBoardStoryHost({ initialExampleId, interactive }: { readonly ini
 
   return (
     <div style={{ display: "flex", height: "100%", width: "100%", flexDirection: "column" }}>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 4, padding: 4 }}>
+      <SharedBorderRow wrap>
         {BLOCK2D_STORY_EXAMPLE_IDS.map((exampleId) => (
-          <button key={exampleId} type="button" data-testid={`block2d-example-${exampleId}`} onClick={() => dispatch("setActiveExample", { exampleId })} disabled={exampleId === state.exampleId}>
+          <Button variant="outline" icon="arrow-right" key={exampleId} type="button" data-testid={`block2d-example-${exampleId}`} onClick={() => dispatch("setActiveExample", { exampleId })} disabled={exampleId === state.exampleId}>
             {exampleId}
-          </button>
+          </Button>
         ))}
-        <button type="button" data-testid="block2d-add-handle-kind" onClick={() => dispatch("addHandleKind", { label: "Story Kind", color: "hsl(0 52% 48%)" })}>
+        <Button variant="outline" icon="arrow-right" type="button" data-testid="block2d-add-handle-kind" onClick={() => dispatch("addHandleKind", { label: "Story Kind", color: "hsl(0 52% 48%)" })}>
           Add handle kind
-        </button>
-        <button type="button" data-testid="block2d-remove-handle-kind" onClick={() => dispatch("removeHandleKind", {})}>
+        </Button>
+        <Button variant="outline" icon="arrow-right" type="button" data-testid="block2d-remove-handle-kind" onClick={() => dispatch("removeHandleKind", {})}>
           Remove handle kind
-        </button>
-        <button type="button" data-testid="block2d-add-handle" onClick={() => dispatch("addHandle", {})}>
+        </Button>
+        <Button variant="outline" icon="arrow-right" type="button" data-testid="block2d-add-handle" onClick={() => dispatch("addHandle", {})}>
           Add handle
-        </button>
-        <button type="button" data-testid="block2d-remove-handle" onClick={() => dispatch("removeHandle", {})}>
+        </Button>
+        <Button variant="outline" icon="arrow-right" type="button" data-testid="block2d-remove-handle" onClick={() => dispatch("removeHandle", {})}>
           Remove handle
-        </button>
-        <button type="button" data-testid="block2d-patch-node-kind" onClick={() => dispatch("patchNodeKind", { field: "label", value: `${state.snapshot.nodeKind.label} ✳️` })}>
+        </Button>
+        <Button variant="outline" icon="arrow-right" type="button" data-testid="block2d-patch-node-kind" onClick={() => dispatch("patchNodeKind", { field: "label", value: `${state.snapshot.nodeKind.label} ✳️` })}>
           Patch node kind
-        </button>
-      </div>
+        </Button>
+      </SharedBorderRow>
       <div style={{ display: "flex", flex: "1 1 auto", minHeight: 0 }}>
         <div style={{ position: "relative", flex: "1 1 auto", minWidth: 0 }}>
           <Board2dHost node={node} onAction={onAction} />

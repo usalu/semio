@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Lean slice plan / Schlanker Slice-Plan",
+  "description": "EN: A machine with a plan limit (every machine that does not serve the fleet) reads the project graph lean: the slice worker that verifies and assembles the graph is the long-lived parent and stays small, and every owner that is stale is inferred by a short-lived child process that exits after a few owners, so the memory its work took goes back to the operating system (the runtime keeps freed heap resident: an in-process inference left 3.8 GB behind in a parent that held 3.0 GB). The parent never infers an owner while a child can be had. How many children run follows the plan limit and the cores: the first child is always allowed (a machine that cannot run one child cannot read the graph at all and says so), more children only where the limit has room after the parent. Mode on forces lean on a serving machine, off switches it off. DE: Eine Maschine mit Plan-Limit (jede, die die Flotte nicht bedient) liest den Projektgraphen schlank: der Slice-Worker, der den Graphen prüft und zusammensetzt, ist der langlebige Elternprozess und bleibt klein, und jeder veraltete Eigner wird von einem kurzlebigen Kindprozess abgeleitet, der nach wenigen Eignern endet, sodass der Speicher seiner Arbeit an das Betriebssystem zurückgeht (die Laufzeit behält freigegebenen Heap resident: eine Ableitung im Prozess ließ 3,8 GB in einem Elternprozess zurück, der 3,0 GB hielt). Der Elternprozess leitet keinen Eigner selbst ab, solange ein Kind zu haben ist. Wie viele Kinder laufen, folgt aus Plan-Limit und Kernen: das erste Kind ist immer erlaubt (eine Maschine, die kein Kind tragen kann, kann den Graphen gar nicht lesen und sagt das), weitere nur, wo das Limit nach dem Elternprozess Platz hat. Der Modus on erzwingt schlank auf einer bedienenden Maschine, off schaltet es ab.",
+  "definitions": {
+    "Policy": {
+      "description": "EN: parentMegabytes is what the lean parent is planned to hold (resident set; its live data is about 0.9 GB while it verifies and the runtime adds the code and the allocator slack); childMegabytes the budget of one child (a child's heap is capped at 0.75 of it and the child is replaced after the owner that passed it); ownersPerChild the owners one child infers before it is replaced, so that a child never lives long enough to keep what it freed; loopsPerChild the owners one child infers at once; minimumChildren the children a lean machine always may run; coreReserve the cores that stay with the parent; modeEnvironment names the variable (auto, on, off). DE: parentMegabytes ist das, was der schlanke Elternprozess halten soll; childMegabytes das Budget eines Kindes (sein Heap ist auf 0,75 davon begrenzt, und es wird nach dem Eigner ersetzt, der es überschritt); ownersPerChild die Eigner, die ein Kind ableitet, bevor es ersetzt wird; loopsPerChild die Eigner, die ein Kind zugleich ableitet; minimumChildren die Kinder, die eine schlanke Maschine immer haben darf; coreReserve die Kerne, die beim Elternprozess bleiben; modeEnvironment nennt die Variable (auto, on, off).",
+      "const": {
+        "version": 1,
+        "modeEnvironment": "SEMIO_SLICE_LEAN",
+        "modes": ["auto", "on", "off"],
+        "parentMegabytes": 1500,
+        "childMegabytes": 1700,
+        "ownersPerChild": 4,
+        "loopsPerChild": 1,
+        "minimumChildren": 1,
+        "coreReserve": 1,
+        "ceilingBasisPoints": 6000
+      }
+    },
+    "Messages": {
+      "description": "EN: The lines of the lean slice plan, one per language of the environment (English first, German second, no default language). DE: Die Zeilen des schlanken Slice-Plans, eine je Sprache der Umgebung (zuerst Englisch, dann Deutsch, keine Standardsprache).",
+      "const": {
+        "en": {
+          "lean": "graph: lean read on a machine of {host} MB: the parent holds about {parent} MB, {children} child process(es) of {child} MB infer the stale projects, {owners} projects each",
+          "tooSmall": "graph: this machine cannot run one inference child ({child} MB) beside the parent ({parent} MB) within {ceiling} MB; the projects are inferred in the parent, which may be stopped by the memory guard"
+        },
+        "de": {
+          "lean": "Graph: schlankes Lesen auf einer Maschine mit {host} MB: der Elternprozess hält etwa {parent} MB, {children} Kindprozess(e) mit je {child} MB leiten die veralteten Projekte ab, je {owners} Projekte",
+          "tooSmall": "Graph: diese Maschine kann neben dem Elternprozess ({parent} MB) kein Ableitungs-Kind ({child} MB) innerhalb von {ceiling} MB betreiben; die Projekte werden im Elternprozess abgeleitet, den die Speicherwache stoppen kann"
+        }
+      }
+    },
+    "Plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lean", "limitMegabytes", "parentMegabytes", "childMegabytes", "children", "ownersPerChild", "loopsPerChild", "fits"],
+      "properties": {
+        "lean": { "type": "boolean" },
+        "fits": { "type": "boolean" },
+        "limitMegabytes": { "type": ["number", "null"] },
+        "parentMegabytes": { "type": "integer", "minimum": 0 },
+        "childMegabytes": { "type": "integer", "minimum": 0 },
+        "children": { "type": "integer", "minimum": 0 },
+        "ownersPerChild": { "type": "integer", "minimum": 0 },
+        "loopsPerChild": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

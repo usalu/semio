@@ -12,6 +12,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
+import { Button, SharedBorderRow } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useCallback, useMemo, useState, type ReactElement } from "react";
 
@@ -44,13 +45,13 @@ function RemodelReportStoryHost({ initialTable }: { readonly initialTable: strin
 
   return (
     <div style={{ display: "flex", height: "100%", width: "100%", flexDirection: "column" }}>
-      <div style={{ display: "flex", gap: 6, padding: 4, flexWrap: "wrap" }}>
+      <SharedBorderRow wrap>
         {REPORT_TABLES.map((table) => (
-          <button key={table} type="button" data-testid={`remodel-report-table-${table}`} onClick={() => onAction({ controllerId: REMODEL_EDITOR_CONTROLLER_ID, action: "setReportTable", args: { table } })}>
+          <Button variant="outline" icon="arrow-right" key={table} type="button" data-testid={`remodel-report-table-${table}`} onClick={() => onAction({ controllerId: REMODEL_EDITOR_CONTROLLER_ID, action: "setReportTable", args: { table } })}>
             {table}
-          </button>
+          </Button>
         ))}
-      </div>
+      </SharedBorderRow>
       <div style={{ position: "relative", flex: "1 1 auto", minHeight: 0 }}>
         <TableHost node={node} onAction={onAction} />
       </div>

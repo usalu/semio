@@ -56,7 +56,7 @@ if ($User -ine $CurrentUser) { throw "-User must be the account of this elevated
 
 $topologyFiles = @(Get-ChildItem -LiteralPath (Split-Path -Parent $PSScriptRoot) -Filter '*.json' -File)
 if ($topologyFiles.Count -ne 1) { throw "The topology file was not found next to this script: $(Split-Path -Parent $PSScriptRoot)" }
-$topology = Get-Content -Raw -LiteralPath $topologyFiles[0].FullName | ConvertFrom-Json
+$topology = Get-Content -Raw -Encoding UTF8 -LiteralPath $topologyFiles[0].FullName | ConvertFrom-Json
 $Worktree = $topology.worktree.windows
 $Drive = $topology.storeMount.windows.Substring(0, 2)
 $group = @($topology.groups | Where-Object { $_.id -eq $GroupId })
@@ -82,7 +82,7 @@ $machine = Join-Path $Worktree '.cache\f\machine.json'
 $joined = $false
 $relocate = $false
 if (Test-Path -LiteralPath $machine) {
-    $identity = Get-Content -Raw -LiteralPath $machine | ConvertFrom-Json
+    $identity = Get-Content -Raw -Encoding UTF8 -LiteralPath $machine | ConvertFrom-Json
     if (-not $identity.originId -or -not $identity.groupId) { throw "$machine has no originId and groupId: remove the worktree state first." }
     if ($identity.originId -ne $OriginId) { throw "$machine belongs to origin $($identity.originId), not ${OriginId}: pass that origin, or remove the worktree state first." }
     if ($identity.groupId -ne $GroupId) { throw "$machine belongs to group $($identity.groupId), not ${GroupId}: pass that group, or remove the worktree state first." }
@@ -105,7 +105,7 @@ function Get-InstalledWorktree {
 }
 if (-not $RelocateFrom -and -not $joined) { $RelocateFrom = Get-InstalledWorktree }
 if ($RelocateFrom -and $RelocateFrom -ine $Worktree -and -not $joined -and (Test-Path -LiteralPath (Join-Path $RelocateFrom '.cache\f\machine.json'))) {
-    $oldMachine = Get-Content -Raw -LiteralPath (Join-Path $RelocateFrom '.cache\f\machine.json') | ConvertFrom-Json
+    $oldMachine = Get-Content -Raw -Encoding UTF8 -LiteralPath (Join-Path $RelocateFrom '.cache\f\machine.json') | ConvertFrom-Json
     if ($oldMachine.originId -ne $OriginId) { throw "$RelocateFrom belongs to origin $($oldMachine.originId), not ${OriginId}: origin ids never change and are never reused, pass that origin." }
     if ($oldMachine.groupId -ne $GroupId) { throw "$RelocateFrom belongs to group $($oldMachine.groupId), not ${GroupId}: pass that group." }
     $relocate = $true
@@ -190,7 +190,7 @@ function Set-OverlayBit([string]$Path, [bool]$Executable) {
 function Get-OverlayDigest([string]$V1) {
     $attest = Join-Path $V1 "origins\$GroupId-server\attest.json"
     if (Test-Path -LiteralPath $attest) {
-        $attested = try { [string](Get-Content -Raw -LiteralPath $attest | ConvertFrom-Json).code } catch { '' }
+        $attested = try { [string](Get-Content -Raw -Encoding UTF8 -LiteralPath $attest | ConvertFrom-Json).code } catch { '' }
         if ($attested -match '^[0-9a-f]{64}$' -and (Test-Path -LiteralPath "$V1\bootstrap\code\$attested\sealed.json")) { return $attested }
     }
     $best = ''
@@ -344,7 +344,7 @@ if ($extract) {
         $verified = $false
         foreach ($attempt in 1..5) {
             if (-not (Test-Path -LiteralPath "$source\manifest.json")) { throw "No bootstrap archive in ${source}: run bootstrap-archive on the group server (its relay refreshes it on a schedule) or pass -ArchivePath <directory>." }
-            $manifest = Get-Content -Raw -LiteralPath "$source\manifest.json" | ConvertFrom-Json
+            $manifest = Get-Content -Raw -Encoding UTF8 -LiteralPath "$source\manifest.json" | ConvertFrom-Json
             if (($manifest.archive -notmatch '^worktree-[0-9a-f]{16}\.tar$') -or -not (Test-Path -LiteralPath "$source\$($manifest.archive)")) { throw "The bootstrap manifest in ${source} names no archive that exists: run bootstrap-archive on the group server (its relay refreshes it on a schedule) or pass -ArchivePath <directory>." }
             Copy-Item -LiteralPath "$source\$($manifest.archive)" -Destination $local -Force
             $actual = (Get-FileHash -Algorithm SHA256 -LiteralPath $local).Hash.ToLowerInvariant()

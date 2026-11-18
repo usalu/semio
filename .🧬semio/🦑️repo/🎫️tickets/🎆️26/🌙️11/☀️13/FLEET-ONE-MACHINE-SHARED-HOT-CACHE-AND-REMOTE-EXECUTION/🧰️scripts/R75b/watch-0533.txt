@@ -1,0 +1,15 @@
+05:31 UTC
+g1-m01     yielding     ch 10 tgt  9 run 0 opm   1.2 pub    6 st  389 cm  1070 rec   0 age   3s 8abf93
+g1-m02     yielding     ch  7 tgt  8 run 1 opm   1.0 pub    5 st  360 cm  1505 rec   5 age   0s 04011a
+g1-m03     nothing-fits ch  1 tgt  1 run 0 opm   0.2 pub    1 st   60 cm  1060 rec   0 age   3s 4783e0
+g1-m04     yielding     ch  0 tgt  1 run 0 opm   0.0 pub    0 st    0 cm   800 rec   0 age   4s 4783e0
+g1-m05     yielding     ch  1 tgt  1 run 1 opm   0.0 pub    0 st   22 cm   800 rec   0 age   3s 4783e0
+g1-m06     nothing-fits ch  0 tgt  1 run 0 opm   1.4 pub    7 st  103 cm   922 rec   0 age   0s 4783e0
+g1-m07     None         ch  5 tgt  0 run 3 opm   1.8 pub    9 st  441 cm  1510 rec   2 age   3s 4783e0
+g1-m08     yielding     ch  6 tgt  5 run 0 opm   2.4 pub   12 st  340 cm  1359 rec   2 age   4s 04011a
+g1-m10     None         ch  4 tgt  0 run 2 opm   1.4 pub    7 st  269 cm  1714 rec   4 age   5s 4783e0
+g1-server  yielding     ch  2 tgt  1 run 0 opm   0.0 pub    0 st    4 cm   800 rec   0 age   3s 4783e0
+fleet opm 9.4
+restarts of the pool seen on the server since 05:30Z: 0
+orphans registered here: 2; cores of the server: 10
+{"wave":"4783e0d7","units":4534,"sample":60,"stored":57,"held":0,"granted":3,"fault":0,"refused":0,"unstoredShare":5,"unstoredEstimate":227}

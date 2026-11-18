@@ -1,0 +1,14 @@
+import{readRemoteExecutionHostViewV1}from"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🌡️load/🟦️.ts";
+import{evaluateHostCapacityV1,sizeHostRequestV1}from"/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
+import{BUILD_HOST_CAPACITY_POLICY_V1 as policy}from"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🟦️.ts";
+import*as library from"/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🟦️.ts";
+const view=await readRemoteExecutionHostViewV1(process.env),now=Date.now(),host=view.host;
+console.log("host",JSON.stringify(host));
+for(const g of view.grants)console.log("grant",g.label??g.operation,g.holder??"-","jobs",g.jobs,"reserved",g.reservedMegabytes,"observed",g.observedMegabytes,"admittedAgo",Math.round((now-g.admittedAtMs)/1000),"s ramp",g.rampMilliseconds??"-");
+console.log("read request now:",JSON.stringify(sizeHostRequestV1(policy,{id:"showholder1",operation:"show"})));
+const holder=view.grants.find(g=>g.operation==="show"||g.operation==="graph"),cores=host.cores,want=cores-1;
+const ask={request:{id:"farmreq0001",operation:"exec",priority:"batch",minimumJobs:1,preferredJobs:want,fixedMegabytes:0,perJobMegabytes:1536,cpuPerJob:1,elastic:true,label:"graph-farm",...holder?{holder:holder.id}:{}},arrivedAtMs:now-1000,pid:process.pid};
+const evaluation=evaluateHostCapacityV1(policy,host,view.grants as never,[...view.waiters,ask] as never,now),row=evaluation.decisions.find(d=>d.id==="farmreq0001")!;
+console.log("farm ask of",want,"children ->",JSON.stringify(row),"floor",evaluation.floorMegabytes,"unrealized",evaluation.unrealizedMegabytes,"headroom",evaluation.headroomMegabytes);
+const lines=(library as any).hostWaitingLineV1;
+if(row.verdict==="wait"&&typeof lines==="function")for(const l of["en","de"])console.log(lines(l,ask.request,host,evaluation,view.grants.length,1,policy,view.grants,[...view.waiters,ask],now));

@@ -1,0 +1,9 @@
+# Silhouette guard: humans, part B (13 assets)
+
+Result: all 13 assets have 0 failing `catalog-silhouette` checks at 1:500, 1:200, 1:100 and 1:50 (final triage `silhouette-triage.ts current`): wheelchair-user, seated-office-worker, jogger, person-cooking, courier-with-hand-truck, person-with-umbrella, parent-carrying-toddler, cyclist, person-on-crutches, person-with-rollator, parent-with-stroller, person-with-white-cane, tour-guide. The guard is unchanged. `validate-all.ts`: no humans asset fails (8 failing of 152 belong to vegetation, machinery and vehicles of other agents).
+
+Per-asset repairs and tools: `humansb-A-findings.md` (wheelchair-user, seated-office-worker, tour-guide), `humansb-B-findings.md` (jogger, person-cooking, person-with-umbrella, parent-carrying-toddler, person-with-white-cane), `humansb-C-findings.md` (courier-with-hand-truck, cyclist), `humansb-D-findings.md` (person-on-crutches, parent-with-stroller, person-with-rollator), shared causes in `humansb-common-causes.md`.
+
+Shared causes: front and plan shapes live in the bone rest frame (forward hands shrink to slivers); slits of one or two cells close in the volume but stay open in the drawing (overlap shapes); 1:50 boot caps offset 10 mm, soles below ground, pelvis too deep; slender volume members take the width of the nearest drawn strip; open strokes with an extruded solid evaluate to zero area; flat patches on spreading bones trip `lateral-ambiguous` (attach to a non-spreading ancestor or give a solid).
+
+Caveats: many drawings now hold traced polygons (`fit-*`, hulls) on the pelvis, so those patches do not follow limbs in clips; person-with-rollator 1:50 plan sits exactly on the limit (15.0 mm); parent-with-stroller 1:50 elevation 14.3 mm; tour-guide 1:100 front 30.0 mm; declared dimensions changed: courier-with-hand-truck width 1.16 to 1.152 m, person-on-crutches height 1.83 to 1.82 m.

@@ -248,7 +248,7 @@ export function InputView({ record, context }: { readonly record: UiNodeRecord; 
     <Popover>
       <PopoverTrigger asChild><Button id={`${draftConflictId}-explain`} icon={resolveControlIconNode("triangle-alert")} aria-label={draftConflictLabel} title={draftConflictLabel} className="shrink-0 text-destructive" /></PopoverTrigger>
       <PopoverContent aria-label={draftConflictLabel} className="max-w-sm whitespace-normal">
-        <p className="text-sm">{draftConflictLabel}</p>
+        <p className="p-single text-sm">{draftConflictLabel}</p>
         <Button id={`${draftConflictId}-discard`} icon={resolveControlIconNode("undo-2")} text={draftDiscardLabel} onClick={() => { discardDraft(); setRefusal(null); }} />
       </PopoverContent>
     </Popover>

@@ -1,0 +1,200 @@
+Reading the project graph slice (124 s): verification 542 of 3622.
+Reading the project graph slice (126 s): verification 543 of 3622.
+Reading the project graph slice (128 s): verification 543 of 3622.
+Reading the project graph slice (130 s): verification 544 of 3622.
+Reading the project graph slice (132 s): verification 551 of 3622.
+[repo] still working after 1040 s; last phase started: door.script
+Reading the project graph slice (134 s): verification 556 of 3622.
+Reading the project graph slice (136 s): verification 557 of 3622.
+Reading the project graph slice (138 s): verification 557 of 3622.
+Reading the project graph slice (140 s): verification 570 of 3622.
+Reading the project graph slice (142 s): verification 572 of 3622.
+Reading the project graph slice (144 s): verification 574 of 3622.
+Reading the project graph slice (146 s): verification 579 of 3622.
+Reading the project graph slice (148 s): verification 582 of 3622.
+Reading the project graph slice (150 s): verification 585 of 3622.
+Reading the project graph slice (152 s): verification 585 of 3622.
+Reading the project graph slice (154 s): verification 586 of 3622.
+Reading the project graph slice (156 s): verification 590 of 3622.
+Reading the project graph slice (158 s): verification 591 of 3622.
+Reading the project graph slice (160 s): verification 594 of 3622.
+Reading the project graph slice (162 s): flush 1 of 1.
+[repo] still working after 1070 s; last phase started: door.script
+Reading the project graph slice (164 s): flush 1 of 1.
+Reading the project graph slice (166 s): flush 1 of 1.
+Reading the project graph slice (168 s): verification 599 of 3622.
+Reading the project graph slice (170 s): verification 601 of 3622.
+Reading the project graph slice (172 s): verification 603 of 3622.
+Reading the project graph slice (174 s): verification 603 of 3622.
+Reading the project graph slice (176 s): verification 605 of 3622.
+Reading the project graph slice (178 s): verification 605 of 3622.
+Reading the project graph slice (180 s): verification 605 of 3622.
+Reading the project graph slice (182 s): verification 605 of 3622.
+Reading the project graph slice (184 s): verification 609 of 3622.
+Reading the project graph slice (186 s): verification 611 of 3622.
+Reading the project graph slice (188 s): verification 614 of 3622.
+Reading the project graph slice (190 s): verification 614 of 3622.
+Reading the project graph slice (192 s): verification 615 of 3622.
+[repo] still working after 1100 s; last phase started: door.script
+Reading the project graph slice (194 s): verification 616 of 3622.
+Reading the project graph slice (196 s): verification 619 of 3622.
+Reading the project graph slice (198 s): verification 619 of 3622.
+Reading the project graph slice (200 s): verification 621 of 3622.
+Reading the project graph slice (202 s): verification 623 of 3622.
+Reading the project graph slice (204 s): verification 623 of 3622.
+Reading the project graph slice (206 s): verification 625 of 3622.
+Reading the project graph slice (208 s): verification 628 of 3622.
+Reading the project graph slice (210 s): verification 633 of 3622.
+Reading the project graph slice (212 s): verification 634 of 3622.
+Reading the project graph slice (214 s): verification 634 of 3622.
+Reading the project graph slice (216 s): verification 637 of 3622.
+Reading the project graph slice (218 s): verification 643 of 3622.
+Reading the project graph slice (220 s): verification 645 of 3622.
+Reading the project graph slice (222 s): verification 645 of 3622.
+[repo] still working after 1130 s; last phase started: door.script
+Reading the project graph slice (224 s): verification 647 of 3622.
+Reading the project graph slice (227 s): verification 647 of 3622.
+Reading the project graph slice (229 s): verification 647 of 3622.
+Reading the project graph slice (231 s): verification 653 of 3622.
+Reading the project graph slice (233 s): verification 654 of 3622.
+Reading the project graph slice (235 s): verification 655 of 3622.
+Reading the project graph slice (237 s): verification 657 of 3622.
+Reading the project graph slice (239 s): verification 658 of 3622.
+Reading the project graph slice (241 s): verification 660 of 3622.
+Reading the project graph slice (243 s): verification 661 of 3622.
+Reading the project graph slice (245 s): verification 661 of 3622.
+Reading the project graph slice (247 s): verification 661 of 3622.
+Reading the project graph slice (249 s): verification 662 of 3622.
+Reading the project graph slice (251 s): verification 663 of 3622.
+Reading the project graph slice (253 s): verification 663 of 3622.
+[repo] still working after 1160 s; last phase started: door.script
+Reading the project graph slice (255 s): verification 671 of 3622.
+Reading the project graph slice (257 s): verification 672 of 3622.
+Reading the project graph slice (259 s): verification 675 of 3622.
+Reading the project graph slice (261 s): verification 676 of 3622.
+Reading the project graph slice (263 s): verification 676 of 3622.
+Reading the project graph slice (265 s): verification 677 of 3622.
+Reading the project graph slice (267 s): verification 677 of 3622.
+Reading the project graph slice (0 s): the slice worker grew to 9847 MB, more than the 6553 MB a plan may take on this machine, so the work is cut smaller (step 6 of 6: fewer projects at once and smaller waves) and continues; projects already inferred are kept and nothing is repeated.
+Reading the project graph slice (2 s).
+Reading the project graph slice (4 s).
+Reading the project graph slice (6 s).
+Reading the project graph slice (8 s).
+Reading the project graph slice (10 s): files 0 of 0.
+Reading the project graph slice (12 s): files 1025 of 1025.
+[repo] still working after 1190 s; last phase started: door.script
+Reading the project graph slice (14 s): facts 16384 of 268375.
+Reading the project graph slice (16 s): facts 61440 of 268375.
+Reading the project graph slice (18 s): facts 110592 of 268375.
+Reading the project graph slice (20 s): facts 110592 of 268375.
+Reading the project graph slice (22 s): facts 176128 of 268375.
+Reading the project graph slice (24 s): facts 237568 of 268375.
+Reading the project graph slice (26 s): facts 249856 of 268375.
+Reading the project graph slice (28 s): facts 268375 of 268375.
+Reading the project graph slice (30 s): facts 268375 of 268375.
+Reading the project graph slice (32 s): verification 598 of 3622.
+Reading the project graph slice (34 s): verification 641 of 3622.
+Reading the project graph slice (36 s): verification 641 of 3622.
+Reading the project graph slice (38 s): verification 641 of 3622.
+Reading the project graph slice (40 s): verification 681 of 3622.
+Reading the project graph slice (42 s): verification 681 of 3622.
+[repo] still working after 1220 s; last phase started: door.script
+Reading the project graph slice (44 s): verification 682 of 3622.
+Reading the project graph slice (46 s): verification 682 of 3622.
+Reading the project graph slice (48 s): verification 682 of 3622.
+Reading the project graph slice (50 s): verification 682 of 3622.
+Reading the project graph slice (52 s): verification 682 of 3622.
+Reading the project graph slice (54 s): verification 682 of 3622.
+Reading the project graph slice (56 s): verification 685 of 3622.
+Reading the project graph slice (58 s): verification 685 of 3622.
+Reading the project graph slice (60 s): verification 686 of 3622.
+Reading the project graph slice (62 s): verification 686 of 3622.
+Reading the project graph slice (64 s): verification 686 of 3622.
+Reading the project graph slice (66 s): verification 686 of 3622.
+Reading the project graph slice (68 s): verification 686 of 3622.
+Reading the project graph slice (70 s): verification 686 of 3622.
+Reading the project graph slice (72 s): verification 687 of 3622.
+[repo] still working after 1250 s; last phase started: door.script
+Reading the project graph slice (74 s): verification 699 of 3622.
+Reading the project graph slice (76 s): verification 724 of 3622.
+Reading the project graph slice (78 s): verification 733 of 3622.
+Reading the project graph slice (80 s): verification 733 of 3622.
+Reading the project graph slice (82 s): verification 733 of 3622.
+Reading the project graph slice (84 s): verification 733 of 3622.
+Reading the project graph slice (86 s): verification 748 of 3622.
+Reading the project graph slice (88 s): verification 759 of 3622.
+Reading the project graph slice (90 s): verification 763 of 3622.
+Reading the project graph slice (92 s): verification 768 of 3622.
+Reading the project graph slice (94 s): verification 773 of 3622.
+Reading the project graph slice (96 s): verification 779 of 3622.
+Reading the project graph slice (98 s): verification 780 of 3622.
+Reading the project graph slice (100 s): verification 785 of 3622.
+Reading the project graph slice (102 s): verification 786 of 3622.
+[repo] still working after 1280 s; last phase started: door.script
+Reading the project graph slice (104 s): verification 789 of 3622.
+Reading the project graph slice (106 s): verification 789 of 3622.
+Reading the project graph slice (108 s): verification 790 of 3622.
+Reading the project graph slice (110 s): verification 797 of 3622.
+Reading the project graph slice (112 s): verification 799 of 3622.
+Reading the project graph slice (114 s): verification 801 of 3622.
+Reading the project graph slice (116 s): verification 801 of 3622.
+Reading the project graph slice (118 s): verification 803 of 3622.
+Reading the project graph slice (120 s): verification 804 of 3622.
+Reading the project graph slice (122 s): verification 807 of 3622.
+Reading the project graph slice (124 s): verification 807 of 3622.
+Reading the project graph slice (126 s): verification 808 of 3622.
+Reading the project graph slice (128 s): verification 808 of 3622.
+Reading the project graph slice (130 s): verification 808 of 3622.
+Reading the project graph slice (132 s): verification 808 of 3622.
+[repo] still working after 1310 s; last phase started: door.script
+Reading the project graph slice (134 s): verification 808 of 3622.
+Reading the project graph slice (136 s): verification 816 of 3622.
+Reading the project graph slice (138 s): verification 817 of 3622.
+Reading the project graph slice (140 s): verification 820 of 3622.
+Reading the project graph slice (142 s): verification 825 of 3622.
+Reading the project graph slice (144 s): verification 826 of 3622.
+Reading the project graph slice (146 s): verification 826 of 3622.
+Reading the project graph slice (148 s): verification 830 of 3622.
+Reading the project graph slice (150 s): verification 830 of 3622.
+Reading the project graph slice (152 s): verification 834 of 3622.
+Reading the project graph slice (154 s): verification 840 of 3622.
+Reading the project graph slice (156 s): verification 840 of 3622.
+Reading the project graph slice (158 s): verification 845 of 3622.
+Reading the project graph slice (160 s): verification 845 of 3622.
+Reading the project graph slice (162 s): verification 845 of 3622.
+[repo] still working after 1340 s; last phase started: door.script
+Reading the project graph slice (164 s): verification 846 of 3622.
+Reading the project graph slice (166 s): verification 847 of 3622.
+Reading the project graph slice (168 s): verification 848 of 3622.
+Reading the project graph slice (170 s): verification 848 of 3622.
+Reading the project graph slice (172 s): verification 850 of 3622.
+Reading the project graph slice (174 s): verification 851 of 3622.
+Reading the project graph slice (176 s): verification 851 of 3622.
+Reading the project graph slice (178 s): verification 851 of 3622.
+Reading the project graph slice (180 s): verification 851 of 3622.
+Reading the project graph slice (182 s): rederivation 105 of 105.
+Reading the project graph slice (184 s): flush 1 of 1.
+Reading the project graph slice (186 s): flush 1 of 1.
+Reading the project graph slice (188 s): flush 1 of 1.
+Reading the project graph slice (190 s): flush 1 of 1.
+Reading the project graph slice (192 s): verification 854 of 3622.
+[repo] still working after 1370 s; last phase started: door.script
+Reading the project graph slice (194 s): verification 854 of 3622.
+Reading the project graph slice (196 s): verification 859 of 3622.
+Reading the project graph slice (198 s): verification 859 of 3622.
+Reading the project graph slice (200 s): verification 863 of 3622.
+Reading the project graph slice (202 s): verification 872 of 3622.
+Reading the project graph slice (204 s): verification 873 of 3622.
+Reading the project graph slice (206 s): verification 878 of 3622.
+Reading the project graph slice (209 s): verification 883 of 3622.
+Reading the project graph slice (211 s): verification 883 of 3622.
+Reading the project graph slice (213 s): verification 890 of 3622.
+Reading the project graph slice (215 s): verification 893 of 3622.
+Reading the project graph slice (217 s): verification 893 of 3622.
+Reading the project graph slice (219 s): verification 898 of 3622.
+Reading the project graph slice (221 s): verification 900 of 3622.
+Reading the project graph slice (223 s): verification 900 of 3622.
+[repo] still working after 1400 s; last phase started: door.script
+Reading the project graph slice (225 s): verification 900 of 3622.
+Reading the project graph slice (227 s): verification 900 of 3622.
+The project graph could not be read on this machine yet: the plan stage verification (during verification) grew to 10230 MB, more than the 6553 MB this machine gives a plan, and only 2825 MB of memory were available (at least 2048 MB are kept in reserve) after it gave back what it could. It was stopped before the host ran short of memory. Nothing is wrong with your tree; run the command again when a machine with free memory serves the graph, or read the graph on a larger machine.

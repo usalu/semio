@@ -3,6 +3,7 @@
 import { describe } from "vitest";
 import { registerOwnsUncontrolledStateExactTests } from "./🔶️owns-uncontrolled-state-exact/🟦️.tsx";
 import { registerDismissesNestedSiblingDialogsTests } from "./🔸️dismisses-nested-sibling-dialogs/🟦️.tsx";
+import { registerSharedBorderPaddingTests } from "./🔹️shared-border-padding/🟦️.tsx";
 import { registerInheritsOneScopedIsolationTests } from "./🟠️inherits-one-scoped-isolation/🟦️.tsx";
 // #endregion 🔌️Adapters
 
@@ -11,5 +12,6 @@ describe("Dialog", () => {
   registerOwnsUncontrolledStateExactTests();
   registerDismissesNestedSiblingDialogsTests();
   registerInheritsOneScopedIsolationTests();
+  registerSharedBorderPaddingTests();
 });
 // #endregion 💬️DialogMatrix

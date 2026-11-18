@@ -2075,6 +2075,8 @@
             "key": "run",
             "heatW": 40
           },
+          "ratedPowerW": 2500,
+          "ratedPowerBasis": "electrical-input",
           "source": "authored-estimate",
           "reference": "incropera-2018"
         },

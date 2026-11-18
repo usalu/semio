@@ -349,6 +349,7 @@ fn a_mounted_progress_bar_announces_its_value_or_busy_and_mounts_as_a_retained_p
 
 #[test]
 fn real_settings_fields_inherit_labels_and_explicit_control_names_win() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/⚙️puzzle3d-settings-document/🔣️.json")).unwrap();
     let tree = mounted_tree(&law);
     let projection = accessibility_projection(&tree);

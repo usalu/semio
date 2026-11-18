@@ -9,7 +9,8 @@
 	margin: calc(-1 * var(--spacing-single)) 0 0 calc(-1 * var(--spacing-single));
 	border-radius: var(--spacing-single);
 	background: var(--color-primary);
-	border: var(--stroke-hairline) solid var(--base);
+	border: 0;
+	box-shadow: 0 0 0 var(--stroke-hairline) var(--base);
 	pointer-events: auto;
 	box-sizing: border-box;
 }
@@ -86,7 +87,9 @@
 	display: flex;
 	flex-direction: row;
 	align-items: center;
-	gap: var(--spacing-single);
+	gap: 0;
+	box-sizing: border-box;
+	border-radius: var(--spacing-single);
 	pointer-events: none;
 }
 
@@ -101,8 +104,7 @@
 	width: 1.5rem;
 	height: 1.5rem;
 	padding: 0;
-	border: var(--stroke-hairline) solid var(--border-normal-color);
-	border-radius: var(--spacing-single);
+	border-radius: 0;
 	background: var(--panel);
 	color: var(--foreground);
 	font-size: 0.75rem;
@@ -118,7 +120,6 @@
 .reveal .presentation-interaction-reset:hover {
 	background: var(--hover-panel);
 	color: var(--foreground);
-	border-color: var(--border-normal-color);
 }
 
 .reveal
@@ -140,7 +141,9 @@
 	display: flex;
 	flex-direction: row;
 	align-items: center;
-	gap: 0.5rem;
+	gap: 0;
+	box-sizing: border-box;
+	border-radius: var(--spacing-single);
 	transform: translateX(-50%);
 	pointer-events: auto;
 }
@@ -149,8 +152,7 @@
 	width: 2rem;
 	height: 2rem;
 	padding: 0;
-	border: var(--stroke-hairline) solid var(--border-normal-color);
-	border-radius: var(--spacing-single);
+	border-radius: 0;
 	background: color-mix(in oklab, var(--panel) 92%, transparent);
 	color: var(--foreground);
 	font-size: 1.125rem;
@@ -166,7 +168,18 @@
 .reveal .presentation-pdf-page-nav__button:hover:not(:disabled) {
 	background: var(--hover-panel);
 	color: var(--foreground);
-	border-color: var(--border-normal-color);
+}
+
+.reveal .presentation-pdf-page-nav__button:first-child,
+.reveal .presentation-interaction-actions > :first-child {
+	border-start-start-radius: var(--spacing-single);
+	border-end-start-radius: var(--spacing-single);
+}
+
+.reveal .presentation-pdf-page-nav__button:last-child,
+.reveal .presentation-interaction-actions > :last-child {
+	border-start-end-radius: var(--spacing-single);
+	border-end-end-radius: var(--spacing-single);
 }
 
 .reveal .presentation-pdf-page-nav__button:disabled {
@@ -184,15 +197,21 @@
 	pointer-events: none;
 }
 
-.reveal .presentation-interaction-slide-reset {
+.reveal .presentation-interaction-slide-reset-frame {
 	position: absolute;
 	top: var(--spacing-single);
 	right: var(--spacing-single);
 	z-index: 1;
+	display: flex;
+	border-radius: var(--spacing-single);
+	pointer-events: none;
+}
+
+.reveal .presentation-interaction-slide-reset {
 	width: 1.5rem;
 	height: 1.5rem;
 	padding: 0;
-	border: var(--stroke-hairline) solid var(--border-normal-color);
+	border: 0;
 	border-radius: var(--spacing-single);
 	background: var(--panel);
 	color: var(--foreground);
@@ -223,6 +242,12 @@
 	)
 	.presentation-media-pdf
 	canvas {
+	pointer-events: none;
+}
+
+.reveal section:has(.presentation-interactive-disposition--selected) .presentation-interaction-slide-reset-frame,
+.reveal section:has(.presentation-interactive-disposition--selected) .presentation-interaction-slide-reset {
+	visibility: hidden;
 	pointer-events: none;
 }
 

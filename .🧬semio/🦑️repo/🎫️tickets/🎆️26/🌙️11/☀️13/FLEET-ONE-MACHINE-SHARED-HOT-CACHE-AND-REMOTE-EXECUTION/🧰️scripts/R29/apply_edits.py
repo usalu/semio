@@ -1,6 +1,6 @@
 import os,sys,importlib
 HERE=os.path.dirname(os.path.abspath(__file__));sys.path.insert(0,HERE)
-LIVE="/Users/Shared/semio/"
+LIVE="/Users/ueli/Documents/semio/"
 out=sys.argv[1];assert os.path.realpath(out).startswith("/private/tmp/claude-501/")
 by={}
 for m in sys.argv[2:]:

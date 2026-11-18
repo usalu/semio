@@ -1,9 +1,10 @@
 /** 🧯️ An EPERM of the resident service below a macOS-protected folder is named as the missing file access consent in both languages, with a reference and the log; every other failure keeps its former refusal. */
 import {expect,test} from "bun:test";
-import {mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync} from "node:fs";
+import {existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,utimesSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
-import {accessDeniedOfV1,deniedPlaceOfV1,failureDetailV1,failureRefusalV1,heavyRefusalOfV1,serviceFactsV1,wantedRefusalOfV1} from "../../🏛️service/🧯️failure/🟨️.mjs";
+import {accessDeniedOfV1,deniedPlaceOfV1,failureBlockV1,failureDetailV1,failureMessageV1,failureRefusalV1,mirrorFailureV1,heavyRefusalOfV1,leaseRefusalOfV1,serviceFactsV1,wantedRefusalOfV1} from "../../🏛️service/🧯️failure/🟨️.mjs";
+import {LeaseOrderErrorV1,type LeaseViolationV1} from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🧭️order/🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json" with {type:"json"};
 
 const perm=Object.assign(new Error("Relative filesystem fstatat failed (EPERM)"),{code:"EPERM"}),home="/Users/worker",logs:string[]=[];
@@ -59,14 +60,14 @@ test("a graph-wanted refusal that waited for heavy projects keeps the sentence n
 });
 
 test("a graph read that stopped projects too heavy for the machine keeps its words through values, message text and cause, and its refusal is retried later in both languages",()=>{
-  const values={named:"@semio-tech/s-dev-composition (about 28000 MB)",limit:2396,megabytes:14000},message="unserved build.graph.owner-too-heavy "+JSON.stringify(values),fields={named:values.named,limit:"2396"};
+  const values={named:"@semio-tech/s-dev-composition (about 28000 MB)",limit:2396,producers:2},message="unserved build.graph.owner-too-heavy "+JSON.stringify(values),fields={named:values.named,limit:"2396",producers:"2"};
   expect(heavyRefusalOfV1(Object.assign(new Error(message),{name:"RepoError",key:"build.graph.owner-too-heavy",values}))).toEqual(fields);
   expect(heavyRefusalOfV1(new Error(message))).toEqual(fields);
   expect(heavyRefusalOfV1(new Error("outer",{cause:new Error(message)}))).toEqual(fields);
   expect(heavyRefusalOfV1(new Error("secret"))).toBeUndefined();expect(wantedRefusalOfV1(new Error(message))).toBeUndefined();
   expect(refuse(new Error(message),{root:"/Users/Shared/semio"})).toEqual({code:"unserved",key:"host-graph-owner-too-heavy",fields,retry:"later"});
   const text=readFileSync(new URL("../../🧬️schema/🔣️.json",import.meta.url),"utf8");
-  expect(text.match(/"host-graph-owner-too-heavy": "[^"]*\{named\}[^"]*\{limit\}/gu)).toHaveLength(2);
+  expect(text.match(/"host-graph-owner-too-heavy": "[^"]*\{named\}[^"]*\{limit\}[^"]*\{producers\}/gu)).toHaveLength(2);
 });
 
 test("every EPERM in the service log carries a where line with the refused root and entry, the code, and the route, pid and parent of the service; an EPERM that names nothing says so",()=>{
@@ -159,4 +160,56 @@ test("g1-m02 round 27 try 2: the typed graph memory refusal (reference fb106d37,
  expect(logs.at(-1)).toContain("graph-memory-refused");
  const all=JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json",import.meta.url),"utf8")),find=(node:any):any=>node&&typeof node==="object"?(node.en&&node.de&&node.en["host-graph-memory-refused"]?node:Object.values(node).map(find).find(Boolean)):undefined,table=find(all),placeholders=(text:string)=>[...text.matchAll(/\{([a-z]+)\}/gu)].map(row=>row[1]).sort();
  for(const language of ["en","de"]){const text=table[language]["host-graph-memory-refused"] as string;expect(text,language).toBeTruthy();expect(placeholders(text)).toEqual(["free","granted","key","need","seconds"]);}
+});
+
+test("an unexpected failure carries its message in the refusal fields and in both texts, and its block lands in the origin folder of the store",()=>{
+  const store=mkdtempSync(join(tmpdir(),"fail-store-")),error=Object.assign(new TypeError("x is not iterable"),{code:"E_BOOM"});
+  try{
+    const refusal=failureRefusalV1(error,{log:()=>undefined,logPath:"/log",root:"/Users/Shared/semio",environment:{SEMIO_FLEET_STORE_ROOT:store,SEMIO_FLEET_ORIGIN:"g1-test"}});
+    expect(refusal).toMatchObject({code:"internal",key:"internal",fields:{log:"/log",message:"TypeError [E_BOOM]: x is not iterable"}});
+    const all=JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json",import.meta.url),"utf8")),find=(node:any):any=>node&&typeof node==="object"?(node.en&&node.de&&node.en["internal"]?node:Object.values(node).map(find).find(Boolean)):undefined,table=find(all);
+    for(const language of ["en","de"])expect(table[language].internal).toContain("{message}");
+    const folder=join(store,"v1","origins","g1-test"),text=readFileSync(join(folder,"service-failure.txt"),"utf8");
+    expect(text).toContain("request-failed "+refusal.fields.reference);expect(text).toContain("message: x is not iterable");expect(text).toContain("code: E_BOOM");
+    expect(text).toContain("en: The resident service met an unexpected failure (reference "+refusal.fields.reference+"): TypeError [E_BOOM]: x is not iterable");
+    expect(text).toContain("de: Der residente Dienst ist auf einen unerwarteten Fehler gestoßen (Referenz "+refusal.fields.reference+"): TypeError [E_BOOM]: x is not iterable");
+    expect(text).toContain("TypeError: x is not iterable");expect(text).toContain("\n    at ");
+    expect(readFileSync(join(folder,"service-failure-"+refusal.fields.reference+".txt"),"utf8")).toBe(text);
+  }finally{rmSync(store,{recursive:true,force:true});}
+});
+
+test("the block is bounded to 64 KiB and the message of the refusal to 300 characters, whatever the failure says",()=>{
+  const huge=new Error("m".repeat(300000)),detail=failureDetailV1(huge),block=failureBlockV1({reference:"abcd0123",detail,error:huge,refusal:{key:"internal",fields:{reference:"abcd0123",log:"/log",message:failureMessageV1(huge)}}});
+  expect(Buffer.byteLength(block)).toBeLessThanOrEqual(65536);expect(block.startsWith("request-failed abcd0123 ")).toBe(true);
+  expect(failureMessageV1(huge).length).toBe(300);expect(failureMessageV1("plain text")).toBe("Error: plain text");expect(failureMessageV1("a\n  b")).toBe("Error: a b");
+});
+
+test("no store or origin in the environment writes nothing, an origin that is a path writes nothing, and only the newest 16 references are kept",()=>{
+  const store=mkdtempSync(join(tmpdir(),"fail-keep-"));
+  try{
+    expect(mirrorFailureV1("x","aaaaaaaa",{environment:{}})).toBeUndefined();
+    expect(mirrorFailureV1("x","aaaaaaaa",{environment:{SEMIO_FLEET_STORE_ROOT:store,SEMIO_FLEET_ORIGIN:"../x"}})).toBeUndefined();
+    expect(mirrorFailureV1("x","aaaaaaaa",{environment:{SEMIO_FLEET_STORE_ROOT:store}})).toBeUndefined();
+    expect(existsSync(join(store,"v1"))).toBe(false);
+    const environment={SEMIO_FLEET_STORE_ROOT:store,SEMIO_FLEET_ORIGIN:"g1-keep"},folder=join(store,"v1","origins","g1-keep");
+    for(let at=0;at<20;at++){const reference=at.toString(16).padStart(8,"0");mirrorFailureV1("block "+at,reference,{environment});const stamp=new Date(1700000000000+at*1000);utimesSync(join(folder,"service-failure-"+reference+".txt"),stamp,stamp);}
+    mirrorFailureV1("block last","ffffffff",{environment});
+    const names=readdirSync(folder).filter(name=>/^service-failure-/u.test(name));
+    expect(names.length).toBe(16);expect(names).toContain("service-failure-ffffffff.txt");expect(names).not.toContain("service-failure-00000000.txt");
+    expect(readFileSync(join(folder,"service-failure.txt"),"utf8")).toBe("block last");
+  }finally{rmSync(store,{recursive:true,force:true});}
+});
+
+test("a read refused by the lease order is a typed refusal in both languages that names what was wanted, what was held, how long and who held it, not an unexpected failure",()=>{
+  const row:LeaseViolationV1={version:1,kind:"hold-and-wait",held:"repository-graph-facts:/Users/ueli/Documents/semio:shard:53",heldMode:"exclusive",heldRank:4,heldClass:"graph",requested:"native-storage-mapping:5874ac7a",requestedMode:"shared",requestedRank:7,requestedClass:"image-mapping",waitedMilliseconds:17000,blockerPid:4242,blockerHeldSeconds:61,blockerCommand:"repo cache gc",atMs:1,pid:7,enforced:true};
+  const error=new LeaseOrderErrorV1("Refusing to wait: x",row),fields={requested:row.requested,mode:"shared",held:row.held,seconds:"17",kind:"hold-and-wait",holderPid:"4242",holderCommand:"repo cache gc",holderSeconds:"61",bound:"-"};
+  expect(leaseRefusalOfV1(error)).toEqual(fields);expect(leaseRefusalOfV1(new Error("outer",{cause:error}))).toEqual(fields);expect(leaseRefusalOfV1(new Error("secret"))).toBeUndefined();
+  const shown=refuse(error,{root:"/Users/Shared/semio"});
+  expect(shown).toEqual({code:"unserved",key:"host-lease-refused",fields,retry:"later"});
+  const unregistered=refuse(new LeaseOrderErrorV1("x",{...row,blockerPid:undefined,blockerCommand:undefined,blockerHeldSeconds:undefined}),{root:"/Users/Shared/semio"});
+  expect(unregistered).toMatchObject({code:"unserved",key:"host-lease-refused-unregistered",retry:"later"});
+  const text=JSON.stringify(schema);
+  for(const key of ["host-lease-refused","host-lease-refused-unregistered"])expect(text.match(new RegExp('"'+key+'":"[^"]*\\{seconds\\}[^"]*\\{requested\\}',"gu"))).toHaveLength(2);
+  expect(text.match(/"host-lease-refused":"[^"]*\{holderPid\}[^"]*\{holderCommand\}[^"]*\{holderSeconds\}/gu)).toHaveLength(2);
+  expect(logs.some(line=>line.startsWith("lease-refused "))).toBe(true);
 });

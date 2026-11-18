@@ -1,0 +1,6 @@
+{
+  "extends": "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/tsconfig.json",
+  "compilerOptions": { "incremental": false, "baseUrl": "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript", "rootDir": "../../../../../../../" },
+  "include": ["../../../../../../../🧰️framework/🛍️products/🎤️presentation/**/*.ts", "../../../../../../../🧰️framework/🛍️products/🎤️presentation/**/*.tsx", "../../../../../../../♻️mit-bestand/🧺️demonstrator/**/*.ts", "../../../../../../../♻️mit-bestand/🧺️demonstrator/**/*.tsx"],
+  "exclude": ["**/node_modules/**", "**/🗑️generated/**", "**/🤖️generated/**"]
+}

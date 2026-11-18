@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {readdir} from "node:fs/promises";
 import {homedir} from "node:os";
 import {join} from "node:path";
@@ -16,7 +17,7 @@ export async function casHostAreasV1(home:string=homedir()):Promise<readonly Cas
 
 /** 📂️ The loose areas a workspace contributes to the host cap: its build-input closures, then the host areas of the user. */
 export async function casAreasOfWorkspaceV1(workspace:string,home:string=homedir()):Promise<readonly CasAreaSourceV1[]>{
- return Object.freeze([{id:"build-input-closures",directory:join(workspace,".cache","b","g","m","build-input-closures")},...await casHostAreasV1(home)]);
+ return Object.freeze([{id:"build-input-closures",directory:machinePathV1(workspace,".cache","b","g","m","build-input-closures")},...await casHostAreasV1(home)]);
 }
 
 /** 🧷️ Pins the build-input closures a loaded graph generation references (`digests` are the file names without `.json`) in the host store of the environment's user, so that neither `cache gc` nor `cache cas gc` collects a leaf the live graph service would read next; without a user home there is no host store and nothing to pin. */

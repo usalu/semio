@@ -223,7 +223,10 @@
       "rampIdleAfterMilliseconds": 30000,
       "rampIdleObservedBasisPoints": 2500,
       "maximumQuiet": 16,
-      "quietSoftStopGrants": 1
+      "quietSoftStopGrants": 1,
+      "rampIdleKeepMegabytes": 3072,
+      "rampIdleKeepBasisPoints": 15000,
+      "childStartMegabytes": 512
     },
     "swap": {
       "ceilingBasisPoints": 2500,
@@ -338,26 +341,26 @@
       {
         "name": "show",
         "shape": "fixed",
-        "fixedMegabytes": 5120,
+        "fixedMegabytes": 3072,
         "cpu": 2,
         "priority": "batch",
-        "minimumMegabytes": 3072
+        "minimumMegabytes": 2304
       },
       {
         "name": "graph",
         "shape": "fixed",
-        "fixedMegabytes": 5120,
+        "fixedMegabytes": 3072,
         "cpu": 2,
         "priority": "batch",
-        "minimumMegabytes": 3072
+        "minimumMegabytes": 2304
       },
       {
         "name": "dependencies",
         "shape": "fixed",
-        "fixedMegabytes": 6144,
+        "fixedMegabytes": 3584,
         "cpu": 2,
         "priority": "batch",
-        "minimumMegabytes": 3072
+        "minimumMegabytes": 2304
       },
       {
         "name": "command",
@@ -394,6 +397,11 @@
         "name": "course-build",
         "pattern": "^run:build:@teaching/architecture-course:build$",
         "megabytes": 12288
+      },
+      {
+        "name": "read-parent",
+        "pattern": "^(?:show|graph)(?::|$)",
+        "megabytes": 4096
       }
     ],
     "estimates": {

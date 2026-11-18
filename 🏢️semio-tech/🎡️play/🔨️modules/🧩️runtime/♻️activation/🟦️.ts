@@ -10,7 +10,8 @@ import { MODULE_SHARD_DIRECTORY, moduleDirectoryName, componentOwnerRootV1 } fro
 import { artifactFiles } from "@semio-tech/framework-plugin/browser-bundle/distribution/inventory";
 import { PREVIEW2_VENDOR_RELATIVE } from "@semio-tech/framework-plugin/browser-bundle/imports";
 import { FONT_ASSET } from "@semio-tech/framework-canvas-ts/fonts";
-import { PLAY_RUNTIME_TARGETS, playPaneClosureRoot, playRuntimeComponentIds } from "../🟦️.ts";
+import type { PlaygroundBuildTarget } from "../../../../../✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🎮️playgrounds/🟦️.ts";
+import { PLAY_RUNTIME_TARGETS, playPaneClosureRoot, playRuntimeComponentIds, playScopeTargets } from "../🟦️.ts";
 
 //#region 🛣️PlayActivationLanes
 /** 📦️ Repository-relative root of the `@semio-tech/framework-os-dev` package every lane's
@@ -26,10 +27,10 @@ export const PLAY_UNION_RECEIPT_DIRECTORY = "🏢️semio-tech/🎡️play/dist/
  * variants are the only candidates: the `s` host lane is the launcher play itself replaces, and every
  * component play needs — the stdio one included, since its own `stdio` pane activates it — is reachable
  * from some pane. */
-export function playActivationLanes(): readonly string[] {
+export function playActivationLanes(targets: readonly PlaygroundBuildTarget[] = PLAY_RUNTIME_TARGETS): readonly string[] {
   const components = [...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS];
-  const closures = PLAY_RUNTIME_TARGETS.map(target => ({ variant: target.variant, ids: runtimeComponentClosure(components, [playPaneClosureRoot(target)]) as readonly string[] }));
-  const union = new Set(playRuntimeComponentIds()), covered = new Set<string>(), lanes: string[] = [];
+  const closures = targets.map(target => ({ variant: target.variant, ids: runtimeComponentClosure(components, [playPaneClosureRoot(target)]) as readonly string[] }));
+  const union = new Set(playRuntimeComponentIds(targets)), covered = new Set<string>(), lanes: string[] = [];
   while ([...union].some(id => !covered.has(id))) {
     let best: { readonly variant: string; readonly ids: readonly string[] } | undefined, bestGain = 0;
     for (const closure of closures) {
@@ -54,10 +55,10 @@ export function playActivationLaneReceiptDirectories(workspace: string): readonl
 }
 
 /** 🧩️ Maps every installed extension directory name to the first lane that staged it. */
-export function playExtensionDirectories(workspace: string): ReadonlyMap<string, string> {
+export function playExtensionDirectories(workspace: string, targets: readonly PlaygroundBuildTarget[] = PLAY_RUNTIME_TARGETS): ReadonlyMap<string, string> {
   const byId = new Map(EXTENSION_TARGETS.map(row => [row.pluginId, row]));
-  const directories = new Map<string, string>(), lanes = playActivationLanes();
-  for (const id of playRuntimeComponentIds().filter(id => byId.has(id))) {
+  const directories = new Map<string, string>(), lanes = playActivationLanes(targets);
+  for (const id of playRuntimeComponentIds(targets).filter(id => byId.has(id))) {
     const name = moduleDirectoryName(id, COMPONENT_MODULE_DIRECTORIES);
     const lane = lanes.find(candidate => existsSync(join(playLaneRuntimeRoot(workspace, candidate), "extensions", name)));
     if (!lane) throw new Error(`Play extension ${id} is installed by no activation lane`);
@@ -70,7 +71,7 @@ export function playExtensionDirectories(workspace: string): ReadonlyMap<string,
 //#region 🔏️PlayInstalledArtifact
 /** 🔏️ The file-identity rule an activation receipt row carries, restated SYNCHRONOUSLY: every file
  * of a staged directory in name order, each preceded by its `[name, size]` header, exactly as
- * `♻️activation/📥️installation/🟦️.ts`'s `activationFilesDigest` streams it. Restated rather than imported
+ * `♻️activation/🔖️identity/🟦️.ts`'s `activationFilesDigest` streams it. Restated rather than imported
  * because that module pulls the whole materialization tool-chain in and answers asynchronously, while play
  * publishes its union INSIDE the Vite config factory — and pinned byte-for-byte to the framework's own
  * digest by a unit law (`🧪️tests/🧪️playactivation`), so the two can never drift apart silently. */
@@ -185,22 +186,17 @@ export function publishPlayUnionReceipt(workspace: string, options: PlayActivati
   return { receiptDirectory, receipt };
 }
 
-/** 🧾️ Requires the exact completed union before starting the development host. */
-export function readPlayActivation(workspace: string, pane?: string): { readonly receiptDirectory: string; readonly extensionsDirectory: string; readonly extensionDirectories: ReadonlyMap<string, string>; readonly receipt: ActivationReceipt } {
-  if (pane !== undefined) {
-    const target = PLAY_RUNTIME_TARGETS.find(target => target.variant === pane);
-    if (!target) throw new Error(`Unknown Play activation pane: ${pane}`);
-    const receipt = mergePlayActivationReceipts([readPlayActivationLane(workspace, pane)], playRuntimeComponentIds([target]), pane);
-    const runtime = playLaneRuntimeRoot(workspace, pane), extensionsDirectory = join(runtime, "extensions");
-    const extensions = new Set(EXTENSION_TARGETS.map(target => target.pluginId));
-    const extensionDirectories = new Map(receipt.plugins.filter(plugin => extensions.has(plugin.pluginId)).map(plugin => {
-      const name = moduleDirectoryName(plugin.pluginId, COMPONENT_MODULE_DIRECTORIES);
-      return [name, join(extensionsDirectory, name)] as const;
-    }));
-    return { receiptDirectory: join(runtime, "activation"), extensionsDirectory, extensionDirectories, receipt };
+/** 🧾️ Requires the exact completed union of a scope (a pane variant or a group id, or every pane) before starting the development host. */
+export function readPlayActivation(workspace: string, scope?: string): { readonly receiptDirectory: string; readonly extensionsDirectory: string; readonly extensionDirectories: ReadonlyMap<string, string>; readonly receipt: ActivationReceipt } {
+  if (scope === undefined) {
+    const { receiptDirectory, receipt } = publishPlayUnionReceipt(workspace);
+    return { receiptDirectory, extensionsDirectory: join(playLaneRuntimeRoot(workspace, playActivationLanes()[0]!), "extensions"), extensionDirectories: playExtensionDirectories(workspace), receipt };
   }
-  const { receiptDirectory, receipt } = publishPlayUnionReceipt(workspace);
-  return { receiptDirectory, extensionsDirectory: join(playLaneRuntimeRoot(workspace, playActivationLanes()[0]!), "extensions"), extensionDirectories: playExtensionDirectories(workspace), receipt };
+  const targets = playScopeTargets(scope), lanes = playActivationLanes(targets), first = playLaneRuntimeRoot(workspace, lanes[0]!);
+  const receipt = mergePlayActivationReceipts(lanes.map(lane => readPlayActivationLane(workspace, lane)), playRuntimeComponentIds(targets), scope);
+  const receiptDirectory = lanes.length === 1 ? join(first, "activation") : join(workspace, "🏢️semio-tech/🎡️play/dist/♻️activation", scope);
+  if (lanes.length > 1) { mkdirSync(receiptDirectory, { recursive: true }); publishActivationReceipt(receiptDirectory, receipt); }
+  return { receiptDirectory, extensionsDirectory: join(first, "extensions"), extensionDirectories: playExtensionDirectories(workspace, targets), receipt };
 }
 //#endregion 🔖️PlayUnionReceipt
 

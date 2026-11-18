@@ -157,7 +157,8 @@ fn chrome_ancestor_emphasis_follows_descendants_and_clears_stale_lineages() {
         tui.render();
         for chrome in [window, built.navbar, built.footer] {
             let at = border(&tui, chrome);
-            let role = if chrome == parent { Role::BorderEmphasized } else { Role::BorderNormal };
+            let shares_the_window_seam = chrome != window && parent == window;
+            let role = if chrome == parent || shares_the_window_seam { Role::BorderEmphasized } else { Role::BorderNormal };
             assert_eq!(tui.frame().get(at.x, at.y).unwrap().fg, tui.theme.role(role));
         }
         assert!(tui.render().0.is_empty());

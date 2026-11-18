@@ -10,10 +10,11 @@ export function buildOverviewButton({ interactive, opened, labels, close }: Pick
       <button
         type="button"
         data-layered-overview-button=""
+        data-shared-border-cell=""
         data-level="dialog"
         aria-keyshortcuts="Escape"
         onClick={close}
-        className="ui-glass absolute right-double top-double z-40 inline-flex items-center gap-single border border-border-normal px-single py-half text-sm font-medium text-foreground outline-none transition-colors hover:border-border-emphasized focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none"
+        className="ui-glass absolute right-0 top-0 z-40 inline-flex items-center gap-single border-b border-l border-border-normal px-single py-half text-sm font-medium text-foreground outline-none transition-colors hover:border-border-emphasized focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none"
       >
         <Icon icon="layout-grid" size="small" />
         {labels.overview}

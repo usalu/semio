@@ -10,14 +10,14 @@ import { isAny, nullableOf } from "../📐️type-render/🟦️.ts";
 //#region 🔖️Context
 /** 🧭️ One schema document's TypeScript leaf and the exports it states, addressed by the document's `$id` and by its file (`file:<absolute path>`); `root` is the export a reference to the whole document names. */
 export class Owner {
-  constructor(
-    readonly ts: string,
-    readonly exports: ReadonlySet<string>,
-    readonly root?: string,
-    readonly shared = false,
-    readonly load: () => Dict | undefined = () => undefined,
-    readonly specifier?: string,
-  ) {}
+  readonly ts:string; readonly exports:ReadonlySet<string>; readonly root?:string; readonly shared:boolean; readonly load:() => Dict | undefined; readonly specifier?:string; constructor(
+    ts: string,
+    exports: ReadonlySet<string>,
+    root?: string,
+    shared = false,
+    load: () => Dict | undefined = () => undefined,
+    specifier?: string,
+  ) {this.ts=ts;this.exports=exports;this.root=root;this.shared=shared;this.load=load;this.specifier=specifier;}
 }
 
 /** 📚️ The text of every source the projection reads, cached on first read so one run sees one consistent tree. */
@@ -43,22 +43,22 @@ export class Context {
   readonly local = new Set<string>();
   self: string | undefined;
 
-  constructor(
-    readonly helper: string,
-    readonly documentId: string | undefined,
-    readonly index: ReadonlyMap<string, Owner>,
-    readonly target: string,
-    readonly siblings: readonly string[],
-    readonly sources: SourceReader,
-    readonly promised: ReadonlySet<ParserKey>,
-    readonly closed = true,
-    readonly document?: Dict,
-    readonly reserved:ReadonlySet<string> = index.get(documentId??"")?.exports??new Set(),
-    readonly resolving = new Set<string>(),
-    readonly foreign = new Map<ParserKey,string>(),
-    readonly redirect?: Owner,
-    readonly receiver = target,
-  ) {}
+  readonly helper:string; readonly documentId:string | undefined; readonly index:ReadonlyMap<string, Owner>; readonly target:string; readonly siblings:readonly string[]; readonly sources:SourceReader; readonly promised:ReadonlySet<ParserKey>; readonly closed:boolean; readonly document?:Dict; readonly reserved:ReadonlySet<string>; readonly resolving:Set<string>; readonly foreign:Map<ParserKey,string>; readonly redirect?:Owner; readonly receiver:string; constructor(
+    helper: string,
+    documentId: string | undefined,
+    index: ReadonlyMap<string, Owner>,
+    target: string,
+    siblings: readonly string[],
+    sources: SourceReader,
+    promised: ReadonlySet<ParserKey>,
+    closed = true,
+    document?: Dict,
+    reserved:ReadonlySet<string> = index.get(documentId??"")?.exports??new Set(),
+    resolving = new Set<string>(),
+    foreign = new Map<ParserKey,string>(),
+    redirect?: Owner,
+    receiver: string = target,
+  ) {this.helper=helper;this.documentId=documentId;this.index=index;this.target=target;this.siblings=siblings;this.sources=sources;this.promised=promised;this.closed=closed;this.document=document;this.reserved=reserved;this.resolving=resolving;this.foreign=foreign;this.redirect=redirect;this.receiver=receiver;}
 
   /** 👁️ The context in which the nodes of another document are rendered: it reads that document, names its parsers as imports of the referring leaf, and shares the callees and the cycle guard of this one. */
   viewOf(owner: Owner, document: Dict | undefined): Context {

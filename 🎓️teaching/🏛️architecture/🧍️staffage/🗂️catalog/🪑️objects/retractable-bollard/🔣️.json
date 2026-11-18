@@ -3580,6 +3580,8 @@
       "key": "beacon",
       "heatW": 8
      },
+     "ratedPowerW": 10,
+     "ratedPowerBasis": "electrical-input",
      "source": "authored-estimate",
      "reference": "iso-10456-2007"
     },
@@ -3683,6 +3685,8 @@
       "key": "hydraulics",
       "heatW": 358.8
      },
+     "ratedPowerW": 750,
+     "ratedPowerBasis": "electrical-input",
      "source": "authored-estimate",
      "reference": "bollard-class"
     }

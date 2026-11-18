@@ -1,0 +1,27 @@
+/** 🩺️ Contract: a SQLite file that cannot be opened is explained with its path, the errno of a create probe and the free space, in English and German, and keeps its original code; a missing parent directory of a database opened for creation is created once. */
+import{expect,test}from"bun:test";
+import{mkdtempSync,rmSync,writeFileSync,existsSync}from"node:fs";
+import{tmpdir}from"node:os";
+import{join}from"node:path";
+import{SqliteDatabaseV1,explainSqliteOpenFailureV1}from"../../🟦️.ts";
+
+test("a database below a regular file is refused with the path, the probe errno and both languages",()=>{
+ const root=mkdtempSync(join(tmpdir(),"semio-r79b-sqlite-"));
+ try{writeFileSync(join(root,"file"),"x");const path=join(root,"file","lease.sqlite");let caught:unknown;
+  try{new SqliteDatabaseV1(path,{create:true,readwrite:true});}catch(error){caught=error;}
+  const error=caught as Error&{path?:string;probe?:string};expect(error).toBeInstanceOf(Error);expect(error.message).toContain(path);expect(error.message).toContain("create probe ENOTDIR");expect(error.message).toContain("Datenbank");expect(error.path).toBe(path);expect(error.probe).toBe("ENOTDIR");
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+test("a missing parent directory of a database opened for creation is created once; a read-only open does not create it",()=>{
+ const root=mkdtempSync(join(tmpdir(),"semio-r79b-sqlite-"));
+ try{const path=join(root,"a","b","lease.sqlite"),database=new SqliteDatabaseV1(path,{create:true,readwrite:true});database.exec("CREATE TABLE t(x)");database.close();expect(existsSync(path)).toBe(true);
+  expect(()=>new SqliteDatabaseV1(join(root,"c","d","x.sqlite"),{readonly:true})).toThrow();expect(existsSync(join(root,"c"))).toBe(false);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+test("only an open failure is rewritten and the original code survives",()=>{
+ const original=Object.assign(Error("unable to open database file"),{code:"SQLITE_CANTOPEN",errno:14});
+ const explained=explainSqliteOpenFailureV1(original,"/nonexistent-r79b/dir/x.sqlite") as Error&{code?:string;errno?:number};expect(explained.code).toBe("SQLITE_CANTOPEN");expect(explained.errno).toBe(14);expect(explained.message).toContain("/nonexistent-r79b/dir/x.sqlite");
+ const other=Error("database is locked");expect(explainSqliteOpenFailureV1(other,"/x")).toBe(other);expect(explainSqliteOpenFailureV1(original,":memory:")).toBe(original);
+});

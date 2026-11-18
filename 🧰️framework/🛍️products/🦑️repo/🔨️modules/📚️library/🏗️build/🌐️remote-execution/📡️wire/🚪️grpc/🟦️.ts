@@ -10,7 +10,7 @@ export const GRPC_CODES_V1=Object.freeze({OK:0,CANCELLED:1,UNKNOWN:2,INVALID_ARG
 
 /** 🧯️ A call failure with a gRPC status; `details` is a serialized `google.rpc.Status` sent in `grpc-status-details-bin`. */
 export class GrpcErrorV1 extends Error{
- constructor(readonly code:number,message:string,readonly details?:Uint8Array){super(message);}
+ readonly code:number; readonly details?:Uint8Array; constructor(code:number,message:string,details?:Uint8Array){super(message);this.code=code;this.details=details;}
 }
 
 /** 📞️ What a handler may know about the call it serves. */

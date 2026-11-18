@@ -4,7 +4,7 @@
  * The rest geometry of an asset at a scale is tessellated once and cached, so the frames of a clip only pay for posing.
  *
  * @see ../../../🧊️volume/🟦️.ts — `modelOf`, the same pipeline as a model document
- * @see ../../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🔺️tessellation/🟦️.ts — `tessellateSolid`
+ * @see ../../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🔺️tessellation/🧱️solid/🟦️.ts — `tessellateSolid`
  */
 import type { Asset, AuthoredVolume, ShapeRole, Slug } from "../../../../🧬️schema/🟦️.ts";
 import { invert4, multiply4, restWorldMatrices, tessellateSolid, transformPoint, type M4, type Node, type Quality } from "../../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts";

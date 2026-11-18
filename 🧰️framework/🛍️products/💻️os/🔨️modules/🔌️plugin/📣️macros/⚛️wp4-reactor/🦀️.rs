@@ -366,8 +366,8 @@ macro_rules! __semio_owned_core_exports {
         }
         #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
         #[unsafe(no_mangle)]
-        pub extern "C" fn semio_owned_channel_version_v1() -> u32 {
-            $crate::component::wasip2::channel_version()
+        pub extern "C" fn semio_owned_channel_version_v1() -> u64 {
+            $crate::owned_abi::return_json(&$crate::component::wasip2::channel_version())
         }
         #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
         #[unsafe(no_mangle)]

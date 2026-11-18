@@ -1,3 +1,4 @@
+import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {linuxHostLibcV1} from "../../../../🎛️commands/🔧️setup/🟦️.ts";
 import{fleetFetchContextV1,pinnedFetchV1}from"../../🛰️fleet-fetch/🟦️.ts";
 import{withRepositoryToolingOperationV1}from"../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
@@ -72,7 +73,7 @@ async function prepareBunOwnedV1(workspace:string,version:string,store:Repositor
     catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
     if (dirname(current) === current) break;
   }
-  const lease={directory:join(workspace,".cache/b/l/m/data"),signal,control},resource=`bun-${row.sha256}`;
+  const lease={directory:machinePathV1(workspace,".cache/b/l/m/data"),signal,control},resource=`bun-${row.sha256}`;
     const validate = async (): Promise<string> => {
       const stat = lstatSync(executable), receipt = JSON.parse(readFileSync(join(directory, ".toolchain.json"), "utf8"));
       if (!stat.isFile() || stat.isSymbolicLink() || lstatSync(directory).isSymbolicLink() || receipt.archive !== row.sha256 || receipt.executable !== createHash("sha256").update(readFileSync(executable)).digest("hex")) throw new Error("Bun installation checksum mismatch");

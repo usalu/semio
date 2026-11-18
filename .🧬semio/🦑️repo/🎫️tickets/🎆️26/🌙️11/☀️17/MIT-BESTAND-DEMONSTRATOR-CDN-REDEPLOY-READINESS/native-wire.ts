@@ -1,0 +1,4 @@
+const root=process.cwd();
+const{createScriptProcessEnvelope,readScriptPolicy}=await import(root+"/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),{createBuildBootstrapCapabilitiesV1}=await import(root+"/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/📤️child/🟦️.ts"),{repositoryScriptProvidersV1}=await import(root+"/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🔌️providers/🟦️.ts"),{writeScriptProviderMapV1}=await import(root+"/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔌️providers/🟦️.ts");
+const wire=JSON.stringify(createScriptProcessEnvelope(readScriptPolicy({version:1,owner:"repository:build",maximumElapsedMilliseconds:0}),await createBuildBootstrapCapabilitiesV1(root,["run",process.argv[2]],process.env),Date.now()));
+process.stdout.write(wire+"\n"+writeScriptProviderMapV1(repositoryScriptProvidersV1()));

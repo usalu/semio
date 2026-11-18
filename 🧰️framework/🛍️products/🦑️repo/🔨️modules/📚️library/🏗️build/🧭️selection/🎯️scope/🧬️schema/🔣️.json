@@ -16,7 +16,7 @@
       "required": ["version", "targets", "includeToolClosure"],
       "properties": {
         "version": { "const": 1 },
-        "targets": { "type": "array", "minItems": 1, "maxItems": 4096, "uniqueItems": true, "items": { "$ref": "#/definitions/TargetRef" } },
+        "targets": { "type": "array", "minItems": 1, "maxItems": 152768, "uniqueItems": true, "items": { "$ref": "#/definitions/TargetRef" } },
         "includeToolClosure": { "type": "boolean" }
       }
     },

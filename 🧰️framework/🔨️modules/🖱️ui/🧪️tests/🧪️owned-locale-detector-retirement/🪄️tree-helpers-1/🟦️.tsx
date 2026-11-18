@@ -485,7 +485,7 @@ describe("tree helpers", () => {
             </TreeSection>
           </TreeContext.Provider>,
         );
-        expect(markup.match(/data-tree-guide-line/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
+        expect(markup.match(/data-slot="tree-parent-guide"/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
         expect(markup).toContain('data-slot="tree-row-content"');
         expect(markup).toMatch(/data-slot="tree-row-content"[^>]*bg-active-base/);
         expect(markup).not.toMatch(/data-slot="tree-item-row"[^>]*bg-active-base/);

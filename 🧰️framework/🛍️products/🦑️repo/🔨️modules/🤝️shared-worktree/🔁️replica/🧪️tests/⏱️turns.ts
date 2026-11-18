@@ -16,6 +16,18 @@ function turns(){
  return {stop:()=>{active=false;return {longest,count};}};
 }
 
+const logicalEntryMilliseconds=0.02;
+
+/** ⏱️ Runs `body` with `performance.now` replaced by a logical clock that advances by a fixed cost for every manifest entry the repair loops name, so the yield budget and the measured turn length depend on the work done and never on how long a loaded host takes to do it. */
+async function underLogicalClock<T>(replica:Awaited<ReturnType<typeof openReplicaV1>>,body:()=>Promise<T>):Promise<T>{
+ const original=performance.now,book=replica.book as unknown as {name:(id:number)=>string};
+ let logical=0;
+ const name=book.name.bind(book);
+ book.name=(id:number)=>{logical+=logicalEntryMilliseconds;return name(id);};
+ performance.now=()=>logical;
+ try{return await body();}finally{performance.now=original;delete (book as Partial<typeof book>).name;}
+}
+
 test("publishing a large sparse file never holds the event loop for longer than the watchdog's heartbeat interval",async()=>{
  const root=mkdtempSync(join(tmpdir(),"replica-turns-"));
  scratch.push(root);
@@ -38,17 +50,20 @@ test("publishing a large sparse file never holds the event loop for longer than 
 
 test("forced full collections are rate limited: thousands of settle requests and growths of large tables in one turn cost at most one collection",async()=>{
  const holder=globalThis as unknown as {Bun:{gc:(force:boolean)=>void}},original=holder.Bun.gc;
- let calls=0;
+ let calls=0,logical=performance.now()+3_600_000;
+ const realNow=performance.now;
  holder.Bun.gc=(force:boolean)=>{calls++;original.call(holder.Bun,force);};
+ performance.now=()=>logical;
  try{
-  await new Promise(done=>setTimeout(done,1100));
   const before=calls;
   for(let index=0;index<5000;index++)settleHeap();
   let array=new Uint8Array(1<<20);
   for(let index=0;index<40;index++)array=widen(array,array.length+(3<<20));
   await Promise.resolve();await new Promise(done=>setImmediate(done));
-  expect(calls-before).toBeLessThanOrEqual(1);
- }finally{holder.Bun.gc=original;}
+  expect(calls-before).toBe(1);
+  logical+=1100;settleHeap();
+  expect(calls-before).toBe(2);
+ }finally{holder.Bun.gc=original;performance.now=realNow;}
 });
 
 test("a drift repair over a 300k-entry manifest and a 300k-entry store snapshot never holds the event loop for longer than 50 ms in one turn",async()=>{
@@ -64,8 +79,7 @@ test("a drift repair over a 300k-entry manifest and a 300k-entry store snapshot 
  const replica=await openReplicaV1(options,()=>{});
  try{
   for(const [path,entry] of table)if(!path.endsWith("0"))replica.manifest.set(path,entry);
-  const meter=turns(),queued=await repairV1(replica),measured=meter.stop();
-  expect(queued).toBeGreaterThan(total/2);
+  const measured=await underLogicalClock(replica,async()=>{const meter=turns(),queued=await repairV1(replica),result=meter.stop();expect(queued).toBeGreaterThan(total/2);return result;});
   expect(measured.count).toBeGreaterThan(100);
   expect(measured.longest).toBeLessThan(50);
  }finally{await closeReplicaV1(replica);}
