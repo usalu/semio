@@ -1,0 +1,10 @@
+{
+  "id": "2026/11/19/FIX-BEAT2-KWH-THINKER",
+  "title": "Fix Beat2 Kilowatt-Hour Thinker Layout",
+  "status": "closed",
+  "goal": "teaching/energy/physics",
+  "client": "cursor-chat",
+  "opened": "2026-11-19T21:50:44",
+  "closed": "2026-11-19T22:03:44",
+  "summary": "Big talking-head clerk upper-right; mind text left of head; formula still clears clock/said."
+}

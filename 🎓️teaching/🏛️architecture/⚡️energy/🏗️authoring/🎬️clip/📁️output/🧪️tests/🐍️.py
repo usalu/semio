@@ -15,6 +15,19 @@ WORKSPACE = next(p for p in Path(__file__).resolve().parents if (p / "🧰️fra
 
 
 class OutputTest(unittest.TestCase):
+    def test_opengl_mobjects_expose_cairo_set_z_index(self):
+        output = importlib.import_module(MODULE)
+        from manim import config
+        config.renderer = "opengl"
+        from manim.mobject.opengl.opengl_mobject import OpenGLMobject
+        if hasattr(OpenGLMobject, "set_z_index"):
+            delattr(OpenGLMobject, "set_z_index")
+        output.install_opengl_cairo_surface()
+        mob = OpenGLMobject()
+        self.assertIs(mob.set_z_index(CASES["opengl_z_index"]["z_index"]), mob)
+        self.assertEqual(mob.z_index, CASES["opengl_z_index"]["z_index"])
+
+
     def test_generated_narration_is_read_and_invalidates_render_cache(self):
         import wave
         output = importlib.import_module(MODULE)

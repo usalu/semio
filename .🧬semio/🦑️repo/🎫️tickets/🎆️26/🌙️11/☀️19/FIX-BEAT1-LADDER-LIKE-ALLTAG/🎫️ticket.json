@@ -1,0 +1,9 @@
+{
+  "id": "2026/11/19/FIX-BEAT1-LADDER-LIKE-ALLTAG",
+  "title": "Align Beat1 Ladder Animation With Alltag",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-19T21:59:12",
+  "closed": "2026-11-19T21:59:12",
+  "summary": "Pack Nullen beside names like Alltag; Beat1 yellow span beside scale labels."
+}

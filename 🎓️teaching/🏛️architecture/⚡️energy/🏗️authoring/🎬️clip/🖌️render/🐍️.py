@@ -13,12 +13,15 @@ if str(_WORKSPACE_ROOT) not in sys.path:
 import argparse
 import math
 import os
+import subprocess
 
 sys.dont_write_bytecode = True
 
 _video_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.⚙️runtime.🐍️")
 compose_videos = _video_module.compose_videos
+live_scene = _video_module.live_scene
 load_manifest = _video_module.load_manifest
+LIVE_RENDERERS = _video_module.LIVE_RENDERERS
 _profile = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🎚️profile.🐍️")
 _audience = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.👥️audience.🐍️")
 
@@ -34,6 +37,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--audience", action="append", choices=_audience.audiences(), help="Video variant; omitted renders Speaker and Spectator")
     parser.add_argument("--video", action="append", choices=[video["id"] for video in videos])
     parser.add_argument("--chapter", action="append", choices=[chapter["scene"] for video in videos for chapter in video["chapters"]], help="Render selected chapters with the same source selections")
+    parser.add_argument("--live", action="store_true", help="Realtime Manim preview of one authored scene (OpenGL window by default)")
+    parser.add_argument("--script", type=Path, help="Authored scene script for --live (teaching-relative or absolute)")
+    parser.add_argument("--scene", help="Scene class name for --live")
+    parser.add_argument("--renderer", choices=LIVE_RENDERERS, default="cairo", help="Live preview renderer; Cairo opens the player after the scene (compatible with teaching morphs), OpenGL streams frames when the scene graph allows")
+    parser.add_argument("--write-movie", action="store_true", help="Also write an mp4 during an OpenGL live preview")
     parser.add_argument("--output-root", type=Path)
     parser.add_argument("--jobs", type=int, default=max(1, min(4, (os.cpu_count() or 2) - 1)), help="Global concurrent segment limit")
     parser.add_argument("--log-output", action="store_true", help="Save immutable per-segment attempt logs")
@@ -45,6 +53,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--no-play", action="store_true")
     parser.add_argument("--play", action="store_true")
     args = parser.parse_args(argv)
+    if args.live and (args.video or args.chapter or args.force or args.concat_only or args.play or args.no_play or args.log_output):
+        parser.error("--live cannot be combined with curriculum compose options")
+    if args.live and (args.script is None or not args.scene):
+        parser.error("--live requires --script and --scene")
+    if not args.live and (args.script is not None or args.scene or args.write_movie):
+        parser.error("--script, --scene and --write-movie require --live")
     if args.force and args.concat_only:
         parser.error("--force and --concat-only cannot be combined")
     if args.jobs < 1:
@@ -60,6 +74,15 @@ def main(argv: list[str] | None = None) -> int:
     if args.output_root:
         os.environ["SEMIO_TEACHING_OUTPUT_ROOT"] = str(args.output_root.resolve())
     try:
+        if args.live:
+            audience = (args.audience or ["speaker"])[0]
+            print(f"[audience] Live preview as {audience}", flush=True)
+            clip = live_scene(args.script, args.scene, language=args.language, audience=audience, profile=args.profile,
+                              renderer=args.renderer, resolution=args.resolution, fps=args.fps,
+                              write_movie=args.write_movie, output_root=args.output_root)
+            if clip is not None:
+                print(f"[live] Wrote {clip}", flush=True)
+            return 0
         for audience in dict.fromkeys(args.audience or _audience.audiences()):
             print(f"[audience] Rendering {audience}", flush=True)
             compose_videos(args.video, language=args.language, audience=audience, output_root=args.output_root, profile=args.profile,
@@ -68,9 +91,9 @@ def main(argv: list[str] | None = None) -> int:
     except KeyboardInterrupt:
         print("Render cancelled; completed segments and chapters can be reused.", flush=True)
         return 130
-    except (RuntimeError, ValueError) as error:
+    except (RuntimeError, ValueError, FileNotFoundError, OSError, subprocess.CalledProcessError) as error:
         print(str(error), file=sys.stderr, flush=True)
-        return 1
+        return getattr(error, "returncode", 1) or 1
     return 0
 
 

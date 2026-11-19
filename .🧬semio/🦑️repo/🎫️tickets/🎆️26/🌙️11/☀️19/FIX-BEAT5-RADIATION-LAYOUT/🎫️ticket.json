@@ -1,0 +1,132 @@
+{
+  "title": "Fix Beat5 Radiation Layout",
+  "emoji": "☀️",
+  "status": "closed",
+  "description": "Shift formula panel down, lengthen reflected sun rays with visible animation, make Raffstore lamellae readable, align sun rays to full window height for exterior and interior blinds.",
+  "goal": "R26-02/UPDATED-DOCS/UPDATED-USER-DOCS/UPDATED-TUTORIALS",
+  "sessions": [],
+  "note": "Created manually: repo MCP unavailable in this Cursor session.",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-19 20:36:00",
+      "author": "Niloufar Ghandehariyoon",
+      "system": "macos",
+      "client": "cursor-chat",
+      "prompt": "in this scene there is a lot of problem... formula lower, reflected radiation longer, curtain elements visible, rays align full window",
+      "llm": "composer-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-19 20:45:00",
+      "author": "Niloufar Ghandehariyoon",
+      "system": "macos",
+      "client": "cursor-chat",
+      "prompt": "Close after Beat5 radiation layout fixes",
+      "llm": "composer-2",
+      "summary": "Lowered formula panel; lengthened and animated reflections; visible Raffstore lamellae; full-window sun rays for out/in blinds.",
+      "files": [
+        "🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/FIX-BEAT5-RADIATION-LAYOUT/CHANGES.md"
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-19 20:48:00",
+      "author": "Niloufar Ghandehariyoon",
+      "system": "macos",
+      "client": "cursor-chat",
+      "prompt": "subtitle text and formula are overlapping, avoid it",
+      "llm": "composer-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-19 20:50:00",
+      "author": "Niloufar Ghandehariyoon",
+      "system": "macos",
+      "client": "cursor-chat",
+      "prompt": "Close after caption/formula overlap fix",
+      "llm": "composer-2",
+      "summary": "Restored formula edge_buff; raised Beat5 room so formula and subtitle no longer overlap."
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-19 20:50:00",
+      "author": "Niloufar Ghandehariyoon",
+      "system": "macos",
+      "client": "cursor-chat",
+      "prompt": "shader curtain radiation not constant; curtain shape/color/vertical elements missing",
+      "llm": "composer-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-19 20:55:00",
+      "author": "Niloufar Ghandehariyoon",
+      "system": "macos",
+      "client": "cursor-chat",
+      "prompt": "Close after Raffstore glyph and steady radiation",
+      "llm": "composer-2",
+      "summary": "Replaced clipped staffage blind with full-height orange/teal Raffstore glyph; steady shade rays instead of staggered pulses."
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-19 20:55:00",
+      "author": "Niloufar Ghandehariyoon",
+      "system": "macos",
+      "client": "cursor-chat",
+      "prompt": "reflected and sun radiation must hit curtain elements precisely then reflect; interior and exterior",
+      "llm": "composer-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-19 21:00:00",
+      "author": "Niloufar Ghandehariyoon",
+      "system": "macos",
+      "client": "cursor-chat",
+      "prompt": "Close after precise curtain ray hits",
+      "llm": "composer-2",
+      "summary": "Per-lamella sun rays with face-normal reflection for exterior and interior blinds; formula buff clear of captions."
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-19 21:00:00",
+      "author": "Niloufar Ghandehariyoon",
+      "system": "macos",
+      "client": "cursor-chat",
+      "prompt": "write word 'besser' in blue",
+      "llm": "composer-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-19 21:01:00",
+      "author": "Niloufar Ghandehariyoon",
+      "system": "macos",
+      "client": "cursor-chat",
+      "prompt": "Close after besser color",
+      "llm": "composer-2",
+      "summary": "Set Beat5 compare label besser/better to P_BLUE."
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-19 21:34:00",
+      "author": "Niloufar Ghandehariyoon",
+      "system": "macos",
+      "client": "cursor-chat",
+      "prompt": "shader curtain not good; blue rectangle only on top; reflection totally false",
+      "llm": "composer-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-19 21:40:00",
+      "author": "Niloufar Ghandehariyoon",
+      "system": "macos",
+      "client": "cursor-chat",
+      "prompt": "Close after raffstore head-only and correct reflection",
+      "llm": "composer-2",
+      "summary": "Head-only teal box; rays stop on lamellae and bounce toward sun; cleared through-beams; formula hidden under summer caption."
+    }
+  ],
+  "updated": "2026-11-19T21:48:29",
+  "closed": "2026-11-19T21:48:39",
+  "summary": "Raffstore bounce was -sun_dir (collinear with incident → invisible). Now specular _mirror off lamella + forced up-left outdoor fork. See REFLECTION-FIX.md."
+}

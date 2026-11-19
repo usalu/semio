@@ -111,20 +111,22 @@ def _readout(fn, at, *, size: float = BODY_FONT_SIZE, color: str = P_WHITE, edge
     return always_redraw(lambda: _m(fn(), at, size=size, color=color, edge=edge))
 
 
-def _panel(parts, *, color: str = P_PRIMARY, size: float = FORMULA_FONT_SIZE):
+def _panel(parts, *, color: str = P_PRIMARY, size: float = FORMULA_FONT_SIZE, edge_buff: float | None = None):
     """🧮 Typeset formula in the fixed bottom panel, shrunk only when it would overrun the frame."""
     row, items = math_row(parts, font_size=size, buff=0.24)
     if row.width > PANEL_MAX_WIDTH:
         row.scale(PANEL_MAX_WIDTH / row.width)
-    row, box = formula_panel(row, color=color)
+    row, box = formula_panel(row, color=color, **({} if edge_buff is None else {"edge_buff": edge_buff}))
     return row, box, items
 
 
-def _fill_panel(scene, stage, prefix, panel, sources, *, run_time: float = 1.2, fly: bool = True):
+def _fill_panel(scene, stage, prefix, panel, sources, *, run_time: float = 1.2, fly: bool = True,
+               hide_sources: bool = False):
     """🧲 Bring source values into their empty panel slots first, then reveal the rest of the formula and its box.
 
     ``fly`` morphs a copy along a clear path; without it the source pulses while its slot appears in the
     same colour — used whenever a straight flight would cross the drawing.
+    ``hide_sources`` fades the origin glyphs as the copies leave so nothing stays stranded mid-frame.
     """
     row, box, items = panel
     targets = [items[key] for key in sources]
@@ -132,10 +134,19 @@ def _fill_panel(scene, stage, prefix, panel, sources, *, run_time: float = 1.2, 
     if fly:
         copies = {key: src.copy() for key, src in sources.items()}
         for copy in copies.values():
+            scene.add(copy)
             for part in copy.get_family():
                 part._layout_zone = "formula"
-        scene.play(*[copies[key].animate.move_to(items[key]) for key in sources], run_time=run_time * 0.7)
-        scene.play(*[stage.transition(f"{prefix}.{key}", source=copies[key], target=items[key]) for key in sources], run_time=run_time * 0.4)
+        leave = [*[copies[key].animate.move_to(items[key]) for key in sources]]
+        if hide_sources:
+            leave.extend(FadeOut(src) for src in sources.values())
+        scene.play(*leave, run_time=run_time * 0.7)
+        scene.play(*[stage.transition(f"{prefix}.{key}", source=copies[key], target=items[key]) for key in sources],
+                   run_time=run_time * 0.4)
+        scene.play(*[FadeOut(copies[key]) for key in sources], run_time=0.2)
+        scene.remove(*copies.values())
+        if hide_sources:
+            scene.remove(*sources.values())
     else:
         scene.play(*[Indicate(src, scale_factor=1.15) for src in sources.values()],
                    *[FadeIn(items[key], scale=1.3) for key in sources], run_time=run_time)
@@ -187,11 +198,10 @@ def _decade_row(e: int, *, x_right: float, y: float, unit: str, base: str, shift
     count = _m(tr(rf"\textcolor{{{P_YELLOW}}}{{{e}}}\,\textcolor{{{P_YELLOW}}}{{\text{{zeros}}}}", rf"\textcolor{{{P_YELLOW}}}{{{e}}}\,\textcolor{{{P_YELLOW}}}{{\text{{Nullen}}}}"), size=17)
     names = _m(rf"\text{{{tr(_DECADE_EN[e], _DECADE_WORDS[e])}}}\,\cdot\,\textcolor{{{P_PRIMARY}}}{{\text{{{tr(_PREFIX_EN.get(name, 'unit'), name or 'Einheit')}}}}}"
                rf"\,=\,1\,\mathrm{{{symbol}{base}}}", size=17)
-    gap = 0.18
-    left = x_right - (count.width + gap + names.width)
-    base_y = y - 0.07 - 0.36
-    _place(count, np.array([left, base_y, 0.0]), "left")
-    _place(names, np.array([x_right, base_y, 0.0]), "right")
+    # Zeros beat: park the yellow count just left of the number line (next to the digits it counts).
+    _place(count, np.array([row.get_left()[0] - 0.16, y - 0.07, 0.0]), "right")
+    # Prefix beat will slide count beside names against the tick.
+    _place(names, np.array([x_right, y - 0.07, 0.0]), "right")
     return {"e": e, "line": row, "pow": items["pow"], "one": items["one"], "zeros": [items[f"z{i}"] for i in range(len(groups))],
             "count": count, "names": names, "x_right": x_right}
 
@@ -217,7 +227,8 @@ def _log_ladder(lo: float, hi: float, *, x: float, y_lo: float, y_hi: float, uni
         if major:
             rows.append(_decade_row(e, x_right=x - 0.24, y=y, unit=unit, base=base, shift=shift))
     texts = VGroup(*[VGroup(r["line"], r["count"], r["names"]) for r in rows])
-    return {"axis": axis, "ticks": ticks, "rows": rows, "group": VGroup(axis, ticks, texts), "y_of": y_of, "x": x}
+    return {"axis": axis, "ticks": ticks, "rows": rows, "group": VGroup(axis, ticks, texts),
+            "y_of": y_of, "x": x, "unit": unit, "shown_powers": []}
 
 
 def _reveal_zeros(scene, ladder, *, run_time: float = 1.1):
@@ -234,20 +245,47 @@ def _reveal_zeros(scene, ladder, *, run_time: float = 1.1):
 
 
 def _reveal_prefixes(scene, ladder, *, run_time: float = 0.7):
-    """🏷️ Swap the long numbers for names: the zeros step aside, each rung gets its number word and SI prefix."""
+    """🏷️ Swap the long numbers for names: zeros and powers step aside; yellow count packs tight beside the name (Alltag style)."""
     rows = ladder["rows"]
-    gone = [m for r in rows for m in (r["line"][1], r["one"], *r["zeros"])]
-    scene.play(*[FadeOut(m) for m in gone],
-               *[r["pow"].animate.shift(RIGHT * (r["x_right"] - r["pow"].get_right()[0])) for r in rows],
-               run_time=0.8)
-    for row in rows:
-        scene.play(FadeIn(row["names"], shift=LEFT * 0.1), Indicate(row["count"], color=P_YELLOW, scale_factor=1.1),
-                   run_time=run_time)
+    gone = [m for r in rows for m in (r["line"][1], r["one"], *r["zeros"], r["pow"])]
+    scene.play(*[FadeOut(m) for m in gone], run_time=0.8)
+    scene.remove(*gone)
+    for m in gone:
+        m.set_opacity(0.0)
+    for r in rows:
+        y = float(ladder["y_of"](10.0 ** r["e"]) - 0.07)
+        gap = 0.14
+        _place(r["names"], np.array([r["x_right"], y, 0.0]), "right")
+        target = r["count"].copy()
+        _place(target, np.array([r["names"].get_left()[0] - gap, y, 0.0]), "right")
+        scene.play(
+            r["count"].animate.move_to(target.get_center()),
+            FadeIn(r["names"], shift=LEFT * 0.08),
+            run_time=run_time,
+        )
+        _place(r["count"], np.array([r["names"].get_left()[0] - gap, y, 0.0]), "right")
+        scene.play(Indicate(r["count"], color=P_YELLOW, scale_factor=1.08), run_time=0.35)
 
 
 def _collapse_rows(scene, ladder, *, run_time: float = 0.7):
-    """🧹 Clear the explanations, keep only the powers of ten, so the examples get the whole scale to themselves."""
-    scene.play(*[FadeOut(m) for r in ladder["rows"] for m in (r["count"], r["names"])], run_time=run_time)
+    """🧹 Strip every rung label — bare axis for the examples; powers return with the yellow span."""
+    scrap = [m for r in ladder["rows"] for m in (r["count"], r["names"], r["line"][1], r["one"], *r["zeros"])]
+    scene.play(*[FadeOut(m) for m in scrap], run_time=run_time)
+    scene.remove(*scrap)
+    for m in scrap:
+        m.set_opacity(0.0)
+
+
+def _show_ladder_powers(scene, ladder, *anims, run_time: float = 0.9):
+    """📐 Mint fresh decade powers with the yellow span so nothing left over from the zeros beat can ghost."""
+    shown = []
+    for r in ladder["rows"]:
+        y = float(ladder["y_of"](10.0 ** r["e"]) - 0.07)
+        p = _m(rf"10^{{{r['e']}}}\,\mathrm{{{ladder['unit']}}}", size=LABEL_FONT_SIZE, color=P_WHITE)
+        _place(p, np.array([r["x_right"], y, 0.0]), "right")
+        shown.append(p)
+    ladder["shown_powers"] = shown
+    scene.play(*[FadeIn(p, shift=RIGHT * 0.05) for p in shown], *anims, run_time=run_time)
 
 
 def _ladder_marks(ladder, entries, *, x_text: float, gap: float = 0.07, bottom: float = -1.7, top: float = 2.3):
@@ -339,12 +377,8 @@ def _beam(start, end, color=P_YELLOW, opacity: float = 0.85, width: float = 2.4)
                 stroke_opacity=opacity)
 
 
-WAVES = {"short": (0.14, 0.03, 1.6), "long": (0.55, 0.085, 2.0)}
-
-
-def _wave_points(corners, kind: str):
-    """🌊 Points of a sinusoidal ray along a polyline — ``short`` is a dense ripple, ``long`` a stretched one, both tapering to the exact ends."""
-    wavelength, amp, _ = WAVES[kind]
+def _wave_points(corners, wavelength: float, amp: float):
+    """🌊 Points of a sinusoidal ray along a polyline, tapering to the exact ends — only the magnifier draws radiation as a wave."""
     corners = [np.array(c, dtype=float) for c in corners]
     segs = [(a, b, float(np.linalg.norm(b - a))) for a, b in zip(corners[:-1], corners[1:])]
     total = sum(length for _, _, length in segs)
@@ -361,10 +395,10 @@ def _wave_points(corners, kind: str):
     return pts
 
 
-def _wave(corners, kind: str, color=P_YELLOW, opacity: float = 0.85):
-    """〰️ Wavy ray from ``corners`` — short-wave sunlight is compact, long-wave heat radiation is stretched."""
-    mob = VMobject(color=color, stroke_width=WAVES[kind][2], stroke_opacity=opacity)
-    mob.set_points_smoothly(_wave_points(corners, kind))
+def _wave(corners, wavelength: float, color=P_YELLOW, *, amp: float = 0.1, width: float = 3.0):
+    """〰️ Wavy ray from ``corners`` — a short wavelength is a tight ripple, a long one a stretched swell of the same height."""
+    mob = VMobject(color=color, stroke_width=width)
+    mob.set_points_smoothly(_wave_points(corners, wavelength, amp))
     return mob
 
 
@@ -418,16 +452,12 @@ def _ripples(centers, *, r_max: float = 0.8, rings: int = 3, cycles: float = 2.0
     return UpdateFromAlphaFunc(arcs, update, remover=True, rate_func=linear)
 
 
-def _beam_pulses(scene, paths, color, *, repeats: int = 2, run_time: float = 2.4, width: float = 5.0, extra=None,
-                 kind: str | None = None):
-    """⚡ Bright pulses running along beam lines — the light itself travels, no extra glyphs."""
+def _beam_pulses(scene, paths, color, *, repeats: int = 2, run_time: float = 2.4, width: float = 5.0, extra=None):
+    """⚡ Bright pulses running along straight beam lines — the light itself travels, no extra glyphs."""
     lines = []
     for corners in paths:
         line = VMobject(color=color, stroke_width=width)
-        if kind:
-            line.set_points_smoothly(_wave_points(corners, kind))
-        else:
-            line.set_points_as_corners([np.array(c, dtype=float) for c in corners])
+        line.set_points_as_corners([np.array(c, dtype=float) for c in corners])
         lines.append(line)
     flashes = [ShowPassingFlash(line.copy(), time_width=0.35) for _ in range(repeats) for line in lines]
     scene.play(LaggedStart(*flashes, lag_ratio=0.6 / len(lines)), *(extra or []), run_time=run_time)
@@ -437,30 +467,35 @@ def _beam_pulses(scene, paths, color, *, repeats: int = 2, run_time: float = 2.4
 
 
 #region Glyphs — sun shading
-BLIND_CAST = "shared-blind-lowered-mirrored"
-BLIND_PORTION = 0.65
+REFLECT_LEN = 1.85
+BLIND_SLAT_COUNT = 10
+BLIND_SLAT_ANGLE = 0.48
+BLIND_SLAT_DEPTH = 0.42
+BLIND_SLAT_THICK = 0.05
+BLIND_HEAD_H = 0.09
 
 
 def _blind(x: float, y_top: float, y_bot: float):
-    """🪟 External venetian blind of the staffage archive fitted between ``y_top`` and ``y_bot`` and centred on ``x``.
+    """🪟 Side-elevation Raffstore: teal head box on top only, then tilted orange lamellae — no full frame.
 
-    Only the upper ``BLIND_PORTION`` of the blind is drawn (true proportions, the lower part cut away) so the lamellae read at 1/``BLIND_PORTION`` times the scale of the full blind.
-
-    ``slats`` holds the sun-facing face of every lamella as (outer end, inner end), ``ys`` their centres, ``angle`` the lamella angle and ``group`` the drawn cast.
-
-    @see ../../../../🧍️staffage/🗂️catalog/🧱️components/external-venetian-blind/🔣️.json — the cast the lamellae are read from
+    ``slats`` are sun-facing faces (outer → inner) for ray hits; ``angle`` is the lamella tilt; ``group`` is the drawable glyph.
     """
-    top = float(_staffage_parts(BLIND_CAST, "box")["box"][:, 1].max())
-    bottom = float(_staffage_parts(BLIND_CAST, "bottom-rail")["bottom-rail"][:, 1].min())
-    bottom = top - BLIND_PORTION * (top - bottom)
-    unit = (y_top - y_bot) / (top - bottom)
-    anchor = np.array([x + 0.075 * unit, y_bot - bottom * unit, 0.0])
-    group = _staffage(BLIND_CAST, unit=unit, anchor=anchor, window=(-1.0, bottom - 1e-3, 0.0, top + 1e-3))
-    parts = {key: polygon for key, polygon in _staffage_parts(BLIND_CAST, "slat-").items() if float(polygon[:, 1].min()) >= bottom - 1e-6}
-    slats = [(np.append(anchor[:2] + outer * unit, 0.0), np.append(anchor[:2] + inner * unit, 0.0)) for outer, inner in lamella_faces(parts)]
-    axis = slats[0][1] - slats[0][0]
-    return {"ys": np.array([(a[1] + b[1]) / 2 for a, b in slats]), "slats": slats, "angle": float(np.arctan2(axis[1], axis[0])),
-            "group": group.set_z_index(4)}
+    along = np.array([np.cos(BLIND_SLAT_ANGLE), np.sin(BLIND_SLAT_ANGLE), 0.0])
+    half_n = np.array([-along[1], along[0], 0.0]) * BLIND_SLAT_THICK
+    ys = np.linspace(y_top - BLIND_HEAD_H - 0.04, y_bot + 0.04, BLIND_SLAT_COUNT)
+    slats, bodies = [], []
+    for y in ys:
+        center = np.array([x, float(y), 0.0])
+        outer = center - along * (BLIND_SLAT_DEPTH * 0.5)
+        inner = center + along * (BLIND_SLAT_DEPTH * 0.5)
+        slats.append((outer, inner))
+        bodies.append(Polygon(outer + half_n, outer - half_n, inner - half_n, inner + half_n,
+                              stroke_color=P_ORANGE, stroke_width=1.4, fill_color=P_ORANGE, fill_opacity=0.95))
+    head = Rectangle(width=BLIND_SLAT_DEPTH * 1.15, height=BLIND_HEAD_H, color=P_TEAL, stroke_width=2.4,
+                     fill_color=P_TEAL, fill_opacity=0.4)
+    head.move_to(np.array([x, y_top - BLIND_HEAD_H * 0.5, 0.0]))
+    group = VGroup(head, *bodies).set_z_index(4)
+    return {"ys": ys, "slats": slats, "angle": float(BLIND_SLAT_ANGLE), "group": group, "head": head}
 
 
 def _blind_hit(blind, start, direction):
@@ -478,6 +513,33 @@ def _blind_hit(blind, start, direction):
     if best is None:
         best = (blind["slats"][0][0][0] - start[0]) / direction[0]
     return start + direction * best
+
+
+def _shade_beams(blind, sun_dir, *, path_len: float = 2.8, reflect_len: float = REFLECT_LEN):
+    """☀️ One sun ray per lamella: stops on the sun-facing face, then specular-bounces up and out.
+
+    Returns ``(incoming, bounced, paths)`` with each path ``[start, hit, back]``.
+    Bounce must NOT be collinear with the incident ray — otherwise the reflection is invisible.
+    """
+    sun_dir = np.array(sun_dir, dtype=float)
+    sun_dir = sun_dir / np.linalg.norm(sun_dir)
+    bounce = _mirror(sun_dir, blind["angle"])
+    bounce = bounce / np.linalg.norm(bounce)
+    # Specular off a rising lamella keeps a +x component; flip it outdoors so rays leave up-and-left.
+    bounce = np.array([-abs(float(bounce[0])) - 0.35, abs(float(bounce[1])), 0.0])
+    bounce = bounce / np.linalg.norm(bounce)
+    incoming, bounced, paths = VGroup(), VGroup(), []
+    for outer, inner in blind["slats"]:
+        outer = np.array(outer, dtype=float)
+        inner = np.array(inner, dtype=float)
+        hit = outer + 0.28 * (inner - outer)
+        start = hit - sun_dir * path_len
+        back = hit + bounce * reflect_len
+        incoming.add(_beam(start, hit, width=2.6))
+        bounced.add(_beam(hit, back, opacity=0.85, width=2.6))
+        paths.append([start, hit, back])
+    return incoming, bounced, paths
+
 #endregion
 
 
@@ -637,12 +699,12 @@ class Beat1_Leistung(Scene):
         caption = caption_bar(subtitle_text(N, "rate"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        power_unit = _m(r"P\;\text{in}\;\;\mathrm{W}", size=FORMULA_FONT_SIZE, color=P_CYAN)
+        power_unit = _m(r"P\;\text{in}\;\;\mathrm{W}", size=FORMULA_FONT_SIZE, color=P_CYAN).move_to(ORIGIN)
         self.play(FadeIn(power_unit), run_time=0.8)
         hold_for(self, N, "rate", used=BEAT_SUBTITLE_FADE + 0.3 + 0.8)
         caption = swap_caption(self, caption, subtitle_text(N, "unit"))
         unit_definition = _m(r"1\,\mathrm{W} = 1\,\frac{\mathrm{J}}{\mathrm{s}}\quad\quad 1\,\mathrm{kW} = 1\,000\,\mathrm{W}",
-                             size=FORMULA_FONT_SIZE, color=P_CYAN)
+                             size=FORMULA_FONT_SIZE, color=P_CYAN).move_to(ORIGIN)
         self.play(stage.transition("physics.fundamentals.unit.watt-name-to-definition", source=power_unit, target=unit_definition), run_time=0.8)
         hold_for(self, N, "unit")
         self.play(FadeOut(unit_definition), run_time=0.4)
@@ -693,13 +755,14 @@ class Beat1_Leistung(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(N, "vacuum"))
         name = Text(tr("Vacuum cleaner", "Staubsauger"), font_size=BODY_FONT_SIZE, color=P_PRIMARY).move_to(np.array([2.6, 1.95, 0.0]))
-        p_read = _readout(lambda: rf"P = {label_number(P.get_value(), 1)}\,\mathrm{{kW}}", np.array([1.2, 1.3, 0.0]),
-                          color=P_CYAN)
+        read_x = 1.2
+        p_read = _readout(lambda: rf"P = {label_number(P.get_value(), 1)}\,\mathrm{{kW}}",
+                          np.array([read_x, O[1] + 0.85 * SY, 0.0]), color=P_CYAN)
         t_read = _readout(
             lambda: rf"t = {label_number(t_now(), 2)}\,\mathrm{{h}} = {label_number(t_now() * 60)}\,\mathrm{{min}}",
-            np.array([1.2, 0.75, 0.0]), color=P_ORANGE)
+            np.array([read_x, O[1] + 0.35 * SY, 0.0]), color=P_ORANGE)
         e_read = _readout(lambda: rf"E = P \cdot t = {label_number(P.get_value() * t_now(), 2)}\,\mathrm{{kWh}}",
-                          np.array([1.2, 0.2, 0.0]), color=P_YELLOW)
+                          np.array([read_x, O[1] - 0.05, 0.0]), color=P_YELLOW)
         controls = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
         power_control = controls.chip("Start", font_size=LABEL_FONT_SIZE).move_to(np.array([5.7, 1.95, 0.0]))
         device_frame = controls.window_frame(6.2, 0.75, color=semio_color("gray"), fill_opacity=0)
@@ -827,19 +890,26 @@ class Beat1_Leistung(Scene):
         for key, idxs in groups.items():
             if key != "scale1":
                 caption = swap_caption(self, caption, subtitle_text(N, key))
-            for i in idxs:
-                self.play(marker.animate.move_to(dots[i]), FadeIn(dots[i]), Create(leaders[i]),
-                          FadeIn(labels[i], shift=RIGHT * 0.1), run_time=0.75)
             if key == "scale4":
-                span = dim_arrow(np.array([-6.6, ladder["y_of"](40), 0.0]),
-                                 np.array([-6.6, ladder["y_of"](9e12), 0.0]), color=P_YELLOW)
+                span_x = ladder["x"] - 2.35
+                span = dim_arrow(np.array([span_x, ladder["y_of"](40), 0.0]),
+                                 np.array([span_x, ladder["y_of"](9e12), 0.0]), color=P_YELLOW)
                 span_lbl = _m(r"\times\,3 \cdot 10^{11}", color=P_YELLOW).next_to(span, UP, buff=0.1)
-                span_lbl.shift(RIGHT * max(0.0, -6.85 - span_lbl.get_left()[0]))
-                self.play(GrowFromCenter(span), FadeIn(span_lbl), run_time=0.9)
+                i = idxs[0]
+                _show_ladder_powers(
+                    self, ladder,
+                    marker.animate.move_to(dots[i]), FadeIn(dots[i]), Create(leaders[i]),
+                    FadeIn(labels[i], shift=RIGHT * 0.1), GrowFromCenter(span), FadeIn(span_lbl),
+                    run_time=0.9,
+                )
+            else:
+                for i in idxs:
+                    self.play(marker.animate.move_to(dots[i]), FadeIn(dots[i]), Create(leaders[i]),
+                              FadeIn(labels[i], shift=RIGHT * 0.1), run_time=0.75)
             hold_for(self, N, key)
 
         caption = swap_caption(self, caption, subtitle_text(N, "load"))
-        self.play(FadeOut(VGroup(ladder["group"], marker, *dots, *labels, *leaders, span, span_lbl)), run_time=0.6)
+        self.play(FadeOut(VGroup(ladder["group"], marker, *dots, *labels, *leaders, span, span_lbl, *ladder["shown_powers"])), run_time=0.6)
         YO = np.array([-5.7, -1.2, 0.0])
         DX, DY = 9.6 / 365.0, 0.31
         days = np.arange(366)
@@ -862,8 +932,10 @@ class Beat1_Leistung(Scene):
         curve = VMobject(color=P_CYAN, stroke_width=3)
         curve.set_points_smoothly([ypt(d, kw_day[d]) for d in range(0, 366, 2)])
         design = DashedLine(ypt(0, 8), ypt(365, 8), color=P_RED, stroke_width=2.5, dash_length=0.12)
-        design_lbl = _m(tr(r"\text{Design heating load}\; \dot{Q}_{\mathrm{H}} \approx 8\,\mathrm{kW}", r"\text{Auslegungsheizlast}\; \dot{Q}_{\mathrm{H}} \approx 8\,\mathrm{kW}"), ypt(200, 8) + UP * 0.2,
-                        color=P_RED, size=LABEL_FONT_SIZE, edge="left")
+        title_x = chart_title.get_center()[0]
+        design_lbl = _m(tr(r"\text{Design heating load}\; \dot{Q}_{\mathrm{H}} \approx 8\,\mathrm{kW}", r"\text{Auslegungsheizlast}\; \dot{Q}_{\mathrm{H}} \approx 8\,\mathrm{kW}"),
+                        np.array([title_x, ypt(200, 8)[1] + 0.2, 0.0]),
+                        color=P_RED, size=LABEL_FONT_SIZE, edge="center")
         p_ticks2 = VGroup(*[_m(str(p), ypt(0, p) + LEFT * 0.22 + DOWN * 0.07, size=LABEL_FONT_SIZE, edge="right")
                             for p in (2, 4, 6, 8)])
         self.play(FadeIn(yax["group"]), FadeIn(months), FadeIn(p_ticks2), FadeIn(chart_title), run_time=0.8)
@@ -880,13 +952,14 @@ class Beat1_Leistung(Scene):
             return Polygon(*pts, stroke_width=0, fill_color=P_CYAN, fill_opacity=0.3)
 
         fill = always_redraw(year_area)
+        demand_y = ypt(200, 6.2)[1]
         q_read = _readout(lambda: rf"Q_{{\mathrm{{h}}}} = {label_number(cum[int(np.clip(sweep.get_value(), 0, 365))])}\,\mathrm{{kWh}}",
-                          ypt(200, 6.2), color=P_CYAN, edge="left")
+                          np.array([title_x, demand_y, 0.0]), color=P_CYAN, edge="center")
         self.add(fill)
         _reveal(self, q_read)
         self.play(sweep.animate.set_value(365), run_time=4.0, rate_func=linear)
-        year_lbl = _m(tr(r"\text{Heating demand}\; Q_{\mathrm{h}} \approx 15\,000\,\frac{\mathrm{kWh}}{\mathrm{a}}", r"\text{Heizwärmebedarf}\; Q_{\mathrm{h}} \approx 15\,000\,\frac{\mathrm{kWh}}{\mathrm{a}}"), ypt(200, 6.2), color=P_CYAN,
-                      edge="left")
+        year_lbl = _m(tr(r"\text{Heating demand}\; Q_{\mathrm{h}} \approx 15\,000\,\frac{\mathrm{kWh}}{\mathrm{a}}", r"\text{Heizwärmebedarf}\; Q_{\mathrm{h}} \approx 15\,000\,\frac{\mathrm{kWh}}{\mathrm{a}}"),
+                      np.array([title_x, demand_y, 0.0]), color=P_CYAN, edge="center")
         self.play(stage.transition("physics.fundamentals.demand.readout-to-year", source=q_read, target=year_lbl), run_time=0.6)
         hold_for(self, N, "demand")
 
@@ -1001,24 +1074,26 @@ class Beat2_EnergieImAlltag(Scene):
         hold_for(self, N, "meter", used=BEAT_SUBTITLE_FADE + 0.3 + 4.2)
 
         caption = swap_caption(self, caption, subtitle_text(N, "slip"))
-        person = _person("physics-fundamentals-clerk", np.array([0.7, hg.get_bottom()[1] + 0.02, 0.0]),
-                         1.75 * 0.72 * house["w_height"] / 5.0, motion=False)
+        # Big talking-head close-up: feet below the frame so head/torso fill the upper right and address the viewer.
+        person = _person("physics-fundamentals-clerk", np.array([4.35, -5.55, 0.0]), 7.0, motion=False)
         said, said_items = math_row([
             ("n", r"\text{4 000}", P_WHITE), ("kw", r"\mathrm{kW}", P_WHITE), ("v", tr(r"\text{consumed}", r"\text{verbraucht}"), P_WHITE),
         ], font_size=BODY_FONT_SIZE, buff=0.14)
-        said.move_to(np.array([2.75, 0.95, 0.0]))
-        cloud = _cloud(said)
-        trail = _cloud_trail(cloud, person.get_top() + RIGHT * 0.12 + UP * 0.08)
-        self.play(FadeIn(person, shift=UP * 0.15), FadeOut(grid_tag), run_time=0.5)
-        self.play(LaggedStart(*[GrowFromCenter(p) for p in trail[::-1]], lag_ratio=0.45), run_time=0.6)
+        said.move_to(person.get_top() + LEFT * 2.55 + UP * 0.08)
+        cloud = _cloud(said, pad=(0.5, 0.42))
+        mind = person.get_top() + LEFT * 0.35 + DOWN * 0.12
+        trail = _cloud_trail(cloud, mind, n=5)
+        self.play(FadeIn(person, shift=UP * 0.2), FadeOut(grid_tag), run_time=0.5)
+        self.play(LaggedStart(*[GrowFromCenter(p) for p in trail[::-1]], lag_ratio=0.35), run_time=0.55)
         self.play(GrowFromPoint(cloud, trail[0].get_center(), rate_func=rate_functions.ease_out_back), run_time=0.6)
         self.play(LaggedStart(*[FadeIn(said_items[k], shift=UP * 0.12) for k in ("n", "kw", "v")], lag_ratio=0.35),
                   run_time=0.8)
+        self.bring_to_front(said)
         self.play(cloud.animate(rate_func=there_and_back).scale(1.04), run_time=0.6)
         hold_for(self, N, "slip")
 
         caption = swap_caption(self, caption, subtitle_text(N, "hour"))
-        clock = _clock(np.array([5.7, 0.95, 0.0]))
+        clock = _clock(np.array([6.05, 2.75, 0.0]))
         clock_lbl = Text(tr("1 hour", "1 Stunde"), font_size=LABEL_FONT_SIZE, color=P_ORANGE).next_to(clock["face"], DOWN, buff=0.14)
         h_glyph = _m(r"\mathrm{h}", clock["face"].get_top() + UP * 0.3, color=P_ORANGE)
         self.play(FadeIn(clock["group"]), FadeIn(clock_lbl), run_time=0.6)
@@ -1032,10 +1107,13 @@ class Beat2_EnergieImAlltag(Scene):
         self.play(said_items["v"].animate.shift(RIGHT * shift), kw.animate.set_color(P_CYAN), stage.transition("physics.fundamentals.said.cloud-widens", source=cloud, target=wide),
                   run_time=0.7)
         cloud = wide
+        # Opaque replacement frame was covering the spoken slip — keep the words on top.
+        self.bring_to_front(said)
         self.play(h_glyph.animate.move_to(np.array([h_target.get_center()[0],
                                                     cloud.get_top()[1] + h_glyph.height / 2 + 0.15, 0.0])),
                   run_time=0.7)
         self.play(h_glyph.animate(rate_func=rate_functions.ease_in_quad).move_to(h_target.get_center()), run_time=0.4)
+        self.bring_to_front(said, h_glyph)
         self.play(cloud.animate(rate_func=there_and_back).scale(1.05), Flash(h_glyph, color=P_ORANGE, line_length=0.16,
                                                                              flash_radius=0.28), run_time=0.6)
         bubble = VGroup(cloud, trail)
@@ -1048,8 +1126,13 @@ class Beat2_EnergieImAlltag(Scene):
             (None, "1", P_WHITE), ("kwh", r"\mathrm{kWh}", P_YELLOW),
         ])
         row, box, items = panel
-        self.play(FadeOut(person), FadeOut(bubble), run_time=0.5)
-        _fill_panel(self, stage, "physics.fundamentals.said.fly", panel, {"kw": kw, "h": h_glyph})
+        # Clear mind-text / clock fully, then show the formula alone — no fly copies that can ghost the rest of the beat.
+        mind_scrap = VGroup(person, bubble, said, h_glyph, clock["group"], clock_lbl)
+        self.play(FadeOut(mind_scrap), run_time=0.5)
+        for mob in (person, bubble, said, h_glyph, kw, clock["group"], clock_lbl, *list(said_items.values())):
+            mob.set_opacity(0.0)
+            self.remove(mob)
+        self.play(FadeIn(row), Create(box), run_time=0.9)
         hold_for(self, N, "product")
 
         caption = swap_caption(self, caption, subtitle_text(N, "vacuum"))
@@ -1086,9 +1169,8 @@ class Beat2_EnergieImAlltag(Scene):
 
         cable = always_redraw(plugged_cable)
         self.play(
-            FadeOut(said), FadeOut(h_glyph), FadeOut(clock["group"]),
-            FadeOut(clock_lbl), FadeOut(hg), FadeOut(meter_box), FadeOut(meter_tag), FadeOut(wire_in),
-            FadeOut(wire_out), FadeOut(meter_read), run_time=0.7,
+            FadeOut(hg), FadeOut(meter_box), FadeOut(meter_tag), FadeOut(wire_in),
+            FadeOut(wire_out), FadeOut(meter_read), FadeOut(VGroup(row, box)), run_time=0.7,
         )
         self.play(FadeIn(tank["group"]), FadeIn(tank["fill"]), FadeIn(tank_lbl), FadeIn(floor), FadeIn(vac),
                   FadeIn(vac_tag), FadeIn(clock2["group"]), FadeIn(cable), run_time=1.0)
@@ -1221,17 +1303,22 @@ class Beat2_EnergieImAlltag(Scene):
         hold_for(self, N, "house")
 
         caption = swap_caption(self, caption, subtitle_text(N, "world"))
-        for i in (4, 5):
-            self.play(FadeIn(dots[i]), Create(leaders[i]), FadeIn(labels[i], shift=RIGHT * 0.1), run_time=0.8)
-        span = dim_arrow(np.array([-6.6, ladder["y_of"](0.15), 0.0]), np.array([-6.6, ladder["y_of"](1.7e14), 0.0]),
+        # Keep the yellow span beside the decade powers / right labels — not stranded on the far left.
+        span_x = ladder["x"] - 2.35
+        span = dim_arrow(np.array([span_x, ladder["y_of"](0.15), 0.0]), np.array([span_x, ladder["y_of"](1.7e14), 0.0]),
                          color=P_YELLOW)
         span_lbl = _m(r"\times\,10^{15}", color=P_YELLOW).next_to(span, UP, buff=0.1)
-        span_lbl.shift(RIGHT * max(0.0, -6.85 - span_lbl.get_left()[0]))
-        self.play(GrowFromCenter(span), FadeIn(span_lbl), run_time=0.9)
+        _show_ladder_powers(
+            self, ladder,
+            FadeIn(dots[4]), Create(leaders[4]), FadeIn(labels[4], shift=RIGHT * 0.1),
+            FadeIn(dots[5]), Create(leaders[5]), FadeIn(labels[5], shift=RIGHT * 0.1),
+            GrowFromCenter(span), FadeIn(span_lbl),
+            run_time=0.9,
+        )
         hold_for(self, N, "world")
 
         caption = swap_caption(self, caption, subtitle_text(N, "design"))
-        self.play(FadeOut(VGroup(ladder["group"], *dots, *labels, *leaders, span, span_lbl)), run_time=0.6)
+        self.play(FadeOut(VGroup(ladder["group"], *dots, *labels, *leaders, span, span_lbl, *ladder["shown_powers"])), run_time=0.6)
         house2 = _build_cross_section_house(center=np.array([-0.3, -0.45, 0.0]))
         house2["group"].clear_updaters()
         win_lo, win_hi = house2["windows"]
@@ -2066,6 +2153,12 @@ class Beat5_Strahlung(Scene):
         ("long",
          "Warm surfaces radiate too — but long-wave, in the infrared.",
          "Warme Oberflächen strahlen selbst — aber langwellig, im Infrarot."),
+        ("lens",
+         "Under the magnifier, radiation is a wave: sunlight has a short wavelength and carries a lot of energy.",
+         "Unter der Lupe ist Strahlung eine Welle: Sonnenlicht hat eine kurze Wellenlänge und trägt viel Energie."),
+        ("lens_long",
+         "The warm room radiates with a much longer wavelength — and that radiation carries less energy.",
+         "Der warme Raum strahlt mit einer viel größeren Wellenlänge — diese Strahlung trägt weniger Energie."),
         ("trap",
          "Glass hardly lets long-wave radiation through: plain glass absorbs it, a low-e coating reflects it back into the room.",
          "Langwellige Strahlung lässt Glas kaum durch: Vollglas nimmt sie auf, eine Low-E-Beschichtung wirft sie in den Raum zurück."),
@@ -2095,7 +2188,7 @@ class Beat5_Strahlung(Scene):
         caption = caption_bar(subtitle_text(N, "sun"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        room = _room(np.array([1.0, 0.25, 0.0]), w=4.6, h=2.6, window=(0.34, 0.92))
+        room = _room(np.array([1.0, 0.55, 0.0]), w=4.6, h=2.4, window=(0.34, 0.92))
         gx = room["glass_x"]
         sun_dir = np.array([1.0, -0.5, 0.0]) / np.linalg.norm([1.0, -0.5])
         sun_c = np.array([gx, (room["win_lo"] + room["win_hi"]) / 2, 0.0]) - sun_dir * 3.25
@@ -2107,18 +2200,18 @@ class Beat5_Strahlung(Scene):
             t_wall = (room["x_r"] - 0.02 - g_pt[0]) / sun_dir[0]
             return g_pt + sun_dir * min(t_floor, t_wall)
 
-        entries = [np.array([gx, y, 0.0]) for y in np.linspace(room["win_lo"] + 0.12, room["win_hi"] - 0.12, 8)]
+        entries = [np.array([gx, y, 0.0]) for y in np.linspace(room["win_lo"] + 0.02, room["win_hi"] - 0.02, 8)]
         starts = [e - sun_dir * 2.3 for e in entries]
         hits = [hit_point(e) for e in entries]
-        beams_out = VGroup(*[_wave([s, e], "short") for s, e in zip(starts, entries)])
-        reflected = VGroup(*[_wave([e, e + bounce_dir * 0.55], "short", opacity=0.4) for e in entries])
+        beams_out = VGroup(*[_beam(s, e) for s, e in zip(starts, entries)])
+        reflected = VGroup(*[_beam(e, e + bounce_dir * REFLECT_LEN, opacity=0.55) for e in entries])
         corner = [np.array([room["x_r"] - 0.02, room["y_f"] + 0.02, 0.0])] if hits[-1][0] > room["x_r"] - 0.05 else []
         shaft = Polygon(entries[0], hits[0], *corner, hits[-1], entries[-1], stroke_width=0, fill_color=P_YELLOW,
                         fill_opacity=0.0)
         patch = VMobject(color=P_YELLOW, stroke_width=6, stroke_opacity=0.85)
         patch.set_points_as_corners([hits[0], *corner, hits[-1]])
         pass_paths = [[starts[k], entries[k], hits[k]] for k in (1, 3, 5, 7)]
-        split_paths = [[starts[k], entries[k], entries[k] + bounce_dir * 0.55] for k in (0, 2, 4, 6)]
+        split_paths = [[starts[k], entries[k], entries[k] + bounce_dir * REFLECT_LEN] for k in (0, 2, 4, 6)]
         i_sun = _example.I_S_CLEAR_W_M2
         i_lbl = _m(rf"I_{{\mathrm{{s}}}} = {label_number(i_sun)}\,\frac{{\mathrm{{W}}}}{{\mathrm{{m^{{2}}}}}}", sun_c + LEFT * 0.4 + DOWN * 0.8, size=LABEL_FONT_SIZE,
                    color=P_YELLOW)
@@ -2128,13 +2221,13 @@ class Beat5_Strahlung(Scene):
         self.play(FadeIn(room["group"]), FadeIn(sun), run_time=1.0)
         self.play(LaggedStart(*[Create(b) for b in beams_out], lag_ratio=0.08), run_time=1.0)
         self.play(shaft.animate.set_fill(opacity=0.16), Create(patch), run_time=0.8)
-        _beam_pulses(self, pass_paths, P_YELLOW, repeats=2, run_time=3.0, kind="short")
+        _beam_pulses(self, pass_paths, P_YELLOW, repeats=2, run_time=3.0)
         hold_for(self, N, "sun", used=BEAT_SUBTITLE_FADE + 0.3 + 5.8)
 
         caption = swap_caption(self, caption, subtitle_text(N, "g"))
         self.play(LaggedStart(*[Create(r) for r in reflected], lag_ratio=0.08),
                   Indicate(room["glass"], color=P_ORANGE, scale_factor=1.0), FadeIn(i_lbl), run_time=0.9)
-        _beam_pulses(self, pass_paths + split_paths, P_YELLOW, repeats=1, run_time=2.6, kind="short",
+        _beam_pulses(self, pass_paths + split_paths, P_YELLOW, repeats=1, run_time=2.6,
                      extra=[FadeIn(g_lbl), FadeIn(gi_lbl, shift=RIGHT * 0.1)])
         norm_tag = _m(rf"\text{{{_references.cite('din-en-410')} · }} g_{{\perp}}", np.array([6.6, 1.45, 0.0]), size=LABEL_FONT_SIZE, color=P_PRIMARY, edge="right")
         self.play(FadeIn(norm_tag), run_time=0.4)
@@ -2167,8 +2260,9 @@ class Beat5_Strahlung(Scene):
             ("av", rf"{label_number(_example.WINDOW_A_M2, 2)}\,\mathrm{{m^{{2}}}}", P_CYAN), (None, r"\cdot", P_WHITE),
             ("iv", rf"{label_number(i_sun)}\,\frac{{\mathrm{{W}}}}{{\mathrm{{m^{{2}}}}}}", P_YELLOW), (None, "=", P_WHITE),
             ("r", rf"{label_number(_example.G_PERP * _example.WINDOW_A_M2 * i_sun)}\,\mathrm{{W}}", P_ORANGE),
-        ])
+        ], edge_buff=2.05)
         _fill_panel(self, stage, "physics.fundamentals.gain.fly", (row, box, items), {"gv": g_lbl, "av": a_read, "iv": i_lbl}, fly=False)
+        formula_panel_mobs = VGroup(row, box)
         hold_for(self, N, "gain")
 
         surface_heat = {key: room[key].copy().set_fill(P_ORANGE, opacity=0) for key in ("floor", "wall_lo", "wall_hi")}
@@ -2177,7 +2271,7 @@ class Beat5_Strahlung(Scene):
         caption = swap_caption(self, caption, subtitle_text(N, "absorb"))
         self.play(FadeOut(VGroup(pane, w_dim, h_dim, w_lbl, h_lbl)), FadeOut(pane_fill), FadeOut(a_read),
                   run_time=0.5)
-        _beam_pulses(self, pass_paths, P_YELLOW, repeats=1, run_time=2.0, kind="short", extra=[
+        _beam_pulses(self, pass_paths, P_YELLOW, repeats=1, run_time=2.0, extra=[
             LaggedStart(*[Flash(hits[k], color=P_ORANGE, flash_radius=0.12, line_length=0.08) for k in (1, 3, 5, 7)],
                         lag_ratio=0.2),
             patch.animate.set_stroke(color=P_ORANGE),
@@ -2194,8 +2288,8 @@ class Beat5_Strahlung(Scene):
             g_in = np.array([gx + 0.1, room["win_lo"] + 0.3 + 0.9 * k, 0.0])
             bounce = _mirror((g_in - src) / np.linalg.norm(g_in - src), PI / 2)
             back_end = g_in + bounce * min(1.6, (room["y_c"] - 0.12 - g_in[1]) / max(0.05, bounce[1]))
-            ir_up.add(_wave([src, g_in], "long", color=P_RED, opacity=0.45))
-            ir_back.add(_wave([g_in, back_end], "long", color=P_RED, opacity=0.45))
+            ir_up.add(_beam(src, g_in, color=P_RED, opacity=0.6))
+            ir_back.add(_beam(g_in, back_end, color=P_RED, opacity=0.6))
             up_paths.append([src, g_in])
             trap_paths.append([src, g_in, back_end])
         lw_lbl = Text(tr("longwave", "langwellig"), font_size=LABEL_FONT_SIZE, color=P_RED).move_to(
@@ -2203,11 +2297,61 @@ class Beat5_Strahlung(Scene):
         sw_lbl = Text(tr("shortwave", "kurzwellig"), font_size=LABEL_FONT_SIZE, color=P_YELLOW).move_to(np.array([-3.6, -0.4, 0.0]))
         self.play(shaft.animate.set_fill(opacity=0.07), LaggedStart(*[Create(b) for b in ir_up], lag_ratio=0.15),
                   FadeIn(lw_lbl), FadeIn(sw_lbl), run_time=1.0)
-        _beam_pulses(self, up_paths, P_RED, repeats=2, run_time=2.6, kind="long", extra=[_ripples(emitters, r_max=0.85)])
+        _beam_pulses(self, up_paths, P_RED, repeats=2, run_time=2.6, extra=[_ripples(emitters, r_max=0.85)])
         hold_for(self, N, "long")
 
-        caption = swap_caption(self, caption, subtitle_text(N, "trap"))
+        caption = swap_caption(self, caption, subtitle_text(N, "lens"))
+        lens_c, lens_r = np.array([5.3, 0.8, 0.0]), 1.65
+        lens_edge = semio_color("light-gray")
+        lens_disc = Circle(radius=lens_r, stroke_width=0, fill_color=P_DEEP_DARK, fill_opacity=1.0).move_to(lens_c)
+        lens_rim = Circle(radius=lens_r, color=lens_edge, stroke_width=6).move_to(lens_c)
+        grip = np.array([np.cos(-0.75), np.sin(-0.75), 0.0])
+        lens_handle = Line(lens_c + grip * lens_r, lens_c + grip * (lens_r + 0.45), color=lens_edge, stroke_width=10)
         win_mid = (room["win_lo"] + room["win_hi"]) / 2
+        marker = DashedVMobject(Circle(radius=0.3, color=lens_edge, stroke_width=3).move_to(np.array([gx + 0.1, win_mid, 0.0])),
+                                num_dashes=16)
+        link = DashedLine(marker.get_right() + RIGHT * 0.04, lens_c + LEFT * lens_r, color=lens_edge, stroke_width=2,
+                          stroke_opacity=0.5)
+
+        def lens_row(dy):
+            return lens_c + UP * dy
+
+        def lens_wave(dy, wavelength, color):
+            return _wave([lens_row(dy) + LEFT * 1.1, lens_row(dy) + RIGHT * 1.1], wavelength, color)
+
+        def lens_lambda(dy, wavelength, color):
+            arrow = dim_arrow(lens_row(dy) + LEFT * wavelength / 2, lens_row(dy) + RIGHT * wavelength / 2, color=color)
+            tag = _m(r"\lambda", lens_row(dy) + RIGHT * (wavelength / 2 + 0.25), size=LABEL_FONT_SIZE, color=color)
+            return VGroup(arrow, tag)
+
+        def lens_text(dy, de, en, color):
+            return Text(tr(en, de), font_size=LABEL_FONT_SIZE, color=color).move_to(lens_row(dy))
+
+        short_wl, long_wl = 0.23, 1.15
+        sw_name = lens_text(1.1, "kurzwellig", "shortwave", P_YELLOW)
+        sw_wave = lens_wave(0.7, short_wl, P_YELLOW)
+        sw_span = lens_lambda(0.4, short_wl, P_YELLOW)
+        sw_energy = lens_text(0.08, "viel Energie", "much energy", P_YELLOW)
+        lw_name = lens_text(-0.25, "langwellig", "longwave", P_RED)
+        lw_wave = lens_wave(-0.62, long_wl, P_RED)
+        lw_span = lens_lambda(-0.9, long_wl, P_RED)
+        lw_energy = lens_text(-1.2, "wenig Energie", "little energy", P_RED)
+        self.play(FadeOut(g_lbl), FadeIn(marker), Create(link), FadeIn(lens_disc), FadeIn(lens_rim), FadeIn(lens_handle), run_time=1.0)
+        self.play(FadeIn(sw_name), Create(sw_wave), run_time=0.8)
+        self.play(GrowFromCenter(sw_span), FadeIn(sw_energy), run_time=0.8)
+        self.play(ShowPassingFlash(sw_wave.copy().set_stroke(width=6), time_width=0.4), run_time=1.0)
+        hold_for(self, N, "lens")
+
+        caption = swap_caption(self, caption, subtitle_text(N, "lens_long"))
+        self.play(FadeIn(lw_name), Create(lw_wave), run_time=1.0)
+        self.play(GrowFromCenter(lw_span), FadeIn(lw_energy), run_time=0.8)
+        self.play(ShowPassingFlash(lw_wave.copy().set_stroke(width=6), time_width=0.4), run_time=1.0)
+        hold_for(self, N, "lens_long")
+
+        lens_all = VGroup(lens_disc, lens_rim, lens_handle, marker, link, sw_name, sw_wave, sw_span, sw_energy, lw_name,
+                          lw_wave, lw_span, lw_energy)
+        caption = swap_caption(self, caption, subtitle_text(N, "trap"))
+        self.play(FadeOut(lens_all), FadeIn(g_lbl), run_time=0.6)
         lowe = Line(np.array([gx + 0.1, room["win_lo"], 0.0]), np.array([gx + 0.1, win_mid, 0.0]),
                     color=P_ORANGE, stroke_width=4)
         lowe_lbl = Text("Low-E", font_size=LABEL_FONT_SIZE, color=P_ORANGE).move_to(
@@ -2220,7 +2364,7 @@ class Beat5_Strahlung(Scene):
                            color=P_ORANGE, stroke_width=1.4, stroke_opacity=0.55)
         self.play(Create(lowe), FadeIn(lowe_lbl), Create(lowe_leader), FadeIn(plain_lbl), Create(plain_leader),
                   Create(ir_back[0]), run_time=1.0)
-        _beam_pulses(self, trap_paths[:1] + up_paths[1:], P_RED, repeats=2, run_time=3.0, kind="long",
+        _beam_pulses(self, trap_paths[:1] + up_paths[1:], P_RED, repeats=2, run_time=3.0,
                      extra=[_ripples(emitters, r_max=0.85)])
         hold_for(self, N, "trap")
 
@@ -2255,28 +2399,24 @@ class Beat5_Strahlung(Scene):
         hold_for(self, N, "winter")
 
         caption = swap_caption(self, caption, subtitle_text(N, "summer"))
-        out_blind = _blind(gx - 0.3, room["win_hi"] + 0.06, room["win_lo"] + 0.18)
+        self.play(FadeOut(formula_panel_mobs), run_time=0.3)
+        out_blind = _blind(gx - 0.3, room["win_hi"] + 0.04, room["win_lo"] - 0.02)
         blind_group = out_blind["group"]
         blind_lbl = Text(tr("Venetian blind", "Raffstore"), font_size=LABEL_FONT_SIZE, color=P_TEAL).move_to(
             np.array([gx - 0.85, room["win_lo"] - 0.35, 0.0]))
-        stopped, shade_paths = VGroup(), []
-        for start in starts:
-            stop = _blind_hit(out_blind, start, sun_dir)
-            stopped.add(_wave([start, stop], "short"))
-            bounce = _mirror(sun_dir, out_blind["angle"])
-            back = stop + bounce * min(0.4, max(0.05, (room["win_hi"] + 0.04 - stop[1]) / max(bounce[1], 1e-6)))
-            stopped.add(_beam(stop, back, opacity=0.4, width=1.6))
-            shade_paths.append([start, stop])
+        incoming, bounced, shade_paths = _shade_beams(out_blind, sun_dir)
+        stopped = VGroup(incoming, bounced)
         norm2 = _m(tr(rf"\text{{{_references.cite('din-4108-2')}: sun protection, reduction factor }} F_{{\mathrm{{C}}}}", rf"\text{{{_references.cite('din-4108-2')}: Sonnenschutz, Abminderungsfaktor }} F_{{\mathrm{{C}}}}"), np.array([6.6, 2.75, 0.0]), size=LABEL_FONT_SIZE, color=P_PRIMARY, edge="right")
-        self.play(FadeOut(radiator), FadeOut(need_read), FadeOut(lowe_lbl), FadeOut(lowe_leader), FadeOut(plain_lbl), FadeOut(plain_leader),
-                  run_time=0.4)
-        self.play(FadeIn(blind_group, shift=DOWN * 0.25), FadeIn(blind_lbl), run_time=1.2)
-        self.play(stage.transition("physics.fundamentals.shade.beams-stopped", source=beams_out, target=stopped), shaft.animate.set_fill(opacity=0.03), FadeOut(patch),
+        self.play(FadeOut(radiator), FadeOut(need_read), FadeOut(lowe), FadeOut(lowe_lbl), FadeOut(lowe_leader),
+                  FadeOut(plain_lbl), FadeOut(plain_leader), FadeOut(beams_out), FadeOut(shaft), FadeOut(patch),
+                  run_time=0.5)
+        self.play(FadeIn(blind_group, shift=DOWN * 0.25), FadeIn(blind_lbl), FadeIn(norm2),
                   t_room.animate.set_value(22.0), room["air"].animate.set_fill(P_RED, opacity=0.04),
                   surface_heat["floor"].animate.set_fill(opacity=0),
                   surface_heat["wall_lo"].animate.set_fill(opacity=0),
-                  surface_heat["wall_hi"].animate.set_fill(opacity=0), FadeIn(norm2), run_time=1.4)
-        _beam_pulses(self, shade_paths, P_YELLOW, repeats=2, run_time=2.6, kind="short")
+                  surface_heat["wall_hi"].animate.set_fill(opacity=0), run_time=1.1)
+        self.play(LaggedStart(*[Create(b) for b in incoming], lag_ratio=0.05), run_time=1.0)
+        self.play(LaggedStart(*[Create(b) for b in bounced], lag_ratio=0.05), run_time=1.0)
         hold_for(self, N, "summer")
 
         caption = swap_caption(self, caption, subtitle_text(N, "inner"))
@@ -2296,32 +2436,28 @@ class Beat5_Strahlung(Scene):
         in_val = always_redraw(lambda: _m(rf"{label_number(22 + 8 * in_frac.get_value())}\,\mathrm{{°C}}", np.array(
             [bar_x["in"], bar_base + max(0.002, (22 + 8 * in_frac.get_value() - 15) * bar_unit) + 0.3, 0.0]),
             size=LABEL_FONT_SIZE, color=P_RED))
-        in_blind = _blind(gx + 0.3, room["win_hi"] + 0.06, room["win_lo"] + 0.18)
+        in_blind = _blind(gx + 0.3, room["win_hi"] + 0.04, room["win_lo"] - 0.02)
         in_group = in_blind["group"]
         in_lbl = Text(tr("Interior blind", "Raffstore innen"), font_size=LABEL_FONT_SIZE, color=P_TEAL).move_to(
             np.array([gx + 1.9, room["y_f"] + 0.3, 0.0]))
-        in_beams, in_paths = VGroup(), []
-        for start in starts:
-            stop = _blind_hit(in_blind, start, sun_dir)
-            in_beams.add(_wave([start, stop], "short"))
-            in_paths.append([start, stop])
-        slat_pts = [np.array([gx + 0.55, y, 0.0]) for y in in_blind["ys"][::3]]
+        in_beams, in_bounce, in_paths = _shade_beams(in_blind, sun_dir)
+        slat_pts = [0.5 * (a + b) for a, b in in_blind["slats"][::3]]
         self.play(FadeOut(VGroup(blind_group, blind_lbl, norm2)), FadeOut(stopped), run_time=0.6)
-        self.play(FadeIn(in_group, shift=DOWN * 0.2), FadeIn(in_lbl),
-                  LaggedStart(*[Create(b) for b in in_beams], lag_ratio=0.08), run_time=1.4)
-        warm_slats = interpolate_color(ManimColor(P_TEAL), ManimColor(P_RED), 0.7)
-        self.play(in_group.animate.set_stroke(color=warm_slats), shaft.animate.set_fill(opacity=0.0), LaggedStart(
-            *[Flash(np.array(pth[1]), color=P_ORANGE, flash_radius=0.12, line_length=0.08) for pth in in_paths],
-            lag_ratio=0.1), run_time=1.0)
-        _beam_pulses(self, in_paths, P_YELLOW, repeats=1, run_time=2.0, kind="short", extra=[
-                         _ripples(slat_pts, r_max=0.6), t_room.animate.set_value(30.0),
-                         in_frac.animate.set_value(1.0), room["air"].animate.set_fill(P_RED, opacity=0.1)])
+        self.play(FadeIn(in_group, shift=DOWN * 0.2), FadeIn(in_lbl), run_time=0.9)
+        self.play(LaggedStart(*[Create(b) for b in in_beams], lag_ratio=0.05), run_time=1.0)
+        self.play(LaggedStart(*[Create(b) for b in in_bounce], lag_ratio=0.05), run_time=0.9)
+        warm_slats = interpolate_color(ManimColor(P_ORANGE), ManimColor(P_RED), 0.65)
+        self.play(in_group.animate.set_fill(warm_slats, opacity=0.95).set_stroke(P_RED),
+                  LaggedStart(*[Flash(np.array(pth[1]), color=P_ORANGE, flash_radius=0.12, line_length=0.08)
+                                for pth in in_paths], lag_ratio=0.08),
+                  _ripples(slat_pts, r_max=0.6), t_room.animate.set_value(30.0),
+                  in_frac.animate.set_value(1.0), room["air"].animate.set_fill(P_RED, opacity=0.1), run_time=1.6)
         hold_for(self, N, "inner")
 
         caption = swap_caption(self, caption, subtitle_text(N, "compare"))
         self.add(in_bar, in_val)
         self.play(FadeIn(out_bar), FadeIn(out_val), FadeIn(out_name), FadeIn(in_name), run_time=0.9)
-        better = Text(tr("better", "besser"), font_size=LABEL_FONT_SIZE, color=P_PRIMARY).move_to(
+        better = Text(tr("better", "besser"), font_size=LABEL_FONT_SIZE, color=P_BLUE).move_to(
             np.array([bar_x["out"], bar_base + 1.3, 0.0]))
         self.play(Indicate(out_bar, color=P_TEAL), FadeIn(better, shift=UP * 0.1), run_time=1.0)
         hold_for(self, N, "compare")
@@ -2964,12 +3100,12 @@ class Beat7_SensibelLatent(Scene):
         self.play(LaggedStart(*[d.animate(rate_func=rate_functions.ease_in_quad).move_to(
             np.array([surf_x + 0.3 + 0.18 * k, trough.get_top()[1] + 0.02, 0.0])) for k, d in enumerate(drops)],
                               lag_ratio=0.25), trough_lvl.animate.set_value(1.0), run_time=3.2)
-        self.play(*[FadeOut(d) for d in drops], run_time=0.4)
+        self.play(*[FadeOut(d) for d in drops], *[FadeOut(m) for m in movers], run_time=0.4)
         hold_for(self, N, "drops")
 
         caption = swap_caption(self, caption, subtitle_text(N, "person"))
         phi_gauge["fill"].clear_updaters()
-        self.play(FadeOut(VGroup(aax["group"], t_lbls, x_lbls, sat, sat_lbl, air_box, air_tag, *rest, dew_lbl,
+        self.play(FadeOut(VGroup(aax["group"], t_lbls, x_lbls, sat, sat_lbl, air_box, air_tag, *rest, *movers, dew_lbl,
                                  surf, surf_lbl, drop_tag, trough, cond_read, v20, tag100, tag50, cool_line,
                                  phi_gauge["group"])), FadeOut(trough_fill), FadeOut(state), FadeOut(st_read),
                   run_time=0.6)

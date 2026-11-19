@@ -1,0 +1,21 @@
+{
+  "manim-sideview.defaultManimPath": "manim-teaching",
+  "manim-sideview.commandLineArgs": "-ql --disable_caching",
+  "manim-sideview.focusOutputOnRun": true,
+  "manim-sideview.preview": true,
+  "terminal.integrated.env.osx": {
+    "SEMIO_TEACHING_LANGUAGE": "de",
+    "SEMIO_TEACHING_AUDIENCE": "speaker",
+    "SEMIO_TEACHING_PROFILE": "preview"
+  },
+  "terminal.integrated.env.linux": {
+    "SEMIO_TEACHING_LANGUAGE": "de",
+    "SEMIO_TEACHING_AUDIENCE": "speaker",
+    "SEMIO_TEACHING_PROFILE": "preview"
+  },
+  "terminal.integrated.env.windows": {
+    "SEMIO_TEACHING_LANGUAGE": "de",
+    "SEMIO_TEACHING_AUDIENCE": "speaker",
+    "SEMIO_TEACHING_PROFILE": "preview"
+  }
+}

@@ -92,6 +92,7 @@ test-results
 /playwright/.auth/
 #--------------------------------------OUTPUTS--------------------------------------
 /media/
+**/.sideview/
 🎓️teaching/🏛️architecture/⚡️energy/**/📍️trace/
 🎓️teaching/🏛️architecture/⚡️energy/**/⏱️timing/
 **/🤖️generated/

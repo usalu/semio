@@ -1056,12 +1056,17 @@ def cloud_glyph(content, *, pad=(0.42, 0.36), color=P_WHITE):
 
 
 def cloud_trail(cloud, target, *, n: int = 3, color=P_WHITE):
-    """📎 A restrained annotation leader from the frame to the described object."""
-    from manim import Line, VGroup
+    """💭 Thought dots from the annotation frame toward the thinker — large near the frame, small near the head."""
+    from manim import Dot, VGroup
 
-    start = cloud.get_bottom()
-    return VGroup(Line(start, np.array(target, dtype=float), color=color,
-                       stroke_width=1.2, stroke_opacity=0.65))
+    start = np.array(cloud.get_bottom(), dtype=float) + np.array([0.0, -0.04, 0.0])
+    end = np.array(target, dtype=float)
+    dots = []
+    for i in range(max(1, n)):
+        t = (i + 1) / (n + 1)
+        p = start + (end - start) * t
+        dots.append(Dot(p, radius=0.028 + 0.055 * (n - i) / n, color=color, fill_opacity=0.9))
+    return VGroup(*dots)
 
 
 def clock_glyph(center, r: float = 0.42, color=P_PRIMARY):

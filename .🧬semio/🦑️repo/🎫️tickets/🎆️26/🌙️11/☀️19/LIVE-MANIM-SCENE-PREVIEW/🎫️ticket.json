@@ -1,0 +1,85 @@
+{
+  "title": "Live Manim Scene Preview",
+  "emoji": "🎬",
+  "status": "closed",
+  "description": "Add a live Manim scene preview path so authored teaching clips (starting with physics fundamentals) can open a realtime OpenGL preview window through the shared render CLI under the explicit preview profile.",
+  "goal": "R26-02/UPDATED-DOCS/UPDATED-USER-DOCS/UPDATED-TUTORIALS",
+  "sessions": [],
+  "note": "Created manually: repo MCP server was not available in this Cursor session (repo binary/shim refused; FetchMcpResource server repo not found).",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-19 18:55:00",
+      "author": "Niloufar Ghandehariyoon",
+      "system": "macos",
+      "client": "cursor-chat",
+      "prompt": "Want to manim the physics fundamentals file and realtime see the render.",
+      "llm": "composer-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-19 19:10:00",
+      "author": "Niloufar Ghandehariyoon",
+      "system": "macos",
+      "client": "cursor-chat",
+      "prompt": "Close after live Manim preview path for fundamentals.",
+      "llm": "composer-2",
+      "summary": "Live --live Cairo preview works for fundamentals Beat1; OpenGL shims partial; repo launcher required for staffage."
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-19 19:42:00",
+      "author": "Niloufar Ghandehariyoon",
+      "system": "macos",
+      "client": "cursor-chat",
+      "prompt": "i want to use manim preview but iam facing an error",
+      "llm": "composer-2",
+      "note": "Manim Sideview exit code 1: missing SEMIO_TEACHING_LANGUAGE"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-19 19:52:00",
+      "author": "Niloufar Ghandehariyoon",
+      "system": "macos",
+      "client": "cursor-chat",
+      "prompt": "Close after Manim Sideview SEMIO_TEACHING_LANGUAGE fix",
+      "llm": "composer-2",
+      "summary": "Sideview exit code 1 was missing SEMIO_TEACHING_LANGUAGE; added manim-teaching shim + workspace settings.",
+      "files": [
+        ".vscode/settings.json",
+        ".vscode/manim-sideview/run.py",
+        ".vscode/manim-sideview/run",
+        ".vscode/manim-sideview/run.cmd",
+        ".vscode/manim-sideview/install.py",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/LIVE-MANIM-SCENE-PREVIEW/SIDEVIEW-DIAGNOSIS.md",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/LIVE-MANIM-SCENE-PREVIEW/USAGE.md"
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-19 20:18:00",
+      "author": "Niloufar Ghandehariyoon",
+      "system": "macos",
+      "client": "cursor-chat",
+      "prompt": "why it dosent show",
+      "llm": "composer-2",
+      "note": "Beat6 Sideview empty 0:00; render succeeded but webview localResourceRoots blocks emoji cache path"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-19 20:22:00",
+      "author": "Niloufar Ghandehariyoon",
+      "system": "macos",
+      "client": "cursor-chat",
+      "prompt": "Close after empty Sideview player fix",
+      "llm": "composer-2",
+      "summary": "Beat6 rendered but webview blocked emoji-cache path; Sideview shim now writes under scene/.sideview/.",
+      "files": [
+        ".vscode/manim-sideview/run.py",
+        ".gitignore",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/LIVE-MANIM-SCENE-PREVIEW/SIDEVIEW-EMPTY-PLAYER.md",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/LIVE-MANIM-SCENE-PREVIEW/USAGE.md"
+      ]
+    }
+  ]
+}

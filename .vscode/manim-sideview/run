@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# 🎬 Unix Manim Sideview launcher → run.py (sets SEMIO_TEACHING_* then execs manim).
+set -euo pipefail
+HERE="$(cd "$(dirname "$0")" && pwd)"
+exec python3 "$HERE/run.py" "$@"

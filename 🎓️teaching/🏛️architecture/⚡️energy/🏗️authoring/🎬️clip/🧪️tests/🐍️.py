@@ -520,6 +520,37 @@ class VideoContractTest(unittest.TestCase):
         expected = [sys.executable if part == "<active-python>" else part for part in CONTRACT["manim_command"]]
         self.assertEqual(manim_command(), expected)
 
+    def test_live_preview_command_streams_opengl_window(self):
+        runtime = importlib.import_module(CONTRACT["canonical_paths"]["runtime"])
+        case = CONTRACT["live_preview"]
+        script = runtime.resolve_script(case["script"])
+        self.assertEqual(runtime.discover_scenes(script), case["scenes"])
+        with tempfile.TemporaryDirectory(dir=os.environ.get("SEMIO_TEACHING_OUTPUT_ROOT")) as directory:
+            media = Path(directory)
+            config = runtime.render_config(media)
+            command = runtime.live_command(script, case["scene"], config=config, media_dir=media,
+                                           resolution=case["resolution"], fps=case["fps"],
+                                           renderer=case["renderer"], write_movie=False)
+            for flag in case["command_flags"]:
+                self.assertIn(flag, command)
+            self.assertEqual(command[:3], [sys.executable, "-m", "manim"])
+            self.assertEqual(command[-2:], [str(script), case["scene"]])
+            self.assertNotIn("--write_to_movie", command)
+            with self.assertRaises(ValueError):
+                runtime.live_command(script, case["scene"], config=config, media_dir=media,
+                                     resolution=case["resolution"], fps=case["fps"], renderer="metal", write_movie=False)
+
+    def test_live_cli_requires_script_and_scene(self):
+        import subprocess
+
+        environment = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
+        result = subprocess.run(
+            [sys.executable, str(ROOT / "🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🖌️render/🐍️.py"),
+             "--live", "--language", "de", "--profile", "preview"],
+            env=environment, capture_output=True, check=False, timeout=30)
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("--live requires --script and --scene", result.stderr.decode("utf-8"))
+
     def test_concat_paths_are_portable(self):
         _video_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.⚙️runtime.🐍️")
         concat_entry = _video_module.concat_entry

@@ -135,6 +135,97 @@ def profile_environment(profile: str, scene: str) -> dict[str, str]:
     return _profile.environment(profile, job_id=f"{profile}-{scene}-{time.time_ns():x}")
 
 
+#region Live scene preview
+LIVE_RENDERERS = ("opengl", "cairo")
+
+
+def discover_scenes(script: Path) -> list[str]:
+    """🎭 Scene class names declared in one authored Manim module, in source order."""
+    tree = ast.parse(Path(script).read_text(encoding="utf-8"))
+    scenes = []
+    for node in tree.body:
+        if not isinstance(node, ast.ClassDef) or not node.name.isidentifier():
+            continue
+        if any((isinstance(base, ast.Name) and base.id == "Scene")
+               or (isinstance(base, ast.Attribute) and base.attr == "Scene") for base in node.bases):
+            scenes.append(node.name)
+    return scenes
+
+
+def resolve_script(script: Path | str, *, root: Path | None = None) -> Path:
+    """📍 Resolve a teaching-relative or absolute authored scene script."""
+    root = Path(root or teaching_root(Path(__file__))).resolve()
+    path = Path(script)
+    candidate = path if path.is_absolute() else root / path
+    if not candidate.is_file():
+        raise FileNotFoundError(f"Scene script not found: {script}")
+    return candidate.resolve()
+
+
+def live_command(script: Path, scene: str, *, config: Path, media_dir: Path, resolution: str, fps: float,
+                 renderer: str, write_movie: bool) -> list[str]:
+    """🎛️ Manim argv for a live authoring preview; OpenGL opens a realtime window, Cairo opens the player after the scene."""
+    if renderer not in LIVE_RENDERERS:
+        raise ValueError(f"Live renderer must be one of {LIVE_RENDERERS}")
+    if not scene.isascii() or not scene.isidentifier():
+        raise ValueError(f"Invalid scene name: {scene}")
+    command = [*manim_command(), "--config_file", str(config), "--media_dir", str(media_dir),
+               "--resolution", resolution, "--fps", f"{fps:g}", "--preview", "--renderer", renderer,
+               "--disable_caching"]
+    if renderer == "opengl":
+        command.append("--force_window")
+        if write_movie:
+            command.append("--write_to_movie")
+    command.extend([str(script), scene])
+    return command
+
+
+def live_scene(script: Path | str, scene: str, *, language: str, audience: str, profile: str,
+               renderer: str = "cairo", resolution: str | None = None, fps: float | None = None,
+               write_movie: bool = False, output_root: Path | None = None,
+               session: ToolSession | None = None) -> Path | None:
+    """🪟 Live-preview one authored scene under an explicit profile.
+
+    Cairo (`renderer=\"cairo\"`) is the compatible default for teaching morphs: it writes the
+    movie and opens the system player when the scene finishes. OpenGL (`renderer=\"opengl\"`)
+    streams frames into a popup while the scene runs when the scene graph stays within the
+    OpenGL Cairo-surface shims.
+    """
+    _audience.subtitles_visible(audience)
+    if language not in {"en", "de"} or profile not in _profile.NAMES or renderer not in LIVE_RENDERERS:
+        raise ValueError("Invalid live preview settings")
+    root = teaching_root(Path(__file__))
+    script = resolve_script(script, root=root)
+    scenes = discover_scenes(script)
+    if scene not in scenes:
+        raise ValueError(f"Scene {scene!r} is not declared in {script.relative_to(root).as_posix()}; known: {scenes}")
+    chosen = _profile.profile(profile)
+    if fps is not None and (not math.isfinite(fps) or fps <= 0):
+        raise ValueError("Live frame rate must be finite and positive")
+    if resolution:
+        parts = resolution.split(",")
+        if len(parts) != 2 or not all(part.isdigit() and int(part) > 0 and int(part) % 2 == 0 for part in parts) or abs(int(parts[0]) / int(parts[1]) - 16 / 9) > 0.01:
+            raise ValueError("Live resolution must be two positive even 16:9 dimensions")
+    rate = fps if fps is not None else chosen.fps
+    size = resolution or f"{chosen.width},{chosen.height}"
+    destination = Path(output_root or _output.output_root()).resolve() / "live" / profile / language / audience
+    media_dir = destination / scene
+    config = render_config(media_dir)
+    command = live_command(script, scene, config=config, media_dir=media_dir, resolution=size, fps=rate,
+                           renderer=renderer, write_movie=write_movie or renderer == "cairo")
+    environment = {"SEMIO_TEACHING_OUTPUT_ROOT": str(destination),
+                   "SEMIO_TEACHING_LANGUAGE": language,
+                   "SEMIO_TEACHING_AUDIENCE": audience,
+                   **_profile.environment(profile, job_id=f"live-{profile}-{scene}-{time.time_ns():x}", fps=rate, resolution=size),
+                   "SEMIO_TEACHING_WORK": str(media_dir / "work.json")}
+    (media_dir / "work.json").unlink(missing_ok=True)
+    print(f"[live] Previewing {scene} via {renderer}", flush=True)
+    run_command(command, cwd=root, env=environment, session=session)
+    clip = media_dir / "v" / f"{scene}.mp4"
+    return clip if clip.is_file() else None
+#endregion
+
+
 def record_timing_profile(manifest: Path, profile: str = "preview") -> Path:
     """📝 Record beside a measured subtitle trace which profile rendered it; timing is profile-independent."""
     record = Path(manifest).with_suffix(".profile.json")

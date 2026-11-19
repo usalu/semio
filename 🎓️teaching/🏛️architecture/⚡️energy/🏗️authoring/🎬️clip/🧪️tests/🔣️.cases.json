@@ -508,5 +508,32 @@
     "profile": "🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🔣️.json",
     "before": "{\"figure\":1}",
     "after": "{\"figure\":2}"
+  },
+  "live_preview": {
+    "script": "🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py",
+    "scene": "Beat1_Leistung",
+    "scenes": [
+      "Beat1_Leistung",
+      "Beat2_EnergieImAlltag",
+      "Beat3_Energieerhaltung",
+      "Beat4_Waermepumpe",
+      "Beat5_Strahlung",
+      "Beat6_ThermischeMasse",
+      "Beat7_SensibelLatent",
+      "Beat8_Zusammenfassung"
+    ],
+    "renderer": "opengl",
+    "profile": "preview",
+    "language": "de",
+    "audience": "speaker",
+    "resolution": "854,480",
+    "fps": 15,
+    "command_flags": [
+      "--preview",
+      "--renderer",
+      "opengl",
+      "--force_window",
+      "--disable_caching"
+    ]
   }
 }
