@@ -62,6 +62,7 @@ sun_rays = _manim_module.sun_rays
 shine = _manim_module.shine
 house_section = _manim_module.house_section
 window_glyph = _manim_module.window_glyph
+emphasize_casement = _manim_module.emphasize_casement
 open_window = _manim_module.open_window
 room_section = _manim_module.room_section
 _example = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📏️running-example.🐍️")
@@ -268,7 +269,7 @@ def _window_wall(x: float, y: float, *, height: float = 1.1, opening: float = 0.
     y0, y1 = y - height / 2, y + height / 2
     below = section_material(Rectangle(width=wall, height=lo - y0)).move_to(np.array([x, (y0 + lo) / 2, 0.0]))
     above = section_material(Rectangle(width=wall, height=y1 - hi)).move_to(np.array([x, (hi + y1) / 2, 0.0]))
-    win = window_glyph(x, lo, hi, depth=0.42, color=PASTEL_CYAN)
+    win = emphasize_casement(window_glyph(x, lo, hi, depth=0.85 * opening, color=PASTEL_CYAN, wall=wall, inward=1))
     return {"x": x, "lo": lo, "hi": hi, "window": win, "group": VGroup(below, above, win["group"])}
 
 
@@ -324,8 +325,8 @@ def _pulses(paths, rt: float, color=PASTEL_YELLOW, *, width: float = 4.0):
 class ReviewingHeatLosses(Scene):
     NARRATION = [
         ("trans",
-         r"From module 2: heat flows through the envelope as $\dot{Q}_{\mathrm{T}}$ — the heat flow $\Phi$ as a load: $\Sigma\, U \cdot A \cdot \Delta\theta$, about $2\,300\,\mathrm{W}$.",
-         r"Aus Modul 2: Wärme fließt durch die Hülle als $\dot{Q}_{\mathrm{T}}$ — der Wärmestrom $\Phi$ als Last: $\Sigma\, U \cdot A \cdot \Delta\theta$, rund $2\,300\,\mathrm{W}$."),
+         r"From module 2: heat flows through the envelope as the load $\dot{Q}_{\mathrm{T}} = \Sigma\, U \cdot A \cdot \Delta\theta$, about $2\,300\,\mathrm{W}$.",
+         r"Aus Modul 2: Wärme fließt durch die Hülle als Last $\dot{Q}_{\mathrm{T}} = \Sigma\, U \cdot A \cdot \Delta\theta$, rund $2\,300\,\mathrm{W}$."),
         ("vent",
          r"From module 3 and the Ventilation video: the air change carries heat out as $\dot{Q}_{\mathrm{V}}$ — $n \cdot V \cdot \rho c_{\mathrm{p}} \cdot \Delta\theta$, about $1\,500\,\mathrm{W}$.",
          r"Aus Modul 3 und dem Lüftungsvideo: Der Luftwechsel trägt Wärme als $\dot{Q}_{\mathrm{V}}$ hinaus — $n \cdot V \cdot \rho c_{\mathrm{p}} \cdot \Delta\theta$, rund $1\,500\,\mathrm{W}$."),
@@ -1232,7 +1233,9 @@ def _plant_house():
     )
     parts["back_wall"] = parts["walls"][0]
     parts["roof"] = section_material(Polygon(P(-7.0, 1.45), P(-4.0, 2.4), P(-1.0, 1.45), P(-1.0, 1.29), P(-4.0, 2.24), P(-7.0, 1.29)))
-    windows = [window_glyph(x, WIN[0] + _HOUSE_DY, WIN[1] + _HOUSE_DY, depth=0.3, color=PASTEL_CYAN, wall=wall, inward=1 if x < -4 else -1)
+    windows = [emphasize_casement(window_glyph(
+        x, WIN[0] + _HOUSE_DY, WIN[1] + _HOUSE_DY, depth=0.85 * (WIN[1] - WIN[0]),
+        color=PASTEL_CYAN, wall=max(wall, 0.28), inward=1 if x < -4 else -1))
                for x in (-6.65, -1.35)]
     parts["windows"] = VGroup(*[w["group"] for w in windows])
     parts["radiators"] = VGroup(*[_cast("shared-radiator-thermostat", staffage_height("shared-radiator-thermostat") * metre, motion=True, anchor=P(x, -0.15), mirror=mirror)

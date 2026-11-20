@@ -1,0 +1,14 @@
+{
+  "id": "2026/11/20/RENDER-VENTILATION-PREVIEW",
+  "title": "Render Ventilation Preview Video",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-20T22:00:00",
+  "goal": "ANIMATE",
+  "summary": "Full_Ventilation_speaker_de_480p15.mp4 (~30.5 min, 480p15) ready.",
+  "closed": "2026-11-20T22:21:25",
+  "files": [
+    "videos/preview/de/speaker/rendered/Full_Ventilation_speaker_de_480p15.mp4",
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py"
+  ]
+}

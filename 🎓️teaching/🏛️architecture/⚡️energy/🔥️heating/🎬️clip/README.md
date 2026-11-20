@@ -12,10 +12,12 @@ Presents the **Heating demand series** inside the shared virtual semio UI. The n
 Ventilation is explained once, season-neutral, in the second video of the curriculum
 (`🎓️teaching/🏛️architecture/⚡️energy/2_ventilation/`). Modul 3 is only the short winter bridge: it recalls
 `V̇ = V · n` (Lüftung Kapitel 2), `c_Luft` and `Δθ = 20 K` (Kapitel 3), shows the ventilation load `Q̇_V ≈ 1500 W` next to
-the transmission load `Q̇_T ≈ 2300 W` of Modul 2 (both are the heat flow `Φ`, written as loads at the room; values come from the shared running example), applies `(1 − η_WRG)` (Kapitel 5) and links
+the transmission load `Q̇_T ≈ 2300 W` of Modul 2 (both are heat flows `Q̇`, written as loads at the room; values come from the shared running example), applies `(1 − η_WRG)` (Kapitel 5) and links
 back with chips.
 
-Notation of Modul 1 to 3: `Φ` is the generic heat flow (`Φ_k`, `Φ_c`, `Φ_r` for conduction, convection, radiation; `Φ = U · A · Δθ`), `R_T = R_si + Σ d/λ + R_se` the total resistance and `U = 1/R_T` in W/(m²K), introduced once in Modul 1 (Beat 8) and recalled in Modul 2; `ψ` in W/(mK) is the linear thermal bridge coefficient. Units are never bracketed inside equations; compound units are set with a fraction bar. Modul 1 Beat 1 names the second law of thermodynamics, Beat 4 shows the spectrum strip (visible light vs infrared) linking thermal radiation to electromagnetic waves.
+Notation of Modul 1 to 3: `Q̇` is the generic heat flow in both the heating and the ventilation video (`Q̇_k`, `Q̇_c`, `Q̇_r` for conduction, convection, radiation; `Q̇ = U · A · Δθ`; loads `Q̇_T`, `Q̇_V`, `Q̇_i`, `Q̇_S`; index V = ventilation; `Φ` stays in the physical fundamentals), `Δθ` is always the temperature difference, `R_T = R_si + Σ d/λ + R_se` the total resistance and `U = 1/R_T` in W/(m²K), introduced once in Modul 1 (Beat 8) and recalled in Modul 2; `ψ` in W/(mK) is the linear thermal bridge coefficient. Units are never bare `[W]` brackets; a symbol-only formula carries `Q̇ in W` or `[Q̇] = W`, readouts `Q̇ = 120 W`; compound units are set with a fraction bar. Modul 1 Beat 1 names the second law of thermodynamics, Beat 4 shows the spectrum strip (visible light vs infrared) linking thermal radiation to electromagnetic waves.
+
+Air movement is shown by moving particles only: the tipped streamline guides of air paths (winter ventilation through-flow, rising radiator air, facade wind) are hidden with `flow_guides(..., visible=False)`, as in the ventilation video; the winter ventilation flow is one through-flow (intake low in the lower window, exhaust high at the upper window). Heat-flow guides and arrows (envelope, wall, radiation) stay.
 
 Entry file: [`🐍️.py`](./🐍️.py)
 
@@ -44,7 +46,7 @@ The movie of a preview job is `<output-root>/preview/<language>/<audience>/rende
 | `Heating_05_Solar` | Modul 5, with canonical physics thermal-mass excerpts |
 | `Heating_06_FinalCalculation` | Final calculation |
 
-The first segment of `Heating_01_Introduction` is `🗺️roadmap` `Beat1_Fahrplan`, the Fahrplan of the whole video: six cards in chapter order (Grundlagen `Φ, Δθ` → Wärmeleitung `U, λ, ψ` → Lüftung `Q̇_V`, taken over from the ventilation video → interne Gewinne `Q̇_i` → solare Gewinne `Q̇_S, g⊥, F_C` → Bilanz `Q_h`, handed to the energy balance). It is declared as data on the shared `🏗️authoring/🗺️roadmap` builder; keep its steps in sync with renamed chapters.
+The first segment of `Heating_01_Introduction` is `🗺️roadmap` `Beat1_Fahrplan`, the Fahrplan of the whole video: six cards in chapter order (Grundlagen `Q̇, Δθ` → Wärmeleitung `U, λ, ψ` → Lüftung `Q̇_V`, taken over from the ventilation video → interne Gewinne `Q̇_i` → solare Gewinne `Q̇_S, g⊥, F_C` → Bilanz `Q_h`, handed to the energy balance). It is declared as data on the shared `🏗️authoring/🗺️roadmap` builder; keep its steps in sync with renamed chapters.
 
 ## Authoring
 

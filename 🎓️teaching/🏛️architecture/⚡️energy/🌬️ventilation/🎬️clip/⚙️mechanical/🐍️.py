@@ -55,7 +55,9 @@ SAFE_BOTTOM = _manim_module.SAFE_BOTTOM
 SAFE_BOTTOM_FORMULA = _manim_module.SAFE_BOTTOM_FORMULA
 fit_band = _manim_module.fit_band
 smooth_path = _manim_module.smooth_path
-flow_guides = _manim_module.flow_guides
+def flow_guides(*args, visible: bool = False, **kwargs):
+    """🧭 Particle-path guides — kept, temporarily hidden; particles stay visible."""
+    return _manim_module.flow_guides(*args, visible=visible, **kwargs)
 flow_animation = _manim_module.flow_animation
 meter = _manim_module.meter
 bind_meter = _manim_module.bind_meter

@@ -1,6 +1,6 @@
 {
   "house": {
-    "wall": 0.14,
+    "wall": 0.18,
     "storey": 1.2,
     "wall_to_storey": [
       0.1,
@@ -26,5 +26,11 @@
       0.7,
       0.95
     ]
+  },
+  "house_window_outer": {
+    "scale": 0.75,
+    "outer_tolerance": 1e-09,
+    "min_joinery": 4,
+    "min_muntins": 2
   }
 }

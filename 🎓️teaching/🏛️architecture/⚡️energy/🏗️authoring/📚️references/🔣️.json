@@ -432,8 +432,10 @@
       "title": {"de": "Gebäudetechnik – Technischer Ausbau und nachhaltige Gebäudesysteme", "en": "Gebäudetechnik – Technischer Ausbau und nachhaltige Gebäudesysteme"},
       "publisher": "Springer Vieweg", "place": "Heidelberg", "isbn": "978-3-658-51570-6",
       "status": "current", "url": "https://www.baunetzwissen.de/gebaeudetechnik/tipps/buecher/technischer-ausbau-von-gebaeuden-4347729", "verified": "2026-11-13",
-      "note": "13th updated edition, 2026 (ISBN of the print edition); title as given by the publisher listing on Baunetzwissen.",
-      "locators": {}
+      "note": "13th updated edition, 2026 (ISBN of the print edition); title as given by the publisher listing on Baunetzwissen. No table of contents was readable, so no chapter or page is cited; the topic locator follows the publisher blurb (heat and cooling supply, ventilation) and does not claim a JAZ chapter.",
+      "locators": {
+        "versorgung": {"de": "Wärme- und Kälteversorgung, Lüftung", "en": "heat and cooling supply, ventilation"}
+      }
     },
     {
       "id": "willems-2024", "kind": "book", "designation": "Willems/Schild/Stricker", "year": 2024, "editionNumber": 8,
@@ -441,8 +443,11 @@
       "title": {"de": "Formeln und Tabellen Bauphysik: Wärmeschutz – Feuchteschutz – Klima – Akustik – Brandschutz", "en": "Formeln und Tabellen Bauphysik: Wärmeschutz – Feuchteschutz – Klima – Akustik – Brandschutz"},
       "publisher": "Springer Vieweg", "place": "Wiesbaden", "isbn": "978-3-658-44973-5", "doi": "10.1007/978-3-658-44974-2",
       "status": "current", "url": "https://www.jpc.de/jpcng/books/detail/-/art/wolfgang-m-willems-formeln-und-tabellen-bauphysik/hnum/11834083", "verified": "2026-11-13",
-      "note": "8th edition, 2024-08-31. The ISBN 978-3-658-44973-5 belongs to Formeln und Tabellen Bauphysik (print); 978-3-658-44971-1 belongs to Praxisbeispiele Bauphysik. The audit mixed the two books up.",
-      "locators": {}
+      "note": "8th edition, 2024-08-31. The ISBN 978-3-658-44973-5 belongs to Formeln und Tabellen Bauphysik (print); 978-3-658-44971-1 belongs to Praxisbeispiele Bauphysik. The audit mixed the two books up. The publisher subtitle names the parts; no table of contents with page numbers was readable, so only part names are cited.",
+      "locators": {
+        "waermeschutz": {"de": "Teil Wärmeschutz", "en": "part Wärmeschutz (thermal protection)"},
+        "feuchteschutz": {"de": "Teil Feuchteschutz", "en": "part Feuchteschutz (moisture protection)"}
+      }
     },
     {
       "id": "maas-1995", "kind": "thesis", "designation": "Maas", "year": 1995, "authors": ["Maas, A."],

@@ -1,0 +1,10 @@
+{
+  "id": "2026/11/20/SMOOTH-CHART-NUMBER-RETEXT",
+  "title": "Smooth Chart Number Retext Morph",
+  "status": "closed",
+  "client": "cursor-chat",
+  "goal": "ENERGY",
+  "opened": "2026-11-20T21:57:33",
+  "closed": "2026-11-20T22:01:05",
+  "summary": "Chart kW·h→W·s numbers morph via retext glyph matching over 2.2s."
+}

@@ -1,0 +1,12 @@
+{
+  "id": "2026/11/20/FIX-VENT-NEED-GERUCH-FILL",
+  "title": "Animate Geruch Gauge Fill",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-20T11:28:39",
+  "closed": "2026-11-20T11:28:39",
+  "summary": "Geruch column fades in empty, then fill rises over 4s like Feuchte.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py"
+  ]
+}

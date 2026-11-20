@@ -66,6 +66,8 @@ math_panel = _manim_module.math_panel
 math_label = _manim_module.math_label
 label_number = _manim_module.label_number
 house_section = _manim_module.house_section
+window_glyph = _manim_module.window_glyph
+emphasize_casement = _manim_module.emphasize_casement
 room_section = _manim_module.room_section
 sun_glyph = _manim_module.sun_glyph
 moon_glyph = _manim_module.moon_glyph
@@ -251,11 +253,13 @@ def _section_room(geo: dict, *, roof_tip=None) -> dict:
         _block(geo["x_w"] - w, geo["x_w"], geo["y_f"], geo["y_s"]),
         _block(geo["x_w"] - w, geo["x_w"], geo["y_t"], geo["y_c"]),
     )
-    glass = Rectangle(width=w * 0.8, height=geo["y_t"] - geo["y_s"], color=COLOR_WIN, stroke_width=2.5,
-                      fill_color=COLOR_WIN, fill_opacity=0.15).move_to([geo["x_w"] - w / 2, (geo["y_s"] + geo["y_t"]) / 2, 0])
+    win = emphasize_casement(window_glyph(
+        geo["x_w"] - w / 2, geo["y_s"], geo["y_t"], depth=0.85 * (geo["y_t"] - geo["y_s"]),
+        color=COLOR_WIN, wall=w, inward=-1))
+    glass = win["group"]
     ground = Line([geo["x_w"], geo["y_f"], 0], [6.6, geo["y_f"], 0], color=P_PRIMARY, stroke_width=2.2)
     return {
-        "shell": shell, "glass": glass, "ground": ground, "group": VGroup(ground, shell, glass),
+        "shell": shell, "glass": glass, "window": win, "ground": ground, "group": VGroup(ground, shell, glass),
         "roof_box": (geo["x_b"] - w, tip, geo["y_c"], geo["y_c"] + sl),
     }
 
@@ -900,9 +904,11 @@ class Beat5_Verschattung(Scene):
         lintel = section_material(Rectangle(width=0.5, height=0.6)).move_to([-3.4, wall_top + 0.3, 0])
         sill = section_material(Rectangle(width=0.5, height=0.6)).move_to([-3.4, wall_bottom - 0.3, 0])
         masonry = VGroup(lintel, sill).set_z_index(3)
-        glazing = Rectangle(width=glass_in - glass_out, height=wall_top - wall_bottom, color=COLOR_WIN, stroke_width=2.5,
-                            fill_color=COLOR_WIN, fill_opacity=0.15).move_to([(glass_out + glass_in) / 2,
-                                                                              (wall_top + wall_bottom) / 2, 0])
+        shade_wall = glass_in - glass_out
+        shade_win = emphasize_casement(window_glyph(
+            (glass_out + glass_in) / 2, wall_bottom, wall_top, depth=0.85 * (wall_top - wall_bottom),
+            color=COLOR_WIN, wall=shade_wall, inward=-1))
+        glazing = shade_win["group"]
         glazing.set_z_index(3)
         slab_left, room_end_x = lintel.get_right()[0], -0.7
         ceiling_y, floor_y = lintel.get_top()[1], sill.get_bottom()[1]

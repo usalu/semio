@@ -1,0 +1,10 @@
+{
+  "id": "2026/11/20/FIX-HEAT-FORMULA-FLY",
+  "title": "Clean Heat Formula Number Fly",
+  "status": "closed",
+  "client": "cursor-chat",
+  "goal": "ENERGY",
+  "opened": "2026-11-20T22:02:33",
+  "closed": "2026-11-20T22:05:54",
+  "summary": "Cleaned heat formula fly: no post-morph FadeOut; retext slots; hide sources."
+}

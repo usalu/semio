@@ -30,6 +30,7 @@ BEAT_SUBTITLE_FADE = _manim_module.BEAT_SUBTITLE_FADE
 BODY_FONT_SIZE = _manim_module.BODY_FONT_SIZE
 LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
+body_text = _manim_module.body_text
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
 P_PRIMARY = _manim_module.P_PRIMARY
 section_material = _manim_module.section_material
@@ -49,7 +50,9 @@ SAFE_BOTTOM_FORMULA = _manim_module.SAFE_BOTTOM_FORMULA
 fit_band = _manim_module.fit_band
 symbol_token = _manim_module.symbol_token
 smooth_path = _manim_module.smooth_path
-flow_guides = _manim_module.flow_guides
+def flow_guides(*args, visible: bool = False, **kwargs):
+    """🧭 Particle-path guides — kept, temporarily hidden; particles stay visible."""
+    return _manim_module.flow_guides(*args, visible=visible, **kwargs)
 meter = _manim_module.meter
 bind_meter = _manim_module.bind_meter
 recolor_meter = _manim_module.recolor_meter
@@ -123,20 +126,44 @@ def _room(center, width, height, color=P_WHITE, t: float = 0.16, *,
     return section_material(VGroup(body, section["floor"]))
 
 
-def _window(pos, height=1.15, width=0.16, color=P_CYAN, inward=1):
-    """🪟 Recessed sash projected inward within a structural wall aperture."""
+def _window(pos, height=1.15, width=0.32, color=P_CYAN, inward=1, *, open_fraction: float = 0.0, tilt: bool = False):
+    """🪟 Shared outer-leaf casement with joinery; open poses keep a readable projected sash."""
+    from manim import Line, VGroup
     win = window_glyph(float(pos[0]), float(pos[1]) - height / 2, float(pos[1]) + height / 2,
-                       depth=0.8 * height, wall=width, color=color, inward=inward)
-    win["sash"].become(window_opening(win))
+                       depth=0.85 * height, wall=max(0.32, width), color=color, inward=inward)
+    # Emphasize fixed outer frame so the wall cut never reads as an empty gap.
+    for line in win["joinery"]:
+        line.set_stroke(width=max(2.8, float(line.get_stroke_width()) + 0.6), color=P_WHITE)
+    win["joinery"][-1].set_stroke(color=color, width=2.4)
+    sill, lintel = win["sill"], win["lintel"]
+    hx, sign, pane = float(win["hinge"][0]), win["inward"], min(win["wall"] * 0.5, max(0.08, win["depth"] * 0.15))
+    jamb = VGroup(
+        Line([hx, sill, 0], [hx + sign * pane, sill, 0], color=P_WHITE, stroke_width=3.0),
+        Line([hx, lintel, 0], [hx + sign * pane, lintel, 0], color=P_WHITE, stroke_width=3.0),
+        Line([hx, sill, 0], [hx, lintel, 0], color=P_WHITE, stroke_width=2.6),
+        Line([hx + sign * pane, sill, 0], [hx + sign * pane, lintel, 0], color=color, stroke_width=2.2),
+    )
+    win["group"].add(jamb)
+    win["sash"][0].set_stroke(width=3.2)
+    if hasattr(win["sash"][1], "__getitem__"):
+        for m in win["sash"][1]:
+            m.set_stroke(width=max(2.0, float(m.get_stroke_width())))
+    if open_fraction > 0:
+        open_sash = window_opening(win, fraction=open_fraction, tilt=tilt)
+        open_sash[0].set_stroke(width=3.2)
+        if hasattr(open_sash[1], "__getitem__"):
+            for m in open_sash[1]:
+                m.set_stroke(width=2.2)
+        win["sash"].become(open_sash)
     win["group"].window = win
     return win["group"]
 
 
-def _stand(room_c, room_h, x, cast: str = "shared-person-pathlines", t: float = 0.16):
+def _stand(room_c, room_h, x, cast: str = "shared-person-pathlines", t: float = 0.16, *, mirror: bool = False):
     """🧍 A 1.75 m breathing occupant (thermal staffage clip) in a 2.5 m clear room, anchored to the slab top."""
     unit = room_metre(room_h - t)
     floor_y = float(room_c[1]) - room_h / 2 + t / 2
-    return staffage_motion(cast, unit=unit, anchor=np.array([x, floor_y, 0.0]))
+    return staffage_motion(cast, unit=unit, anchor=np.array([x, floor_y, 0.0]), mirror=mirror)
 
 
 def _badge(title, value, color=P_PRIMARY):
@@ -226,9 +253,14 @@ def _vent_room(ox: float, floor_y: float, k: float, title: str, color):
     back = section_material(Rectangle(width=0.18 * k, height=h)).move_to([ox - 0.09 * k, floor_y + h / 2, 0])
     brust = section_material(Rectangle(width=t, height=sill - floor_y)).move_to([(x_in + x_out) / 2, (floor_y + sill) / 2, 0])
     sturz = section_material(Rectangle(width=t, height=ceil - lintel)).move_to([(x_in + x_out) / 2, (lintel + ceil) / 2, 0])
-    laibung = Rectangle(width=t, height=lintel - sill, stroke_width=0, fill_color=P_ORANGE, fill_opacity=0.14)
+    # Quiet reveal fill — the casement (outer leaf) must stay the readable cyan element.
+    laibung = Rectangle(width=t, height=lintel - sill, stroke_width=0, fill_color=P_ORANGE, fill_opacity=0.08)
     laibung.move_to([(x_in + x_out) / 2, (sill + lintel) / 2, 0])
-    window = window_glyph((x_in + x_out) / 2, sill, lintel, depth=0.9 * k, wall=t, inward=-1, color=P_CYAN)
+    # Wall centreline; inward=-1 opens into the room so the sash hinges on x_out (exterior face).
+    window = window_glyph((x_in + x_out) / 2, sill, lintel, depth=1.1 * k, wall=t, inward=-1, color=color)
+    window["sash"][0].set_stroke(width=2.8)
+    for line in window["joinery"]:
+        line.set_stroke(width=max(2.2, float(line.get_stroke_width())))
     rad = VGroup(*[_remember(staffage(cast, unit=k, anchor=np.array([x_in, floor_y + 0.04 * k, 0.0])))
                    for cast in ("ventilation-natural-radiator-on-mirrored", "ventilation-natural-radiator-off-mirrored")])
     _level(rad[1], 0.0)
@@ -360,8 +392,8 @@ class Beat1_Fensterregeln(Scene):
 
         win_h = 1.42
         window = window_glyph(room_c[0] - 2.8, 0.30 - win_h / 2, 0.30 + win_h / 2,
-                              depth=0.8 * win_h, wall=0.16, color=P_CYAN)
-        frame, sash, gap = window["reveal"], window["sash"], window["reference"]
+                              depth=0.55 * win_h, wall=0.22, color=P_CYAN, inward=1)
+        frame, sash, joinery, gap = window["reveal"], window["sash"], window["joinery"], window["reference"]
         opening = ValueTracker(0.0)
 
         def _shape_window(_m=None):
@@ -390,7 +422,7 @@ class Beat1_Fensterregeln(Scene):
 
         inside_summer, inside_winter = _inside(26, P_ORANGE), _inside(20, P_ORANGE)
 
-        scaffold = VGroup(room, floor, wash, person, frame, sash, gap, open_pct, outdoor_cool, inside_summer)
+        scaffold = VGroup(room, floor, wash, person, frame, sash, joinery, gap, open_pct, outdoor_cool, inside_summer)
         fit_band(scaffold)
 
         stuffy_spots = [person.get_top() + UP * 0.05, person.get_top() + LEFT * 1.6 + DOWN * 0.6]
@@ -446,7 +478,7 @@ class Beat1_Fensterregeln(Scene):
 
         self.add(wash)
         self.play(Create(room), Create(floor), FadeIn(person), run_time=1.3)
-        self.play(FadeIn(frame), FadeIn(sash), FadeIn(gap), FadeIn(open_pct), FadeIn(inside_summer), run_time=0.8)
+        self.play(FadeIn(frame), FadeIn(sash), FadeIn(joinery), FadeIn(gap), FadeIn(open_pct), FadeIn(inside_summer), run_time=0.8)
         self.play(FadeIn(air["group"]), FadeIn(comfort), FadeIn(comfort_lbl), FadeIn(n_low), run_time=1.0)
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.3 + 0.8 + 1.0)
 
@@ -638,8 +670,16 @@ class Beat2_StossOderKipp(Scene):
         caption = swap_caption(self, caption, subtitle_text(N, "open"))
         state["heat"] = [rk]
         self.play(valve_s.animate.set_value(0.0), *_power(rs["rad"], False), *running(0.8), run_time=0.8)
-        self.play(_open_sash(rs["window"]), open_window(rk["window"], fraction=0.17, tilt=True), *running(0.9),
-                  run_time=0.9)
+        # Stoß = full casement into the room; Kipp = bottom-hinged lean — poses must stay visually distinct.
+        self.play(open_window(rs["window"], fraction=1.0), open_window(rk["window"], fraction=0.55, tilt=True),
+                  *running(0.9), run_time=0.9)
+        rs["sash"].become(window_opening(rs["window"], fraction=1.0, tilt=False))
+        rk["sash"].become(window_opening(rk["window"], fraction=0.55, tilt=True))
+        pose_s = body_text(tr("wide open", "weit auf"), font_size=LABEL_FONT_SIZE, color=P_CYAN)
+        pose_k = body_text(tr("tilted", "gekippt"), font_size=LABEL_FONT_SIZE, color=P_ORANGE)
+        pose_s.next_to(rs["window"]["group"], RIGHT, buff=0.18)
+        pose_k.next_to(rk["window"]["group"], RIGHT, buff=0.18)
+        self.play(FadeIn(pose_s), FadeIn(pose_k), run_time=0.4)
         hold_for(self, N, "open", during=running)
 
         caption = swap_caption(self, caption, subtitle_text(N, "five"))
@@ -709,7 +749,7 @@ class Beat2_StossOderKipp(Scene):
             size=LABEL_FONT_SIZE, color=P_CYAN)
         stoss_eq.scale_to_fit_width(min(stoss_eq.width, 6.2)).move_to([3.35, yr_s + 0.05, 0])
         state["air"] = ["k"]
-        self.play(_open_sash(rs["window"], run_time=1.0, close=True), valve_s.animate.set_value(0.6),
+        self.play(_open_sash(rs["window"], run_time=1.0, close=True), FadeOut(pose_s), valve_s.animate.set_value(0.6),
                   *_power(rs["rad"], True), FadeIn(air_s_lbl), FadeIn(stoss_eq), FadeOut(n_kipp_box), *running(1.0), run_time=1.0)
         state["heat"] = [rs, rk]
         hold_for(self, N, "stoss", during=running)
@@ -827,8 +867,9 @@ class Beat3_Querlueftung(Scene):
         room_c = np.array([0.0, 0.55, 0.0])
         shell = _room(room_c, 6.4, 2.2, window_side="both", window_y=0.55)
         room, floor = shell[0], shell[1]
-        left_win = _window(np.array([room_c[0] - 3.2, 0.55, 0.0]), height=1.15)
-        right_win = _window(np.array([room_c[0] + 3.2, 0.55, 0.0]), height=1.15, inward=-1)
+        # Both façades open from the start — outer-leaf casements, not empty wall gaps.
+        left_win = _window(np.array([room_c[0] - 3.2, 0.55, 0.0]), height=1.2, color=P_GREEN, open_fraction=1.0)
+        right_win = _window(np.array([room_c[0] + 3.2, 0.55, 0.0]), height=1.2, color=P_ORANGE, inward=-1, open_fraction=1.0)
 
         a1_lbl = math_label(r"A_{1}", size=BODY_FONT_SIZE, color=P_GREEN).next_to(left_win, LEFT, buff=0.18)
         a2_lbl = math_label(r"A_{2}", size=BODY_FONT_SIZE, color=P_ORANGE).next_to(right_win, RIGHT, buff=0.18)
@@ -913,7 +954,7 @@ class Beat3_Querlueftung(Scene):
             m for m in eq.submobjects
             if m is not items["a1"] and m is not items["a2"]
         ])
-        self.play(Create(eq_box), FadeIn(rest), FadeIn(aeff_wide), *through(0.9), run_time=0.9)
+        self.play(Create(eq_box), FadeIn(rest), FadeIn(aeff_wide, rate_func=smooth), *through(1.2), run_time=1.2)
         self.play(
             stage.transition("ventilation.natural.cross-ventilation.a1-into-formula", source=a1_lbl, target=items["a1"]),
             stage.transition("ventilation.natural.cross-ventilation.a2-into-formula", source=a2_lbl, target=items["a2"]),
@@ -933,33 +974,45 @@ class Beat3_Querlueftung(Scene):
         a2_ring = highlight_param(items, "a2", color=P_RED)
         guides_thin = flow_guides(cross_thin, P_RED)
         self.play(
-            open_window(right_win.window, fraction=0.26),
+            open_window(right_win.window, fraction=0.28),
             stage.transition("ventilation.natural.cross-ventilation.aeff-thin", source=aeff_wide, target=aeff_thin),
             stage.transition("ventilation.natural.cross-ventilation.guides-thin", source=guides, target=guides_thin),
             Create(a2_ring),
-            run_time=1.3,
+            run_time=1.5,
         )
+        right_win.window["sash"].become(window_opening(right_win.window, fraction=0.28))
+        right_win.window["sash"][0].set_stroke(width=3.2)
         self.play(*through(2.6, cross_thin, P_RED, 0.3, 2), run_time=2.6)
         guides = flow_guides(cross, P_GREEN)
         self.play(
-            open_window(right_win.window),
+            open_window(right_win.window, fraction=1.0),
             stage.transition("ventilation.natural.cross-ventilation.aeff-wide-again", source=aeff_thin, target=aeff_wide),
             stage.transition("ventilation.natural.cross-ventilation.guides-wide-again", source=guides_thin, target=guides),
             FadeOut(a2_ring),
-            run_time=1.1,
+            run_time=1.4,
         )
+        right_win.window["sash"].become(window_opening(right_win.window, fraction=1.0))
+        right_win.window["sash"][0].set_stroke(width=3.2)
         self.play(*through(2.0), run_time=2.0)
         hold_for(self, self.NARRATION, "limit", during=through)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "summer"))
-        self.play(stage.transition("ventilation.natural.cross-ventilation.tip-summer", source=aeff_wide, target=tip), *through(0.9, color=P_BLUE, end=P_ORANGE), run_time=0.9)
+        self.play(
+            stage.transition("ventilation.natural.cross-ventilation.tip-summer", source=aeff_wide, target=tip),
+            *through(1.6, color=P_BLUE, end=P_ORANGE),
+            run_time=1.6,
+        )
         hold_for(self, self.NARRATION, "summer", during=lambda rt: through(rt, color=P_BLUE, end=P_ORANGE))
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "winter"))
         self.add(wash)
         wash.set_z_index(-1)
-        self.play(stage.transition("ventilation.natural.cross-ventilation.tip-winter", source=tip, target=tip_winter), wash.animate.set_fill(P_BLUE, opacity=0.14),
-                  *through(1.0, speed=1.2, color=P_BLUE, end=P_ORANGE), run_time=1.0)
+        self.play(
+            stage.transition("ventilation.natural.cross-ventilation.tip-winter", source=tip, target=tip_winter),
+            wash.animate.set_fill(P_BLUE, opacity=0.14),
+            *through(1.7, speed=1.2, color=P_BLUE, end=P_ORANGE),
+            run_time=1.7,
+        )
         self.play(*through(2.0, speed=1.2, color=P_BLUE, end=P_ORANGE), run_time=2.0)
         hold_for(self, self.NARRATION, "winter", during=lambda rt: through(rt, speed=1.2, color=P_BLUE, end=P_ORANGE))
         self.play(FadeOut(caption), run_time=0.3)
@@ -991,11 +1044,11 @@ class Beat4_Auftrieb(Scene):
          r"Over the height $h$ between inlet and outlet this becomes a pressure: $\Delta p = \Delta\rho \cdot g \cdot h = 0.8\,\mathrm{Pa}$ for $h = 2.5\,\mathrm{m}$.",
          r"Über die Höhe $h$ zwischen Zu- und Abluftöffnung wird daraus ein Druck: $\Delta p = \Delta\rho \cdot g \cdot h = 0{,}8\,\mathrm{Pa}$ bei $h = 2{,}5\,\mathrm{m}$."),
         ("speed",
-         r"The pressure accelerates the air: $v = \sqrt{2\,\Delta p/\rho}$ gives $1.15\,\mathrm{m/s}$ with $\rho \approx 1.2\,\mathrm{kg/m^3}$ (20 °C).",
-         r"Der Druck beschleunigt die Luft: $v = \sqrt{2\,\Delta p/\rho}$ ergibt $1{,}15\,\mathrm{m/s}$ mit $\rho \approx 1{,}2\,\mathrm{kg/m^3}$ (20 °C)."),
+         r"The pressure difference accelerates the air: the velocity $v(\Delta p) = \sqrt{2\,\Delta p/\rho}$ gives $1.15\,\mathrm{m/s}$ with $\rho \approx 1.2\,\mathrm{kg/m^3}$ (20 °C).",
+         r"Der Druckunterschied beschleunigt die Luft: die Geschwindigkeit $v(\Delta p) = \sqrt{2\,\Delta p/\rho}$ ergibt $1{,}15\,\mathrm{m/s}$ mit $\rho \approx 1{,}2\,\mathrm{kg/m^3}$ (20 °C)."),
         ("flow",
-         r"Speed times open area is the flow: $\dot{V} = C_d \cdot A \cdot v = 0.069\,\mathrm{m^3/s} \approx 250\,\mathrm{m^3/h}$ for $C_d \approx 0.6$ and $A = 0.1\,\mathrm{m^2}$.",
-         r"Geschwindigkeit mal Öffnungsfläche ist der Volumenstrom: $\dot{V} = C_d \cdot A \cdot v = 0{,}069\,\mathrm{m^3/s} \approx 250\,\mathrm{m^3/h}$ bei $C_d \approx 0{,}6$ und $A = 0{,}1\,\mathrm{m^2}$."),
+         r"Speed times open area is the volume flow: $\dot{V} = C_d \cdot A \cdot v \approx 250\,\mathrm{m^3/h}$.",
+         r"Geschwindigkeit mal Öffnungsfläche ist der Volumenstrom: $\dot{V} = C_d \cdot A \cdot v \approx 250\,\mathrm{m^3/h}$."),
         ("taller",
          r"Raise the outlet and $h$ grows: the shaft lifts it from $2.5\,\mathrm{m}$ to $4.4\,\mathrm{m}$, so $\Delta p$ rises to $1.4\,\mathrm{Pa}$ and the flow speeds up.",
          r"Höherer Auslass, größeres $h$: der Schacht hebt es von $2{,}5\,\mathrm{m}$ auf $4{,}4\,\mathrm{m}$, $\Delta p$ steigt auf $1{,}4\,\mathrm{Pa}$, der Strom wird schneller."),
@@ -1009,15 +1062,15 @@ class Beat4_Auftrieb(Scene):
 
     SHAFT_X = -1.60
     SHAFT_HW = 0.42
-    TOP_LOW = 0.75
-    TOP_HIGH = 2.05
+    TOP_LOW = 1.80
+    TOP_HIGH = 3.04
 
     def _stack_paths(self, inlet, room_top, shaft_top):
         """〰️ Inlet → occupied zone → up the shaft → out at the top."""
         return VGroup(*[
             smooth_path([
                 inlet + RIGHT * 0.06 + UP * (0.06 * i),
-                np.array([-3.20, -0.62 + 0.10 * i, 0.0]),
+                np.array([-3.20, inlet[1] - 0.20 + 0.10 * i, 0.0]),
                 np.array([self.SHAFT_X, room_top + 0.10, 0.0]),
                 np.array([self.SHAFT_X, shaft_top - 0.08, 0.0]),
             ])
@@ -1036,17 +1089,21 @@ class Beat4_Auftrieb(Scene):
         caption = caption_bar(subtitle_text(N, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        room_c = np.array([-2.90, -0.45, 0.0])
-        shell = _room(room_c, 4.2, 1.7, window_side="left", window_y=-0.85, window_h=0.60)
+        # Keep the room above every stack formula — panels hang under the slab with a hard gap.
+        # Classic stack room (taller proportions); sit high enough that formulas clear underneath.
+        room_c = np.array([-2.90, 0.27, 0.0])
+        shell = _room(room_c, 4.0, 1.25, window_side="left", window_y=0.05, window_h=0.50)
         room, floor = shell[0], shell[1]
         room_top = room.get_top()[1]
-        inlet = Rectangle(width=0.16, height=0.60, color=P_CYAN, stroke_width=2.5, fill_opacity=0.0)
-        inlet.move_to(np.array([room_c[0] - 2.1, -0.85, 0.0]))
+        inlet = Rectangle(width=0.16, height=0.50, color=P_CYAN, stroke_width=2.5, fill_opacity=0.0)
+        inlet.move_to(np.array([room_c[0] - 2.0, 0.05, 0.0]))
         inlet_arrow = Arrow(inlet.get_center() + LEFT * 0.95, inlet.get_center() + LEFT * 0.12, buff=0, color=P_CYAN,
                             stroke_width=4, max_tip_length_to_length_ratio=0.28)
+        inlet_arrow.set_opacity(0)
         inlet_lbl = Text(tr("Inlet opening", "Zuluftöffnung"), font_size=LABEL_FONT_SIZE, color=P_CYAN)
-        inlet_lbl.next_to(inlet_arrow, UP, buff=0.10, aligned_edge=RIGHT)
-        person = _stand(room_c, 1.7, -1.75)
+        # Above the arrow — on-frame, and clear of the comfort ring around the opening alone.
+        inlet_lbl.next_to(inlet_arrow, UP, buff=0.18, aligned_edge=RIGHT)
+        person = _stand(room_c, 1.25, -1.70)
 
         shaft_walls = VGroup(*[
             Line(
@@ -1063,10 +1120,11 @@ class Beat4_Auftrieb(Scene):
             np.array([self.SHAFT_X + self.SHAFT_HW, self.TOP_LOW, 0.0]),
             color=P_ORANGE, stroke_width=3.0, dash_length=0.09,
         )
-        outlet_arrow = Arrow(outlet.get_center() + UP * 0.05, outlet.get_center() + UP * 0.62, buff=0, color=P_ORANGE,
+        outlet_arrow = Arrow(outlet.get_center() + UP * 0.05, outlet.get_center() + UP * 0.45, buff=0, color=P_ORANGE,
                              stroke_width=4, max_tip_length_to_length_ratio=0.3)
+        outlet_arrow.set_opacity(0)
         outlet_lbl = Text(tr("Outlet opening", "Abluftöffnung"), font_size=LABEL_FONT_SIZE, color=P_ORANGE)
-        outlet_lbl.next_to(outlet, LEFT, buff=0.25)
+        outlet_lbl.next_to(outlet, LEFT, buff=0.25).shift(DOWN * 0.30)
         outlet_group = VGroup(outlet, outlet_arrow, outlet_lbl)
 
         def _legend(season, season_color, t_out, t_in):
@@ -1089,8 +1147,16 @@ class Beat4_Auftrieb(Scene):
         legend_rows = legend[1]
 
         scaffold = VGroup(room, floor, inlet, inlet_arrow, inlet_lbl, person, shaft_walls, outlet_group, legend)
-        fit_band(scaffold, bottom=SAFE_BOTTOM_FORMULA)
+        # Leave a deep free strip under the room for every formula panel (Δρ … V̇).
+        fit_band(scaffold, bottom=-0.20)
+        room_top = room.get_top()[1]
+        # Prefer raising the whole scaffold slightly over squashing the room.
+        slab_bottom = min(room.get_bottom()[1], floor.get_bottom()[1])
+        if slab_bottom < -0.05:
+            scaffold.shift(UP * (-0.05 - slab_bottom))
+            room_top = room.get_top()[1]
 
+        top_y = float(outlet.get_center()[1])
         warm_spots = [person.get_top() + UP * 0.05, np.array([-2.30, floor.get_top()[1] + 0.02, 0.0])]
         stack = {"paths": None, "speed": 0.65}
 
@@ -1119,7 +1185,7 @@ class Beat4_Auftrieb(Scene):
         def panel_density(s):
             kgm3 = r"\,\frac{\mathrm{kg}}{\mathrm{m^{3}}}"
             return math_panel([
-                ("drho", r"\Delta\rho", P_BLUE), (None, "=", P_WHITE),
+                ("drho", r"\Delta\rho(\theta)", P_BLUE), (None, "=", P_WHITE),
                 ("diff", r"\rho(\theta_{e}) - \rho(\theta_{i})", P_BLUE), (None, "=", P_WHITE),
                 ("val", rf"{ru(s['rho_e'], 3)}{kgm3} - {ru(s['rho_i'], 3)}{kgm3} = {ru(s['drho'], 3)}{kgm3}", P_YELLOW),
             ], color=P_BLUE)
@@ -1135,7 +1201,7 @@ class Beat4_Auftrieb(Scene):
 
         def panel_v(s):
             return math_panel([
-                ("v", "v", P_CYAN), (None, "=", P_WHITE),
+                ("v", r"v(\Delta p)", P_CYAN), (None, "=", P_WHITE),
                 ("root", r"\sqrt{2\,\Delta p\,/\,\rho}", P_WHITE), (None, "=", P_WHITE),
                 ("val", rf"\sqrt{{2 \cdot {ru(s['dp'], 1)}\,\mathrm{{Pa}}\,/\,{ru(RHO_AIR, 1)}\,\frac{{\mathrm{{kg}}}}{{\mathrm{{m^{{3}}}}}}}} ={ru(s['v'], 2)}\,\frac{{\mathrm{{m}}}}{{\mathrm{{s}}}}", P_CYAN),
             ], color=P_CYAN)
@@ -1146,11 +1212,37 @@ class Beat4_Auftrieb(Scene):
                 ("cd", r"C_{d}", P_WHITE), (None, r"\cdot", P_WHITE),
                 ("a", "A", P_CYAN), (None, r"\cdot", P_WHITE),
                 ("v", "v", P_CYAN), (None, "=", P_WHITE),
-                ("val", rf"{ru(CD_OPENING, 1)} \cdot {ru(A_OPENING, 1)}\,\mathrm{{m^{{2}}}} \cdot {ru(s['v'], 2)}\,\frac{{\mathrm{{m}}}}{{\mathrm{{s}}}} = {ru(s['vdot'], 3)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{s}}}} \approx {ru(round(s['vdot_h'], -1))}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}", P_GREEN),
+                ("val", rf"{ru(CD_OPENING, 1)} \cdot {ru(A_OPENING, 1)}\,\mathrm{{m^{{2}}}} \cdot {ru(s['v'], 2)}\,\mathrm{{m/s}} = {ru(s['vdot'], 3)}\,\mathrm{{m^{{3}}/s}} \approx {ru(round(s['vdot_h'], -1))}\,\mathrm{{m^{{3}}/h}}", P_GREEN),
             ], color=P_GREEN)
 
+        def _fit_stack_panel(panel):
+            """🗜️ Hang compact stack formulas under the floor slab — shrink before shoving the room."""
+            row, box, items = panel
+            group = VGroup(row, box)
+            slab_bottom = min(room.get_bottom()[1], floor.get_bottom()[1])
+            top_limit = slab_bottom - 0.42
+            bot_limit = caption.get_top()[1] + 0.14
+            band = top_limit - bot_limit
+            if band < 0.50:
+                bot_limit = top_limit - 0.50
+                band = 0.50
+            # Prefer smaller formulas over eating the room.
+            target = band * 0.78
+            if group.height > target:
+                group.scale(target / group.height)
+            group.shift(UP * (top_limit - group.get_top()[1]))
+            if group.get_bottom()[1] < bot_limit:
+                need = max(0.35, top_limit - bot_limit)
+                if group.height > need * 0.78:
+                    group.scale((need * 0.78) / group.height)
+                group.shift(UP * (top_limit - group.get_top()[1]))
+            group.set_x(0.0)
+            return row, box, items
+
         def swap_panel(old, new):
-            return [FadeOut(old[0]), FadeOut(old[1]), FadeIn(new[0]), FadeIn(new[1])]
+            # Mutate caller's tuple slots so `panel = new` keeps the fitted mobjects.
+            fitted = _fit_stack_panel(new)
+            return [FadeOut(old[0]), FadeOut(old[1]), FadeIn(fitted[0]), FadeIn(fitted[1])]
 
         self.play(Create(room), Create(floor), Create(inlet), GrowArrow(inlet_arrow), FadeIn(inlet_lbl), FadeIn(person), run_time=1.4)
         self.play(*warmth(1.1), run_time=1.1)
@@ -1158,14 +1250,14 @@ class Beat4_Auftrieb(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(N, "shaft"))
         self.play(Create(shaft_walls), FadeIn(ceiling_gap), Create(outlet), GrowArrow(outlet_arrow), FadeIn(outlet_lbl), *warmth(1.2), run_time=1.2)
-        stack["paths"] = stack_low = self._stack_paths(inlet.get_center(), room_top, self.TOP_LOW)
+        stack["paths"] = stack_low = self._stack_paths(inlet.get_center(), room_top, top_y)
         guides_low = flow_guides(stack_low, P_ORANGE)
         self.play(Create(guides_low), *warmth(0.6), run_time=0.6)
         self.play(*rising(2.6), run_time=2.6)
         hold_for(self, N, "shaft", during=rising)
 
         caption = swap_caption(self, caption, subtitle_text(N, "density"))
-        panel = panel_density(S_LOW)
+        panel = _fit_stack_panel(panel_density(S_LOW))
         self.play(FadeIn(legend), *rising(1.2), run_time=1.2)
         hold_for(self, N, "density", during=rising)
 
@@ -1174,13 +1266,14 @@ class Beat4_Auftrieb(Scene):
                   *rising(1.4), run_time=1.4)
         hold_for(self, N, "drho", during=rising)
 
+        boden_y = float(floor.get_top()[1])
         h_dim = dim_arrow(
-            np.array([-0.20, inlet.get_center()[1], 0.0]),
-            np.array([-0.20, self.TOP_LOW, 0.0]),
+            np.array([-0.45, boden_y, 0.0]),
+            np.array([-0.45, top_y, 0.0]),
             color=P_CYAN,
         )
         h_tok = math_label(tr(r"h = 2.5\,\mathrm{m}", r"h = 2{,}5\,\mathrm{m}"), size=LABEL_FONT_SIZE, color=P_CYAN).rotate(PI / 2)
-        h_tok.next_to(h_dim, LEFT, buff=0.10)
+        h_tok.next_to(h_dim, RIGHT, buff=0.06)
         h_tok_tall = math_label(tr(r"h = 4.4\,\mathrm{m}", r"h = 4{,}4\,\mathrm{m}"), size=LABEL_FONT_SIZE, color=P_CYAN).rotate(PI / 2)
 
         caption = swap_caption(self, caption, subtitle_text(N, "pressure"))
@@ -1205,7 +1298,13 @@ class Beat4_Auftrieb(Scene):
         caption = swap_caption(self, caption, subtitle_text(N, "flow"))
         new = panel_q(S_LOW)
         a_lbl = math_label(rf"A = {ru(A_OPENING, 1)}\,\mathrm{{m^{{2}}}}", size=LABEL_FONT_SIZE, color=P_CYAN)
-        a_lbl.next_to(inlet_arrow, DOWN, buff=0.10, aligned_edge=RIGHT)
+        # Stack under Zuluftöffnung, still above the arrow — never inside the opening ring.
+        a_lbl.next_to(inlet_lbl, DOWN, buff=0.08, aligned_edge=RIGHT)
+        # If the callout still kisses the arrow, nudge both fully above it.
+        inlet_callout = VGroup(inlet_lbl, a_lbl)
+        gap = 0.14
+        if inlet_callout.get_bottom()[1] < inlet_arrow.get_top()[1] + gap:
+            inlet_callout.shift(UP * (inlet_arrow.get_top()[1] + gap - inlet_callout.get_bottom()[1]))
         self.play(*swap_panel(panel, new), FadeIn(out_q), FadeIn(a_lbl), Indicate(inlet, color=P_CYAN, scale_factor=1.3), *rising(1.2), run_time=1.2)
         panel = new
         ring_q = highlight_param(panel[2], "a", color=P_CYAN)
@@ -1217,8 +1316,8 @@ class Beat4_Auftrieb(Scene):
         rise = self.TOP_HIGH - self.TOP_LOW
         h_tok_tall.move_to(h_tok.get_center() + UP * rise / 2)
         tall_dim = dim_arrow(
-            np.array([-0.20, inlet.get_center()[1], 0.0]),
-            np.array([-0.20, self.TOP_HIGH, 0.0]),
+            np.array([-0.45, boden_y, 0.0]),
+            np.array([-0.45, top_y + rise, 0.0]),
             color=P_CYAN,
         )
         new = panel_dp(S_TALL, 4.4)
@@ -1238,7 +1337,7 @@ class Beat4_Auftrieb(Scene):
             run_time=1.6,
         )
         panel = new
-        stack["paths"] = stack_high = self._stack_paths(inlet.get_center(), room_top, self.TOP_HIGH)
+        stack["paths"] = stack_high = self._stack_paths(inlet.get_center(), room_top, top_y + rise)
         stack["speed"] = 1.1
         self.play(Create(flow_guides(stack_high, P_ORANGE)), run_time=0.5)
         self.play(*rising(2.4), run_time=2.4)
@@ -1259,10 +1358,11 @@ class Beat4_Auftrieb(Scene):
         hold_for(self, N, "winter", during=rising)
 
         caption = swap_caption(self, caption, subtitle_text(N, "comfort"))
-        low_ring = VGroup(
-            SurroundingRectangle(VGroup(inlet, inlet_arrow), color=P_CYAN, buff=_theme_module.UI_SPACING, corner_radius=0, stroke_width=2.5),
-            SurroundingRectangle(person, color=P_CYAN, buff=_theme_module.UI_SPACING, corner_radius=0, stroke_width=2.5),
-        )
+        # Ring only the opening + the people — keep Zuluft/A stacked above the arrow, outside the ring.
+        inlet_callout = VGroup(inlet_lbl, a_lbl)
+        if inlet_callout.get_bottom()[1] < inlet.get_top()[1] + 0.35:
+            inlet_callout.shift(UP * (inlet.get_top()[1] + 0.35 - inlet_callout.get_bottom()[1]))
+        low_ring = SurroundingRectangle(inlet, color=P_CYAN, buff=_theme_module.UI_SPACING, corner_radius=0, stroke_width=2.5)
         high_ring = SurroundingRectangle(VGroup(outlet, outlet_arrow), color=P_ORANGE, buff=_theme_module.UI_SPACING,
                                          corner_radius=0, stroke_width=2.5)
         self.play(Create(low_ring), Create(high_ring), *rising(1.0), run_time=1.0)
@@ -1377,11 +1477,11 @@ class Beat5_Nachtlueftung(Scene):
         ).arrange(DOWN, aligned_edge=LEFT, buff=0.18)
         keys.move_to(np.array([4.85, -0.55, 0.0]))
 
-        room_c = np.array([5.05, 1.10, 0.0])
-        icon = Rectangle(width=2.3, height=1.3, stroke_width=0).move_to(room_c)
-        icon_room = _room(room_c, 2.3, 1.3, t=0.12, window_side="both", window_y=room_c[1] + 0.28, window_h=0.45)
+        room_c = np.array([4.95, 0.95, 0.0])
+        icon = Rectangle(width=2.9, height=1.6, stroke_width=0).move_to(room_c)
+        icon_room = _room(room_c, 2.9, 1.6, t=0.12, window_side="both", window_y=room_c[1] + 0.34, window_h=0.6)
         mass = Rectangle(
-            width=2.05, height=0.42, stroke_width=0,
+            width=2.65, height=0.5, stroke_width=0,
             fill_color=P_RED, fill_opacity=0.0,
         ).move_to(icon.get_bottom() + UP * 0.24)
         mass_lbl = Text(tr("Thermal mass", "Speichermasse"), font_size=LABEL_FONT_SIZE, color=P_PRIMARY)
@@ -1389,30 +1489,43 @@ class Beat5_Nachtlueftung(Scene):
         mass_hot = Text("27 °C", font_size=BODY_FONT_SIZE, color=P_RED).move_to(mass)
         mass_cool = Text("22 °C", font_size=BODY_FONT_SIZE, color=P_BLUE).move_to(mass)
         icon_win = VGroup(
-            _window(icon.get_left() + UP * 0.28, height=0.45, width=0.12),
-            _window(icon.get_right() + UP * 0.28, height=0.45, width=0.12, inward=-1),
+            _window(icon.get_left() + UP * 0.34, height=0.6, width=0.12),
+            _window(icon.get_right() + UP * 0.34, height=0.6, width=0.12, inward=-1),
         )
-        win_c = icon.get_left() + UP * 0.28
-        sky_pos = win_c + np.array([-1.05, 1.0, 0.0])
-        sun = sun_glyph(sky_pos).scale(0.32)
-        blind_c = win_c + LEFT * 0.32
+        win_c = icon.get_left() + UP * 0.34
+        sky_pos = win_c + np.array([-1.15, 1.05, 0.0])
+        sun = sun_glyph(sky_pos).scale(0.42)
+        blind_c = win_c + LEFT * 0.36
         blind = VGroup(
-            Rectangle(width=0.5, height=0.05, stroke_width=0, fill_color=P_ORANGE, fill_opacity=0.9).move_to(win_c + np.array([-0.32, 0.39, 0.0])),
+            Rectangle(width=0.62, height=0.06, stroke_width=0, fill_color=P_ORANGE, fill_opacity=0.9).move_to(win_c + np.array([-0.36, 0.47, 0.0])),
             *[Line(blind_c + np.array([-0.12, dy, 0.0]), blind_c + np.array([0.12, dy - 0.07, 0.0]), color=P_ORANGE, stroke_width=3.2)
-              for dy in np.linspace(0.30, -0.28, 6)],
+              for dy in np.linspace(0.38, -0.34, 7)],
         )
         shade_lbl = Text(tr("Shading", "Verschattung"), font_size=LABEL_FONT_SIZE, color=P_ORANGE)
-        shade_lbl.scale(0.85).next_to(blind, DOWN, buff=0.12)
-        shade_lbl.shift(RIGHT * (blind_c[0] + 0.12 - shade_lbl.get_right()[0]))
+        shade_lbl.scale(0.72).next_to(blind, DOWN, buff=0.12)
+        shade_lbl.move_to(np.array([2.85, blind.get_bottom()[1] - 0.22, 0.0]))
         ray_dir = (blind_c + UP * 0.1 - sky_pos) / np.linalg.norm(blind_c + UP * 0.1 - sky_pos)
-        ray_normal = np.array([-ray_dir[1], ray_dir[0], 0.0])
-        rays = VGroup(*[
-            Arrow(sky_pos + ray_dir * 0.36 + ray_normal * k, sky_pos + ray_dir * (np.linalg.norm(blind_c + UP * 0.1 - sky_pos) - 0.10) + ray_normal * k,
-                  buff=0, color=P_YELLOW, stroke_width=3.5, max_tip_length_to_length_ratio=0.3)
-            for k in (-0.2, 0.0, 0.2)
-        ])
-        leak = Arrow(win_c + RIGHT * 0.12, mass.get_top() + LEFT * 0.55, buff=0, color=P_YELLOW, stroke_width=2.0,
-                     max_tip_length_to_length_ratio=0.25).set_stroke(opacity=0.7)
+        # Soft transparent sun wash onto the shaded facade (no ray lines).
+        hit_hi = blind_c + UP * 0.42 + LEFT * 0.04
+        hit_lo = blind_c + DOWN * 0.40 + LEFT * 0.04
+        rays = Polygon(
+            sky_pos + ray_dir * 0.30,
+            hit_hi,
+            hit_lo,
+            stroke_width=0,
+            fill_color=P_YELLOW,
+            fill_opacity=0.22,
+        )
+        # Soft residual wash through the glass into the Speichermasse.
+        leak = Polygon(
+            win_c + np.array([0.02, 0.28, 0.0]),
+            win_c + np.array([0.02, -0.28, 0.0]),
+            mass.get_top() + LEFT * 0.35 + DOWN * 0.08,
+            mass.get_top() + LEFT * 0.80 + UP * 0.02,
+            stroke_width=0,
+            fill_color=P_YELLOW,
+            fill_opacity=0.14,
+        )
         sun_group = VGroup(sun, rays, blind, shade_lbl, leak)
         moon = VGroup(
             moon_glyph(sky_pos).scale(0.85),
@@ -1452,8 +1565,8 @@ class Beat5_Nachtlueftung(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "shade"))
         self.add(mass)
-        self.play(LaggedStart(*[GrowArrow(a) for a in rays], lag_ratio=0.2), FadeIn(blind), FadeIn(shade_lbl), run_time=1.4)
-        self.play(GrowArrow(leak), run_time=0.8)
+        self.play(FadeIn(rays), FadeIn(blind), FadeIn(shade_lbl), run_time=1.4)
+        self.play(FadeIn(leak), run_time=0.8)
         hold_for(self, self.NARRATION, "shade", used=1.4 + 0.8)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "day"))
@@ -1563,32 +1676,33 @@ class Beat6_GrenzenDerFreienLueftung(Scene):
         self.play(FadeIn(caption), run_time=0.3)
 
         room_c = np.array([-3.40, 0.55, 0.0])
-        shell = _room(room_c, 4.4, 2.2, window_side="left", window_y=0.55, window_h=1.0)
+        shell = _room(room_c, 4.4, 2.2)
         room, floor = shell[0], shell[1]
         wash = Rectangle(
             width=4.3, height=2.1, stroke_width=0, fill_color=P_RED, fill_opacity=0.0,
         ).move_to(room_c)
-        win = _window(np.array([room_c[0] - 2.2, 0.55, 0.0]), height=1.0)
-        person = _stand(room_c, 2.2, -2.25)
+        wall_l, ceil_y = room_c[0] - 2.2, room_c[1] + 1.02 + 0.08
+        inlet_y, vent_x = room_c[1] - 1.02 + 0.62, room_c[0] + 1.3
+        inlet_gap = Rectangle(width=0.2, height=0.5, stroke_width=0, fill_color=P_DEEP_DARK, fill_opacity=1.0).move_to(np.array([wall_l, inlet_y, 0.0]))
+        vent_gap = Rectangle(width=0.62, height=0.2, stroke_width=0, fill_color=P_DEEP_DARK, fill_opacity=1.0).move_to(np.array([vent_x, ceil_y, 0.0]))
+        inlet_edge = DashedLine(inlet_gap.get_corner(UL), inlet_gap.get_corner(DL), color=P_CYAN, stroke_width=3.0, dash_length=0.08)
+        vent_edge = DashedLine(vent_gap.get_corner(DL), vent_gap.get_corner(DR), color=P_ORANGE, stroke_width=3.0, dash_length=0.08)
+        openings = VGroup(inlet_gap, vent_gap, inlet_edge, vent_edge).set_z_index(5)
+        inlet_tag = Text(tr("Air intake", "Zuluft"), font_size=LABEL_FONT_SIZE, color=P_CYAN).next_to(inlet_gap, LEFT, buff=0.12).shift(DOWN * 0.38)
+        vent_tag = Text(tr("Exhaust air", "Abluft"), font_size=LABEL_FONT_SIZE, color=P_ORANGE).next_to(vent_gap, RIGHT, buff=0.16).shift(UP * 0.2)
+        person = _stand(room_c, 2.2, room_c[0] - 1.70)
 
         outdoor = _badge(tr("Summer afternoon", "Sommernachmittag"), tr("32 °C · humid", "32 °C · schwül"), P_RED)
-        outdoor.move_to(np.array([-3.40, 2.15, 0.0]))
+        outdoor.move_to(np.array([-4.55, 2.45, 0.0]))
         outdoor_cold = _badge("Winter", tr("0 °C · cold", "0 °C · kalt"), P_CYAN).move_to(outdoor)
 
-        inflow = VGroup(
-            smooth_path([
-                win.get_right() + RIGHT * 0.05 + UP * 0.20,
-                room_c + LEFT * 0.9 + UP * 0.35,
-                room_c + RIGHT * 0.9 + DOWN * 0.10,
-            ]),
-        )
-        outflow = VGroup(
-            smooth_path([
-                room_c + RIGHT * 0.9 + UP * 0.45,
-                room_c + LEFT * 0.9 + UP * 0.72,
-                win.get_right() + RIGHT * 0.05 + UP * 0.62,
-            ]),
-        )
+        def _through(dx: float, dy: float):
+            return smooth_path([np.array(pt) for pt in (
+                (wall_l - 0.95, inlet_y + dy, 0.0), (wall_l + 0.15, inlet_y + dy, 0.0),
+                (room_c[0] - 0.4, room_c[1] + 0.05 + dy, 0.0), (vent_x + dx, ceil_y - 0.28, 0.0))])
+
+        inflow = VGroup(_through(-0.12, -0.08), _through(0.12, 0.08))
+        outflow = VGroup(smooth_path([np.array([vent_x, ceil_y - 0.2, 0.0]), np.array([vent_x + 0.04, ceil_y + 0.35, 0.0]), np.array([vent_x, ceil_y + 0.85, 0.0])]))
 
         rng = np.random.default_rng(9)
         grime = VGroup(*[
@@ -1601,13 +1715,8 @@ class Beat6_GrenzenDerFreienLueftung(Scene):
         grime_tag = Text(tr("Pollen · Dust", "Pollen · Staub"), font_size=LABEL_FONT_SIZE, color=P_WHITE)
         grime_tag.next_to(room, DOWN, buff=0.16)
 
-        lost = Arrow(
-            win.get_left() + LEFT * 0.10 + UP * 0.62,
-            win.get_left() + LEFT * 0.95 + UP * 0.62,
-            buff=0, color=P_ORANGE, stroke_width=4, max_tip_length_to_length_ratio=0.24,
-        )
-        lost_tag = Text(tr("unused", "ungenutzt"), font_size=LABEL_FONT_SIZE, color=P_ORANGE)
-        lost_tag.next_to(lost, UP, buff=0.12).set_x(room.get_left()[0] - 0.12 - lost_tag.width / 2)
+        lost = Arrow(np.array([vent_x, ceil_y + 0.12, 0.0]), np.array([vent_x, ceil_y + 0.9, 0.0]), buff=0, color=P_ORANGE, stroke_width=4, max_tip_length_to_length_ratio=0.24)
+        lost_tag = Text(tr("unused", "ungenutzt"), font_size=LABEL_FONT_SIZE, color=P_ORANGE).next_to(lost, RIGHT, buff=0.14).shift(UP * 0.42)
 
         gaps = VGroup(*[
             VGroup(cross_mark(), Text(t, font_size=BODY_FONT_SIZE, color=P_WHITE)).arrange(RIGHT, buff=0.22)
@@ -1621,7 +1730,7 @@ class Beat6_GrenzenDerFreienLueftung(Scene):
         gaps.move_to(np.array([4.05, 0.45, 0.0]))
 
         lost_eta = math_label(r"\eta = 0", size=BODY_FONT_SIZE, color=P_ORANGE)
-        lost_eta.next_to(lost, DOWN, buff=0.14).set_x(lost_tag.get_x())
+        lost_eta.next_to(lost_tag, DOWN, buff=0.1, aligned_edge=LEFT)
         q_loss = V_NET * N_RATE * C_LUFT * D_THETA
         loss_read = math_label(
             rf"\text{{Winter:}}\;\dot{{Q}}_{{\mathrm{{V,sens}}}} \approx {label_number(round(q_loss, -2))}\,\mathrm{{W}}",
@@ -1635,7 +1744,7 @@ class Beat6_GrenzenDerFreienLueftung(Scene):
         ).arrange(RIGHT, buff=0.3)
         handover.move_to(np.array([0.0, -1.95, 0.0]))
 
-        scaffold = VGroup(room, floor, wash, win, person, outdoor, grime_tag, gaps, handover, loss_read)
+        scaffold = VGroup(room, floor, wash, openings, person, outdoor, grime_tag, gaps, handover, loss_read)
         fit_band(scaffold)
 
         vol = meter(tr("Volume flow", "Volumenstrom"), length=2.1, thickness=0.52, color=P_CYAN)
@@ -1649,7 +1758,7 @@ class Beat6_GrenzenDerFreienLueftung(Scene):
             return [_streams([(inflow, *air["in"]), (outflow, *air["out"])], rt, speed=air["speed"])]
 
         self.add(wash)
-        self.play(Create(room), Create(floor), FadeIn(win), FadeIn(person), run_time=1.3)
+        self.play(Create(room), Create(floor), FadeIn(openings), FadeIn(inlet_tag), FadeIn(vent_tag), FadeIn(person), run_time=1.3)
         self.play(Create(flow_guides(inflow, P_CYAN)), Create(flow_guides(outflow, P_CYAN)), run_time=0.7)
         self.play(*exchange(1.8), run_time=1.8)
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.3 + 0.7 + 1.8, during=exchange)
@@ -1663,8 +1772,13 @@ class Beat6_GrenzenDerFreienLueftung(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "cold"))
         air["in"] = (P_BLUE, P_ORANGE)
-        self.play(stage.transition("ventilation.natural.limits.outdoor-cold", source=outdoor, target=outdoor_cold), wash.animate.set_fill(P_BLUE, opacity=0.16),
-                  *exchange(1.2), run_time=1.2)
+        # Fade Sommernachmittag → Winter with the wash; keep air moving under the morph.
+        self.play(
+            stage.transition("ventilation.natural.limits.outdoor-cold", source=outdoor, target=outdoor_cold),
+            wash.animate.set_fill(P_BLUE, opacity=0.16),
+            *exchange(2.2),
+            run_time=2.2,
+        )
         self.play(*exchange(2.0), run_time=2.0)
         hold_for(self, self.NARRATION, "cold", during=exchange)
 

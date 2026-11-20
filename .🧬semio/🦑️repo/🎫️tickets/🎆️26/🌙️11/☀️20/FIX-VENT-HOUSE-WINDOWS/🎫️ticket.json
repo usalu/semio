@@ -1,0 +1,9 @@
+{
+  "id": "2026/11/20/FIX-VENT-HOUSE-WINDOWS",
+  "title": "Outer Leaf House Windows Everywhere",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-20T10:28:41",
+  "closed": "2026-11-20T10:28:41",
+  "summary": "Shared window_glyph flush to exterior with mullion/joinery; all house scenes inherit."
+}

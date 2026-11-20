@@ -1,0 +1,53 @@
+{
+  "air_guides_hidden": [
+    {
+      "chapter": "🌬️convection",
+      "call": "flow_guides(flow[::2], PASTEL_BLUE, opacity=0.22, visible=False)"
+    },
+    {
+      "chapter": "🧲️fundamentals",
+      "call": "rise_guide = flow_guides([rise], HOT, opacity=0.25, visible=False)"
+    },
+    {
+      "chapter": "🧲️fundamentals",
+      "call": "wind_guides = flow_guides(lanes, PASTEL_CYAN, opacity=0.28, width=1.8, visible=False)"
+    }
+  ],
+  "heat_flow_symbol": {
+    "chapters": [
+      "🌬️convection",
+      "🧲️fundamentals",
+      "🧱️conduction",
+      "🧮️calculation",
+      "🗺️roadmap",
+      "👥️internal-gains",
+      "☀️solar-gains"
+    ],
+    "forbidden": [
+      "\\Phi"
+    ],
+    "required": {
+      "🧲️fundamentals": "\\dot{Q}_{\\mathrm{k}}",
+      "🗺️roadmap": "\\dot{Q},\\;\\Delta\\theta"
+    }
+  },
+  "equilibrium_label_handoff": {
+    "transition_id": "heating.conduction.equilibrium.readouts-to-label",
+    "recipe": "appear",
+    "source_is_null": true,
+    "fade_out_marker": "FadeOut(VGroup(left_read, right_read))",
+    "appear_marker": "stage.transition(\"heating.conduction.equilibrium.readouts-to-label\", target=eq_label)"
+  },
+  "micro_lattice_motion": {
+    "hold_for_wait": "scene.wait(remaining, frozen_frame=False)",
+    "heat_attr": "dot.heat = 0.0",
+    "updater_dt": "def updater(mob, dt=0):",
+    "forbidden": [
+      "is_hot"
+    ]
+  },
+  "r_formula_clearance": {
+    "marker": "rect.get_top()[1] + 0.72",
+    "min_offset": 0.72
+  }
+}

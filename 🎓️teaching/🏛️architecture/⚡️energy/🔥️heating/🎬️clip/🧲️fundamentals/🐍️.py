@@ -371,8 +371,8 @@ def _dtheta_label(kelvin: float):
 
 
 def _q_token(sub: str, color: str):
-    """🔣 Typeset heat-flow symbol Φ with an upright mechanism index (k conduction, c convection, r radiation)."""
-    return math_label(rf"\Phi_{{\mathrm{{{sub}}}}}", size=FORMULA_FONT_SIZE, color=color)
+    """🔣 Typeset heat-flow symbol Q̇ with an upright mechanism index (k conduction, c convection, r radiation)."""
+    return math_label(rf"\dot{{Q}}_{{\mathrm{{{sub}}}}}", size=FORMULA_FONT_SIZE, color=color)
 
 
 UNIT_R = r"\frac{\mathrm{m^{2}\,K}}{\mathrm{W}}"
@@ -623,8 +623,8 @@ class Beat2_Waermeleitung(Scene):
          "But watch one particle: it never leaves its place. Only the energy moves through the wall, not the material.",
          "Aber sehen Sie ein Teilchen an: es verlässt seinen Platz nie. Nur die Energie wandert durch die Wand, nicht das Material."),
         ("symbol",
-         r"That heat flow through the solid is called $\Phi_{\mathrm{k}}$.",
-         r"Diesen Wärmestrom durch den Feststoff nennen wir $\Phi_{\mathrm{k}}$."),
+         r"That heat flow through the solid is called $\dot{Q}_{\mathrm{k}}$.",
+         r"Diesen Wärmestrom durch den Feststoff nennen wir $\dot{Q}_{\mathrm{k}}$."),
     ]
 
     def construct(self):
@@ -733,8 +733,8 @@ class Beat3_Konvektion(Scene):
          "Along the floor it flows back to the radiator — a closed loop that keeps carrying heat to the wall.",
          "Am Boden strömt sie zurück zum Heizkörper — eine geschlossene Walze, die laufend Wärme an die Wand trägt."),
         ("symbol",
-         r"Heat carried by moving air is $\Phi_{\mathrm{c}}$. Exchanging room air with outdoor air is ventilation — that is the Ventilation video.",
-         r"Wärme, die bewegte Luft trägt, nennen wir $\Phi_{\mathrm{c}}$. Den Luftaustausch mit außen zeigt das Lüftungsvideo."),
+         r"Heat carried by moving air is $\dot{Q}_{\mathrm{c}}$. Exchanging room air with outdoor air is ventilation — that is the Ventilation video.",
+         r"Wärme, die bewegte Luft trägt, nennen wir $\dot{Q}_{\mathrm{c}}$. Den Luftaustausch mit außen zeigt das Lüftungsvideo."),
     ]
 
     def construct(self):
@@ -753,7 +753,7 @@ class Beat3_Konvektion(Scene):
         routes = _route_strip(active=1)
         rise = stage["fit"](_path([*RISE_PTS, (-1.45, 1.47)]))
         loop, loop_color = _loop(stage)
-        rise_guide = flow_guides([rise], HOT, opacity=0.25)
+        rise_guide = flow_guides([rise], HOT, opacity=0.25, visible=False)
         loop_guide = loop.copy().set_stroke(color=PASTEL_CYAN, width=2.0, opacity=0.35).set_fill(opacity=0)
         glow = RoundedRectangle(corner_radius=0.12, width=(RADIATOR[2] - RADIATOR[0]) * stage["s"] + 0.2,
                                 height=(RADIATOR[3] - RADIATOR[1]) * stage["s"] + 0.2,
@@ -910,8 +910,8 @@ class Beat4_Strahlung(Scene):
          "The radiation still arrives — it needs no medium. That is how the sun's heat crosses empty space to reach us.",
          "Die Strahlung kommt trotzdem an — sie braucht kein Medium. So erreicht uns auch die Sonnenwärme durch das leere Weltall."),
         ("symbol",
-         r"This heat flow is $\Phi_{\mathrm{r}}$.",
-         r"Diesen Wärmestrom nennen wir $\Phi_{\mathrm{r}}$."),
+         r"This heat flow is $\dot{Q}_{\mathrm{r}}$.",
+         r"Diesen Wärmestrom nennen wir $\dot{Q}_{\mathrm{r}}$."),
     ]
 
     def construct(self):
@@ -1011,9 +1011,9 @@ class Beat5_Zusammenfassung(Scene):
         ("sum",
          "Inside, convection and radiation bring the heat to the wall, the wall conducts it through, and outside wind and radiation carry it off.",
          "Innen bringen Konvektion und Strahlung die Wärme an die Wand, die Wand leitet sie durch, außen tragen Wind und Strahlung sie fort."),
-        ("k", r"Inside the wall only conduction works: $\Phi_{\mathrm{k}}$.", r"In der Wand wirkt nur die Leitung: $\Phi_{\mathrm{k}}$."),
-        ("c", r"At both surfaces moving air carries the heat: $\Phi_{\mathrm{c}}$.", r"An beiden Oberflächen trägt bewegte Luft die Wärme: $\Phi_{\mathrm{c}}$."),
-        ("r", r"Next to it the surfaces radiate: $\Phi_{\mathrm{r}}$.", r"Daneben strahlen die Oberflächen: $\Phi_{\mathrm{r}}$."),
+        ("k", r"Inside the wall only conduction works: $\dot{Q}_{\mathrm{k}}$.", r"In der Wand wirkt nur die Leitung: $\dot{Q}_{\mathrm{k}}$."),
+        ("c", r"At both surfaces moving air carries the heat: $\dot{Q}_{\mathrm{c}}$.", r"An beiden Oberflächen trägt bewegte Luft die Wärme: $\dot{Q}_{\mathrm{c}}$."),
+        ("r", r"Next to it the surfaces radiate: $\dot{Q}_{\mathrm{r}}$.", r"Daneben strahlen die Oberflächen: $\dot{Q}_{\mathrm{r}}$."),
         ("profile",
          "The same heat flow passes every station. The temperature drops in steps: twenty, sixteen point three, one point one, zero degrees.",
          "Derselbe Wärmestrom läuft durch alle Stationen. Die Temperatur fällt in Stufen: 20, 16,3, 1,1 und 0 Grad."),
@@ -1041,7 +1041,7 @@ class Beat5_Zusammenfassung(Scene):
         loop, loop_color = _loop(stage)
         loop_guide = loop.copy().set_stroke(color=PASTEL_CYAN, width=2.0, opacity=0.35).set_fill(opacity=0)
         lanes = _wind(stage)
-        wind_guides = flow_guides(lanes, PASTEL_CYAN, opacity=0.28, width=1.8)
+        wind_guides = flow_guides(lanes, PASTEL_CYAN, opacity=0.28, width=1.8, visible=False)
         inner = _ir_rays(stage, INNER_RAYS)
         outer = _ir_rays(stage, OUTER_RAYS)
         wall_lanes = _through(stage)
@@ -1054,10 +1054,10 @@ class Beat5_Zusammenfassung(Scene):
                     *_ir_glow(stage, INNER_RAYS + OUTER_RAYS, rt)]
 
         eq, eq_box, items = math_panel([
-            ("ci", r"\Phi_{\mathrm{c,si}}", PASTEL_CYAN), (None, "+", PASTEL_WHITE), ("ri", r"\Phi_{\mathrm{r,si}}", PASTEL_YELLOW),
-            (None, "=", PASTEL_WHITE), ("k", r"\Phi_{\mathrm{k}}", PASTEL_RED), (None, "=", PASTEL_WHITE),
-            ("ce", r"\Phi_{\mathrm{c,se}}", PASTEL_CYAN), (None, "+", PASTEL_WHITE), ("re", r"\Phi_{\mathrm{r,se}}", PASTEL_YELLOW),
-            (None, r"\quad\Phi\;\text{in}\;\mathrm{W}", P_PRIMARY),
+            ("ci", r"\dot{Q}_{\mathrm{c,si}}", PASTEL_CYAN), (None, "+", PASTEL_WHITE), ("ri", r"\dot{Q}_{\mathrm{r,si}}", PASTEL_YELLOW),
+            (None, "=", PASTEL_WHITE), ("k", r"\dot{Q}_{\mathrm{k}}", PASTEL_RED), (None, "=", PASTEL_WHITE),
+            ("ce", r"\dot{Q}_{\mathrm{c,se}}", PASTEL_CYAN), (None, "+", PASTEL_WHITE), ("re", r"\dot{Q}_{\mathrm{r,se}}", PASTEL_YELLOW),
+            (None, r"\quad\dot{Q}\;\text{in}\;\mathrm{W}", P_PRIMARY),
         ])
 
         q = PROFILE_U * (THETA_I - THETA_E)
@@ -1622,7 +1622,7 @@ class Beat8_UWert(Scene):
 #endregion
 
 
-#region Beat9 – Φ = U · A · Δθ, and what each factor actually does
+#region Beat9 – Q̇ = U · A · Δθ, and what each factor actually does
 #region Beat9 example facade
 B9_UNIT_PER_M = 0.25
 B9_W, B9_H = 12.0, 6.0
@@ -1637,8 +1637,8 @@ class Beat9_WaermestromFormel(Scene):
          "Now we can finally count watts. The heat flow through any building element takes three factors.",
          "Jetzt können wir endlich Watt zählen. Der Wärmestrom durch ein Bauteil braucht drei Faktoren."),
         ("formula",
-         r"The heat flow $\Phi$ equals the U-value $U$ times the area $A$ times the temperature difference $\Delta\theta$.",
-         r"Der Wärmestrom $\Phi$ ist gleich U-Wert $U$ mal Fläche $A$ mal Temperaturdifferenz $\Delta\theta$."),
+         r"The heat flow $\dot{Q}$ equals the U-value $U$ times the area $A$ times the temperature difference $\Delta\theta$.",
+         r"Der Wärmestrom $\dot{Q}$ ist gleich U-Wert $U$ mal Fläche $A$ mal Temperaturdifferenz $\Delta\theta$."),
         ("u",
          r"$U$ is the quality of the construction — the one number we just built out of the layers.",
          r"$U$ ist die Qualität des Aufbaus — die Zahl, die wir gerade aus den Schichten gebaut haben."),
@@ -1736,7 +1736,7 @@ class Beat9_WaermestromFormel(Scene):
         set_meter(q_gauge, 0.0)
         q_gauge["fill"].add_updater(lambda m: set_meter(q_gauge, min(1.0, q_now() / B9_Q_FULL)))
         q_live = _live(
-            lambda: (rf"\Phi = U \cdot A \cdot \Delta\theta = {label_number(u_t.get_value(), 2)}\,{UNIT_U}"
+            lambda: (rf"\dot{{Q}} = U \cdot A \cdot \Delta\theta = {label_number(u_t.get_value(), 2)}\,{UNIT_U}"
                      rf" \cdot {label_number(area())}\,\mathrm{{m^{{2}}}} \cdot {label_number(dt_t.get_value())}\,\mathrm{{K}}"
                      rf" = {label_number(q_now())}\,\mathrm{{W}}"),
             np.array([1.60, -0.72, 0.0]),
@@ -1744,11 +1744,11 @@ class Beat9_WaermestromFormel(Scene):
         )
 
         eq, eq_box, items = math_panel([
-            ("q", r"\Phi", PASTEL_WHITE), (None, "=", PASTEL_WHITE),
+            ("q", r"\dot{Q}", PASTEL_WHITE), (None, "=", PASTEL_WHITE),
             ("u", "U", PASTEL_ORANGE), (None, r"\cdot", PASTEL_WHITE),
             ("a", "A", PASTEL_CYAN), (None, r"\cdot", PASTEL_WHITE),
             ("dt", r"\Delta\theta", PASTEL_BLUE),
-            (None, r"\quad\Phi\;\text{in}\;\mathrm{W}", P_PRIMARY),
+            (None, r"\quad\dot{Q}\;\text{in}\;\mathrm{W}", P_PRIMARY),
         ])
 
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)

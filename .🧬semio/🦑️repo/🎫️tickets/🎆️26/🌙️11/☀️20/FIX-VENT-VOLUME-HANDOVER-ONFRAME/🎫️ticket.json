@@ -1,0 +1,12 @@
+{
+  "id": "2026/11/20/FIX-VENT-VOLUME-HANDOVER-ONFRAME",
+  "title": "Keep Heizung Kuehltechnik Chips On Frame",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-20T11:43:37",
+  "closed": "2026-11-20T11:43:37",
+  "summary": "Handover chips sit above the V·n bar instead of right of it where they clipped.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py"
+  ]
+}

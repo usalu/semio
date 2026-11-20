@@ -1,0 +1,12 @@
+{
+  "id": "2026/11/20/FIX-VENT-NIGHT-SUN-WASH",
+  "title": "Transparent Sun Wash Instead Of Rays",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-20T16:31:53",
+  "closed": "2026-11-20T16:31:53",
+  "summary": "Beat5 sun radiation is a soft yellow Polygon wash; leak into Speichermasse is the same.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌿️natural/🐍️.py"
+  ]
+}

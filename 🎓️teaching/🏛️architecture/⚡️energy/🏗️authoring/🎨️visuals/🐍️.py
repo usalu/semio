@@ -380,17 +380,23 @@ def smooth_path(points):
     return path
 
 
-def flow_guides(paths, color, *, opacity: float = 0.25, width: float = 2.0, tips: bool = True):
-    """🧭 Faint tipped streamlines so the route stays readable between particles."""
+def flow_guides(paths, color, *, opacity: float = 0.25, width: float = 2.0, tips: bool = True, visible: bool = True):
+    """🧭 Faint tipped streamlines so the route stays readable between particles.
+
+    Pass ``visible=False`` to keep the geometry (and call sites) while hiding the stroke and tip —
+    particles from ``flow_animation`` stay the only motion cue.
+    """
     from manim import VGroup
 
+    if not visible:
+        opacity = 0.0
     lines = VGroup()
     for path in paths:
         guide = path.copy().set_stroke(color=color, width=width, opacity=opacity)
         guide.set_fill(opacity=0)
         if tips:
             guide.add_tip(tip_length=0.17, tip_width=0.14)
-            guide.tip.set_fill(color=color, opacity=opacity + 0.3)
+            guide.tip.set_fill(color=color, opacity=0.0 if not visible else opacity + 0.3)
             guide.tip.set_stroke(width=0)
         lines.add(guide)
     return lines
@@ -853,30 +859,62 @@ def _section_material(width, height, center):
 
 
 def window_glyph(x: float, sill: float, lintel: float, *, depth: float = 0.42, color=P_CYAN,
-                 wall: float = 0.14, inward: float = 1.0):
-    """🪟 Glazing in a material reveal with a hinged sash in oblique projection."""
+                 wall: float = 0.18, inward: float = 1.0):
+    """🪟 Casement flush with the exterior face of a cut wall, with sill/lintel joinery and mullioned glazing.
+
+    ``x`` is the wall centreline; the sash sits on the outer leaf and opens inward. The sash stays a two-part
+    ``VGroup`` (frame + mullion) so ``open_window`` can morph it; sill/lintel boards and a vertical bar are
+    fixed joinery in the wall aperture.
+    """
     from manim import Line, Polygon, VGroup
 
     if lintel <= sill or depth <= 0 or wall <= 0 or inward == 0:
         raise ValueError("A window needs positive height, depth, wall and an inward direction")
     sign = 1.0 if inward > 0 else -1.0
-    thickness = depth * 0.06
-    reveal_height = (lintel - sill) * 0.06
-    hinge_x = x + sign * wall / 2
-    vertices = [np.array([hinge_x, sill, 0.0]), np.array([hinge_x + sign * thickness, sill, 0.0]),
-                np.array([hinge_x + sign * thickness, lintel, 0.0]), np.array([hinge_x, lintel, 0.0])]
-    frame = Polygon(*vertices, color=color, stroke_width=1.5, fill_color=color, fill_opacity=0.35)
+    height = lintel - sill
+    # Prefer most of the outer leaf; never thicker than the wall; keep a floor so thin walls still read.
+    pane = min(wall * 0.85, max(min(0.08, wall * 0.85), depth * 0.15))
+    reveal_height = height * 0.07
+    outer_x = x - sign * wall / 2
+    hinge_x = outer_x
+    inset = min(0.035, height * 0.04)
+    vertices = [np.array([hinge_x, sill + inset, 0.0]), np.array([hinge_x + sign * pane, sill + inset, 0.0]),
+                np.array([hinge_x + sign * pane, lintel - inset, 0.0]), np.array([hinge_x, lintel - inset, 0.0])]
+    frame = Polygon(*vertices, color=color, stroke_width=2.2, fill_color=color, fill_opacity=0.18)
     mid = (sill + lintel) / 2
-    mullion = Line([hinge_x, mid, 0], [hinge_x + sign * thickness, mid, 0], color=color, stroke_width=1.1)
-    sash = VGroup(frame, mullion)
+    mid_x = hinge_x + sign * pane / 2
+    muntins = VGroup(
+        Line([hinge_x, mid, 0], [hinge_x + sign * pane, mid, 0], color=color, stroke_width=1.6),
+        Line([mid_x, sill + inset, 0], [mid_x, lintel - inset, 0], color=color, stroke_width=1.5),
+    )
+    sash = VGroup(frame, muntins)
     reveal = VGroup(*[_section_material(wall, reveal_height, [x, y, 0])
                       for y in (sill - reveal_height / 2, lintel + reveal_height / 2)])
+    # Outer leaf alignment: white sill/lintel caps on the exterior face, vertical muntin in the pane.
+    # Caps stay inside the wall thickness so overview scales of (depth, wall, height) stay uniform.
+    joinery = VGroup(
+        Line([outer_x, sill, 0], [outer_x + sign * pane, sill, 0], color=P_WHITE, stroke_width=2.4),
+        Line([outer_x, lintel, 0], [outer_x + sign * pane, lintel, 0], color=P_WHITE, stroke_width=2.4),
+        Line([outer_x, sill, 0], [outer_x, lintel, 0], color=P_WHITE, stroke_width=1.8),
+        Line([outer_x + sign * pane, sill, 0], [outer_x + sign * pane, lintel, 0], color=color, stroke_width=1.4),
+    )
     reference = Polygon(*vertices, stroke_width=0, fill_opacity=0)
-    return {"x": x, "sill": sill, "lintel": lintel, "center": np.array([hinge_x, mid, 0.0]),
-            "hinge": np.array([hinge_x, mid, 0.0]), "sash": sash, "reveal": reveal,
-            "depth": depth, "wall": wall, "inward": sign, "projection": "oblique",
-            "reference": reference, "projection_ratio": depth / thickness,
-            "group": VGroup(reveal, sash, reference)}
+    group = VGroup(reveal, sash, joinery, reference)
+    return {"x": x, "sill": sill, "lintel": lintel, "center": np.array([hinge_x + sign * pane / 2, mid, 0.0]),
+            "hinge": np.array([hinge_x, mid, 0.0]), "outer": outer_x, "sash": sash, "reveal": reveal,
+            "joinery": joinery, "depth": depth, "wall": wall, "inward": sign, "projection": "oblique",
+            "reference": reference, "projection_ratio": depth / pane,
+            "group": group}
+
+
+def emphasize_casement(window, *, color=None):
+    """🪵 Stronger sash and outer-leaf joinery so overview-scale houses still read as casements."""
+    color = color or window["sash"][0].get_stroke_color()
+    window["sash"][0].set_stroke(width=max(2.6, float(window["sash"][0].get_stroke_width())))
+    for line in window["joinery"]:
+        line.set_stroke(width=max(2.4, float(line.get_stroke_width()) + 0.4), color=P_WHITE)
+    window["joinery"][-1].set_stroke(color=color, width=2.2)
+    return window
 
 
 def window_opening(window, *, fraction: float = 1.0, tilt: bool = False):
@@ -887,21 +925,36 @@ def window_opening(window, *, fraction: float = 1.0, tilt: bool = False):
         raise ValueError("Window opening fraction must be between zero and one")
     sash = window["sash"]
     bottom, near_bottom, near_top, top = window["reference"].get_vertices()[:4]
-    across = (near_bottom - bottom) * window["projection_ratio"] * 0.82 * fraction
+    across = (near_bottom - bottom) * window["projection_ratio"] * (0.55 if tilt else 0.92) * fraction
     height = top - bottom
     if tilt:
-        lean = across * 0.5
-        drop = height * 0.035 * fraction
+        # Bottom-hinged Kipp: top leans into the room — exaggerate so it never reads as a closed leaf.
+        span = max(fraction, 0.4)
+        lean = across * (0.55 / max(fraction, 1e-6)) * span
+        drop = height * 0.12 * span
         vertices = [bottom, near_bottom, near_top + lean - drop, top + lean - drop]
     else:
         edge = near_bottom - bottom
-        vertices = [bottom, bottom + edge * (1 - fraction) + across + height * 0.1 * fraction,
-                    top + edge * (1 - fraction) + across - height * 0.1 * fraction, top]
-    frame = Polygon(*vertices, color=sash[0].get_stroke_color(), stroke_width=sash[0].get_stroke_width(),
-                    fill_color=sash[0].get_fill_color(), fill_opacity=sash[0].get_fill_opacity())
-    mullion = Line((vertices[0] + vertices[3]) / 2, (vertices[1] + vertices[2]) / 2,
-                   color=sash[1].get_stroke_color(), stroke_width=sash[1].get_stroke_width())
-    return VGroup(frame, mullion)
+        # Full casement swing into the room (Stoßlüften).
+        vertices = [bottom, bottom + edge * (1 - fraction) + across + height * 0.12 * fraction,
+                    top + edge * (1 - fraction) + across - height * 0.12 * fraction, top]
+    stroke = max(2.4, float(sash[0].get_stroke_width()))
+    fill = sash[0].get_fill_color()
+    opacity = min(0.22, max(0.12, float(sash[0].get_fill_opacity())))
+    frame = Polygon(*vertices, color=sash[0].get_stroke_color(), stroke_width=stroke,
+                    fill_color=fill, fill_opacity=opacity)
+    # Cross muntin tracks the projected sash (same two-part identity as the closed glyph).
+    muntin_color = sash[1][0].get_stroke_color() if hasattr(sash[1], "__getitem__") else sash[1].get_stroke_color()
+    muntin_w = 1.6
+    if hasattr(sash[1], "__getitem__"):
+        muntin_w = max(1.5, float(sash[1][0].get_stroke_width()))
+    else:
+        muntin_w = max(1.5, float(sash[1].get_stroke_width()))
+    muntins = VGroup(
+        Line((vertices[0] + vertices[3]) / 2, (vertices[1] + vertices[2]) / 2, color=muntin_color, stroke_width=muntin_w),
+        Line((vertices[0] + vertices[1]) / 2, (vertices[3] + vertices[2]) / 2, color=muntin_color, stroke_width=muntin_w),
+    )
+    return VGroup(frame, muntins)
 
 
 def pose_animation(mobject, target, **kwargs):
@@ -958,7 +1011,11 @@ def house_section(center=None, scale: float = 1.0):
     roof = VGroup(section_material(Polygon(
         eave_l, roof_peak, eave_r, eave_r + drop, roof_peak + drop, eave_l + drop,
     )))
-    windows = [window_glyph(x_l + t / 2, a, b, depth=0.42 * s, wall=t) for a, b in openings]
+    windows = []
+    for a, b in openings:
+        win = window_glyph(x_l + t / 2, a, b, depth=0.85 * (b - a), wall=t, inward=1)
+        emphasize_casement(win)
+        windows.append(win)
     window_group = VGroup(*[window["group"] for window in windows])
     material = section_assembly(floor, walls, roof, *(window["reveal"] for window in windows))
     return {"material": material, "center": center, "floor": floor, "ground": ground, "walls": walls, "roof": roof,
@@ -993,16 +1050,26 @@ def room_section(center, *, w: float = 5.0, h: float = 2.5, wall: float = 0.2, s
     wall_hi = _section_material(wall, y_c - hi, [gx, (hi + y_c) / 2, 0])
     wall_l = VGroup(wall_lo, wall_hi) if window_side in {"left", "both"} else _section_material(wall, h, [gx, cy, 0])
     wall_r = VGroup(*[_section_material(wall, b - a, [rx, (a + b) / 2, 0]) for a, b in ((y_f, lo), (hi, y_c))]) if window_side in {"right", "both"} else _section_material(wall, h, [rx, cy, 0])
-    glass = Rectangle(width=0.035, height=hi - lo, color=P_CYAN, stroke_width=1.5,
-                      fill_color=P_CYAN, fill_opacity=0.35).move_to([gx, (lo + hi) / 2, 0])
-    right_glass = glass.copy().move_to([rx, (lo + hi) / 2, 0]) if window_side in {"right", "both"} else None
-    if window_side not in {"left", "both"}:
+    depth = 0.85 * (hi - lo)
+    windows = []
+    if window_side in {"left", "both"}:
+        left_win = emphasize_casement(window_glyph(gx, lo, hi, depth=depth, wall=wall, inward=1))
+        windows.append(left_win)
+        glass = left_win["group"]
+    else:
+        glass = Rectangle(width=0.035, height=hi - lo, color=P_CYAN, stroke_width=1.5,
+                          fill_color=P_CYAN, fill_opacity=0.35).move_to([gx, (lo + hi) / 2, 0])
         glass.set_opacity(0)
+    right_glass = None
+    if window_side in {"right", "both"}:
+        right_win = emphasize_casement(window_glyph(rx, lo, hi, depth=depth, wall=wall, inward=-1))
+        windows.append(right_win)
+        right_glass = right_win["group"]
     air = Rectangle(width=w, height=h, stroke_width=0, fill_color=P_RED, fill_opacity=0).move_to([cx, cy, 0])
     shell = section_assembly(floor, ceiling, wall_l, wall_r)
     glazing = VGroup(glass, *([right_glass] if right_glass is not None else []))
     return {"floor": floor, "ceiling": ceiling, "wall_lo": wall_lo, "wall_hi": wall_hi, "wall_l": wall_l,
-            "wall_r": wall_r, "glass": glass, "right_glass": right_glass, "air": air, "shell": shell,
+            "wall_r": wall_r, "glass": glass, "right_glass": right_glass, "windows": windows, "air": air, "shell": shell,
             "group": VGroup(air, shell, glazing), "x_l": x_l, "x_r": x_r, "y_f": y_f, "y_c": y_c,
             "win_lo": lo, "win_hi": hi, "glass_x": gx, "right_glass_x": rx, "window_side": window_side,
             "center": np.array([cx, cy, 0]), "w": w, "h": h, "wall": wall, "slab": slab}
@@ -2159,7 +2226,7 @@ def hold_for(scene, narration: list[Clause], key: str, *, used: float = 0.0, min
     if anims:
         scene.play(*anims, run_time=remaining)
     else:
-        scene.wait(remaining)
+        scene.wait(remaining, frozen_frame=False)
     return remaining
 #endregion
 

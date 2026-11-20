@@ -1,0 +1,18 @@
+{
+  "id": "2026/11/20/FIX-HEAT-CONDUCTION-MICRO-PARTICLE-CONTINUITY",
+  "title": "Continuous Micro Lattice Particle Motion",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-20T22:31:40",
+  "goal": "ANIMATE",
+  "prompt": "In Heizen conduction micro lattice beat, particle motion has visible breaks; make movement continuous.",
+  "closed": "2026-11-20T22:35:18",
+  "summary": "Narration holds no longer freeze lattice jiggling (wait frozen_frame=False); heat front ramps amp/freq smoothly instead of popping.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🐍️.py",
+    "🎓️teaching/🧰️interop/🕐️clock/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧪️architecture/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧪️architecture/🔣️.cases.json"
+  ]
+}

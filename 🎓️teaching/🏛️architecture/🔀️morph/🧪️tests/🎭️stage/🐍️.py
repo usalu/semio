@@ -211,6 +211,30 @@ class StageEndToEndTests(unittest.TestCase):
         run("preview", definitions)
         self.assertNotIn("full", definitions.lods)
 
+    def test_fade_recipe_crossfades_under_preview_profile(self):
+        definitions = Definitions()
+        result = run("preview", definitions, "demo.blocks-fade-to-tiles")
+        counts = result["work"]["counts"]
+        self.assertGreater(counts.get("full.prepare", 0), 0)
+        self.assertEqual(counts.get("preview.swap", 0), 0)
+        self.assertEqual(list(result["scene"].mobjects), [result["target"]])
+
+    def test_hull_recipe_silhouettes_under_preview_profile(self):
+        definitions = Definitions()
+        result = run("preview", definitions, "demo.blocks-hull-to-tiles")
+        counts = result["work"]["counts"]
+        self.assertGreater(counts.get("full.prepare", 0), 0)
+        self.assertEqual(counts.get("preview.swap", 0), 0)
+        self.assertEqual(list(result["scene"].mobjects), [result["target"]])
+
+    def test_replace_recipe_reshapes_under_preview_profile(self):
+        definitions = Definitions()
+        result = run("preview", definitions, "demo.blocks-replace-to-tiles")
+        counts = result["work"]["counts"]
+        self.assertGreater(counts.get("full.prepare", 0), 0)
+        self.assertEqual(counts.get("preview.swap", 0), 0)
+        self.assertEqual(list(result["scene"].mobjects), [result["target"]])
+
 
 if __name__ == "__main__":
     unittest.main()

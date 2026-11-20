@@ -1,0 +1,12 @@
+{
+  "id": "2026/11/20/FIX-VENT-STACK-ROOM-RESTORE",
+  "title": "Restore Beat4 Room Geometry",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-20T15:17:35",
+  "closed": "2026-11-20T15:17:35",
+  "summary": "Restored classic Beat4 room proportions; formulas shrink under the slab instead of squashing the room.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌿️natural/🐍️.py"
+  ]
+}

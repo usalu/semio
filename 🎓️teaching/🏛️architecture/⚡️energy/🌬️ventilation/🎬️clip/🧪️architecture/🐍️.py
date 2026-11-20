@@ -141,6 +141,25 @@ class VentilationArchitecture(unittest.TestCase):
         self.assertLess(rad[0].get_left()[0], room["x_in"])
         self.assertGreater(rad[0].get_left()[0], room["x_in"] - 0.4 * k)
 
+    def test_particle_path_arrows_stay_hidden_while_geometry_remains(self):
+        case = CASES["particle_path_arrows"]
+        path = VISUALS.smooth_path([[-1.0, 0.0, 0.0], [0.0, 0.2, 0.0], [1.0, 0.0, 0.0]])
+        shown = VISUALS.flow_guides([path], VISUALS.P_CYAN, opacity=0.3, visible=True)
+        hidden = VISUALS.flow_guides([path], VISUALS.P_CYAN, opacity=0.3, visible=False)
+        self.assertGreater(shown[0].get_stroke_opacity(), case["max_stroke_opacity_when_hidden"])
+        self.assertGreater(shown[0].tip.get_fill_opacity(), case["max_tip_fill_opacity_when_hidden"])
+        self.assertEqual(hidden[0].get_stroke_opacity(), case["max_stroke_opacity_when_hidden"])
+        self.assertEqual(hidden[0].tip.get_fill_opacity(), case["max_tip_fill_opacity_when_hidden"])
+        self.assertEqual(len(shown.submobjects), len(hidden.submobjects))
+        for chapter in case["chapters"]:
+            source = (CHAPTERS / chapter / "🐍️.py").read_text(encoding="utf-8")
+            with self.subTest(chapter=chapter):
+                self.assertIn("visible: bool = False", source)
+                self.assertIn("return _manim_module.flow_guides(*args, visible=visible, **kwargs)", source)
+        natural = next(CHAPTERS.glob("*natural*/🐍️.py")).read_text(encoding="utf-8")
+        self.assertIn("inlet_arrow.set_opacity(0)", natural)
+        self.assertIn("outlet_arrow.set_opacity(0)", natural)
+
 
 if __name__ == "__main__":
     unittest.main()

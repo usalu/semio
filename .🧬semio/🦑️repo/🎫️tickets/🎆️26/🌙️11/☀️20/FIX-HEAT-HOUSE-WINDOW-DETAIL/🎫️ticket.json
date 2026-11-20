@@ -1,0 +1,9 @@
+{
+  "id": "2026/11/20/FIX-HEAT-HOUSE-WINDOW-DETAIL",
+  "title": "Detailed Outer Leaf Windows In Heating",
+  "status": "open",
+  "client": "cursor-chat",
+  "opened": "2026-11-20T22:57:00",
+  "goal": "ANIMATE",
+  "prompt": "House windows in heating should match prior videos: more detailed, aligned to outer side of the wall, entire video."
+}

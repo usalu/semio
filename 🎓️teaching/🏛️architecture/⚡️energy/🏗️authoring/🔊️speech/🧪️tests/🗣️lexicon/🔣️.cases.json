@@ -1,6 +1,7 @@
 {
   "math": [
     {"tex": "\\Delta\\theta", "de": "Delta Theta", "en": "delta theta"},
+    {"tex": "\\Delta\\theta = 2\\,\\mathrm{K}", "de": "Delta Theta gleich 2 Kelvin", "en": "delta theta equals 2 kelvin"},
     {"tex": "\\Delta\\theta = \\theta_i - \\theta_e", "de": "Delta Theta gleich Theta i minus Theta e", "en": "delta theta equals theta i minus theta e"},
     {"tex": "\\dot{Q}_{\\mathrm{V}}", "de": "Q-Punkt V", "en": "Q dot V"},
     {"tex": "\\dot{V}", "de": "V-Punkt", "en": "V dot"},
@@ -9,6 +10,9 @@
     {"tex": "\\dot{Q}_{\\mathrm{i,e}}", "de": "Q-Punkt i e", "en": "Q dot i e"},
     {"tex": "\\dot{Q}_{\\mathrm{i,l}}", "de": "Q-Punkt i l", "en": "Q dot i l"},
     {"tex": "\\dot{Q}_{\\mathrm{i,lat}}", "de": "Q-Punkt i latent", "en": "Q dot i latent"},
+    {"tex": "\\dot{Q}", "de": "Q-Punkt", "en": "Q dot"},
+    {"tex": "\\dot{Q}_{\\mathrm{k}}", "de": "Q-Punkt k", "en": "Q dot k"},
+    {"tex": "\\dot{Q}_{\\mathrm{c,si}}", "de": "Q-Punkt c s i", "en": "Q dot c s i"},
     {"tex": "\\Phi_{\\mathrm{c,si}}", "de": "Phi c s i", "en": "phi c s i"},
     {"tex": "G_{t,20/15}", "de": "G t 20 15", "en": "G t 20 15"},
     {"tex": "e_{E}", "de": "e E", "en": "e E"},

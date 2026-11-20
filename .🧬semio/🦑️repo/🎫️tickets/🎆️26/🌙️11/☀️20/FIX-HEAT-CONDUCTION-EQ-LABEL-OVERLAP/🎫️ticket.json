@@ -1,0 +1,17 @@
+{
+  "id": "2026/11/20/FIX-HEAT-CONDUCTION-EQ-LABEL-OVERLAP",
+  "title": "Fix Conduction Equilibrium Label Overlap",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-20T22:27:14",
+  "goal": "ANIMATE",
+  "prompt": "In Heizen conduction beat, top-of-wall temperature/equilibrium labels overlap for ~1s during transition; make the handoff clean.",
+  "closed": "2026-11-20T22:31:19",
+  "summary": "Equilibrium handoff is sequential: θ1/θ2 fade out, then Gleichgewicht appears (appear recipe). No more mid-morph overlap.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🔀️transitions/🔣️.json",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧪️architecture/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧪️architecture/🔣️.cases.json"
+  ]
+}

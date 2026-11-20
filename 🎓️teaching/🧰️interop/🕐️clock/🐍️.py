@@ -65,7 +65,7 @@ def stopwatch(rate: float = 1.0) -> Callable[[], float]:
 def scene_timer(rate: float = 1.0) -> ValueTracker:
     """⏱️ A tracker that follows a `stopwatch(rate)` while it is in the scene and freezes when its updaters are cleared."""
     tracker, watch = ValueTracker(0.0), stopwatch(rate)
-    tracker.add_updater(lambda mob: mob.set_value(watch()))
+    tracker.add_updater(lambda mob, dt=0: mob.set_value(watch()))
     return tracker
 
 

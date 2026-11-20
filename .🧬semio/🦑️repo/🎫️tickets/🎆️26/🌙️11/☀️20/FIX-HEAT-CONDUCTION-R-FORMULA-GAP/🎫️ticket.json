@@ -1,0 +1,16 @@
+{
+  "id": "2026/11/20/FIX-HEAT-CONDUCTION-R-FORMULA-GAP",
+  "title": "Lift R Formula Off Insulation Slab",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-20T22:43:01",
+  "goal": "ANIMATE",
+  "prompt": "Yellow R formula rectangle touches the Dämmung slab; shift it a little higher.",
+  "closed": "2026-11-20T22:43:01",
+  "summary": "Raised yellow R = d/λ readout from +0.42 to +0.72 above the Dämmung slab top.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧪️architecture/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧪️architecture/🔣️.cases.json"
+  ]
+}

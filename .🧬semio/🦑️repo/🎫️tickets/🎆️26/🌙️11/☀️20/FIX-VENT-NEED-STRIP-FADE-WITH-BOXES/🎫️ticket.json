@@ -1,0 +1,9 @@
+{
+  "id": "2026/11/20/FIX-VENT-NEED-STRIP-FADE-WITH-BOXES",
+  "title": "Fade Counting Texts With Blue Boxes",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-20T10:58:53",
+  "closed": "2026-11-20T10:58:53",
+  "summary": "4× / 30 / =120 fade out with the chips; formula fades in with no morph copies."
+}

@@ -1,0 +1,12 @@
+{
+  "id": "2026/11/20/FIX-VENT-GRENZEN-ROUND-AIR",
+  "title": "Round Air Circulation In Grenzen",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-20T15:06:04",
+  "closed": "2026-11-20T15:06:04",
+  "summary": "Beat6 window exchange uses closed oval loops instead of linear window-to-person paths.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌿️natural/🐍️.py"
+  ]
+}

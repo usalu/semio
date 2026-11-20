@@ -1,0 +1,9 @@
+{
+  "id": "2026/11/20/FIX-VENT-NEED-HIDE-CHIPS",
+  "title": "Hide Counting Chips When Formula Shows",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-20T10:32:30",
+  "closed": "2026-11-20T10:32:30",
+  "summary": "Clear 4× / 30 m³/h / =120 strip once the formula panel owns those numbers."
+}

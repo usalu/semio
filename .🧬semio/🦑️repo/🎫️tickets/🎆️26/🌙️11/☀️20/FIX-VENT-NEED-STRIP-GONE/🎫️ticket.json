@@ -1,0 +1,9 @@
+{
+  "id": "2026/11/20/FIX-VENT-NEED-STRIP-GONE",
+  "title": "Hide Counting Strip With Formula",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-20T10:53:44",
+  "closed": "2026-11-20T10:53:44",
+  "summary": "Blue boxes and 4×/30/=120 texts clear before the formula panel lands."
+}

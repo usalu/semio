@@ -57,7 +57,9 @@ math_readout = _manim_module.math_readout
 math_panel = _manim_module.math_panel
 label_number = _manim_module.label_number
 smooth_path = _manim_module.smooth_path
-flow_guides = _manim_module.flow_guides
+def flow_guides(*args, visible: bool = False, **kwargs):
+    """🧭 Particle-path guides — kept, temporarily hidden; particles stay visible."""
+    return _manim_module.flow_guides(*args, visible=visible, **kwargs)
 flow_animation = _manim_module.flow_animation
 dim_arrow = _manim_module.dim_arrow
 caption_bar = _manim_module.caption_bar
@@ -115,12 +117,6 @@ def _din_ref(text: str):
 def _streams(streams, rt: float, *, speed: float = 0.8, waves: int = 3):
     """💨 Continuous particle streams for ``rt`` seconds at a steady ``speed`` in passes per second."""
     return flow_animation([(list(p), *c) for p, *c in streams], waves=waves, cycles=speed * rt)
-
-
-def _fade_flow(flow):
-    """🌫️ Thin a running particle stream out to nothing over its run time — play it after ``flow``."""
-    return UpdateFromAlphaFunc(flow.mobject, lambda m, a: [d.set_fill(opacity=d.get_fill_opacity() * (1.0 - a)) for d in m],
-                               rate_func=linear)
 #endregion
 
 
@@ -255,7 +251,7 @@ def _pf_house(house, origin, scale: float, *, eave_m: float = 0.5):
     for inward, x_m in ((1, house["wall"] / 2), (-1, w - house["wall"] / 2)):
         for sill_m, lintel_m in openings:
             x, sill, lintel = o[0] + x_m * s, o[1] + sill_m * s, o[1] + lintel_m * s
-            windows.append(window_glyph(x, sill, lintel, depth=0.8 * (lintel - sill),
+            windows.append(window_glyph(x, sill, lintel, depth=0.65 * (lintel - sill),
                                         wall=house["wall"] * s, inward=inward, color=P_CYAN))
     material = section_assembly(*material)
     group = VGroup(ground, hatch, material, *[win["group"] for win in windows])
@@ -284,11 +280,12 @@ def _room(center, width, height, color=P_WHITE, t: float = 0.16, *,
     return section_material(VGroup(body, section["floor"]))
 
 
-def _stand(room_c, room_h, x, cast: str = "shared-person-pathlines", rate: float = 1.0, t: float = 0.16):
+def _stand(room_c, room_h, x, cast: str = "shared-person-pathlines", rate: float = 1.0, t: float = 0.16,
+           mirror: bool = False):
     """🧍 A 1.75 m breathing occupant (thermal staffage clip) in a 2.5 m clear room, anchored to the slab top."""
     unit = room_metre(room_h - t)
     floor_y = float(room_c[1]) - room_h / 2 + t / 2
-    return staffage_motion(cast, unit=unit, anchor=np.array([x, floor_y, 0.0]), rate=rate)
+    return staffage_motion(cast, unit=unit, anchor=np.array([x, floor_y, 0.0]), rate=rate, mirror=mirror)
 
 
 def _dim(mob, factor: float, **kwargs):
@@ -505,17 +502,10 @@ class Beat1_Innenvolumen(Scene):
         r_dim = dim_arrow([r_x, O[1], 0], [r_x, outer_pts[3][1], 0], color=P_YELLOW)
         r_lbl = math_label(rf"{label_number(H['ridge'], 1)}\,\mathrm{{m}}", size=LABEL_FONT_SIZE, color=P_YELLOW)
         r_lbl.next_to(r_dim, RIGHT, buff=0.1)
-        out_paths = [smooth_path([np.array(p) + d for d in ([-0.16, -0.03, 0], [0.06, 0.03, 0], [0.28, -0.01, 0])])
-                     for p in ([-6.6, 1.75, 0], [-5.2, 2.2, 0], [-6.75, 0.2, 0], [-2.35, 2.25, 0], [-1.05, 1.95, 0],
-                               [-0.75, -0.35, 0], [-1.15, -0.95, 0], [-6.75, -0.75, 0])]
-
-        def outdoor(rt):
-            return [_streams([(out_paths, P_BLUE)], rt, speed=0.55, waves=2)]
-
-        self.play(Create(pf["group"]), *outdoor(1.4), run_time=1.4)
+        self.play(Create(pf["group"]), run_time=1.4)
         self.play(GrowFromCenter(w_dim), FadeIn(w_lbl), GrowFromCenter(e_dim), FadeIn(e_lbl),
-                  GrowFromCenter(r_dim), FadeIn(r_lbl), *outdoor(1.2), run_time=1.2)
-        hold_for(self, N, "intro", used=2.6, during=outdoor)
+                  GrowFromCenter(r_dim), FadeIn(r_lbl), run_time=1.2)
+        hold_for(self, N, "intro", used=2.6)
 
         caption = swap_caption(self, caption, subtitle_text(N, "gross"))
         level = ValueTracker(0.001)
@@ -530,7 +520,7 @@ class Beat1_Innenvolumen(Scene):
         a_read = math_readout(lambda: rf"A_{{\mathrm{{e}}}} = {label_number(area_e(), 1)}\,\mathrm{{m^{{2}}}}",
                               np.array([x0, 1.85, 0]), size=BODY_FONT_SIZE, color=P_TEAL)
         self.add(gross_fill, a_read)
-        self.play(level.animate.set_value(H["ridge"]), *outdoor(2.0), run_time=2.0, rate_func=linear)
+        self.play(level.animate.set_value(H["ridge"]), run_time=2.0, rate_func=linear)
 
         def back():
             off = depth_vec * depth.get_value() / H["depth"]
@@ -544,21 +534,20 @@ class Beat1_Innenvolumen(Scene):
                     rf"{label_number(H['A_e'] * depth.get_value())}\,\mathrm{{m^{{3}}}}",
             np.array([x0, 1.28, 0]), size=BODY_FONT_SIZE, color=P_WHITE)
         self.add(back_mob, ve_read)
-        self.play(depth.animate.set_value(H["depth"]), *outdoor(1.8), run_time=1.8, rate_func=linear)
+        self.play(depth.animate.set_value(H["depth"]), run_time=1.8, rate_func=linear)
         ve_read.clear_updaters()
         d_start = outer_pts[1] + RIGHT * 0.12 + DOWN * 0.1
         d_dim = dim_arrow(d_start, d_start + depth_vec, color=P_YELLOW)
         d_lbl = math_label(rf"{label_number(H['depth'])}\,\mathrm{{m}}", size=LABEL_FONT_SIZE, color=P_YELLOW)
         d_lbl.next_to(d_dim.get_center(), DR, buff=0.04)
-        self.play(GrowFromCenter(d_dim), FadeIn(d_lbl), *outdoor(0.6), run_time=0.6)
-        hold_for(self, N, "gross", during=outdoor)
+        self.play(GrowFromCenter(d_dim), FadeIn(d_lbl), run_time=0.6)
+        hold_for(self, N, "gross")
 
         caption = swap_caption(self, caption, subtitle_text(N, "focus"))
         pieces = {name: _poly(pts, O, S, stroke_width=1, color=P_YELLOW, fill_color=P_YELLOW, fill_opacity=0.0)
                   for name, pts in H["pieces"].items()}
         self.add(*pieces.values())
-        last = outdoor(1.2)[0]
-        self.play(last, _fade_flow(last), gross_fill.animate.set_opacity(0.0), run_time=1.2)
+        self.play(gross_fill.animate.set_opacity(0.0), run_time=1.2)
         self.remove(gross_fill)
         self.play(*[p.animate.set_fill(P_YELLOW, opacity=0.75) for p in pieces.values()], run_time=1.0)
         hold_for(self, N, "focus")
@@ -1048,12 +1037,15 @@ class Beat3_Volumenstrom(Scene):
         hold_for(self, N, "spell")
 
         caption = swap_caption(self, caption, subtitle_text(N, "people"))
-        room_c, room_w, room_h = np.array([-4.1, 0.58, 0.0]), 4.0, 2.4
+        # Wider room so four full-height people stand with clear gaps — not a crowded clone strip.
+        room_c, room_w, room_h = np.array([-4.15, 0.72, 0.0]), 5.6, 2.45
         room = _room(room_c, room_w, room_h)
-        persons = [_stand(room_c, room_h, room_c[0] + dx) for dx in (-1.35, -0.45, 0.45, 1.35)]
+        margin = 0.95
+        person_xs = np.linspace(room_c[0] - room_w / 2 + margin, room_c[0] + room_w / 2 - margin, PERSONS)
+        persons = [_stand(room_c, room_h, float(x), rate=0.0) for x in person_xs]
         room_lbl = math_label(tr(rf"{PERSONS}\;\text{{people}}", rf"{PERSONS}\;\text{{Personen}}"), np.array([room_c[0], room_c[1] + room_h / 2 + 0.38, 0]),
                               size=BODY_FONT_SIZE, color=P_ORANGE)
-        bx, unit, row_h = -0.4, 5.6 / V_DOT, 0.45
+        bx, unit, row_h = -0.15, 5.4 / V_DOT, 0.45
         bar_n = Rectangle(width=V_DOT * unit, height=row_h, color=P_TEAL, stroke_width=1.6, fill_color=P_TEAL,
                           fill_opacity=0.5).move_to([bx + V_DOT * unit / 2, 1.2, 0])
         lbl_n = math_label(rf"V \cdot n = {label_number(V_DOT)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}", np.array([bx, 1.75, 0]),
@@ -1081,22 +1073,38 @@ class Beat3_Volumenstrom(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(N, "cover"))
         x_a, x_b = bx + PERSONS * PER_PERSON * unit, bx + V_DOT * unit
-        reserve = dim_arrow([x_a, -0.35, 0], [x_b, -0.35, 0], color=P_YELLOW)
+        reserve = dim_arrow([x_a, -0.2, 0], [x_b, -0.2, 0], color=P_YELLOW)
         reserve_lbl = math_label(tr(rf"\mathrm{{reserve}}\;{label_number(V_DOT - PERSONS * PER_PERSON)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}", rf"\mathrm{{Reserve}}\;{label_number(V_DOT - PERSONS * PER_PERSON)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}"),
-                                 np.array([(x_a + x_b) / 2, -0.72, 0]), size=LABEL_FONT_SIZE, color=P_YELLOW)
+                                 np.array([(x_a + x_b) / 2, -0.52, 0]), size=LABEL_FONT_SIZE, color=P_YELLOW)
         row3, box3, items3 = math_panel([
             ("p", rf"{PERSONS} \cdot {label_number(PER_PERSON)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}} = {label_number(PERSONS * PER_PERSON)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}", P_BLUE),
             (None, "<", None),
             ("n", rf"V \cdot n = {label_number(V_DOT)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}", P_TEAL),
-        ])
+        ], edge_buff=1.7)
         self.play(stage.transition("ventilation.volume.flow.cover-people", source=lbl_p, target=items3["p"]), stage.transition("ventilation.volume.flow.cover-total", source=lbl_n, target=items3["n"]),
                   FadeIn(VGroup(*[m for m in row3 if m not in items3.values()])), Create(box3), run_time=1.0)
         self.play(GrowFromCenter(reserve), FadeIn(reserve_lbl), FadeOut(lbl_n), FadeOut(lbl_p),
                   _dim(VGroup(room_lbl, *persons), 0.25), run_time=0.8)
-        chips = VGroup(_handover_chip(tr(r"\to\;\text{Heating:}\;V \cdot n", r"\to\;\text{Heizung:}\;V \cdot n"), P_ORANGE, LABEL_FONT_SIZE),
-                       _handover_chip(tr(r"\to\;\text{Cooling:}\;q_{v,\mathrm{R}}", r"\to\;\text{Kühltechnik:}\;q_{v,\mathrm{R}}"), P_CYAN, LABEL_FONT_SIZE)).arrange(RIGHT, buff=0.5)
-        chips.move_to([0.0, -1.25, 0])
-        self.play(FadeIn(chips, shift=UP * 0.1), run_time=0.6)
+        chip_h = _handover_chip(tr(r"\to\;\text{Heating:}\;V \cdot n", r"\to\;\text{Heizung:}\;V \cdot n"), P_ORANGE, LABEL_FONT_SIZE)
+        chip_k = _handover_chip(tr(r"\to\;\text{Cooling:}\;q_{v,\mathrm{R}}", r"\to\;\text{Kühltechnik:}\;q_{v,\mathrm{R}}"), P_CYAN, LABEL_FONT_SIZE)
+        # lbl_n has just faded — park the hand-over stack in that free slot above the V·n bar
+        # (never right of the bar: that clips the frame edge).
+        chips = VGroup(chip_h, chip_k).arrange(DOWN, buff=0.18, aligned_edge=LEFT)
+        room_right = float(room_c[0] + room_w / 2)
+        right_limit = 6.15
+        chips.next_to(bar_n, UP, buff=0.18)
+        chips.align_to(bar_n, LEFT)
+        if chips.get_right()[0] > right_limit:
+            chips.shift(LEFT * (chips.get_right()[0] - right_limit))
+        if chips.get_left()[0] < room_right + 0.3:
+            max_w = max(2.0, right_limit - (room_right + 0.3))
+            if chips.width > max_w:
+                chips.scale(max_w / chips.width)
+            chips.next_to(bar_n, UP, buff=0.18)
+            chips.align_to(bar_n, LEFT)
+            if chips.get_right()[0] > right_limit:
+                chips.shift(LEFT * (chips.get_right()[0] - right_limit))
+        self.play(FadeIn(chips, shift=UP * 0.08), run_time=0.6)
         hold_for(self, N, "cover")
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)

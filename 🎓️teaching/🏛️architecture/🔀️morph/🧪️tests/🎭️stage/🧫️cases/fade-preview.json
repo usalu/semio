@@ -1,0 +1,11 @@
+{
+  "description": "fade recipe under preview profile runs full dissolve, not PreviewSwap",
+  "profile": "preview",
+  "transition": "demo.blocks-fade-to-tiles",
+  "expect": {
+    "full.prepare": {
+      "min": 1
+    },
+    "preview.swap": 0
+  }
+}

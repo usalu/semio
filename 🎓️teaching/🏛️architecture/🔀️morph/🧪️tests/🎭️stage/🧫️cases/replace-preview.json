@@ -1,0 +1,11 @@
+{
+  "description": "replace recipe under preview profile runs full reshape, not PreviewSwap",
+  "profile": "preview",
+  "transition": "demo.blocks-replace-to-tiles",
+  "expect": {
+    "full.prepare": {
+      "min": 1
+    },
+    "preview.swap": 0
+  }
+}

@@ -54,7 +54,9 @@ math_panel = _manim_module.math_panel
 label_number = _manim_module.label_number
 smooth_path = _manim_module.smooth_path
 flow_animation = _manim_module.flow_animation
-flow_guides = _manim_module.flow_guides
+def flow_guides(*args, visible: bool = False, **kwargs):
+    """🧭 Particle-path guides — kept, temporarily hidden; particles stay visible."""
+    return _manim_module.flow_guides(*args, visible=visible, **kwargs)
 dim_arrow = _manim_module.dim_arrow
 chip = _manim_module.chip
 meter = _manim_module.meter
@@ -315,12 +317,12 @@ class Beat1_Luftwaerme(Scene):
         caption = swap_caption(self, caption, subtitle_text(N, "mass"))
         xl, xq = -6.45, 1.55
         mass = ValueTracker(0.0)
-        rho_lbl = math_label(rf"\rho \approx {label_number(RHO_AIR, 1)}\,\frac{{\mathrm{{kg}}}}{{\mathrm{{m^{{3}}}}}}\;(20\,°\mathrm{{C}})", np.array([xl, 2.25, 0]),
+        rho_lbl = math_label(rf"\rho \approx {label_number(RHO_AIR, 1)}\,\frac{{\mathrm{{kg}}}}{{\mathrm{{m^{{3}}}}}}\;(20\,°\mathrm{{C}})", np.array([xl, 2.3, 0]),
                              size=BODY_FONT_SIZE, color=P_CYAN, edge="left")
-        rho_note = math_label(rf"{label_number(1.27, 2)}\,\frac{{\mathrm{{kg}}}}{{\mathrm{{m^{{3}}}}}}\;(5\,°\mathrm{{C}})", np.array([xl, 1.2, 0]),
-                              size=LABEL_FONT_SIZE, color=P_CYAN, edge="left")
+        rho_note = math_label(rf"{label_number(1.27, 2)}\,\frac{{\mathrm{{kg}}}}{{\mathrm{{m^{{3}}}}}}\;(5\,°\mathrm{{C}})", np.array([xl, 1.05, 0]),
+                              size=BODY_FONT_SIZE, color=P_CYAN, edge="left")
         m_read = math_readout(lambda: rf"m = {label_number(RHO_AIR, 1)}\,\frac{{\mathrm{{kg}}}}{{\mathrm{{m^{{3}}}}}} \cdot 1\,\mathrm{{m^{{3}}}} = {label_number(mass.get_value(), 2)}\,\mathrm{{kg}}",
-                              np.array([xl, 1.72, 0]), size=BODY_FONT_SIZE, color=P_CYAN)
+                              np.array([xl, 1.62, 0]), size=BODY_FONT_SIZE, color=P_CYAN)
         self.play(FadeIn(rho_lbl), run_time=0.5)
         self.add(m_read)
         self.play(mass.animate.set_value(RHO_AIR), Indicate(cube, color=P_CYAN, scale_factor=1.04), run_time=1.4)
@@ -422,18 +424,21 @@ class Beat1_Luftwaerme(Scene):
         hold_for(self, N, "variiert")
 
         caption = swap_caption(self, caption, subtitle_text(N, "perk"))
+        # Clear both unit cards first — the yellow perk line used to ramp in while SI was still fading (~1 s overlap).
+        _hide(self, both, note, run_time=0.45)
+        self.remove(both, note)
         k = ValueTracker(0.0)
         perk = math_readout(
             lambda: rf"\dot{{V}} \cdot c_{{\mathrm{{Luft}}}} = {label_number(V_DOT * k.get_value())}\,\mathrm{{\frac{{m^3}}{{h}}}} \cdot {label_number(C_LUFT, 2)}\,\mathrm{{\frac{{Wh}}{{m^3\,K}}}} "
                     rf"\approx {label_number(V_DOT * C_LUFT * k.get_value())}\,\mathrm{{\frac{{W}}{{K}}}}",
-            np.array([0.0, -0.4, 0]), size=FORMULA_FONT_SIZE, color=P_YELLOW, edge="center")
+            np.array([0.0, 0.55, 0]), size=FORMULA_FONT_SIZE, color=P_YELLOW, edge="center")
         row, box, items = math_panel([
             ("c", r"c_{\mathrm{Luft}}", P_GREEN), (None, "=", P_WHITE),
             (None, rf"\frac{{{label_number(RHO_AIR, 1)}\,\frac{{\mathrm{{kg}}}}{{\mathrm{{m^3}}}} \cdot {label_number(CP_AIR)}\,\frac{{\mathrm{{J}}}}{{\mathrm{{kg\,K}}}}}}{{3600\,\frac{{\mathrm{{s}}}}{{\mathrm{{h}}}}}}", P_WHITE),
             (None, rf"\approx {label_number(C_LUFT, 2)}\,\mathrm{{\frac{{Wh}}{{m^3\,K}}}}", P_GREEN),
-        ])
+        ], edge_buff=2.15)
         self.add(perk)
-        self.play(_ramp(k, 1.0), FadeOut(VGroup(both, note)), Create(box), FadeIn(row), run_time=1.8)
+        self.play(_ramp(k, 1.0), Create(box), FadeIn(row), run_time=1.8)
         hold_for(self, N, "perk")
 
         self.play(FadeOut(caption), run_time=0.3)
@@ -595,8 +600,8 @@ class Beat3_LatenteLast(Scene):
          "Summer air carries more than heat: the humid outdoor air brings water vapour into the room.",
          "Sommerluft trägt mehr als Wärme: Die feuchte Außenluft bringt Wasserdampf in den Raum."),
         ("dx",
-         r"Outdoor air at $32\,°\mathrm{C}$ and $50\,\%$ holds $15\,\mathrm{g/kg}$; the room at $26\,°\mathrm{C}$ and $50\,\%$ holds $10.5\,\mathrm{g/kg}$. Thus $\Delta x = 4.5\,\mathrm{g/kg}$.",
-         r"Bei $32\,°\mathrm{C}$ und $50\,\%$ hat die Außenluft $15\,\mathrm{g/kg}$, die Raumluft bei $26\,°\mathrm{C}$ nur $10{,}5\,\mathrm{g/kg}$: $\Delta x = 4{,}5\,\mathrm{g/kg}$."),
+         r"Outside $32\,°\mathrm{C}$/$50\,\%$: $15\,\mathrm{g/kg}$; room $26\,°\mathrm{C}$: $10.5\,\mathrm{g/kg}$.\n$\Delta x = 4.5\,\mathrm{g/kg}$ — humidity drives the latent flow as $\Delta\theta$ drives the sensible one.",
+         r"Außen $32\,°\mathrm{C}$/$50\,\%$: $15\,\mathrm{g/kg}$; Raum $26\,°\mathrm{C}$: $10{,}5\,\mathrm{g/kg}$.\n$\Delta x = 4{,}5\,\mathrm{g/kg}$ — Feuchte treibt den latenten Strom wie $\Delta\theta$ den sensiblen."),
         ("formula",
          r"The latent ventilation load $\dot{Q}_{\mathrm{V,lat}}$ is density $\rho$ times latent heat $r$ times $\Delta x$ times volume flow $q_{v,\mathrm{R}}$.",
          r"Die latente Lüftungslast $\dot{Q}_{\mathrm{V,lat}}$ ist Dichte $\rho$ mal Verdampfungswärme $r$ mal $\Delta x$ mal Volumenstrom $q_{v,\mathrm{R}}$."),

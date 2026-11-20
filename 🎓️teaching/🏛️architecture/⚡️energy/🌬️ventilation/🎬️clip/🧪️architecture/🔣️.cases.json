@@ -108,5 +108,18 @@
     "x_text": 1.2,
     "safe_margin": 0.3,
     "expected_en": "Dwelling"
+  },
+  "particle_path_arrows": {
+    "chapters": [
+      "⚙️mechanical",
+      "❓️need",
+      "🌡️heat-flow",
+      "📦️volume",
+      "🤝️handoff",
+      "🪟️natural"
+    ],
+    "visible_default_in_ventilation": false,
+    "max_stroke_opacity_when_hidden": 0.0,
+    "max_tip_fill_opacity_when_hidden": 0.0
   }
 }

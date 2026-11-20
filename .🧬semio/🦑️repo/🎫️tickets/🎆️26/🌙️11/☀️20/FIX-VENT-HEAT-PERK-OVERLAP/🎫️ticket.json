@@ -1,0 +1,9 @@
+{
+  "id": "2026/11/20/FIX-VENT-HEAT-PERK-OVERLAP",
+  "title": "Clear Unit Cards Before Perk Formula",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-20T10:33:26",
+  "closed": "2026-11-20T10:33:26",
+  "summary": "Hide SI/building unit cards before the yellow perk line starts counting."
+}

@@ -1,0 +1,13 @@
+{
+  "id": "2026/11/20/FIX-VENT-STACK-INLET-RING",
+  "title": "Clear Inlet Labels From Comfort Ring",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-20T14:56:41",
+  "goal": null,
+  "closed": "2026-11-20T15:00:48",
+  "summary": "Zuluftöffnung + A stacked above the arrow; comfort ring only around the opening.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌿️natural/🐍️.py"
+  ]
+}

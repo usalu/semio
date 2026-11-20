@@ -1,0 +1,12 @@
+{
+  "id": "2026/11/20/FIX-VENT-NIGHT-SUN-LINES",
+  "title": "Sun Radiation As Lines Not Arrows",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-20T15:01:22",
+  "closed": "2026-11-20T15:01:22",
+  "summary": "Beat5 night purge sun rays and leak path use Line instead of Arrow.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌿️natural/🐍️.py"
+  ]
+}

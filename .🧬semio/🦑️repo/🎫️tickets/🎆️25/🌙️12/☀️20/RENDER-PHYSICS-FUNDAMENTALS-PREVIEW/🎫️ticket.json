@@ -1,0 +1,21 @@
+{
+  "id": "2026/11/20/RENDER-PHYSICS-FUNDAMENTALS-PREVIEW",
+  "title": "Render Full Fundamentals Preview Video",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-20T16:49:15",
+  "reopened": "2026-11-20T16:54:43",
+  "closed": "2026-11-20T16:59:41",
+  "summary": "Rendered all 9 physical_fundamentals scenes at 480p15 and concatenated (~18.5 min).",
+  "files": {
+    "created": [
+      "/Users/niloufarghandehariyoon/Developer/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️25/🌙️12/☀️20/RENDER-PHYSICS-FUNDAMENTALS-PREVIEW/SUMMARY.md",
+      "/Users/niloufarghandehariyoon/Developer/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️25/🌙️12/☀️20/RENDER-PHYSICS-FUNDAMENTALS-PREVIEW/CHANGES.md",
+      "/Users/niloufarghandehariyoon/Developer/semio/videos/preview/de/speaker/rendered/Full_PhysicalFundamentals_speaker_de_480p15.mp4"
+    ],
+    "updated": [
+      "/Users/niloufarghandehariyoon/Developer/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️25/🌙️12/☀️20/RENDER-PHYSICS-FUNDAMENTALS-PREVIEW/🎫️ticket.json"
+    ],
+    "removed": []
+  }
+}

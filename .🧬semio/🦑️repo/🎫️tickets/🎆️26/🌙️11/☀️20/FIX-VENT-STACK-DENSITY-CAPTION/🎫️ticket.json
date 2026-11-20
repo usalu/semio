@@ -1,0 +1,12 @@
+{
+  "id": "2026/11/20/FIX-VENT-STACK-DENSITY-CAPTION",
+  "title": "Shorten Beat4 Density Caption For Sideview",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-20T16:43:57",
+  "closed": "2026-11-20T16:43:57",
+  "summary": "Beat4 density German caption exceeded 2 lines and crashed Sideview; shortened.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌿️natural/🐍️.py"
+  ]
+}

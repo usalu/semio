@@ -1,0 +1,12 @@
+{
+  "id": "2026/11/20/FIX-VENT-NEED-PETTENKOFER-LABEL",
+  "title": "Shorten Pettenkofer Limit Label",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-20T11:08:51",
+  "closed": "2026-11-20T11:08:51",
+  "summary": "Pettenkofer tag shortened and moved left of CO₂ gauge to clear Feuchte.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py"
+  ]
+}

@@ -92,7 +92,11 @@ test-results
 /playwright/.auth/
 #--------------------------------------OUTPUTS--------------------------------------
 /media/
+/videos/
+.🧬semio/🎓️teaching/⚡️cache/
 **/.sideview/
+# Preview/render movies under energy (🖼️posters png stay tracked)
+🎓️teaching/🏛️architecture/⚡️energy/**/*.mp4
 🎓️teaching/🏛️architecture/⚡️energy/**/📍️trace/
 🎓️teaching/🏛️architecture/⚡️energy/**/⏱️timing/
 **/🤖️generated/

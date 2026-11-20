@@ -32,8 +32,8 @@ class Beat1_Fahrplan(RoadmapScene):
          "This video follows six steps.",
          "Dieses Video folgt sechs Schritten."),
         ("grundlagen",
-         r"First, the basics: the heat flow $\Phi$ and the temperature difference $\Delta\theta$.",
-         r"Zuerst die Grundlagen: der Wärmestrom $\Phi$ und die Temperaturdifferenz $\Delta\theta$."),
+         r"First, the basics: the heat flow $\dot{Q}$ and the temperature difference $\Delta\theta$.",
+         r"Zuerst die Grundlagen: der Wärmestrom $\dot{Q}$ und die Temperaturdifferenz $\Delta\theta$."),
         ("leitung",
          r"Then conduction through the envelope: the $U$-value, the conductivity $\lambda$ and thermal bridges $\psi$.",
          r"Dann die Wärmeleitung durch die Hülle: der $U$-Wert, die Wärmeleitfähigkeit $\lambda$ und Wärmebrücken $\psi$."),
@@ -53,7 +53,7 @@ class Beat1_Fahrplan(RoadmapScene):
 
     HEADING = ("The roadmap of this video", "Der Fahrplan des Videos")
     STEPS = [
-        {"key": "grundlagen", "name": ("Basics", "Grundlagen"), "symbols": r"\Phi,\;\Delta\theta", "pictogram": "thermometer"},
+        {"key": "grundlagen", "name": ("Basics", "Grundlagen"), "symbols": r"\dot{Q},\;\Delta\theta", "pictogram": "thermometer"},
         {"key": "leitung", "name": ("Conduction", "Wärmeleitung"), "symbols": r"U,\;\lambda,\;\psi", "pictogram": "wall"},
         {"key": "lueftung", "name": ("Ventilation", "Lüftung"), "symbols": r"\dot{Q}_{\mathrm{V}}", "pictogram": "air-room",
          "receives": [{"text": (r"←\;\text{Ventilation:}\;\dot{Q}_{\mathrm{V}}", r"←\;\text{Lüftung:}\;\dot{Q}_{\mathrm{V}}"), "color": "P_ORANGE"}]},

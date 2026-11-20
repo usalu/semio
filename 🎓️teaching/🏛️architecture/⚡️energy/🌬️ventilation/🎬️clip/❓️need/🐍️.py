@@ -43,8 +43,11 @@ P_RED = _manim_module.P_RED
 P_BLUE = _manim_module.P_BLUE
 P_GREEN = _manim_module.P_GREEN
 smooth_path = _manim_module.smooth_path
-flow_guides = _manim_module.flow_guides
+def flow_guides(*args, visible: bool = False, **kwargs):
+    """🧭 Particle-path guides — kept, temporarily hidden; particles stay visible."""
+    return _manim_module.flow_guides(*args, visible=visible, **kwargs)
 flow_animation = _manim_module.flow_animation
+chip = _manim_module.chip
 meter = _manim_module.meter
 bind_meter = _manim_module.bind_meter
 recolor_meter = _manim_module.recolor_meter
@@ -53,6 +56,7 @@ math_label = _manim_module.math_label
 math_panel = _manim_module.math_panel
 math_readout = _manim_module.math_readout
 label_number = _manim_module.label_number
+UI_SPACING = _manim_module.UI_SPACING
 caption_bar = _manim_module.caption_bar
 swap_caption = _manim_module.swap_caption
 hold_for = _manim_module.hold_for
@@ -126,11 +130,12 @@ def _room(center, width, height, color=P_WHITE, t: float = 0.16, *,
     return section_material(VGroup(body, section["floor"]))
 
 
-def _window(pos, height=1.15, width=0.16, color=P_CYAN, inward=1):
-    """🪟 Recessed sash projected inward within a structural wall aperture."""
+def _window(pos, height=1.15, width=0.22, color=P_CYAN, inward=1, *, open_fraction: float = 0.0):
+    """🪟 Shared outer-leaf casement; ajar when ``open_fraction`` > 0."""
     win = window_glyph(float(pos[0]), float(pos[1]) - height / 2, float(pos[1]) + height / 2,
-                       depth=0.8 * height, wall=width, color=color, inward=inward)
-    win["sash"].become(window_opening(win))
+                       depth=0.55 * height, wall=max(0.22, width), color=color, inward=inward)
+    if open_fraction > 0:
+        win["sash"].become(window_opening(win, fraction=open_fraction))
     win["group"].window = win
     return win["group"]
 
@@ -234,8 +239,8 @@ class Beat1_Lueftungsbedarf(Scene):
          r"More people need more air: about $30\,\mathrm{m^3/h}$ per person is the planning order of magnitude.",
          r"Mehr Personen brauchen mehr Luft: etwa $30\,\mathrm{m^3/h}$ je Person."),
         ("jahreszeit",
-         "This need exists in winter as much as in summer, so ventilation is always needed alongside heating and cooling.",
-         "Diesen Bedarf gibt es im Winter wie im Sommer, darum bedarf es immer der Lüftung neben Heizung und Kühlung."),
+         "This need exists in winter as much as in summer: ventilation is always necessary in addition to heating and cooling.",
+         "Diesen Bedarf gibt es im Winter wie im Sommer: Lüftung ist neben Heizen und Kühlen immer notwendig."),
     ]
 
     def construct(self):
@@ -250,7 +255,7 @@ class Beat1_Lueftungsbedarf(Scene):
         caption = caption_bar(subtitle_text(N, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        room_c, room_w, room_h = np.array([-2.7, 0.45, 0.0]), 5.2, 2.5
+        room_c, room_w, room_h = np.array([-3.15, 1.35, 0.0]), 5.0, 2.2
         shell = _room(room_c, room_w, room_h, window_side="both", window_y=room_c[1] + 0.3)
         win_y = room_c[1] + 0.3
         left_win = _window(np.array([room_c[0] - room_w / 2, win_y, 0.0]))
@@ -261,7 +266,7 @@ class Beat1_Lueftungsbedarf(Scene):
         heads = [p.get_top() + UP * 0.05 for p in people]
 
         co2, moist, odor = ValueTracker(0.0), ValueTracker(0.0), ValueTracker(0.0)
-        gx = {"co2": 1.5, "moist": 4.9, "odor": 6.0}
+        gx = {"co2": 1.55, "moist": 5.35, "odor": 6.35}
         g_co2 = _gauge(gx["co2"], 0.35, CO2_COLOR, co2)
         g_moist = _gauge(gx["moist"], 0.35, MOISTURE_COLOR, moist)
         g_odor = _gauge(gx["odor"], 0.35, ODOUR_COLOR, odor)
@@ -275,13 +280,15 @@ class Beat1_Lueftungsbedarf(Scene):
             return Line(np.array([x - 0.31, y, 0.0]), np.array([x + 0.31, y, 0.0]), color=P_WHITE, stroke_width=2.2)
 
         tick_out, tick_pk = tick(g_co2, gx["co2"], 0.42), tick(g_co2, gx["co2"], 1.0)
-        def tag(name: str, value: str, y: float):
-            lines = VGroup(math_label(rf"\text{{{name}}}", size=LABEL_FONT_SIZE), math_label(value, size=LABEL_FONT_SIZE, color=P_WHITE))
-            lines.arrange(DOWN, buff=0.08, aligned_edge=LEFT)
-            return lines.move_to(np.array([gx["co2"] + 0.45 + lines.width / 2, y, 0.0]))
+        def tag(name: str, value: str, y: float, *, lift: float = 0.0):
+            # Short tags sit just right of the CO₂ track — clear of the room and of Feuchte.
+            lines = VGroup(*[math_label(rf"\text{{{part}}}", size=LABEL_FONT_SIZE) for part in name.split("|")], math_label(value, size=LABEL_FONT_SIZE, color=P_WHITE))
+            lines.arrange(DOWN, buff=0.06, aligned_edge=LEFT)
+            return lines.move_to(np.array([gx["co2"] + 0.50 + lines.width / 2, y + lift, 0.0]))
 
         tag_out = tag(tr("Outdoor air", "Außenluft"), r"420\,\mathrm{ppm}", tick_out.get_y())
-        tag_pk = tag(tr("Limit after Pettenkofer (1858)", "Grenzwert nach Pettenkofer (1858)"), r"1000\,\mathrm{ppm}", tick_pk.get_y())
+        # Year lives in the DIN citation; keep this label short so it never spans the track.
+        tag_pk = tag(tr("Pettenkofer limit", "Grenzwert nach|Pettenkofer"), r"1000\,\mathrm{ppm}", tick_pk.get_y(), lift=0.30)
         read_co2 = math_readout(lambda: rf"c = {label_number(co2.get_value() * 1000)}\,\mathrm{{ppm}}", np.array([gx["co2"], -1.35, 0.0]),
                                 color=CO2_COLOR, edge="center")
         read_lat = math_readout(lambda: rf"\dot{{Q}}_{{\mathrm{{i,lat}}}} = {label_number(moist.get_value() * PEOPLE * LATENT_PER_PERSON_W)}\,\mathrm{{W}}",
@@ -332,7 +339,9 @@ class Beat1_Lueftungsbedarf(Scene):
         hold_for(self, N, "feuchte")
 
         caption = swap_caption(self, caption, subtitle_text(N, "geruch"))
-        self.play(FadeIn(odor_col), odor.animate.set_value(1.0), run_time=3.0)
+        # Empty column first (same as Feuchte), then the fill rises — never FadeIn a full bar.
+        self.play(FadeIn(odor_col), run_time=0.8)
+        self.play(odor.animate.set_value(1.0), run_time=4.0)
         hold_for(self, N, "geruch")
 
         caption = swap_caption(self, caption, subtitle_text(N, "frisch"))
@@ -347,57 +356,109 @@ class Beat1_Lueftungsbedarf(Scene):
         def breeze(rt):
             return [_streams([(fresh, AIR_COLOR)], rt, speed=0.5, waves=4)]
 
-        self.play(FadeIn(fresh_guides), FadeIn(tag_in), FadeIn(tag_exit), *breeze(1.0), run_time=1.0)
+        self.play(FadeIn(fresh_guides), FadeIn(tag_in), FadeIn(tag_exit),
+                  open_window(left_win.window, fraction=0.55), open_window(right_win.window, fraction=0.55),
+                  *breeze(1.0), run_time=1.0)
         self.play(co2.animate.set_value(0.42), moist.animate.set_value(0.08), odor.animate.set_value(0.06),
                   recolor_meter(g_co2, CO2_COLOR), *breeze(4.0), run_time=4.0)
         hold_for(self, N, "frisch", during=breeze)
         _hide(self, co2_col, moist_col, odor_col, co2_dots, drops, smells, fresh_guides, tag_in, tag_exit, run_time=0.8)
 
         caption = swap_caption(self, caption, subtitle_text(N, "personen"))
+        room_floor = float(room_c[1] - room_h / 2)
+        room_right = float(room_c[0] + room_w / 2)
+        # Counting chips sit fully below the slab — never on the floor line.
+        pad = 2.2 * UI_SPACING
+        probe = math_label(rf"{label_number(PER_PERSON_M3H)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}",
+                           ORIGIN, size=LABEL_FONT_SIZE, color=AIR_COLOR)
+        chip_h = probe.height + 2 * pad
+        rate_y = room_floor - 0.28 - chip_h / 2
         blocks, texts = VGroup(), VGroup()
         for x in xs:
-            blocks.add(Rectangle(width=1.1, height=0.44, color=AIR_COLOR, stroke_width=2, fill_color=AIR_COLOR,
-                                 fill_opacity=0.22).move_to(np.array([x, -1.22, 0.0])))
-            texts.add(math_label(rf"{label_number(PER_PERSON_M3H)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}", np.array([x, -1.29, 0.0]),
-                                 size=LABEL_FONT_SIZE, color=AIR_COLOR))
-        n_tag = math_label(rf"{PEOPLE}\,\times", np.array([-5.75, -1.29, 0.0]), color=P_ORANGE, edge="center")
+            label = math_label(rf"{label_number(PER_PERSON_M3H)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}",
+                               np.array([x, rate_y, 0.0]), size=LABEL_FONT_SIZE, color=AIR_COLOR)
+            box = Rectangle(width=label.width + 2 * pad, height=label.height + 2 * pad,
+                            color=AIR_COLOR, stroke_width=2, fill_color=AIR_COLOR, fill_opacity=0.22)
+            box.move_to(label.get_center())
+            blocks.add(box)
+            texts.add(label)
+        chip_half = blocks[0].width / 2
+        n_tag = math_label(rf"{PEOPLE}\,\times", np.array([xs[0] - chip_half - 0.55, rate_y, 0.0]),
+                           color=P_ORANGE, edge="center")
         k = ValueTracker(0.0)
         v_total = math_readout(lambda: rf"= {label_number(PER_PERSON_M3H * k.get_value())}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}",
-                               np.array([-0.2, -1.29, 0.0]), color=P_WHITE, edge="left")
-        self.play(FadeIn(n_tag), run_time=0.6)
+                               np.array([xs[-1] + chip_half + 0.25, rate_y, 0.0]), color=P_WHITE, edge="left")
+        count_strip = VGroup(n_tag, blocks, texts, v_total)
+        self.play(FadeIn(n_tag), run_time=0.5)
         self.add(v_total)
         for i, (b, t, p) in enumerate(zip(blocks, texts, people)):
             self.play(FadeIn(b), FadeIn(t), Indicate(p, scale_factor=1.0), k.animate.set_value(i + 1.0),
-                      run_time=3.2 / PEOPLE)
+                      run_time=3.0 / PEOPLE)
+        # Formula owns the numbers — blue boxes and the 4× / 30 / =120 texts fade out together, then the panel appears.
+        # No morph snaps: those copies used to sit in the strip positions for the whole fly-in.
         panel = math_panel([
             (None, r"\dot{V}_{\mathrm{Pers}}", AIR_COLOR), (None, "=", P_WHITE), ("n", f"{PEOPLE}", P_ORANGE),
             (None, r"\cdot", P_WHITE), ("blk", rf"{label_number(PER_PERSON_M3H)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}", AIR_COLOR),
             (None, "=", P_WHITE), ("tot", rf"{label_number(PER_PERSON_M3H * PEOPLE)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}", P_WHITE),
-        ], color=AIR_COLOR)
-        _fill_panel(self, stage, panel, {"n": n_tag, "blk": texts[0], "tot": v_total})
+        ], color=AIR_COLOR, edge_buff=1.75)
+        row, box, items = panel
+        for part in row.get_family():
+            part._layout_zone = "formula"
+        for mob in (n_tag, blocks, texts, v_total, count_strip):
+            for part in mob.get_family():
+                part.clear_updaters()
+        self.play(
+            FadeOut(blocks), FadeOut(texts), FadeOut(n_tag), FadeOut(v_total),
+            FadeIn(row), Create(box),
+            run_time=0.8,
+        )
+        self.remove(blocks, texts, n_tag, v_total, count_strip)
         hold_for(self, N, "personen")
 
         caption = swap_caption(self, caption, subtitle_text(N, "jahreszeit"))
 
-        def season_card(name: str, color: str, theta: float, icon, at):
+        def season_card(name: str, color: str, theta: float, icon):
             lines = VGroup(body_text(name, font_size=BODY_FONT_SIZE, color=color),
-                           math_label(rf"\theta_{{\mathrm{{e}}}} = {label_number(theta)}\,°\mathrm{{C}}", size=LABEL_FONT_SIZE, color=color),
+                           math_label(rf"\theta_{{\mathrm{{e}}}} = {label_number(theta)}\,°\mathrm{{C}}",
+                                      size=LABEL_FONT_SIZE, color=color),
                            math_label(rf"\dot{{V}}_{{\mathrm{{Pers}}}} = {label_number(PER_PERSON_M3H * PEOPLE)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}",
-                                      size=LABEL_FONT_SIZE, color=P_WHITE)).arrange(DOWN, buff=0.14, aligned_edge=LEFT)
-            frame = RoundedRectangle(width=3.7, height=1.4, corner_radius=0, color=color, stroke_width=2).move_to(at)
-            lines.move_to(at + RIGHT * 0.35)
-            return VGroup(frame, icon.move_to(at + LEFT * 1.15), lines)
+                                      size=LABEL_FONT_SIZE, color=P_WHITE)).arrange(DOWN, buff=0.1, aligned_edge=LEFT)
+            body = VGroup(icon, lines).arrange(RIGHT, buff=0.22)
+            frame = RoundedRectangle(width=max(3.15, body.width + 0.42), height=body.height + 0.3,
+                                     corner_radius=0, color=color, stroke_width=2)
+            card = VGroup(frame, body)
+            frame.move_to(ORIGIN)
+            body.move_to(ORIGIN)
+            return card
 
-        winter_icon = _room(ORIGIN, 0.8, 0.55, color=WINTER_COLOR, t=0.07)
-        summer_icon = sun_glyph(ORIGIN, color=P_YELLOW).scale(0.34)
-        card_w = season_card("Winter", WINTER_COLOR, THETA_WINTER[1], winter_icon, np.array([4.3, 0.95, 0.0]))
-        card_s = season_card(tr("Summer", "Sommer"), SUMMER_COLOR, THETA_SUMMER[1], summer_icon, np.array([4.3, -0.55, 0.0]))
-        self.play(FadeOut(VGroup(blocks, texts, n_tag, v_total)), run_time=0.6)
-        self.play(FadeIn(card_w, shift=LEFT * 0.2), run_time=1.2)
-        self.play(FadeIn(card_s, shift=LEFT * 0.2), run_time=1.2)
+        winter_icon = _room(ORIGIN, 0.7, 0.48, color=WINTER_COLOR, t=0.06)
+        summer_icon = sun_glyph(ORIGIN, color=P_YELLOW).scale(0.3)
+        card_w = season_card("Winter", WINTER_COLOR, THETA_WINTER[1], winter_icon)
+        card_s = season_card(tr("Summer", "Sommer"), SUMMER_COLOR, THETA_SUMMER[1], summer_icon)
+        season_stack = VGroup(card_w, card_s).arrange(DOWN, buff=0.38)
+        # Right column: clear of the room, clear of the formula band.
+        formula_top = float(box.get_top()[1])
+        avail_bottom = formula_top + 0.28
+        avail_top = float(room_c[1] + room_h / 2)
+        if season_stack.height > avail_top - avail_bottom:
+            season_stack.scale((avail_top - avail_bottom) * 0.92 / season_stack.height)
+        season_x = room_right + 0.4 + season_stack.width / 2
+        season_x = min(season_x, 6.4 - season_stack.width / 2)
+        season_y = 0.5 * (avail_top + avail_bottom)
+        season_stack.move_to(np.array([season_x, season_y, 0.0]))
+        if season_stack.get_bottom()[1] < avail_bottom:
+            season_stack.shift(UP * (avail_bottom - season_stack.get_bottom()[1]))
+        if season_stack.get_left()[0] < room_right + 0.3:
+            season_stack.shift(RIGHT * (room_right + 0.3 - season_stack.get_left()[0]))
+        self.play(FadeIn(card_w, shift=LEFT * 0.15), run_time=0.9)
+        self.play(FadeIn(card_s, shift=LEFT * 0.15), run_time=0.9)
+        always = chip(tr("Ventilation is always necessary in addition to heating and cooling", "Lüftung ist neben Heizen und Kühlen immer notwendig"),
+                      P_YELLOW, font_size=LABEL_FONT_SIZE).move_to(np.array([0.0, 2.95, 0.0]))
+        self.play(FadeIn(always, shift=UP * 0.1), run_time=0.6)
         hold_for(self, N, "jahreszeit")
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)
+
 #endregion
 
 
@@ -416,8 +477,8 @@ class Beat2_Lueftungsweg(Scene):
          "In winter, warm room air leaves at the top and cold outdoor air enters at the bottom.",
          "Im Winter verlässt warme Raumluft das Haus oben, kalte Außenluft strömt unten nach."),
         ("waerme_winter",
-         r"Heat leaves with the air. This heat flow $\Phi$ is the load $\dot{Q}_{\mathrm{V}}$ at the room, V for ventilation. The temperature difference $\Delta\theta$ is $20\,\mathrm{K}$.",
-         r"Mit der Luft geht Wärme verloren. Dieser Wärmestrom $\Phi$ ist als Last am Raum $\dot{Q}_{\mathrm{V}}$, V für Lüftung. Die Temperaturdifferenz $\Delta\theta$ beträgt $20\,\mathrm{K}$."),
+         r"Heat leaves with the air. This heat flow is the load $\dot{Q}_{\mathrm{V}}$ at the room, V for ventilation. The temperature difference $\Delta\theta$ is $20\,\mathrm{K}$.",
+         r"Mit der Luft geht Wärme verloren. Dieser Wärmestrom ist die Last $\dot{Q}_{\mathrm{V}}$ am Raum, V für Lüftung. Die Temperaturdifferenz $\Delta\theta$ beträgt $20\,\mathrm{K}$."),
         ("sommer",
          "In summer the flow reverses: hot outdoor air enters at the top, cooled room air leaves at the bottom.",
          "Im Sommer kehrt sich die Strömung um: Heiße Außenluft tritt oben ein, gekühlte Raumluft unten aus."),

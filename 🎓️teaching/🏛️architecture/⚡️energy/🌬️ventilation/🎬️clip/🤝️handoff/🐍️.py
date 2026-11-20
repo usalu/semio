@@ -47,7 +47,9 @@ P_RED = _manim_module.P_RED
 P_BLUE = _manim_module.P_BLUE
 P_GREEN = _manim_module.P_GREEN
 smooth_path = _manim_module.smooth_path
-flow_guides = _manim_module.flow_guides
+def flow_guides(*args, visible: bool = False, **kwargs):
+    """🧭 Particle-path guides — kept, temporarily hidden; particles stay visible."""
+    return _manim_module.flow_guides(*args, visible=visible, **kwargs)
 flow_animation = _manim_module.flow_animation
 chip = _manim_module.chip
 dim_chip = _manim_module.dim_chip
@@ -195,10 +197,12 @@ def _series_chain(y):
 
 #region Beat 1 – Zusammenfassung
 
-CARD_Y, CARD_STEP = 1.36, 1.5
+CARD_Y, CARD_STEP = 1.68, 1.5
 X_FORMULA, X_WINTER, X_SUMMER = -6.55, 1.45, 4.85
-Y_HEAD = 0.22
-Y_ROWS = (-0.34, -0.80, -1.26, -1.72, -2.18)
+# Heads under the cards; rule under the heads; first formula baseline clears a tall m³/h fraction.
+Y_HEAD = 0.66
+RULE_Y = 0.30
+Y_ROWS = (-0.62, -1.10, -1.58, -2.06, -2.42)
 
 _CARD_EN = {"Volumen": "Volume", "Luftwechsel": "Air change", "Volumenstrom": "Volume flow", "Dichte": "Density",
             "Wärmekapazität": "Heat capacity", "Winter / Sommer": "Winter / Summer", "Feuchtedifferenz": "Humidity diff.",
@@ -290,7 +294,8 @@ class Beat1_Zusammenfassung(Scene):
             np.array([X_WINTER, Y_HEAD, 0.0]))
         head_s = body_text(tr("Summer · Cooling", "Sommer · Kühltechnik"), font_size=LABEL_FONT_SIZE, color=COL_COOL).move_to(
             np.array([X_SUMMER, Y_HEAD, 0.0]))
-        rule = Line(np.array([-6.6, Y_HEAD - 0.24, 0.0]), np.array([6.6, Y_HEAD - 0.24, 0.0]), color=P_WHITE, stroke_width=1.2,
+        # Rule only under Winter/Sommer heads — starts right of the formula band.
+        rule = Line(np.array([X_WINTER - 1.05, RULE_Y, 0.0]), np.array([6.55, RULE_Y, 0.0]), color=P_WHITE, stroke_width=1.2,
                     stroke_opacity=0.35)
 
         def watts(amount, tracker, x, y, color):
@@ -392,7 +397,8 @@ class Beat1_Zusammenfassung(Scene):
         ring_sens = SurroundingRectangle(res2w, color=COL_HEAT, buff=_theme_module.UI_SPACING, corner_radius=0, stroke_width=3)
         ring_lat = DashedVMobject(SurroundingRectangle(res3w, color=COL_DX, buff=_theme_module.UI_SPACING, corner_radius=0, stroke_width=3), num_dashes=24)
         note = body_text(tr("heating load: sensible only (convention)", "Heizlast: nur fühlbar (Konvention)"), font_size=LABEL_FONT_SIZE - 2, color=COL_HEAT)
-        note.scale_to_fit_width(min(note.width, 2.15)).move_to(np.array([3.3, (Y_ROWS[1] + Y_ROWS[2]) / 2, 0.0]))
+        # Sit in the free mid gap between winter/summer watt columns, clear of both rings.
+        note.scale_to_fit_width(min(note.width, 1.85)).move_to(np.array([(X_WINTER + X_SUMMER) / 2, (Y_ROWS[1] + Y_ROWS[2]) / 2 - 0.06, 0.0]))
         caption = swap_caption(self, caption, subtitle_text(N, "conv"))
         self.play(Create(ring_sens), Create(ring_lat), FadeIn(note), run_time=1.2)
         hold_for(self, N, "conv")

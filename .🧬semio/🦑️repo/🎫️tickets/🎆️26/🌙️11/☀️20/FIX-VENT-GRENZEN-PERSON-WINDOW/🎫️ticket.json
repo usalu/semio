@@ -1,0 +1,12 @@
+{
+  "id": "2026/11/20/FIX-VENT-GRENZEN-PERSON-WINDOW",
+  "title": "Person In Front Of Window In Grenzen",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-20T15:03:01",
+  "closed": "2026-11-20T15:03:01",
+  "summary": "Beat6 occupant stands at the left window, mirrored into the room; airflow retargeted.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌿️natural/🐍️.py"
+  ]
+}

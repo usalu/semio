@@ -1,0 +1,10 @@
+{
+  "id": "2026/11/20/SMOOTH-FUNDAMENTALS-TILE-GRID",
+  "title": "Smooth Thermal Mass Tile Grid",
+  "status": "closed",
+  "client": "cursor-chat",
+  "goal": "ENERGY",
+  "opened": "2026-11-20T17:22:04",
+  "closed": "2026-11-20T17:23:01",
+  "summary": "Smoothed tile-grid expansion and moved 5 m dim off the formula."
+}

@@ -99,6 +99,17 @@ class ArchitectureTest(unittest.TestCase):
         self.assertGreater(tilted[3][0], closed[3][0])
         self.assertLess(tilted[3][1], closed[3][1])
 
+    def test_house_windows_flush_outer_leaf_with_joinery(self):
+        case = CASES["house_window_outer"]
+        house = VISUALS.house_section(scale=case["scale"])
+        outer = house["bottom_left"][0]
+        for window in house["windows"]:
+            self.assertAlmostEqual(window["outer"], outer, delta=case["outer_tolerance"])
+            self.assertGreaterEqual(len(window["joinery"]), case["min_joinery"])
+            self.assertGreaterEqual(len(window["sash"][1]), case["min_muntins"])
+            xs = [v[0] for v in window["sash"][0].get_vertices()]
+            self.assertAlmostEqual(min(xs), outer, delta=case["outer_tolerance"])
+
     def test_both_room_walls_have_apertures_when_requested(self):
         room = VISUALS.room_section([0, 0, 0], window_side="both")
         self.assertIsNotNone(room["right_glass"])
@@ -107,6 +118,9 @@ class ArchitectureTest(unittest.TestCase):
         for side in (room["wall_l"], room["wall_r"]):
             self.assertAlmostEqual(side[0].get_top()[1], room["win_lo"])
             self.assertAlmostEqual(side[1].get_bottom()[1], room["win_hi"])
+        self.assertEqual(len(room["windows"]), 2)
+        self.assertAlmostEqual(room["windows"][0]["outer"], room["glass_x"] - room["wall"] / 2)
+        self.assertAlmostEqual(room["windows"][1]["outer"], room["right_glass_x"] + room["wall"] / 2)
 
 
 

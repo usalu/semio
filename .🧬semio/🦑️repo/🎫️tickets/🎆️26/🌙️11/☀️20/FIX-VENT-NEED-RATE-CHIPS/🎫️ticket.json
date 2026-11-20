@@ -1,0 +1,9 @@
+{
+  "id": "2026/11/20/FIX-VENT-NEED-RATE-CHIPS",
+  "title": "Fit Per-Person Rate Chip Boxes",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-20T10:30:36",
+  "closed": "2026-11-20T10:30:36",
+  "summary": "Size cyan 30 m³/h chips from label bounds with padding."
+}

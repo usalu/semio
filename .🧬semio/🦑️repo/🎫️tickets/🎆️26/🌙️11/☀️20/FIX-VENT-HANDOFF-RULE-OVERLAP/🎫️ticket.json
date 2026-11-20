@@ -1,0 +1,12 @@
+{
+  "id": "2026/11/20/FIX-VENT-HANDOFF-RULE-OVERLAP",
+  "title": "Clear Handoff Rule From Formula Units",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-20T12:15:56",
+  "closed": "2026-11-20T12:15:56",
+  "summary": "Season rule no longer cuts m³/h; heads/rows respaced; rule limited to season columns.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🐍️.py"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "id": "2026/11/20/FIX-VENT-STACK-NO-PERSON-BOX",
+  "title": "No Cyan Box Around Person",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-20T16:55:17",
+  "closed": "2026-11-20T16:55:17",
+  "summary": "Beat4 comfort beat rings only the inlet; person has no SurroundingRectangle.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌿️natural/🐍️.py"
+  ]
+}

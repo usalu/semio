@@ -15,7 +15,7 @@
   "house": {
     "width": 3.6,
     "height": 2.4,
-    "wall": 0.14,
+    "wall": 0.18,
     "deck": 0.1,
     "floor": 0.12,
     "eave": 0.26,

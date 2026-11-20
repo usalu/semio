@@ -1,0 +1,22 @@
+{
+  "id": "2026/11/20/SMOOTH-FUNDAMENTALS-TANK-TO-AREA",
+  "title": "Smooth Tank to Area Fade",
+  "status": "closed",
+  "client": "cursor-chat",
+  "goal": "ENERGY",
+  "opened": "2026-11-20T17:05:48",
+  "summary": "Replaced fade crossfade with axis-aligned replace morph of tank fill into chart area.",
+  "files": {
+    "created": [
+      "/Users/niloufarghandehariyoon/Developer/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/SMOOTH-FUNDAMENTALS-TANK-TO-AREA/SUMMARY.md",
+      "/Users/niloufarghandehariyoon/Developer/semio/videos/preview/de/speaker/rendered/Beat1_Leistung_480p15.mp4"
+    ],
+    "updated": [
+      "/Users/niloufarghandehariyoon/Developer/semio/🎓️teaching/🏛️architecture/⚡️energy/🧪physics/🎬️clip/🧪fundamentals/🐍️.py",
+      "/Users/niloufarghandehariyoon/Developer/semio/🎓️teaching/🏛️architecture/🔀️morph/🎭️stage/🐍️.py"
+    ],
+    "removed": []
+  },
+  "reopened": "2026-11-20T17:30:46",
+  "closed": "2026-11-20T21:49:32"
+}

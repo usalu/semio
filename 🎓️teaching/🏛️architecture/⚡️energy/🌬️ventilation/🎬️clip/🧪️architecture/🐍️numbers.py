@@ -3,6 +3,7 @@
 import ast
 import importlib
 import json
+import re
 import sys
 import unittest
 from pathlib import Path
@@ -30,6 +31,16 @@ def natural():
 
 class VentilationNumbers(unittest.TestCase):
     """🔢 Tilted window, stack effect and latent hand-over."""
+
+    def test_air_density_belongs_to_a_stated_temperature(self):
+        spec = CASES["airDensity"]
+        for case in spec["cases"]:
+            ideal = spec["pressurePa"] / (spec["gasConstant"] * (273.15 + case["celsius"]))
+            self.assertAlmostEqual(ideal, case["kgM3"], places=3)
+        text = (CHAPTERS / "🌡️heat-flow" / "🐍️.py").read_text(encoding="utf-8")
+        for stated in spec["stated"]:
+            rho, temperature = re.escape(stated["rounded"]).replace(r"\.", "[.,]"), re.escape(f"{stated['celsius']}\\,°\\mathrm{{C}}")
+            self.assertRegex(text, rf"(?s){rho}.{{0,160}}{temperature}|{temperature}.{{0,160}}{rho}")
 
     def test_tilted_window_share_after_five_minutes(self):
         case = CASES["tilt"]

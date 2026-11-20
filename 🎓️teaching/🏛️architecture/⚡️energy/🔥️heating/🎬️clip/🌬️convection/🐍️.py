@@ -147,8 +147,8 @@ class Beat1_LueftungImWinter(Scene):
          "In winter the house loses heat on two paths: through the envelope and with the air that ventilation exchanges.",
          "Im Winter verliert das Haus Wärme auf zwei Wegen: durch die Hülle und mit der Luft, die die Lüftung austauscht."),
         ("formula",
-         r"The ventilation heat flow $\Phi$, as a load at the room, is $\dot{Q}_{\mathrm{V}} = V \cdot n \cdot c_{\mathrm{Luft}} \cdot \Delta\theta$.",
-         r"Der Lüftungswärmestrom $\Phi$, als Last am Raum, ist $\dot{Q}_{\mathrm{V}} = V \cdot n \cdot c_{\mathrm{Luft}} \cdot \Delta\theta$."),
+         r"The ventilation heat flow, as a load at the room, is $\dot{Q}_{\mathrm{V}} = V \cdot n \cdot c_{\mathrm{Luft}} \cdot \Delta\theta$.",
+         r"Der Lüftungswärmestrom, als Last am Raum, ist $\dot{Q}_{\mathrm{V}} = V \cdot n \cdot c_{\mathrm{Luft}} \cdot \Delta\theta$."),
         ("recap",
          r"A short reminder: $\dot{V} = V \cdot n = 220\,\mathrm{m^{3}/h}$, $c_{\mathrm{Luft}} = 0.34\,\mathrm{Wh/(m^{3}K)}$ and $\Delta\theta = 20\,\mathrm{K}$ in winter — about $1500\,\mathrm{W}$.",
          r"Kurz zur Erinnerung: $\dot{V} = V \cdot n = 220\,\mathrm{m^{3}/h}$, $c_{\mathrm{Luft}} = 0{,}34\,\mathrm{Wh/(m^{3}K)}$ und im Winter $\Delta\theta = 20\,\mathrm{K}$ — rund $1500\,\mathrm{W}$."),
@@ -182,21 +182,19 @@ class Beat1_LueftungImWinter(Scene):
                       hs["roof_peak"] + DOWN * 0.14, tl + RIGHT * t + DOWN * 0.06,
                       stroke_width=0, fill_color=PASTEL_ORANGE, fill_opacity=0.0).set_z_index(-1)
         y_mid = hs["level_1"].get_center()[1]
-        intake, exhaust = [], []
-        for win, (yf, yc) in zip(hs["windows"], ((bl[1], y_mid), (y_mid, tl[1]))):
-            x_w, sill, lintel = win["x"], win["sill"], win["lintel"]
-            for dy in (0.0, 0.1):
-                intake.append(smooth_path([np.array([x, y + dy, 0.0]) for x, y in (
-                    (x_w - 1.0, sill - 0.06), (x_w - 0.4, sill + 0.06), (x_w + 0.3, sill + 0.02),
-                    (x_w + 0.9, yf + 0.2), (x_r - 0.8, yf + 0.18), (x_r - 0.3, yf + 0.55))]))
-                exhaust.append(smooth_path([np.array([x, y - dy, 0.0]) for x, y in (
-                    (x_r - 0.3, yf + 0.68), (x_r - 0.5, yc - 0.16), (x_w + 1.2, yc - 0.14),
-                    (x_w + 0.35, lintel - 0.05), (x_w - 0.35, lintel - 0.05), (x_w - 0.8, lintel + 0.22))]))
-        guides = VGroup(flow_guides(intake[::2], PASTEL_BLUE, opacity=0.22),
-                        flow_guides(exhaust[::2], PASTEL_ORANGE, opacity=0.22))
+        low, high = hs["windows"]
+        flow = []
+        for dy in (0.0, 0.1):
+            flow.append(smooth_path([np.array([x, y + dy, 0.0]) for x, y in (
+                (low["x"] - 1.0, low["sill"] - 0.06), (low["x"] - 0.4, low["sill"] + 0.06), (low["x"] + 0.3, low["sill"] + 0.02),
+                (low["x"] + 0.9, bl[1] + 0.2), (x_r - 0.8, bl[1] + 0.18), (x_r - 0.3, bl[1] + 0.55),
+                (x_r - 0.3, y_mid + 0.68), (x_r - 0.5, tl[1] - 0.16), (high["x"] + 1.2, tl[1] - 0.14),
+                (high["x"] + 0.35, high["lintel"] - 0.05), (high["x"] - 0.35, high["lintel"] - 0.05),
+                (high["x"] - 0.8, high["lintel"] + 0.22))]))
+        guides = VGroup(flow_guides(flow[::2], PASTEL_BLUE, opacity=0.22, visible=False))
 
-        def breeze(rt, waves=3):
-            return [_streams([(intake, PASTEL_BLUE, PASTEL_ORANGE), (exhaust, PASTEL_ORANGE)], rt, speed=0.45, waves=waves)]
+        def breeze(rt, waves=6):
+            return [_streams([(flow, PASTEL_BLUE, PASTEL_ORANGE)], rt, speed=0.45, waves=waves)]
 
         th_i = math_label(r"\theta_{\mathrm{i}} = 20\,°\mathrm{C}", np.array([-3.9, 1.27, 0.0]), size=LABEL_FONT_SIZE + 1,
                           color=PASTEL_RED)

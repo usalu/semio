@@ -1,0 +1,22 @@
+{
+  "id": "2026/11/20/HIDE-VENT-PARTICLE-PATH-ARROWS",
+  "title": "Hide Ventilation Particle Path Arrows",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-20T15:24:11",
+  "goal": "ANIMATE",
+  "prompt": "Hide (do not delete) arrows that indicate air-particle direction across all Lüftung scenes; keep particles visible.",
+  "closed": "2026-11-20T15:27:32",
+  "summary": "Hidden particle-path flow_guides (visible=False) across all Lüftung chapters; stack inlet/outlet arrows opacity 0. Particles unchanged. Shared flow_guides gained a visible flag.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🧪️architecture/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🧪️architecture/🔣️.cases.json"
+  ]
+}

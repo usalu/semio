@@ -153,24 +153,24 @@ def _twinkle(stars, run_time: float):
 
 
 #region Typeset symbols
-def _phi(sub: str) -> str:
+def _q_dot(sub: str) -> str:
     """🔣 LaTeX source of an internal-gain load Q̇_i with an upright index (p, e, l; ``int`` is the sum Q̇_i)."""
     return r"\dot{Q}_{\mathrm{i}}" if sub == "int" else rf"\dot{{Q}}_{{\mathrm{{i,{sub}}}}}"
 
 
 def _watts(sub: str, tracker) -> str:
     """⚡ Live ``Q̇_i,x = … W`` source read from a tracker."""
-    return rf"{_phi(sub)} = {label_number(tracker.get_value())}\,\mathrm{{W}}"
+    return rf"{_q_dot(sub)} = {label_number(tracker.get_value())}\,\mathrm{{W}}"
 
 
 def _sum_parts(keys, *, lead=None):
     """🧮 Panel parts ``[lead =] Q̇_i,p + Q̇_i,e + …  [Q̇_i] = W`` for ``math_panel``."""
     colors = {"p": COLOR_PEOPLE, "e": COLOR_EQUIP, "l": COLOR_LIGHT, "int": PASTEL_WHITE}
-    parts = [(f"phi_{lead}", _phi(lead), colors[lead]), (None, "=", PASTEL_WHITE)] if lead else []
+    parts = [(f"phi_{lead}", _q_dot(lead), colors[lead]), (None, "=", PASTEL_WHITE)] if lead else []
     for i, k in enumerate(keys):
         if i:
             parts.append((None, "+", PASTEL_WHITE))
-        parts.append((f"phi_{k}", _phi(k), colors[k]))
+        parts.append((f"phi_{k}", _q_dot(k), colors[k]))
     parts.append((None, r"\quad[\dot{Q}_{\mathrm{i}}] = \mathrm{W}", PASTEL_WHITE))
     return parts
 #endregion
@@ -356,8 +356,8 @@ class Beat2_PersonenPhiP(Scene):
          "That load is about eighty watts — roughly two thirds of a seated person's full output.",
          "Diese Last liegt bei etwa achtzig Watt — rund zwei Drittel einer sitzenden Person."),
         ("phi_p",
-         r"We call the heat from persons $\dot{Q}_{\mathrm{i,p}}$ — the heat flow $\Phi$ as a load at the room, unit watt.",
-         r"Wir nennen die Personenwärme $\dot{Q}_{\mathrm{i,p}}$ — der Wärmestrom $\Phi$ als Last am Raum, Einheit Watt."),
+         r"We call the heat from persons $\dot{Q}_{\mathrm{i,p}}$ — a heat flow as a load at the room, unit watt.",
+         r"Wir nennen die Personenwärme $\dot{Q}_{\mathrm{i,p}}$ — ein Wärmestrom als Last am Raum, Einheit Watt."),
     ]
 
     def construct(self):
@@ -677,7 +677,7 @@ class Beat5_SummeUndDichte(Scene):
             bar.add_updater(lambda m, x=x, t=t: m.stretch_to_fit_height(bar_h(t)).move_to(
                 np.array([x, B5_BASE_Y + bar_h(t) / 2, 0.0])))
             bars.add(bar)
-            tokens.add(math_label(_phi(key), size=BODY_FONT_SIZE, color=color).move_to(
+            tokens.add(math_label(_q_dot(key), size=BODY_FONT_SIZE, color=color).move_to(
                 np.array([x, B5_BASE_Y - 0.30, 0.0])))
             names.add(Text(name, font_size=LABEL_FONT_SIZE, color=color).move_to(
                 np.array([x, B5_BASE_Y - 0.66, 0.0])))
@@ -748,7 +748,7 @@ class Beat5_SummeUndDichte(Scene):
         row2, box2, items2 = math_panel([
             ("q_int", r"q_{\mathrm{i}}", COLOR_HEAT),
             (None, "=", PASTEL_WHITE),
-            ("frac", rf"\frac{{{_phi('int')}}}{{\textcolor{{{PASTEL_CYAN}}}{{A_{{\mathrm{{N}}}}}}}}", PASTEL_WHITE),
+            ("frac", rf"\frac{{{_q_dot('int')}}}{{\textcolor{{{PASTEL_CYAN}}}{{A_{{\mathrm{{N}}}}}}}}", PASTEL_WHITE),
             (None, r"\quad[q_{\mathrm{i}}] = \frac{\mathrm{W}}{\mathrm{m^{2}}}", PASTEL_WHITE),
         ], edge_buff=FORMULA_EDGE_BUFF)
         self.play(stage.transition("heating.internal-gains.sum.formula-to-density", source=row, target=row2), stage.transition("heating.internal-gains.sum.formula-box-to-density", source=box, target=box2), run_time=1.4)

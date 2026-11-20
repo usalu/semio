@@ -1,0 +1,13 @@
+{
+  "id": "2026/11/20/FIX-VENT-GRENZEN-SUMMER-WINTER-FADE",
+  "title": "Smoother Summer To Winter Badge Fade",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-20T15:09:02",
+  "closed": "2026-11-20T15:09:02",
+  "summary": "Beat6 Sommernachmittag→Winter uses fade (2.2s ease-in-out) instead of replace.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌿️natural/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌿️natural/🔀️transitions/🔣️.json"
+  ]
+}

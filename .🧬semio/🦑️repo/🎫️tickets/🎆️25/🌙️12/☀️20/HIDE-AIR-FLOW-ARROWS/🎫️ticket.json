@@ -1,0 +1,10 @@
+{
+  "id": "2026/11/20/HIDE-AIR-FLOW-ARROWS",
+  "title": "Hide Air Flow Guide Arrows",
+  "status": "closed",
+  "client": "cursor-chat",
+  "goal": "ENERGY",
+  "opened": "2026-11-20T21:52:11",
+  "closed": "2026-11-20T21:55:05",
+  "summary": "Hid air-flow guide arrows via visible=False; kept code and particles."
+}

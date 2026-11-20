@@ -60,6 +60,7 @@ _example = importlib.import_module("🎓️teaching.🏛️architecture.⚡️en
 ripples = _manim_module.ripples
 house_section = _manim_module.house_section
 window_glyph = _manim_module.window_glyph
+emphasize_casement = _manim_module.emphasize_casement
 staffage = _manim_module.staffage
 staffage_motion = _manim_module.staffage_motion
 staffage_height = _manim_module.staffage_height
@@ -327,13 +328,16 @@ def _envelope_house(center, scale: float, col: dict) -> dict:
     inner_top, outer_top = h["roof_wall_tops"]["right"]
     h["wall_right"].become(section_material(Polygon(np.array([br[0] - t, door_top, 0.0]), np.array([br[0], door_top, 0.0]),
                                     outer_top, inner_top)))
-    door = window_glyph(br[0] - t / 2, br[1], door_top, depth=0.5 * scale,
-                        color=col["Haustür"], wall=t, inward=-1)
+    door = emphasize_casement(window_glyph(br[0] - t / 2, br[1], door_top, depth=0.85 * (door_top - br[1]),
+                                           color=col["Haustür"], wall=t, inward=-1),
+                              color=col["Haustür"])
     door["sash"][1].set_opacity(0)
     for w in h["windows"]:
         w["sash"].set_color(col["Fenster"])
+        emphasize_casement(w, color=col["Fenster"])
     parts = {"Dach": h["roof"].copy(), "Außenwand": VGroup(h["walls"][0], h["wall_right"]).copy(),
-             "Fenster": VGroup(*[w["sash"] for w in h["windows"]]), "Haustür": door["sash"], "Boden": h["floor"].copy()}
+             "Fenster": VGroup(*[VGroup(w["sash"], w["joinery"]) for w in h["windows"]]),
+             "Haustür": VGroup(door["sash"], door["joinery"]), "Boden": h["floor"].copy()}
     overlays = VGroup(*[parts[name].set_fill(col[name], opacity=0.35).set_stroke(width=0, opacity=0)
                         for name in ("Dach", "Außenwand", "Boden")])
     return {**h, "door": door, "door_top": door_top, "parts": parts,
@@ -449,9 +453,14 @@ class Beat1_MakroUndMikro(Scene):
             left_block[0].animate.set_stroke(width=0),
             right_block[0].animate.set_stroke(width=0),
             FadeIn(merged_outline),
-            stage.transition("heating.conduction.equilibrium.readouts-to-label", source=VGroup(left_read, right_read), target=eq_label),
-            *balanced(1.5),
-            run_time=1.5,
+            FadeOut(VGroup(left_read, right_read)),
+            *balanced(0.55),
+            run_time=0.55,
+        )
+        self.play(
+            stage.transition("heating.conduction.equilibrium.readouts-to-label", target=eq_label),
+            *balanced(0.7),
+            run_time=0.7,
         )
         hold_for(self, self.NARRATION, "equilibrium", during=balanced)
 
@@ -477,7 +486,7 @@ class Beat1_MakroUndMikro(Scene):
                 pos = np.array([start_x + c * dx, start_y - r * dy, 0.0])
                 dot = Dot(point=pos, radius=0.08, color=PASTEL_BLUE)
                 dot.init_pos = pos.copy()
-                dot.is_hot = False
+                dot.heat = 0.0
                 dots.append(dot)
                 dots_group.add(dot)
                 phases[dot] = (r * 1.3 + c * 2.7)
@@ -489,15 +498,18 @@ class Beat1_MakroUndMikro(Scene):
             def make_updater(d):
                 p = phases[d]
 
-                def updater(mob):
+                def updater(mob, dt=0):
                     t = time_tracker.get_value()
-                    amp, freq = (0.07, 24.0) if d.is_hot else (0.012, 8.0)
+                    heat = float(np.clip(d.heat, 0.0, 1.0))
+                    amp = 0.012 + 0.06 * heat
+                    freq = 8.0 + 16.0 * heat
                     offset = np.array([
                         amp * np.sin(freq * t + p),
                         amp * np.cos(freq * t * 1.3 + p * 0.7),
                         0.0,
                     ])
                     mob.move_to(d.init_pos + offset)
+                    mob.set_color(interpolate_color(ManimColor(PASTEL_BLUE), ManimColor(PASTEL_ORANGE), heat))
                 return updater
 
             dot.add_updater(make_updater(dot))
@@ -533,14 +545,19 @@ class Beat1_MakroUndMikro(Scene):
 
         def heat_propagation_updater(dt):
             x_val = sweep_x.get_value()
+            edge = 0.35
             for d in dots:
-                if d.init_pos[0] <= x_val and d.init_pos[0] < insulation_x - 0.25 and not d.is_hot:
-                    d.is_hot = True
-                    d.set_color(PASTEL_ORANGE)
+                if d.init_pos[0] >= insulation_x - 0.25:
+                    continue
+                # Smooth front: heat rises over ``edge`` scene-units behind the sweep.
+                d.heat = float(np.clip((x_val - d.init_pos[0]) / edge, 0.0, 1.0))
 
         self.add_updater(heat_propagation_updater)
         self.play(sweep_x.animate.set_value(insulation_x - 0.22), run_time=3.6, rate_func=linear)
         self.remove_updater(heat_propagation_updater)
+        for d in dots:
+            if d.init_pos[0] < insulation_x - 0.25:
+                d.heat = 1.0
         sweep_line.clear_updaters()
         hold_for(self, self.NARRATION, "insulation")
 
@@ -632,7 +649,7 @@ class Beat2_RWert(Scene):
         r_read = math_readout(
             lambda: (rf"R = \frac{{d}}{{\lambda}} = \frac{{{label_number(d_now(), 2)}\,\mathrm{{m}}}}{{{label_number(LAMBDA_INSULATION, 3)}\,\frac{{\mathrm{{W}}}}{{\mathrm{{m\,K}}}}}}"
                      rf" = {label_number(d_now() / LAMBDA_INSULATION, 1)}\,{UNIT_R}"),
-            np.array([left_x, rect.get_top()[1] + 0.42, 0.0]), color=PASTEL_YELLOW, edge="left")
+            np.array([left_x, rect.get_top()[1] + 0.72, 0.0]), color=PASTEL_YELLOW, edge="left")
         ring_d = highlight_param({"d": frac[0]}, "d", color=PASTEL_ORANGE)
         self.add(d_span, d_read, r_read)
         caption = swap_caption(self, caption, subtitle_text(N, "d"))
@@ -684,8 +701,8 @@ class Beat3_UWertUndGradient(Scene):
          r"Through the wall, the temperature drops from indoors to outdoors — this is the temperature difference $\Delta\theta$.",
          r"Durch die Wand fällt die Temperatur von innen nach außen — dies ist die Temperaturdifferenz $\Delta\theta$."),
         ("steeper",
-         r"A steeper gradient means a larger driving force $\Delta\theta$ and a higher heat flow $\Phi$.",
-         r"Ein steilerer Gradient heißt größere Triebkraft $\Delta\theta$ und höheren Wärmestrom $\Phi$."),
+         r"A steeper gradient means a larger driving force $\Delta\theta$ and a higher heat flow $\dot{Q}$.",
+         r"Ein steilerer Gradient heißt größere Triebkraft $\Delta\theta$ und höheren Wärmestrom $\dot{Q}$."),
     ]
 
     def construct(self):
@@ -837,9 +854,9 @@ class Beat3_UWertUndGradient(Scene):
         self.play(t_out.animate.set_value(-5.0), run_time=2.0)
         _drop_panel(self, p_h)
         p_q = math_panel([
-            ("q", r"\Phi", PASTEL_RED), (None, "=", PASTEL_WHITE), ("u", "U", PASTEL_ORANGE), (None, r"\cdot", PASTEL_WHITE),
+            ("q", r"\dot{Q}", PASTEL_RED), (None, "=", PASTEL_WHITE), ("u", "U", PASTEL_ORANGE), (None, r"\cdot", PASTEL_WHITE),
             ("a", "A", PASTEL_CYAN), (None, r"\cdot", PASTEL_WHITE), ("dt", r"\Delta\theta", PASTEL_YELLOW),
-            (None, r"\quad\Phi\;\text{in}\;\mathrm{W}", PASTEL_WHITE),
+            (None, r"\quad\dot{Q}\;\text{in}\;\mathrm{W}", PASTEL_WHITE),
         ])
         _fly_into(self, stage, "heating.conduction.q.fly", p_q, {"dt": dt_lbl.copy().clear_updaters()}, run_time=1.0)
         hold_for(self, N, "profile", during=band_heat)
@@ -964,13 +981,13 @@ class Beat4_WattVergleich(Scene):
         caption = swap_caption(self, caption, subtitle_text(N, "q"))
         _drop_panel(self, p_r)
         p_q = math_panel([
-            ("q", r"\Phi", PASTEL_RED), (None, "=", PASTEL_WHITE), ("u", "U", PASTEL_ORANGE), (None, r"\cdot", PASTEL_WHITE),
+            ("q", r"\dot{Q}", PASTEL_RED), (None, "=", PASTEL_WHITE), ("u", "U", PASTEL_ORANGE), (None, r"\cdot", PASTEL_WHITE),
             ("a", r"25\,\mathrm{m^{2}}", PASTEL_CYAN), (None, r"\cdot", PASTEL_WHITE), ("dt", r"20\,\mathrm{K}", PASTEL_BLUE),
         ])
         _fly_into(self, stage, "heating.conduction.compare.fly", p_q, {"u": u_reads[0]}, run_time=1.0)
         q_trk = [ValueTracker(0.0) for _ in data]
         q_reads = [
-            math_readout(lambda t=t: rf"\Phi = {label_number(t.get_value())}\,\mathrm{{W}}",
+            math_readout(lambda t=t: rf"\dot{{Q}} = {label_number(t.get_value())}\,\mathrm{{W}}",
                          np.array([d["x"], -1.45, 0.0]), color=PASTEL_RED, edge="center")
             for t, d in zip(q_trk, data)
         ]
@@ -1023,8 +1040,8 @@ class Beat5_Gebaeudehuelle(Scene):
          "For the whole building, add every envelope piece: roof, walls, windows, door, floor.",
          "Für das ganze Gebäude addieren wir jedes Hüllteil: Dach, Außenwand, Fenster, Haustür, Boden."),
         ("formula",
-         r"Each part has its heat flow $\Phi = U \cdot A \cdot \Delta\theta$. Their sum $\Sigma\,\Phi$ is the transmission load $\dot{Q}_{\mathrm{T}}$ at the room.",
-         r"Jedes Teil hat seinen Wärmestrom $\Phi = U \cdot A \cdot \Delta\theta$. Ihre Summe $\Sigma\,\Phi$ ist die Transmissionslast $\dot{Q}_{\mathrm{T}}$ am Raum."),
+         r"Each part has its heat flow $\dot{Q} = U \cdot A \cdot \Delta\theta$. Their sum $\Sigma\,\dot{Q}$ is the transmission load $\dot{Q}_{\mathrm{T}}$ at the room.",
+         r"Jedes Teil hat seinen Wärmestrom $\dot{Q} = U \cdot A \cdot \Delta\theta$. Ihre Summe $\Sigma\,\dot{Q}$ ist die Transmissionslast $\dot{Q}_{\mathrm{T}}$ am Raum."),
         ("paths",
          r"Each pathway leaks on its own: the wall with $209\,\mathrm{m^{2}}$ loses most, the windows follow with their high U-value.",
          r"Jeder Pfad leckt für sich: die Außenwand mit $209\,\mathrm{m^{2}}$ verliert am meisten, die Fenster folgen mit ihrem hohen U-Wert."),
@@ -1090,7 +1107,7 @@ class Beat5_Gebaeudehuelle(Scene):
         hold_for(self, N, "intro", used=2.2 + 0.3, during=room_warmth)
 
         panel = math_panel([
-            ("phi", r"\dot{Q}_{\mathrm{T}}", PASTEL_WHITE), (None, "=", PASTEL_WHITE), (None, r"\Sigma\,\Phi", PASTEL_WHITE),
+            ("phi", r"\dot{Q}_{\mathrm{T}}", PASTEL_WHITE), (None, "=", PASTEL_WHITE), (None, r"\Sigma\,\dot{Q}", PASTEL_WHITE),
             (None, "=", PASTEL_WHITE), (None, r"\Sigma\,(", PASTEL_WHITE),
             ("u", r"U_{i}", PASTEL_ORANGE), (None, r"\cdot", PASTEL_WHITE), ("a", r"A_{i}", PASTEL_CYAN), (None, r"\cdot", PASTEL_WHITE),
             ("dt", r"\Delta\theta_{i}", PASTEL_BLUE), (None, ")", PASTEL_WHITE), (None, r"\quad\dot{Q}_{\mathrm{T}}\;\text{in}\;\mathrm{W}", PASTEL_WHITE),
@@ -1108,7 +1125,7 @@ class Beat5_Gebaeudehuelle(Scene):
             math_label(r"A_{i}", np.array([x_a, y_head - 0.07, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_CYAN),
             math_label(r"U_{i}", np.array([x_u, y_head - 0.07, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_ORANGE),
             math_label(r"\Delta\theta_{i}", np.array([x_t, y_head - 0.07, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_BLUE),
-            math_label(r"\Phi", np.array([x_phi, y_head - 0.07, 0.0]), size=LABEL_FONT_SIZE, edge="right"),
+            math_label(r"\dot{Q}", np.array([x_phi, y_head - 0.07, 0.0]), size=LABEL_FONT_SIZE, edge="right"),
         )
         units = VGroup(
             math_label(r"\text{in}\;\mathrm{m^{2}}", np.array([x_a, y_head - 0.42, 0.0]), size=17, color=PASTEL_CYAN),

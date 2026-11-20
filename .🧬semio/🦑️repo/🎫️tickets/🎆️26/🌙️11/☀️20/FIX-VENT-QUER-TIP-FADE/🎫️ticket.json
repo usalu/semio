@@ -1,0 +1,13 @@
+{
+  "id": "2026/11/20/FIX-VENT-QUER-TIP-FADE",
+  "title": "Smoother Querlueftung Tip Fades",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-20T14:27:53",
+  "closed": "2026-11-20T14:27:53",
+  "summary": "Top-of-room Aeff/Sommer/Winter tips use fade recipe with longer ease-in-out timings.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌿️natural/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌿️natural/🔀️transitions/🔣️.json"
+  ]
+}

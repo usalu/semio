@@ -1,7 +1,7 @@
 {
   "version": 1,
   "dimensions": {
-    "house_wall": 0.14,
+    "house_wall": 0.18,
     "storey_height": 1.2
   },
   "section_material": {

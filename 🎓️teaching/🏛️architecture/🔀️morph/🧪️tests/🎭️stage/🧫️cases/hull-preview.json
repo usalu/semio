@@ -1,0 +1,11 @@
+{
+  "description": "hull recipe under preview profile runs full silhouette morph, not PreviewSwap",
+  "profile": "preview",
+  "transition": "demo.blocks-hull-to-tiles",
+  "expect": {
+    "full.prepare": {
+      "min": 1
+    },
+    "preview.swap": 0
+  }
+}

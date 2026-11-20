@@ -1,0 +1,12 @@
+{
+  "id": "2026/11/20/FIX-VENT-STACK-FORMULA-GAP",
+  "title": "Clear Stack Formula From Room",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-20T14:32:55",
+  "closed": "2026-11-20T14:32:55",
+  "summary": "Beat4 room raised and fit_band bottom raised so Δρ panel no longer touches the room.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌿️natural/🐍️.py"
+  ]
+}

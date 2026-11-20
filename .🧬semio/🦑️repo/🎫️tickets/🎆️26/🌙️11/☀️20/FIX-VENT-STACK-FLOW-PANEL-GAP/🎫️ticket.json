@@ -1,0 +1,12 @@
+{
+  "id": "2026/11/20/FIX-VENT-STACK-FLOW-PANEL-GAP",
+  "title": "Hard Gap Under Room For Flow Panel",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-20T14:42:09",
+  "closed": "2026-11-20T14:42:09",
+  "summary": "Stack panels pin under the room with 0.55 gap and shrink against the live caption.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌿️natural/🐍️.py"
+  ]
+}

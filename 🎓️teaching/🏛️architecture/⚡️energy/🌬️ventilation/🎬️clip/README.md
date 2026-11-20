@@ -25,7 +25,7 @@ plug their own season into it:
 
 | Quantity | Defined in | Heating uses it as | Cooling uses it as |
 |----------|------------|--------------------|--------------------|
-| `V`, `n`, `V̇ = V·n` (= `q_v,R`) | Kapitel 2 | `Q̇_V = V̇·c_Luft·Δθ` (Φ as the generic heat flow, Q̇ as the load at the room, index V = ventilation) | `q_v,R` in `Q̇_V = ρ·c_p·Δθ·q_v,R` |
+| `V`, `n`, `V̇ = V·n` (= `q_v,R`) | Kapitel 2 | `Q̇_V = V̇·c_Luft·Δθ` (Q̇ is the heat flow in both videos, index V = ventilation; Φ stays in the physical fundamentals) | `q_v,R` in `Q̇_V = ρ·c_p·Δθ·q_v,R` |
 | `c_Luft = ρ·c_p / 3600 ≈ 0,34 Wh/(m³·K)` (ρ ≈ 1,2 kg/m³ at 20 °C, 1,27 kg/m³ at 5 °C; the norm uses the fixed 0,34) | Kapitel 3 | winter factor | summer factor |
 | `Δθ` (signed), `Δx` | Kapitel 3 | `Δθ = 20 K`, latent part by convention not counted | `Δθ = 6 K`, `Δx = 4,5 g/kg` |
 | `η_WRG = (θ_ZUL − θ_AUL) / (θ_ABL − θ_AUL)` | Kapitel 5 | `Q̇_V,sens·(1 − η_WRG)` | cold recovery |
@@ -108,9 +108,9 @@ The movie of a preview job is `<output-root>/preview/<language>/<audience>/rende
 | 4 | `Beat1_Fensterregeln` | das Fenster als Regler |
 | 4 | `Beat2_StossOderKipp` | 340 Wh gegen ≈ 830 Wh; „8 %“ = 5 min / 60 min bei `n ≈ 1 h⁻¹` (Maas (1995), Diss. Univ. Kassel, Kap. 8.2, S. 74: 0,56 … 1,38 h⁻¹) |
 | 4 | `Beat3_Querlueftung` | zwei Öffnungen, `A_eff` |
-| 4 | `Beat4_Auftrieb` | `Δρ(θ)` → `Δp = Δρ·g·h` → `v = √(2Δp/ρ)` → `V̇ = C_d·A·v`; Zuluft- und Abluftöffnung, Kamin |
+| 4 | `Beat4_Auftrieb` | `Δρ(θ)` → `Δp = Δρ·g·h` → `v = √(2Δp/ρ)` → `V̇ = C_d·A·v`; Zuluftöffnung unten, Abluftöffnung oben auf sichtbarem Kamin; `Δρ(θ)` und `v(Δp)` benannt |
 | 4 | `Beat5_Nachtlueftung` | Sonne, Verschattung, den Speicher entladen |
-| 4 | `Beat6_GrenzenDerFreienLueftung` | Wetter, Filter, Regelung, keine Rückgewinnung |
+| 4 | `Beat6_GrenzenDerFreienLueftung` | Wetter, Filter, Regelung, keine Rückgewinnung; Zuluft unten, Abluft oben (kein Kurzschluss) |
 | 5 | `Beat1_Grundtypen` | Abluft, Zuluft, Zu-/Abluft |
 | 5 | `Beat2_Waermerueckgewinnung` | `η_WRG`, Winter 1500 → 300 W, Sommer Kälterückgewinnung |
 | 5 | `Beat3_Anlagenvergleich` | Fenster, zentral, dezentral; Passivhaus |

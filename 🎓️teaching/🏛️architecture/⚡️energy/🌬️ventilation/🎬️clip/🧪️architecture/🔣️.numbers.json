@@ -1,6 +1,7 @@
 {
   "description": "Language-agnostic expectations of the ventilation numbers shown in chapters 4 to 6: the tilted-window share, the stack-effect chain (density difference, pressure, speed, volume flow) and the latent hand-over, each derived from first principles in the test and compared with the authored value.",
   "tilt": {"minutes": 5.0, "airChangePerHour": 1.0, "share": 0.0833, "measuredRangePerHour": [0.56, 1.38], "source": "Maas (1995), Diss. Univ. Kassel · Kap. 8.2, S. 74 – Kippfenster"},
+  "airDensity": {"pressurePa": 101325.0, "gasConstant": 287.05, "cases": [{"celsius": 20.0, "kgM3": 1.204}, {"celsius": 5.0, "kgM3": 1.269}, {"celsius": 0.0, "kgM3": 1.292}], "stated": [{"celsius": 20, "rounded": "1.2"}, {"celsius": 5, "rounded": "1.27"}]},
   "stack": {
     "pressurePa": 101325.0,
     "gasConstant": 287.05,
